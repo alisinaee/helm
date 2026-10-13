@@ -198,6 +198,12 @@ function normalizeTask(t) {
     checkK: num(t.checkK),
     needsUser: Boolean(t.needsUser),
     note: t.note || "",
+    // WP29 keys: subtasks [{t, d}], the token cap (thousands) and the definition of done when the file has them.
+    subs: list(t.subs).map(function (s) {
+      return { t: String(s.t || ""), d: s.d === true };
+    }),
+    capK: num(t.capK),
+    dod: typeof t.dod === "string" && t.dod ? t.dod : null,
   };
 }
 
@@ -253,7 +259,11 @@ export function normalizeSnapshot(raw, fetchedAt) {
     }).map(function (j) {
       return normalizeJob(j, fetchedAt);
     }),
-    tasks: list(raw.tasks).map(normalizeTask),
+    // The task cap lives in the snapshot's budget (budget.tasks[id].limit), so it is read from there.
+    tasks: list(raw.tasks).map(function (t) {
+      const row = raw.budget && raw.budget.tasks ? raw.budget.tasks[t.id] : null;
+      return normalizeTask(Object.assign({}, t, { capK: t.capK != null ? t.capK : row ? row.limit : null }));
+    }),
     spikes: list(raw.spikes).map(normalizeBoard),
     rh: list(raw.rh).map(normalizeBoard),
     next: list(raw.next).map(String),
@@ -273,7 +283,26 @@ export function normalizeSnapshot(raw, fetchedAt) {
     activity: list(raw.activity).map(normalizeActivity),
     blocked: idList(raw.blocked),
     issues: list(raw.issues).map(normalizeIssue),
+    // WP29 keys: comments by target (newest last), the queue, and project rules when the snapshot has them.
+    comments: normalizeComments(raw.comments),
+    queue: list(raw.queue).map(function (q) {
+      return { task: String(q.task || ""), by: String(q.by || "") };
+    }),
+    rules: Array.isArray(raw.rules) ? raw.rules.map(function (r) {
+      return { id: String(r.id || ""), scope: String(r.scope || ""), text: String(r.text || "") };
+    }) : null,
   };
+}
+
+function normalizeComments(raw) {
+  const out = Object.create(null);
+  if (!raw || typeof raw !== "object") return out;
+  for (const target of Object.keys(raw)) {
+    out[target] = list(raw[target]).map(function (c) {
+      return { by: String(c.by || ""), at: typeof c.at === "string" ? c.at : null, t: String(c.t || "") };
+    });
+  }
+  return out;
 }
 
 // The control key: stopped and blocked flags, the reason text and the warnings. An error marker reads as not stopped.

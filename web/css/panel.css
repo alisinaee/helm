@@ -1,1 +1,61 @@
-/* panel.css (WP28 stub). The styles for this area arrive with its package; keep this file small and token-only. */
+/* Right panel (WP29): the two tabs, the Projects rows and the Details pieces. Tokens only; budget 4.5 KB. */
+
+.side-tab{flex:1 1 0;min-height:var(--h-control);padding:0 var(--sp-2);border:0;border-radius:var(--r-control);background:none;color:var(--text-2);font-weight:600;cursor:pointer}
+.side-tab:hover{background:var(--surface-2);color:var(--text-1)}
+.side-tab[aria-selected="true"]{background:var(--sel);color:var(--text-1)}
+.side-close{flex:none;min-height:var(--h-control)}
+.side-body{display:grid;gap:var(--sp-3);align-content:start}
+.side-body > *{min-width:0}
+
+.p-list{display:grid;gap:var(--sp-1)}
+.p-row{display:grid;gap:var(--sp-1);padding:var(--sp-2);border-radius:var(--r-control);color:var(--text-1);text-decoration:none;min-height:var(--h-row)}
+.p-row:hover{background:var(--surface-2)}
+.p-row[aria-current="page"]{background:var(--sel)}
+.p-head{display:flex;align-items:center;gap:var(--sp-2);min-width:0}
+.p-dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--text-3)}
+.p-row[data-state="blocked"] .p-dot{background:var(--danger)}
+.p-row[data-state="needs"] .p-dot,.p-row[data-state="stopped"] .p-dot{background:var(--warning)}
+.p-row[data-state="running"] .p-dot{background:var(--success)}
+.p-row[data-state="stale"] .p-dot{background:var(--unknown)}
+.p-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.p-word{flex:none;font-size:var(--fs-11);color:var(--text-2);white-space:nowrap}
+.p-meter{display:block}
+.p-meter .meter{height:6px}
+.p-badges{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2);min-height:var(--h-small);font-size:var(--fs-12);color:var(--text-2);font-variant-numeric:tabular-nums}
+.p-badge{display:inline-flex;align-items:center;gap:2px}
+.p-badge[data-kind="blocker"]{color:var(--danger)}
+.p-badge[data-kind="needs"]{color:var(--warning)}
+.p-chip{padding:0 var(--sp-1);border:1px solid var(--danger);border-radius:var(--r-control);color:var(--danger);font-size:var(--fs-11);font-weight:600}
+
+.d-back{display:flex}
+.d-head{display:grid;gap:var(--sp-1)}
+.d-id{font-family:var(--font-mono);font-size:var(--fs-11);color:var(--text-2)}
+.d-title{font-size:var(--fs-15);font-weight:600;overflow-wrap:anywhere}
+.d-meta{font-size:var(--fs-12);color:var(--text-2)}
+.d-meter .meter{height:6px}
+.d-sec{display:grid;gap:var(--sp-2);padding-top:var(--sp-3);border-top:1px solid var(--track)}
+.d-h{font-size:var(--fs-12);font-weight:600;color:var(--text-2)}
+.d-list{display:grid;gap:var(--sp-1)}
+.d-list li{overflow-wrap:anywhere}
+.d-btns{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.d-form{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2)}
+.d-form label{flex:1 0 100%;font-size:var(--fs-12);color:var(--text-2)}
+.d-form input{flex:1 1 140px;min-width:0;min-height:var(--h-control);padding:0 var(--sp-2);background:var(--surface-0);color:var(--text-1);border:1px solid var(--line);border-radius:var(--r-control)}
+.d-sub{display:flex;align-items:flex-start;gap:var(--sp-2);min-height:var(--h-row)}
+.d-sub span{overflow-wrap:anywhere}
+.d-sub[data-done="true"] span{text-decoration:line-through;color:var(--text-2)}
+.d-comment p{overflow-wrap:anywhere}
+.d-dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--sp-1) var(--sp-3)}
+.d-dl dt{color:var(--text-2)}
+.d-dl dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+
+@media (max-width:640px){
+.side-tab,.side-close,.p-row,.d-btns .btn,.d-form .btn,.d-back .btn-small,.d-sub{min-height:44px}
+}
+/* The sheet and the overlay sit above the scrim (same layer otherwise, and the scrim comes later in the page). */
+@media (max-width:1199px){
+.side{z-index:calc(var(--z-over) + 1)}
+}
+@media (prefers-reduced-motion:reduce){
+.side-tab{transition:none}
+}

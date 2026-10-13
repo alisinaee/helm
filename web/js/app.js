@@ -13,6 +13,7 @@ import { configureCommands, pendingValue, run } from "./cmd.js";
 import { initKeys, setKeyHooks } from "./keys.js";
 import { bnavView, navView, toggleMore } from "./views/nav.js";
 import { pageAction } from "./views/inbox.js";
+import { initPanel, panelView } from "./views/panel.js";
 import { topbarView } from "./views/topbar.js";
 import { dismissToast, setToastHold, setToastListener, toastsHtml, undoToast } from "./views/toast.js";
 
@@ -180,6 +181,9 @@ function render() {
     }],
     ["main", function () {
       return mainHtml(vm);
+    }],
+    ["side", function () {
+      return panelView(vm);
     }],
     ["bnav", function () {
       return bnavView(vm);
@@ -441,6 +445,7 @@ function boot() {
     patch("toasts", toastsHtml());
   });
   initKeys();
+  initPanel({ render: render });
   document.addEventListener("click", onClick);
   document.addEventListener("pointerover", onPointerOver);
   document.addEventListener("pointerout", onPointerOut);
