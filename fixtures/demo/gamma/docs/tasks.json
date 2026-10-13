@@ -1,0 +1,48 @@
+{
+  "updated": "2026-10-13",
+  "phases": [
+    {
+      "id": "P1",
+      "name": "Project kickoff and foundation",
+      "status": "todo"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "P1.1",
+      "phase": "P1",
+      "title": "Initialize repository structure, toolchain, and CI skeleton",
+      "status": "todo",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P1.2",
+      "phase": "P1",
+      "title": "Define core domain interfaces and configuration schema",
+      "status": "todo",
+      "tokensK": 35,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P1.3",
+      "phase": "P1",
+      "title": "Spike architecture prototype and validate critical assumptions",
+      "status": "todo",
+      "tokensK": 50,
+      "thinking": "high",
+      "model": "opus",
+      "needsUser": false,
+      "check": "sonnet",
+      "checkK": 10
+    }
+  ]
+}

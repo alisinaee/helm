@@ -36,6 +36,22 @@ Each work package writes a fragment in `changes/WPn.md`; the fragments are merge
   a check fails. Log rotation (1 MB x 5, mode 0600) with a redaction filter.
 - **Documentation and docs check** (WP12): README, architecture, contributing guide, API reference, security draft,
   and `tools/check_docs.py`, which runs every documented `roadmap` command against a temporary home.
+- **Task, plan, and status commands** (WP16): `task show|list|done|start|hold|set`, `plan import|export|template`,
+  and top-level `status`, backed by pure planfmt grammar parsing and tasks service.
+- **Research, agent guide, and skill drafts** (WP17): `roadmap research new|list|check` for research notes,
+  `roadmap agent-guide`, and skill drafts for roadmap updates and planning.
+- **Extended data layer and snapshot** (WP20): data stores and parsers for issues, questions, comments, budget,
+  queue, and activity JSONL, plus subtask support in the tasks service.
+- **Command layer and interactive CLI** (WP21): command runner with undo log, CLI modules for issue, subtask,
+  ask, comment, inbox, budget, and undo, plus plan view and move commands.
+- **Control and hook enforcement** (WP22): agent guard, budget and weekly limit controls, rules engine synced to
+  CLAUDE.md, PreToolUse hook gating, and SessionStart inbox lines.
+- **Command route and security** (WP23): `POST /api/v1/cmd` endpoint with CSRF and rate limiting, phone app
+  write allowlist, and task token spending integration with budget.
+- **Usage ledger and limit rows** (WP27): 14-day usage ledger (points and tokens), limit rows per day, week or total window (global and project) evaluated
+  to ok, warn, block or unknown, and limit lines in status.
+- **Interactive web shell** (WP28): modern app shell with navigation rail, command dispatcher with undo toasts,
+  design tokens, keyboard shortcuts, and view routing.
 
 ### Changed
 
@@ -43,6 +59,7 @@ Each work package writes a fragment in `changes/WPn.md`; the fragments are merge
 - Project settings live in each project's `docs/roadmap.config.json`, not in the code. The extras are configured
   there.
 - Launchd logs are trimmed above 5 MB when the service starts.
+- Hook uninstall now cleans up five settings entries instead of three to cover PreToolUse and SessionStart (WP22).
 
 ### Security
 
@@ -56,6 +73,10 @@ Each work package writes a fragment in `changes/WPn.md`; the fragments are merge
 - The keychain token is read with `security` as an argument list, held in memory, and sent only to
   `api.anthropic.com` over HTTPS. Redirects are refused.
 - Data files and folders are private (0600 and 0700). Writes are atomic and locked.
+- R1 security fixes (WP14): symlink rejection on `.claude` and settings with `O_NOFOLLOW`, tunnel host allowlisting
+  with strict host key checking, validated ssh pid signaling, and safe static file path resolution.
+- R2 hook enforcement hardening (WP22-fixes): project resolution confined to payload cwd, lock-synchronized limit
+  recomputation, safe normalised state directory parsing, and restricted commands while blocked.
 
 ### Deprecated
 

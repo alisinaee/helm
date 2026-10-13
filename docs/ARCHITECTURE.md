@@ -297,3 +297,21 @@ exit 1, with no traceback in the output.
 
 Every work package adds one fragment in `changes/WPn.md`. The release package merges the fragments into
 `CHANGELOG.md` under a version heading. Parallel workers never edit the changelog together.
+
+## Data files added for the interactive manager
+
+| file | location (project data dir, global state dir or global config dir) | what it holds | size caps (module constants) | written by (module) |
+|---|---|---|---|---|
+| `issues.json` | project data dir | open, doing, and recent closed/wontfix issues | `OPEN_CAP = 200`, `CLOSED_KEEP = 100`, `TASKS_MAX = 5` | `roadmap.services.issues` |
+| `issues-archive.jsonl` | project data dir | archived closed and wontfix issues (beyond the newest `CLOSED_KEEP`) | `CLOSED_KEEP = 100` | `roadmap.services.issues` |
+| `questions.json` | project data dir | agent questions asked to user (open and recent answered/defaulted) | `OPEN_CAP = 50`, `ANSWERED_KEEP = 50`, `OPT_MAX = 60` | `roadmap.services.questions` |
+| `questions-archive.jsonl` | project data dir | archived answered and defaulted questions (beyond the newest `ANSWERED_KEEP`) | `ANSWERED_KEEP = 50` | `roadmap.services.questions` |
+| `comments.json` | project data dir | flat comment thread per target (task or issue id) | `PER_TARGET = 20`, `FILE_MAX_BYTES = 150 * 1024`, `BY_MAX = 40` | `roadmap.services.comments` |
+| `comments-archive.jsonl` | project data dir | archived older comments (per-target overflow, or the oldest when the file is over `FILE_MAX_BYTES`) | `PER_TARGET`, `FILE_MAX_BYTES` | `roadmap.services.comments` |
+| `queue.json` | project data dir | start queue (`entries`): tasks waiting to be started, and stop requests (`op: "stop"`) | `CAP = 50` | `roadmap.services.queue`, `roadmap.services.commands` |
+| `undo.jsonl` | project data dir | inverse of each reversible write, keyed by activity id (for `undo <A>`) | `UNDO_KEEP = 500` | `roadmap.services.commands` |
+| `budget.json` | project data dir | token limits, spend per task/model, limitRows, and remembered job ids | `JOBS_KEEP = 500` | `roadmap.services.budget`, `roadmap.services.limits` |
+| `activity.jsonl` | project data dir | log of write operations ({id, at, src, op, sum, undo}) | `KEEP = 500` (services/activity.py), `ACTIVITY_SUM_MAX = 60` (core/parsers.py) | `roadmap.services.activity` |
+| `ledger.json` | global state dir | measured account points and project tracked tokens across 14 local days and recent readings | `DAYS_KEEP = 14`, `MAX_BYTES = 4096`, `RECENT_MAX = 36` | `roadmap.services.ledger` |
+| `control-<project>.json`, `block-<project>` | global state dir | recomputed control state (stop, blocks, warnings); the `block-` file exists only while something blocks | none | `roadmap.services.control` |
+| `config.json` | global config dir | global config, including the global limit rows under the "limits" key | none | `roadmap.store.config` (`update_limits`, called by `roadmap.services.limits`) |

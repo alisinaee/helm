@@ -1,0 +1,212 @@
+{
+  "updated": "2026-10-13",
+  "phases": [
+    {
+      "id": "P1",
+      "name": "Data modeling and repository layer",
+      "status": "done"
+    },
+    {
+      "id": "P2",
+      "name": "REST endpoints and business services",
+      "status": "partial"
+    },
+    {
+      "id": "P3",
+      "name": "Authentication and rate limiting",
+      "status": "todo"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "P1.1",
+      "phase": "P1",
+      "title": "FastAPI application scaffold and Pydantic v2 settings",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "Async server entrypoint and env loader ready",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P1.2",
+      "phase": "P1",
+      "title": "PostgreSQL database models and Alembic migration setup",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "Users, teams, and projects tables created",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P1.3",
+      "phase": "P1",
+      "title": "Async SQLAlchemy session factory and connection pool tuning",
+      "status": "done",
+      "tokensK": 25,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "Asyncpg driver with pooled connections",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P1.4",
+      "phase": "P1",
+      "title": "Generic CRUD repository pattern with pagination helpers",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "note": "Offset and cursor pagination implemented",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P1.5",
+      "phase": "P1",
+      "title": "Database fixtures and transactional test container harness",
+      "status": "done",
+      "tokensK": 35,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "Pytest testcontainers suite running green",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P2.1",
+      "phase": "P2",
+      "title": "Health check and Prometheus metrics exposition endpoint",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "Liveness, readiness, and metrics routes verified",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P2.2",
+      "phase": "P2",
+      "title": "User account management and registration API endpoints",
+      "status": "done",
+      "tokensK": 45,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "note": "Signup, profile update, and account deletion endpoints",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P2.3",
+      "phase": "P2",
+      "title": "Project workspace resources and member permission checking",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "high",
+      "model": "sonnet",
+      "needsUser": false,
+      "note": "Role-based permission evaluator implemented",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P2.4",
+      "phase": "P2",
+      "title": "Task item management API with search and tag filters",
+      "status": "partial",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "CRUD operations done; complex tag filters in progress",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P2.5",
+      "phase": "P2",
+      "title": "Audit log event dispatching on sensitive resource changes",
+      "status": "partial",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "Background worker queue connected; payload schema pending",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P3.1",
+      "phase": "P3",
+      "title": "JWT access token generation and cryptographic validation",
+      "status": "todo",
+      "tokensK": 35,
+      "thinking": "high",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P3.2",
+      "phase": "P3",
+      "title": "Redis-backed distributed token revocation blocklist",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P3.3",
+      "phase": "P3",
+      "title": "API key provisioning and scoped header authentication",
+      "status": "todo",
+      "tokensK": 45,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "P3.4",
+      "phase": "P3",
+      "title": "Sliding window rate limiting middleware with Redis",
+      "status": "todo",
+      "tokensK": 55,
+      "thinking": "high",
+      "model": "opus",
+      "needsUser": false,
+      "check": "sonnet",
+      "checkK": 10
+    },
+    {
+      "id": "P3.5",
+      "phase": "P3",
+      "title": "CORS policy, security headers, and OpenAPI security schemes",
+      "status": "todo",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    }
+  ]
+}
