@@ -1,80 +1,256 @@
 # roadmap-board HTTP API (v1)
 
-The server runs on `127.0.0.1` only (`roadmap serve [--port N] [--no-usage-loop]`, default port from config, 8765).
-All responses are JSON except the pages under `/`. The contract is this file plus `tests/api/schemas/*.json`.
+The server listens on `127.0.0.1` only. It is started by `roadmap serve` (or by the launchd service, which runs the
+same command). The default port is 8765; `roadmap serve --port N` picks another one.
+
+- Every `/api/v1/*` reply is JSON, UTF-8.
+- The contract is this file plus the schemas in `tests/api/schemas/*.json`. The tests start a real server and check
+  each route's reply against those schemas.
+- Within v1, only new fields are added. Existing camelCase keys (such as `tokensK` and `weeklyPercent`) stay as they
+  are. New keys are snake_case.
+
+The examples below are real replies from a server with one registered project (`demo-app`, a fresh `docs/` folder
+made by `roadmap project init`), with the usage numbers set by `roadmap usage push`. Long values are cut short and
+marked `...`.
 
 ## Routes
 
-| Method | Path | Returns |
+| Method | Path | Reply |
 |---|---|---|
 | GET | `/api/v1/health` | `{ok, version, server_time}` |
-| GET | `/api/v1/meta` | `{version, api_version, snapshot_schema_version, schema_versions, poll_intervals_s, usage_interval_s}` |
-| GET | `/api/v1/projects` | `{projects: [{id, name, progress, tasks_left, running, need_user, errors_count, stale}]}` |
-| GET | `/api/v1/projects/{id}/snapshot` | the project snapshot (see below); `ETag`, and `304` on `If-None-Match` |
-| GET | `/api/v1/usage` | `{weeklyPercent, fiveHourPercent, weeklyResetsAt, fiveHourResetsAt, updated, source, lastError, stale, ageS}` |
-| POST | `/api/v1/usage/sync` | runs one usage read, then returns the `/api/v1/usage` object. The only write route |
-| GET | `/data.json` | deprecated alias of the first project's snapshot (`Deprecation: true`); removed in 2.0 |
-| GET | `/`, `/<file>` | pages from `web/` (see below) |
+| GET | `/api/v1/meta` | versions, schema versions, poll intervals |
+| GET | `/api/v1/projects` | `{projects: [summary, ...]}` |
+| GET | `/api/v1/projects/{id}/snapshot` | the project snapshot. `ETag`; `304` on a matching `If-None-Match` |
+| GET | `/api/v1/usage` | the stored plan usage |
+| POST | `/api/v1/usage/sync` | reads the plan usage now, then returns the `/api/v1/usage` object. **The only write route** |
+| GET | `/data.json` | **deprecated** alias of the first registered project's snapshot. Removed in 2.0 |
+| GET | `/`, `/<file>` | the pages under `web/` (not JSON; see [Pages](#pages)) |
 
-Field notes:
-- `progress` in the project list is a fraction from 0 to 1 (whole project, deferred tasks excluded).
-- `running` and `need_user` are counts. `errors_count` is the length of the snapshot's `errors`.
-- `stale` in the project list is true when `tasks.json` is missing or unreadable.
-- `progress`, `tasks_left` and the other numbers come straight from the snapshot.
-- Within v1 fields are only added. Existing camelCase keys stay; new keys are snake_case.
+Any other path under `/api/v1/` gives `404 not_found`. A path that matches but has the wrong method gives
+`405 method_not_allowed` with an `Allow` header.
 
-## Snapshot
+### GET /api/v1/health
 
-The v1 snapshot is the old `build()` shape plus `project: {id, title}` and `schemaVersion`. `server_time` is ISO 8601
-with whole seconds. Problems with individual files are listed in `errors: [{file, error}]` and never fail the request.
-A project that is not registered gives 404.
+```json
+{"ok": true, "version": "0.1.0", "server_time": "2026-10-13T18:08:50+03:30"}
+```
 
-`ETag` is a strong hash of the snapshot content without `server_time`. A running job's duration moves with the clock,
-so its ETag changes while that job runs.
+`server_time` is local time with its offset, to the second. Use it to check the clock; the snapshot ETag ignores it.
+
+### GET /api/v1/meta
+
+```json
+{
+  "version": "0.1.0",
+  "api_version": "v1",
+  "snapshot_schema_version": 1,
+  "schema_versions": {"config": 1, "autonomy": 2, "tasks": 1, "jobs": 1, "roadmap_config": 1, "usage": 1, "hooks": 1},
+  "poll_intervals_s": {"snapshot": 2, "usage": 30, "hidden_tab": 30},
+  "usage_interval_s": 120
+}
+```
+
+`usage_interval_s` is the config's `usage.intervalS`. `schema_versions` is what this build writes for each data file
+kind (see [ARCHITECTURE.md](ARCHITECTURE.md#data-files-schema-versions-and-migrations)).
+
+### GET /api/v1/projects
+
+```json
+{"projects": [
+  {"id": "demo-app", "name": "Demo App", "progress": 0.0, "tasks_left": 0, "running": 0,
+   "need_user": 0, "errors_count": 0, "stale": false}
+]}
+```
+
+| Field | Meaning |
+|---|---|
+| `id`, `name` | from the registry |
+| `progress` | a fraction from 0 to 1 for the whole project. Deferred tasks are not counted |
+| `tasks_left` | tasks that are `todo` or `partial` |
+| `running` | jobs in `running` state |
+| `need_user` | open tasks (`todo` or `partial`) whose `needsUser` flag is true |
+| `errors_count` | the length of the snapshot's `errors` |
+| `stale` | true when `tasks.json` is missing or cannot be read |
+
+A project whose folder or `tasks.json` is missing still appears, with `stale: true`. Projects are listed in the order
+they were added.
+
+### GET /api/v1/projects/{id}/snapshot
+
+`{id}` is a registered project id: lowercase letters, digits and dashes, up to 40 characters. An unknown id gives
+`404` with `not_found`.
+
+```json
+{
+  "server_time": "2026-10-13T18:08:50+03:30",
+  "errors": [],
+  "jobs": [],
+  "project": {"id": "demo-app", "title": "demo-app"},
+  "schemaVersion": 1,
+  "tasks_updated": "2026-10-13",
+  "summary": {"tasks_total": 1, "tasks_left": 1, "tokens_left_k": 20, "running_count": 0,
+              "need_user": 0, "jobs_tokens_k": 42.5, "jobs_with_tokens": 1, "...": "..."},
+  "overall": {"project": {"done": 0, "partial": 0, "todo": 1, "total": 1, "progress": 0.0}, "...": "..."},
+  "phases": [{"id": "P1", "name": "Engine", "status": "todo", "...": "..."}],
+  "tasks": [{"id": "P1.1", "phase": "P1", "title": "Example task", "status": "todo", "...": "..."}],
+  "spikes": {"...": "..."},
+  "rh": {"...": "..."},
+  "next": [],
+  "log": []
+}
+```
+
+The snapshot is the dashboard's data, in the shape the original server produced (`build()`), plus `project` and
+`schemaVersion`. The `summary` also carries the mirrored `autonomy` block. Problems with a single file never fail
+the request: they are listed in `errors`, as `{"file": "<name>", "error": "<ExceptionType>: <reason>"}`, for example
+`{"file": "tasks.json", "error": "FileNotFoundError: file not found"}`. A missing `tasks.json` is listed there too,
+and the project's `stale` flag is set.
+
+`ETag` is a strong tag: the first 32 hex characters of a SHA-256 over the snapshot content with `server_time` left
+out, in quotes, for example `"c8f6148f5af0d6c7135ea34e7b0bf70e"`. Send it back as `If-None-Match`. When nothing has
+changed the reply is `304` with no body, and the `ETag` header again. A running job's duration moves with the
+clock, so the tag changes while a job runs.
+
+`ETag` and `Cache-Control: no-cache` are sent on every snapshot reply, so a browser or proxy always revalidates.
+
+### GET /api/v1/usage
+
+```json
+{"weeklyPercent": 61, "fiveHourPercent": 13,
+ "weeklyResetsAt": "2026-10-16T07:59:00+00:00", "fiveHourResetsAt": "2026-10-13T18:00:00+00:00",
+ "updated": "2026-10-13T18:08:26+03:30", "source": "manual push", "lastError": null,
+ "ageS": 24, "stale": false}
+```
+
+| Field | Meaning |
+|---|---|
+| `weeklyPercent`, `fiveHourPercent` | whole percentages of the weekly and five-hour limits. `null` when nothing is stored yet |
+| `weeklyResetsAt`, `fiveHourResetsAt` | when each window resets, as ISO 8601 with an offset, or `null` |
+| `updated` | when the last good reading was stored |
+| `source` | `"Anthropic usage endpoint"` for a sync, `"manual push"` for `usage push` |
+| `lastError` | the reason the newest read failed, or `null`. The good numbers stay when a read fails |
+| `ageS` | seconds since `updated`, or `null` |
+| `stale` | true when `ageS` is more than twice the configured interval (240 s by default), or when nothing was ever read |
+
+Before any reading, the reply has `weeklyPercent: null`, `updated: null`, `ageS: null` and `stale: true`.
+
+### POST /api/v1/usage/sync
+
+Reads the plan usage now: the keychain item, then one HTTPS request to `api.anthropic.com`. It stores the result and
+mirrors it into each project's `autonomy.json` (see the README's [Plan usage](../README.md#plan-usage) section). On
+success the reply is the same object as `GET /api/v1/usage`.
+
+The request needs all of the write rules below, and the body may be empty or a JSON object:
+
+```http
+POST /api/v1/usage/sync HTTP/1.1
+Host: 127.0.0.1:8765
+Content-Type: application/json
+Sec-Fetch-Site: same-origin
+X-Roadmap-CSRF: <the token from the page's <meta name="csrf">>
+Content-Length: 0
+```
+
+Failure to read gives `502` with code `usage_unavailable`. The message is the plain reason, for example
+`keychain item not found, sign in to Claude Code first`, `keychain access denied or failed (exit 36)`, or
+`usage endpoint answered HTTP 401`. The token is never in a message.
+
+### GET /data.json (deprecated)
+
+Returns the snapshot of the first registered project, exactly as `/api/v1/projects/{id}/snapshot` does, with the same
+`ETag` and `304` behaviour. Its headers add:
+
+```http
+Deprecation: true
+Link: </api/v1/projects/demo-app/snapshot>; rel="successor-version"
+```
+
+With no registered project it gives `404` with `not_found`. Use the v1 snapshot route in new code. `/data.json` is
+kept until 2.0, when it is removed.
 
 ## Errors
 
-Every error body is `{"error": {"code", "message"}}`. The message is short and plain and never contains a secret.
+Every error body is one object:
+
+```json
+{"error": {"code": "not_found", "message": "no project with id 'nosuch'"}}
+```
+
+`message` is short and plain, and never contains a secret. Clients should branch on `code`.
 
 | Status | Code | When |
 |---|---|---|
-| 400 | `invalid_input` | bad JSON body, bad `Content-Length`, chunked body |
-| 403 | `forbidden` | write without the CSRF header, or from another site |
-| 404 | `not_found` | unknown route, page, or project |
-| 405 | `method_not_allowed` | wrong method (the `Allow` header says which) |
-| 413 | `too_large` | write body over 4096 bytes |
-| 415 | `unsupported_media_type` | write without `Content-Type: application/json` |
-| 421 | `misdirected_request` | `Host` is not `127.0.0.1:<port>` or `localhost:<port>` |
-| 500 | `internal` or a data code | unexpected error, or a data file this build cannot read (for example `newer_schema`) |
-| 502 | `usage_unavailable` | the usage read failed (keychain or endpoint); the reason is plain text |
+| 400 | `invalid_input` | a bad `Content-Length`, a chunked body, or a body that is not JSON (for the sync route) |
+| 403 | `forbidden` | a write without a valid CSRF token, or one that is not same-origin |
+| 404 | `not_found` | an unknown route, page or project id |
+| 405 | `method_not_allowed` | the wrong method. The `Allow` header names the right ones |
+| 413 | `too_large` | a write body over 4096 bytes |
+| 415 | `unsupported_media_type` | a write without `Content-Type: application/json` |
+| 421 | `misdirected_request` | the `Host` header is not `127.0.0.1:<port>` or `localhost:<port>` |
+| 500 | `internal`, or a data code such as `newer_schema` | an unexpected error, or a data file this build cannot read |
+| 502 | `usage_unavailable` | the usage read failed (keychain or endpoint). The message gives the plain reason |
 
-## Writes
+Example, a foreign `Host` header:
 
-`POST /api/v1/usage/sync` needs all of these:
-- `X-Roadmap-CSRF` equal to the per-process token. The token is in `<meta name="csrf" content="...">` in every HTML page.
-- `Sec-Fetch-Site: same-origin`, or an `Origin` equal to this server's origin. Anything else gives 403.
-- `Content-Type: application/json`, and a body of at most 4096 bytes. The body may be empty or a JSON object.
+```http
+HTTP/1.1 421 Misdirected Request
 
-Checks run in this order: Host, route and method, CSRF and origin, content type, size, then the work.
+{"error": {"code": "misdirected_request", "message": "this server answers only on 127.0.0.1 or localhost"}}
+```
 
-## Headers on every response
+A project file that is broken does not produce any of these: the reply is `200` with an `errors` entry.
 
-- `Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`
-- `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`,
-  `Cross-Origin-Resource-Policy: same-origin`
-- `Cache-Control: no-cache`
+## Write rules
 
-**Exception (temporary):** `/legacy.html` (the old page, served while `web/index.html` does not exist) gets
-`'unsafe-inline'` for scripts and styles. It is removed with the page in WP8. No other page gets it.
+`POST /api/v1/usage/sync` is the only route that changes anything. Its checks run in this order, and the first
+failure stops the request before any work is done:
+
+1. `Host` is allowed (421 otherwise).
+2. The route and method exist (404 or 405).
+3. `Sec-Fetch-Site` is `same-origin`, or `Origin` is this server's origin (`http://127.0.0.1:<port>` or
+   `http://localhost:<port>`), and `X-Roadmap-CSRF` equals the server's token for this process (403 otherwise).
+   The token is 32 random bytes, generated when the server starts, and is compared in constant time. The page reads
+   it from `<meta name="csrf" content="...">`.
+4. `Content-Type` is `application/json` (415).
+5. The body is at most 4096 bytes (413).
+6. The body, when it has any content, is a JSON object (400).
+
+A request with neither `Sec-Fetch-Site` nor `Origin` is refused. A cross-site `Sec-Fetch-Site` is refused.
+
+Job writes are not HTTP routes on purpose. Jobs are recorded by the CLI and the hooks, so the server has one write
+route to protect.
+
+## Headers on every reply
+
+```http
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: no-referrer
+Cross-Origin-Resource-Policy: same-origin
+Cache-Control: no-cache
+```
+
+Plus `Content-Type: application/json; charset=utf-8` on JSON replies, `ETag` on snapshots, and `Allow` on `405`.
+
+**Exception (temporary):** `/legacy.html`, the old single-file page, keeps `'unsafe-inline'` for scripts and styles so it
+still runs. It is removed with the file in WP8. No other reply gets that exception.
 
 ## Pages
 
-`/` serves `web/index.html`, or `web/legacy.html` while index.html does not exist. Only files under `web/` with a known
-extension are served, from an allowlist built at startup. URL paths are never turned into file paths, so `..`, `%2e`,
-double slashes and unlisted names all give 404. Page MIME types: `.html`, `.css`, `.js`, `.json`, `.svg`, `.png`, `.jpg`,
-`.ico`, `.woff2`, `.txt`.
+`/` serves `web/index.html`. `/<file>` serves the files listed in an allowlist that is built when the server starts:
+the files under `web/` with a known extension (`.html`, `.css`, `.js`, `.json`, `.svg`, `.png`, `.jpg`, `.ico`,
+`.woff2`, `.txt`). URL paths are never turned into file paths. `..`, percent-encoded dots, double slashes and names
+that are not in the list all give `404`. Pages are served with the same security headers as the JSON.
 
 ## Access log
 
-One line per request on stderr: `<time> roadmap.http.access INFO <METHOD> <path> <status> <ms>ms`. The query string is
-never logged. Requests with a query string, such as `?k=...`, are logged without it.
+One line per request goes to stderr and to `server.log`:
+
+```
+2026-10-13 18:08:50,780 roadmap.http.access INFO GET /api/v1/usage 200 0ms
+```
+
+The line has the method, the path, the status and the time in milliseconds. The query string is never written, so a
+`?k=...` value does not reach the log. Log lines pass through a redaction filter that also removes `Bearer ...`,
+`sk-ant-...` and `k=...` values.
