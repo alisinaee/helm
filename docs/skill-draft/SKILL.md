@@ -49,7 +49,7 @@ roadmap project check <project-id>
 
 - `project init` writes the template files into `<project>/docs/` and keeps any file that exists. Never overwrite a
   real `docs/tasks.json` with a template. Replace the example phases and tasks with the project's real plan
-  (section 4).
+  (the `roadmap-plan-new` skill).
 - `project add` gives the project an id (lowercase, from the name unless `--name` is set) and registers its folder.
   Run it once; a second run says the folder is already registered.
 - `hooks install` is idempotent. Run it again only after the roadmap clone has moved, or the hooks show "stale".
@@ -149,50 +149,11 @@ Plan usage comes from one of two places:
 Stop working when `weeklyPercent` reaches `stopAtPercent`. A stale or missing reading is not a reason to keep going:
 say so and ask the person.
 
-## 4. Editing docs/tasks.json
-
-Top level: `updated` (date string), `phases` (array), `tasks` (array). Extra keys are ignored.
-
-Phase fields:
-
-| field | values |
-|---|---|
-| id | short id, for example `P1`. Tasks refer to it through `phase`. |
-| name | shown on the phase header |
-| status | `done` \| `partial` \| `todo` \| `hold` |
-
-Task fields:
-
-| field | values |
-|---|---|
-| id | `<phase>.<n>`, for example `P1.2` |
-| phase | a phase id |
-| title | one line |
-| status | `todo` \| `partial` \| `done` \| `hold` |
-| tokensK | number, estimated work tokens in thousands (see below) |
-| thinking | `low` \| `medium` \| `high` |
-| model | `haiku` \| `sonnet` \| `opus` |
-| needsUser | `true` when the user must act (shows a person icon and counts in "need you") |
-| check | `none` \| `sonnet` \| `opus` (a short review by a stronger model) |
-| checkK | number, estimated review tokens in thousands (0 when check is none) |
-| note | optional string. A `hold` task whose note starts with `Deferred` shows as deferred and is not counted as left. |
-
-Status meanings: `done` counts 100% in phase progress, `partial` counts 50%, `todo` and `hold` count 0%. Tasks left =
-`todo` + `partial`. Holds are parked, not left.
-
-Token estimates (rough, in thousands, round to 5):
-- Count the lines the worker will read plus the lines it will write. Multiply by about 12 tokens per line. Add about
-  50% for tool calls and retries. Divide by 1000.
-- Small one-file change: 10 to 30. Medium, a few files: 30 to 80. Large or new feature: 80 to 150.
-- A `check` review is usually 10 to 25% of the work estimate.
-
-After each job:
-1. Set the task's `status` (and `tokensK` if the real cost is known) in `docs/tasks.json`.
-2. When every task of a phase is done, set the phase `status` to `done`. Set it to `partial` when work has started.
-3. Update the top-level `updated` date.
-4. Check the file still parses: `roadmap project check <project-id>`. A parse error shows as a banner on the page,
-   and that file's data is not shown. The command names the file and the reason.
-5. Tell the person the new counts, or refresh the dashboard tab.
+## 4. Changing tasks (use the CLI, not JSON)
+Never edit `docs/tasks.json` or `docs/jobs.json` by hand. Record work with `roadmap job start|done|fail` and
+`roadmap task done|start|hold`, and bulk changes with `roadmap task set --dry-run`. Plan new work with
+`roadmap plan import --dry-run`. The `roadmap-update` skill (day-to-day) and `roadmap-plan-new` skill
+(new projects) give the steps and the budgets.
 
 ## 5. Project settings (docs/roadmap.config.json)
 

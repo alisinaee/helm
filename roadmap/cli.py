@@ -18,6 +18,8 @@ COMMAND_MODULES = (
     "job",
     "task",
     "plan",
+    "research",
+    "agent_guide",
     "status",
     "hook",
     "hooks",

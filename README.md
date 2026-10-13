@@ -90,6 +90,13 @@ roadmap service install
 
 Open `http://127.0.0.1:8765/` in a browser tab. The page refreshes itself every 2 seconds.
 
+### New project
+
+For a new project, an agent follows the draft skill `docs/skill-draft/roadmap-plan-new/SKILL.md`. It reads
+`roadmap agent-guide`, asks a few questions, and writes up to 6 research notes in `docs/research/`. Then it imports
+the plan. Check the notes with `roadmap research check`, and the plan with `roadmap plan import` and `--dry-run`
+first. The skills are drafts: installing them into `~/.claude/skills` is a manual step, done by you.
+
 ## Plan usage
 
 The usage band on the page shows your weekly and five-hour plan usage, the time until each limit resets, and
@@ -180,6 +187,10 @@ Every command accepts `--json` and then prints `{"ok": true, "data": ...}` or
 | `roadmap plan import <file\|-> [--dry-run] [--replace-phase P]` | create or update phases and tasks from plan text |
 | `roadmap plan export [--phase P]` | print the plan text for a re-plan |
 | `roadmap plan template` | print the plan grammar and an example |
+| `roadmap research new <slug> "<title>"` | start research note NN (next number, template, INDEX line; at most 6 notes) |
+| `roadmap research list` | print the research index |
+| `roadmap research check` | check the caps (120 lines, 6 KB), the headings and any roadmap-plan block |
+| `roadmap agent-guide` | print the short guide for AI agents (at most 40 lines) |
 | `roadmap hooks install\|uninstall\|status <id>` | manage the Claude Code hook entries of a project |
 | `roadmap hook` | the hook entry point; Claude Code runs it, you do not |
 | `roadmap usage show` | print the stored plan usage and whether it is stale |
