@@ -42,20 +42,20 @@ class CliTests(unittest.TestCase):
         self.assertEqual(out, "roadmap " + __version__ + "\n")
 
     def test_stub_command_exit_1_and_error_code(self):
-        code, out, _ = run(["doctor", "--json"])
+        code, out, _ = run(["open", "--json"])
         self.assertEqual(code, 1)
         body = json.loads(out)
         self.assertIs(body["ok"], False)
         self.assertEqual(body["error"]["code"], "not_implemented")
 
     def test_stub_plain_mode_writes_error_to_stderr(self):
-        code, out, err = run(["doctor"])
+        code, out, err = run(["open"])
         self.assertEqual(code, 1)
         self.assertEqual(out, "")
         self.assertIn("not implemented", err)
 
     def test_every_group_is_registered_and_stubbed(self):
-        for argv in (["open"], ["service", "logs"], ["phone", "link"], ["doctor"]):
+        for argv in (["open"], ["phone", "link"]):
             with self.subTest(argv=argv):
                 code, out, _ = run(argv + ["--json"])
                 self.assertEqual(code, 1)
@@ -81,7 +81,7 @@ class ShimTests(unittest.TestCase):
         self.assertIs(json.loads(proc.stdout)["ok"], True)
 
     def test_shim_stub_exit_code(self):
-        proc = subprocess.run([SHIM, "doctor"], capture_output=True, text=True, check=False)
+        proc = subprocess.run([SHIM, "open"], capture_output=True, text=True, check=False)
         self.assertEqual(proc.returncode, 1)
 
 
