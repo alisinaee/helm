@@ -92,3 +92,64 @@ export async function run(op, args, opts) {
   refreshNow();
   return data;
 }
+
+async function undoBatch(activities, project, o, keys) {
+  for (const key of keys) pending.delete(key);
+  rerender();
+  let failed = 0;
+  for (const activity of activities) {
+    try {
+      await postOp("undo", { activity: activity }, project);
+    } catch (err) {
+      failed += 1;
+    }
+  }
+  showToast(failed
+    ? { text: "Undo failed for " + failed + " change(s)", tone: "danger" }
+    : { text: "Undone: " + (o.done || "changes"), tone: "success" });
+  refreshNow();
+}
+
+// Several ops as one change (WP31, the Work list's bulk bar). items: [{op, args, key, value}]. The ops post in turn and
+// a failure is counted without stopping the rest. One toast reports the count, with one Undo that reverts every
+// undoable op, newest first. opts: done (the noun shown after the count, e.g. "tasks updated"), project.
+export async function runBatch(items, opts) {
+  const o = opts || {};
+  if (!writable()) {
+    showToast({ text: "Offline. Changes are paused until the connection returns.", tone: "danger" });
+    return null;
+  }
+  const project = o.project || projectOf();
+  const keys = [];
+  for (const item of items) {
+    if (!item.key) continue;
+    keys.push(item.key);
+    pending.set(item.key, { value: item.value, doneAt: null, expires: Date.now() + PENDING_MS });
+  }
+  rerender();
+  const activities = [];
+  let failed = 0;
+  for (const item of items) {
+    try {
+      const reply = await postOp(item.op, item.args, project);
+      const data = reply.data || {};
+      if (data.undo === true && typeof data.activity === "string") activities.push(data.activity);
+    } catch (err) {
+      failed += 1;
+    }
+  }
+  for (const key of keys) {
+    if (pending.has(key)) pending.get(key).doneAt = Date.now();
+  }
+  const count = items.length - failed;
+  const text = count + " " + (o.done || "changes") + (failed ? "; " + failed + " failed" : "");
+  showToast({
+    text: text,
+    tone: failed ? "danger" : "success",
+    undo: activities.length ? function () {
+      return undoBatch(activities.slice().reverse(), project, o, keys);
+    } : null,
+  });
+  refreshNow();
+  return { changed: count, failed: failed };
+}

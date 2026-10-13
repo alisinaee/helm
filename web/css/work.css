@@ -1,1 +1,56 @@
-/* work.css (WP28 stub). The styles for this area arrive with its package; keep this file small and token-only. */
+/* Work section (WP31): board, list, tree, filters, bulk bar. Tokens only. */
+.wk{display:grid;gap:var(--sp-3);min-width:0}
+.wk-top,.wk-filters,.wk-groupbar,.wk-bulk,.wk-chips,.wk-card-top,.wk-acts,.wk-tree-row,.wk-field{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
+.wk-views button,.wk-tab,.wk-chip,.wk-sort,.wk-phase-btn,.wk-menu summary{font:inherit;color:var(--text-2);background:var(--surface-1);border:1px solid var(--line);border-radius:var(--r-control);min-height:var(--h-control);padding:0 var(--sp-2);cursor:pointer}
+.wk-views button[aria-pressed=true],.wk-tab[aria-pressed=true],.wk-chip[aria-pressed=true]{background:var(--sel);color:var(--accent);border-color:var(--accent)}
+.wk :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.wk-hint,.wk-word,.wk-count,.wk-meta,.wk-none,.wk-chips-label{color:var(--text-3)}
+.wk-hint,.wk-meta,.wk-chips-label{margin:0;font-size:var(--fs-11)}
+.wk-tabs{display:none}
+.wk-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-2);align-items:start}
+.wk-col{background:var(--surface-2);border-radius:var(--r-card);padding:var(--sp-2);min-width:0}
+.wk-col.is-over{box-shadow:inset 0 0 0 2px var(--drop)}
+.wk-col-head{display:flex;justify-content:space-between;margin:0 0 var(--sp-2);font-size:var(--fs-13);color:var(--text-1)}
+.wk-cards,.wk-tree-tasks,.wk-subs{list-style:none;margin:0;padding:0;display:grid;gap:var(--sp-2)}
+.wk-card{background:var(--surface-1);border:1px solid var(--track);border-radius:var(--r-card);padding:var(--sp-2) var(--sp-3);display:grid;gap:4px}
+.wk-card.is-dragging{opacity:.5}
+.wk-card[draggable=true]{cursor:grab}
+.wk-card-top{font-size:var(--fs-12)}
+.wk-id{color:var(--text-3);font-family:var(--font-mono)}
+.wk-title{color:var(--text-1);text-decoration:none;font-size:var(--fs-13);overflow-wrap:anywhere}
+.wk-card.is-done .wk-title,.wk-table tr.is-done .wk-c-title a{color:var(--text-3);text-decoration:line-through}
+.wk-meta{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-2)}
+@media (hover:hover) and (pointer:fine){.wk-acts{opacity:0}.wk-card:hover .wk-acts,.wk-card:focus-within .wk-acts{opacity:1}}
+.wk-menu{position:relative}
+.wk-menu-list{position:absolute;z-index:var(--z-over);right:0;top:100%;margin-top:4px;display:grid;gap:4px;min-width:160px;background:var(--surface-1);border:1px solid var(--line);border-radius:var(--r-control);padding:var(--sp-1);box-shadow:var(--shadow-2)}
+.wk-menu-list button{font:inherit;color:var(--text-1);background:none;border:0;text-align:left;min-height:var(--h-control);padding:0 var(--sp-2);cursor:pointer}
+.wk-field{font-size:var(--fs-12);color:var(--text-2)}
+.wk-field select{font:inherit;color:var(--text-1);background:var(--surface-1);border:1px solid var(--line);border-radius:var(--r-control);min-height:var(--h-control)}
+.wk-bulk{background:var(--sel);border-radius:var(--r-card);padding:var(--sp-2)}
+.wk-bulk-count{margin:0;font-size:var(--fs-13);color:var(--text-1)}
+.wk-tablewrap{overflow-x:auto}
+.wk-table{width:100%;border-collapse:collapse;font-size:var(--fs-13)}
+.wk-table th,.wk-table td{height:var(--h-row);padding:0 var(--sp-2);border-bottom:1px solid var(--track);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-2)}
+.wk-table th{color:var(--text-3);font-size:var(--fs-12)}
+.wk-table .wk-c-title{max-width:360px}
+.wk-table .wk-c-title a{color:var(--text-1);text-decoration:none}
+.wk-sort{min-height:var(--h-small);border:0;background:none;padding:0;color:var(--text-3)}
+.wk-group-head th{background:var(--surface-2);color:var(--text-1)}
+.wk-phase{border-bottom:1px solid var(--track);padding:var(--sp-2) 0}
+.wk-phase-h{margin:0 0 var(--sp-2);font-size:var(--fs-13)}
+.wk-phase-btn{display:flex;align-items:center;gap:var(--sp-2);width:100%;text-align:left}
+.wk-tree-task{padding:var(--sp-1) 0 var(--sp-1) var(--sp-4)}
+.wk-tree-row{font-size:var(--fs-13)}
+.wk-sub{display:flex;gap:var(--sp-2);align-items:center;font-size:var(--fs-13);color:var(--text-2);min-height:var(--h-small)}
+@media (max-width:767px){
+.wk-board{display:block}
+.wk-col[data-on=false]{display:none}
+.wk-tabs{display:flex;gap:var(--sp-1)}
+.wk-tab,.wk-chip,.wk-views button,.wk-card .btn,.wk-menu summary{min-height:44px}
+.wk-card .wk-acts{opacity:1}
+.wk-table thead,.wk-c-sel,.wk-c-phase,.wk-c-est,.wk-c-spent,.wk-c-cap,.wk-bulk{display:none}
+.wk-table tr{display:flex;flex-wrap:wrap;gap:4px var(--sp-2);padding:var(--sp-2) 0;min-height:44px;border-bottom:1px solid var(--track)}
+.wk-table td,.wk-table th{height:auto;border:0;padding:0;white-space:normal}
+.wk-table .wk-c-title{order:2;flex:1 1 100%;max-width:none}
+.wk-table .wk-group-head{display:block}
+}

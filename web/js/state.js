@@ -203,6 +203,8 @@ function normalizeTask(t) {
       return { t: String(s.t || ""), d: s.d === true };
     }),
     capK: num(t.capK),
+    // WP31: measured spend (thousands), from the budget row, for the Work list.
+    spentK: num(t.spentK),
     dod: typeof t.dod === "string" && t.dod ? t.dod : null,
   };
 }
@@ -263,7 +265,8 @@ export function normalizeSnapshot(raw, fetchedAt) {
     // The task cap lives in the snapshot's budget (budget.tasks[id].limit), so it is read from there.
     tasks: list(raw.tasks).map(function (t) {
       const row = raw.budget && raw.budget.tasks ? raw.budget.tasks[t.id] : null;
-      return normalizeTask(Object.assign({}, t, { capK: t.capK != null ? t.capK : row ? row.limit : null }));
+      return normalizeTask(Object.assign({}, t, { capK: t.capK != null ? t.capK : row ? row.limit : null,
+        spentK: row ? row.spent : null }));
     }),
     spikes: list(raw.spikes).map(normalizeBoard),
     rh: list(raw.rh).map(normalizeBoard),
