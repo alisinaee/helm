@@ -8,17 +8,65 @@ roadmap.config.json. now is the moment to measure running jobs and the recent wi
 from datetime import timedelta
 
 from roadmap.core.extras import parse_extras
-from roadmap.core.parsers import error_entry, parse_autonomy, parse_jobs, parse_tasks, parse_ts
+from roadmap.core.parsers import (ISSUE_OPEN, error_entry, parse_activity, parse_autonomy, parse_budget,
+                                  parse_comments, parse_issues, parse_jobs, parse_questions, parse_queue, parse_tasks,
+                                  parse_ts)
 
 SNAPSHOT_SCHEMA_VERSION = 1
 PHASE_WEIGHT = {"done": 1.0, "partial": 0.5}
 ACTIVE = ("todo", "partial")                        # task states counted as "left"
 RECENT_WINDOW = timedelta(minutes=30)               # finished jobs shown under their task
 RECENT_MAX = 2
+ACTIVITY_SHOWN = 15                                 # log lines on the Overview
+COMMENTS_SHOWN = 3                                  # newest comments per target
 
 
 def _missing(name):
     return error_entry(name, FileNotFoundError("file not found"))
+
+
+def _read_optional(files, name, parse, errors):
+    """The parsed value of an optional WP20 file, or None when the file is missing (a missing file adds no error)."""
+    text = files.get(name)
+    if text is None:
+        return None
+    value, errs = parse(text, name)
+    errors.extend(errs)
+    return value
+
+
+def _budget_view(doc, tasks, phases):
+    """Limits, spend and percent of limit per total, phase, model and task. Spend is in thousands of tokens.
+    Percent is None when there is no limit. Spend on '-' (no task) counts in the total and models only."""
+    limits = doc["limits"]
+    spent = doc["spent"]
+    task_phase = {t["id"]: t["phase"] for t in tasks if t.get("id") and t.get("phase")}
+
+    def row(amount, limit):
+        pct = round(100.0 * amount / limit, 1) if limit else None
+        return {"spent": round(amount, 1), "limit": limit, "pct": pct}
+
+    task_spent = {tid: sum(models.values()) for tid, models in spent.items()}
+    model_spent = {}
+    phase_spent = {}
+    for tid, models in spent.items():
+        for model, amount in models.items():
+            model_spent[model] = model_spent.get(model, 0.0) + amount
+        if tid != "-":
+            pid = task_phase.get(tid) or tid.split(".")[0]
+            phase_spent[pid] = phase_spent.get(pid, 0.0) + task_spent[tid]
+    phase_ids = [p["id"] for p in phases] + [k for k in list(limits["phases"]) + list(phase_spent)
+                                              if k not in [p["id"] for p in phases]]
+    model_ids = sorted(set(model_spent) | set(limits["models"]))
+    task_ids = sorted(set(task_spent) | set(limits["tasks"]))
+    return {
+        "limits": limits,
+        "total": row(sum(task_spent.values()), limits.get("project")),
+        "phases": {pid: row(phase_spent.get(pid, 0.0), limits["phases"].get(pid)) for pid in phase_ids},
+        "models": {m: row(model_spent.get(m, 0.0), limits["models"].get(m)) for m in model_ids},
+        "tasks": {tid: row(task_spent.get(tid, 0.0), limits["tasks"].get(tid)) for tid in task_ids},
+        "spent": spent,
+    }
 
 
 def build_snapshot(files, config, now):
@@ -160,5 +208,44 @@ def build_snapshot(files, config, now):
         "rh": rh,
         "next": nxt,
         "log": log,
+    })
+
+    # WP20 keys. A project without the new files gets them empty (budget gets {} when budget.json is missing).
+    issues_all = _read_optional(files, "issues.json", parse_issues, errors) or []
+    questions_all = _read_optional(files, "questions.json", parse_questions, errors) or []
+    comments_all = _read_optional(files, "comments.json", parse_comments, errors) or []
+    queue_all = _read_optional(files, "queue.json", parse_queue, errors) or []
+    activity_all = _read_optional(files, "activity.jsonl", parse_activity, errors) or []
+    budget_doc = _read_optional(files, "budget.json", parse_budget, errors)
+
+    issues_open = [i for i in issues_all if i["status"] in ISSUE_OPEN]
+    questions_open = [q for q in questions_all if q["status"] == "open"]
+    blocked = sorted({tid for i in issues_open if i["kind"] == "blocker" for tid in i["tasks"]})
+    by_target = {}
+    for comment in comments_all:
+        by_target.setdefault(comment["on"], []).append(comment)
+    needs_you = ([{"kind": "task", "id": t["id"], "title": t["title"]}
+                  for t in tasks if t["needsUser"] and t["state"] in ACTIVE]
+                 + [{"kind": "question", "id": q["id"], "text": q["text"]} for q in questions_open if q["block"]])
+    running_ids = {j["id"] for j in running_jobs}
+    running_rows = [{"id": j["id"], "title": j["title"], "model": j["model"], "task": j["task"],
+                     "role": j.get("role"), "parent": j.get("parent"), "elapsed_s": j["elapsed_s"],
+                     "tokensK": j["tokensK"]} for j in running_jobs]
+    groups = {}
+    for j in running_jobs:
+        if j.get("parent") in running_ids:
+            groups.setdefault(j["parent"], []).append(j["id"])
+    out.update({
+        "issues": issues_open,
+        "questions": questions_open,
+        "comments": {target: rows[-COMMENTS_SHOWN:] for target, rows in by_target.items()},
+        "budget": {} if budget_doc is None else _budget_view(budget_doc, tasks, phases),
+        "blocked": blocked,
+        "needsYou": needs_you,
+        "agents": {"running": running_rows, "groups": groups,
+                   "roots": [j["id"] for j in running_jobs if j.get("parent") not in running_ids]},
+        "control": {},
+        "queue": queue_all,
+        "activity": activity_all[-ACTIVITY_SHOWN:],
     })
     return out

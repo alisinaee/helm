@@ -136,6 +136,14 @@ Every JSON file roadmap reads or writes has a `schemaVersion` key. A file withou
 | `jobs` | `docs/jobs.json` | 1 | the job registry, written only through roadmap |
 | `autonomy` | `docs/autonomy.json` | 2 | `limit` (your rule) and the mirrored `usage` block |
 | `roadmap_config` | `docs/roadmap.config.json` | 1 | project settings and extras |
+| `issues` | `docs/issues.json` | 1 | issues; at most 200 open, closed ones beyond the newest 100 move to `issues-archive.jsonl` |
+| `questions` | `docs/questions.json` | 1 | agent questions; at most 50 open, answered ones beyond the newest 50 move to `questions-archive.jsonl` |
+| `comments` | `docs/comments.json` | 1 | comments per task or issue; at most 20 per target and 150 KB, older ones move to `comments-archive.jsonl` |
+| `budget` | `docs/budget.json` | 1 | limits and spend per task and model; a job id is counted once (the last 500 are remembered) |
+| `queue` | `docs/queue.json` | 1 | the start queue; at most 50 entries |
+
+`docs/activity.jsonl` is not a schema kind: one JSON object per line, the newest 500 kept. The five new JSON files
+are created by their first write, never by `project init`; `migrate` and `backup` cover them.
 
 The rules, implemented in `store/schema.py` and `store/migrations.py`:
 
@@ -194,10 +202,14 @@ The rules, implemented in `store/schema.py` and `store/migrations.py`:
 `core/` is the part that is easy to test, and it never touches the disk or the network:
 
 - `mdtables.py` reads Markdown tables and sections (used by the extras).
-- `parsers.py` parses `tasks.json`, `jobs.json` and `autonomy.json`. Each returns `(data, errors)` and never raises.
+- `parsers.py` parses `tasks.json`, `jobs.json` and `autonomy.json`, and (WP20) the issues, questions, comments, budget,
+  queue and activity files. Each returns `(data, errors)` and never raises. The WP20 task, phase and job keys (`subs`,
+  `capK`, `approved`, `parent`, `role`) appear in the parsed output only when the file has them.
 - `extras.py` parses the configured Markdown files (`spikes`, `testing`, `roadmap`).
 - `snapshot.py` turns the file texts into one dict: `summary`, `overall`, `phases`, `tasks`, `jobs`, `spikes`, `rh`,
-  `next`, `log`, `errors`, plus `project` and `schemaVersion`. `build_snapshot(files, config, now)` is pure.
+  `next`, `log`, `errors`, plus `project` and `schemaVersion`. `build_snapshot(files, config, now)` is pure. WP20 adds
+  `issues`, `questions`, `comments`, `budget`, `blocked`, `needsYou`, `agents`, `control`, `queue` and `activity`; a
+  project without those files gets them empty.
 - `format.py` formats tokens, percentages, durations and counts, and the web's `format.js` is tested against the
   same `tests/fixtures/format_cases.json`.
 

@@ -2,6 +2,8 @@
 
 The golden file was captured once from split_net/tools/roadmap-web/server.py (see changes/WP3.md).
 Only three keys are additive and left out of the comparison: server_time, project and schemaVersion.
+The WP20 keys (issues, questions, ...) are also additive: a project without their files must give them empty, and
+they are left out of the comparison here (see test_wp20_keys_empty_without_new_files).
 """
 
 import json
@@ -17,6 +19,8 @@ SPLITNET = os.path.join(FIXTURES, "splitnet")
 GOLDEN = os.path.join(FIXTURES, "golden_snapshot.json")
 PINNED_NOW = datetime(2026, 10, 13, 12, 0, 0, tzinfo=timezone.utc)
 ADDITIVE_KEYS = ("server_time", "project", "schemaVersion")
+WP20_KEYS = ("issues", "questions", "comments", "budget", "blocked", "needsYou", "agents", "control", "queue",
+             "activity")
 
 
 def load_fixture():
@@ -39,10 +43,21 @@ class GoldenSnapshotTests(unittest.TestCase):
 
     def test_matches_old_server_output(self):
         new = build_snapshot(self.files, self.config, PINNED_NOW)
-        for key in ADDITIVE_KEYS:
+        for key in ADDITIVE_KEYS + WP20_KEYS:
             new.pop(key, None)
         self.assertEqual(set(new), set(self.golden))
         self.assertEqual(new, self.golden)
+
+    def test_wp20_keys_empty_without_new_files(self):
+        new = build_snapshot(self.files, self.config, PINNED_NOW)
+        for key in ("issues", "questions", "comments", "blocked", "queue", "activity"):
+            self.assertEqual(new[key], [] if key != "comments" else {}, key)
+        # needsYou is derived from tasks.json too, so the fixture's needs-you tasks show; no question entries
+        self.assertTrue(new["needsYou"])
+        self.assertEqual({row["kind"] for row in new["needsYou"]}, {"task"})
+        self.assertEqual(new["budget"], {})
+        self.assertEqual(new["control"], {})
+        self.assertEqual(set(new["agents"]), {"running", "groups", "roots"})
 
     def test_additive_keys_present(self):
         new = build_snapshot(self.files, self.config, PINNED_NOW)

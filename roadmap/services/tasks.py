@@ -8,8 +8,9 @@ live in roadmap.core.planfmt; this module only does the file work and the rules 
 import copy
 import datetime
 import os
+import re
 
-from roadmap.core import planfmt
+from roadmap.core import parsers, planfmt
 from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import jobs
 from roadmap.store import backup, config, lock, schema
@@ -426,6 +427,93 @@ def _num(value):
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return 0.0
     return float(value)
+
+
+# ---------------------------------------------------------------- subtasks (WP20)
+
+SUB_ADDR_RE = re.compile(r"^([A-Za-z0-9]+\.[0-9]+)/([0-9]+)$")
+
+
+def add_subtask(data_dir, task_id, title):
+    """Append a subtask to a task (at most 12, title at most 80 characters).
+    Returns {"addr", "t", "d"}, where addr is like P2.4/3.
+    The task's status and the updated date are not changed."""
+    _require_dir(data_dir)
+    text = " ".join(str(title or "").split())
+    if not text:
+        raise RoadmapError("usage", "a subtask needs a title (allowed: text, up to 80 characters)", EXIT_USAGE)
+    if len(text) > parsers.SUB_TITLE_MAX:
+        raise RoadmapError("usage", "subtask title is " + str(len(text)) + " characters; the limit is "
+                           + str(parsers.SUB_TITLE_MAX), EXIT_USAGE)
+    with lock.locked(data_dir):
+        doc = load(data_dir)
+        task = _task_in(doc, task_id)
+        subs = task.get("subs") if isinstance(task.get("subs"), list) else []
+        if len(subs) >= parsers.SUBS_MAX:
+            raise RoadmapError("usage", task_id + " already has " + str(parsers.SUBS_MAX) + " subtasks (the most); "
+                               "finish or remove one first", EXIT_USAGE)
+        sub = {"t": text, "d": False}
+        subs.append(sub)
+        task["subs"] = subs
+        schema.write_data("tasks", tasks_path(data_dir), doc)
+    return {"addr": task_id + "/" + str(len(subs)), "t": text, "d": False}
+
+
+def toggle_subtask(data_dir, addr):
+    """Tick or untick one subtask, addressed P2.4/2 (1-based). Ticking the first subtask moves a todo task to partial.
+    A task is never finished by its subtasks. Returns the result; undo_subtask(result) reverses it."""
+    _require_dir(data_dir)
+    task_id, index = _parse_addr(addr)
+    with lock.locked(data_dir):
+        doc = load(data_dir)
+        task = _task_in(doc, task_id)
+        sub = _sub_at(task, task_id, index, addr)
+        before = {"addr": addr, "done": sub.get("d") is True, "status": task.get("status")}
+        sub["d"] = not before["done"]
+        if sub["d"] and task.get("status") == "todo":
+            task["status"] = "partial"
+        schema.write_data("tasks", tasks_path(data_dir), doc)
+    return {"addr": addr, "done": sub["d"], "status_before": before["status"], "status_after": task.get("status"),
+            "before": before}
+
+
+def undo_subtask(data_dir, result):
+    """Put back the tick and the task status that toggle_subtask changed. result is what toggle_subtask returned."""
+    _require_dir(data_dir)
+    before = result["before"]
+    task_id, index = _parse_addr(before["addr"])
+    with lock.locked(data_dir):
+        doc = load(data_dir)
+        task = _task_in(doc, task_id)
+        sub = _sub_at(task, task_id, index, before["addr"])
+        sub["d"] = before["done"]
+        if before["status"] is not None:
+            task["status"] = before["status"]
+        schema.write_data("tasks", tasks_path(data_dir), doc)
+    return {"addr": before["addr"], "done": before["done"], "status": task.get("status")}
+
+
+def _parse_addr(addr):
+    match = SUB_ADDR_RE.match(str(addr or "").strip())
+    if not match:
+        raise RoadmapError("usage", "subtask address '" + str(addr) + "' must look like P2.4/2 "
+                           "(task id, slash, subtask number from 1)", EXIT_USAGE)
+    return match.group(1), int(match.group(2))
+
+
+def _task_in(doc, task_id):
+    for task in doc["tasks"]:
+        if isinstance(task, dict) and task.get("id") == task_id:
+            return task
+    raise RoadmapError("not_found", "no task " + str(task_id), EXIT_NOT_FOUND)
+
+
+def _sub_at(task, task_id, index, addr):
+    subs = task.get("subs") if isinstance(task.get("subs"), list) else []
+    if index < 1 or index > len(subs):
+        raise RoadmapError("not_found", "no subtask " + str(addr) + " (" + task_id + " has " + str(len(subs))
+                           + " subtasks)", EXIT_NOT_FOUND)
+    return subs[index - 1]
 
 
 # ---------------------------------------------------------------- helpers

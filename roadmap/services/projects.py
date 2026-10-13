@@ -24,6 +24,16 @@ DATA_FILES = (
     ("roadmap.config.json", "roadmap_config"),
 )
 
+# WP20 files. init never writes them (their services create them on the first write), but migrate and backup cover them.
+LAZY_DATA_FILES = (
+    ("issues.json", "issues"),
+    ("questions.json", "questions"),
+    ("comments.json", "comments"),
+    ("budget.json", "budget"),
+    ("queue.json", "queue"),
+)
+LOG_FILES = ("activity.jsonl", "issues-archive.jsonl", "questions-archive.jsonl", "comments-archive.jsonl")
+
 
 def _existing_folder(path):
     folder = os.path.abspath(os.path.expanduser(str(path)))
@@ -200,7 +210,7 @@ def migrate_project(project_id):
     unchanged = []
     with lock.locked(data_dir):
         plan = []
-        for filename, kind in DATA_FILES:
+        for filename, kind in DATA_FILES + LAZY_DATA_FILES:
             path = os.path.join(data_dir, filename)
             if not os.path.exists(path):
                 continue
@@ -219,7 +229,8 @@ def migrate_project(project_id):
                 unchanged.append(filename)
         backup_folder = None
         if plan:
-            existing = [os.path.join(data_dir, f) for f, _ in DATA_FILES if os.path.exists(os.path.join(data_dir, f))]
+            names = [f for f, _ in DATA_FILES + LAZY_DATA_FILES] + list(LOG_FILES)
+            existing = [os.path.join(data_dir, f) for f in names if os.path.exists(os.path.join(data_dir, f))]
             backup_folder = backup.backup_files(project_id, existing)
             for filename, kind, path, found, target in plan:
                 data, _ = schema.read_data(kind, path)
@@ -248,9 +259,10 @@ def backup_projects(project_id=None):
         if not os.path.isdir(data_dir):
             rows.append({"project": entry["id"], "status": "skipped", "reason": "data folder does not exist"})
             continue
-        files = [os.path.join(data_dir, f) for f, _ in DATA_FILES]
+        names = [f for f, _ in DATA_FILES + LAZY_DATA_FILES] + list(LOG_FILES)
+        files = [os.path.join(data_dir, f) for f in names]
         with lock.locked(data_dir):
             folder = backup.backup_files(entry["id"], files)
         rows.append({"project": entry["id"], "status": "ok", "folder": folder,
-                     "files": [f for f, _ in DATA_FILES if os.path.isfile(os.path.join(data_dir, f))]})
+                     "files": [f for f in names if os.path.isfile(os.path.join(data_dir, f))]})
     return rows

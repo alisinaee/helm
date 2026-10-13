@@ -15,6 +15,11 @@ CURRENT = {
     "roadmap_config": 1,
     "usage": 1,
     "hooks": 1,
+    "issues": 1,
+    "questions": 1,
+    "comments": 1,
+    "budget": 1,
+    "queue": 1,
 }
 
 

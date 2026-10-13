@@ -33,12 +33,16 @@ def read_json(path, default=_MISSING):
 
 def write_json(path, obj):
     """Replace path with obj as JSON, atomically. New files get mode 0600; an existing file keeps its mode."""
+    write_text(path, json.dumps(obj, indent=2, ensure_ascii=False) + "\n")
+
+
+def write_text(path, payload):
+    """Replace path with payload (text), atomically, with the same mode and symlink rules as write_json."""
     path = os.path.abspath(path)
     if os.path.islink(path):
         raise RoadmapError("invalid_data", "refusing to replace a symlink, left unchanged: " + path,
                            EXIT_INVALID_DATA)
     directory = os.path.dirname(path)
-    payload = json.dumps(obj, indent=2, ensure_ascii=False) + "\n"
     os.makedirs(directory, exist_ok=True)
     mode = _mode_of(path)
     fd, tmp = tempfile.mkstemp(dir=directory, prefix="." + os.path.basename(path) + ".", suffix=".tmp")

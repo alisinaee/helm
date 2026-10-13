@@ -101,7 +101,12 @@ they were added.
 ```
 
 The snapshot is the dashboard's data, in the shape the original server produced (`build()`), plus `project` and
-`schemaVersion`. The `summary` also carries the mirrored `autonomy` block. Problems with a single file never fail
+`schemaVersion`. Since WP20 it also has these keys, empty when the project lacks the files behind them:
+`issues` (open and doing issues), `questions` (open questions), `comments` (the newest 3 per target, keyed by target),
+`budget` (limits, spend and percent of limit per total, phase, model and task; `{}` without `budget.json`),
+`blocked` (task ids with an open blocker issue), `needsYou` (needs-you tasks and open blocking questions), `agents`
+(`running` jobs with `parent` and `role`, `groups` of child job ids by parent, and `roots`), `control` (`{}` for now),
+`queue` (the start queue) and `activity` (the newest 15 log lines). The `summary` also carries the mirrored `autonomy` block. Problems with a single file never fail
 the request: they are listed in `errors`, as `{"file": "<name>", "error": "<ExceptionType>: <reason>"}`, for example
 `{"file": "tasks.json", "error": "FileNotFoundError: file not found"}`. A missing `tasks.json` is listed there too,
 and the project's `stale` flag is set.
