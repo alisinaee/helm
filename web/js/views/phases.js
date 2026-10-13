@@ -1,5 +1,6 @@
 // Phases: the main column of the project view. One row per phase (name, state word, meter, done/total, tokens
-// left, percent) that expands to its task rows. Outside the chosen minimal view a running phase opens by itself.
+// left, percent) that expands to its task rows. Minimal view keeps every phase folded unless the person opens it;
+// expanded view opens them all. Running jobs never open a phase by themselves.
 // Deferred phases are dimmed and carry a chip. The phase rows are buttons, so Enter and Space toggle them.
 
 import { chipHtml, esc, meterHtml, sectionHtml } from "../dom.js";
@@ -8,26 +9,12 @@ import { deferredRowHtml, jobChipHtml, STATE_GLYPH, STATE_WORD, taskRowHtml } fr
 
 const TONE = { done: "success", partial: "accent", todo: "accent", hold: "warning" };
 
-// The phase the person is working in: the first partial phase, else the first unfinished phase with tasks.
-export function activePhaseId(phases) {
-  const partial = phases.find(function (p) {
-    return p.state === "partial" && !p.onlyDeferred;
-  });
-  if (partial) return partial.id;
-  const open = phases.find(function (p) {
-    return p.state !== "done" && !p.onlyDeferred;
-  });
-  return open ? open.id : null;
-}
-
-// The effective open state of a phase: an explicit choice wins, expanded mode opens all, and the chosen minimal
-// view keeps phase rows only. Otherwise a running phase opens by itself, and so does the active phase.
-export function phaseIsOpen(vm, phase, activeId) {
+// The effective open state of a phase: an explicit choice wins. Minimal view (the default too) never opens a phase
+// by itself, so a long task list stays folded. Expanded view opens every phase.
+export function phaseIsOpen(vm, phase) {
   const saved = vm.prefsOpen["phase:" + phase.id];
   if (typeof saved === "boolean") return saved;
-  if (vm.mode === "expanded") return true;
-  if (vm.modeChosen) return false;
-  return phase.runningCount > 0 || phase.id === activeId;
+  return vm.mode === "expanded";
 }
 
 function deferOpen(vm, phase) {
@@ -120,8 +107,8 @@ function phaseBodyHtml(vm, phase, tasks, jobById) {
   return html;
 }
 
-function phaseHtml(vm, phase, activeId, tasks, jobById) {
-  const open = phaseIsOpen(vm, phase, activeId);
+function phaseHtml(vm, phase, tasks, jobById) {
+  const open = phaseIsOpen(vm, phase);
   const bodyId = "phase-" + phase.id + "-body";
   const body = open ? phaseBodyHtml(vm, phase, tasks, jobById) : "";
   return '<div class="phase">' + phaseRowHtml(vm, phase, open) + '<div class="phase-body" id="' + bodyId +
@@ -130,7 +117,6 @@ function phaseHtml(vm, phase, activeId, tasks, jobById) {
 
 export function phasesSection(vm) {
   const snap = vm.project.snapshot;
-  const activeId = activePhaseId(snap.phases);
   const jobById = {};
   snap.jobs.forEach(function (job) {
     jobById[job.id] = job;
@@ -139,7 +125,7 @@ export function phasesSection(vm) {
     const tasks = snap.tasks.filter(function (t) {
       return t.phase === phase.id;
     });
-    return phaseHtml(vm, phase, activeId, tasks, jobById);
+    return phaseHtml(vm, phase, tasks, jobById);
   }).join("");
   const head = '<div class="phase-grid ph-head" aria-hidden="true"><span>Phase</span><span>Progress</span>' +
     "<span>Items</span><span>Tokens left</span><span>Done</span></div>";

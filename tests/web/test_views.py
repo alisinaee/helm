@@ -63,15 +63,24 @@ class ProjectViewTests(unittest.TestCase):
         self.assertIn("Repo layout, tooling, lint, CI skeleton", html)
         self.assertIn("systemd service, polkit action", html)
 
-    def test_running_phase_opens_by_default_and_timers_are_marked(self):
+    def test_timers_are_marked_and_running_phase_stays_folded_by_default(self):
         html = self.views["default"]
         self.assertIn('data-started-ms="', html)
-        self.assertIn("Repo layout, tooling, lint, CI skeleton", html)
+        self.assertNotIn("Repo layout, tooling, lint, CI skeleton", html)
 
     def test_minimal_view_collapses_the_other_sections(self):
         html = self.views["minimal"]
         self.assertIn("Phases", html)
         self.assertGreaterEqual(html.count('aria-expanded="false"'), 5)
+
+    def test_minimal_view_opens_no_phase_by_itself(self):
+        for name in ("default", "minimal"):
+            html = self.views[name]
+            self.assertIsNone(re.search(r'class="phase-row[^"]*is-open', html), name)
+            self.assertNotIn("Repo layout, tooling, lint, CI skeleton", html, name)
+
+    def test_expanded_view_shows_running_phase_task_rows(self):
+        self.assertIn("Repo layout, tooling, lint, CI skeleton", self.views["expanded"])
 
     def test_expanded_view_opens_every_section_and_phase(self):
         self.assertNotIn('aria-expanded="false"', self.views["expanded"])
@@ -91,6 +100,32 @@ class ProjectViewTests(unittest.TestCase):
     def test_home_renders_the_project_card(self):
         self.assertIn("split-net", self.views["home"])
         self.assertIn("#/p/splitnet", self.views["home"])
+
+
+class FinishedRowTests(unittest.TestCase):
+    """A finished-job title drops a leading model word that the model chip already shows.
+
+    The full title stays in the title attribute.
+    """
+
+    def test_short_title_strips_only_the_matching_model_prefix(self):
+        if shutil.which("node") is None:
+            raise unittest.SkipTest("node is not installed")
+        script = (
+            "const m = await import(process.argv[1]);"
+            "const cases = [{model:'haiku', title:'haiku: WP2 store'}, {model:'opus', title:'Opus: plan'},"
+            "{model:'haiku', title:'opus: mismatch'}, {model:null, title:'haiku: none'}, {model:'agy', title:'agy:x'}];"
+            "console.log(JSON.stringify(cases.map(c => m.shortTitle(c))));"
+        )
+        url = "file://" + os.path.join(WEB, "js", "views", "running.js")
+        proc = subprocess.run([shutil.which("node"), "--input-type=module", "-e", script, url],
+                              capture_output=True, text=True, check=False, timeout=60)
+        self.assertEqual(proc.returncode, 0, proc.stderr[-800:])
+        self.assertEqual(json.loads(proc.stdout), ["WP2 store", "plan", "opus: mismatch", "haiku: none", "agy:x"])
+
+    def test_finished_titles_keep_the_full_text_in_the_title_attribute(self):
+        html = render()["expanded"]
+        self.assertIn('<p class="fin-title" title="', html)
 
 
 class StaticModuleTests(unittest.TestCase):

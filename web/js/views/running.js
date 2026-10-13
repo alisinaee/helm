@@ -42,12 +42,25 @@ function runItemHtml(job) {
     '<p class="run-title" title="' + esc(job.title) + '">' + esc(job.title) + "</p></div>";
 }
 
+// The model chip already says "haiku" or "opus", so a title that starts with that word and a colon drops it.
+// The title attribute keeps the full text.
+const KNOWN_MODELS = ["haiku", "sonnet", "opus", "cursor", "agy"];
+
+export function shortTitle(job) {
+  const title = job.title || "";
+  if (!job.model || KNOWN_MODELS.indexOf(job.model) < 0) return title;
+  const prefix = job.model + ": ";
+  return title.toLowerCase().indexOf(prefix) === 0 ? title.slice(prefix.length) : title;
+}
+
 function finishedRowHtml(job) {
   const ok = job.status === "done";
   const tokens = typeof job.tokensK === "number" ? "~" + fmtTokens(job.tokensK) : MISSING;
-  return '<li class="fin-row"><span class="fin-state">' + (ok ? "✓ done" : "✗ failed") + "</span>" +
-    '<span class="fin-title" title="' + esc(job.title) + '">' + esc(job.title) + "</span>" +
-    modelChip(job.model) + '<span class="fin-dur num">' + esc(fmtDuration(job.elapsedS)) + "</span>" +
+  return '<li class="fin-row"><div class="fin-main">' +
+    '<p class="fin-meta"><span class="fin-state">' + (ok ? "✓ done" : "✗ failed") + "</span>" +
+    modelChip(job.model) + "</p>" +
+    '<p class="fin-title" title="' + esc(job.title) + '">' + esc(shortTitle(job)) + "</p></div>" +
+    '<span class="fin-dur num">' + esc(fmtDuration(job.elapsedS)) + "</span>" +
     '<span class="fin-tok num">' + esc(tokens) + "</span></li>";
 }
 
