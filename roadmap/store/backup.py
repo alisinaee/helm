@@ -3,7 +3,9 @@
 import datetime
 import os
 import shutil
+import stat
 
+from roadmap.errors import EXIT_INVALID_DATA, RoadmapError
 from roadmap.store import paths
 
 KEEP = 14
@@ -14,6 +16,16 @@ def backup_files(project_id, files, now=None):
     """Copy the files that exist into backups/<project>/<timestamp>/, then prune. Returns the new folder."""
     if now is None:
         now = datetime.datetime.now(datetime.timezone.utc)
+    sources = []
+    for src in files:
+        try:
+            mode = os.lstat(src).st_mode
+        except FileNotFoundError:
+            continue
+        if stat.S_ISLNK(mode):
+            raise RoadmapError("invalid_data", "refusing to back up a symlink: " + src, EXIT_INVALID_DATA)
+        if stat.S_ISREG(mode):
+            sources.append(src)
     root = paths.backups_dir(project_id)
     paths.ensure_dir(root)
     while True:
@@ -24,11 +36,12 @@ def backup_files(project_id, files, now=None):
         except FileExistsError:
             now = now + datetime.timedelta(microseconds=1)
     os.chmod(dest, paths.DIR_MODE)
-    for src in files:
-        if os.path.isfile(src):
-            target = os.path.join(dest, os.path.basename(src))
-            shutil.copyfile(src, target)
-            os.chmod(target, paths.FILE_MODE)
+    for src in sources:
+        target = os.path.join(dest, os.path.basename(src))
+        fd = os.open(src, os.O_RDONLY | os.O_NOFOLLOW)  # never follows a link that appeared after the check
+        with os.fdopen(fd, "rb") as inp, open(target, "wb") as out:
+            shutil.copyfileobj(inp, out)
+        os.chmod(target, paths.FILE_MODE)
     prune(project_id, KEEP)
     return dest
 

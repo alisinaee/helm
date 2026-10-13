@@ -34,6 +34,9 @@ def read_json(path, default=_MISSING):
 def write_json(path, obj):
     """Replace path with obj as JSON, atomically. New files get mode 0600; an existing file keeps its mode."""
     path = os.path.abspath(path)
+    if os.path.islink(path):
+        raise RoadmapError("invalid_data", "refusing to replace a symlink, left unchanged: " + path,
+                           EXIT_INVALID_DATA)
     directory = os.path.dirname(path)
     payload = json.dumps(obj, indent=2, ensure_ascii=False) + "\n"
     os.makedirs(directory, exist_ok=True)
@@ -53,10 +56,12 @@ def write_json(path, obj):
 
 
 def _mode_of(path):
+    """The mode of an existing regular file, else 0600. lstat, so a symlink's target mode is never used."""
     try:
-        return stat.S_IMODE(os.stat(path).st_mode)
+        st = os.lstat(path)
     except FileNotFoundError:
         return NEW_FILE_MODE
+    return stat.S_IMODE(st.st_mode) if stat.S_ISREG(st.st_mode) else NEW_FILE_MODE
 
 
 def _fsync_dir(directory):

@@ -26,7 +26,10 @@ _OUTPUT_RE = re.compile(r'output_file[:\s"]+(\S+?\.output)')
 _RESULT_RE = re.compile(r"result file[^:]*:\s*(\S+\.result\.md)")
 _COMPANION_RE = re.compile(r'companion\.mjs"?\s+(\w+)')
 _CONTROL_RE = re.compile(r"\b(wait|observe|cancel)\b")
-_CURSOR_RE = re.compile(r"cursor-review2\.sh\s+(\S+)")
+_CURSOR_RE = re.compile(r"cursor-review2\.sh\s+(\"[^\"]+\"|'[^']+'|[^\s&;|]+)")
+_QUOTED_PROMPT_RE = re.compile(r"""\s+(?:"((?:[^"\\]|\\.)*)"|'([^']*)')""")
+_OPERATOR_RE = re.compile(r"\s*(?:&&|\|\||[;|&])")
+HOOK_LOCK_TIMEOUT_S = 1.0  # each lock wait in one hook event: the hook must exit well inside its 10 s budget
 
 
 def _response_text(tool_response):
@@ -36,6 +39,11 @@ def _response_text(tool_response):
 
 def _squash(text):
     return re.sub(r"\s+", " ", text)
+
+
+def _before_operator(text):
+    """The text up to the first shell operator (&&, ||, ;, | or &). A title never shows what runs after the command."""
+    return _OPERATOR_RE.split(text, maxsplit=1)[0]
 
 
 class AgentDetector:
@@ -102,7 +110,8 @@ class AgyDetector(_FileDetector):
         if not found:
             return None
         who = _COMPANION_RE.search(cmd)
-        title = "agy %s: %s" % (who.group(1) if who else "job", _squash(cmd.split("--prompt")[-1])[:80])
+        prompt = _squash(_before_operator(cmd.split("--prompt")[-1])).strip(" \"'")[:80]
+        title = "agy %s: %s" % (who.group(1) if who else "job", prompt)
         return {"title": title, "model": "agy", "text": cmd, "kind": "file", "watch": found.group(1),
                 "agent": ""}
 
@@ -116,12 +125,34 @@ class CursorDetector(_FileDetector):
         if tool != "Bash":
             return None
         cmd = str(tool_input.get("command") or "")
-        found = _CURSOR_RE.search(cmd)
-        if "cursor-review2.sh" not in cmd or not found:
+        invocation = _cursor_invocation(cmd)
+        if invocation is None:
             return None
-        title = "Cursor Auto: " + _squash(cmd.split(found.group(1), 1)[-1])[:80]
-        return {"title": title, "model": "cursor", "text": cmd, "kind": "file",
-                "watch": found.group(1).strip("\"'"), "agent": ""}
+        output, prompt = invocation
+        label = _squash(prompt)[:70] if prompt else os.path.basename(output)
+        return {"title": "Cursor Auto: " + label, "model": "cursor", "text": cmd, "kind": "file",
+                "watch": output, "agent": ""}
+
+
+def _cursor_invocation(cmd):
+    """(output file, quoted prompt or None) of the last cursor-review2.sh invocation in a command, or None.
+
+    Chained commands around it (&&, ;, |, &) never count as the output file: the output token cannot start with an
+    operator, and the last invocation is the one that runs the review.
+    """
+    found = None
+    for match in _CURSOR_RE.finditer(cmd):
+        found = match
+    if found is None:
+        return None
+    token = found.group(1)
+    if token[:1] in "&;|" or not token.strip("\"'"):
+        return None
+    prompt = None
+    quoted = _QUOTED_PROMPT_RE.match(cmd, found.end())
+    if quoted is not None:
+        prompt = quoted.group(1) if quoted.group(1) is not None else quoted.group(2)
+    return token.strip("\"'"), prompt
 
 
 DETECTORS = {d.name: d for d in (AgentDetector(), AgyDetector(), CursorDetector())}
@@ -204,25 +235,62 @@ def _handle(raw, environ, cwd, now):
     for name in names:
         if name not in DETECTORS:
             _log("skip: unknown detector '" + name + "' in " + project["id"])
+    try:
+        _run_event(project, data_dir, event, payload, active, regex, known, now)
+    except RoadmapError as exc:
+        if exc.code != "locked":
+            raise
+        # A busy lock: return silently, so the hook exits 0 within its time budget. The next event tries again.
+
+
+def _run_event(project, data_dir, event, payload, active, regex, known, now):
+    """Read the state, do the job work, then save the state. The state lock is never held while a project lock is
+    awaited: the state is read under its lock, the jobs are started or closed under the project lock only, and the
+    result is merged into the state again under its lock. Each lock wait is HOOK_LOCK_TIMEOUT_S at most."""
     path = paths.hooks_file(project["id"])
     paths.ensure_dir(paths.state_dir())
-    with lock.locked(paths.state_dir()):
-        state = _read_state(path)
-        changed = False
-        if event == "PostToolUse":
-            tool_input = payload.get("tool_input")
-            tool_input = tool_input if isinstance(tool_input, dict) else {}
-            for detector in active:
-                entry = detector.on_tool(tool, tool_input, payload.get("tool_response"))
-                if entry is not None:
-                    changed = _start(data_dir, state, detector, entry, regex, known, now) or changed
-        elif event == "SubagentStop":
-            agent_id = str(payload.get("agent_id") or "")
-            if agent_id:
-                changed = _finish_matching(data_dir, state, agent_id) or changed
-        changed = _reap(data_dir, state, now) or changed
-        if changed:
-            _write_state(path, project["id"], state)
+    with lock.locked(paths.state_dir(), timeout=HOOK_LOCK_TIMEOUT_S):
+        snapshot = _read_state(path)["active"]
+    started = []
+    closed = []
+    with lock.timeout_scope(HOOK_LOCK_TIMEOUT_S):
+        try:
+            if event == "PostToolUse":
+                tool = str(payload.get("tool_name") or "")
+                tool_input = payload.get("tool_input")
+                tool_input = tool_input if isinstance(tool_input, dict) else {}
+                for detector in active:
+                    entry = detector.on_tool(tool, tool_input, payload.get("tool_response"))
+                    if entry is not None:
+                        new = _start(data_dir, detector, entry, regex, known, now)
+                        if new is not None:
+                            started.append(new)
+            elif event == "SubagentStop":
+                agent_id = str(payload.get("agent_id") or "")
+                if agent_id:
+                    closed += _close_some(data_dir, snapshot,
+                                          lambda e: "done" if e.get("agent") == agent_id else None)
+            left = [e for e in snapshot if e.get("job") not in set(closed)]
+            closed += _close_some(data_dir, left, _verdict_of(now))
+        except RoadmapError as exc:
+            if exc.code != "locked":
+                raise
+            # keep what was done so far; the rest is retried by a later event
+    if not started and not closed:
+        return
+    with lock.locked(paths.state_dir(), timeout=HOOK_LOCK_TIMEOUT_S):
+        latest = _read_state(path)["active"]
+        gone = set(closed)
+        merged = [e for e in latest if e.get("job") not in gone] + started
+        _write_state(path, project["id"], {"active": merged})
+
+
+def _verdict_of(now):
+    """The function that asks each active entry's detector whether its job is finished (or failed)."""
+    def verdict(entry):
+        detector = DETECTORS.get(entry.get("detector"))
+        return detector.reap(entry, now) if detector is not None else None
+    return verdict
 
 
 def _project_for(payload, environ, cwd):
@@ -235,58 +303,43 @@ def _project_for(payload, environ, cwd):
         return None
 
 
-def _start(data_dir, state, detector, entry, regex, known, now):
-    """Register a job for a detected start when the text names a known task. Returns True when state changed."""
+def _start(data_dir, detector, entry, regex, known, now):
+    """Register a job for a detected start when the text names a known task. Returns the new state entry, or None.
+    A busy project lock raises locked, so nothing is registered and the caller returns silently."""
     task = find_task(entry["text"], regex, known)
     title = entry["title"][:120]
     if task is None:
         _log("skip (no task id): " + title[:60])
-        return False
+        return None
     try:
         job = jobs.start_job(data_dir, title, entry["model"], task)
     except RoadmapError as exc:
+        if exc.code == "locked":
+            raise
         _log("skip: " + exc.message)
-        return False
-    state["active"].append({"job": job["id"], "detector": detector.name, "kind": entry["kind"],
-                            "agent": entry["agent"], "watch": entry["watch"], "started": now})
+        return None
     _log("start " + job["id"] + " " + title[:60])
-    return True
+    return {"job": job["id"], "detector": detector.name, "kind": entry["kind"], "agent": entry["agent"],
+            "watch": entry["watch"], "started": now}
 
 
-def _finish_matching(data_dir, state, agent_id):
-    """Close the active jobs that belong to agent_id. Returns True when state changed."""
-    keep = []
-    changed = False
-    for entry in state["active"]:
-        if entry.get("agent") != agent_id:
-            keep.append(entry)
+def _close_some(data_dir, entries, verdict):
+    """Close each entry whose verdict gives a status ("done" or "failed"). Returns the job ids closed. Stops at the
+    first busy project lock, so one event never waits on many locks in a row."""
+    closed = []
+    for entry in entries:
+        status = verdict(entry)
+        if status is None:
             continue
-        changed = True
-        if not _close(data_dir, entry, "done"):
-            keep.append(entry)
-    state["active"] = keep
-    return changed
-
-
-def _reap(data_dir, state, now):
-    """Close active jobs whose detector reports them finished. Returns True when state changed."""
-    keep = []
-    changed = False
-    for entry in state["active"]:
-        detector = DETECTORS.get(entry.get("detector"))
-        verdict = detector.reap(entry, now) if detector is not None else None
-        if verdict is None:
-            keep.append(entry)
-            continue
-        changed = True
-        if not _close(data_dir, entry, verdict):
-            keep.append(entry)
-    state["active"] = keep
-    return changed
+        if not _close(data_dir, entry, status):
+            break
+        closed.append(entry["job"])
+    return closed
 
 
 def _close(data_dir, entry, status):
-    """Finish the job of a state entry. Returns True when the entry may be dropped from state."""
+    """Finish the job of a state entry. Returns False when the project lock is busy (the entry stays in the state),
+    otherwise True: the entry may be dropped from the state."""
     try:
         jobs.finish_job(data_dir, entry["job"], status)
     except RoadmapError as exc:

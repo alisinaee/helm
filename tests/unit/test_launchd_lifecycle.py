@@ -254,5 +254,17 @@ class ServiceCommandTests(LaunchdCase):
         self.assertIn("nothing to remove", out)
 
 
+class UninstallFailureTests(LaunchdCase):
+    def test_a_bootout_failure_keeps_the_plist(self):
+        os.makedirs(os.path.dirname(launchd.plist_path()), exist_ok=True)
+        with open(launchd.plist_path(), "w", encoding="utf-8") as fh:
+            fh.write("<plist/>\n")
+        fake = FakeRunner(lambda argv: (5, "", "Operation not permitted"))
+        with self.assertRaises(RoadmapError) as ctx:
+            launchd.uninstall(runner=fake)
+        self.assertEqual(ctx.exception.code, "external")
+        self.assertTrue(os.path.exists(launchd.plist_path()))
+
+
 if __name__ == "__main__":
     unittest.main()

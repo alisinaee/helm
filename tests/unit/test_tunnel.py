@@ -4,18 +4,23 @@ ssh, token file mode and rotation, and the URL parsing."""
 import os
 import signal
 import stat
+from unittest import mock
 
 from roadmap.errors import EXIT_CONFLICT, EXIT_EXTERNAL, EXIT_NOT_FOUND, RoadmapError
 from roadmap.services import tunnel
 from roadmap.store import config as config_store
+from roadmap.store import paths
 from tests.unit.test_tunnel_fakes import BANNER, FAKE_PID, SSH_COMMAND, TunnelCase
 
 
 class StartTests(TunnelCase):
     def test_start_runs_the_exact_ssh_command_and_saves_the_host(self):
         result = tunnel.start(phone_port=8766)
-        self.assertEqual(self.ssh.spawned[0][0], ["ssh", "-o", "ServerAliveInterval=30", "-R",
-                                                   "80:127.0.0.1:8766", "nokey@localhost.run"])
+        known_hosts = os.path.join(paths.state_dir(), "known_hosts")
+        self.assertEqual(self.ssh.spawned[0][0], ["ssh", "-o", "ServerAliveInterval=30",
+                                                   "-o", "StrictHostKeyChecking=yes",
+                                                   "-o", "UserKnownHostsFile=" + known_hosts,
+                                                   "-R", "80:127.0.0.1:8766", "nokey@localhost.run"])
         self.assertEqual(result, {"running": True, "pid": FAKE_PID, "url": "https://abc123.lhr.life",
                                   "host": "abc123.lhr.life"})
         self.assertEqual(config_store.load()["phoneHost"], "abc123.lhr.life")
@@ -160,3 +165,38 @@ class StatusAndLinkTests(TunnelCase):
     def test_configured_host_rejects_a_value_that_is_not_a_bare_host(self):
         tunnel._save_host("https://evil.example/path")
         self.assertIsNone(tunnel.configured_host())
+
+
+class HostAndPidSafetyTests(TunnelCase):
+    def test_only_a_tunnel_domain_host_is_taken_from_the_banner(self):
+        banner = ("Visit https://evil.example/?k=x first\n"
+                  "also https://lookalike.lhr.life.evil.example/\n"
+                  "Connect to https://abc123.lhr.life\n")
+        self.assertEqual(tunnel.find_tunnel_host(banner), "abc123.lhr.life")
+        self.assertIsNone(tunnel.find_tunnel_host("Visit https://evil.example/ only\n"))
+        self.ssh.banner = banner
+        self.assertEqual(tunnel.start()["host"], "abc123.lhr.life")
+
+    def test_start_never_signals_a_pid_that_is_not_our_ssh(self):
+        self.ssh.banner = ""
+        spawn = self.ssh.spawn
+
+        def spawn_then_reuse(argv, log_path):
+            pid = spawn(argv, log_path)
+            self.ssh.table[pid] = "vim notes.txt"  # ssh exited and the pid now belongs to another program
+            return pid
+
+        with mock.patch.object(tunnel, "SPAWN", spawn_then_reuse):
+            with self.assertRaises(RoadmapError) as ctx:
+                tunnel.start(timeout_s=1)
+        self.assertEqual(ctx.exception.code, "external")
+        self.assertEqual(self.ssh.killed, [])
+
+    def test_stop_with_a_ps_failure_keeps_the_pid_file_and_signals_nothing(self):
+        tunnel.start()
+        with mock.patch.object(tunnel, "PS", side_effect=tunnel.ProcessListError("ps broke")):
+            with self.assertRaises(RoadmapError) as ctx:
+                tunnel.stop()
+        self.assertEqual(ctx.exception.code, "external")
+        self.assertEqual(self.ssh.killed, [])
+        self.assertTrue(os.path.exists(self.pid_path()))

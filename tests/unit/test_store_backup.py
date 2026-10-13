@@ -4,6 +4,7 @@ import datetime
 import os
 import unittest
 
+from roadmap.errors import RoadmapError
 from roadmap.store import backup, paths
 from tests.unit.test_store_support import HomeCase, mode_of
 
@@ -57,6 +58,19 @@ class BackupTests(HomeCase):
         self.assertEqual(len([n for n in os.listdir(root) if os.path.isdir(os.path.join(root, n))]), 1)
         self.assertTrue(os.path.exists(os.path.join(root, "note.txt")))
         self.assertEqual(len(os.listdir(paths.backups_dir("other"))), 1)
+
+
+class BackupSymlinkTests(HomeCase):
+    def test_a_symlink_source_is_refused_before_anything_is_copied(self):
+        outside = os.path.join(self.tmp, "claude.json")
+        with open(outside, "w", encoding="utf-8") as fh:
+            fh.write('{"secret": 1}')
+        link = os.path.join(self.tmp, "settings.local.json")
+        os.symlink(outside, link)
+        with self.assertRaises(RoadmapError) as ctx:
+            backup.backup_files("demo", [link], now=datetime.datetime(2026, 10, 1, tzinfo=datetime.timezone.utc))
+        self.assertEqual(ctx.exception.code, "invalid_data")
+        self.assertFalse(os.path.exists(paths.backups_dir("demo")))
 
 
 if __name__ == "__main__":

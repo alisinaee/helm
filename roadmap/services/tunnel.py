@@ -28,10 +28,12 @@ TOKEN_FILE_MODE = 0o600
 START_TIMEOUT_S = 30
 POLL_S = 0.2
 TUNNEL_LOG = "tunnel.log"
+KNOWN_HOSTS = "known_hosts"  # the only host keys ssh trusts for the tunnel; see docs/SECURITY.md (first use)
 DEFAULT_PHONE_PORT = 8766
 TUNNEL_TOOL = "localhost.run"
+TUNNEL_SUFFIXES = (".localhost.run", ".lhr.life")  # the only tunnel service domains the phone link may use
+_TUNNEL_HOST_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$")
 _URL_RE = re.compile(r"https://((?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)", re.I)
-_HOST_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$")
 
 
 def _default_spawn(argv, log_path):
@@ -46,14 +48,23 @@ def _default_spawn(argv, log_path):
     return proc.pid
 
 
+class ProcessListError(RuntimeError):
+    """ps could not be run or failed, so nothing can be said about the process. Callers never signal on this."""
+
+
 def _default_ps(pid):
-    """The command line of pid from ps, or None when no such process is running."""
+    """The command line of pid from ps, or None when no such process is running. ps failing raises ProcessListError.
+    ps -p exits 1 with no output when nothing matches the pid."""
     try:
         proc = subprocess.run(["ps", "-o", "command=", "-p", str(int(pid))], capture_output=True, text=True,
                               timeout=10, check=False)
-    except (OSError, subprocess.TimeoutExpired):
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise ProcessListError("ps could not run: " + str(exc)) from exc
+    text = proc.stdout.strip()
+    if proc.returncode == 1 and not text:
         return None
-    text = proc.stdout.strip() if proc.returncode == 0 else ""
+    if proc.returncode != 0:
+        raise ProcessListError("ps exited with status %d" % proc.returncode)
     return text or None
 
 
@@ -122,13 +133,41 @@ def running_pid():
     pid = read_pid()
     if pid is None:
         return None
-    return pid if is_our_tunnel(PS(pid)) else None
+    try:
+        command = PS(pid)
+    except ProcessListError as exc:
+        raise RoadmapError("external", "cannot check the phone tunnel process: " + str(exc), EXIT_EXTERNAL)
+    return pid if is_our_tunnel(command) else None
+
+
+def _kill_if_ours(pid):
+    """SIGTERM pid only when ps still shows our ssh to localhost.run. A ps failure or a process that is gone or
+    not ours is never signalled. Returns True when a signal was sent."""
+    try:
+        command = PS(pid)
+    except ProcessListError:
+        return False
+    if not is_our_tunnel(command):
+        return False
+    try:
+        KILL(pid, signal.SIGTERM)
+    except OSError:
+        return False
+    return True
+
+
+def valid_tunnel_host(value):
+    """True for a bare host name under a tunnel service domain, such as abc123.lhr.life: no scheme, no port, no path,
+    and the name must end in .localhost.run or .lhr.life. The phone Host allowlist uses the same check."""
+    if not isinstance(value, str) or len(value) > 253 or _TUNNEL_HOST_RE.match(value) is None:
+        return False
+    return value.endswith(TUNNEL_SUFFIXES)
 
 
 def configured_host():
-    """The saved tunnel host (config phoneHost), or None."""
+    """The saved tunnel host (config phoneHost), or None. It must pass the same check as the Host allowlist."""
     value = config_store.load().get("phoneHost")
-    return value if isinstance(value, str) and _HOST_RE.match(value) else None
+    return value if valid_tunnel_host(value) else None
 
 
 def _save_host(host):
@@ -157,12 +196,12 @@ def _phone_port():
 
 
 def find_tunnel_host(text):
-    """The first https host in ssh's output that is not localhost.run itself, or None."""
+    """The first https host in ssh's output that is under a tunnel service domain, or None. Other hosts in the banner
+    are skipped, so a crafted banner cannot make the phone link point elsewhere."""
     for match in _URL_RE.finditer(text):
         host = match.group(1).lower()
-        if host == TUNNEL_TOOL or host.endswith("." + TUNNEL_TOOL):
-            continue
-        return host
+        if valid_tunnel_host(host):
+            return host
     return None
 
 
@@ -193,19 +232,21 @@ def start(phone_port=None, timeout_s=START_TIMEOUT_S):
     token = new_token()
     _write_private(paths.phone_token_file(), token)
     log_path = os.path.join(paths.state_dir(), TUNNEL_LOG)
-    argv = ["ssh", "-o", "ServerAliveInterval=30", "-R", "80:127.0.0.1:%d" % port, TUNNEL_TARGET]
+    known_hosts = os.path.join(paths.state_dir(), KNOWN_HOSTS)
+    argv = ["ssh", "-o", "ServerAliveInterval=30", "-o", "StrictHostKeyChecking=yes", "-o",
+            "UserKnownHostsFile=" + known_hosts, "-R", "80:127.0.0.1:%d" % port, TUNNEL_TARGET]
     paths.ensure_dir(paths.state_dir())
     try:
         pid = SPAWN(argv, log_path)
     except OSError:
         _forget_token()
         raise RoadmapError("external", "ssh is not available, so the phone tunnel cannot start", EXIT_EXTERNAL)
-    host = _wait_for_host(pid, log_path, timeout_s)
+    try:
+        host = _wait_for_host(pid, log_path, timeout_s)
+    except ProcessListError:
+        host = None  # ps failed: the wait ends without a host, and nothing is signalled below
     if host is None:
-        try:
-            KILL(pid, signal.SIGTERM)
-        except OSError:
-            pass
+        _kill_if_ours(pid)
         _forget_token()
         raise RoadmapError("external", "the tunnel gave no address within %d seconds (see tunnel.log)" % timeout_s,
                            EXIT_EXTERNAL)
@@ -220,9 +261,14 @@ def stop():
     pid = read_pid()
     stopped_pid = None
     refused = False
+    unverified = False
     if pid is not None:
-        command = PS(pid)
-        if command is None:
+        try:
+            command = PS(pid)
+        except ProcessListError:
+            command = None
+            unverified = True
+        if unverified or command is None:
             pass
         elif is_our_tunnel(command):
             KILL(pid, signal.SIGTERM)
@@ -231,6 +277,9 @@ def stop():
             refused = True
     _forget_token()
     _save_host(None)
+    if unverified:
+        raise RoadmapError("external", "ps failed, so the tunnel process could not be checked and was not signalled; "
+                           "tunnel.pid is kept, run roadmap phone stop again", EXIT_EXTERNAL)
     if refused:
         raise RoadmapError("conflict", "pid %d is not our phone tunnel, so it was not stopped; tunnel.pid is kept"
                            % pid, EXIT_CONFLICT)

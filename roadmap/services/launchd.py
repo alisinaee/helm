@@ -144,9 +144,11 @@ def install(python=None, runner=None, logs_dir=None):
 
 
 def uninstall(runner=None):
-    """Unload the job (ignored when it is not loaded) and remove the plist. Logs and config are kept.
-    Returns True when a plist was removed."""
-    _launchctl(["bootout", service_target()], runner)
+    """Unload the job and remove the plist. Logs and config are kept. A bootout failure other than "not loaded" is an
+    error, and then the plist is kept, so the job can still be unloaded later. Returns True when a plist was removed."""
+    rc, _, err = _launchctl(["bootout", service_target()], runner)
+    if rc != 0 and rc not in NOT_LOADED_CODES:
+        raise _fail("bootout", rc, err)
     path = plist_path()
     if os.path.exists(path):
         os.remove(path)

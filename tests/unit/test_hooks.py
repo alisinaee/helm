@@ -6,6 +6,7 @@ import time
 import unittest
 
 from roadmap.services import hooks
+from roadmap.store import lock
 from tests.unit.test_jobs_support import FixtureCase, ROADMAP_CONFIG, run_cli, write_json
 from tests.unit.test_store_support import mode_of
 
@@ -209,6 +210,32 @@ class ResilienceTests(HookTestCase):
         os.environ["ROADMAP_HOME"] = os.path.join(blocker, "home")
         self.addCleanup(os.environ.__setitem__, "ROADMAP_HOME", saved)
         hooks.run_hook("{bad")  # must not raise
+
+
+class CommandTitleAndBusyLockTests(HookTestCase):
+    def test_cursor_title_comes_from_the_invocation_in_a_chained_command(self):
+        command = ("sed -n 1,3p src.sh > tools/cursor-review2.sh && chmod +x tools/cursor-review2.sh && "
+                   '(nohup tools/cursor-review2.sh /tmp/o.md "Review P0.8 parser" &)')
+        self.fire(hook_event_name="PostToolUse", tool_name="Bash", tool_input={"command": command},
+                  tool_response={"stdout": ""})
+        job = self.read_jobs()[0]
+        self.assertEqual(job["title"], "Cursor Auto: Review P0.8 parser")
+        self.assertEqual(self.state_active()[0]["watch"], "/tmp/o.md")
+
+    def test_agy_title_stops_at_a_shell_operator(self):
+        result = os.path.join(self.tmp, "chain.result.md")
+        command = 'node "/opt/agy-companion.mjs" task --prompt "Review P0.8 parser" && rm -rf /tmp/x ; echo done'
+        self.fire(hook_event_name="PostToolUse", tool_name="Bash", tool_input={"command": command},
+                  tool_response={"stdout": "result file: " + result})
+        self.assertEqual(self.read_jobs()[0]["title"], "agy task: Review P0.8 parser")
+
+    def test_busy_project_lock_returns_quickly_and_registers_nothing(self):
+        start = time.monotonic()
+        with lock.locked(self.docs, timeout=1):
+            self.agent_start()
+        self.assertLess(time.monotonic() - start, 5)
+        self.assertEqual(self.read_jobs(), [])
+        self.assertIsNone(self.state_active())
 
 
 if __name__ == "__main__":

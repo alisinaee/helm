@@ -30,6 +30,7 @@ class StaticFiles:
 
     def __init__(self, root):
         self.root = os.path.abspath(root)
+        real_root = os.path.realpath(self.root)
         self._map = {}
         for dirpath, dirnames, filenames in os.walk(self.root):
             dirnames[:] = sorted(d for d in dirnames if not d.startswith(".") and d != "__pycache__")
@@ -38,8 +39,12 @@ class StaticFiles:
                 if name.startswith(".") or ext not in CONTENT_TYPES:
                     continue
                 full = os.path.join(dirpath, name)
+                # A symlink in web/ is served only when its real file is inside web/; the real path is what is opened.
+                real = os.path.realpath(full)
+                if not real.startswith(real_root + os.sep):
+                    continue
                 rel = os.path.relpath(full, self.root).replace(os.sep, "/")
-                self._map["/" + rel] = Entry(full, CONTENT_TYPES[ext], rel == LEGACY_FILE)
+                self._map["/" + rel] = Entry(real, CONTENT_TYPES[ext], rel == LEGACY_FILE)
         home = "/" + INDEX_FILE if "/" + INDEX_FILE in self._map else "/" + LEGACY_FILE
         if home in self._map:
             self._map["/"] = self._map[home]

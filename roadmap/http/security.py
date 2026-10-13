@@ -11,6 +11,8 @@ import secrets
 import threading
 import time
 
+from roadmap.services.tunnel import valid_tunnel_host
+
 MAX_BODY_BYTES = 4096
 CSP = ("default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; "
        "frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
@@ -25,7 +27,6 @@ PHONE_COOKIE = "rb_phone"
 PHONE_COOKIE_MAX_AGE_S = 7 * 24 * 3600
 PHONE_FAIL_LIMIT = 10
 PHONE_FAIL_WINDOW_S = 60
-_TUNNEL_HOST_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$")
 _PLAIN_PATH_RE = re.compile(r"/(?!/)[A-Za-z0-9._~/-]*")
 
 
@@ -48,11 +49,6 @@ def host_allowed(host, port):
     if not isinstance(host, str):
         return False
     return host.strip().lower() in ("127.0.0.1:%d" % port, "localhost:%d" % port)
-
-
-def valid_tunnel_host(value):
-    """True for a bare host name such as abc123.lhr.life: no scheme, no port, no path."""
-    return isinstance(value, str) and len(value) <= 253 and _TUNNEL_HOST_RE.match(value) is not None
 
 
 def phone_host_allowed(host, port, tunnel_host):

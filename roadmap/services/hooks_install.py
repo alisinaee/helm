@@ -11,13 +11,14 @@ import copy
 import json
 import os
 
-from roadmap.errors import EXIT_INVALID_DATA, EXIT_USAGE, RoadmapError
+from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_USAGE, RoadmapError
 from roadmap.store import atomic, backup, config, lock
 
 MARKER = "roadmap hook"
 LEGACY_MARKER = "jobs_auto.py"
 SETTINGS_RELPATH = os.path.join(".claude", "settings.local.json")
 HOOK_TIMEOUT_S = 10
+MERGE_ATTEMPTS = 3  # re-merge when Claude Code changed the settings file between our read and our replace
 # (event, matcher or None). PostToolUse is the only event with a matcher.
 EVENTS = (
     ("PostToolUse", "Agent|Task|Bash"),
@@ -49,7 +50,21 @@ def hook_command():
 
 
 def settings_file(project):
-    return os.path.join(os.path.abspath(project["path"]), SETTINGS_RELPATH)
+    """The settings path inside the project. A project that ships .claude or settings.local.json as a symlink is
+    refused, and so is a settings file whose real path is outside the project's own .claude folder."""
+    root = os.path.abspath(project["path"])
+    path = os.path.join(root, SETTINGS_RELPATH)
+    claude = os.path.join(root, ".claude")
+    for candidate in (claude, path):
+        if os.path.islink(candidate):
+            raise RoadmapError("invalid_data", "refusing a symlink in the project settings path, left unchanged: "
+                               + candidate, EXIT_INVALID_DATA)
+    if os.path.lexists(path):
+        base = os.path.join(os.path.realpath(root), ".claude") + os.sep
+        if not os.path.realpath(path).startswith(base):
+            raise RoadmapError("invalid_data", "the settings file resolves outside the project's .claude folder, "
+                               "left unchanged: " + path, EXIT_INVALID_DATA)
+    return path
 
 
 def _is_ours(hook):
@@ -62,11 +77,29 @@ def _is_legacy(hook):
     return isinstance(command, str) and LEGACY_MARKER in command
 
 
-def _load(path):
-    """The settings object, or {} when the file does not exist. A file that is not a JSON object is left alone."""
-    if not os.path.exists(path):
+def _read_raw(path):
+    """The exact bytes of the settings file, or None when it does not exist. O_NOFOLLOW: a symlink is refused."""
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        raise RoadmapError("invalid_data", "settings file cannot be read safely, left unchanged: " + path
+                           + " (" + str(exc) + ")", EXIT_INVALID_DATA)
+    with os.fdopen(fd, "rb") as fh:
+        return fh.read()
+
+
+def _parse(raw, path):
+    """The settings object for the given bytes: {} for a missing file. A file that is not a JSON object is left
+    alone."""
+    if raw is None:
         return {}
-    data = atomic.read_json(path)
+    try:
+        data = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError) as exc:
+        raise RoadmapError("invalid_data", "not valid JSON, left unchanged: " + path + " (" + str(exc)[:80] + ")",
+                           EXIT_INVALID_DATA)
     if not isinstance(data, dict):
         raise RoadmapError("invalid_data", "settings file is not a JSON object, left unchanged: " + path,
                            EXIT_INVALID_DATA)
@@ -116,15 +149,70 @@ def _ours_in(groups):
             for h in g["hooks"] if _is_ours(h)]
 
 
-def _write_if_changed(project, path, before, after):
-    """Back up the old file, then write the new one. Returns the backup folder, or None when nothing changed."""
-    if after == before:
-        return None
-    folder = None
-    if os.path.exists(path):
-        folder = backup.backup_files(project["id"], [path])
-    atomic.write_json(path, after)
-    return folder
+def _edit(project, path, transform):
+    """Apply transform(settings) to the settings file and write the result if it changed.
+
+    Claude Code does not take our lock, so the file is re-read just before the replace. When its bytes changed since
+    our read, the transform is applied again to the new content. Returns (changed, backup folder, transform result).
+    """
+    for _ in range(MERGE_ATTEMPTS):
+        raw = _read_raw(path)
+        before = _parse(raw, path)
+        settings = copy.deepcopy(before)
+        extra = transform(settings)
+        if settings == before:
+            return False, None, extra
+        if _read_raw(path) != raw:
+            continue
+        folder = backup.backup_files(project["id"], [path]) if raw is not None else None
+        atomic.write_json(path, settings)
+        return True, folder, extra
+    raise RoadmapError("locked", "the settings file kept changing while it was merged; try again", EXIT_CONFLICT)
+
+
+def _apply_install(settings, command, replace_legacy):
+    """Add our entries to settings in place. Returns the number of legacy entries removed."""
+    hooks = _hooks_of(settings, create=True)
+    legacy_removed = 0
+    if replace_legacy:
+        for event in list(hooks):
+            if not isinstance(hooks[event], list):
+                continue
+            kept, count = _strip(hooks[event], _is_legacy)
+            legacy_removed += count
+            if count:
+                hooks[event] = kept
+                if not kept:
+                    del hooks[event]
+    for event, matcher in EVENTS:
+        kept, _ = _strip(_groups(hooks, event), _is_ours)
+        entry = {"type": "command", "command": command, "timeout": HOOK_TIMEOUT_S}
+        group = {"hooks": [entry]}
+        if matcher is not None:
+            group = {"matcher": matcher, "hooks": [entry]}
+        kept.append(group)
+        hooks[event] = kept
+    return legacy_removed
+
+
+def _apply_uninstall(settings):
+    """Remove only our entries from settings in place. Returns the number removed."""
+    before_hooks = bool(settings.get("hooks"))
+    hooks = _hooks_of(settings, create=False)
+    removed = 0
+    for event in list(hooks):
+        if not isinstance(hooks[event], list):
+            continue
+        kept, count = _strip(hooks[event], _is_ours)
+        removed += count
+        if count:
+            if kept:
+                hooks[event] = kept
+            else:
+                del hooks[event]
+    if "hooks" in settings and not hooks and before_hooks:
+        del settings["hooks"]
+    return removed
 
 
 def install(project_id, replace_legacy=False):
@@ -133,30 +221,9 @@ def install(project_id, replace_legacy=False):
     path = settings_file(project)
     command = hook_command()
     with lock.locked(os.path.dirname(path)):
-        settings = _load(path)
-        before = copy.deepcopy(settings)
-        hooks = _hooks_of(settings, create=True)
-        legacy_removed = 0
-        if replace_legacy:
-            for event in list(hooks):
-                if not isinstance(hooks[event], list):
-                    continue
-                kept, count = _strip(hooks[event], _is_legacy)
-                legacy_removed += count
-                if count:
-                    hooks[event] = kept
-                    if not kept:
-                        del hooks[event]
-        for event, matcher in EVENTS:
-            kept, _ = _strip(_groups(hooks, event), _is_ours)
-            entry = {"type": "command", "command": command, "timeout": HOOK_TIMEOUT_S}
-            group = {"hooks": [entry]}
-            if matcher is not None:
-                group = {"matcher": matcher, "hooks": [entry]}
-            kept.append(group)
-            hooks[event] = kept
-        folder = _write_if_changed(project, path, before, settings)
-    return {"project": project_id, "settings": path, "command": command, "changed": settings != before,
+        changed, folder, legacy_removed = _edit(
+            project, path, lambda settings: _apply_install(settings, command, replace_legacy))
+    return {"project": project_id, "settings": path, "command": command, "changed": changed,
             "backup": folder, "legacyRemoved": legacy_removed}
 
 
@@ -167,25 +234,8 @@ def uninstall(project_id):
     if not os.path.exists(path):
         return {"project": project_id, "settings": path, "removed": 0, "changed": False, "backup": None}
     with lock.locked(os.path.dirname(path)):
-        settings = _load(path)
-        before = copy.deepcopy(settings)
-        hooks = _hooks_of(settings, create=False)
-        removed = 0
-        for event in list(hooks):
-            if not isinstance(hooks[event], list):
-                continue
-            kept, count = _strip(hooks[event], _is_ours)
-            removed += count
-            if count:
-                if kept:
-                    hooks[event] = kept
-                else:
-                    del hooks[event]
-        if "hooks" in settings and not hooks and before.get("hooks"):
-            del settings["hooks"]
-        folder = _write_if_changed(project, path, before, settings)
-    return {"project": project_id, "settings": path, "removed": removed, "changed": folder is not None,
-            "backup": folder}
+        changed, folder, removed = _edit(project, path, _apply_uninstall)
+    return {"project": project_id, "settings": path, "removed": removed, "changed": changed, "backup": folder}
 
 
 def status(project_id):
@@ -193,7 +243,7 @@ def status(project_id):
     project = config.get_project(project_id)
     path = settings_file(project)
     expected = hook_command()
-    hooks = _hooks_of(_load(path), create=False)
+    hooks = _hooks_of(_parse(_read_raw(path), path), create=False)
     events = {}
     for event, matcher in EVENTS:
         commands = _ours_in(_groups(hooks, event))

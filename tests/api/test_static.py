@@ -3,7 +3,10 @@ and the CSP exception that only legacy.html gets."""
 
 import os
 import shutil
+import tempfile
+import unittest
 
+from roadmap.http.static import StaticFiles
 from tests.api.support import REPO_LEGACY, ServerCase
 
 
@@ -72,3 +75,22 @@ class Index(ServerCase):
         res = self.request("GET", "/css/app.css", headers={"If-None-Match": first})
         self.assertEqual(res.status, 304)
         self.assertEqual(res.body, b"")
+
+
+class SymlinksInWebRoot(unittest.TestCase):
+    def test_a_symlink_whose_real_file_is_outside_web_is_not_served(self):
+        tmp = tempfile.mkdtemp(prefix="rb-static-")
+        self.addCleanup(shutil.rmtree, tmp)
+        web = os.path.join(tmp, "web")
+        os.makedirs(web)
+        secret = os.path.join(tmp, "token.txt")
+        with open(secret, "w", encoding="utf-8") as fh:
+            fh.write("k=secret\n")
+        inside = os.path.join(web, "real.txt")
+        with open(inside, "w", encoding="utf-8") as fh:
+            fh.write("inside\n")
+        os.symlink(secret, os.path.join(web, "note.txt"))
+        os.symlink(inside, os.path.join(web, "alias.txt"))
+        files = StaticFiles(web)
+        self.assertIsNone(files.lookup("/note.txt"))
+        self.assertEqual(files.lookup("/alias.txt").path, os.path.realpath(inside))

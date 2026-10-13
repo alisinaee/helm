@@ -2,6 +2,8 @@
 
 import json
 import os
+import shutil
+from unittest import mock
 
 from roadmap.services import hooks_install
 from tests.unit.test_project_support import HOOK_CMD, ProjectCase, read_text, run_cli, write_json
@@ -174,3 +176,43 @@ class SharedHelperTests(ProjectCase):
     def test_shim_path_is_the_repo_bin_roadmap(self):
         self.assertEqual(hooks_install.shim_path(), os.path.join(os.path.dirname(os.path.dirname(
             os.path.dirname(os.path.realpath(hooks_install.__file__)))), "bin", "roadmap"))
+
+
+class SettingsSafetyTests(ProjectCase):
+    def setUp(self):
+        super().setUp()
+        self.init_and_add()
+        self.settings = self.settings_path()
+        self.claude = os.path.dirname(self.settings)
+        self.outside = os.path.join(self.tmp, "outside")
+        os.makedirs(self.outside)
+        self.target = os.path.join(self.outside, "settings.local.json")
+        write_json(self.target, {"env": {"KEEP": "1"}})
+        self.before = read_text(self.target)
+
+    def test_symlinked_claude_folder_is_refused_and_the_target_is_untouched(self):
+        if os.path.isdir(self.claude):
+            shutil.rmtree(self.claude)
+        os.symlink(self.outside, self.claude)
+        code, _ = self.envelope(["hooks", "install", "demo"])
+        self.assertNotEqual(code, 0)
+        self.assertEqual(read_text(self.target), self.before)
+        self.assertEqual(os.listdir(self.outside), ["settings.local.json"])
+
+    def test_settings_changed_by_claude_between_read_and_replace_are_kept(self):
+        write_json(self.settings, {"permissions": {"allow": ["Bash(ls)"]}})
+        real_read = hooks_install._read_raw
+        calls = []
+
+        def racing_read(path):
+            calls.append(path)
+            if len(calls) == 2:  # Claude Code saves its own settings after our first read
+                write_json(path, {"permissions": {"allow": ["Bash(ls)"]}, "env": {"NEW": "1"}})
+            return real_read(path)
+
+        with mock.patch.object(hooks_install, "_read_raw", side_effect=racing_read):
+            code, _ = self.envelope(["hooks", "install", "demo"])
+        self.assertEqual(code, 0)
+        data = json.loads(read_text(self.settings))
+        self.assertEqual(data["env"], {"NEW": "1"})
+        self.assertIn("Stop", data["hooks"])
