@@ -10,16 +10,40 @@
 <link rel="stylesheet" href="/css/tokens.css">
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/components.css">
+<link rel="stylesheet" href="/css/shell.css">
+<link rel="stylesheet" href="/css/panel.css">
+<link rel="stylesheet" href="/css/work.css">
+<link rel="stylesheet" href="/css/plan.css">
+<link rel="stylesheet" href="/css/admin.css">
+<link rel="stylesheet" href="/css/flow.css">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
-<div id="app" class="app">
-  <header id="topbar" class="topbar-wrap"></header>
-  <div id="live-status" class="sr-only" aria-live="polite"></div>
-  <section id="usage" class="band-wrap" aria-label="Plan usage"></section>
-  <section id="kpi" class="kpi-wrap" aria-label="Summary" hidden></section>
+<div id="app" class="app" data-nav="full" data-panel="open">
+  <nav id="nav" class="nav" aria-label="Sections"></nav>
+  <header id="topbar" class="top"></header>
   <main id="main" class="main" tabindex="-1"></main>
+  <aside id="side" class="side" aria-label="Projects and details">
+    <div class="side-tabs" role="tablist" aria-label="Panel">
+      <button type="button" role="tab" id="tab-projects" aria-selected="true">Projects</button>
+      <button type="button" role="tab" id="tab-details" aria-selected="false">Details</button>
+    </div>
+    <div class="side-body" role="tabpanel" aria-labelledby="tab-projects">
+      <p class="placeholder">Coming soon</p>
+    </div>
+  </aside>
+  <nav id="bnav" class="bnav" aria-label="Sections, small screens"></nav>
 </div>
+<div id="scrim" class="scrim" data-action="panel-close" hidden></div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="live-status" class="sr-only" aria-live="polite"></div>
+<dialog id="help" class="help" aria-labelledby="help-title">
+  <div class="help-head">
+    <h2 id="help-title" class="help-title">Keyboard shortcuts</h2>
+    <button type="button" class="btn" data-action="help-close">Close</button>
+  </div>
+  <div id="help-body"></div>
+</dialog>
 <noscript><p class="banner banner-danger">roadmap-board needs JavaScript to show the dashboard.</p></noscript>
 <script type="module" src="/js/app.js"></script>
 </body>

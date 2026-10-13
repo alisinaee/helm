@@ -23,7 +23,6 @@ export const THEME_ORDER = ["auto", "dark", "light"];
 export const STALE_AFTER_S = 240;
 export const OLD_AFTER_S = 3600;
 const PREFS_PREFIX = "roadmap-board.prefs.";
-const THEME_KEY = "roadmap-board.theme";
 
 export function createStore() {
   return {
@@ -67,21 +66,88 @@ export function savePrefs(key, prefs) {
   }
 }
 
-export function loadTheme() {
+// UI preferences (WP28) live under one localStorage key. Every read and write is wrapped in try/catch: storage can be
+// blocked, and then the defaults apply for this page view only.
+const UI_KEY = "rb.ui.v2";
+const PANEL_TABS = ["projects", "details"];
+const WORK_VIEWS = ["board", "list", "tree"];
+const DENSITIES = ["comfortable", "compact"];
+const PROJECT_ID_RE = /^[a-z0-9][a-z0-9-]{0,39}$/;
+
+export function defaultUi() {
+  return {
+    navMini: false,
+    panelOpen: null,
+    panelTab: "projects",
+    workView: "board",
+    filters: {},
+    density: "comfortable",
+    theme: "auto",
+    lastProject: null,
+  };
+}
+
+function sanitizeUi(raw) {
+  const ui = defaultUi();
+  if (!raw || typeof raw !== "object") return ui;
+  if (typeof raw.navMini === "boolean") ui.navMini = raw.navMini;
+  if (typeof raw.panelOpen === "boolean") ui.panelOpen = raw.panelOpen;
+  if (PANEL_TABS.indexOf(raw.panelTab) >= 0) ui.panelTab = raw.panelTab;
+  if (WORK_VIEWS.indexOf(raw.workView) >= 0) ui.workView = raw.workView;
+  if (DENSITIES.indexOf(raw.density) >= 0) ui.density = raw.density;
+  if (THEME_ORDER.indexOf(raw.theme) >= 0) ui.theme = raw.theme;
+  if (typeof raw.lastProject === "string" && PROJECT_ID_RE.test(raw.lastProject)) ui.lastProject = raw.lastProject;
+  if (raw.filters && typeof raw.filters === "object") {
+    for (const key of Object.keys(raw.filters).slice(0, 20)) {
+      if (typeof raw.filters[key] === "string" && raw.filters[key].length <= 200) {
+        ui.filters[key] = raw.filters[key];
+      }
+    }
+  }
+  return ui;
+}
+
+// panelOpen null means "not chosen yet": the panel is docked open on wide screens and hidden where it floats.
+export function isSheetWidth() {
+  return window.matchMedia("(max-width: 1199px)").matches;
+}
+
+export function panelIsOpen(ui) {
+  return ui.panelOpen === null ? !isSheetWidth() : ui.panelOpen;
+}
+
+export function loadUi() {
   try {
-    const value = window.localStorage.getItem(THEME_KEY);
-    return THEME_ORDER.indexOf(value) >= 0 ? value : "auto";
+    return sanitizeUi(JSON.parse(window.localStorage.getItem(UI_KEY)));
   } catch (err) {
-    return "auto";
+    return defaultUi();
   }
 }
 
-export function saveTheme(value) {
+export function saveUi(ui) {
   try {
-    window.localStorage.setItem(THEME_KEY, value);
+    window.localStorage.setItem(UI_KEY, JSON.stringify(sanitizeUi(ui)));
   } catch (err) {
-    // Blocked storage: the theme still changes for this page view.
+    // Blocked or full storage: the choice lasts until reload.
   }
+}
+
+// Change one or more preferences and save. change() receives a copy and may edit it.
+export function updateUi(change) {
+  const ui = loadUi();
+  change(ui);
+  saveUi(ui);
+  return ui;
+}
+
+export function loadTheme() {
+  return loadUi().theme;
+}
+
+export function saveTheme(value) {
+  updateUi(function (ui) {
+    ui.theme = THEME_ORDER.indexOf(value) >= 0 ? value : "auto";
+  });
 }
 
 export function nextTheme(value) {
@@ -198,7 +264,36 @@ export function normalizeSnapshot(raw, fetchedAt) {
       return { file: e.file || "file", message: e.error || "could not be read" };
     }),
     tasksUpdated: raw.tasks_updated || null,
+    control: normalizeControl(raw.control),
+    meters: normalizeMeters(raw.meters),
   };
+}
+
+// The control key: stopped and blocked flags, and the reason text. An error marker reads as not stopped.
+function normalizeControl(raw) {
+  const c = raw && typeof raw === "object" ? raw : {};
+  return { stopped: c.stopped === true, blocked: c.blocked === true, reason: String(c.reason || "") };
+}
+
+// meters.limits rows (WP27). Null when the snapshot has no meters, so the top bar can show "unknown".
+const LIMIT_STATES = ["ok", "warn", "block", "unknown"];
+
+function normalizeMeters(raw) {
+  if (!raw || !Array.isArray(raw.limits)) return null;
+  return raw.limits.map(function (row) {
+    return {
+      id: String(row.id || ""),
+      scope: row.scope === "project" ? "project" : "global",
+      window: row.window === "week" ? "week" : row.window === "total" ? "total" : "day",
+      kind: String(row.kind || "pct"),
+      used: num(row.used),
+      limit: num(row.limit),
+      state: LIMIT_STATES.indexOf(row.state) >= 0 ? row.state : "unknown",
+      est: row.est === true,
+      paceAt: typeof row.paceAt === "string" ? row.paceAt : null,
+      src: typeof row.src === "string" ? row.src : null,
+    };
+  });
 }
 
 export function normalizeUsage(raw, fetchedAt) {
