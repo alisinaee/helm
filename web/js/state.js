@@ -249,6 +249,7 @@ export function normalizeSnapshot(raw, fetchedAt) {
         runningCount: running.length,
         running: running,
         recent: idList(p.recent),
+        approved: p.approved === true,
       };
     }),
     jobs: jobs.map(function (j) {
@@ -283,13 +284,16 @@ export function normalizeSnapshot(raw, fetchedAt) {
     activity: list(raw.activity).map(normalizeActivity),
     blocked: idList(raw.blocked),
     issues: list(raw.issues).map(normalizeIssue),
+    // WP32: spend and limit per phase (thousands of tokens) from budget.json; empty when the project has none.
+    budget: normalizeBudget(raw.budget),
     // WP29 keys: comments by target (newest last), the queue, and project rules when the snapshot has them.
     comments: normalizeComments(raw.comments),
     queue: list(raw.queue).map(function (q) {
       return { task: String(q.task || ""), by: String(q.by || "") };
     }),
     rules: Array.isArray(raw.rules) ? raw.rules.map(function (r) {
-      return { id: String(r.id || ""), scope: String(r.scope || ""), text: String(r.text || "") };
+      return { id: String(r.id || ""), scope: String(r.scope || ""), kind: String(r.kind || ""),
+        text: String(r.text || ""), value: num(r.value) };
     }) : null,
   };
 }
@@ -341,9 +345,25 @@ function normalizeActivity(a) {
     sum: String(a.sum || ""), undo: a.undo === true };
 }
 
+function normalizeBudget(raw) {
+  const phases = {};
+  const src = raw && raw.phases && typeof raw.phases === "object" ? raw.phases : {};
+  for (const id of Object.keys(src)) {
+    phases[id] = { spent: num(src[id].spent), limit: num(src[id].limit) };
+  }
+  const models = {};
+  const srcModels = raw && raw.models && typeof raw.models === "object" ? raw.models : {};
+  for (const id of Object.keys(srcModels)) {
+    models[id] = { spent: num(srcModels[id].spent), limit: num(srcModels[id].limit) };
+  }
+  const total = raw && raw.total && typeof raw.total === "object" ?
+    { spent: num(raw.total.spent), limit: num(raw.total.limit) } : null;
+  return { phases: phases, models: models, total: total };
+}
+
 function normalizeIssue(i) {
   return { id: String(i.id || ""), title: String(i.title || ""), kind: String(i.kind || ""),
-    status: String(i.status || ""), tasks: idList(i.tasks) };
+    sev: num(i.sev), status: String(i.status || ""), tasks: idList(i.tasks) };
 }
 
 // Today's or this week's usage from meters: the day's points, or the weekly percent, with tracked tokens (K).
@@ -370,6 +390,7 @@ function normalizeMeters(raw) {
       est: row.est === true,
       paceAt: typeof row.paceAt === "string" ? row.paceAt : null,
       src: typeof row.src === "string" ? row.src : null,
+      action: row.action === "block" || row.action === "warn" ? row.action : null,
     };
   });
 }

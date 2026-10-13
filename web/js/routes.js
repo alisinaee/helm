@@ -5,17 +5,18 @@
 export const SECTIONS = [
   { id: "overview", label: "Overview", icon: "overview", module: "./views/overview.js", bottom: true },
   { id: "inbox", label: "Inbox", icon: "inbox", module: "./views/inbox.js", bottom: true },
-  { id: "roadmap", label: "Roadmap", icon: "roadmap", module: null, bottom: false },
+  { id: "roadmap", label: "Roadmap", icon: "roadmap", module: "./views/roadmap.js", bottom: false },
   { id: "work", label: "Work", icon: "work", module: "./views/work.js", bottom: true },
-  { id: "issues", label: "Issues", icon: "issues", module: null, bottom: true },
+  { id: "issues", label: "Issues", icon: "issues", module: "./views/issues.js", bottom: true },
   { id: "agents", label: "Agents", icon: "agents", module: null, bottom: false },
-  { id: "tokens", label: "Tokens", icon: "tokens", module: null, bottom: false },
-  { id: "rules", label: "Rules", icon: "rules", module: null, bottom: false },
+  { id: "tokens", label: "Tokens", icon: "tokens", module: "./views/tokens.js", bottom: false },
+  { id: "rules", label: "Rules", icon: "rules", module: "./views/rules.js", bottom: false },
   { id: "research", label: "Research", icon: "research", module: null, bottom: false },
   { id: "activity", label: "Activity", icon: "activity", module: "./views/activity.js", bottom: false },
 ];
 
-export const SETTINGS = { id: "settings", label: "Settings", icon: "settings", module: null, bottom: false };
+export const SETTINGS = { id: "settings", label: "Settings", icon: "settings", module: "./views/settings.js",
+  bottom: false };
 
 export const DEFAULT_SECTION = "overview";
 
