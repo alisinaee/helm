@@ -1,6 +1,6 @@
 """Command group hooks: install and inspect the Claude Code hooks of a project."""
 
-from roadmap.services import hooks_install
+from roadmap.services import agentguard, hooks_install
 
 
 def register(sub, common):
@@ -38,6 +38,7 @@ def _install(args):
 
 
 def _uninstall(args):
+    agentguard.refuse_if_agent("hooks uninstall")  # removing the gate loosens control: a person runs it
     result = hooks_install.uninstall(args.project)
     if not _wants_json(args):
         print("removed %d roadmap hook entr%s" % (result["removed"], "y" if result["removed"] == 1 else "ies"))

@@ -1,4 +1,5 @@
-"""Agent guard: ops that loosen control are refused from an agent's shell (CLAUDECODE=1) or when the source is agent.
+"""Agent guard: ops that loosen control are refused from an agent's shell (any non-empty CLAUDECODE), or when the
+source is agent.
 
 The refusal names `roadmap ask` as the next step, so the agent asks the person instead of changing the control state.
 """
@@ -12,9 +13,9 @@ ASK_NEXT = 'roadmap ask "<question>"'
 
 
 def is_agent(source=None, environ=None):
-    """True when the call comes from an agent: source is agent, or the shell has CLAUDECODE=1."""
+    """True when the call comes from an agent: source is agent, or the shell has a non-empty CLAUDECODE."""
     environ = os.environ if environ is None else environ
-    return source == "agent" or str(environ.get(ENV, "")).strip() == "1"
+    return source == "agent" or str(environ.get(ENV, "")).strip() != ""
 
 
 def source_name(environ=None):

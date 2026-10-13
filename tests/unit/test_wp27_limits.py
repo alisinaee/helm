@@ -294,7 +294,8 @@ class FanOutAndHookTests(ControlCase):
         control.set_limit_row("demo", "global", "day", "pct", 2, now=self.now)
         payload = json.dumps({"hook_event_name": "PreToolUse", "tool_name": "Edit", "tool_input": {},
                               "cwd": self.project})
-        code, out, _ = run_cli(["hook", "pre"], stdin_text=payload)
+        with mock.patch("roadmap.services.hooks.time.time", return_value=self.now.timestamp()):
+            code, out, _ = run_cli(["hook", "pre"], stdin_text=payload)
         self.assertEqual(code, 0)
         reply = json.loads(out)
         self.assertEqual(reply["hookSpecificOutput"]["permissionDecision"], "deny")
@@ -308,7 +309,10 @@ class FanOutAndHookTests(ControlCase):
         control.set_limit_row("demo", "global", "day", "pct", 2, now=self.now)
         control.override("demo", 1, now=self.now)
         self.assertIsNone(self.gate(self.now + datetime.timedelta(minutes=30)))
-        self.assertIsNotNone(self.gate(self.now + datetime.timedelta(hours=2)))
+        later = self.now + datetime.timedelta(hours=2)
+        self.now = later
+        self.reading(45, minutes_before_now=1)  # a fresh reading, still over the day row
+        self.assertIsNotNone(self.gate(later))
 
     def test_stale_usage_lets_the_hook_through(self):
         self.reading(40, minutes_before_now=20)

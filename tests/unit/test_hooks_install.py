@@ -118,6 +118,9 @@ class HooksInstallTests(ProjectCase):
 class HooksUninstallStatusTests(ProjectCase):
     def setUp(self):
         super().setUp()
+        saved = os.environ.pop("CLAUDECODE", None)  # an agent shell refuses uninstall; these tests are a person's
+        if saved is not None:
+            self.addCleanup(os.environ.__setitem__, "CLAUDECODE", saved)
         self.init_and_add()
         self.settings = self.settings_path()
 
