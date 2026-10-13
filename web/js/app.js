@@ -12,6 +12,7 @@ import { loadSection, sectionById } from "./routes.js";
 import { configureCommands, pendingValue, run } from "./cmd.js";
 import { initKeys, setKeyHooks } from "./keys.js";
 import { bnavView, navView, toggleMore } from "./views/nav.js";
+import { pageAction } from "./views/inbox.js";
 import { topbarView } from "./views/topbar.js";
 import { dismissToast, setToastHold, setToastListener, toastsHtml, undoToast } from "./views/toast.js";
 
@@ -390,6 +391,8 @@ function onClick(event) {
     undoToast(el.getAttribute("data-toast"));
   } else if (action === "toast-close") {
     dismissToast(el.getAttribute("data-toast"));
+  } else if (action === "inbox-answer" || action === "undo-line" || action === "override") {
+    pageAction(action, el);
   }
 }
 

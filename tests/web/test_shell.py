@@ -99,10 +99,18 @@ class CssBudgetTests(unittest.TestCase):
             self.assertTrue(os.path.isfile(os.path.join(CSS_DIR, name)), name)
 
     def test_stub_stylesheets_are_commented_and_small(self):
-        for name in ("panel.css", "work.css", "plan.css", "admin.css", "flow.css"):
+        for name in ("panel.css", "work.css", "plan.css", "admin.css"):
             text = read(os.path.join(CSS_DIR, name))
             self.assertTrue(text.lstrip().startswith("/*"), name)
             self.assertLess(len(text), 400, name)
+
+    def test_flow_css_holds_the_overview_inbox_and_activity_styles(self):
+        # WP30 filled flow.css: the question card and the activity rows. It stays well inside the 51 KB total.
+        text = read(os.path.join(CSS_DIR, "flow.css"))
+        self.assertTrue(text.lstrip().startswith("/*"))
+        self.assertLessEqual(len(text.encode("utf-8")), 4 * 1024)
+        self.assertIn(".qc {", text)
+        self.assertIn(".act-row", text)
 
 
 class RegistryTests(unittest.TestCase):
