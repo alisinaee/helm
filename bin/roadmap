@@ -1,5 +1,24 @@
 #!/bin/sh
 # roadmap-board CLI shim. Follows its own symlinks to find the repo, then runs the package from there.
+# Fast path: `roadmap hook pre` (the PreToolUse gate) exits 0 at once, without starting Python, while no project has a
+# block sentinel (<state>/block-<project>). Most tool calls therefore cost no Python start.
+if [ "$1" = hook ] && [ "$2" = pre ]; then
+    if [ -n "$ROADMAP_HOME" ]; then
+        state=$ROADMAP_HOME/state
+    else
+        state="$HOME/Library/Application Support/roadmap-board"
+    fi
+    armed=
+    for sentinel in "$state"/block-*; do
+        if [ -e "$sentinel" ]; then
+            armed=1
+            break
+        fi
+    done
+    if [ -z "$armed" ]; then
+        exit 0
+    fi
+fi
 src=$0
 while [ -h "$src" ]; do
     dir=$(cd -P "$(dirname "$src")" && pwd)

@@ -90,6 +90,25 @@ review gate (WP13/R1) must be signed before the 1.0.0 release (WP14).
 
 **First use of the tunnel host key (WP14).** `phone start` runs ssh with `StrictHostKeyChecking=yes` and a private `known_hosts` in the state folder, so the tunnel host key must be added once, by you. Run `ssh-keyscan localhost.run`, read the output and check the key yourself, then append the lines to `known_hosts` in the state folder. roadmap never fetches the key itself. Until the key is there, `phone start` exits 6 and `tunnel.log` shows a host key error.
 
+### Control, the PreToolUse gate and agent refusals (WP22, built)
+- **Control state.** Each write recomputes `<state>/control-<project>.json` (stop, stopped tasks, the limit that blocks,
+  the override time). The sentinel `<state>/block-<project>` exists only while something blocks.
+- **Gate.** The PreToolUse hook denies Edit, Write, MultiEdit, NotebookEdit, Bash, Agent, Task, WebFetch and WebSearch
+  while blocked. Read, Grep and Glob are never denied. A Bash command passes only when it starts with `roadmap ` and
+  chains nothing (no `;`, `&`, `|`, backticks, `$(`, redirects or new lines), so a stop cannot be bypassed by a
+  chained command.
+- **Fail open, on purpose.** A missing or unreadable state, an unknown project, an exception or a gate that takes longer
+  than 300 ms lets the call through. The shell shim exits 0 before it starts Python when no sentinel exists.
+  Normal sessions keep working whether or not the roadmap is running. The cost is that a damaged state file lifts
+  the gate; the next write rebuilds it, and a corrupt control file refuses writes until someone fixes or removes it.
+- **Agent refusals.** Ops that loosen control (`resume`, `override`, `limit set`, raising or clearing a budget, `phase
+  approve`, `rules add|rm|sync`) are refused when `CLAUDECODE=1` or the source is `agent`. The refusal names
+  `roadmap ask "<question>"`. Stopping is never refused.
+- **Writes outside the project.** `rules sync` writes only between `<!-- roadmap:rules -->` and
+  `<!-- /roadmap:rules -->` in the project's `CLAUDE.md`, makes a backup first, refuses broken markers and refuses a
+  symlinked file.
+- **Denials are logged** at most once a minute per project in `hooks.log`. Nothing the agent wrote is executed.
+
 ## Known limits
 
 - The usage endpoint and its beta header are not a documented public API. A change on Anthropic's side fails the read

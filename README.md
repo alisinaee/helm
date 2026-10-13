@@ -138,6 +138,8 @@ echo '{"rateLimits":[{"kind":"seven_day","percentUsed":61,"resetsAt":"2026-10-16
 
 | Event | Matcher | What roadmap does |
 |---|---|---|
+| `PreToolUse` | `Edit\|Write\|MultiEdit\|NotebookEdit\|Bash\|Agent\|Task\|WebFetch\|WebSearch` | denies the call while the project is stopped or blocked (`roadmap stop`, a limit); fails open |
+| `SessionStart` | none | adds at most 3 inbox lines to the agent's context |
 | `PostToolUse` | `Agent\|Task\|Bash` | starts a job when an agent, a task or a known background command starts |
 | `SubagentStop` | none | closes the job of that agent |
 | `Stop` | none | closes jobs whose work has finished (an agent with no output change for 3 minutes, a result file that has appeared) |
@@ -212,6 +214,17 @@ Every command accepts `--json` and then prints `{"ok": true, "data": ...}` or
 | `roadmap agent-guide` | print the short guide for AI agents (at most 40 lines) |
 | `roadmap hooks install\|uninstall\|status <id>` | manage the Claude Code hook entries of a project |
 | `roadmap hook` | the hook entry point; Claude Code runs it, you do not |
+| `roadmap stop [--task ID]` | stop the project, or one task: the next gated tool call is denied |
+| `roadmap resume [--project ID]` | clear the stop and the stopped tasks (refused from an agent shell) |
+| `roadmap override --hours N` | let work run past a budget or weekly block for 1 to 4 hours (refused from an agent shell) |
+| `roadmap limit set <pct>` | stop agents at this weekly usage percent, 1 to 100 (refused from an agent shell) |
+| `roadmap limit budget project\|phase P\|model M\|task ID <K>` | set a budget in thousands of tokens; `clear` removes it; raising it is refused from an agent |
+| `roadmap phase approve <P>` | mark a phase approved (refused from an agent shell) |
+| `roadmap rules show [--for ID] [--model M] [--role lead\|worker]` | the rules for a worker or lead, at most 12 lines |
+| `roadmap rules add <scope> <kind> "<text>" [--budget N]` | add a rule to `docs/rules.txt` (refused from an agent shell) |
+| `roadmap rules rm R3` | remove a rule (refused from an agent shell) |
+| `roadmap rules sync [--dry-run]` | write the all, lead and claude rules into `CLAUDE.md` between the markers, with a backup |
+| `roadmap rules check` | validate `docs/rules.txt` against the caps (60 rules, 160 characters, 8 KB) |
 | `roadmap usage show` | print the stored plan usage and whether it is stale |
 | `roadmap usage sync` | read the plan usage now (keychain, then the Anthropic endpoint) |
 | `roadmap usage push` | store plan usage from JSON on stdin |
