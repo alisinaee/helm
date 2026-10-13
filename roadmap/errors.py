@@ -13,11 +13,13 @@ EXIT_DOCTOR = 10
 class RoadmapError(Exception):
     """An error with a stable machine code, a plain-words message and a CLI exit code."""
 
-    def __init__(self, code, message, exit=EXIT_ERROR):
+    def __init__(self, code, message, exit=EXIT_ERROR, next=None):
         super().__init__(message)
         self.code = code
         self.message = message
         self.exit = exit
+        # The exact command to run next (printed as "next: ..."), or None.
+        self.next = next
 
 
 def not_implemented(name):
