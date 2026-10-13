@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>roadmap-board self-test</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/components.css">
+</head>
+<body>
+<main class="main app">
+  <h1 class="topbar-title">Self-test</h1>
+  <p class="placeholder">Checks the JavaScript formatters against the shared fixture, and that this page does not
+  scroll sideways.</p>
+  <p id="result" class="badge">Running</p>
+  <ul id="report" class="run-list"></ul>
+</main>
+<script type="application/json" id="format-cases">
+[
+ {
+  "fn": "fmt_tokens",
+  "input": 840,
+  "expected": "840k"
+ },
+ {
+  "fn": "fmt_tokens",
+  "input": 0,
+  "expected": "0k"
+ },
+ {
+  "fn": "fmt_tokens",
+  "input": 999.4,
+  "expected": "999k"
+ },
+ {
+  "fn": "fmt_tokens",
+  "input": 999.6,
+  "expected": "1.0M"
+ },
+ {
+  "fn": "fmt_tokens",
+  "input": 1000,
+  "expected": "1.0M"
+ },
+ {
+  "fn": "fmt_tokens",
+  "input": 1234,
+  "expected": "1.2M"
+ },
+ {
+  "fn": "fmt_tokens",
+  "input": 2600,
+  "expected": "2.6M"
+ },
+ {
+  "fn": "fmt_tokens",
+  "input": null,
+  "expected": "–"
+ },
+ {
+  "fn": "fmt_tokens",
+  "input": 840.5,
+  "expected": "841k"
+ },
+ {
+  "fn": "fmt_percent",
+  "input": 63,
+  "expected": "63%"
+ },
+ {
+  "fn": "fmt_percent",
+  "input": 0,
+  "expected": "0%"
+ },
+ {
+  "fn": "fmt_percent",
+  "input": 0.4,
+  "expected": "<1%"
+ },
+ {
+  "fn": "fmt_percent",
+  "input": 0.5,
+  "expected": "<1%"
+ },
+ {
+  "fn": "fmt_percent",
+  "input": 1,
+  "expected": "1%"
+ },
+ {
+  "fn": "fmt_percent",
+  "input": 99.6,
+  "expected": "100%"
+ },
+ {
+  "fn": "fmt_percent",
+  "input": 72,
+  "expected": "72%"
+ },
+ {
+  "fn": "fmt_percent",
+  "input": 62.5,
+  "expected": "63%"
+ },
+ {
+  "fn": "fmt_percent",
+  "input": null,
+  "expected": "–"
+ },
+ {
+  "fn": "fmt_duration",
+  "input": 45,
+  "expected": "45s"
+ },
+ {
+  "fn": "fmt_duration",
+  "input": 0,
+  "expected": "0s"
+ },
+ {
+  "fn": "fmt_duration",
+  "input": 59.4,
+  "expected": "59s"
+ },
+ {
+  "fn": "fmt_duration",
+  "input": 59.6,
+  "expected": "1m 00s"
+ },
+ {
+  "fn": "fmt_duration",
+  "input": 252,
+  "expected": "4m 12s"
+ },
+ {
+  "fn": "fmt_duration",
+  "input": 3600,
+  "expected": "1h 00m"
+ },
+ {
+  "fn": "fmt_duration",
+  "input": 3900,
+  "expected": "1h 05m"
+ },
+ {
+  "fn": "fmt_duration",
+  "input": 86399,
+  "expected": "23h 59m"
+ },
+ {
+  "fn": "fmt_duration",
+  "input": 86400,
+  "expected": "1d 0h"
+ },
+ {
+  "fn": "fmt_duration",
+  "input": 97200,
+  "expected": "1d 3h"
+ },
+ {
+  "fn": "fmt_duration",
+  "input": -5,
+  "expected": "0s"
+ },
+ {
+  "fn": "fmt_duration",
+  "input": null,
+  "expected": "–"
+ },
+ {
+  "fn": "fmt_count",
+  "input": 0,
+  "expected": "0"
+ },
+ {
+  "fn": "fmt_count",
+  "input": 999,
+  "expected": "999"
+ },
+ {
+  "fn": "fmt_count",
+  "input": 1234,
+  "expected": "1,234"
+ },
+ {
+  "fn": "fmt_count",
+  "input": 1234567,
+  "expected": "1,234,567"
+ },
+ {
+  "fn": "fmt_count",
+  "input": 1234.5,
+  "expected": "1,235"
+ },
+ {
+  "fn": "fmt_count",
+  "input": null,
+  "expected": "–"
+ }
+]
+</script>
+<script type="module" src="/dev/tests.js"></script>
+</body>
+</html>

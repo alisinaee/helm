@@ -8,10 +8,12 @@ import signal
 import sys
 import threading
 
+from roadmap import log as rlog
 from roadmap.errors import EXIT_CONFLICT, EXIT_USAGE, RoadmapError, stub
 from roadmap.http import server as http_server
-from roadmap.services import loader, usage
+from roadmap.services import launchd, loader, usage
 from roadmap.store import config as config_store
+from roadmap.store import paths
 
 DEFAULT_PORT = 8765
 
@@ -43,6 +45,8 @@ def run(args):
         raise RoadmapError("conflict", "port %d is busy (used by %s)" % (port, who), EXIT_CONFLICT)
 
     _log_to_stderr()
+    rlog.setup_file_logging(paths.logs_dir())
+    launchd.prepare_launchd_logs()
     bound = httpd.server_address[1]
     url = "http://127.0.0.1:%d/" % bound
     stop_usage = threading.Event()

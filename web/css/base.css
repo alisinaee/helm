@@ -1,0 +1,130 @@
+/* Base rules: reset, type, focus ring, page frame and the responsive breakpoints (640 and 1000 px).
+   Colours and sizes come from tokens.css only. No inline styles anywhere: the CSP forbids them. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-0);
+  color: var(--text-1);
+  font-family: var(--font-ui);
+  font-size: var(--fs-13);
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+h1,
+h2,
+h3,
+p,
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+ul {
+  list-style: none;
+}
+
+button,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: var(--sp-2);
+  left: var(--sp-2);
+  padding: var(--sp-1) var(--sp-2);
+  background: var(--surface-1);
+  color: var(--text-1);
+  border-radius: var(--r-control);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--sp-6);
+}
+
+.main {
+  padding: var(--sp-4) 0 var(--sp-8);
+  min-width: 0;
+}
+
+.main:focus {
+  outline: none;
+}
+
+.topbar-wrap,
+.band-wrap,
+.kpi-wrap {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .app {
+    padding: 0 var(--sp-4);
+  }
+
+  button,
+  select,
+  a.btn {
+    min-height: var(--h-row);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
