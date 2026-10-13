@@ -55,7 +55,7 @@ class CliTests(unittest.TestCase):
         self.assertIn("not implemented", err)
 
     def test_every_group_is_registered_and_stubbed(self):
-        for argv in (["serve"], ["open"], ["service", "logs"], ["phone", "link"], ["doctor"]):
+        for argv in (["open"], ["service", "logs"], ["phone", "link"], ["doctor"]):
             with self.subTest(argv=argv):
                 code, out, _ = run(argv + ["--json"])
                 self.assertEqual(code, 1)

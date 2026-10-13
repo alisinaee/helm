@@ -1,0 +1,7 @@
+{"type": "object", "required": ["projects"],
+ "properties": {"projects": {"type": "array", "items": {"type": "object",
+   "required": ["id", "name", "progress", "tasks_left", "running", "need_user", "errors_count", "stale"],
+   "properties": {"id": {"type": "string"}, "name": {"type": "string"}, "progress": {"type": "number"},
+                  "tasks_left": {"type": "integer"}, "running": {"type": "integer"},
+                  "need_user": {"type": "integer"}, "errors_count": {"type": "integer"},
+                  "stale": {"type": "boolean"}}}}}}

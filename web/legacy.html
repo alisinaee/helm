@@ -1,0 +1,928 @@
+<!doctype html>
+<!-- TODO(WP8): temporary page, served only while index.html does not exist. Its inline <style> and <script>
+     need the legacy-only CSP exception in roadmap/http/security.py (CSP_LEGACY). Delete this file with WP8. -->
+
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>split-net roadmap</title>
+<style>
+/* tokens: spacing 4/8/12/16/24; type 11/12/13/15/17 (+22 for stat values); radii 6 controls, 8 cards */
+:root{
+  --bg:#0b0d12;--panel:#141821;--line:#2a3144;--text:#e6e9f2;--muted:#9aa3b8;--track:#262c3d;
+  --green:#22c55e;--yellow:#facc15;--red:#f87171;--cyan:#22d3ee;--gray:#6b7280;--blue:#60a5fa;--magenta:#e879f9;
+  --defer:#a79bd0;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;
+  --r-ctl:6px;--r-card:8px;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:13px;line-height:20px}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:var(--r-ctl)}
+.wrap{width:100%;max-width:1440px;margin:0 auto;padding:var(--s4) var(--s6) var(--s6);min-width:0;overflow-wrap:anywhere}
+.top{display:flex;justify-content:space-between;align-items:center;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s4)}
+h1{font-size:17px;line-height:24px;font-weight:600;margin:0}
+.sub{color:var(--muted);font-size:12px;line-height:16px}
+.live{display:flex;align-items:center;gap:var(--s2);color:var(--green);font-weight:600;font-size:12px}
+.live.bad{color:var(--red)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex:none;animation:pulse 1.8s infinite}
+.live.bad .dot{background:var(--red);animation:none}
+.clock{color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums;margin-left:var(--s1)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+@media (prefers-reduced-motion:reduce){.dot,.rdot,.pchip,.phase.has-run,.task.is-run{animation:none}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);padding:var(--s4);min-width:0}
+.ctitle{font-size:15px;line-height:20px;font-weight:600;margin-bottom:var(--s3);display:flex;justify-content:space-between;align-items:baseline;gap:var(--s2)}
+.muted{color:var(--muted)}
+.small{font-size:12px;font-weight:400}
+.warn{background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.4);color:#fde68a;border-radius:var(--r-card);padding:var(--s2) var(--s3);margin-bottom:var(--s4);font-size:12px}
+.warn:empty{display:none}
+
+/* top bar: segmented view control next to the live badge */
+.topR{display:flex;align-items:center;flex-wrap:wrap;gap:var(--s3) var(--s4);min-width:0}
+.seg{display:inline-flex;align-items:center;gap:var(--s1);padding:2px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--track)}
+.segb{appearance:none;margin:0;border:1px solid transparent;background:transparent;color:var(--muted);font:inherit;font-size:12px;line-height:16px;font-weight:600;min-height:28px;padding:0 var(--s3);border-radius:4px;cursor:pointer;white-space:nowrap}
+.segb:hover{color:var(--text)}
+.segb[aria-pressed="true"]{background:var(--panel);color:var(--text);border-color:var(--line)}
+.segb:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+/* section headers: the whole row is the button (32 high min); chevron sits at the far right */
+.sbtn{appearance:none;box-sizing:border-box;display:flex;align-items:center;gap:var(--s2);width:100%;min-width:0;min-height:32px;margin:0 0 var(--s3);padding:0;border:0;border-radius:var(--r-ctl);background:none;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.sbtn:hover .schev{color:var(--text)}
+.sbtn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.sname{flex:none;font-size:15px;line-height:20px;font-weight:600}
+.ssum{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:12px;line-height:16px;font-weight:400;font-variant-numeric:tabular-nums}
+.schev{flex:none;width:16px;height:16px;margin-left:auto;color:var(--muted);transition:transform 150ms ease}
+.schev path{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.sbtn[aria-expanded="false"] .schev{transform:rotate(-90deg)}
+.sbtn[aria-expanded="false"]{margin-bottom:0}
+/* collapsible body: grid row 1fr to 0fr, so the height animates without measuring */
+.sbody{display:grid;grid-template-rows:1fr;opacity:1;visibility:visible;transition:grid-template-rows 150ms ease,opacity 150ms ease,visibility 150ms ease}
+.sbody>.sin{min-height:0;overflow:hidden}
+.sbody.is-min{grid-template-rows:0fr;opacity:0;visibility:hidden}
+@media (prefers-reduced-motion:reduce){.sbody,.schev{transition:none}}
+
+/* summary: equal-height stat cards; value row, sub and meter line up across cards */
+.toprow{display:grid;gap:var(--s4)}
+#limit:empty{display:none}
+.lim .shead{display:flex;align-items:center;gap:var(--s2)}
+.lim .shead .sbtn{flex:1 1 auto;min-width:0;margin:0}
+.lim .shead:has(.sbtn[aria-expanded="true"]){margin-bottom:var(--s3)}
+.synb{appearance:none;flex:none;min-height:28px;padding:0 var(--s3);border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--track);color:var(--text);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer}
+.synb:hover{border-color:var(--cyan)}
+.synb:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.synb[disabled]{opacity:.6;cursor:progress}
+.ulim{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s4)}
+.upart{min-width:0;display:flex;flex-direction:column;gap:var(--s2)}
+.ptl{font-size:13px;line-height:20px;font-weight:600}
+.lim .lu{color:var(--muted);font-size:12px;line-height:16px}
+.lim .lu.stale{color:var(--yellow)}
+.lim .lu.err{color:#fde68a}
+.lim .cols3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s3)}
+.lim .ml{color:var(--muted);font-size:11px;line-height:16px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lim .mv{font-size:26px;font-weight:700;line-height:30px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden}
+.lim .m.good .mv{color:var(--green)}
+.lim .m.bad .mv{color:var(--red)}
+.lim .meter{margin-top:var(--s1);height:6px;border-radius:999px;background:var(--track);overflow:hidden}
+.lim .meter i{display:block;height:100%;border-radius:inherit}
+.lim .mm{color:var(--muted);font-size:12px;line-height:16px;margin-top:var(--s1);font-variant-numeric:tabular-nums}
+#summary .sin{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s3);align-items:stretch}
+@media (min-width:1180px){#summary .sin{grid-template-columns:repeat(7,minmax(0,1fr))}}
+#summary .wide{grid-column:1/-1}
+@media (max-width:640px){#summary .card.stat:nth-last-child(2):nth-child(odd){grid-column:1/-1}}
+.stat{display:flex;flex-direction:column;min-height:120px}
+.stat .l,.lbl{font-size:11px;line-height:16px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat .v{margin-top:var(--s2);min-height:32px;display:flex;align-items:baseline;flex-wrap:nowrap;gap:var(--s1);
+  font-size:28px;line-height:32px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;min-width:0}
+.stat .v .of{font-size:12px;line-height:16px;font-weight:500;color:var(--muted)}
+.stat .sub{margin-top:var(--s1);font-size:12px;line-height:16px;color:var(--muted);flex:1 1 auto}
+.stat .meter{margin-top:var(--s2);height:6px;border-radius:999px;background:var(--track);overflow:hidden}
+.stat .meter i{display:block;height:100%;border-radius:inherit}
+.stat .meter.off{visibility:hidden}
+.stat.run-on .v{color:var(--cyan)}
+.chips{display:flex;flex-wrap:wrap;gap:var(--s1);min-width:0}
+.chip{display:inline-block;font-size:12px;line-height:16px;font-weight:600;padding:2px var(--s2);border-radius:var(--r-ctl);white-space:nowrap;color:#0b0d12}
+.m-haiku{background:var(--cyan)}
+.m-sonnet{background:var(--yellow)}
+.m-opus{background:var(--red)}
+.m-cursor{background:#9333ea;color:#fff}
+.m-agy{background:#fb923c;color:#0b0d12}
+.m-none{background:var(--gray)}
+.chip.you{background:rgba(250,204,21,.14);color:#fde68a;border:1px solid rgba(250,204,21,.5);padding:1px 7px}
+.chip.t-task{background:transparent;color:var(--muted);border:1px solid var(--line);font-family:var(--mono)}
+.chip.t-def{background:transparent;color:#c4b9e6;border:1px solid rgba(167,155,208,.55);font-weight:500}
+.chip.pchip{background:var(--cyan);animation:jpulse 1.6s infinite}
+
+/* overall */
+#overall .wide{margin-bottom:var(--s4)}
+.bhead{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:var(--s2);font-size:13px;margin-bottom:var(--s1)}
+.bhead b{font-weight:600;min-width:48px;text-align:right;font-variant-numeric:tabular-nums}
+.stack{display:flex;height:8px;border-radius:999px;background:var(--track);overflow:hidden}
+.stack i{display:block;height:100%}
+.stack .s-done{background:var(--green)}.stack .s-part{background:var(--cyan)}
+.ov-legend{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);font-size:12px;color:var(--muted);margin-top:var(--s2)}
+.ov-legend b{color:var(--text);font-variant-numeric:tabular-nums}
+.phgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--s2) var(--s4);margin:var(--s4) 0}
+.ph{display:grid;grid-template-columns:32px minmax(0,1fr) 56px 44px;column-gap:var(--s2);align-items:center;font-size:12px;line-height:16px}
+.ph .id{font-weight:600}
+.ph .pn{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ph .pp{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.ph .dn{grid-column:3/5;text-align:right;color:var(--muted)}
+.ph.deferred{opacity:.6}
+.bars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s4)}
+.bar{display:block;height:6px;border-radius:999px;background:var(--track);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:inherit}
+.c-cyan{background:var(--cyan)}.c-green{background:var(--green)}.c-blue{background:var(--blue)}
+
+/* main: phases left, sidebar right */
+.main{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:var(--s4);margin-top:var(--s4);align-items:start}
+.phases{display:flex;flex-direction:column;gap:var(--s2);min-width:0}
+.phase{padding:var(--s2) var(--s3);transition:border-color .2s}
+.phase.active{border-color:var(--pc,var(--line))}
+.phase.is-done{opacity:.7}
+.phase.is-deferred{opacity:.6}
+.phase.has-run{border-color:var(--cyan);animation:ring 2s ease-in-out infinite}
+.phase.is-deferred.has-run{opacity:1}
+
+/* phase header: one fixed-column grid, so every row lines up */
+.phead{all:unset;box-sizing:border-box;display:grid;grid-template-columns:16px minmax(0,1fr) 96px 64px 88px 44px 12px;
+  column-gap:var(--s2);align-items:center;width:100%;min-height:24px;cursor:pointer;font-size:13px}
+.phead:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:var(--r-ctl)}
+.pico{grid-column:1;text-align:center}
+.ptitle{grid-column:2;display:flex;align-items:center;gap:var(--s2);min-width:0}
+.ptxt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptxt b{font-weight:600}
+.pbar{grid-column:3;min-width:0}
+.pmeta{display:contents}
+.pcount{grid-column:4;text-align:right;color:var(--muted);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pleft{grid-column:5;text-align:right;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.ppct{grid-column:6;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.caret{grid-column:7;text-align:center;color:var(--muted)}
+.tasks{margin-top:var(--s2);border-top:1px solid var(--line);padding-top:var(--s1)}
+
+/* task rows: title takes the free width, the numeric and chip columns are fixed */
+.task{display:grid;grid-template-columns:minmax(0,1fr) 56px 84px 76px 112px 84px;column-gap:var(--s2);align-items:center;
+  min-height:32px;padding:var(--s1) 0;border-bottom:1px dashed var(--line)}
+.task:last-child{border-bottom:0}
+.task.done{opacity:.55}
+.task.deferred-row{opacity:.75}
+.task.is-run{padding-left:var(--s2);border-radius:var(--r-ctl);animation:rowglow 2s ease-in-out infinite}
+.tline{display:flex;align-items:center;gap:var(--s2);min-width:0}
+.sdot{width:8px;height:8px;border-radius:50%;flex:none}
+.tid{font-family:var(--mono);font-size:12px;color:var(--muted);flex:none;min-width:48px}
+.ttl{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tchips{display:contents}
+.tk{font-size:12px;color:var(--muted);white-space:nowrap;text-align:right;justify-self:end;font-variant-numeric:tabular-nums}
+.tdone{grid-column:2/-1;justify-self:end}
+.task .chip{justify-self:end}
+.note{grid-column:1/-1;color:var(--muted);font-size:12px;line-height:16px;padding:var(--s1) 0 0 16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tjob{grid-column:1/-1;display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s1);padding:var(--s1) var(--s2);
+  border-radius:var(--r-ctl);background:rgba(34,211,238,.09);border:1px solid rgba(34,211,238,.35);font-size:12px}
+.tfin{grid-column:1/-1;color:var(--muted);font-size:12px;padding-left:16px}
+.dtog{all:unset;box-sizing:border-box;display:block;margin-top:var(--s2);padding:var(--s1) 0;color:var(--muted);font-size:12px;cursor:pointer}
+.dtog:hover{color:var(--text)}
+.dtog:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:4px}
+.dlist{margin-top:var(--s1)}
+.dlist .task{min-height:32px}
+
+/* sidebar: sticky on wide screens */
+.side{position:sticky;top:var(--s3);align-self:start;max-height:calc(100vh - 24px);overflow:auto;display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.side .chips{margin-top:var(--s1)}
+.sc{font-size:12px;line-height:16px;font-weight:600;padding:2px var(--s2);border-radius:var(--r-ctl);border:1px solid;white-space:nowrap}
+.sc-done{background:rgba(34,197,94,.18);color:#86efac;border-color:rgba(34,197,94,.5)}
+.sc-part{background:rgba(250,204,21,.16);color:#fde68a;border-color:rgba(250,204,21,.5)}
+.sc-todo{background:rgba(107,114,128,.18);color:#c5cad4;border-color:rgba(107,114,128,.55)}
+ol.next{margin:0;padding-left:var(--s4);display:grid;gap:var(--s1);font-size:13px}
+.logrow{padding:var(--s1) 0;border-bottom:1px dashed var(--line);font-size:13px}
+.logrow:last-child{border-bottom:0}
+.legend{color:var(--muted);font-size:12px;line-height:18px}
+
+/* running now */
+#running{border-color:rgba(34,211,238,.35)}
+.rnone{color:var(--muted);font-size:13px;padding:var(--s1) 0}
+.rjob{padding:var(--s2) 0;border-bottom:1px dashed var(--line)}
+.rjob:last-child{border-bottom:0}
+.rline{display:flex;align-items:center;gap:var(--s2);min-width:0;flex-wrap:wrap}
+.rdot{width:8px;height:8px;border-radius:50%;background:var(--cyan);flex:none;animation:jpulse 1.6s infinite}
+.rtitle{font-weight:600;min-width:0;flex:1 1 140px;overflow-wrap:anywhere}
+.rmeta{margin:var(--s1) 0 0 16px;font-size:12px;color:var(--muted)}
+.ela{color:var(--cyan);font-weight:600;font-variant-numeric:tabular-nums}
+.fhead{color:var(--muted);font-size:11px;line-height:16px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;margin:var(--s4) 0 var(--s1)}
+.fin{list-style:none;margin:0;padding:0}
+.fin li{display:grid;grid-template-columns:14px minmax(0,1fr) 76px 56px 80px;column-gap:var(--s2);align-items:center;
+  min-height:32px;padding:var(--s1) 0;border-bottom:1px dashed var(--line);font-size:13px}
+.fin li:last-child{border-bottom:0}
+.fin li .chip{justify-self:end}
+.fico{text-align:center;font-weight:700}
+.fico.ok{color:var(--green)}
+.fico.bad{color:var(--red)}
+.ftitle{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fdur{color:var(--muted);font-size:12px;text-align:right;justify-self:end;white-space:nowrap;font-variant-numeric:tabular-nums}
+.fnote{grid-column:2/-1;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+@keyframes jpulse{0%{box-shadow:0 0 0 0 rgba(34,211,238,.7)}70%{box-shadow:0 0 0 8px rgba(34,211,238,0)}100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}}
+@keyframes ring{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}50%{box-shadow:0 0 0 3px rgba(34,211,238,.3)}}
+@keyframes rowglow{0%,100%{box-shadow:inset 3px 0 0 var(--cyan),0 0 0 0 rgba(34,211,238,0)}50%{box-shadow:inset 3px 0 0 var(--cyan),0 0 12px 0 rgba(34,211,238,.22)}}
+
+/* narrow screens: .side dissolves into the .main grid so the running card sits above the phases */
+@media (max-width:1000px){
+  .main{grid-template-columns:minmax(0,1fr)}
+  .side{display:contents}
+  #running{order:-1}
+  .side>.card{order:1}
+}
+@media (min-width:641px) and (max-width:1000px){
+  .main{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .phases,#running{grid-column:1/-1}
+}
+@media (max-width:640px){
+  .wrap{padding:var(--s4)}
+  #summary .sin{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bars{grid-template-columns:minmax(0,1fr)}
+  .phead{grid-template-columns:16px minmax(0,1fr) 44px 12px}
+  .pico{grid-column:1;grid-row:1}
+  .ptitle{grid-column:2;grid-row:1}
+  .ppct{grid-column:3;grid-row:1}
+  .caret{grid-column:4;grid-row:1}
+  .pbar{grid-column:2/5;grid-row:2;margin-top:var(--s1)}
+  .pmeta{display:flex;align-items:center;gap:var(--s2);grid-column:2/5;grid-row:3;min-width:0}
+  .pcount,.pleft{grid-column:auto;text-align:left}
+  .task{grid-template-columns:minmax(0,1fr)}
+  .tchips{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s1) var(--s2);padding-left:16px}
+  .tchips>:empty{display:none}
+  .tk,.task .chip,.tdone{justify-self:auto;grid-column:auto}
+  .fin li{grid-template-columns:14px minmax(0,1fr) auto auto auto}
+  .fin li .chip,.fdur{justify-self:auto}
+}
+
+/* KPI strip: shown only in the minimal view (body.is-min-view) */
+#kpi{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s2)}
+@media (min-width:641px){#kpi{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media (min-width:1000px){#kpi{grid-template-columns:repeat(9,minmax(0,1fr))}}
+.kt{position:relative;min-width:0;padding:var(--s2) var(--s3);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);--tone:var(--cyan)}
+.kt.t-good{--tone:var(--green)}
+.kt.t-warn{--tone:var(--yellow)}
+.kt.t-bad{--tone:var(--red)}
+.kt.t-run{--tone:var(--cyan)}
+.kl{font-size:11px;line-height:14px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kt.k-sync .kl{padding-right:28px}
+.kv{margin-top:var(--s1);font-size:26px;line-height:30px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
+.kt[class*="t-"] .kv{color:var(--tone)}
+.kw{font-size:12px;font-weight:500;color:var(--muted)}
+.ks{font-size:11px;line-height:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.kb{height:4px;margin-top:var(--s2);border-radius:999px;background:var(--track);overflow:hidden}
+.kb i{display:block;height:100%;background:var(--tone,var(--cyan));border-radius:inherit}
+.kref{all:unset;box-sizing:border-box;position:absolute;top:0;right:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-ctl);color:var(--muted);cursor:pointer}
+.kref:hover{color:var(--text)}
+.kref:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.kref[disabled]{cursor:progress}
+.kref .ico{width:16px;height:16px}
+.kref .ico path{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.kref.busy .ico{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.kfoot{grid-column:1/-1;font-size:11px;line-height:14px;color:var(--muted);padding:0 var(--s1)}
+.kfoot.err{color:#fde68a}
+@media (max-width:640px){.kt{padding:var(--s2)}.kv{font-size:24px}.ulim{grid-template-columns:minmax(0,1fr)}.lim .mv{font-size:22px}}
+
+body.is-min-view #kpi{display:grid}
+body.is-min-view #limit,body.is-min-view #summary,body.is-min-view #overall,body.is-min-view #spikes,
+body.is-min-view #rh,body.is-min-view #next,body.is-min-view #recent,body.is-min-view #legend{display:none}
+body.is-min-view .main{grid-template-columns:minmax(0,1fr);margin-top:var(--s2)}
+body.is-min-view .side{display:contents}
+body.is-min-view #running{order:-1}
+body.is-min-view #running:not(.has-jobs){display:none}
+body.is-min-view #running .sbtn,body.is-min-view #running .fhead,body.is-min-view #running .fin,body.is-min-view #running .rnone{display:none}
+body.is-min-view #running .sbody{grid-template-rows:1fr;opacity:1;visibility:visible}
+body.is-min-view #running{padding:var(--s3) var(--s4)}
+body.is-min-view .phases{gap:var(--s1)}
+body.is-min-view .phase{padding:0 var(--s3)}
+body.is-min-view .phead{min-height:30px}
+body.is-min-view .tasks{display:none}
+@media (max-width:640px){
+  body.is-min-view .pbar,body.is-min-view .pmeta{display:none}
+  body.is-min-view .phead{grid-template-columns:16px minmax(0,1fr) 44px 12px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>split-net roadmap</h1>
+      <div class="sub" id="sub">loading...</div>
+    </div>
+    <div class="topR">
+      <div class="seg" id="seg" role="group" aria-label="Section view"><button type="button" class="segb" data-view="min" aria-pressed="false">Minimal all</button><button type="button" class="segb" data-view="exp" aria-pressed="true">Expand all</button></div>
+      <div class="live" id="live"><span class="dot"></span><span id="livetxt">live</span><span class="clock">updated <span id="clock">--:--:--</span></span></div>
+    </div>
+  </header>
+  <div class="warn" id="errors"></div>
+
+  <div class="toprow">
+    <div id="kpi"></div>
+    <div id="limit"></div>
+    <div id="summary"><div class="card muted">loading...</div></div>
+    <div class="card" id="overall"><div class="ctitle">Overall</div></div>
+  </div>
+
+  <div class="main">
+    <div class="phases" id="phases"></div>
+    <aside class="side">
+      <div class="card" id="running"></div>
+      <div class="card" id="spikes"></div>
+      <div class="card" id="rh" hidden></div>
+      <div class="card" id="next"></div>
+      <div class="card" id="recent"></div>
+      <div class="card" id="legend">
+        <div class="ctitle">Legend</div>
+        <div class="legend">● done ◐ partial ○ todo ⏸ hold ◌ deferred (macOS first)<br>needs you = the task waits on you (amber chip)<br>▶ N running = jobs in flight in that phase<br>✓ = short review by the stronger model<br>tokens are estimates, ~Nk = thousands of tokens; deferred and hold tasks are not counted as left</div>
+      </div>
+    </aside>
+  </div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var KEY = "splitnet-roadmap-open";          // phases expanded
+  var KEY_COLL = "splitnet-roadmap-collapsed"; // phases the user collapsed by hand (never auto-expanded)
+  var MODEL_CLS = {haiku: "m-haiku", sonnet: "m-sonnet", opus: "m-opus", cursor: "m-cursor", agy: "m-agy", head: "m-none"};
+  var ICON = {done: "●", partial: "◐", todo: "○", hold: "⏸", deferred: "◌"};
+  var PCOL = {done: "var(--green)", partial: "var(--yellow)", todo: "var(--gray)", hold: "var(--magenta)", deferred: "var(--defer)"};
+  var openIds = null;    // Set of open phase ids; null until the first data arrives
+  var manualColl = new Set();  // phases the user collapsed by hand
+  var openDefer = new Set();   // phases whose deferred list is expanded
+  var prevRun = null;    // phase id -> true for phases that had running jobs at the last render
+  var lastKey = "";      // JSON of the data without server_time; re-render only when it changes
+  var lastHTML = {};     // section id -> last html written, so unchanged sections are not touched
+  var data = null;
+  var SEC_KEYS = ["limit", "summary", "overall", "running", "spikes", "rh", "next", "recent"];
+  var KEY_SEC = "splitnet-dash-collapsed";   // JSON array: sections in the minimal view
+  var KEY_VIEW = "splitnet-dash-view";       // last global choice: "min", "exp", or "mix" (sections differ)
+  var secMin = new Set();                    // collapsed section keys; default is all expanded
+  var view = "exp";
+  try {
+    var savedSec = JSON.parse(localStorage.getItem(KEY_SEC) || "[]");
+    if (Array.isArray(savedSec)) secMin = new Set(savedSec.filter(function (k) { return SEC_KEYS.indexOf(k) >= 0; }));
+  } catch (e) { /* memory only */ }
+  try {
+    var savedView = localStorage.getItem(KEY_VIEW);
+    if (savedView === "min" || savedView === "exp" || savedView === "mix") view = savedView;
+  } catch (e) { /* memory only */ }
+
+  try {
+    var saved = localStorage.getItem(KEY);
+    if (saved) openIds = new Set(JSON.parse(saved));
+  } catch (e) { /* storage unavailable: memory only */ }
+  try {
+    var coll = localStorage.getItem(KEY_COLL);
+    if (coll) manualColl = new Set(JSON.parse(coll));
+  } catch (e) { /* memory only */ }
+
+  function saveSet(key, set) {
+    try { localStorage.setItem(key, JSON.stringify(Array.from(set))); } catch (e) { /* memory only */ }
+  }
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c];
+    });
+  }
+  function pct(f) { return Math.round(f * 100) + "%"; }
+  function fmtK(n) {
+    n = Math.round(n);
+    return n >= 1000 ? (n / 1000).toFixed(1) + "M" : n + "k";
+  }
+  // m:ss, or h:mm:ss from one hour on (live timers)
+  function fmtClock(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    var mm = String(m).padStart(2, "0"), ss = String(s).padStart(2, "0");
+    return h > 0 ? h + ":" + mm + ":" + ss : m + ":" + ss;
+  }
+  // finished durations: 42s, 4m 05s, 1h 12m
+  function fmtDur(sec) {
+    if (sec == null) return "";
+    sec = Math.max(0, Math.round(sec));
+    if (sec < 60) return sec + "s";
+    if (sec < 3600) return Math.floor(sec / 60) + "m " + String(sec % 60).padStart(2, "0") + "s";
+    return Math.floor(sec / 3600) + "h " + String(Math.floor((sec % 3600) / 60)).padStart(2, "0") + "m";
+  }
+  function modelChip(m) {
+    return '<span class="chip ' + (MODEL_CLS[m] || "m-none") + '">' + esc(m || "?") + "</span>";
+  }
+  // one stat card: label, value row, sub line, and a meter line at the bottom (kept in every card so rows align)
+  function stat(label, value, sub, opt) {
+    opt = opt || {};
+    var meter = opt.meter == null
+      ? '<div class="meter off" aria-hidden="true"></div>'
+      : '<div class="meter" role="img" aria-label="' + esc(opt.meterLabel || "") + '"><i style="width:' + opt.meter +
+        "%;background:" + opt.color + '"></i></div>';
+    return '<div class="card stat' + (opt.run ? " run-on" : "") + '"><div class="l">' + esc(label) + '</div><div class="v">' +
+      value + '</div><div class="sub">' + sub + "</div>" + meter + "</div>";
+  }
+  function saveStr(key, val) {
+    try { localStorage.setItem(key, val); } catch (e) { /* memory only */ }
+  }
+  // section header: one button with the name, a one-line summary (cut with an ellipsis) and a chevron
+  function chevron() {
+    return '<svg class="schev" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 6l4 4 4-4"/></svg>';
+  }
+  function secHead(key, name, sum) {
+    return '<button type="button" class="sbtn" data-sec="' + key + '" data-name="' + esc(name) +
+      '" aria-expanded="true" aria-label="Collapse ' + esc(name) + '"><span class="sname">' + esc(name) +
+      '</span><span class="ssum" title="' + esc(sum) + '">' + esc(sum) + "</span>" + chevron() + "</button>";
+  }
+  // the collapsible part of a section; applyView() sets its state after every render
+  function secBody(key, html) {
+    return '<div class="sbody" data-body="' + key + '"><div class="sin">' + html + "</div></div>";
+  }
+  // push the collapsed set and the global choice into the DOM (re-renders keep the state, no flicker)
+  function applyView() {
+    var i, el;
+    document.body.classList.toggle("is-min-view", view === "min");
+    var bodies = document.querySelectorAll("[data-body]");
+    for (i = 0; i < bodies.length; i++) {
+      bodies[i].classList.toggle("is-min", secMin.has(bodies[i].getAttribute("data-body")));
+    }
+    var heads = document.querySelectorAll("[data-sec]");
+    for (i = 0; i < heads.length; i++) {
+      el = heads[i];
+      var min = secMin.has(el.getAttribute("data-sec"));
+      el.setAttribute("aria-expanded", min ? "false" : "true");
+      el.setAttribute("aria-label", (min ? "Expand " : "Collapse ") + (el.getAttribute("data-name") || ""));
+    }
+    var segs = document.querySelectorAll("[data-view]");
+    for (i = 0; i < segs.length; i++) {
+      segs[i].setAttribute("aria-pressed", segs[i].getAttribute("data-view") === view ? "true" : "false");
+    }
+  }
+  function setView(v) {
+    secMin = new Set(v === "min" ? SEC_KEYS : []);
+    view = v;
+    saveSet(KEY_SEC, secMin);
+    saveStr(KEY_VIEW, v);
+    applyView();
+  }
+  // Running now card: running jobs with live timers, then the last 6 finished jobs.
+  function runningHTML(jobs) {
+    var running = jobs.filter(function (j) { return j.status === "running"; });
+    var finished = jobs.filter(function (j) { return j.status !== "running"; })
+      .sort(function (a, b) { return String(b.ended || "").localeCompare(String(a.ended || "")); })
+      .slice(0, 6);
+    var html = "";
+    if (!running.length) {
+      html += '<div class="rnone">Nothing running</div>';
+    } else {
+      html += running.map(function (j) {
+        return '<div class="rjob"><div class="rline"><span class="rdot" aria-hidden="true"></span>' +
+          '<span class="rtitle">' + esc(j.title) + "</span>" + modelChip(j.model) +
+          (j.task ? '<span class="chip t-task">' + esc(j.task) + "</span>" : "") +
+          '</div><div class="rmeta">tokens: counted when it finishes · elapsed <span class="ela" data-started="' + esc(j.started || "") +
+          '">--</span></div></div>';
+      }).join("");
+    }
+    html += '<div class="fhead">Recently finished</div>';
+    if (!finished.length) {
+      html += '<div class="muted small">no finished jobs yet</div>';
+    } else {
+      html += '<ul class="fin">' + finished.map(function (j) {
+        var ok = j.status === "done";
+        return '<li><span class="fico ' + (ok ? "ok" : "bad") + '">' + (ok ? "✓" : "✗") + "</span>" +
+          '<span class="ftitle" title="' + esc(j.title) + '">' + esc(j.title) + "</span>" +
+          modelChip(j.model) + '<span class="fdur">' + esc(fmtDur(j.elapsed_s) || "–") + "</span>" +
+          '<span class="fdur" title="tokens used by this job">' + (j.tokensK ? "~" + fmtK(j.tokensK) + " tok" : "–") + "</span>" +
+          (j.note ? '<span class="fnote">' + esc(j.note) + "</span>" : "") + "</li>";
+      }).join("") + "</ul>";
+    }
+    return secHead("running", "Running now", running.length + " running") + secBody("running", html);
+  }
+  // Live timers: computed from each job's started time, so they tick between the 2 s polls.
+  function tickTimers() {
+    var now = Date.now();
+    var els = document.querySelectorAll(".ela[data-started]");
+    for (var i = 0; i < els.length; i++) {
+      var t = Date.parse(els[i].getAttribute("data-started"));
+      els[i].textContent = isNaN(t) ? "--" : fmtClock((now - t) / 1000);
+    }
+  }
+  setInterval(tickTimers, 1000);
+
+  var syncing = false;   // a usage sync request is in flight
+  var syncErr = "";      // last sync failure, shown under the usage tiles and in the usage card
+  function toneOf(p) { return p < 50 ? "t-good" : p <= 80 ? "t-warn" : "t-bad"; }
+  // "3d 4h", "2h 5m", "40m" until an ISO time; "" when missing
+  function resetsIn(iso) {
+    var t = Date.parse(iso); if (!t) return "";
+    var m = Math.max(0, Math.round((t - Date.now()) / 60000)), dd = Math.floor(m / 1440), hh = Math.floor(m % 1440 / 60);
+    return dd ? dd + "d " + hh + "h" : hh ? hh + "h " + (m % 60) + "m" : m + "m";
+  }
+  function resetsSub(iso) { var r = resetsIn(iso); return r ? "resets in " + r : ""; }
+  function agoText(iso) {
+    var t = Date.parse(iso); if (!t) return "never";
+    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    return m < 1 ? "just now" : m + " min ago";
+  }
+  function syncBtn() {
+    return '<button type="button" class="synb" data-sync aria-label="Sync usage now"' + (syncing ? " disabled" : "") + ">" +
+      (syncing ? "syncing..." : "Sync now") + "</button>";
+  }
+  function syncIcon() {
+    return '<button type="button" class="kref' + (syncing ? " busy" : "") + '" data-sync aria-label="Sync usage now" title="Sync usage now"' +
+      (syncing ? " disabled" : "") + '><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">' +
+      '<path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9"/><path d="M13.5 2.5v3h-3"/></svg></button>';
+  }
+  // one KPI tile for the minimal strip: small caps label, big value, sub line, optional meter
+  function kpiTile(label, value, sub, o) {
+    o = o || {};
+    var bar = o.bar == null ? "" : '<div class="kb" role="img" aria-label="' + esc(label) + " " + Math.round(o.bar) +
+      '%"><i style="width:' + Math.max(0, Math.min(100, o.bar)) + '%"></i></div>';
+    return '<div class="kt' + (o.tone ? " " + o.tone : "") + (o.sync ? " k-sync" : "") + '">' + (o.sync ? syncIcon() : "") +
+      '<div class="kl">' + esc(label) + '</div><div class="kv">' + value + '</div><div class="ks">' + esc(sub) + "</div>" + bar + "</div>";
+  }
+  // the per-process token that the server puts in <meta name="csrf"> (WP5)
+  function csrfToken() {
+    var m = document.querySelector('meta[name="csrf"]');
+    return m ? m.getAttribute("content") : "";
+  }
+  // one POST to the local server; the page then pulls fresh data and redraws
+  function syncUsage() {
+    if (syncing) return;
+    syncing = true;
+    syncErr = "";
+    if (data) render(data);
+    fetch("/api/v1/usage/sync", {method: "POST", cache: "no-store", credentials: "same-origin",
+      headers: {"Content-Type": "application/json", "X-Roadmap-CSRF": csrfToken()}, body: "{}"})
+      .then(function (r) {
+        return r.json().then(function (j) { return {ok: r.ok, error: j && j.error && j.error.message}; },
+          function () { return {ok: false, error: "could not read usage: HTTP " + r.status}; });
+      })
+      .then(function (x) {
+        if (!x.ok) syncErr = x.error || "could not read usage: unknown error";
+      }, function () { syncErr = "could not read usage: server did not answer"; })
+      .then(function () { return pull(); })
+      .then(function () { syncing = false; if (data) render(data); });
+  }
+  function clock(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "--:--:--";
+    return [d.getHours(), d.getMinutes(), d.getSeconds()]
+      .map(function (n) { return String(n).padStart(2, "0"); }).join(":");
+  }
+  function setHTML(id, html) {
+    if (lastHTML[id] === html) return;
+    lastHTML[id] = html;
+    $(id).innerHTML = html;
+  }
+  function setLive(ok) {
+    $("live").classList.toggle("bad", !ok);
+    $("livetxt").textContent = ok ? "live" : "disconnected, retrying";
+  }
+
+  // A job inside a phase's task list: live line while running, muted line once finished.
+  function jobLine(j) {
+    if (j.status === "running") {
+      return '<div class="tjob"><span class="rdot" aria-hidden="true"></span>' +
+        '<span class="rtitle" title="' + esc(j.title) + '">' + esc(j.title) + "</span>" + modelChip(j.model) +
+        '<span class="ela" data-started="' + esc(j.started || "") + '">--</span></div>';
+    }
+    var ok = j.status === "done";
+    return '<div class="tfin"><span class="fico ' + (ok ? "ok" : "bad") + '">' + (ok ? "✓" : "✗") + "</span> " +
+      esc(j.title) + ' <span class="fdur">' + esc(fmtDur(j.elapsed_s)) + "</span></div>";
+  }
+
+  // one active (todo / partial / done / plain hold) task; jobsHere are the jobs whose task id is t.id
+  // every row emits the same six grid cells (empty where a value is missing), so the columns line up
+  function taskRow(t, jobsHere) {
+    var note = t.note ? '<div class="note" title="' + esc(t.note) + '">' + esc(t.note) + "</div>" : "";
+    var isRun = jobsHere.some(function (j) { return j.status === "running"; });
+    var line = '<div class="tline"><span class="sdot" style="background:' + PCOL[t.state] + '"></span>' +
+      '<span class="tid">' + esc(t.id) + "</span>" +
+      '<span class="ttl" title="' + esc(t.title) + '">' + esc(t.title) + "</span></div>";
+    var cls = "task" + (t.state === "done" ? " done" : "") + (isRun ? " is-run" : "");
+    var cells;
+    if (t.state === "done") {
+      cells = '<span class="tk tdone">done</span>';
+    } else {
+      cells = '<span class="tk">~' + Math.round(t.tokensK) + "k</span>" +
+        '<span class="tk">' + (t.thinking ? "think " + esc(t.thinking) : "") + "</span>" +
+        '<span class="chip ' + (MODEL_CLS[t.model] || "m-none") + '">' + esc(t.model) + "</span>" +
+        (t.check !== "none"
+          ? '<span class="chip ' + MODEL_CLS[t.check] + '">✓ ' + esc(t.check) + " ~" + Math.round(t.checkK) + "k</span>"
+          : "<span></span>") +
+        (t.needsUser ? '<span class="chip you" title="this task waits on you">needs you</span>' : "<span></span>");
+    }
+    return '<div class="' + cls + '">' + line + '<div class="tchips">' + cells + "</div>" + note +
+      jobsHere.map(jobLine).join("") + "</div>";
+  }
+
+  // a deferred task: muted, one chip instead of the token and model cells
+  function deferredRow(t) {
+    var note = t.note ? '<div class="note" title="' + esc(t.note) + '">' + esc(t.note) + "</div>" : "";
+    return '<div class="task deferred-row"><div class="tline"><span class="sdot" style="background:' + PCOL.deferred + '"></span>' +
+      '<span class="tid">' + esc(t.id) + "</span>" +
+      '<span class="ttl" title="' + esc(t.title) + '">' + esc(t.title) + "</span></div>" +
+      '<div class="tchips"><span class="chip t-def tdone">deferred</span></div>' + note + "</div>";
+  }
+
+  // One compact header row per phase, then the tasks (when open), jobs and the deferred toggle.
+  // rows: all tasks of the phase; jobsByTask: task id -> jobs; floats: jobs with no task row to hang on
+  function phaseCard(p, rows, jobsByTask, floats, isActive, isOpen) {
+    var runs = (p.running || []).length;
+    var pc = p.only_deferred ? PCOL.deferred : PCOL[p.state];
+    var chip = runs ? '<span class="chip pchip" title="jobs running in this phase">▶ ' + runs + " running</span>" : "";
+    var head;
+    if (p.only_deferred) {
+      head = '<span class="pico" style="color:' + PCOL.deferred + '">' + ICON.deferred + "</span>" +
+        '<span class="ptitle"><span class="ptxt"><b>' + esc(p.id) + "</b> " + esc(p.name) + '</span><span class="chip t-def">deferred</span></span>' +
+        '<span class="pbar"></span>' +
+        '<span class="pmeta"><span class="pcount">' + p.deferred + " tasks</span><span class=\"pleft\">deferred</span></span>" +
+        '<span class="ppct"></span>';
+    } else {
+      head = '<span class="pico" style="color:' + pc + '">' + (ICON[p.state] || "○") + "</span>" +
+        '<span class="ptitle"><span class="ptxt"><b>' + esc(p.id) + "</b> " + esc(p.name) + "</span>" + chip + "</span>" +
+        '<span class="bar pbar"><i style="width:' + Math.round(p.progress * 100) + "%;background:" + pc + '"></i></span>' +
+        '<span class="pmeta"><span class="pcount">' + (p.total ? p.done + "/" + p.total : "no tasks") + "</span>" +
+        '<span class="pleft">' + (p.remaining_k > 0 ? "~" + fmtK(p.remaining_k) + " left" : "") + "</span></span>" +
+        '<span class="ppct">' + pct(p.progress) + "</span>";
+    }
+    var body = "";
+    if (isOpen) {
+      var tops = floats.length ? '<div class="tops">' + floats.map(jobLine).join("") + "</div>" : "";
+      var live = rows.filter(function (t) { return t.state !== "deferred"; });
+      var defs = rows.filter(function (t) { return t.state === "deferred"; });
+      var inner = tops + (live.length
+        ? live.map(function (t) { return taskRow(t, jobsByTask[t.id] || []); }).join("")
+        : (floats.length ? "" : '<div class="muted small">no tasks in this phase</div>'));
+      if (defs.length) {
+        var dOpen = openDefer.has(p.id);
+        inner += '<button class="dtog" data-defer="' + esc(p.id) + '" aria-expanded="' + dOpen + '">' +
+          (dOpen ? "▾" : "▸") + " " + defs.length + " deferred</button>";
+        if (dOpen) inner += '<div class="dlist">' + defs.map(deferredRow).join("") + "</div>";
+      }
+      body = '<div class="tasks">' + inner + "</div>";
+    }
+    return '<section class="card phase' + (isActive ? " active" : "") + (p.state === "done" ? " is-done" : "") +
+      (p.only_deferred ? " is-deferred" : "") + (runs ? " has-run" : "") +
+      '" style="--pc:' + pc + '">' +
+      '<button class="phead" data-phase="' + esc(p.id) + '" aria-expanded="' + isOpen + '">' + head +
+      '<span class="caret">' + (isOpen ? "▾" : "▸") + "</span>" +
+      "</button>" +
+      body + "</section>";
+  }
+
+  function render(d) {
+    var jobs = d.jobs || [];
+    var jobById = {};
+    jobs.forEach(function (j) { jobById[j.id] = j; });
+
+    if (openIds === null) {
+      var first = d.phases.find(function (p) { return p.state !== "done"; });
+      openIds = new Set(first ? [first.id] : []);
+    }
+
+    // auto-expand a phase once when a job starts in it, unless the user collapsed it by hand
+    var nowRun = {};
+    d.phases.forEach(function (p) { if ((p.running || []).length) nowRun[p.id] = true; });
+    var expanded = false;
+    d.phases.forEach(function (p) {
+      if (nowRun[p.id] && !(prevRun && prevRun[p.id]) && !manualColl.has(p.id) && !openIds.has(p.id)) {
+        openIds.add(p.id);
+        expanded = true;
+      }
+    });
+    prevRun = nowRun;
+    if (expanded) saveSet(KEY, openIds);
+
+    var activeP = d.phases.find(function (p) { return p.state === "partial"; }) ||
+      d.phases.find(function (p) { return p.state !== "done"; });
+    var activeId = activeP ? activeP.id : null;
+
+    setHTML("errors", d.errors.length
+      ? "⚠ " + d.errors.length + " parse problem(s): " +
+        d.errors.map(function (e) { return esc(e.file + " - " + e.error); }).join("<br>")
+      : "");
+
+    // place each phase's running and recent jobs: under their task row, or at the top of the phase
+    var byPhase = {};
+    d.tasks.forEach(function (t) { (byPhase[t.phase] = byPhase[t.phase] || []).push(t); });
+    var jobsByTask = {}, floats = {};
+    d.phases.forEach(function (p) {
+      var rowIds = {};
+      (byPhase[p.id] || []).forEach(function (t) { if (t.state !== "deferred") rowIds[t.id] = true; });
+      (p.running || []).concat(p.recent || []).forEach(function (id) {
+        var j = jobById[id];
+        if (!j) return;
+        if (j.task && rowIds[j.task]) (jobsByTask[j.task] = jobsByTask[j.task] || []).push(j);
+        else (floats[p.id] = floats[p.id] || []).push(j);
+      });
+    });
+
+    var s = d.summary;
+    var au = s.autonomy;
+    var us = (au && au.usage) || {}, lm = (au && au.limit) || {};
+    var hasUse = !!(au && au.usage && au.limit);
+    var wk = Number(us.weeklyPercent) || 0, fh = Number(us.fiveHourPercent) || 0, stop = Number(lm.stopAtPercent) || 0;
+    var left = Math.max(0, stop - wk), hit = hasUse && stop > 0 && left === 0;
+    var toLimit = stop ? Math.min(100, Math.round(wk / stop * 100)) : 0;
+    var stateTxt = hit ? "Stopped" : "Working";
+    var stale = hasUse && (!Date.parse(us.updated) || Date.now() - Date.parse(us.updated) > 10 * 60000);
+    var metric = function (label, value, color, pctw, meta, cls) {
+      return '<div class="m' + (cls ? " " + cls : "") + '"><div class="ml">' + label + '</div><div class="mv">' + value + '</div>' +
+        '<div class="meter"><i style="width:' + pctw + '%;background:' + color + '"></i></div><div class="mm">' + meta + "</div></div>";
+    };
+    var mv = function (v, suffix) { return hasUse ? esc(v) + (suffix || "") : "–"; };
+    var usePart = '<div class="upart"><div class="ptl">Account usage</div>' +
+      '<div class="lu' + (stale ? " stale" : "") + '">updated ' + agoText(us.updated) + (stale ? " · may be out of date" : "") +
+      " · " + esc(us.source || "no reading yet") + "</div>" +
+      (syncErr ? '<div class="lu err">' + esc(syncErr) + "</div>" : "") +
+      metric("Weekly", mv(wk, "%"), "var(--cyan)", Math.min(100, wk), esc(resetsSub(us.weeklyResetsAt))) +
+      metric("5-hour", mv(fh, "%"), "var(--cyan)", Math.min(100, fh), esc(resetsSub(us.fiveHourResetsAt))) +
+      "</div>";
+    var limPart = '<div class="upart"><div class="ptl">Work limit</div>' +
+      '<div class="lu">set by ' + esc(lm.setBy || "you") + " · " + esc(lm.kind || "weekly") + " usage</div>" +
+      '<div class="cols3">' +
+      metric("Stop at", mv(stop, "%"), "var(--green)", toLimit, "usage reaches this") +
+      metric("Status", hasUse ? stateTxt : "–", hit ? "var(--red)" : "var(--green)", toLimit,
+        hit ? "limit reached" : "working", hit ? "bad" : (hasUse ? "good" : "")) +
+      metric("Points left", mv(left), hit ? "var(--red)" : "var(--green)", toLimit, "to the stop") +
+      "</div></div>";
+    var sumTxt = hasUse ? "weekly " + wk + "% of " + stop + "% stop · 5h " + fh + "% · " + stateTxt : "no usage reading yet";
+    setHTML("limit", '<div class="card lim' + (hit ? " hit" : "") + '"><div class="shead">' +
+      secHead("limit", "Usage & limit", sumTxt) + syncBtn() + "</div>" +
+      secBody("limit", '<div class="ulim">' + usePart + limPart + "</div>") + "</div>");
+
+    setHTML("summary", secHead("summary", "Summary", "running " + s.running_count + " · tasks left " + s.tasks_left + " · ~" + fmtK(s.tokens_left_k) + " left") + secBody("summary",
+      stat("roadmap", "~" + fmtK(s.tokens_done_k),
+        "tokens of done tasks, of ~" + fmtK(s.tokens_roadmap_k) + " total (estimates); partial ~" + fmtK(s.tokens_partial_k)) +
+      stat("tokens used", "~" + fmtK(s.jobs_tokens_k),
+        s.jobs_with_tokens + " finished jobs with a count") +
+      stat("running", s.running_count, s.running_count ? "jobs in flight" : "nothing running", {run: s.running_count > 0}) +
+      stat("tasks left", s.tasks_left, "of " + s.tasks_total + " total") +
+      stat("~tokens left", "~" + fmtK(s.tokens_left_k), "work + checks") +
+      stat("need you", s.need_user, "tasks waiting on you") +
+      stat("deferred", s.deferred_count, "tasks (~" + fmtK(s.deferred_tokens_k) + " tokens)") +
+      '<div class="card wide"><div class="lbl">left by model</div><div class="chips" style="margin-top:8px">' +
+        '<span class="chip m-haiku">work haiku ~' + fmtK(s.work_haiku_k) + "</span>" +
+        (s.work_agy_k > 0 ? '<span class="chip m-agy">work agy gemini (own quota) ~' + fmtK(s.work_agy_k) + "</span>" : "") +
+        (s.work_cursor_k > 0 ? '<span class="chip m-cursor">work cursor auto (own quota) ~' + fmtK(s.work_cursor_k) + "</span>" : "") +
+        (s.work_other_k > 0 ? '<span class="chip m-sonnet">work sonnet/opus ~' + fmtK(s.work_other_k) + "</span>" : "") +
+        '<span class="chip m-sonnet">check sonnet ~' + fmtK(s.check_sonnet_k) + "</span>" +
+        '<span class="chip m-opus">check opus ~' + fmtK(s.check_opus_k) + "</span>" +
+      "</div></div>"));
+
+    var o = d.overall;
+    function brow(label, note, x, cls) {
+      return '<div class="brow"><div class="bhead"><span>' + esc(label) + ' <span class="muted">' + esc(note) +
+        '</span></span><b>' + pct(x.ratio) + '</b></div><div class="bar"><i class="' + cls +
+        '" style="width:' + Math.round(x.ratio * 100) + '%"></i></div></div>';
+    }
+    var pj = o.project;
+    var pjHTML = '<div class="wide"><div class="bhead"><span>Whole project <span class="muted">' + pj.done + " done of " + pj.total +
+      ' tasks</span></span><b>' + pct(pj.progress) + '</b></div><div class="stack" role="img" aria-label="Project progress ' +
+      pct(pj.progress) + '"><i class="s-done" style="width:' + (pj.total ? pj.done / pj.total * 100 : 0) + '%"></i><i class="s-part" style="width:' +
+      (pj.total ? pj.partial / pj.total * 100 : 0) + '%"></i></div><div class="ov-legend"><span><b>' + pj.done + '</b> done</span><span><b>' +
+      pj.partial + '</b> in progress (built, not fully proven)</span><span><b>' + pj.todo + '</b> to do</span></div></div>';
+    var phHTML = '<div class="phgrid">' + d.phases.filter(function (p) { return p.total > 0 || p.only_deferred; }).map(function (p) {
+      var r = p.progress == null ? 0 : p.progress;
+      return '<div class="ph' + (p.progress == null ? ' deferred' : '') + '" title="' + esc(p.title || p.id) + '"><span class="id">' + esc(p.id) +
+        '</span><span class="bar"><i class="c-cyan" style="width:' + Math.round(r * 100) + '%"></i></span>' +
+        (p.progress == null
+          ? '<span class="dn">deferred</span>'
+          : '<span class="pn">' + p.done + "/" + p.total + '</span><span class="pp">' + Math.round(r * 100) + "%</span>") + "</div>";
+    }).join("") + '</div>';
+    setHTML("overall", secHead("overall", "Overall", "Whole project " + pct(pj.progress)) + secBody("overall", pjHTML + phHTML + '<div class="bars">' +
+      brow("Phases done", o.phases.done + "/" + o.phases.total, o.phases, "c-cyan") +
+      brow("Spikes passed", o.spikes.done + "/" + o.spikes.total, o.spikes, "c-green") +
+      brow("Real-hardware passed", o.rh.done + "/" + o.rh.total, o.rh, "c-blue") + "</div>"));
+
+    setHTML("phases", d.phases.map(function (p) {
+      return phaseCard(p, byPhase[p.id] || [], jobsByTask, floats[p.id] || [],
+        p.id === activeId, openIds.has(p.id));
+    }).join(""));
+    setHTML("running", runningHTML(jobs));
+    $("running").classList.toggle("has-jobs", jobs.some(function (j) { return j.status === "running"; }));
+    tickTimers();
+
+    var chipOf = function (x) {
+      var cls = x.state === "done" ? "sc-done" : x.state === "partial" ? "sc-part" : "sc-todo";
+      var st = x.status ? " - " + x.status : "";
+      return '<span class="sc ' + cls + '" title="' + esc(x.id + " " + x.label + st) + '">' + esc(x.id) + "</span>";
+    };
+    var spPassed = d.spikes.filter(function (x) { return x.state === "done"; }).length;
+    var rhPassed = d.rh.filter(function (x) { return x.state === "done"; }).length;
+    setHTML("spikes", secHead("spikes", "Spike board", spPassed + "/" + d.spikes.length + " passed") +
+      secBody("spikes", '<div class="chips">' + d.spikes.map(chipOf).join("") + "</div>"));
+    $("rh").hidden = !d.rh.length;
+    setHTML("rh", d.rh.length
+      ? secHead("rh", "Real-hardware board", rhPassed + "/" + d.rh.length + " passed") +
+        secBody("rh", '<div class="chips">' + d.rh.map(chipOf).join("") + "</div>")
+      : "");
+
+    setHTML("next", secHead("next", "Next up", d.next.length ? String(d.next[0]) : "") +
+      secBody("next", '<ol class="next">' + d.next.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + "</ol>"));
+    // log is newest first, so the summary is the latest row
+    setHTML("recent", secHead("recent", "Recent progress", d.log.length ? d.log[0].date.slice(5) + " " + d.log[0].text : "") +
+      secBody("recent", d.log.length ? d.log.map(function (l) {
+        return '<div class="logrow"><span class="muted">' + esc(l.date.slice(5)) + "</span> " + esc(l.text) + "</div>";
+      }).join("") : '<div class="muted">no log rows</div>'));
+    // minimal view: one KPI strip with the same numbers as the cards
+    var na = "–";
+    var kp = kpiTile("Weekly", hasUse ? wk + "%" : na, hasUse ? resetsSub(us.weeklyResetsAt) : "no reading yet",
+        {tone: hasUse ? toneOf(wk) : "", bar: Math.min(100, wk), sync: true}) +
+      kpiTile("5-hour", hasUse ? fh + "%" : na, hasUse ? resetsSub(us.fiveHourResetsAt) : "", {tone: hasUse ? toneOf(fh) : ""}) +
+      kpiTile("Work limit", stop ? '<span class="kw">stop</span> ' + stop + "%" : na,
+        hasUse ? (hit ? "limit reached" : left + " points left") : "", {tone: hasUse ? (hit ? "t-bad" : "t-good") : ""}) +
+      kpiTile("Running", s.running_count, s.running_count ? "in flight" : "nothing running", {tone: s.running_count ? "t-run" : ""}) +
+      kpiTile("Tasks left", s.tasks_left, "of " + s.tasks_total + " total") +
+      kpiTile("~Tokens left", "~" + fmtK(s.tokens_left_k), "work + checks") +
+      kpiTile("Project", pct(pj.progress), pj.done + " of " + pj.total + " done") +
+      kpiTile("Spikes", spPassed + "/" + d.spikes.length, "passed") +
+      kpiTile("RH", rhPassed + "/" + d.rh.length, "passed");
+    var kfoot = syncErr ? '<div class="kfoot err">' + esc(syncErr) + "</div>" :
+      '<div class="kfoot">' + (syncing ? "syncing usage..." : hasUse ? "updated " + agoText(us.updated) + " · " + esc(us.source || "") :
+      "usage not read yet, press the refresh icon") + "</div>";
+    setHTML("kpi", kp + kfoot);
+    applyView();
+  }
+
+  function updateHeader(d) {
+    $("sub").textContent = d.tasks_updated ? "docs/tasks.json updated " + d.tasks_updated : "docs/tasks.json not loaded";
+    $("clock").textContent = clock(d.server_time);
+  }
+
+  $("phases").addEventListener("click", function (ev) {
+    if (!data || !ev.target.closest) return;
+    var dt = ev.target.closest("[data-defer]");
+    if (dt) {
+      var pid = dt.getAttribute("data-defer");
+      if (openDefer.has(pid)) openDefer.delete(pid); else openDefer.add(pid);
+      render(data);
+      return;
+    }
+    var b = ev.target.closest("[data-phase]");
+    if (!b) return;
+    var id = b.getAttribute("data-phase");
+    if (openIds.has(id)) {
+      openIds.delete(id);
+      manualColl.add(id);          // a hand-collapsed phase is not auto-expanded again
+    } else {
+      openIds.add(id);
+      manualColl.delete(id);
+    }
+    saveSet(KEY, openIds);
+    saveSet(KEY_COLL, manualColl);
+    render(data);
+  });
+
+  async function pull() {
+    try {
+      var r = await fetch("/data.json", {cache: "no-store"});
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      var d = await r.json();
+      setLive(true);
+      data = d;
+      // elapsed_s changes every poll; the running timers tick client-side, so leave it out of the key
+      var key = JSON.stringify(d, function (k, v) {
+        return (k === "server_time" || k === "elapsed_s") ? undefined : v;
+      });
+      if (key !== lastKey) {
+        lastKey = key;
+        render(d);
+      }
+      updateHeader(d);
+    } catch (e) {
+      console.error(e && e.stack || e);
+      setLive(false);   // keep the last good data on screen
+    }
+  }
+  async function poll() {
+    await pull();
+    setTimeout(poll, 2000);
+  }
+
+  $("seg").addEventListener("click", function (ev) {
+    var b = ev.target.closest && ev.target.closest("[data-view]");
+    if (b) setView(b.getAttribute("data-view"));
+  });
+  document.addEventListener("click", function (ev) {
+    var h = ev.target.closest && ev.target.closest("[data-sec]");
+    if (!h) return;
+    var k = h.getAttribute("data-sec");
+    if (secMin.has(k)) secMin.delete(k); else secMin.add(k);
+    view = secMin.size === 0 ? "exp" : secMin.size === SEC_KEYS.length ? "min" : "mix";
+    saveSet(KEY_SEC, secMin);
+    saveStr(KEY_VIEW, view);
+    applyView();
+  });
+  document.addEventListener("click", function (ev) {
+    var sy = ev.target.closest && ev.target.closest("[data-sync]");
+    if (sy && !sy.disabled) syncUsage();
+  });
+  applyView();
+  poll();
+})();
+</script>
+</body>
+</html>

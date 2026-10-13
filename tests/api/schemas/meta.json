@@ -1,0 +1,5 @@
+{"type": "object", "required": ["version", "api_version", "snapshot_schema_version", "schema_versions",
+                               "poll_intervals_s", "usage_interval_s"],
+ "properties": {"version": {"type": "string"}, "api_version": {"type": "string"},
+                "snapshot_schema_version": {"type": "integer"}, "schema_versions": {"type": "object"},
+                "poll_intervals_s": {"type": "object"}, "usage_interval_s": {"type": "integer"}}}

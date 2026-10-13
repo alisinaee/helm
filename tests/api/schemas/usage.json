@@ -1,0 +1,8 @@
+{"type": "object",
+ "required": ["weeklyPercent", "fiveHourPercent", "weeklyResetsAt", "fiveHourResetsAt", "updated", "source",
+              "lastError", "stale", "ageS"],
+ "properties": {"weeklyPercent": {"type": ["number", "null"]}, "fiveHourPercent": {"type": ["number", "null"]},
+                "weeklyResetsAt": {"type": ["string", "null"]}, "fiveHourResetsAt": {"type": ["string", "null"]},
+                "updated": {"type": ["string", "null"]}, "source": {"type": ["string", "null"]},
+                "lastError": {"type": ["string", "null"]}, "stale": {"type": "boolean"},
+                "ageS": {"type": ["integer", "null"]}}}

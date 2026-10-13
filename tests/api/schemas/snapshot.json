@@ -1,0 +1,14 @@
+{"type": "object",
+ "required": ["server_time", "errors", "jobs", "project", "schemaVersion", "tasks_updated", "summary", "overall",
+              "phases", "tasks", "spikes", "rh", "next", "log"],
+ "properties": {
+   "server_time": {"type": "string"}, "errors": {"type": "array"}, "jobs": {"type": "array"},
+   "project": {"type": "object", "required": ["id", "title"],
+               "properties": {"id": {"type": "string"}, "title": {"type": "string"}}},
+   "schemaVersion": {"type": "integer"}, "tasks_updated": {"type": "string"},
+   "summary": {"type": "object", "required": ["tasks_left", "tasks_total", "need_user", "running_count"],
+               "properties": {"tasks_left": {"type": "integer"}, "tasks_total": {"type": "integer"},
+                              "need_user": {"type": "integer"}, "running_count": {"type": "integer"}}},
+   "overall": {"type": "object", "required": ["project", "phases"]},
+   "phases": {"type": "array"}, "tasks": {"type": "array"}, "spikes": {"type": "array"},
+   "rh": {"type": "array"}, "next": {"type": "array"}, "log": {"type": "array"}}}

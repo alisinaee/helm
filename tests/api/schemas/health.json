@@ -1,0 +1,2 @@
+{"type": "object", "required": ["ok", "version", "server_time"],
+ "properties": {"ok": {"type": "boolean"}, "version": {"type": "string"}, "server_time": {"type": "string"}}}

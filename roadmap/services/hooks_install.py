@@ -35,7 +35,10 @@ def shim_path():
 
 
 def hook_command():
-    """The command every entry runs. A path with spaces or shell characters is refused, since the command is not quoted."""
+    """The command every entry runs.
+
+    A path with spaces or shell characters is refused, since the command is not quoted.
+    """
     shim = shim_path()
     if not os.path.isfile(shim):
         raise RoadmapError("not_found", "the roadmap shim is missing: " + shim, EXIT_USAGE)
