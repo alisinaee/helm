@@ -404,6 +404,10 @@ function onClick(event) {
     sectionAction("./views/roadmap.js", action, el);
   } else if (action === "issue-close") {
     sectionAction("./views/issues.js", action, el);
+  } else if (action === "agent-stop") {
+    sectionAction("./views/agents.js", action, el);
+  } else if (action === "note-open" || action === "note-refresh") {
+    sectionAction("./views/research.js", action, el);
   } else if (limitAction(action, el) || ruleAction(action, el) || settingsAction(action, el)) {
     render();
   }
@@ -464,6 +468,7 @@ function boot() {
   initKeys();
   initPanel({ render: render });
   document.addEventListener("click", onClick);
+  document.addEventListener("rb:render", render);
   document.addEventListener("pointerover", onPointerOver);
   document.addEventListener("pointerout", onPointerOut);
   document.addEventListener("focusin", onPointerOver);

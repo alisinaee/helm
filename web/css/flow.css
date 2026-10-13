@@ -52,3 +52,14 @@
   .act-row { grid-template-columns: minmax(0, 1fr); }
   .act-row .btn { justify-self: start; }
 }
+
+/* Agents, Research (WP34). */
+.ag-list, .ag-kids { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
+.ag-kids { padding-left: var(--sp-3); border-left: 2px solid var(--track); }
+.ag-line { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); align-items: center; min-width: 0;
+  font-size: var(--fs-13); }
+.ag-title { font-weight: 600; color: var(--text-1); }
+.nz-list .btn { display: grid; width: 100%; text-align: left; }
+.note-text { margin: 0; padding: var(--sp-3); max-height: 60vh; overflow: auto; white-space: pre-wrap;
+  overflow-wrap: anywhere; font: var(--fs-12) / 1.5 var(--font-mono); background: var(--surface-2); border-radius: var(--r-card); }
+@media (max-width: 599px) { .ag-row .btn, .nz-list .btn { min-height: 44px; } }

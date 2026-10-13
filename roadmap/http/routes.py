@@ -7,7 +7,9 @@ Content-Type and the body size before it does anything.
 
 import hashlib
 import json
+import os
 import re
+import stat
 from datetime import datetime
 
 from roadmap import __version__
@@ -246,6 +248,88 @@ def legacy_data_json(app, req, match):
     return _snapshot_reply(req, loader.load_snapshot(first), headers)
 
 
+# ---------------------------------------------------------------- research notes (read only)
+
+NOTES_DIR = "research"            # the folder under the project's data folder that `roadmap research` writes
+NOTE_NAME = re.compile(r"^[0-9]{2}-[a-z0-9-]+\.md$")
+NOTE_MAX_BYTES = 64 * 1024
+NOTE_TITLE = re.compile(r"^#\s+(.+?)\s*$", re.MULTILINE)
+
+
+def _read_note(folder, name):
+    """The bytes of one note, read without following a symlink. Raises not_found for a missing or non-file entry and
+    too_large above NOTE_MAX_BYTES. The name is validated by the caller."""
+    path = os.path.join(folder, name)
+    try:
+        before = os.lstat(path)
+    except OSError:
+        raise RoadmapError("not_found", "no research note named " + name, EXIT_NOT_FOUND)
+    if not stat.S_ISREG(before.st_mode):
+        raise RoadmapError("not_found", "no research note named " + name, EXIT_NOT_FOUND)
+    if before.st_size > NOTE_MAX_BYTES:
+        raise RoadmapError("too_large", name + " is larger than 64 KB", EXIT_USAGE)
+    try:
+        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    except OSError:
+        raise RoadmapError("not_found", "no research note named " + name, EXIT_NOT_FOUND)
+    with os.fdopen(fd, "rb") as fh:
+        opened = os.fstat(fh.fileno())
+        if not stat.S_ISREG(opened.st_mode) or (opened.st_dev, opened.st_ino) != (before.st_dev, before.st_ino):
+            raise RoadmapError("not_found", "no research note named " + name, EXIT_NOT_FOUND)
+        body = fh.read(NOTE_MAX_BYTES + 1)
+    if len(body) > NOTE_MAX_BYTES:
+        raise RoadmapError("too_large", name + " is larger than 64 KB", EXIT_USAGE)
+    return body
+
+
+def _notes_folder(data_dir):
+    """The research folder, or None when it is missing or is a symlink (then the project has no readable notes)."""
+    folder = os.path.join(data_dir, NOTES_DIR)
+    try:
+        info = os.lstat(folder)
+    except OSError:
+        return None
+    return folder if stat.S_ISDIR(info.st_mode) else None
+
+
+def _note_row(folder, name):
+    """{name, title, size, lines} for one note file; title and lines are None when the note is over the size cap."""
+    body = _read_note(folder, name)
+    size = len(body)
+    text = body.decode("utf-8", "replace")
+    found = NOTE_TITLE.search(text)
+    return {"name": name, "title": found.group(1) if found else None, "size": size,
+            "lines": text.count("\n") + (0 if text.endswith("\n") or not text else 1)}
+
+
+def notes(app, req, match):
+    """GET /api/v1/projects/{pid}/notes: the note list. GET .../notes/{name}: one note as plain text (UTF-8).
+    Names must match NN-slug.md, so no path can leave the research folder; symlinks are never followed."""
+    project = _cmd_project(match.group("pid"))
+    _, data_dir = task_service.resolve(project)
+    name = match.group("name")
+    folder = _notes_folder(data_dir)
+    if name is None:
+        rows = []
+        if folder is not None:
+            for entry in sorted(os.listdir(folder)):
+                if not NOTE_NAME.match(entry):
+                    continue
+                try:
+                    rows.append(_note_row(folder, entry))
+                except RoadmapError as exc:
+                    if exc.code != "too_large":
+                        continue
+                    rows.append({"name": entry, "title": None, "size": os.lstat(os.path.join(folder, entry)).st_size,
+                                 "lines": None})
+        return json_reply(200, {"notes": rows})
+    if not NOTE_NAME.match(name):
+        raise RoadmapError("invalid_input", "a note name looks like 01-landscape.md", EXIT_USAGE)
+    if folder is None:
+        raise RoadmapError("not_found", "no research note named " + name, EXIT_NOT_FOUND)
+    return Reply(200, _read_note(folder, name), ctype="text/plain; charset=utf-8")
+
+
 # ---------------------------------------------------------------- table
 
 _PID = r"[a-z0-9][a-z0-9-]{0,39}"
@@ -254,6 +338,7 @@ ROUTES = (
     (re.compile(r"/api/v1/meta"), ("GET",), meta),
     (re.compile(r"/api/v1/projects"), ("GET",), projects),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/snapshot"), ("GET",), project_snapshot),
+    (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/notes(?:/(?P<name>[^/]*))?"), ("GET",), notes),
     (re.compile(r"/api/v1/usage"), ("GET",), usage_get),
     (re.compile(r"/api/v1/usage/sync"), ("POST",), usage_sync),
     (re.compile(r"/api/v1/cmd"), ("POST",), cmd),

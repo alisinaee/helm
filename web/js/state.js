@@ -181,6 +181,9 @@ function normalizeJob(j, fetchedAt) {
     note: j.note || "",
     startedMs: Number.isNaN(started) ? null : started,
     endedMs: Number.isNaN(ended) ? null : ended,
+    // WP34: the lead job a worker was started under, and the worker's role (both null for a plain job).
+    parent: j.parent || null,
+    role: j.role || null,
     fetchedAt: fetchedAt,
   };
 }

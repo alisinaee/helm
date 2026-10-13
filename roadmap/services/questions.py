@@ -63,6 +63,22 @@ def answer(data_dir, question_id, value, now=None):
     return result
 
 
+def reopen(data_dir, question_id):
+    """Undo of answer: the question is open again and its answer is cleared. A blocking question then waits again,
+    because ask wait and the needs-you list read the open status. Only an answered or defaulted question can reopen."""
+    records.require_dir(data_dir)
+    with lock.locked(data_dir):
+        doc = records.load("questions", data_dir, FILE, "questions")
+        question = _find(doc["questions"], question_id)
+        if question.get("status") == "open":
+            raise records.conflict(question_id + " is already open; not changed")
+        if _open_count(doc["questions"]) >= OPEN_CAP:
+            raise records.conflict("questions: " + str(OPEN_CAP) + " are open, the most allowed; answer one first")
+        question.update(status="open", answer=None, answered=None)
+        records.save("questions", data_dir, FILE, doc)
+    return dict(question)
+
+
 def expire(data_dir, now=None):
     """Default every open question whose timeout has passed: status defaulted, answer = default. Returns the ids."""
     records.require_dir(data_dir)

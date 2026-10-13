@@ -21,6 +21,8 @@ marked `...`.
 | GET | `/api/v1/meta` | versions, schema versions, poll intervals |
 | GET | `/api/v1/projects` | `{projects: [summary, ...]}` |
 | GET | `/api/v1/projects/{id}/snapshot` | the project snapshot. `ETag`; `304` on a matching `If-None-Match` |
+| GET | `/api/v1/projects/{id}/notes` | the project's research notes: `{notes: [{name, title, size, lines}]}` (read only) |
+| GET | `/api/v1/projects/{id}/notes/{name}` | one research note as plain text, UTF-8 (read only) |
 | GET | `/api/v1/usage` | the stored plan usage |
 | POST | `/api/v1/usage/sync` | reads the plan usage now, then returns the `/api/v1/usage` object |
 | POST | `/api/v1/cmd` | runs one command-registry op: body `{op, args, project?}`, reply `{ok, data, activity, undo}` (see below) |
@@ -127,13 +129,25 @@ kind, value, text}` (`value` is the number for a budget rule, else null). At mos
 rule, or whose text is over 160 characters, is skipped. A missing or unreadable file gives `[]`. Without the key the
 snapshot is unchanged.
 
-
 `ETag` is a strong tag: the first 32 hex characters of a SHA-256 over the snapshot content with `server_time` left
 out, in quotes, for example `"c8f6148f5af0d6c7135ea34e7b0bf70e"`. Send it back as `If-None-Match`. When nothing has
 changed the reply is `304` with no body, and the `ETag` header again. A running job's duration moves with the
 clock, so the tag changes while a job runs.
 
 `ETag` and `Cache-Control: no-cache` are sent on every snapshot reply, so a browser or proxy always revalidates.
+
+### GET /api/v1/projects/{id}/notes and /notes/{name}
+
+Read-only access to the research notes that `roadmap research` writes under the project's data folder
+(`research/`, see `roadmap research list`). Only files named `NN-slug.md` (two digits, then lowercase letters, digits
+and dashes) are listed or read; `INDEX.md` and every other name are not. Symlinks are never followed.
+
+- The list reply is `{notes: [{name, title, size, lines}]}`. `title` is the first `# ` heading (or null), `size` is in
+  bytes, and `lines` is null for a note over the size cap.
+- The note reply is the file's bytes as `text/plain; charset=utf-8`. The client must show it as plain text, not as
+  markup.
+- A name that does not match the pattern gives `400 invalid_input`. A missing note, a non-file or a symlink gives
+  `404 not_found`. A note over 64 KB gives `413 too_large`. An unregistered project gives `404 not_found`.
 
 ### GET /api/v1/usage
 
