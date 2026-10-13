@@ -1,0 +1,3571 @@
+{
+  "jobs": [
+    {
+      "id": "j1",
+      "title": "Docker lab: S7 QUIC + RH3/RH8",
+      "model": "haiku",
+      "task": "P0.8",
+      "status": "done",
+      "started": "2026-10-08T08:45:55+03:30",
+      "ended": "2026-10-08T09:06:09+03:30",
+      "note": "QUIC via TUN ok (aioquic), RH3/RH8 ok in Docker"
+    },
+    {
+      "id": "j2",
+      "title": "Docker lab: S4 DNS + S10 coexistence",
+      "model": "haiku",
+      "task": "P0.5",
+      "status": "done",
+      "started": "2026-10-08T08:45:55+03:30",
+      "ended": "2026-10-08T08:45:55+03:30",
+      "note": "6/6 + 6/7"
+    },
+    {
+      "id": "j3",
+      "title": "P0.1 repo tooling skeleton",
+      "model": "haiku",
+      "task": "P0.1",
+      "status": "done",
+      "started": "2026-10-08T08:45:55+03:30",
+      "ended": "2026-10-08T08:45:55+03:30"
+    },
+    {
+      "id": "j4",
+      "title": "Live web dashboard",
+      "model": "haiku",
+      "status": "done",
+      "started": "2026-10-08T08:45:55+03:30",
+      "ended": "2026-10-08T08:45:55+03:30"
+    },
+    {
+      "id": "j5",
+      "title": "Running-now card + jobs registry",
+      "model": "haiku",
+      "task": "P0",
+      "status": "done",
+      "started": "2026-10-08T08:48:19+03:30",
+      "ended": "2026-10-08T08:48:19+03:30",
+      "note": "card and jobs.py added"
+    },
+    {
+      "id": "j6",
+      "title": "Dashboard: running jobs inline in phases + deferred state",
+      "model": "haiku",
+      "task": "P0",
+      "status": "done",
+      "started": "2026-10-08T08:50:29+03:30",
+      "ended": "2026-10-08T08:55:57+03:30",
+      "note": "running inline in phases + deferred state"
+    },
+    {
+      "id": "j7",
+      "title": "P1: profile parsers (links, wg conf, subscription)",
+      "model": "haiku",
+      "task": "P1.3",
+      "status": "done",
+      "started": "2026-10-08T09:07:21+03:30",
+      "ended": "2026-10-08T09:13:25+03:30",
+      "note": "52 tests pass"
+    },
+    {
+      "id": "j8",
+      "title": "P1: sing-box config generator",
+      "model": "haiku",
+      "task": "P1.4",
+      "status": "done",
+      "started": "2026-10-08T09:07:21+03:30",
+      "ended": "2026-10-08T09:10:15+03:30",
+      "note": "37/37 tests, sing-box check ok for all kinds"
+    },
+    {
+      "id": "j9",
+      "title": "P1: sidecar launcher (SOCKS, health, restart)",
+      "model": "haiku",
+      "task": "P1.2",
+      "status": "done",
+      "started": "2026-10-08T09:07:21+03:30",
+      "ended": "2026-10-08T09:15:36+03:30",
+      "note": "11 pass 1 skip; restart 1.2 s; worker ran a stray rm -rf probe (nothing deleted)"
+    },
+    {
+      "id": "j10",
+      "title": "P2: macOS interfaces, snapshot and restore plan",
+      "model": "haiku",
+      "task": "P2.5",
+      "status": "done",
+      "started": "2026-10-08T09:40:47+03:30",
+      "ended": "2026-10-08T10:02:01+03:30",
+      "note": "tests pass (see report)"
+    },
+    {
+      "id": "j11",
+      "title": "P2: helper protocol, server, auth, install scripts",
+      "model": "haiku",
+      "task": "P2.1",
+      "status": "done",
+      "started": "2026-10-08T09:40:47+03:30",
+      "ended": "2026-10-08T10:02:01+03:30",
+      "note": "tests pass (see report)"
+    },
+    {
+      "id": "j12",
+      "title": "P2: app discovery and stats aggregator",
+      "model": "haiku",
+      "task": "P2.9",
+      "status": "done",
+      "started": "2026-10-08T09:40:47+03:30",
+      "ended": "2026-10-08T10:01:50+03:30",
+      "note": "39 tests, node:sqlite store + JSON fallback"
+    },
+    {
+      "id": "j13",
+      "title": "P2: TUN config and policy engine",
+      "model": "haiku",
+      "task": "P2.7",
+      "status": "done",
+      "started": "2026-10-08T09:40:47+03:30",
+      "ended": "2026-10-08T10:02:01+03:30",
+      "note": "tests pass (see report)"
+    },
+    {
+      "id": "j14",
+      "title": "P2: real helper backend (core control, restore, stats) with fakes",
+      "model": "haiku",
+      "task": "P2.8",
+      "status": "done",
+      "started": "2026-10-08T10:03:23+03:30",
+      "ended": "2026-10-08T10:13:32+03:30",
+      "note": "helper 174 + core 185 tests; allowlist route add/delete, ifconfig utun down"
+    },
+    {
+      "id": "j15",
+      "title": "P3: Electron UI scaffold + Profiles/Apps/Rules/Networks/Usage screens (mock mode)",
+      "model": "haiku",
+      "task": "P3.1",
+      "status": "done",
+      "started": "2026-10-08T10:03:23+03:30",
+      "ended": "2026-10-08T10:14:02+03:30",
+      "note": "scaffold: tsc ok, build ok, 37 tests; never seen on screen"
+    },
+    {
+      "id": "j16",
+      "title": "P2: typecheck core+helper (tsc), wire per-connection limiter, lease extension",
+      "model": "haiku",
+      "task": "P2.2",
+      "status": "done",
+      "started": "2026-10-08T10:13:37+03:30",
+      "ended": "2026-10-08T10:23:47+03:30",
+      "note": "typecheck 0 errors both; helper 203 + core 185 tests; new protocol commands"
+    },
+    {
+      "id": "j17",
+      "title": "P3: migrate app to new protocol (rules, list-apps, interfaces, profiles)",
+      "model": "haiku",
+      "task": "P3.2",
+      "status": "done",
+      "started": "2026-10-08T10:24:11+03:30",
+      "ended": "2026-10-08T10:37:14+03:30",
+      "note": "app migrated; tsc ok, build ok, 61 tests"
+    },
+    {
+      "id": "j18",
+      "title": "Download Electron binary (npm rebuild electron) and launch UI in mock mode",
+      "model": "head",
+      "task": "P3.1",
+      "status": "done",
+      "started": "2026-10-08T10:37:55+03:30",
+      "ended": "2026-10-08T10:39:51+03:30",
+      "note": "Electron binary installed; UI launched in mock mode (dev server :5173)"
+    },
+    {
+      "id": "j19",
+      "title": "CLI for the real Telegram test (doctor, profile add, telegram on/off, status) + root-owned helper install",
+      "model": "haiku",
+      "task": "P2.1",
+      "status": "done",
+      "started": "2026-10-08T10:43:26+03:30",
+      "ended": "2026-10-08T11:00:03+03:30",
+      "note": "CLI + real installer: helper 238, cli 38 tests; nothing run live"
+    },
+    {
+      "id": "j20",
+      "title": "P3: Simple Home UI per docs/12-ui-ux.md (mock mode)",
+      "model": "haiku",
+      "task": "P3.12",
+      "status": "done",
+      "started": "2026-10-08T10:44:55+03:30",
+      "ended": "2026-10-08T10:56:46+03:30",
+      "note": "Simple Home: tsc/build ok, 103 tests; not seen on screen"
+    },
+    {
+      "id": "j21",
+      "title": "CLI: complete Telegram ranges + auto-detect routes from lsof; sing-box root-owned copy in installer",
+      "model": "haiku",
+      "task": "P2.1",
+      "status": "done",
+      "started": "2026-10-08T11:02:27+03:30",
+      "ended": "2026-10-08T11:10:24+03:30",
+      "note": "ranges + lsof detect + root sing-box copy; helper 249, cli 52 tests"
+    },
+    {
+      "id": "j22",
+      "title": "helper daemon: read SPLITNET_SINGBOX and SPLITNET_IDLE_EXIT_SECONDS",
+      "model": "haiku",
+      "task": "P2.1",
+      "status": "done",
+      "started": "2026-10-08T11:10:24+03:30",
+      "ended": "2026-10-08T11:15:45+03:30",
+      "note": "daemon reads SPLITNET_SINGBOX + idle exit; helper 274 tests"
+    },
+    {
+      "id": "j23",
+      "title": "REAL TEST: install helper + Telegram through the user's VPN (scoped)",
+      "model": "head",
+      "task": "P2.1",
+      "status": "done",
+      "started": "2026-10-08T11:19:55+03:30",
+      "ended": "2026-10-08T11:23:25+03:30",
+      "note": "LIVE: helper installed, profile imported, Telegram routed through the profile (scoped), stats flowing"
+    },
+    {
+      "id": "j24",
+      "title": "FIX helper: unify app ids in stats and list-apps, user-facing running apps only",
+      "model": "haiku",
+      "task": "P2.6",
+      "status": "done",
+      "started": "2026-10-08T11:35:26+03:30",
+      "ended": "2026-10-08T11:42:52+03:30",
+      "note": "helper 290 tests; apps contract + stats id unified"
+    },
+    {
+      "id": "j25",
+      "title": "FIX UI: icons, Add app picker, running apps, Test button, app log",
+      "model": "haiku",
+      "task": "P3.13",
+      "status": "done",
+      "started": "2026-10-08T11:35:26+03:30",
+      "ended": "2026-10-08T11:46:23+03:30",
+      "note": "app 143 tests; icons chain, add app, running group, Test, app.log"
+    },
+    {
+      "id": "j26",
+      "title": "FIX: Electron main crash in real mode (native icon calls) + dev CSP noise",
+      "model": "haiku",
+      "task": "P3.13",
+      "status": "done",
+      "started": "2026-10-08T12:19:18+03:30",
+      "ended": "2026-10-08T12:24:10+03:30",
+      "note": "icons out of Electron (plutil+sips queue), lazy load, CSP dev/prod; 159 tests"
+    },
+    {
+      "id": "j27",
+      "title": "UX research: best practices for per-app VPN/firewall apps on macOS (web)",
+      "model": "haiku",
+      "task": "P3.12",
+      "status": "done",
+      "started": "2026-10-08T12:19:49+03:30",
+      "ended": "2026-10-08T12:21:48+03:30",
+      "note": "UX research written (many sources unreachable)"
+    },
+    {
+      "id": "j28",
+      "title": "W2 UI: apply UX research (VPN|Direct control, status sentence, Check, menu bar, wording, states)",
+      "model": "haiku",
+      "task": "P3.20",
+      "status": "done",
+      "started": "2026-10-08T12:27:36+03:30",
+      "ended": "2026-10-08T12:45:11+03:30",
+      "note": "W2 UI: 202 tests; segmented control, status+Check, tray, wording lint, onboarding"
+    },
+    {
+      "id": "j29",
+      "title": "W3 helper: independent Guard process + sleep/wake + network-change handling",
+      "model": "haiku",
+      "task": "P2.16",
+      "status": "done",
+      "started": "2026-10-08T12:27:36+03:30",
+      "ended": "2026-10-08T12:49:19+03:30",
+      "note": "guard + network watcher + backend integration: helper 364 tests"
+    },
+    {
+      "id": "j30",
+      "title": "W4 UI: real Finder icons via compiled Swift helper (out of process)",
+      "model": "haiku",
+      "task": "P3.13",
+      "status": "done",
+      "started": "2026-10-08T12:49:49+03:30",
+      "ended": "2026-10-08T12:53:41+03:30",
+      "note": "Swift icon-tool works for Little Snitch + Calculator (cli); app 219 tests"
+    },
+    {
+      "id": "j31",
+      "title": "W4 core: end-to-end tests through a real local VLESS server",
+      "model": "haiku",
+      "task": "P1.10",
+      "status": "done",
+      "started": "2026-10-08T12:49:49+03:30",
+      "ended": "2026-10-08T12:58:29+03:30",
+      "note": "e2e: 15 tests, 10 protocols incl. negative cases + kill -9 recovery"
+    },
+    {
+      "id": "j32",
+      "title": "W4 helper+core: global capture mode 'Only some apps' for ANY app (fakes only)",
+      "model": "haiku",
+      "task": "P2.17",
+      "status": "done",
+      "started": "2026-10-08T12:49:49+03:30",
+      "ended": "2026-10-08T13:10:58+03:30",
+      "note": "global capture with fakes: helper 446, core 216 tests; gates consent+lease+guard"
+    },
+    {
+      "id": "j33",
+      "title": "SAFETY REVIEW (Sonnet): global capture, guard, allowlist, consent gates, installer",
+      "model": "sonnet",
+      "task": "P2.17",
+      "status": "done",
+      "started": "2026-10-08T13:11:21+03:30",
+      "ended": "2026-10-08T13:18:55+03:30",
+      "note": "Sonnet review: verdict NO until guard liveness + pid identity + installer stage integrity fixed"
+    },
+    {
+      "id": "j34",
+      "title": "FIX review findings 1,2,3,6,8,9,11,12: guard pid identity, guard liveness, installer stage hash, system-path rules, DNS post-state, ifconfig check",
+      "model": "haiku",
+      "task": "P6.10",
+      "status": "done",
+      "started": "2026-10-08T13:18:55+03:30",
+      "ended": "2026-10-08T13:40:50+03:30",
+      "note": "8 review findings fixed; helper 501 + core 227 tests"
+    },
+    {
+      "id": "j35",
+      "title": "UI: browser mock shim so the renderer can be screenshotted in a browser tab (dev only)",
+      "model": "haiku",
+      "task": "P3.20",
+      "status": "done",
+      "started": "2026-10-09T08:26:09+03:30",
+      "ended": "2026-10-09T08:54:25+03:30",
+      "note": "browser shim done (238 tests)"
+    },
+    {
+      "id": "j36",
+      "title": "Port the Lightning UI kit into app/ (kit gallery)",
+      "model": "haiku",
+      "task": "P3.30",
+      "status": "done",
+      "started": "2026-10-09T08:29:19+03:30",
+      "ended": "2026-10-09T08:54:25+03:30",
+      "note": "UI kit ported (238 tests)"
+    },
+    {
+      "id": "j37",
+      "title": "Research: per-app routers with saved profiles (Proxifier, Netch, Surge, Little Snitch)",
+      "model": "haiku",
+      "task": "P3.35",
+      "status": "done",
+      "started": "2026-10-09T08:29:19+03:30",
+      "ended": "2026-10-09T08:32:15+03:30",
+      "note": "UX research on per-app routers with saved profiles written"
+    },
+    {
+      "id": "j38",
+      "title": "W5 data: Setup store, rules generation, start/stop/switch, import/export, VPN library API (main+preload+mock)",
+      "model": "haiku",
+      "task": "P3.31",
+      "status": "done",
+      "started": "2026-10-09T08:39:15+03:30",
+      "ended": "2026-10-09T08:52:56+03:30",
+      "note": "data side: setups store, lanes runner, vpns, networks API; 56 new tests"
+    },
+    {
+      "id": "j39",
+      "title": "W5 UI: screens on the kit: Profiles sidebar, List+Board editor, VPNs, toolbar, status bar (devShim)",
+      "model": "haiku",
+      "task": "P3.32",
+      "status": "done",
+      "started": "2026-10-09T08:39:16+03:30",
+      "ended": "2026-10-09T08:41:48+03:30",
+      "note": "stopped early (confused by an image); restarted with the layered contract"
+    },
+    {
+      "id": "j40",
+      "title": "W5 UI v2: layered profile editor (connections -> VPN -> apps), networks, VPNs, lanes overview (devShim)",
+      "model": "haiku",
+      "task": "P3.32",
+      "status": "done",
+      "started": "2026-10-09T08:42:23+03:30",
+      "ended": "2026-10-09T08:45:03+03:30",
+      "note": "stopped early again after opening an image; replaced by two smaller jobs without images"
+    },
+    {
+      "id": "j41",
+      "title": "W5 core: lanes generator (outbound per VPN+interface, urltest failover, lane rules, conflicts)",
+      "model": "haiku",
+      "task": "P2.28",
+      "status": "done",
+      "started": "2026-10-09T08:42:23+03:30",
+      "ended": "2026-10-09T08:49:18+03:30",
+      "note": "core lanes generator: 47 tests, 13 sing-box check cases; core 274 tests"
+    },
+    {
+      "id": "j42",
+      "title": "W5 UI-A: pure model modules + layered dev shim + tests (no screens yet)",
+      "model": "haiku",
+      "task": "P3.32",
+      "status": "done",
+      "started": "2026-10-09T08:45:05+03:30",
+      "ended": "2026-10-09T08:54:51+03:30",
+      "note": "model modules + layered shim; app 384 tests"
+    },
+    {
+      "id": "j43",
+      "title": "Research (web+GitHub): similar per-app routers, open-source repos, architecture and UX ideas",
+      "model": "haiku",
+      "task": "P3.35",
+      "status": "done",
+      "started": "2026-10-09T08:46:53+03:30",
+      "ended": "2026-10-09T08:50:17+03:30",
+      "note": "research 07 written"
+    },
+    {
+      "id": "j44",
+      "title": "INTEGRATION-A helper+core: apply-lanes command, backend via buildLanesConfig, launcher gate for global failover, guard (fakes)",
+      "model": "haiku",
+      "task": "P2.28",
+      "status": "done",
+      "started": "2026-10-09T08:54:25+03:30",
+      "ended": "2026-10-09T09:05:07+03:30",
+      "note": "apply-lanes helper: 549 tests, core 282"
+    },
+    {
+      "id": "j45",
+      "title": "INTEGRATION-B app main: runner uses apply-lanes, scoped vs global choice, consent flow, mock parity",
+      "model": "haiku",
+      "task": "P3.31",
+      "status": "done",
+      "started": "2026-10-09T08:54:25+03:30",
+      "ended": "2026-10-09T09:07:09+03:30",
+      "note": "app uses apply-lanes + consent"
+    },
+    {
+      "id": "j46",
+      "title": "W5 UI-B: layered screens on the kit (sidebar, toolbar, profile flow editor, networks, VPNs, overview, status bar)",
+      "model": "haiku",
+      "task": "P3.32",
+      "status": "done",
+      "started": "2026-10-09T08:54:52+03:30",
+      "ended": "2026-10-09T09:06:22+03:30",
+      "note": "layered screens; app 455 tests"
+    },
+    {
+      "id": "j47",
+      "title": "W7 helper: external VPN detection + passive nettop monitor",
+      "model": "haiku",
+      "task": "P2.23",
+      "status": "done",
+      "started": "2026-10-09T10:22:03+03:30",
+      "ended": "2026-10-09T10:27:34+03:30",
+      "note": "external VPN detect + get-activity; helper 574"
+    },
+    {
+      "id": "j48",
+      "title": "W7 app: per-app speed, Detected-on-Mac wiring, screen fixes",
+      "model": "haiku",
+      "task": "P3.45",
+      "status": "done",
+      "started": "2026-10-09T10:22:03+03:30",
+      "ended": "2026-10-09T10:30:58+03:30",
+      "note": "app 469 tests; appSpeeds, external VPNs"
+    },
+    {
+      "id": "j49",
+      "title": "Docs: unsigned install guide + two-connection test runbook",
+      "model": "haiku",
+      "task": "P3.43",
+      "status": "done",
+      "started": "2026-10-09T10:22:03+03:30",
+      "ended": "2026-10-09T10:23:59+03:30",
+      "note": "install guide + runbook"
+    },
+    {
+      "id": "j50",
+      "title": "Hard-test scripts: DNS leak, short-connection miss rate, failover watcher (tiny data)",
+      "model": "haiku",
+      "task": "P6.1",
+      "status": "done",
+      "started": "2026-10-09T10:22:03+03:30",
+      "ended": "2026-10-09T10:28:54+03:30",
+      "note": "hard-test scripts, 17 tests"
+    },
+    {
+      "id": "j51",
+      "title": "Core: failover prefers the first chosen connection (preferred-first)",
+      "model": "haiku",
+      "task": "P7.11",
+      "status": "done",
+      "started": "2026-10-09T11:26:08+03:30",
+      "ended": "2026-10-09T11:31:37+03:30",
+      "note": "selector-based preferred-first in core/lanes.ts; launcher wiring + 2 test expectations still to do"
+    },
+    {
+      "id": "j52",
+      "title": "Audit: mark P1-P3 tasks done that the code already finishes (tasks.json only)",
+      "model": "haiku",
+      "task": "P3.33",
+      "status": "done",
+      "started": "2026-10-09T11:27:58+03:30",
+      "ended": "2026-10-09T11:32:38+03:30",
+      "note": "audit: 6 done, 15 partial with notes"
+    },
+    {
+      "id": "j53",
+      "title": "P2 helper batch: IPv6 never leaks, diagnostics report, process-tree grouping, reconnect hint, sleep/wake checks",
+      "model": "haiku",
+      "task": "P2.13",
+      "status": "done",
+      "started": "2026-10-09T11:27:58+03:30",
+      "ended": "2026-10-09T11:45:01+03:30",
+      "note": "helper 618, core 310: IPv6, diagnostics, process groups, reconnect, network events"
+    },
+    {
+      "id": "j54",
+      "title": "P3 app batch: Activity screen, Connections view, per-profile log view, menu bar tray quick control",
+      "model": "haiku",
+      "task": "P3.39",
+      "status": "done",
+      "started": "2026-10-09T11:27:58+03:30",
+      "ended": "2026-10-09T11:37:29+03:30",
+      "note": "app: Activity, Connections, Log, tray; 505 tests (1 expects urltest)"
+    },
+    {
+      "id": "j55",
+      "title": "CLI batch: profile start/stop/list, test connection (latency, exit IP), import",
+      "model": "haiku",
+      "task": "P3.34",
+      "status": "done",
+      "started": "2026-10-09T11:27:58+03:30",
+      "ended": "2026-10-09T11:35:42+03:30",
+      "note": "cli: profile-set, doctor; 87 tests"
+    },
+    {
+      "id": "j56",
+      "title": "Skill: reusable roadmap-dashboard skill for other projects",
+      "model": "haiku",
+      "status": "done",
+      "started": "2026-10-09T11:29:59+03:30",
+      "ended": "2026-10-09T11:33:07+03:30",
+      "note": "roadmap-dashboard skill"
+    },
+    {
+      "id": "j57",
+      "title": "App batch 2: Keychain for VPN secrets, settings (start at login, theme, update check), Check-this-app button, per-app DNS help",
+      "model": "haiku",
+      "task": "P1.9",
+      "status": "done",
+      "started": "2026-10-09T11:40:47+03:30",
+      "ended": "2026-10-09T11:58:32+03:30",
+      "note": "Keychain, settings, check-app, DNS field; app 537"
+    },
+    {
+      "id": "j58",
+      "title": "Research: PF vpnonly group + route-to as a no-NE kill switch (web, docs only)",
+      "model": "haiku",
+      "task": "P2.30",
+      "status": "done",
+      "started": "2026-10-09T11:40:47+03:30",
+      "ended": "2026-10-09T11:45:01+03:30",
+      "note": "PF research doc"
+    },
+    {
+      "id": "j59",
+      "title": "P7.12 wire preferred-first failover: launcher probe-and-switch loop, test expectations selector",
+      "model": "haiku",
+      "task": "P7.12",
+      "status": "done",
+      "started": "2026-10-09T11:45:09+03:30",
+      "ended": "2026-10-09T11:50:47+03:30",
+      "note": "P7.12 failover loop + selector expectations; core 16 new tests, helper 7 new, app 1 expectation"
+    },
+    {
+      "id": "j60",
+      "title": "Helper: core exit reason + core log tail in get-diagnostics (find the 2-minute lane stop)",
+      "model": "haiku",
+      "task": "P2.33",
+      "status": "done",
+      "started": "2026-10-09T11:55:40+03:30",
+      "ended": "2026-10-09T12:02:00+03:30",
+      "note": "guard lease heartbeat bug fixed; helper 630, core 329"
+    },
+    {
+      "id": "j61",
+      "title": "App: mock parity for new protocol commands + docs refresh of app/README",
+      "model": "haiku",
+      "task": "P3.45",
+      "status": "done",
+      "started": "2026-10-09T11:55:40+03:30",
+      "ended": "2026-10-09T11:58:27+03:30",
+      "note": "mock parity; app 537/537"
+    },
+    {
+      "id": "j62",
+      "title": "Docs refresh: README status, roadmap phases/log/next-up, RH statuses, requirements, release plan waves",
+      "model": "haiku",
+      "task": "P0.12b",
+      "status": "done",
+      "started": "2026-10-09T11:58:17+03:30",
+      "ended": "2026-10-09T12:01:10+03:30",
+      "note": "docs refresh"
+    },
+    {
+      "id": "j63",
+      "title": "Packaging: unsigned .app/.dmg with bundled helper, core, sing-box + GPL notice (scripts, no install)",
+      "model": "haiku",
+      "task": "P3.22",
+      "status": "done",
+      "started": "2026-10-09T11:59:15+03:30",
+      "ended": "2026-10-09T12:06:48+03:30",
+      "note": "unsigned .app + .dmg built and verified (never launched)"
+    },
+    {
+      "id": "j64",
+      "title": "App: onboarding helper install/upgrade/uninstall flow from the app (admin prompt via injected runner)",
+      "model": "haiku",
+      "task": "P2.20",
+      "status": "done",
+      "started": "2026-10-09T11:59:15+03:30",
+      "ended": "2026-10-09T12:07:00+03:30",
+      "note": "in-app helper install/upgrade/uninstall + onboarding; app 566"
+    },
+    {
+      "id": "j65",
+      "title": "Hard-test scripts 2: guard/crash (H1-H3), lane stop/restore, two lanes at once, Little Snitch coexistence read-only check",
+      "model": "haiku",
+      "task": "P2.15",
+      "status": "done",
+      "started": "2026-10-09T12:01:10+03:30",
+      "ended": "2026-10-09T12:08:35+03:30",
+      "note": "hard-test scripts 2; 43 tests"
+    },
+    {
+      "id": "j66",
+      "title": "Research: is github.com/devdotfast/whiteboard good for architecture diagrams of our app",
+      "model": "haiku",
+      "status": "done",
+      "started": "2026-10-09T12:06:48+03:30",
+      "ended": "2026-10-09T12:08:14+03:30",
+      "note": "whiteboard: no; use Mermaid"
+    },
+    {
+      "id": "j67",
+      "title": "Core+helper: per-app DNS honored in lanes (dns server per app, hijack in scoped/global)",
+      "model": "haiku",
+      "task": "P3.38",
+      "status": "done",
+      "started": "2026-10-09T12:07:39+03:30",
+      "ended": "2026-10-09T12:13:19+03:30",
+      "note": "per-app DNS in lanes; core 341 helper 639"
+    },
+    {
+      "id": "j68",
+      "title": "Security review (read-only): guard lease, apply-lanes, consent gate, Keychain vault, install flow, packaging",
+      "model": "sonnet",
+      "task": "P6.10",
+      "status": "done",
+      "started": "2026-10-09T12:07:39+03:30",
+      "ended": "2026-10-09T12:17:25+03:30",
+      "note": "security review 2: global conditional yes, v1.0 not yet"
+    },
+    {
+      "id": "j69",
+      "title": "Docs: architecture diagrams in Mermaid (system map, layered flow, start sequence, guard/recovery, data/stats flow)",
+      "model": "haiku",
+      "status": "done",
+      "started": "2026-10-09T12:08:14+03:30",
+      "ended": "2026-10-09T12:11:25+03:30",
+      "note": "diagrams md + html"
+    },
+    {
+      "id": "j70",
+      "title": "App: notifications (lane stopped, failover switched, global window ending, new app seen) + auto-switch profile by Wi-Fi network (opt-in)",
+      "model": "haiku",
+      "task": "P7.8",
+      "status": "done",
+      "started": "2026-10-09T12:08:45+03:30",
+      "ended": "2026-10-09T12:28:16+03:30",
+      "note": "notifications + wifi auto-switch; app 625"
+    },
+    {
+      "id": "j71",
+      "title": "CLI for agents 1: full command surface with --json, exit codes, dry-run, schema output",
+      "model": "haiku",
+      "task": "P7.13",
+      "status": "done",
+      "started": "2026-10-09T12:09:39+03:30",
+      "ended": "2026-10-09T12:25:23+03:30",
+      "note": "agent CLI surface; cli 118 tests"
+    },
+    {
+      "id": "j72",
+      "title": "Helper: data quotas and schedules per lane (stop/pause when cap reached or outside window), with fakes",
+      "model": "haiku",
+      "task": "P7.3",
+      "status": "done",
+      "started": "2026-10-09T12:13:29+03:30",
+      "ended": "2026-10-09T12:29:52+03:30",
+      "note": "quotas+schedules; core 355 helper 668"
+    },
+    {
+      "id": "j73",
+      "title": "Docs: two simple maps for non-technical users (structure map, screens and how to use the app)",
+      "model": "haiku",
+      "status": "done",
+      "started": "2026-10-09T12:14:52+03:30",
+      "ended": "2026-10-09T12:18:11+03:30",
+      "note": "simple maps md + html"
+    },
+    {
+      "id": "j74",
+      "title": "S1 security: app install adapter never silently allows user-owned node; explicit tick + refusal copy",
+      "model": "haiku",
+      "task": "S1",
+      "status": "done",
+      "started": "2026-10-09T12:17:35+03:30",
+      "ended": "2026-10-09T12:23:31+03:30",
+      "note": "E1 app side fixed; onboarding checkbox + build error pending"
+    },
+    {
+      "id": "j75",
+      "title": "Security batch A (helper/core): S2 guard canary, S4 route coverage cap, S5 helper-side consented window, S6 restore/pid/fresh-snapshot, S8 caps+redaction",
+      "model": "haiku",
+      "task": "S2",
+      "status": "done",
+      "started": "2026-10-10T09:30:44+03:30",
+      "ended": "2026-10-10T09:46:01+03:30",
+      "note": "security batch A: helper 706, core 365"
+    },
+    {
+      "id": "j76",
+      "title": "S1b app: Onboarding second checkbox for user-owned node + install(acceptRisk)",
+      "model": "haiku",
+      "task": "S1",
+      "status": "done",
+      "started": "2026-10-10T09:30:44+03:30",
+      "ended": "2026-10-10T09:32:08+03:30",
+      "note": "onboarding second checkbox; app 629"
+    },
+    {
+      "id": "j77",
+      "title": "P7.16 fix 5 Cursor-review findings (limits flap, failover vs block selectors, appsOverlap, block-lane DNS, 23:59 window)",
+      "model": "haiku",
+      "task": "P7.16",
+      "status": "done",
+      "started": "2026-10-10T09:46:19+03:30",
+      "ended": "2026-10-10T09:52:25+03:30",
+      "note": "5 cursor findings fixed; core 376 helper 709"
+    },
+    {
+      "id": "j78",
+      "title": "test: cursor model chip",
+      "model": "cursor",
+      "status": "done",
+      "started": "2026-10-10T09:48:34+03:30",
+      "ended": "2026-10-10T09:48:41+03:30",
+      "note": "chip test"
+    },
+    {
+      "id": "j79",
+      "title": "Cursor Auto review C1: helper guard, lease, canary, restore, route policy (read-only)",
+      "model": "cursor",
+      "task": "C1",
+      "status": "failed",
+      "started": "2026-10-10T09:48:55+03:30",
+      "ended": "2026-10-10T10:01:46+03:30",
+      "note": "cursor-agent returned empty output (tool-using prompts in plan/ask mode); only trivial prompts answer"
+    },
+    {
+      "id": "j80",
+      "title": "Cursor Auto review C2: Keychain vault, install flow, node trust, packaging (read-only)",
+      "model": "cursor",
+      "task": "C2",
+      "status": "failed",
+      "started": "2026-10-10T09:48:55+03:30",
+      "ended": "2026-10-10T09:58:31+03:30",
+      "note": "empty/denied output (false done); rerun"
+    },
+    {
+      "id": "j81",
+      "title": "Cursor Auto review C3: agent CLI guardrails, consent token, lock, exit codes (read-only)",
+      "model": "cursor",
+      "task": "C3",
+      "status": "failed",
+      "started": "2026-10-10T09:48:55+03:30",
+      "ended": "2026-10-10T09:56:43+03:30",
+      "note": "empty or denied output (headless shell permission / blank result); rerun"
+    },
+    {
+      "id": "j82",
+      "title": "agy Gemini 3.8 Flash: docs consistency audit (stale statuses, contradicting numbers) read-only",
+      "model": "agy",
+      "task": "A1",
+      "status": "done",
+      "started": "2026-10-10T09:50:24+03:30",
+      "ended": "2026-10-10T09:56:23+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j83",
+      "title": "agy A3: TODO(linux)/TODO(windows) port-notes index",
+      "model": "agy",
+      "task": "A3",
+      "status": "failed",
+      "started": "2026-10-10T09:57:29+03:30",
+      "ended": "2026-10-10T09:57:49+03:30",
+      "note": "empty or denied output (headless shell permission / blank result); rerun"
+    },
+    {
+      "id": "j84",
+      "title": "agy A4: jargon scan of UI strings",
+      "model": "agy",
+      "task": "A4",
+      "status": "failed",
+      "started": "2026-10-10T09:57:29+03:30",
+      "ended": "2026-10-10T09:57:49+03:30",
+      "note": "empty or denied output (headless shell permission / blank result); rerun"
+    },
+    {
+      "id": "j85",
+      "title": "agy A5: not-proven-live checklist",
+      "model": "agy",
+      "task": "A5",
+      "status": "failed",
+      "started": "2026-10-10T09:57:29+03:30",
+      "ended": "2026-10-10T09:58:05+03:30",
+      "note": "empty or denied output (headless shell permission / blank result); rerun"
+    },
+    {
+      "id": "j86",
+      "title": "agy A6: helper protocol reference table",
+      "model": "agy",
+      "task": "A6",
+      "status": "done",
+      "started": "2026-10-10T09:57:29+03:30",
+      "ended": "2026-10-10T10:01:19+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j87",
+      "title": "agy A3 (rerun): port-notes index from a prepared list",
+      "model": "agy",
+      "task": "A3",
+      "status": "failed",
+      "started": "2026-10-10T09:59:00+03:30",
+      "ended": "2026-10-10T09:59:12+03:30",
+      "note": "empty/denied output (false done); rerun"
+    },
+    {
+      "id": "j88",
+      "title": "agy A4 (rerun): jargon scan of UI strings, file reads only",
+      "model": "agy",
+      "task": "A4",
+      "status": "done",
+      "started": "2026-10-10T09:59:00+03:30",
+      "ended": "2026-10-10T11:01:28+03:30",
+      "note": "output written (marked by lead)"
+    },
+    {
+      "id": "j89",
+      "title": "agy A5 (rerun): not-proven-live checklist, file reads only",
+      "model": "agy",
+      "task": "A5",
+      "status": "done",
+      "started": "2026-10-10T09:59:00+03:30",
+      "ended": "2026-10-10T11:01:28+03:30",
+      "note": "output written (marked by lead)"
+    },
+    {
+      "id": "j90",
+      "title": "Docs fixes from the agy audit (verify each claim, then edit docs only)",
+      "model": "haiku",
+      "task": "A2",
+      "status": "done",
+      "started": "2026-10-10T09:59:14+03:30",
+      "ended": "2026-10-10T10:02:59+03:30",
+      "note": "15 audit items applied with corrections"
+    },
+    {
+      "id": "j91",
+      "title": "agy A7: CLI cheat sheet from the schema (for the agent guide)",
+      "model": "agy",
+      "task": "A7",
+      "status": "done",
+      "started": "2026-10-10T10:00:52+03:30",
+      "ended": "2026-10-10T10:02:27+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j92",
+      "title": "agy A8: troubleshooting table from the app's plain error messages",
+      "model": "agy",
+      "task": "A8",
+      "status": "done",
+      "started": "2026-10-10T10:00:52+03:30",
+      "ended": "2026-10-10T10:05:31+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j93",
+      "title": "agy A9: settings and automation keys reference",
+      "model": "agy",
+      "task": "A9",
+      "status": "done",
+      "started": "2026-10-10T10:00:52+03:30",
+      "ended": "2026-10-10T10:04:35+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j94",
+      "title": "agy A10: plain-words summary of the helper for support",
+      "model": "agy",
+      "task": "A10",
+      "status": "done",
+      "started": "2026-10-10T10:00:52+03:30",
+      "ended": "2026-10-10T10:03:23+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j95",
+      "title": "agy A11: list of user-visible screens with their file and state",
+      "model": "agy",
+      "task": "A11",
+      "status": "done",
+      "started": "2026-10-10T10:00:52+03:30",
+      "ended": "2026-10-10T10:06:15+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j96",
+      "title": "agy A12: README links check by reading",
+      "model": "agy",
+      "task": "A12",
+      "status": "done",
+      "started": "2026-10-10T10:00:52+03:30",
+      "ended": "2026-10-10T10:03:24+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j97",
+      "title": "agy A3 (rerun 2): port-notes index from .agy-input list",
+      "model": "agy",
+      "task": "A3",
+      "status": "done",
+      "started": "2026-10-10T10:01:34+03:30",
+      "ended": "2026-10-10T10:11:34+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j98",
+      "title": "Cursor C2 (rerun, sequential): Keychain vault, install flow, node trust, packaging",
+      "model": "cursor",
+      "task": "C2",
+      "status": "failed",
+      "started": "2026-10-10T10:01:34+03:30",
+      "ended": null,
+      "note": "cursor-agent returned empty output (tool-using prompts in plan/ask mode); only trivial prompts answer"
+    },
+    {
+      "id": "j99",
+      "title": "Cursor C3 (rerun, sequential): agent CLI guardrails, consent token, lock, exit codes",
+      "model": "cursor",
+      "task": "C3",
+      "status": "failed",
+      "started": "2026-10-10T10:01:34+03:30",
+      "ended": "2026-10-10T10:09:42+03:30",
+      "note": "cursor exit 0 or empty output"
+    },
+    {
+      "id": "j100",
+      "title": "Research: which tasks suit Cursor Auto vs agy Gemini 3.8 Flash vs Haiku (web + our own measurements), routing table for the roadmap",
+      "model": "haiku",
+      "status": "done",
+      "started": "2026-10-10T10:02:06+03:30",
+      "ended": "2026-10-10T10:03:22+03:30",
+      "note": "worker routing research"
+    },
+    {
+      "id": "j101",
+      "title": "Tools: persistent build script for docs/diagrams.html and docs/simple-maps.html from the md (regenerate both)",
+      "model": "haiku",
+      "status": "done",
+      "started": "2026-10-10T10:02:59+03:30",
+      "ended": "2026-10-10T10:05:07+03:30",
+      "note": "build-diagram-pages.py; both pages regenerated"
+    },
+    {
+      "id": "j102",
+      "title": "Research: how to use Cursor Agent CLI reliably headless + tools like agy-staff for Cursor (macOS)",
+      "model": "haiku",
+      "status": "done",
+      "started": "2026-10-10T10:53:24+03:30",
+      "ended": "2026-10-10T10:55:06+03:30",
+      "note": "cursor cli research"
+    },
+    {
+      "id": "j103",
+      "title": "Cursor C3 (pinned CLI): agent CLI guardrails review",
+      "model": "cursor",
+      "task": "C3",
+      "status": "done",
+      "started": "2026-10-10T11:00:10+03:30",
+      "ended": "2026-10-10T11:05:41+03:30",
+      "note": "pinned cursor 2026.08.04 review ok"
+    },
+    {
+      "id": "j104",
+      "title": "Wording fixes from the agy jargon scan (verify each row, edit UI strings, keep tests green)",
+      "model": "haiku",
+      "task": "P3.20",
+      "status": "done",
+      "started": "2026-10-10T11:01:31+03:30",
+      "ended": "2026-10-10T11:07:01+03:30",
+      "note": "5 jargon fixes applied; app 629"
+    },
+    {
+      "id": "j105",
+      "title": "H1 install trust: pinned sing-box hash + embedded manifest, uninstall order (S3, S7)",
+      "model": "haiku",
+      "task": "S3",
+      "status": "done",
+      "started": "2026-10-10T11:02:34+03:30",
+      "ended": "2026-10-10T11:12:32+03:30",
+      "note": "install trust S3 + uninstall order S7; helper 765, packaging 24"
+    },
+    {
+      "id": "j106",
+      "title": "H2 helper/core: guard canary target, consent window test, restart keeps deadline (S2, S5)",
+      "model": "haiku",
+      "task": "S2",
+      "status": "done",
+      "started": "2026-10-10T11:02:34+03:30",
+      "ended": "2026-10-10T11:12:50+03:30",
+      "note": "consent challenge S5 + canary target S2; helper 766"
+    },
+    {
+      "id": "j107",
+      "title": "H3 app main: silent mode + tray checkboxes, app takes the CLI lock (P3.42, P7.13)",
+      "model": "haiku",
+      "task": "P3.42",
+      "status": "done",
+      "started": "2026-10-10T11:02:34+03:30",
+      "ended": "2026-10-10T11:12:20+03:30",
+      "note": "silent mode + shared lock; 9 app tests red from helper consent change (H2)"
+    },
+    {
+      "id": "j108",
+      "title": "H5 hard-test scripts 3: limits, canary, per-app DNS, short global capture (never run by workers)",
+      "model": "haiku",
+      "task": "P2.15",
+      "status": "done",
+      "started": "2026-10-10T11:02:34+03:30",
+      "ended": "2026-10-10T11:11:33+03:30",
+      "note": "hard-test scripts 3: 88 tests"
+    },
+    {
+      "id": "j109",
+      "title": "H6 agent guide: docs/18, splitnet agent-guide command, Claude skill (P7.14)",
+      "model": "haiku",
+      "task": "P7.14",
+      "status": "done",
+      "started": "2026-10-10T11:02:34+03:30",
+      "ended": "2026-10-10T11:06:37+03:30",
+      "note": "agent-guide command, docs/18, skill split-net-agent, 10 new tests (128 total)"
+    },
+    {
+      "id": "j110",
+      "title": "agy A13: dead exports and unused files list (read-only, helper/core/app main)",
+      "model": "agy",
+      "task": "A13",
+      "status": "done",
+      "started": "2026-10-10T11:02:34+03:30",
+      "ended": "2026-10-10T11:02:52+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j111",
+      "title": "agy A14: log hygiene scan (secrets or ids in log lines, helper and app main)",
+      "model": "agy",
+      "task": "A14",
+      "status": "done",
+      "started": "2026-10-10T11:02:34+03:30",
+      "ended": "2026-10-10T11:12:35+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j112",
+      "title": "Cursor C1 (pinned CLI): helper guard, lease, canary, restore review",
+      "model": "cursor",
+      "task": "C1",
+      "status": "done",
+      "started": "2026-10-10T11:02:34+03:30",
+      "ended": "2026-10-10T11:13:24+03:30",
+      "note": "pinned cursor review ok"
+    },
+    {
+      "id": "j113",
+      "title": "Cursor C2 (pinned CLI): Keychain vault, install flow, packaging review",
+      "model": "cursor",
+      "task": "C2",
+      "status": "done",
+      "started": "2026-10-10T11:02:34+03:30",
+      "ended": "2026-10-10T11:23:45+03:30",
+      "note": "pinned cursor review ok"
+    },
+    {
+      "id": "j114",
+      "title": "H6 agent guide",
+      "model": "haiku",
+      "task": "P7.14",
+      "status": "done",
+      "started": "2026-10-10T11:06:37+03:30",
+      "ended": "2026-10-10T11:06:45+03:30",
+      "note": "agent-guide command, docs/18, skill split-net-agent, 10 new tests (128 total)"
+    },
+    {
+      "id": "j115",
+      "title": "Consent challenge end to end",
+      "model": "cursor",
+      "task": "S5",
+      "status": "done",
+      "started": "2026-10-10T11:31:22+03:30",
+      "ended": "2026-10-10T11:44:20+03:30",
+      "note": "App and CLI send a one-time consent nonce. Fakes only, not proven live."
+    },
+    {
+      "id": "j116",
+      "title": "Dead-code list",
+      "model": "agy",
+      "status": "failed",
+      "started": "2026-10-10T11:37:24+03:30",
+      "ended": "2026-10-10T11:52:56+03:30",
+      "note": "timed out after 15m, empty output"
+    },
+    {
+      "id": "j117",
+      "title": "Log hygiene scan",
+      "model": "agy",
+      "status": "failed",
+      "started": "2026-10-10T11:37:24+03:30",
+      "ended": "2026-10-10T11:53:06+03:30",
+      "note": "timed out after 15m, empty output"
+    },
+    {
+      "id": "j118",
+      "title": "IPC channel table",
+      "model": "agy",
+      "status": "done",
+      "started": "2026-10-10T11:37:24+03:30",
+      "ended": "2026-10-10T11:46:34+03:30",
+      "note": "IPC table written; not checked against ipc.ts yet"
+    },
+    {
+      "id": "j119",
+      "title": "User-visible strings",
+      "model": "agy",
+      "status": "done",
+      "started": "2026-10-10T11:37:24+03:30",
+      "ended": "2026-10-10T11:46:22+03:30",
+      "note": "string table from SimpleScreens; wording.ts claim not checked yet"
+    },
+    {
+      "id": "j120",
+      "title": "App install adapter pin checks",
+      "model": "cursor",
+      "task": "S3",
+      "status": "done",
+      "started": "2026-10-10T11:45:50+03:30",
+      "ended": "2026-10-11T13:14:08+03:30",
+      "note": "finished in the Cursor/cloud session (merged to main)"
+    },
+    {
+      "id": "j121",
+      "title": "Settings controls and wording",
+      "model": "cursor",
+      "status": "done",
+      "started": "2026-10-10T11:45:50+03:30",
+      "ended": "2026-10-11T13:14:08+03:30",
+      "note": "finished in the Cursor/cloud session (merged to main)"
+    },
+    {
+      "id": "j122",
+      "title": "Packaging gaps",
+      "model": "cursor",
+      "task": "P3.22",
+      "status": "done",
+      "started": "2026-10-10T11:45:50+03:30",
+      "ended": "2026-10-10T11:54:40+03:30",
+      "note": "pinned bundle copy in installer, fakes only; contact and icon still placeholders"
+    },
+    {
+      "id": "j123",
+      "title": "H7 hard-test scripts fetch the consent challenge (Q3)",
+      "model": "haiku",
+      "task": "P2.15",
+      "status": "done",
+      "started": "2026-10-11T13:14:08+03:30",
+      "ended": "2026-10-11T13:22:45+03:30",
+      "note": "hard-test consent challenge; 93 tests"
+    },
+    {
+      "id": "j124",
+      "title": "H8 diagnostic report command + issue template (P6.8)",
+      "model": "haiku",
+      "task": "P6.8",
+      "status": "done",
+      "started": "2026-10-11T13:14:08+03:30",
+      "ended": "2026-10-11T13:22:45+03:30",
+      "note": "splitnet report; cli 142"
+    },
+    {
+      "id": "j125",
+      "title": "H9 app local control API: loopback socket + token, live state for CLI/agents (P7.15)",
+      "model": "haiku",
+      "task": "P7.15",
+      "status": "done",
+      "started": "2026-10-11T13:14:08+03:30",
+      "ended": "2026-10-11T13:19:37+03:30",
+      "note": "control API; app 693"
+    },
+    {
+      "id": "j126",
+      "title": "H10 helper upgrade/downgrade guard + state schema migration (P6.3)",
+      "model": "haiku",
+      "task": "P6.3",
+      "status": "done",
+      "started": "2026-10-11T13:14:08+03:30",
+      "ended": "2026-10-11T13:25:33+03:30",
+      "note": "H10 downgrade guard + state migration; helper 815"
+    },
+    {
+      "id": "j127",
+      "title": "H11 tasks.json status audit v2 against code and docs/10 (tasks.json only)",
+      "model": "haiku",
+      "task": "P3.35",
+      "status": "done",
+      "started": "2026-10-11T13:14:08+03:30",
+      "ended": "2026-10-11T13:18:12+03:30",
+      "note": "tasks audit v2"
+    },
+    {
+      "id": "j128",
+      "title": "agy A15: docs vs code audit v2 after the merge (counts, statuses, consent wording)",
+      "model": "agy",
+      "task": "A15",
+      "status": "done",
+      "started": "2026-10-11T13:14:08+03:30",
+      "ended": "2026-10-11T13:17:49+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j129",
+      "title": "agy A16: classify every consent mention (code, test fixture, stale doc)",
+      "model": "agy",
+      "task": "A16",
+      "status": "done",
+      "started": "2026-10-11T13:14:08+03:30",
+      "ended": "2026-10-11T13:28:57+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j130",
+      "title": "agy A17: table of every app IPC channel and its handler (input for the local control API)",
+      "model": "agy",
+      "task": "A17",
+      "status": "done",
+      "started": "2026-10-11T13:14:08+03:30",
+      "ended": "2026-10-11T13:16:42+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j131",
+      "title": "Cursor C1 (pinned CLI): helper guard, lease, canary, restore, consent challenge review",
+      "model": "cursor",
+      "task": "C1",
+      "status": "failed",
+      "started": "2026-10-11T13:14:08+03:30",
+      "ended": "2026-10-11T13:18:59+03:30",
+      "note": "only progress text came back (findings went to a report tool); rerun queued"
+    },
+    {
+      "id": "j132",
+      "title": "Cursor C2 (pinned CLI): install/upgrade script, pinned sing-box, probe-vpn review",
+      "model": "cursor",
+      "task": "C2",
+      "status": "failed",
+      "started": "2026-10-11T13:14:08+03:30",
+      "ended": "2026-10-11T13:22:01+03:30",
+      "note": "progress text only (findings went to a report tool); rerun queued"
+    },
+    {
+      "id": "j133",
+      "title": "Cursor C3 (pinned CLI): agent CLI guardrails and consent flow review",
+      "model": "cursor",
+      "task": "C3",
+      "status": "failed",
+      "started": "2026-10-11T13:14:08+03:30",
+      "ended": "2026-10-11T13:24:37+03:30",
+      "note": "progress text only; rerun j138"
+    },
+    {
+      "id": "j134",
+      "title": "A2b apply verified items of the agy docs audit v2 (docs only)",
+      "model": "haiku",
+      "task": "A2",
+      "status": "done",
+      "started": "2026-10-11T13:18:38+03:30",
+      "ended": "2026-10-11T13:22:45+03:30",
+      "note": "audit v2 items applied"
+    },
+    {
+      "id": "j135",
+      "title": "Cursor C1 rerun: findings must be in the final chat message",
+      "model": "cursor",
+      "task": "C1",
+      "status": "done",
+      "started": "2026-10-11T13:19:45+03:30",
+      "ended": "2026-10-11T13:35:17+03:30",
+      "note": "cursor findings captured"
+    },
+    {
+      "id": "j136",
+      "title": "H12 Settings switch for the local control API (renderer, preload, api types)",
+      "model": "haiku",
+      "task": "P7.15",
+      "status": "done",
+      "started": "2026-10-11T13:19:58+03:30",
+      "ended": "2026-10-11T13:22:45+03:30",
+      "note": "control API Settings switch; app 699"
+    },
+    {
+      "id": "j137",
+      "title": "Cursor C2 rerun: install/upgrade/probe review (findings in chat)",
+      "model": "cursor",
+      "task": "C2",
+      "status": "done",
+      "started": "2026-10-11T13:22:40+03:30",
+      "ended": "2026-10-11T13:38:33+03:30",
+      "note": "cursor findings captured"
+    },
+    {
+      "id": "j138",
+      "title": "Cursor C3 rerun: CLI guardrails and consent flow review (findings in chat)",
+      "model": "cursor",
+      "task": "C3",
+      "status": "done",
+      "started": "2026-10-11T13:22:40+03:30",
+      "ended": "2026-10-11T13:42:03+03:30",
+      "note": "cursor findings captured"
+    },
+    {
+      "id": "j139",
+      "title": "H13 screen fixes from the on-screen review: single helper banner, stale Running state, narrow-column wrapping",
+      "model": "haiku",
+      "task": "P3.44",
+      "status": "done",
+      "started": "2026-10-11T13:28:43+03:30",
+      "ended": "2026-10-11T13:31:35+03:30",
+      "note": "single helper banner; unknown state; speed chip; app 712"
+    },
+    {
+      "id": "j140",
+      "title": "H14 verify and fix the 6 Cursor C1 findings (helper/core)",
+      "model": "haiku",
+      "task": "C1",
+      "status": "done",
+      "started": "2026-10-11T13:35:29+03:30",
+      "ended": "2026-10-11T13:44:14+03:30",
+      "note": "fixed/verified"
+    },
+    {
+      "id": "j141",
+      "title": "H15 verify and fix the 6 Cursor C2 findings (install adapter, install script, probe)",
+      "model": "haiku",
+      "task": "C2",
+      "status": "done",
+      "started": "2026-10-11T13:38:52+03:30",
+      "ended": "2026-10-11T13:44:14+03:30",
+      "note": "fixed/verified"
+    },
+    {
+      "id": "j142",
+      "title": "H16 verify and fix the Cursor C3 findings (CLI guardrails, consent flow)",
+      "model": "haiku",
+      "task": "C3",
+      "status": "done",
+      "started": "2026-10-11T13:44:40+03:30",
+      "ended": "2026-10-11T13:47:44+03:30",
+      "note": "C3: 5 real fixed; cli 146, app 731"
+    },
+    {
+      "id": "j143",
+      "title": "H17 helper human confirmation for global capture (S10)",
+      "model": "haiku",
+      "task": "S10",
+      "status": "done",
+      "started": "2026-10-11T13:48:07+03:30",
+      "ended": "2026-10-11T13:53:05+03:30",
+      "note": "S10 helper human dialog; helper 858"
+    },
+    {
+      "id": "j144",
+      "title": "H18 app: wire confirmGlobal native dialog (S11)",
+      "model": "haiku",
+      "task": "S11",
+      "status": "done",
+      "started": "2026-10-11T13:48:07+03:30",
+      "ended": "2026-10-11T13:53:05+03:30",
+      "note": "S11 app confirmGlobal; app 739"
+    },
+    {
+      "id": "j145",
+      "title": "H19 app maps E_RATE_LIMITED, retests global flow end to end with the human gate (fakes)",
+      "model": "haiku",
+      "task": "S11",
+      "status": "done",
+      "started": "2026-10-11T13:53:26+03:30",
+      "ended": "2026-10-11T13:56:43+03:30",
+      "note": "human gate error mapping; app 741 cli 150 hard 97"
+    },
+    {
+      "id": "j146",
+      "title": "H20 docs sync: roadmap log, docs/10 section 10.31, maps (control API, human gate, probe-vpn, report, upgrade guard), regenerate map pages",
+      "model": "haiku",
+      "status": "done",
+      "started": "2026-10-11T13:57:21+03:30",
+      "ended": "2026-10-11T14:01:35+03:30",
+      "note": "docs sync + maps"
+    },
+    {
+      "id": "j147",
+      "title": "Research: best token-saving tools for Claude Code (MCP, plugins, skills, hooks): caveman, rtk, pointer-style, context tools; fresh sources",
+      "model": "haiku",
+      "status": "done",
+      "started": "2026-10-11T14:19:48+03:30",
+      "ended": "2026-10-11T14:21:59+03:30",
+      "note": "token-saving tools research"
+    },
+    {
+      "id": "j148",
+      "title": "Cursor C4 (pinned CLI): new control API + human gate (helper dialog) review",
+      "model": "cursor",
+      "task": "C4",
+      "status": "done",
+      "started": "2026-10-11T14:58:42+03:30",
+      "ended": "2026-10-11T15:13:14+03:30",
+      "note": "x"
+    },
+    {
+      "id": "j149",
+      "title": "agy A18: refresh the helper protocol reference table from protocol.ts (new commands, error codes)",
+      "model": "agy",
+      "task": "A18",
+      "status": "done",
+      "started": "2026-10-11T14:58:42+03:30",
+      "ended": "2026-10-11T15:02:01+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j150",
+      "title": "H21 app: 'All other apps' lane in the editor (global mode UI, P3.19): confirm flow, 10 min window, plain wording",
+      "model": "haiku",
+      "task": "P3.19",
+      "status": "done",
+      "started": "2026-10-11T14:58:42+03:30",
+      "ended": "2026-10-11T15:01:50+03:30",
+      "note": "H21 All other apps UI; app 754"
+    },
+    {
+      "id": "j151",
+      "title": "H22 tray: live speed + per-profile checkboxes (P3.9)",
+      "model": "haiku",
+      "task": "P3.9",
+      "status": "done",
+      "started": "2026-10-11T15:05:33+03:30",
+      "ended": "2026-10-11T15:11:28+03:30",
+      "note": "H22 tray title model; app 765"
+    },
+    {
+      "id": "j152",
+      "title": "H23 ask-on-first-connect: offer to add a newly seen app to a profile (P3.7)",
+      "model": "haiku",
+      "task": "P3.7",
+      "status": "done",
+      "started": "2026-10-11T15:05:33+03:30",
+      "ended": "2026-10-11T15:08:13+03:30",
+      "note": "H23 ask-on-first-connect model; app 783 (IPC wiring pending)"
+    },
+    {
+      "id": "j153",
+      "title": "H24 update check with ed25519 signature verification (P6.6)",
+      "model": "haiku",
+      "task": "P6.6",
+      "status": "done",
+      "started": "2026-10-11T15:05:33+03:30",
+      "ended": "2026-10-11T15:08:45+03:30",
+      "note": "H24 signed updates; app 793 (placeholder key)"
+    },
+    {
+      "id": "j154",
+      "title": "H25 stats: per-app history retention + SQLite hardening (P2.9)",
+      "model": "haiku",
+      "task": "P2.9",
+      "status": "done",
+      "started": "2026-10-11T15:05:33+03:30",
+      "ended": "2026-10-11T15:14:48+03:30",
+      "note": "H25 stats history; helper 876"
+    },
+    {
+      "id": "j155",
+      "title": "H26 core perf bench: config generation scaling thresholds (P6.5)",
+      "model": "haiku",
+      "task": "P6.5",
+      "status": "done",
+      "started": "2026-10-11T15:05:33+03:30",
+      "ended": "2026-10-11T15:12:30+03:30",
+      "note": "H26 perf bench + appsOverlap hotspot fix; core 384"
+    },
+    {
+      "id": "j156",
+      "title": "H27 packaging: app icon pipeline + bundle verify extras (P3.22)",
+      "model": "haiku",
+      "task": "P3.22",
+      "status": "done",
+      "started": "2026-10-11T15:05:33+03:30",
+      "ended": "2026-10-11T15:10:00+03:30",
+      "note": "H27 packaging icon + verify; packaging 47"
+    },
+    {
+      "id": "j157",
+      "title": "H28 user guide docs/27 + install guide refresh (W8)",
+      "model": "haiku",
+      "task": "P3.15",
+      "status": "done",
+      "started": "2026-10-11T15:05:33+03:30",
+      "ended": "2026-10-11T15:08:35+03:30",
+      "note": "user guide docs/27 + install guide"
+    },
+    {
+      "id": "j158",
+      "title": "agy A19: possibly unused code list (helper, core, app main)",
+      "model": "agy",
+      "task": "A19",
+      "status": "failed",
+      "started": "2026-10-11T15:05:33+03:30",
+      "ended": "2026-10-11T15:20:45+03:30",
+      "note": "agy exit 0 or empty/denied output"
+    },
+    {
+      "id": "j159",
+      "title": "agy A20: which helper commands have no test mentioning them",
+      "model": "agy",
+      "task": "A20",
+      "status": "failed",
+      "started": "2026-10-11T15:05:34+03:30",
+      "ended": "2026-10-11T15:10:10+03:30",
+      "note": "agy exit 0 or empty/denied output"
+    },
+    {
+      "id": "j160",
+      "title": "agy A21: jargon scan of notification and error strings in app main",
+      "model": "agy",
+      "task": "A21",
+      "status": "done",
+      "started": "2026-10-11T15:05:34+03:30",
+      "ended": "2026-10-11T15:10:51+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j161",
+      "title": "agy A22: settings reference refresh after new settings",
+      "model": "agy",
+      "task": "A22",
+      "status": "done",
+      "started": "2026-10-11T15:05:34+03:30",
+      "ended": "2026-10-11T15:12:08+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j162",
+      "title": "Cursor C5 (pinned CLI): app global-capture flow (setupRunner, laneApply, globalConfirm, All other apps UI model)",
+      "model": "cursor",
+      "task": "C5",
+      "status": "done",
+      "started": "2026-10-11T15:05:34+03:30",
+      "ended": "2026-10-11T15:44:42+03:30",
+      "note": "cursor review ok"
+    },
+    {
+      "id": "j163",
+      "title": "Cursor C6 (pinned CLI): helper apply-lanes, limits, failover loop, human gate wiring in backend",
+      "model": "cursor",
+      "task": "C6",
+      "status": "done",
+      "started": "2026-10-11T15:05:34+03:30",
+      "ended": "2026-10-11T15:47:21+03:30",
+      "note": "cursor review ok"
+    },
+    {
+      "id": "j164",
+      "title": "H29 app wiring: tray title, ask-on-first-connect IPC/preload/notification click/dialog mount, verified jargon fixes in main texts",
+      "model": "haiku",
+      "task": "P3.7",
+      "status": "done",
+      "started": "2026-10-11T15:11:28+03:30",
+      "ended": "2026-10-11T15:17:23+03:30",
+      "note": "H29 wiring; app 808"
+    },
+    {
+      "id": "j165",
+      "title": "Cursor C4 rerun: control API + human gate review",
+      "model": "cursor",
+      "task": "C4",
+      "status": "done",
+      "started": "2026-10-11T15:15:22+03:30",
+      "ended": "2026-10-11T15:39:24+03:30",
+      "note": "cursor findings captured"
+    },
+    {
+      "id": "j166",
+      "title": "H30 helper: totals.json in the state-migrate start-up gate (newer file refuses to start)",
+      "model": "haiku",
+      "task": "P6.3",
+      "status": "done",
+      "started": "2026-10-11T15:18:07+03:30",
+      "ended": "2026-10-11T15:21:02+03:30",
+      "note": "H30 totals gate; helper 887"
+    },
+    {
+      "id": "j167",
+      "title": "H31 docs sync: roadmap log, docs/10 section 10.32, maps (tray title, ask-on-first-connect, All other apps, signed updates, stats history), regenerate pages",
+      "model": "haiku",
+      "status": "done",
+      "started": "2026-10-11T15:18:07+03:30",
+      "ended": "2026-10-11T15:20:00+03:30",
+      "note": "H31 docs sync"
+    },
+    {
+      "id": "j168",
+      "title": "agy A23: swallowed errors (empty catch, ignored promise rejections) in helper and app main",
+      "model": "agy",
+      "task": "A23",
+      "status": "done",
+      "started": "2026-10-11T15:18:58+03:30",
+      "ended": "2026-10-11T15:32:36+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j169",
+      "title": "agy A24: timers, listeners and child processes without cleanup",
+      "model": "agy",
+      "task": "A24",
+      "status": "failed",
+      "started": "2026-10-11T15:18:58+03:30",
+      "ended": "2026-10-11T15:32:14+03:30",
+      "note": "agy exit 3 or empty/denied output"
+    },
+    {
+      "id": "j170",
+      "title": "agy A25: every file write, its mode and atomicity",
+      "model": "agy",
+      "task": "A25",
+      "status": "done",
+      "started": "2026-10-11T15:18:58+03:30",
+      "ended": "2026-10-11T15:32:32+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j171",
+      "title": "agy A26: every child process call and shell-injection surface",
+      "model": "agy",
+      "task": "A26",
+      "status": "done",
+      "started": "2026-10-11T15:18:58+03:30",
+      "ended": "2026-10-11T15:27:42+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j172",
+      "title": "agy A27: TODO FIXME XXX comments (not Linux or Windows) by priority",
+      "model": "agy",
+      "task": "A27",
+      "status": "failed",
+      "started": "2026-10-11T15:18:58+03:30",
+      "ended": "2026-10-11T15:32:15+03:30",
+      "note": "agy exit 3 or empty/denied output"
+    },
+    {
+      "id": "j173",
+      "title": "agy A28: CLI commands vs docs coverage",
+      "model": "agy",
+      "task": "A28",
+      "status": "done",
+      "started": "2026-10-11T15:18:58+03:30",
+      "ended": "2026-10-11T15:24:37+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j174",
+      "title": "agy A29: IPC channels vs preload vs shared api consistency",
+      "model": "agy",
+      "task": "A29",
+      "status": "done",
+      "started": "2026-10-11T15:18:58+03:30",
+      "ended": "2026-10-11T15:29:30+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j175",
+      "title": "agy A30: accessibility gaps in screen components",
+      "model": "agy",
+      "task": "A30",
+      "status": "done",
+      "started": "2026-10-11T15:18:58+03:30",
+      "ended": "2026-10-11T15:31:40+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j176",
+      "title": "agy A31: error codes and settings missing from the docs",
+      "model": "agy",
+      "task": "A31",
+      "status": "done",
+      "started": "2026-10-11T15:18:58+03:30",
+      "ended": "2026-10-11T15:23:29+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j177",
+      "title": "agy A32: hard-coded colors in renderer styles (dark theme risk)",
+      "model": "agy",
+      "task": "A32",
+      "status": "done",
+      "started": "2026-10-11T15:18:58+03:30",
+      "ended": "2026-10-11T15:28:01+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j178",
+      "title": "agy A33: log and event statements on the new code that could hold sensitive data",
+      "model": "agy",
+      "task": "A33",
+      "status": "done",
+      "started": "2026-10-11T15:18:58+03:30",
+      "ended": "2026-10-11T15:23:09+03:30",
+      "note": "agy gemini 3.8 flash finished"
+    },
+    {
+      "id": "j179",
+      "title": "agy A34: every process.env read and default (configuration surface)",
+      "model": "agy",
+      "task": "A34",
+      "status": "failed",
+      "started": "2026-10-11T15:18:58+03:30",
+      "ended": "2026-10-11T15:32:16+03:30",
+      "note": "agy exit 3 or empty/denied output"
+    },
+    {
+      "id": "j180",
+      "title": "H32 verify and fix agy A26 (shell/injection surface) + A33 (sensitive logs): helper, app main, tools, packaging",
+      "model": "haiku",
+      "task": "S8",
+      "status": "done",
+      "started": "2026-10-11T15:28:13+03:30",
+      "ended": "2026-10-11T15:32:56+03:30",
+      "note": "H32: 3 of 80 real, fixed; app 809"
+    },
+    {
+      "id": "j181",
+      "title": "H33 verify and fix agy A32 hard-coded colors (dark mode) in renderer styles",
+      "model": "haiku",
+      "task": "P3.44",
+      "status": "done",
+      "started": "2026-10-11T15:28:13+03:30",
+      "ended": "2026-10-11T15:34:12+03:30",
+      "note": "H33: 16 of 21 colors fixed; app 814"
+    },
+    {
+      "id": "j182",
+      "title": "H34 docs: apply agy A31 + A28 gaps (error codes, settings, CLI docs)",
+      "model": "haiku",
+      "task": "A2",
+      "status": "done",
+      "started": "2026-10-11T15:28:13+03:30",
+      "ended": "2026-10-11T15:29:49+03:30",
+      "note": "H34 docs gaps applied"
+    },
+    {
+      "id": "j183",
+      "title": "agy A24a: timers/listeners/child processes without cleanup (helper/src)",
+      "model": "agy",
+      "task": "A24a",
+      "status": "failed",
+      "started": "2026-10-11T15:32:46+03:30",
+      "ended": "2026-10-11T15:33:27+03:30",
+      "note": "agy exit 3 or empty/denied output"
+    },
+    {
+      "id": "j184",
+      "title": "agy A24b: timers/listeners/child processes without cleanup (app/src/main and core/src)",
+      "model": "agy",
+      "task": "A24b",
+      "status": "failed",
+      "started": "2026-10-11T15:32:46+03:30",
+      "ended": "2026-10-11T15:33:02+03:30",
+      "note": "agy exit 3 or empty/denied output"
+    },
+    {
+      "id": "j185",
+      "title": "agy A27a: TODO FIXME XXX HACK comments in helper and core",
+      "model": "agy",
+      "task": "A27a",
+      "status": "failed",
+      "started": "2026-10-11T15:32:46+03:30",
+      "ended": "2026-10-11T15:33:29+03:30",
+      "note": "agy exit 3 or empty/denied output"
+    },
+    {
+      "id": "j186",
+      "title": "agy A27b: TODO FIXME XXX HACK comments in app, tools and packaging",
+      "model": "agy",
+      "task": "A27b",
+      "status": "failed",
+      "started": "2026-10-11T15:32:46+03:30",
+      "ended": "2026-10-11T15:33:04+03:30",
+      "note": "agy exit 3 or empty/denied output"
+    },
+    {
+      "id": "j187",
+      "title": "agy A34a: process.env reads in helper and core",
+      "model": "agy",
+      "task": "A34a",
+      "status": "failed",
+      "started": "2026-10-11T15:32:46+03:30",
+      "ended": "2026-10-11T15:33:30+03:30",
+      "note": "agy exit 3 or empty/denied output"
+    },
+    {
+      "id": "j188",
+      "title": "agy A34b: process.env reads in app, tools and packaging",
+      "model": "agy",
+      "task": "A34b",
+      "status": "failed",
+      "started": "2026-10-11T15:32:46+03:30",
+      "ended": "2026-10-11T15:33:33+03:30",
+      "note": "agy exit 3 or empty/denied output"
+    },
+    {
+      "id": "j189",
+      "title": "H35 verify and fix agy A25 (file writes: mode, atomicity) in helper, app main, tools/cli",
+      "model": "haiku",
+      "task": "S8",
+      "status": "failed",
+      "started": "2026-10-11T15:32:58+03:30",
+      "ended": null,
+      "note": "killed by the session usage limit; rerun"
+    },
+    {
+      "id": "j190",
+      "title": "H36 verify and fix agy A29 (IPC channel consistency): shared api, preload, ipc, dev shim",
+      "model": "haiku",
+      "task": "P7.15",
+      "status": "failed",
+      "started": "2026-10-11T15:32:58+03:30",
+      "ended": null,
+      "note": "killed by the session usage limit; rerun"
+    },
+    {
+      "id": "j191",
+      "title": "H35b verify and fix agy A25 (file writes), rerun",
+      "model": "haiku",
+      "task": "S8",
+      "status": "done",
+      "started": "2026-10-11T18:08:01+03:30",
+      "ended": "2026-10-11T18:45:39+03:30",
+      "note": "finished (registry cleanup by lead)"
+    },
+    {
+      "id": "j192",
+      "title": "H36b verify and fix agy A29 (IPC consistency), rerun",
+      "model": "haiku",
+      "task": "P7.15",
+      "status": "done",
+      "started": "2026-10-11T18:08:01+03:30",
+      "ended": "2026-10-11T18:45:39+03:30",
+      "note": "finished (registry cleanup by lead)"
+    },
+    {
+      "id": "j193",
+      "title": "H37 verify and fix Cursor C4 (control API + human gate)",
+      "model": "haiku",
+      "task": "C4",
+      "status": "done",
+      "started": "2026-10-11T18:08:01+03:30",
+      "ended": "2026-10-11T18:45:39+03:30",
+      "note": "finished (registry cleanup by lead)"
+    },
+    {
+      "id": "j194",
+      "title": "H38 verify and fix Cursor C5 (app global-capture flow)",
+      "model": "haiku",
+      "task": "C5",
+      "status": "done",
+      "started": "2026-10-11T18:08:01+03:30",
+      "ended": "2026-10-11T18:45:39+03:30",
+      "note": "finished (registry cleanup by lead)"
+    },
+    {
+      "id": "j195",
+      "title": "H39 verify and fix Cursor C6 (helper backend, limits, failover)",
+      "model": "haiku",
+      "task": "C6",
+      "status": "done",
+      "started": "2026-10-11T18:08:01+03:30",
+      "ended": "2026-10-11T18:45:39+03:30",
+      "note": "finished (registry cleanup by lead)"
+    },
+    {
+      "id": "j196",
+      "title": "S12 helper: clear the kept global window when the core drops mid-window",
+      "model": "haiku",
+      "task": "S12",
+      "status": "done",
+      "started": "2026-10-11T18:13:56+03:30",
+      "ended": "2026-10-11T18:45:39+03:30",
+      "note": "finished (registry cleanup by lead)"
+    },
+    {
+      "id": "j197",
+      "title": "S13 UI: configured global window minutes in Toolbar and ColumnApps",
+      "model": "haiku",
+      "task": "S13",
+      "status": "done",
+      "started": "2026-10-11T18:13:56+03:30",
+      "ended": "2026-10-11T18:45:39+03:30",
+      "note": "finished (registry cleanup by lead)"
+    },
+    {
+      "id": "j198",
+      "title": "Cursor C7 (pinned CLI): update signature check, stats history, state migration",
+      "model": "cursor",
+      "task": "C7",
+      "status": "done",
+      "started": "2026-10-11T18:13:56+03:30",
+      "ended": "2026-10-11T18:17:24+03:30",
+      "note": "cursor review ok"
+    },
+    {
+      "id": "j199",
+      "title": "Cursor C8 (pinned CLI): ask-on-first-connect, tray title, control API wiring in app main",
+      "model": "cursor",
+      "task": "C8",
+      "status": "done",
+      "started": "2026-10-11T18:13:56+03:30",
+      "ended": "2026-10-11T18:23:09+03:30",
+      "note": "cursor review ok"
+    },
+    {
+      "id": "j200",
+      "title": "H40 verify and fix Cursor C7 (update signature, stats history, state migration)",
+      "model": "haiku",
+      "task": "C7",
+      "status": "done",
+      "started": "2026-10-11T18:17:39+03:30",
+      "ended": "2026-10-11T18:27:57+03:30",
+      "note": "verified fixes"
+    },
+    {
+      "id": "j201",
+      "title": "H41 verify and fix Cursor C8 (HIGH and MEDIUM rows only)",
+      "model": "haiku",
+      "task": "C8",
+      "status": "done",
+      "started": "2026-10-11T18:23:31+03:30",
+      "ended": "2026-10-11T18:27:58+03:30",
+      "note": "verified fixes"
+    },
+    {
+      "id": "j202",
+      "title": "Research: where Gemini 3.8 Flash / agy is good for split-net and how to get better results (prompting, structured output, quotas)",
+      "model": "haiku",
+      "status": "done",
+      "started": "2026-10-11T18:24:56+03:30",
+      "ended": "2026-10-11T18:27:29+03:30",
+      "note": "agy fit research"
+    },
+    {
+      "id": "j203",
+      "title": "Research: Gemini 3.8 Flash (high) vs Gemini 3.1 Pro for code reading, extraction and review (web comparison)",
+      "model": "haiku",
+      "status": "done",
+      "started": "2026-10-11T18:27:47+03:30",
+      "ended": "2026-10-11T18:29:18+03:30",
+      "note": "research 37"
+    },
+    {
+      "id": "j204",
+      "title": "A/B agy model gemini-3.8-flash-high: child process calls in helper/src (measured against grep)",
+      "model": "agy",
+      "task": "AB",
+      "status": "failed",
+      "started": "2026-10-11T18:27:47+03:30",
+      "ended": "2026-10-11T18:28:01+03:30",
+      "note": "exit 3 or quota/empty"
+    },
+    {
+      "id": "j205",
+      "title": "A/B agy model gemini-3.1-pro-high: child process calls in helper/src (measured against grep)",
+      "model": "agy",
+      "task": "AB",
+      "status": "failed",
+      "started": "2026-10-11T18:27:47+03:30",
+      "ended": "2026-10-11T18:28:05+03:30",
+      "note": "exit 3 or quota/empty"
+    },
+    {
+      "id": "j206",
+      "title": "Opus (medium, one call, capped): decide the best agy model/recipe per task type from research 36+37",
+      "model": "opus",
+      "status": "done",
+      "started": "2026-10-11T18:29:18+03:30",
+      "ended": "2026-10-11T18:45:39+03:30",
+      "note": "finished (registry cleanup by lead)"
+    },
+    {
+      "id": "j207",
+      "title": "H42 failover: why traffic does not return to the preferred connection after replug (P7.17)",
+      "model": "haiku",
+      "task": "P7.17",
+      "status": "done",
+      "started": "2026-10-11T19:01:28+03:30",
+      "ended": "2026-10-11T19:08:35+03:30",
+      "note": "H42 failover probe diagnostics; core 390 helper 910"
+    },
+    {
+      "id": "j208",
+      "title": "H43 sleep/wake awareness: wake must not look like a lost guard (S14)",
+      "model": "haiku",
+      "task": "S14",
+      "status": "done",
+      "started": "2026-10-11T19:09:02+03:30",
+      "ended": "2026-10-11T19:10:29+03:30",
+      "note": "H43 spawned a Sonnet subagent: stopped, rerun"
+    },
+    {
+      "id": "j209",
+      "title": "H43b sleep/wake awareness (S14), Haiku only, no subagents",
+      "model": "haiku",
+      "task": "S14",
+      "status": "done",
+      "started": "2026-10-11T19:10:29+03:30",
+      "ended": "2026-10-11T19:16:50+03:30",
+      "note": "H43b sleep/wake awareness; helper 919"
+    },
+    {
+      "id": "j210",
+      "title": "H44 failover restart keeps remaining members",
+      "model": "haiku",
+      "task": "P7.17",
+      "status": "done",
+      "started": "2026-10-11T20:32:08+03:30",
+      "ended": "2026-10-11T20:34:50+03:30",
+      "note": "keepUpConnections on restart; core 396 helper 923"
+    },
+    {
+      "id": "j211",
+      "title": "H45 limits rebuild with member down",
+      "model": "haiku",
+      "task": "P7.17",
+      "status": "done",
+      "started": "2026-10-11T21:03:33+03:30",
+      "ended": "2026-10-11T21:05:43+03:30",
+      "note": "rebuildForLimits keeps remaining members; helper 925"
+    },
+    {
+      "id": "j212",
+      "title": "H46 remaining screens review",
+      "model": "haiku",
+      "task": "P3.44",
+      "status": "done",
+      "started": "2026-10-11T21:03:33+03:30",
+      "ended": "2026-10-11T21:06:49+03:30",
+      "note": "colors guard covers .ts, error Notices, daemon banned; app 840"
+    },
+    {
+      "id": "j213",
+      "title": "H47 docs sync live results",
+      "model": "haiku",
+      "task": "P0.17",
+      "status": "done",
+      "started": "2026-10-11T21:03:33+03:30",
+      "ended": "2026-10-11T21:04:44+03:30",
+      "note": "docs synced with live results 10.33-10.41"
+    },
+    {
+      "id": "j214",
+      "title": "H48 Try again re-runs same action",
+      "model": "haiku",
+      "task": "P3.44",
+      "status": "done",
+      "started": "2026-10-11T21:59:25+03:30",
+      "ended": "2026-10-11T22:01:39+03:30",
+      "note": "Try again re-runs same action; app 842"
+    },
+    {
+      "id": "j215",
+      "title": "H49 security items S4 S6 S8 P2.13",
+      "model": "haiku",
+      "task": "S4",
+      "status": "done",
+      "started": "2026-10-12T07:26:01+03:30",
+      "ended": "2026-10-12T07:31:27+03:30",
+      "note": "S4 S6 S8 done; P2.13 partial; helper 927"
+    },
+    {
+      "id": "j216",
+      "title": "H50 usage history and Activity gaps",
+      "model": "haiku",
+      "task": "P3.6",
+      "status": "done",
+      "started": "2026-10-12T07:26:01+03:30",
+      "ended": "2026-10-12T07:29:52+03:30",
+      "note": "Activity 30-day column, per-day CSV; P3.41 P3.45 done; app 844"
+    },
+    {
+      "id": "j217",
+      "title": "H51 agent CLI gaps",
+      "model": "haiku",
+      "task": "P7.13",
+      "status": "done",
+      "started": "2026-10-12T07:26:01+03:30",
+      "ended": "2026-10-12T07:28:08+03:30",
+      "note": "CLI lock agreement test; notes updated; cli 154"
+    },
+    {
+      "id": "j218",
+      "title": "H52 fix Cursor MEDIUM: limit unblock member, client timeout",
+      "model": "haiku",
+      "task": "S5",
+      "status": "done",
+      "started": "2026-10-12T07:59:32+03:30",
+      "ended": "2026-10-12T08:03:09+03:30",
+      "note": "Cursor 39 MEDIUMs fixed: live-plan unblock, 130 s timeout; helper 928"
+    },
+    {
+      "id": "j219",
+      "title": "H53 core flow audit setup to stop",
+      "model": "haiku",
+      "task": "P3.8",
+      "status": "done",
+      "started": "2026-10-12T08:03:37+03:30",
+      "ended": "2026-10-12T08:07:43+03:30",
+      "note": "core flow: Stop/Restore/status fixes; app 850"
+    },
+    {
+      "id": "j220",
+      "title": "H54 packaging offline checks",
+      "model": "haiku",
+      "task": "P3.22",
+      "status": "done",
+      "started": "2026-10-12T08:03:37+03:30",
+      "ended": "2026-10-12T08:04:42+03:30",
+      "note": "packaging verifies offline; 52 tests; needs user: contact, icon, update key, launch"
+    },
+    {
+      "id": "j221",
+      "title": "H55 pause on network change + resume-lanes (helper)",
+      "model": "haiku",
+      "task": "P7.17",
+      "status": "done",
+      "started": "2026-10-12T08:12:54+03:30",
+      "ended": "2026-10-12T08:25:07+03:30",
+      "note": "pause default + resume-lanes; helper 939"
+    },
+    {
+      "id": "j222",
+      "title": "H56 wake restarts when connections unchanged",
+      "model": "haiku",
+      "task": "P2.12",
+      "status": "done",
+      "started": "2026-10-12T08:25:07+03:30",
+      "ended": "2026-10-12T08:27:20+03:30",
+      "note": "wake restarts when connections unchanged; helper 943"
+    },
+    {
+      "id": "j223",
+      "title": "H57 app paused notice Continue or Stop",
+      "model": "haiku",
+      "task": "P3.8",
+      "status": "done",
+      "started": "2026-10-12T08:25:07+03:30",
+      "ended": "2026-10-12T08:30:07+03:30",
+      "note": "paused notice Continue/Stop; app 859"
+    },
+    {
+      "id": "j224",
+      "title": "H58 warn on unsupported share-link options",
+      "model": "haiku",
+      "task": "P1.5",
+      "status": "done",
+      "started": "2026-10-12T09:06:26+03:30",
+      "ended": "2026-10-12T09:11:45+03:30",
+      "note": "unsupported share-link options warn at import; core 404 app 861 cli 159"
+    },
+    {
+      "id": "j225",
+      "title": "H59 VPN secrets keychain vs CLI vs helper",
+      "model": "haiku",
+      "task": "P1.9",
+      "status": "done",
+      "started": "2026-10-12T09:11:52+03:30",
+      "ended": "2026-10-12T09:21:07+03:30",
+      "note": "VPN secrets: CLI uses the vault, legacy-only migration, missing secret refused; app 871 cli 164"
+    },
+    {
+      "id": "j226",
+      "title": "H60 fix stale lease-error banner on pause/resume",
+      "model": "haiku",
+      "task": "P3.8",
+      "status": "done",
+      "started": "2026-10-12T09:15:14+03:30",
+      "ended": "2026-10-12T09:16:55+03:30",
+      "note": "banner rule + tests; services.ts/App.tsx wiring left"
+    },
+    {
+      "id": "j227",
+      "title": "H61 responsive layout, roomier VPN/Connections, Lightning-style side panel",
+      "model": "haiku",
+      "task": "P3.44",
+      "status": "done",
+      "started": "2026-10-12T09:19:57+03:30",
+      "ended": "2026-10-12T09:25:22+03:30",
+      "note": "responsive layout, roomier lists, Lightning-style rail; app 889"
+    },
+    {
+      "id": "j228",
+      "title": "H62 docs sync resume-lanes networkChange",
+      "model": "haiku",
+      "task": "P0.17",
+      "status": "done",
+      "started": "2026-10-12T09:22:04+03:30",
+      "ended": "2026-10-12T09:24:27+03:30",
+      "note": "docs 20/21/24/25 synced: resume-lanes, networkChange, notice"
+    },
+    {
+      "id": "j229",
+      "title": "Cursor review: Keychain vault (secrets, CLI, concurrency)",
+      "model": "cursor",
+      "task": "P1.9",
+      "status": "failed",
+      "started": "2026-10-12T09:23:27+03:30",
+      "ended": "2026-10-12T09:40:00+03:30",
+      "note": "Cursor returned empty output twice; rerun with a shorter prompt"
+    },
+    {
+      "id": "j230",
+      "title": "Cursor review: today's helper changes (2 MEDIUM fixed)",
+      "model": "cursor",
+      "task": "S5",
+      "status": "done",
+      "started": "2026-10-12T09:23:27+03:30",
+      "ended": "2026-10-12T09:23:27+03:30",
+      "note": "2 MEDIUM, no HIGH; fixed by H52"
+    },
+    {
+      "id": "j231",
+      "title": "Cursor review: pause/resume code",
+      "model": "cursor",
+      "task": "P7.17",
+      "status": "done",
+      "started": "2026-10-12T09:23:27+03:30",
+      "ended": "2026-10-12T09:23:28+03:30",
+      "note": "retry returned empty, rerun pending"
+    },
+    {
+      "id": "j232",
+      "title": "H63 summary boxes + picker dialogs (profile screen)",
+      "model": "haiku",
+      "task": "P3.32",
+      "status": "done",
+      "started": "2026-10-12T09:28:21+03:30",
+      "ended": "2026-10-12T09:34:56+03:30",
+      "note": "summary boxes + picker dialogs; app 906"
+    },
+    {
+      "id": "j233",
+      "title": "H64 UI polish pass: top bar, density, boxes, screens",
+      "model": "haiku",
+      "task": "P3.44",
+      "status": "done",
+      "started": "2026-10-12T09:35:34+03:30",
+      "ended": "2026-10-12T09:41:51+03:30",
+      "note": "UI polish: header 40px, density tokens, folds, settings cards; app 919"
+    },
+    {
+      "id": "j234",
+      "title": "H65 helper install upgrade uninstall completeness",
+      "model": "haiku",
+      "task": "P2.20",
+      "status": "done",
+      "started": "2026-10-12T09:39:54+03:30",
+      "ended": "2026-10-12T09:45:40+03:30",
+      "note": "install/upgrade/uninstall lifecycle checklist; helper 956"
+    },
+    {
+      "id": "j235",
+      "title": "H66 auto-update safety and release-sign",
+      "model": "haiku",
+      "task": "P6.6",
+      "status": "done",
+      "started": "2026-10-12T09:39:54+03:30",
+      "ended": "2026-10-12T09:42:31+03:30",
+      "note": "update check hardened, sign verify, placeholder key refuses; app 922"
+    },
+    {
+      "id": "j236",
+      "title": "Cursor review: Keychain vault (retry, short prompt)",
+      "model": "cursor",
+      "task": "P1.9",
+      "status": "failed",
+      "started": "2026-10-12T09:40:00+03:30",
+      "ended": "2026-10-12T10:19:16+03:30",
+      "note": "Cursor not available in this region (empty output); review waits until it works"
+    },
+    {
+      "id": "j237",
+      "title": "H67 debug panels + self-tests (from Lightning)",
+      "model": "haiku",
+      "task": "P6.8",
+      "status": "done",
+      "started": "2026-10-12T09:45:56+03:30",
+      "ended": "2026-10-12T10:00:18+03:30",
+      "note": "debug screen + 9 safe self-tests + guarded scoped check; app 999"
+    },
+    {
+      "id": "j238",
+      "title": "H68 fix errors found in the app log + richer logging",
+      "model": "haiku",
+      "task": "P6.8",
+      "status": "done",
+      "started": "2026-10-12T09:49:37+03:30",
+      "ended": "2026-10-12T09:54:53+03:30",
+      "note": "log fixes: unique keys, vault base64+reason codes, rotation 5x2MB; wiring left"
+    },
+    {
+      "id": "j239",
+      "title": "H69 picker dialog layout, close button, sticky footer",
+      "model": "haiku",
+      "task": "P3.32",
+      "status": "done",
+      "started": "2026-10-12T09:51:03+03:30",
+      "ended": "2026-10-12T09:54:53+03:30",
+      "note": "picker dialogs: one column 520px, sticky footer, collapsed detected group; app 944"
+    },
+    {
+      "id": "j240",
+      "title": "H70 profile name field clarity and save",
+      "model": "haiku",
+      "task": "P3.32",
+      "status": "done",
+      "started": "2026-10-12T09:53:18+03:30",
+      "ended": "2026-10-12T09:55:52+03:30",
+      "note": "name field is a labelled input; one inline error; default name; app 983"
+    },
+    {
+      "id": "j241",
+      "title": "H71 UI/UX skill research and our guide",
+      "model": "haiku",
+      "task": "P3.20",
+      "status": "done",
+      "started": "2026-10-12T09:53:18+03:30",
+      "ended": "2026-10-12T09:54:39+03:30",
+      "note": "UI/UX research + our guide docs/29"
+    },
+    {
+      "id": "j242",
+      "title": "H72 wire session and action logging in main",
+      "model": "haiku",
+      "task": "P6.8",
+      "status": "done",
+      "started": "2026-10-12T09:54:53+03:30",
+      "ended": "2026-10-12T10:00:30+03:30",
+      "note": "session line, action lines, runner transitions wired; app 1009"
+    },
+    {
+      "id": "j243",
+      "title": "H73 remove blue focus ring, normalize padding/margins (guide)",
+      "model": "haiku",
+      "task": "P3.44",
+      "status": "done",
+      "started": "2026-10-12T10:00:26+03:30",
+      "ended": "2026-10-12T10:19:16+03:30",
+      "note": "blue focus ring removed, spacing scale applied; app 1011"
+    },
+    {
+      "id": "j244",
+      "title": "H74 VPN test in app, visible warnings, check before Start",
+      "model": "haiku",
+      "task": "P1.6",
+      "status": "done",
+      "started": "2026-10-12T10:02:30+03:30",
+      "ended": "2026-10-12T10:13:29+03:30",
+      "note": "shared VPN test, visible warnings, check before Start; core 417 app 1033 cli 167"
+    },
+    {
+      "id": "j245",
+      "title": "H75 remember window position + stale lease banner",
+      "model": "haiku",
+      "task": "P3.44",
+      "status": "done",
+      "started": "2026-10-12T10:19:11+03:30",
+      "ended": "2026-10-12T10:25:56+03:30",
+      "note": "window position remembered, lease banner only on watchdog, status.stoppedReason; app 1059"
+    },
+    {
+      "id": "j246",
+      "title": "H76 VPN test from the app uses the helper's node path (L5)",
+      "model": "haiku",
+      "task": "P1.6",
+      "status": "done",
+      "started": "2026-10-12T10:21:02+03:30",
+      "ended": "2026-10-12T10:27:29+03:30",
+      "note": "helper reports its node path; test lane uses it; check never blocks Start when it cannot run; helper 960"
+    },
+    {
+      "id": "j247",
+      "title": "H77 two profiles: no collateral stop, plain global message, running list (L6-L9)",
+      "model": "haiku",
+      "task": "P2.8",
+      "status": "done",
+      "started": "2026-10-12T10:27:31+03:30",
+      "ended": "2026-10-12T10:35:31+03:30",
+      "note": "refused start keeps running profiles; plain global messages; running list popover; helper 967"
+    },
+    {
+      "id": "j248",
+      "title": "H78 research: Xray-core companion engine (all VPN kinds)",
+      "model": "haiku",
+      "task": "P7.4",
+      "status": "done",
+      "started": "2026-10-12T10:28:33+03:30",
+      "ended": "2026-10-12T10:31:02+03:30",
+      "note": "research doc 43: needs-Xray list, pinned v26.3.27, phases"
+    },
+    {
+      "id": "j249",
+      "title": "H79 phase 1: import and tag every VPN kind (xhttp, kcp, tcp-http, Xray JSON)",
+      "model": "haiku",
+      "task": "P7.4",
+      "status": "done",
+      "started": "2026-10-12T10:30:58+03:30",
+      "ended": "2026-10-12T10:38:35+03:30",
+      "note": "phase 1: all Xray kinds and JSON import tagged; core 453 app 1066 cli 168"
+    },
+    {
+      "id": "j250",
+      "title": "H80 Home screen: profile cards, states, actions (L10)",
+      "model": "haiku",
+      "task": "P3.32",
+      "status": "done",
+      "started": "2026-10-12T10:35:44+03:30",
+      "ended": "2026-10-12T10:47:14+03:30",
+      "note": "Home screen with profile cards; app 1098"
+    },
+    {
+      "id": "j251",
+      "title": "H81 phase 2a: Xray config generator + sing-box socks hop (core)",
+      "model": "haiku",
+      "task": "P7.4",
+      "status": "done",
+      "started": "2026-10-12T10:38:58+03:30",
+      "ended": "2026-10-12T10:47:14+03:30",
+      "note": "Xray config generator + sing-box socks hop; golden tests"
+    },
+    {
+      "id": "j252",
+      "title": "H82 phase 2a: new profile fields through app, vault, helper protocol",
+      "model": "haiku",
+      "task": "P7.4",
+      "status": "done",
+      "started": "2026-10-12T10:38:58+03:30",
+      "ended": "2026-10-12T10:43:03+03:30",
+      "note": "new profile fields travel app->helper, kcp seed in Keychain, redaction; helper 978 app 1097 cli 171"
+    },
+    {
+      "id": "j253",
+      "title": "H83 phase 2b: helper Xray process lifecycle (fakes)",
+      "model": "haiku",
+      "task": "P7.4",
+      "status": "done",
+      "started": "2026-10-12T10:47:55+03:30",
+      "ended": "2026-10-12T10:55:56+03:30",
+      "note": "helper Xray lifecycle with fakes: refusal when missing, start order, crash teardown; helper 1019; guard pids pending"
+    },
+    {
+      "id": "j254",
+      "title": "H84 installer + packaging prepared for pinned Xray-core (no download)",
+      "model": "haiku",
+      "task": "P3.22",
+      "status": "done",
+      "started": "2026-10-12T10:47:55+03:30",
+      "ended": "2026-10-12T10:58:06+03:30",
+      "note": "installer/packaging prepared for pinned Xray-core (sha null), fetch script dry-run, licence placeholder; packaging 76"
+    },
+    {
+      "id": "j255",
+      "title": "H85 VPN ping: Check speed + Test all",
+      "model": "haiku",
+      "task": "P1.6",
+      "status": "done",
+      "started": "2026-10-12T10:47:55+03:30",
+      "ended": "2026-10-12T10:55:15+03:30",
+      "note": "Check speed (TCP ping) + Test all (real); speed tools moved under the search; app 1115"
+    },
+    {
+      "id": "j256",
+      "title": "H86 guard records and kills Xray pids (high-risk, fakes)",
+      "model": "haiku",
+      "task": "P2.16",
+      "status": "done",
+      "started": "2026-10-12T10:56:03+03:30",
+      "ended": "2026-10-12T11:02:19+03:30",
+      "note": "guard records and verifies Xray pids; helper 1037"
+    },
+    {
+      "id": "j257",
+      "title": "Review (Sonnet): guard Xray-pid change, high-risk",
+      "model": "sonnet",
+      "task": "P2.16",
+      "status": "done",
+      "started": "2026-10-12T11:02:29+03:30",
+      "ended": "2026-10-12T11:04:07+03:30",
+      "note": "Sonnet review: no HIGH, 3 MEDIUM, fixes assigned (H87)"
+    },
+    {
+      "id": "j258",
+      "title": "H87 guard review fixes: restore order, unknown vs gone, tests",
+      "model": "haiku",
+      "task": "P2.16",
+      "status": "done",
+      "started": "2026-10-12T11:04:07+03:30",
+      "ended": "2026-10-12T11:13:02+03:30",
+      "note": "guard review fixes: Xray stop last with 3 s cap, unknown vs gone, tests; helper 1054"
+    },
+    {
+      "id": "j259",
+      "title": "Review (Sonnet): Keychain vault, secrets handling",
+      "model": "sonnet",
+      "task": "P1.9",
+      "status": "done",
+      "started": "2026-10-12T11:04:20+03:30",
+      "ended": "2026-10-12T11:05:42+03:30",
+      "note": "Sonnet review of vault: no argv leak; HIGH stale cache overwrites CLI changes; 3 MEDIUM; fixes assigned (H88)"
+    },
+    {
+      "id": "j260",
+      "title": "H88 vault review fixes: fresh load under shared lock, missing-secret refusal, rollback",
+      "model": "haiku",
+      "task": "P1.9",
+      "status": "done",
+      "started": "2026-10-12T11:05:42+03:30",
+      "ended": "2026-10-12T11:15:23+03:30",
+      "note": "vault: fresh load under shared lock, hasPassword refusal, finalmask/extra to Keychain, rollback; app 1138 cli 176"
+    },
+    {
+      "id": "j261",
+      "title": "H89 truthful Xray messages, engine status, Start notice",
+      "model": "haiku",
+      "task": "P7.4",
+      "status": "done",
+      "started": "2026-10-12T11:17:12+03:30",
+      "ended": "2026-10-12T11:27:47+03:30",
+      "note": "truthful Xray messages, engine status, Start gate; helper 1055 app 1150 cli 178"
+    },
+    {
+      "id": "j262",
+      "title": "Cursor reviews x5: pause/resume, vault lock, apply-lanes atomic, Xray helper, guard fixes",
+      "model": "cursor",
+      "task": "P6.10",
+      "status": "done",
+      "started": "2026-10-12T11:19:20+03:30",
+      "ended": "2026-10-12T12:23:25+03:30",
+      "note": "5 Cursor reviews done: 3 HIGH in resume/xray/vault, MEDIUMs; fixes H92-H94"
+    },
+    {
+      "id": "j263",
+      "title": "agy 3.1-pro: bug candidates in guard/xray (rows, script-verified)",
+      "model": "agy",
+      "task": "P2.16",
+      "status": "done",
+      "started": "2026-10-12T11:24:40+03:30",
+      "ended": "2026-10-12T11:32:21+03:30",
+      "note": "agy guard review rows produced; to triage"
+    },
+    {
+      "id": "j264",
+      "title": "agy flash-high: draft user guide sections (docs/27)",
+      "model": "agy",
+      "task": "P3.20",
+      "status": "done",
+      "started": "2026-10-12T11:24:40+03:30",
+      "ended": "2026-10-12T11:32:21+03:30",
+      "note": "agy user-guide draft produced; to review"
+    },
+    {
+      "id": "j265",
+      "title": "H90 pin Xray by binary hash, --xray-bundle for dev installs, MPL licence text",
+      "model": "haiku",
+      "task": "P7.4",
+      "status": "done",
+      "started": "2026-10-12T11:26:00+03:30",
+      "ended": "2026-10-12T11:32:21+03:30",
+      "note": "pin by binary hash, --xray-bundle, MPL licence; 11 helper tests need follow-up"
+    },
+    {
+      "id": "j266",
+      "title": "H91 fix Cursor findings: resume drops protection lanes, wake retry survives Stop",
+      "model": "haiku",
+      "task": "P7.17",
+      "status": "failed",
+      "started": "2026-10-12T11:29:40+03:30",
+      "ended": "2026-10-12T12:23:25+03:30",
+      "note": "Haiku session limit hit; redone as H92"
+    },
+    {
+      "id": "j267",
+      "title": "agy queue x9: 5 bug-candidate reviews (3.1-pro), docs stale, cli exit codes, ipc table, wording",
+      "model": "agy",
+      "task": "P6.10",
+      "status": "done",
+      "started": "2026-10-12T11:30:29+03:30",
+      "ended": "2026-10-12T12:28:43+03:30",
+      "note": "agy queue: 9 jobs, rows script-verified; wording, docs-stale, cli-exit and runner-race rows triaged"
+    },
+    {
+      "id": "j268",
+      "title": "agy dev: splitnet logs command family (tail, issues, sessions, search, export, triage)",
+      "model": "agy",
+      "task": "P7.13",
+      "status": "done",
+      "started": "2026-10-12T11:31:30+03:30",
+      "ended": "2026-10-12T14:17:02+03:30",
+      "note": "agy wrote logs.ts + tests (16 of 19 pass); 3 failures to fix"
+    },
+    {
+      "id": "j269",
+      "title": "H92 backend fixes: resume protection lanes, wake retry, limits restore, pin tests",
+      "model": "haiku",
+      "task": "P7.17",
+      "status": "done",
+      "started": "2026-10-12T12:23:25+03:30",
+      "ended": "2026-10-12T12:27:09+03:30",
+      "note": "resume refuses to drop protection lanes, wake retry cleared on stop, limits restored; pin tests injected; helper 1070 before H93"
+    },
+    {
+      "id": "j270",
+      "title": "H93 Xray helper fixes from Cursor review (port handshake, DNS, scoped loop, creds)",
+      "model": "haiku",
+      "task": "P7.4",
+      "status": "done",
+      "started": "2026-10-12T12:23:25+03:30",
+      "ended": "2026-10-12T12:30:13+03:30",
+      "note": "Xray helper fixes: authenticated readiness, DNS via proxy, creds, loop refusal (needs backend wiring)"
+    },
+    {
+      "id": "j271",
+      "title": "H94 vault fixes from Cursor review (locked load, merge, push gate, flags)",
+      "model": "haiku",
+      "task": "P1.9",
+      "status": "done",
+      "started": "2026-10-12T12:23:25+03:30",
+      "ended": "2026-10-12T12:27:05+03:30",
+      "note": "vault fixes: locked load, 3-way merge, push gate, presence flags; app 1157"
+    },
+    {
+      "id": "j272",
+      "title": "H95 plain wording audit fixes + stale docs (from agy rows)",
+      "model": "haiku",
+      "task": "P3.20",
+      "status": "done",
+      "started": "2026-10-12T12:28:43+03:30",
+      "ended": "2026-10-12T12:33:13+03:30",
+      "note": "plain wording across screens, docs 21/24/25 fixed; app 1157"
+    },
+    {
+      "id": "j273",
+      "title": "H96 backend wiring: scoped Xray exemption and server-in-routes refusal",
+      "model": "haiku",
+      "task": "P7.4",
+      "status": "done",
+      "started": "2026-10-12T12:30:22+03:30",
+      "ended": "2026-10-12T12:32:28+03:30",
+      "note": "scoped Xray exemption and server-in-routes refusal; core 492 helper 1090"
+    },
+    {
+      "id": "j274",
+      "title": "HEAD: find why the new helper did not start (install rolled back)",
+      "model": "opus",
+      "task": "P2.20",
+      "status": "done",
+      "started": "2026-10-12T12:36:04+03:30",
+      "ended": "2026-10-12T12:37:00+03:30",
+      "note": "found: daemon imports pinned.ts which the stage excludes; fix assigned (H97)"
+    },
+    {
+      "id": "j275",
+      "title": "H97 fix helper start crash: Xray pin file instead of importing pinned.ts + import-graph test",
+      "model": "haiku",
+      "task": "P2.20",
+      "status": "done",
+      "started": "2026-10-12T12:37:00+03:30",
+      "ended": "2026-10-12T12:41:57+03:30",
+      "note": "Xray pin file + import-graph regression test; helper 1097"
+    },
+    {
+      "id": "j276",
+      "title": "H98 profile header status/name alignment",
+      "model": "haiku",
+      "task": "P3.44",
+      "status": "done",
+      "started": "2026-10-12T12:37:00+03:30",
+      "ended": "2026-10-12T12:38:37+03:30",
+      "note": "header status/name block; app tests green"
+    },
+    {
+      "id": "j277",
+      "title": "H99 upgrade saved VPNs to engine fields on load + vpn refresh",
+      "model": "haiku",
+      "task": "P7.4",
+      "status": "done",
+      "started": "2026-10-12T12:43:01+03:30",
+      "ended": "2026-10-12T12:48:35+03:30",
+      "note": "legacy VPNs upgraded from raw on load; vpn refresh"
+    },
+    {
+      "id": "j278",
+      "title": "H100 full-width top bar, sidebar below, one-line header",
+      "model": "haiku",
+      "task": "P3.44",
+      "status": "done",
+      "started": "2026-10-12T13:13:59+03:30",
+      "ended": "2026-10-12T13:19:05+03:30",
+      "note": "full-width top bar, sidebar below, one-line header; app 1165"
+    },
+    {
+      "id": "j279",
+      "title": "H101 global start with two physical default routes when the lane names its connection",
+      "model": "haiku",
+      "task": "P2.17",
+      "status": "done",
+      "started": "2026-10-12T14:10:46+03:30",
+      "ended": "2026-10-12T14:18:26+03:30",
+      "note": "global start with two physical defaults when the lane names its connection; helper 1108"
+    },
+    {
+      "id": "j280",
+      "title": "H102 global config validator accepts the loopback Xray socks outbound",
+      "model": "haiku",
+      "task": "P7.4",
+      "status": "done",
+      "started": "2026-10-12T14:13:18+03:30",
+      "ended": "2026-10-12T14:18:26+03:30",
+      "note": "validator accepts the loopback Xray socks outbound; app maps launcher refusals; core 504"
+    },
+    {
+      "id": "j281",
+      "title": "Cursor review: global baseline with several physical defaults",
+      "model": "cursor",
+      "task": "P2.17",
+      "status": "done",
+      "started": "2026-10-12T14:13:57+03:30",
+      "ended": "2026-10-12T14:20:09+03:30",
+      "note": "Cursor output empty again; user stopped Cursor; Sonnet review instead"
+    },
+    {
+      "id": "j282",
+      "title": "H103 fix agy logs command (3 failing tests + review)",
+      "model": "haiku",
+      "task": "P7.13",
+      "status": "done",
+      "started": "2026-10-12T14:17:11+03:30",
+      "ended": "2026-10-12T14:18:50+03:30",
+      "note": "agy logs command fixed and reviewed; cli 205"
+    },
+    {
+      "id": "j283",
+      "title": "H104 wire xrayCompanions into the launcher call",
+      "model": "haiku",
+      "task": "P7.4",
+      "status": "done",
+      "started": "2026-10-12T14:18:26+03:30",
+      "ended": "2026-10-12T14:20:25+03:30",
+      "note": "xrayCompanions wired into the launcher; helper 1111"
+    },
+    {
+      "id": "j284",
+      "title": "Review (Sonnet): global baseline with several physical defaults",
+      "model": "sonnet",
+      "task": "P2.17",
+      "status": "done",
+      "started": "2026-10-12T14:20:09+03:30",
+      "ended": null
+    },
+    {
+      "id": "j285",
+      "title": "agy dev: splitnet vpn rank (TCP ping all VPNs)",
+      "model": "agy",
+      "task": "P7.13",
+      "status": "failed",
+      "started": "2026-10-12T14:22:48+03:30",
+      "ended": null,
+      "note": "agy produced no files; redo only if wanted"
+    },
+    {
+      "id": "j286",
+      "title": "agy edit: user guide docs/27 + docs index",
+      "model": "agy",
+      "task": "P3.20",
+      "status": "failed",
+      "started": "2026-10-12T14:22:48+03:30",
+      "ended": null,
+      "note": "agy produced no files; redo only if wanted"
+    },
+    {
+      "id": "j287",
+      "title": "H105 safe global probe (DNS/TCP/HTTPS/IPv6 checks, auto abort) for the lost-connection bug",
+      "model": "haiku",
+      "task": "P2.17",
+      "status": "done",
+      "started": "2026-10-12T14:36:48+03:30",
+      "ended": null
+    },
+    {
+      "id": "j288",
+      "title": "Opus: L16 root cause read (ENETUNREACH on bound dial)",
+      "model": "opus",
+      "task": "L16",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:42+03:30"
+    },
+    {
+      "id": "j289",
+      "title": "Fix L16 Xray hop lo0 + global DNS local resolver",
+      "model": "sonnet",
+      "task": "L16",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:42+03:30"
+    },
+    {
+      "id": "j290",
+      "title": "Fix L16 IPv6 drop + probe https4/https6 split",
+      "model": "sonnet",
+      "task": "L16",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:42+03:30"
+    },
+    {
+      "id": "j291",
+      "title": "Scoped default route for global capture (helper, guard, policy)",
+      "model": "sonnet",
+      "task": "L16",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:42+03:30"
+    },
+    {
+      "id": "j292",
+      "title": "Opus review: scoped default + guard (no HIGH)",
+      "model": "opus",
+      "task": "L16",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:42+03:30"
+    },
+    {
+      "id": "j293",
+      "title": "Apply review fixes MED-1/MED-2",
+      "model": "sonnet",
+      "task": "L16",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:42+03:30"
+    },
+    {
+      "id": "j294",
+      "title": "Probe route evidence snapshots",
+      "model": "sonnet",
+      "task": "L16",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:42+03:30"
+    },
+    {
+      "id": "j295",
+      "title": "Isolation + per-VPN sweep hard test (proven live)",
+      "model": "sonnet",
+      "task": "L17",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:42+03:30"
+    },
+    {
+      "id": "j296",
+      "title": "Debug panel hard self-test: Profile isolation",
+      "model": "sonnet",
+      "task": "L17",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:42+03:30"
+    },
+    {
+      "id": "j297",
+      "title": "Sidebar: scroll, compact, collapsible Advanced, hover and wheel probes",
+      "model": "haiku",
+      "task": "P3.20",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:42+03:30"
+    },
+    {
+      "id": "j298",
+      "title": "Sidebar: no drag region over the sidebar (macOS wheel fix, user confirmed)",
+      "model": "haiku",
+      "task": "P3.20",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:42+03:30"
+    },
+    {
+      "id": "j299",
+      "title": "Isolation retry once",
+      "model": "haiku",
+      "task": "L17",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:42+03:30"
+    },
+    {
+      "id": "j300",
+      "title": "L18 part 1: plain message 'Another VPN is connected'",
+      "model": "haiku",
+      "task": "L18",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:42+03:30"
+    },
+    {
+      "id": "j301",
+      "title": "agy edit: splitnet vpn rank (TCP ping of all VPNs)",
+      "model": "agy",
+      "task": "L17",
+      "status": "failed",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:18:56+03:30",
+      "note": "connection broke at launch; relaunched"
+    },
+    {
+      "id": "j302",
+      "title": "agy edit: user guide docs/27 update",
+      "model": "agy",
+      "task": "P6.8",
+      "status": "failed",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:18:56+03:30",
+      "note": "connection broke at launch; relaunched"
+    },
+    {
+      "id": "j303",
+      "title": "L18 part 2: external VPN (Happ) hard test script",
+      "model": "haiku",
+      "task": "L18",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:56+03:30"
+    },
+    {
+      "id": "j304",
+      "title": "L15: read-only helper commands no longer starve",
+      "model": "haiku",
+      "task": "L15",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:10:56+03:30"
+    },
+    {
+      "id": "j305",
+      "title": "L11: a broken VPN must not block the others",
+      "model": "haiku",
+      "task": "L11",
+      "status": "done",
+      "started": "2026-10-12T18:10:42+03:30",
+      "ended": "2026-10-12T18:14:50+03:30"
+    },
+    {
+      "id": "j306",
+      "title": "agy edit: splitnet vpn rank (relaunch)",
+      "model": "agy",
+      "task": "L17",
+      "status": "failed",
+      "started": "2026-10-12T18:18:56+03:30",
+      "ended": "2026-10-12T18:39:44+03:30",
+      "note": "8 parallel agy jobs: auth errors/permission denial; requeued in 2 lanes"
+    },
+    {
+      "id": "j307",
+      "title": "agy edit: user guide docs/27 (relaunch)",
+      "model": "agy",
+      "task": "P3.20",
+      "status": "failed",
+      "started": "2026-10-12T18:18:56+03:30",
+      "ended": "2026-10-12T18:39:44+03:30",
+      "note": "8 parallel agy jobs: auth errors/permission denial; requeued in 2 lanes"
+    },
+    {
+      "id": "j308",
+      "title": "L18 byte-count proof (Haiku)",
+      "model": "haiku",
+      "task": "L12",
+      "status": "done",
+      "started": "2026-10-12T18:29:15+03:30",
+      "ended": "2026-10-12T18:29:15+03:30"
+    },
+    {
+      "id": "j309",
+      "title": "L13 guard review (read-only)",
+      "model": "haiku",
+      "task": "L12",
+      "status": "done",
+      "started": "2026-10-12T18:29:15+03:30",
+      "ended": "2026-10-12T18:29:15+03:30"
+    },
+    {
+      "id": "j310",
+      "title": "L13 guard fixes 1-3",
+      "model": "haiku",
+      "task": "L12",
+      "status": "done",
+      "started": "2026-10-12T18:29:15+03:30",
+      "ended": "2026-10-12T18:29:15+03:30"
+    },
+    {
+      "id": "j311",
+      "title": "L12 runner races",
+      "model": "haiku",
+      "task": "L12",
+      "status": "done",
+      "started": "2026-10-12T18:29:15+03:30",
+      "ended": "2026-10-12T18:29:15+03:30"
+    },
+    {
+      "id": "j312",
+      "title": "agy edit: docs/26 mark proven items",
+      "model": "agy",
+      "task": "P2.17",
+      "status": "failed",
+      "started": "2026-10-12T18:34:36+03:30",
+      "ended": "2026-10-12T18:39:44+03:30",
+      "note": "8 parallel agy jobs: auth errors/permission denial; requeued in 2 lanes"
+    },
+    {
+      "id": "j313",
+      "title": "agy edit: docs/22 helper in plain words update",
+      "model": "agy",
+      "task": "P2.16",
+      "status": "failed",
+      "started": "2026-10-12T18:34:36+03:30",
+      "ended": "2026-10-12T18:39:44+03:30",
+      "note": "8 parallel agy jobs: auth errors/permission denial; requeued in 2 lanes"
+    },
+    {
+      "id": "j314",
+      "title": "agy edit: tools/cli ops-errors tests",
+      "model": "agy",
+      "task": "P7.13",
+      "status": "failed",
+      "started": "2026-10-12T18:34:36+03:30",
+      "ended": "2026-10-12T18:39:44+03:30",
+      "note": "8 parallel agy jobs: auth errors/permission denial; requeued in 2 lanes"
+    },
+    {
+      "id": "j315",
+      "title": "agy read-only: tasks that are really done (evidence rows)",
+      "model": "agy",
+      "task": "P6.9",
+      "status": "failed",
+      "started": "2026-10-12T18:34:36+03:30",
+      "ended": "2026-10-12T18:39:44+03:30",
+      "note": "8 parallel agy jobs: auth errors/permission denial; requeued in 2 lanes"
+    },
+    {
+      "id": "j316",
+      "title": "agy read-only: UI jargon strings",
+      "model": "agy",
+      "task": "P3.20",
+      "status": "failed",
+      "started": "2026-10-12T18:34:36+03:30",
+      "ended": "2026-10-12T18:39:44+03:30",
+      "note": "8 parallel agy jobs: auth errors/permission denial; requeued in 2 lanes"
+    },
+    {
+      "id": "j317",
+      "title": "agy read-only: broken doc links and index",
+      "model": "agy",
+      "task": "P6.8",
+      "status": "failed",
+      "started": "2026-10-12T18:34:36+03:30",
+      "ended": "2026-10-12T18:39:44+03:30",
+      "note": "8 parallel agy jobs: auth errors/permission denial; requeued in 2 lanes"
+    },
+    {
+      "id": "j318",
+      "title": "Haiku: L8+L10 running profiles + Home cards",
+      "model": "haiku",
+      "task": "L8",
+      "status": "done",
+      "started": "2026-10-12T18:34:36+03:30",
+      "ended": "2026-10-12T18:40:17+03:30"
+    },
+    {
+      "id": "j319",
+      "title": "Haiku: P6.7+S7 complete uninstaller + verify",
+      "model": "haiku",
+      "task": "P6.7",
+      "status": "done",
+      "started": "2026-10-12T18:34:36+03:30",
+      "ended": "2026-10-12T18:42:56+03:30"
+    },
+    {
+      "id": "j320",
+      "title": "Haiku: P6.4 security review of the helper (docs/research/50)",
+      "model": "haiku",
+      "task": "P6.4",
+      "status": "done",
+      "started": "2026-10-12T18:34:36+03:30",
+      "ended": "2026-10-12T18:40:17+03:30"
+    },
+    {
+      "id": "j321",
+      "title": "agy queue lane 1: docs/26, docs/22, ops-errors tests, tasks-really-done audit",
+      "model": "agy",
+      "task": "P2.17",
+      "status": "done",
+      "started": "2026-10-12T18:39:44+03:30",
+      "ended": "2026-10-12T19:14:17+03:30"
+    },
+    {
+      "id": "j322",
+      "title": "agy queue lane 2: vpn rank, user guide, jargon audit, doc links audit",
+      "model": "agy",
+      "task": "P3.20",
+      "status": "done",
+      "started": "2026-10-12T18:39:44+03:30",
+      "ended": "2026-10-12T19:14:17+03:30"
+    },
+    {
+      "id": "j323",
+      "title": "Haiku: fix security findings F1,F2,F4,F5,F6",
+      "model": "haiku",
+      "task": "P6.4",
+      "status": "done",
+      "started": "2026-10-12T18:40:17+03:30",
+      "ended": "2026-10-12T18:47:05+03:30"
+    },
+    {
+      "id": "j324",
+      "title": "Haiku: P3.11 accessibility pass",
+      "model": "haiku",
+      "task": "P3.11",
+      "status": "done",
+      "started": "2026-10-12T18:42:56+03:30",
+      "ended": "2026-10-12T19:23:36+03:30"
+    },
+    {
+      "id": "j325",
+      "title": "Haiku: L9 global profile vs scoped profiles pre-check",
+      "model": "haiku",
+      "task": "L9",
+      "status": "done",
+      "started": "2026-10-12T18:42:56+03:30",
+      "ended": "2026-10-12T18:51:23+03:30"
+    },
+    {
+      "id": "j326",
+      "title": "Haiku: accessibility pass part 2 (remaining screens)",
+      "model": "haiku",
+      "task": "P3.11",
+      "status": "done",
+      "started": "2026-10-12T18:47:05+03:30",
+      "ended": "2026-10-12T18:50:23+03:30"
+    },
+    {
+      "id": "j327",
+      "title": "Haiku: P6.1 leak test (IPv6 + DNS per VPN)",
+      "model": "haiku",
+      "task": "P6.1",
+      "status": "done",
+      "started": "2026-10-12T18:50:23+03:30",
+      "ended": "2026-10-12T18:56:47+03:30"
+    },
+    {
+      "id": "j328",
+      "title": "Haiku: L14 design - apps without known ranges (docs/research/51)",
+      "model": "haiku",
+      "task": "L14",
+      "status": "done",
+      "started": "2026-10-12T18:52:56+03:30",
+      "ended": "2026-10-12T18:56:47+03:30"
+    },
+    {
+      "id": "j329",
+      "title": "Haiku: S14 wake must not look like a lost guard",
+      "model": "haiku",
+      "task": "S14",
+      "status": "done",
+      "started": "2026-10-12T18:52:56+03:30",
+      "ended": "2026-10-12T18:57:13+03:30"
+    },
+    {
+      "id": "j330",
+      "title": "Haiku: fix leak test (no IPv6 scoped route)",
+      "model": "haiku",
+      "task": "P6.1",
+      "status": "done",
+      "started": "2026-10-12T18:56:47+03:30",
+      "ended": "2026-10-12T18:58:30+03:30"
+    },
+    {
+      "id": "j331",
+      "title": "Haiku: L14a+c learned ranges any app + store",
+      "model": "haiku",
+      "task": "L14a",
+      "status": "done",
+      "started": "2026-10-12T18:56:47+03:30",
+      "ended": "2026-10-12T18:59:54+03:30"
+    },
+    {
+      "id": "j332",
+      "title": "Haiku: L14b helper read-only per-process lsof",
+      "model": "haiku",
+      "task": "L14b",
+      "status": "done",
+      "started": "2026-10-12T18:57:13+03:30",
+      "ended": "2026-10-12T19:05:39+03:30"
+    },
+    {
+      "id": "j333",
+      "title": "Haiku: splitnet vpn rank",
+      "model": "haiku",
+      "task": "L17",
+      "status": "done",
+      "started": "2026-10-12T18:59:54+03:30",
+      "ended": "2026-10-12T19:05:39+03:30"
+    },
+    {
+      "id": "j334",
+      "title": "Haiku: L14d learn step before start + wiring",
+      "model": "haiku",
+      "task": "L14d",
+      "status": "done",
+      "started": "2026-10-12T19:05:39+03:30",
+      "ended": "2026-10-12T19:16:12+03:30"
+    },
+    {
+      "id": "j335",
+      "title": "Haiku: redaction audit (no secret in any log/report)",
+      "model": "haiku",
+      "task": "P6.8",
+      "status": "done",
+      "started": "2026-10-12T19:05:39+03:30",
+      "ended": "2026-10-12T19:13:57+03:30"
+    },
+    {
+      "id": "j336",
+      "title": "agy read-only audits (done-tasks evidence, UI jargon, doc links), queue",
+      "model": "agy",
+      "task": "P6.9",
+      "status": "failed",
+      "started": "2026-10-12T19:14:17+03:30",
+      "ended": "2026-10-12T19:31:54+03:30",
+      "note": "agy read-only audits time out; replaced by scripts (link check done)"
+    },
+    {
+      "id": "j337",
+      "title": "Haiku: fix 5 core tsc errors",
+      "model": "haiku",
+      "task": "L14d",
+      "status": "done",
+      "started": "2026-10-12T19:16:36+03:30",
+      "ended": "2026-10-12T19:17:41+03:30"
+    },
+    {
+      "id": "j338",
+      "title": "Haiku: UI Learn now + learn-first message",
+      "model": "haiku",
+      "task": "L14d",
+      "status": "done",
+      "started": "2026-10-12T19:16:36+03:30",
+      "ended": "2026-10-12T19:23:36+03:30"
+    },
+    {
+      "id": "j339",
+      "title": "Haiku: jargon sweep in user-visible text",
+      "model": "haiku",
+      "task": "P3.20",
+      "status": "done",
+      "started": "2026-10-12T19:23:36+03:30",
+      "ended": "2026-10-12T19:31:05+03:30"
+    },
+    {
+      "id": "j340",
+      "title": "Haiku: L14e merge adjacent learned prefixes + cap",
+      "model": "haiku",
+      "task": "L14e",
+      "status": "done",
+      "started": "2026-10-12T19:31:54+03:30",
+      "ended": "2026-10-12T19:34:32+03:30"
+    },
+    {
+      "id": "j341",
+      "title": "Haiku: P6.3 upgrade/downgrade matrix + tests (docs/research/54)",
+      "model": "haiku",
+      "task": "P6.3",
+      "status": "done",
+      "started": "2026-10-12T19:31:54+03:30",
+      "ended": "2026-10-12T19:35:02+03:30"
+    },
+    {
+      "id": "j342",
+      "title": "Haiku: wire prefixesToSend into learn/start + truncated text",
+      "model": "haiku",
+      "task": "L14e",
+      "status": "done",
+      "started": "2026-10-12T19:34:32+03:30",
+      "ended": "2026-10-12T19:39:38+03:30"
+    },
+    {
+      "id": "j343",
+      "title": "Haiku: P6.3 fixes (installer rollback marker, newer-helper message)",
+      "model": "haiku",
+      "task": "P6.3",
+      "status": "done",
+      "started": "2026-10-12T19:35:02+03:30",
+      "ended": "2026-10-12T19:41:36+03:30"
+    },
+    {
+      "id": "j344",
+      "title": "Haiku: SetupRunner.start with learned store tests",
+      "model": "haiku",
+      "task": "L14d",
+      "status": "done",
+      "started": "2026-10-12T19:44:20+03:30",
+      "ended": "2026-10-12T19:44:20+03:30"
+    },
+    {
+      "id": "j345",
+      "title": "Haiku: docs (Learn now, hard tests, uninstall, doc 54)",
+      "model": "haiku",
+      "task": "P3.20",
+      "status": "done",
+      "started": "2026-10-12T19:44:43+03:30",
+      "ended": "2026-10-12T19:46:32+03:30"
+    },
+    {
+      "id": "j346",
+      "title": "Haiku: P2.26 Restart app button",
+      "model": "haiku",
+      "task": "P2.26",
+      "status": "done",
+      "started": "2026-10-12T19:46:32+03:30",
+      "ended": "2026-10-12T19:55:38+03:30"
+    },
+    {
+      "id": "j347",
+      "title": "Haiku: older helper -> friendly Learn chips + Start message",
+      "model": "haiku",
+      "task": "L14d",
+      "status": "done",
+      "started": "2026-10-12T19:56:24+03:30",
+      "ended": "2026-10-12T19:59:47+03:30"
+    },
+    {
+      "id": "j348",
+      "title": "Haiku: P3.44 visual QA (dark/light, empty, error, onboarding)",
+      "model": "haiku",
+      "task": "P3.44",
+      "status": "done",
+      "started": "2026-10-12T19:56:24+03:30",
+      "ended": "2026-10-12T20:01:34+03:30"
+    },
+    {
+      "id": "j349",
+      "title": "Haiku: helper capabilities list + doctor",
+      "model": "haiku",
+      "task": "P2.21",
+      "status": "done",
+      "started": "2026-10-12T20:01:34+03:30",
+      "ended": "2026-10-12T20:03:49+03:30"
+    },
+    {
+      "id": "j350",
+      "title": "Haiku: error-state footer message + fix button",
+      "model": "haiku",
+      "task": "P3.40",
+      "status": "done",
+      "started": "2026-10-12T20:06:04+03:30",
+      "ended": "2026-10-12T20:06:04+03:30"
+    },
+    {
+      "id": "j351",
+      "title": "Haiku: roadmap audit (mark done with evidence)",
+      "model": "haiku",
+      "task": "P3.20",
+      "status": "done",
+      "started": "2026-10-12T20:06:04+03:30",
+      "ended": "2026-10-12T20:06:15+03:30"
+    },
+    {
+      "id": "j352",
+      "title": "Haiku: P3.33 start at login setting",
+      "model": "haiku",
+      "task": "P3.33",
+      "status": "done",
+      "started": "2026-10-12T20:07:10+03:30",
+      "ended": "2026-10-12T20:18:14+03:30"
+    },
+    {
+      "id": "j353",
+      "title": "Haiku: P3.5 close one connection / all of an app",
+      "model": "haiku",
+      "task": "P3.5",
+      "status": "done",
+      "started": "2026-10-12T20:07:10+03:30",
+      "ended": "2026-10-12T20:18:14+03:30"
+    },
+    {
+      "id": "j354",
+      "title": "Haiku: L14h profile start used plain VPN file (no uuid); fix + live scoped run",
+      "model": "haiku",
+      "task": "L14h",
+      "status": "done",
+      "started": "2026-10-13T07:52:22+03:30",
+      "ended": "2026-10-13T07:52:22+03:30",
+      "tokensK": 143.4
+    },
+    {
+      "id": "j355",
+      "title": "Haiku: guard findings 1-6 verify + fix + tests",
+      "model": "haiku",
+      "task": "L13",
+      "status": "done",
+      "started": "2026-10-13T16:23:24+03:30",
+      "ended": "2026-10-13T16:25:49+03:30",
+      "tokensK": 136.3
+    },
+    {
+      "id": "j356",
+      "title": "Haiku: roadmap counts match tasks.json",
+      "model": "haiku",
+      "task": "P0.1",
+      "status": "done",
+      "started": "2026-10-13T16:23:24+03:30",
+      "ended": "2026-10-13T16:23:29+03:30",
+      "tokensK": 90.6
+    },
+    {
+      "id": "j357",
+      "title": "agy: docs consistency audit A1",
+      "model": "agy",
+      "task": "A1",
+      "status": "done",
+      "started": "2026-10-13T16:23:24+03:30",
+      "ended": "2026-10-13T16:23:29+03:30"
+    },
+    {
+      "id": "j358",
+      "title": "Cursor Auto: guard review (L13)",
+      "model": "cursor",
+      "task": "L13",
+      "status": "done",
+      "started": "2026-10-13T16:23:24+03:30",
+      "ended": "2026-10-13T16:23:29+03:30"
+    },
+    {
+      "id": "j359",
+      "title": "Haiku: dashboard UI/UX polish (alignment, numbers, hierarchy)",
+      "model": "haiku",
+      "task": "A5",
+      "status": "done",
+      "started": "2026-10-13T16:36:04+03:30",
+      "ended": "2026-10-13T16:41:16+03:30",
+      "tokensK": 141.8
+    },
+    {
+      "id": "j361",
+      "title": "haiku: Dashboard collapsible sections",
+      "model": "haiku",
+      "task": "A5",
+      "status": "done",
+      "started": "2026-10-13T17:02:15+03:30",
+      "ended": "2026-10-13T17:09:56+03:30",
+      "tokensK": 162.1
+    },
+    {
+      "id": "j362",
+      "title": "haiku: Minimal view + usage sync button",
+      "model": "haiku",
+      "task": "A5",
+      "status": "done",
+      "started": "2026-10-13T17:12:40+03:30",
+      "ended": "2026-10-13T17:20:36+03:30",
+      "tokensK": 179.2
+    },
+    {
+      "id": "j363",
+      "title": "opus: Opus architect for roadmap-board",
+      "model": "opus",
+      "task": "A5",
+      "status": "done",
+      "started": "2026-10-13T17:21:22+03:30",
+      "ended": "2026-10-13T17:25:42+03:30",
+      "tokensK": 97.8
+    },
+    {
+      "id": "j364",
+      "title": "haiku: WP1 roadmap-board skeleton",
+      "model": "haiku",
+      "task": "WP1",
+      "status": "done",
+      "started": "2026-10-13T17:26:13+03:30",
+      "ended": "2026-10-13T17:29:47+03:30",
+      "tokensK": 111.1
+    },
+    {
+      "id": "j365",
+      "title": "haiku: WP2 roadmap-board store",
+      "model": "haiku",
+      "task": "WP2",
+      "status": "running",
+      "started": "2026-10-13T17:30:11+03:30",
+      "ended": null
+    },
+    {
+      "id": "j366",
+      "title": "haiku: WP3 roadmap-board core move",
+      "model": "haiku",
+      "task": "WP3",
+      "status": "running",
+      "started": "2026-10-13T17:30:20+03:30",
+      "ended": null
+    }
+  ]
+}

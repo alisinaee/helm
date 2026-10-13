@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "splitnet",
+  "title": "split-net",
+  "taskIdPattern": "^[A-Z]+[0-9]+(\\.[0-9]+)?$",
+  "hookDetectors": ["agent", "agy", "cursor"],
+  "extras": {
+    "spikes": "10-spike-results.md",
+    "testing": {"file": "07-testing.md", "section": "7.9"},
+    "roadmap": {"file": "05-roadmap.md", "next": "Next up", "log": "Progress log"}
+  }
+}
