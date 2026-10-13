@@ -350,7 +350,7 @@ def meters(project, now=None):
     return {
         "limits": [{"id": r["id"], "scope": r["scope"], "window": r["window"], "kind": r["kind"], "used": r["used"],
                     "limit": r["limit"], "state": r["state"], "est": r["est"], "paceAt": r["paceAt"],
-                    "src": r["src"]} for r in rows],
+                    "src": r["src"], "action": r["action"]} for r in rows],
         "today": {"pts": round(ledger.daily_points(doc, moment), 1) if readable else None,
                   "tokK": ledger.tokens_k(doc, pid, "day", moment) if readable else None,
                   "estPts": ledger.project_estimate(doc, pid, "day", moment) if readable else None},
