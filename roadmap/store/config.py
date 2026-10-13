@@ -87,6 +87,20 @@ def remove_project(project_id):
     return _update(mutate)
 
 
+def update_limits(mutate):
+    """Run mutate(rows) on the global limit rows (config key "limits", a list) under the config lock, then save.
+    mutate changes the list in place and returns its result (WP27, services/limits.py)."""
+
+    def inner(cfg):
+        rows = cfg.get("limits")
+        if not isinstance(rows, list):
+            rows = []
+            cfg["limits"] = rows
+        return mutate(rows)
+
+    return _update(inner)
+
+
 def _update(mutate):
     """Read-modify-write under the config directory lock. The config is re-read inside the lock."""
     paths.ensure_dir(paths.config_dir())

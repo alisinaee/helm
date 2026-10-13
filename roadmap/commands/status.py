@@ -5,7 +5,7 @@ issues, budget, you, next. The ask, queue, issues and budget lines come from the
 (docs/AGENT-INTERFACE.md section 2; docs/PRODUCT-SPEC.md section 4).
 """
 
-from roadmap.services import commands, jobs, tasks
+from roadmap.services import commands, jobs, limits, tasks
 
 MAX_LINES = 8
 MAX_CHARS = 700
@@ -26,7 +26,8 @@ def compose(base, extras):
     you = [line for line in rest if line.startswith("you:")]
     nxt = [line for line in rest if line.startswith("next:")]
     run = [line for line in rest if line.startswith("run:")]
-    ordered = head + run + [extras["ask"], extras["queue"], extras["issues"], extras["budget"]] + you + nxt
+    meters = [extras["limits"]] if extras.get("limits") else []
+    ordered = head + run + [extras["ask"], extras["queue"], extras["issues"], extras["budget"]] + meters + you + nxt
     return _fit(ordered)
 
 
@@ -44,7 +45,9 @@ def _fit(lines):
 def _run(args):
     project, data_dir = tasks.resolve(args.project)
     base = tasks.summary(data_dir, jobs.list_jobs(data_dir), name=project["id"])
-    lines = compose(base, commands.status_extras(data_dir))
+    extras = commands.status_extras(data_dir)
+    extras["limits"] = limits.status_line(limits.evaluate_rows(project))
+    lines = compose(base, extras)
     if not getattr(args, "json", False):
         for line in lines:
             print(line)

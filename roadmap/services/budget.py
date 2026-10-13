@@ -5,9 +5,11 @@ A job's tokens are recorded once per job id (idempotent; the last 500 job ids ar
 """
 
 from roadmap.errors import EXIT_USAGE, RoadmapError
+from roadmap.log import get_logger
 from roadmap.services import records
 from roadmap.store import lock
 
+log = get_logger("services.budget")
 FILE = "budget.json"
 JOBS_KEEP = 500
 SCOPES = ("project", "phases", "models", "tasks")
@@ -46,9 +48,38 @@ def set_limit(data_dir, scope, key, value):
     return doc["limits"]
 
 
+def update(data_dir, mutate):
+    """Run mutate(doc) on the budget document under the folder lock, then save it. Returns mutate's result."""
+    records.require_dir(data_dir)
+    with lock.locked(data_dir):
+        doc = _load_doc(data_dir)
+        result = mutate(doc)
+        records.save("budget", data_dir, FILE, doc)
+    return result
+
+
+def set_project_limit(data_dir, value, action="block"):
+    """Set the project budget in thousands of tokens (None clears it). action warn makes it warn instead of block.
+    Returns (prior value, prior action)."""
+    if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0):
+        raise RoadmapError("usage", "a limit is a number of thousands of tokens, 0 or more, or empty to clear",
+                           EXIT_USAGE)
+
+    def mutate(doc):
+        prior = (doc["limits"]["project"], doc.get("limitAction"))
+        doc["limits"]["project"] = None if value is None else round(float(value), 1)
+        if action == "warn" and value is not None:
+            doc["limitAction"] = "warn"
+        else:
+            doc.pop("limitAction", None)
+        return prior
+
+    return update(data_dir, mutate)
+
+
 def record_job_spend(data_dir, job_id, task, model, tokens_k):
-    """Add a finished job's tokens to its task and model. Returns True when recorded, False when this job id was
-    already counted (nothing changes)."""
+    """Add a finished job's tokens to its task and model, and to the usage ledger for its project. Returns True when
+    recorded, False when this job id was already counted (nothing changes)."""
     records.require_dir(data_dir)
     wanted = str(job_id or "").strip()
     name = str(model or "").strip()
@@ -63,7 +94,19 @@ def record_job_spend(data_dir, job_id, task, model, tokens_k):
         row[name] = round(row.get(name, 0.0) + amount, 1)
         doc["jobs"] = (doc["jobs"] + [wanted])[-JOBS_KEEP:]
         records.save("budget", data_dir, FILE, doc)
+    _ledger_spend(data_dir, amount)
     return True
+
+
+def _ledger_spend(data_dir, amount):
+    """Add the tokens to the usage ledger under the project that owns this folder. Best effort: the budget is saved."""
+    try:
+        from roadmap.services import ledger
+        project_id = ledger.project_id_for_dir(data_dir)
+        if project_id is not None:
+            ledger.record_spend(project_id, amount)
+    except Exception as exc:  # the spend is recorded in budget.json already; the ledger is derived
+        log.warning("usage ledger not updated for a job spend: %s", type(exc).__name__)
 
 
 def record_task_tokens(data_dir, task_id, model, tokens_k):
@@ -91,6 +134,8 @@ def _load_doc(data_dir):
     doc["limits"].setdefault("models", {})
     doc["limits"].setdefault("tasks", {})
     doc["limits"].setdefault("project", None)
+    rows = doc.get("limitRows")
+    doc["limitRows"] = list(rows) if isinstance(rows, list) else []  # WP27 limit rows (services/limits.py)
     return doc
 
 

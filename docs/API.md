@@ -112,6 +112,15 @@ the request: they are listed in `errors`, as `{"file": "<name>", "error": "<Exce
 `{"file": "tasks.json", "error": "FileNotFoundError: file not found"}`. A missing `tasks.json` is listed there too,
 and the project's `stale` flag is set.
 
+Since WP27 the snapshot also has `meters`, computed from the limit rows and the usage ledger (`services/limits.py`,
+`services/ledger.py`). `limits` lists each row that applies to the project: `id` (L3, AUTO or BUD), `scope`
+(global or project), `window` (day, week or total), `kind` (pct, tok or acct), `used`, `limit`, `state` (ok, warn,
+block or unknown), `est` (true for a project's share estimate, shown with "≈"), `paceAt` (the local time the pace of
+the last two hours reaches the limit, or null) and `src` (config, limits, autonomy or budget). `today` holds `pts` (the
+account's measured points today), `tokK` (the project's tracked thousands of tokens today) and `estPts` (its estimate).
+`week` holds `pct` (the weekly account percent), `tokK` and `estPts` for seven days. Unknown values are null. A
+snapshot without these keys is unchanged.
+
 `ETag` is a strong tag: the first 32 hex characters of a SHA-256 over the snapshot content with `server_time` left
 out, in quotes, for example `"c8f6148f5af0d6c7135ea34e7b0bf70e"`. Send it back as `If-None-Match`. When nothing has
 changed the reply is `304` with no body, and the `ETag` header again. A running job's duration moves with the
@@ -170,7 +179,8 @@ activity id (for example `A812`) and whether `POST /api/v1/cmd {"op":"undo","arg
 Ops: `task.status` (args `id`, `status`, optional `note`, `tokensK`), `task.start`, `task.stop`, `task.cap` (`id`,
 `value`), `subtask.toggle` (`addr`, `done`), `plan.move` (`id`, `before` or `after`), `phase.approve` (`phase`),
 `question.answer` (`id`, `value`), `comment.add` (`on`, `text`, `by`), `issue.new`, `issue.close` (`id`),
-`budget.set` (`scope`, `key`, `value`), `limit.set` (`pct` 1 to 100), `control.stop` (`task`?), `control.resume`,
+`budget.set` (`scope`, `key`, `value`), `limit.set` (`pct` 1 to 100, or the WP27 row form `scope`, `window`, `kind`,
+`value`, `action` and optional `id`), `limit.rm` (`id`: L3, AUTO or BUD), `control.stop` (`task`?), `control.resume`,
 `control.override` (`hours` 1 to 4), `rules.add` (`scope`, `kind`, `text`, `value`?), `rules.rm` (`id`),
 `rules.sync` (`dryRun`?), `undo` (`activity`).
 
@@ -179,7 +189,7 @@ Errors, in the order checked: `403 forbidden` (CSRF, origin, or not allowed on t
 rate_limited` (more than 10 ops per second in this process), `409` (conflict or agent refused), `404 not_found`.
 
 Agent guard: ops that loosen control (`control.resume`, `control.override`, `budget.set`, `task.cap`, `limit.set`,
-`rules.*`, `phase.approve`) are refused from an agent shell, with `409 agent_refused`. A browser (`gui`) call is not an
+`limit.rm`, `rules.*`, `phase.approve`) are refused from an agent shell, with `409 agent_refused`. A browser (`gui`) call is not an
 agent call and is not refused for that reason.
 
 Phone listener: `POST /api/v1/cmd` is `403` unless config `phoneWrites` is `true`. With it, only `question.answer`,

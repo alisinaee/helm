@@ -14,12 +14,12 @@ import os
 import threading
 
 from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
-from roadmap.services import commands, control, jobs, rules
+from roadmap.services import commands, control, jobs, limits, rules
 from roadmap.services import budget as budget_service
 from roadmap.store import config as config_store
 from roadmap.store import schema
 
-LOOSENING = frozenset(["control.resume", "control.override", "budget.set", "task.cap", "limit.set",
+LOOSENING = frozenset(["control.resume", "control.override", "budget.set", "task.cap", "limit.set", "limit.rm",
                        "phase.approve", "rules.add", "rules.rm", "rules.sync"])
 _ENV_LOCK = threading.Lock()
 SCOPE_WORDS = ("project", "phases", "models", "tasks")
@@ -133,11 +133,20 @@ def _h_control_override(data_dir, a, now):
 
 # ---------------------------------------------------------------- limits
 
+ROW_ID_KEYS = ("scope", "window", "kind")
+
+
 def _check_limit_set(a):
-    pct = a.get("pct")
-    if isinstance(pct, bool) or not isinstance(pct, (int, float)) or not 1 <= pct <= PERCENT_MAX:
-        raise commands._usage("pct must be a number from 1 to 100")
-    return {"pct": pct}
+    """Legacy {pct} sets the weekly stop (kind acct). Otherwise {scope, window, kind, value, action, id?} sets a row."""
+    if "pct" in a and not any(key in a for key in ROW_ID_KEYS):
+        pct = a.get("pct")
+        if isinstance(pct, bool) or not isinstance(pct, (int, float)) or not 1 <= pct <= PERCENT_MAX:
+            raise commands._usage("pct must be a number from 1 to 100")
+        return {"pct": pct}
+    row_id = _opt_id(a, "id")
+    spec = limits.check_spec(_text_arg(a, "scope") or "project", _text_arg(a, "window"), _text_arg(a, "kind"),
+                             a.get("value"), _text_arg(a, "action") or "block")
+    return {"row": spec, "id": row_id}
 
 
 def _weekly_prior(data_dir):
@@ -149,14 +158,49 @@ def _weekly_prior(data_dir):
     return limit.get("stopAtPercent") if isinstance(limit, dict) else None
 
 
+def _row_args(row):
+    """The arguments that set a row back to this state (limit.set), with its id."""
+    return {"id": row["id"], "scope": row["scope"], "window": row["window"], "kind": row["kind"],
+            "value": row["value"], "action": row["action"]}
+
+
+def _row_data(row):
+    return {key: row[key] for key in ("id", "scope", "window", "kind", "value", "action") if key in row}
+
+
 def _h_limit_set(data_dir, a, now):
     _refuse_phone("limit.set")
     pid = _project_id(data_dir)
-    prior = _weekly_prior(data_dir)
+    if "pct" in a:
+        prior = _weekly_prior(data_dir)
+        with _caller_env():
+            control.set_weekly_limit(pid, a["pct"], now=now, source=commands.current_source())
+        inverse = {"op": "limit.set", "args": {"pct": prior}} if prior is not None else None
+        return {"pct": a["pct"]}, "weekly stop at %g%%" % a["pct"], inverse
+    spec = a["row"]
     with _caller_env():
-        control.set_weekly_limit(pid, a["pct"], now=now, source=commands.current_source())
-    inverse = {"op": "limit.set", "args": {"pct": prior}} if prior is not None else None
-    return {"pct": a["pct"]}, "weekly stop at %g%%" % a["pct"], inverse
+        result = control.set_limit_row(pid, spec["scope"], spec["window"], spec["kind"], spec["value"],
+                                       spec["action"], row_id=a["id"], now=now,
+                                       source=commands.current_source())
+    row, prior = result["row"], result["prior"]
+    inverse = {"op": "limit.set", "args": _row_args(prior)} if prior else {"op": "limit.rm",
+                                                                           "args": {"id": row["id"]}}
+    return _row_data(row), limits.label(row) + " set", inverse
+
+
+def _check_limit_rm(a):
+    row_id = _text_arg(a, "id")
+    if not limits.ANY_ID.match(row_id):
+        raise commands._usage("row id '" + row_id + "' looks like L3, AUTO or BUD", "roadmap limit show")
+    return {"id": row_id}
+
+
+def _h_limit_rm(data_dir, a, now):
+    _refuse_phone("limit.rm")
+    pid = _project_id(data_dir)
+    with _caller_env():
+        removed = control.remove_limit_row(pid, a["id"], now=now, source=commands.current_source())
+    return _row_data(removed), limits.label(removed) + " removed", {"op": "limit.set", "args": _row_args(removed)}
 
 
 def _check_budget_set(a):
@@ -272,6 +316,7 @@ _register("control.stop", _check_control_stop, _h_control_stop)
 _register("control.resume", _check_none, _h_control_resume)
 _register("control.override", _check_control_override, _h_control_override)
 _register("limit.set", _check_limit_set, _h_limit_set)
+_register("limit.rm", _check_limit_rm, _h_limit_rm)
 _register("budget.set", _check_budget_set, _h_budget_set)
 _register("task.cap", _check_task_cap, _h_task_cap)
 _register("phase.approve", _check_phase_approve, _h_phase_approve)
