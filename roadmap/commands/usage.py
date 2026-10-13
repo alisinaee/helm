@@ -1,4 +1,7 @@
-"""Command group usage: the global plan-usage store. show, sync (reads the keychain and the endpoint) and push (JSON on stdin)."""
+"""Command group usage: the global plan-usage store.
+
+show, sync (reads the keychain and the endpoint) and push (JSON on stdin).
+"""
 
 import sys
 
@@ -13,7 +16,8 @@ def register(sub, common):
     actions = group.add_subparsers(dest="action", metavar="ACTION", required=True)
     actions.add_parser("show", parents=[common], help="show the stored usage").set_defaults(handler=handle_show)
     actions.add_parser("sync", parents=[common], help="fetch usage now").set_defaults(handler=handle_sync)
-    actions.add_parser("push", parents=[common], help="store usage from JSON on stdin").set_defaults(handler=handle_push)
+    push = actions.add_parser("push", parents=[common], help="store usage from JSON on stdin")
+    push.set_defaults(handler=handle_push)
 
 
 def _json_mode(args):

@@ -276,7 +276,10 @@ def _mirror_one(project, block):
 
 
 def mirror_to_projects(cfg, record):
-    """Write the usage block into every registered project's autonomy.json. One project failing does not stop the rest."""
+    """Write the usage block into every registered project's autonomy.json.
+
+    One project failing does not stop the rest.
+    """
     block = {key: record.get(key) for key in MIRROR_FIELDS}
     return [_mirror_one(project, block) for project in cfg.get("projects", [])]
 
@@ -311,7 +314,10 @@ def show(config=None, now=None):
 
 
 def parse_push(text):
-    """Turn the push input {"rateLimits": [{"kind": "seven_day"|"five_hour", "percentUsed", "resetsAt"}]} into changes."""
+    """Turn the push input into changes.
+
+    Input shape: {"rateLimits": [{"kind": "seven_day"|"five_hour", "percentUsed", "resetsAt"}]}.
+    """
     try:
         payload = json.loads(text)
     except ValueError:

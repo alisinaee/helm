@@ -341,7 +341,8 @@ class TokenHygieneTests(UsageCase):
 class CliTests(UsageCase):
     def test_push_then_show_json(self):
         code, out, _ = run_cli(["usage", "push", "--json"],
-                               '{"rateLimits":[{"kind":"seven_day","percentUsed":61,"resetsAt":"2026-10-16T08:00:00Z"}]}')
+                               '{"rateLimits":[{"kind":"seven_day","percentUsed":61,'
+                               '"resetsAt":"2026-10-16T08:00:00Z"}]}')
         self.assertEqual(code, 0)
         self.assertIs(json.loads(out)["ok"], True)
         code, out, _ = run_cli(["usage", "show", "--json"])
