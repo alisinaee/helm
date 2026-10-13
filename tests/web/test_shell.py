@@ -124,8 +124,9 @@ class RegistryTests(unittest.TestCase):
             self.assertTrue(os.path.isfile(path), match)
 
     def test_unbuilt_sections_are_registered_without_a_module(self):
+        # WP34 built the last unbuilt sections, so no entry is null now; the loader must still refuse a null module.
         text = read(os.path.join(WEB, "js", "routes.js"))
-        self.assertIn("module: null", text)
+        self.assertIn("!section.module", text)
 
     def test_shell_modules_exist(self):
         for name in ("router.js", "routes.js", "state.js", "app.js", "cmd.js", "keys.js"):

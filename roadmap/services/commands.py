@@ -297,7 +297,17 @@ def _check_question_answer(a):
 
 def _h_question_answer(data_dir, a, now):
     question = questions.answer(data_dir, a["id"], a["value"], now=now)
-    return question, question["id"] + " answered " + question["answer"], None
+    inverse = {"op": "question.reopen", "args": {"id": question["id"]}}
+    return question, question["id"] + " answered " + question["answer"], inverse
+
+
+def _check_question_reopen(a):
+    return {"id": _id(a, "id", "question id")}
+
+
+def _h_question_reopen(data_dir, a, now):
+    question = questions.reopen(data_dir, a["id"])
+    return question, question["id"] + " open again", None
 
 
 def _check_comment_add(a):
@@ -489,6 +499,7 @@ OPS = {
     "issue.status": _Op(_check_issue_status, _h_issue_status, public=False),
     "issue.links": _Op(_check_issue_links, _h_issue_links, public=False),
     "subtask.restore": _Op(_check_subtask_restore, _h_subtask_restore, public=False),
+    "question.reopen": _Op(_check_question_reopen, _h_question_reopen, public=False),
 }
 
 
