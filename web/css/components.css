@@ -1,6 +1,5 @@
-/* Components: TopBar, ProjectSwitcher, LiveBadge, UsageBand, KpiTile, SectionHeader, Meter, Chip, Banner,
-   EmptyState, skeletons, project cards and the running list. Sizes follow the 4/8 spacing scale and the type
-   steps 11/12/13/15/17 (28 for KPI values only). Status is never colour alone: each state also has a word. */
+/* Components: TopBar, LiveBadge, UsageBand, KpiTile, SectionHeader, Meter, Chip, Banner, EmptyState, skeletons,
+   project cards. 4/8 spacing; type 11/12/13/15/17 (28 for KPI values). Status is never colour alone. */
 
 /* ---------- TopBar ---------- */
 
@@ -18,31 +17,6 @@
   font-weight: 600;
   margin-right: auto;
   white-space: nowrap;
-}
-
-.topbar-group {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  min-width: 0;
-}
-
-.switcher-label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  color: var(--text-2);
-  font-size: var(--fs-12);
-}
-
-.switcher {
-  height: var(--h-control);
-  max-width: 220px;
-  padding: 0 var(--sp-2);
-  background: var(--surface-1);
-  color: var(--text-1);
-  border: 1px solid var(--line);
-  border-radius: var(--r-control);
 }
 
 /* ---------- Buttons and the segmented control ---------- */
@@ -117,14 +91,6 @@
   border-radius: 50%;
   background: currentColor;
   animation: live-pulse 2s ease-in-out infinite;
-}
-
-.live.is-down {
-  color: var(--danger);
-}
-
-.live.is-down::before {
-  animation: none;
 }
 
 .live.is-wait {
@@ -507,10 +473,6 @@
 
 .skel.w-90 {
   width: 90%;
-}
-
-.skel.tall {
-  height: 56px;
 }
 
 @keyframes skel-pulse {
@@ -1110,8 +1072,7 @@
   font-size: var(--fs-12);
 }
 
-/* The side column is 360 px at desktop, too narrow for seven columns: the title runs full width on the first line,
-   and the model chip and tokens sit under it. The check chip and the thinking level are left out here. */
+/* The 360 px side column is too narrow for seven columns: the title runs full width, the model chip and tokens sit under it. */
 .needs-list .task-row {
   grid-template-columns: 56px minmax(0, 1fr) auto auto;
   row-gap: 2px;

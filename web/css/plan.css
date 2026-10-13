@@ -11,7 +11,7 @@
 .lane-empty { color: var(--text-3); font-size: var(--fs-12); }
 .lane-cards { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .rc { flex: 0 1 15rem; min-width: 12rem; display: grid; gap: var(--sp-1); padding: var(--sp-2) var(--sp-3); background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-control); }
-.rc.is-blocked, .iss.is-blocker { border-color: var(--danger); }
+.rc.is-blocked { border-color: var(--danger); }
 .rc-title { margin: 0; color: var(--text-1); font-size: var(--fs-13); overflow-wrap: anywhere; }
 .rc-move { display: flex; gap: var(--sp-1); margin: 0; }
 .tl-row { display: grid; gap: var(--sp-1); }
