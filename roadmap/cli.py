@@ -16,6 +16,9 @@ COMMAND_MODULES = (
     "service",
     "project",
     "job",
+    "task",
+    "plan",
+    "status",
     "hook",
     "hooks",
     "usage",
@@ -60,9 +63,17 @@ def _emit(obj):
 
 def _fail(exc, want_json):
     if want_json:
-        _emit({"ok": False, "error": {"code": exc.code, "message": exc.message}})
+        error = {"code": exc.code, "message": exc.message}
+        if exc.next:
+            error["next"] = exc.next
+        _emit({"ok": False, "error": error})
     else:
-        print("roadmap: " + exc.message, file=sys.stderr)
+        lines = exc.message.split("\n")
+        if exc.next and len(lines) == 1 and exc.code != "invalid_plan":
+            text = "roadmap: " + lines[0] + ". next: " + exc.next
+        else:
+            text = "\n".join(["roadmap: " + lines[0]] + lines[1:] + (["next: " + exc.next] if exc.next else []))
+        print(text, file=sys.stderr)
     return exc.exit
 
 

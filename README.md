@@ -172,6 +172,14 @@ Every command accepts `--json` and then prints `{"ok": true, "data": ...}` or
 | `roadmap job done\|fail <id> ["<note>"] [--tokens K]` | finish a job; a finished job cannot be finished again |
 | `roadmap job list [--project ID]` | list the jobs of a project |
 | `roadmap job prune [--project ID]` | remove finished jobs beyond the newest 30 (running jobs are kept) |
+| `roadmap status [--project ID]` | brief board summary: at most 8 lines, including running jobs |
+| `roadmap task show <id>` | print one task as one plan line |
+| `roadmap task list [--phase P] [--status todo,partial] [--needs-you] [--limit N]` | list tasks as plan lines (default 20) |
+| `roadmap task done\|start\|hold <id>... [--tokens K] [--note "..."]` | change the status of one or more tasks |
+| `roadmap task set [-] [--dry-run]` | bulk patch from stdin, one `ID key=value ...` line per task |
+| `roadmap plan import <file\|-> [--dry-run] [--replace-phase P]` | create or update phases and tasks from plan text |
+| `roadmap plan export [--phase P]` | print the plan text for a re-plan |
+| `roadmap plan template` | print the plan grammar and an example |
 | `roadmap hooks install\|uninstall\|status <id>` | manage the Claude Code hook entries of a project |
 | `roadmap hook` | the hook entry point; Claude Code runs it, you do not |
 | `roadmap usage show` | print the stored plan usage and whether it is stale |
