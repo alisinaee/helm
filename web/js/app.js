@@ -13,6 +13,9 @@ import { configureCommands, pendingValue, run } from "./cmd.js";
 import { initKeys, setKeyHooks } from "./keys.js";
 import { bnavView, navView, toggleMore } from "./views/nav.js";
 import { pageAction } from "./views/inbox.js";
+import { limitAction } from "./views/limits.js";
+import { ruleAction } from "./views/rules.js";
+import { settingsAction } from "./views/settings.js";
 import { initPanel, panelView } from "./views/panel.js";
 import { topbarView } from "./views/topbar.js";
 import { dismissToast, setToastHold, setToastListener, toastsHtml, undoToast } from "./views/toast.js";
@@ -397,7 +400,21 @@ function onClick(event) {
     dismissToast(el.getAttribute("data-toast"));
   } else if (action === "inbox-answer" || action === "undo-line" || action === "override") {
     pageAction(action, el);
+  } else if (action === "plan-move" || action === "phase-approve") {
+    sectionAction("./views/roadmap.js", action, el);
+  } else if (action === "issue-close") {
+    sectionAction("./views/issues.js", action, el);
+  } else if (limitAction(action, el) || ruleAction(action, el) || settingsAction(action, el)) {
+    render();
   }
+}
+
+// Roadmap and Issues buttons (WP32) are handled by their section modules, which are loaded already when the button
+// was drawn; the import only fetches the module's exports.
+function sectionAction(path, action, el) {
+  import(path).then(function (mod) {
+    mod.pageAction(action, el);
+  });
 }
 
 // A toast holds its timer while the pointer or the keyboard focus is on it.

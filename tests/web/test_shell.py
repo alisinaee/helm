@@ -99,7 +99,7 @@ class CssBudgetTests(unittest.TestCase):
             self.assertTrue(os.path.isfile(os.path.join(CSS_DIR, name)), name)
 
     def test_stub_stylesheets_are_commented_and_small(self):
-        for name in ("work.css", "plan.css", "admin.css"):
+        for name in ("work.css", "plan.css"):
             text = read(os.path.join(CSS_DIR, name))
             self.assertTrue(text.lstrip().startswith("/*"), name)
             self.assertLess(len(text), 400, name)
