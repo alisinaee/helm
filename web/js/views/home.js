@@ -1,9 +1,17 @@
-// Home (#/): one card per project, then Running now across projects. The project view frame (WP7) shows the
-// Phases and Running now sections; phase rows arrive in WP8.
+// Home (#/): one card per project, then Running now across projects. The project view (#/p/<id>) is composed here
+// from the section modules: Phases in the main column; Running now, Needs you, Next up, Recent, Extras and Legend in
+// the side column. On narrow screens the side column follows the main column.
 
 import { bannerHtml, chipHtml, emptyHtml, esc, meterHtml, sectionHtml, skeletonHtml } from "../dom.js";
 import { fmtCount, fmtDuration, fmtPercent, MISSING } from "../format.js";
 import { projectHash } from "../router.js";
+import { extrasSection } from "./extras.js";
+import { legendSection } from "./legend.js";
+import { needsSection } from "./needsyou.js";
+import { nextSection } from "./next.js";
+import { phasesSection } from "./phases.js";
+import { recentSection } from "./recent.js";
+import { runningSection } from "./running.js";
 
 const MODEL_KINDS = ["haiku", "sonnet", "opus", "cursor", "agy"];
 
@@ -91,21 +99,9 @@ export function projectView(vm) {
       e.message + ". Fix the file named above, then save it.");
   }).join("");
   const updated = snap.tasksUpdated ? '<p class="project-line">Tasks updated ' + esc(snap.tasksUpdated) + "</p>" : "";
-  const done = snap.done == null ? MISSING : fmtCount(snap.done);
-  const total = snap.total == null ? MISSING : fmtCount(snap.total);
-  const phases = sectionHtml({
-    id: "phases",
-    title: "Phases",
-    summary: done + " of " + total + " items done",
-    open: vm.open.phases,
-    body: '<p class="placeholder">Sections arrive in WP8.</p>',
-  });
-  const running = sectionHtml({
-    id: "running",
-    title: "Running now",
-    summary: project.running.length + " running",
-    open: vm.open.running,
-    body: runList(project.running, false),
-  });
-  return (errors ? '<div class="banner-stack">' + errors + "</div>" : "") + updated + phases + running;
+  const side = [runningSection(vm), needsSection(vm), nextSection(vm), recentSection(vm), extrasSection(vm),
+    legendSection(vm)].join("");
+  return (errors ? '<div class="banner-stack">' + errors + "</div>" : "") + updated +
+    '<div class="proj"><div class="proj-main">' + phasesSection(vm) + '</div>' +
+    '<div class="proj-side">' + side + "</div></div>";
 }

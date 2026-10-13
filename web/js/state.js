@@ -8,8 +8,13 @@ export const VIEW_SECTIONS = {
     { id: "running", openByDefault: true },
   ],
   project: [
-    { id: "phases", openByDefault: true },
+    { id: "phases", openByDefault: true, keepInMinimal: true },
     { id: "running", openByDefault: true },
+    { id: "needs", openByDefault: false },
+    { id: "next", openByDefault: false },
+    { id: "recent", openByDefault: false },
+    { id: "extras", openByDefault: false },
+    { id: "legend", openByDefault: false },
   ],
 };
 
@@ -88,6 +93,53 @@ function num(value) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function list(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function idList(value) {
+  return list(value).map(String);
+}
+
+function normalizeJob(j, fetchedAt) {
+  const started = Date.parse(j.started);
+  const ended = Date.parse(j.ended);
+  return {
+    id: j.id,
+    task: j.task || null,
+    title: j.title || "",
+    model: j.model || null,
+    status: j.status || "",
+    elapsedS: num(j.elapsed_s),
+    tokensK: num(j.tokensK),
+    note: j.note || "",
+    startedMs: Number.isNaN(started) ? null : started,
+    endedMs: Number.isNaN(ended) ? null : ended,
+    fetchedAt: fetchedAt,
+  };
+}
+
+function normalizeTask(t) {
+  return {
+    id: t.id,
+    title: t.title || "",
+    phase: t.phase || "",
+    state: t.state || "todo",
+    model: t.model || null,
+    thinking: t.thinking || "",
+    tokensK: num(t.tokensK),
+    check: t.check || "none",
+    checkK: num(t.checkK),
+    needsUser: Boolean(t.needsUser),
+    note: t.note || "",
+  };
+}
+
+function normalizeBoard(b) {
+  return { id: b.id || "", label: b.label || "", state: b.state || "todo", status: b.status || "",
+    date: b.date || "" };
+}
+
 export function normalizeSnapshot(raw, fetchedAt) {
   const project = raw.project || {};
   const summary = raw.summary || {};
@@ -111,6 +163,7 @@ export function normalizeSnapshot(raw, fetchedAt) {
     done: num(overall.done),
     total: num(overall.total),
     phases: phases.map(function (p) {
+      const running = idList(p.running);
       return {
         id: p.id,
         name: p.name || p.id,
@@ -118,20 +171,28 @@ export function normalizeSnapshot(raw, fetchedAt) {
         total: num(p.total),
         progress: num(p.progress),
         state: p.state || "todo",
-        runningCount: Array.isArray(p.running) ? p.running.length : 0,
+        onlyDeferred: Boolean(p.only_deferred),
+        deferred: num(p.deferred) || 0,
+        remainingK: num(p.remaining_k),
+        runningCount: running.length,
+        running: running,
+        recent: idList(p.recent),
       };
+    }),
+    jobs: jobs.map(function (j) {
+      return normalizeJob(j, fetchedAt);
     }),
     running: jobs.filter(function (j) {
       return j.status === "running";
     }).map(function (j) {
-      return {
-        id: j.id,
-        task: j.task || "",
-        title: j.title || "",
-        model: j.model || "other",
-        elapsedS: num(j.elapsed_s),
-        fetchedAt: fetchedAt,
-      };
+      return normalizeJob(j, fetchedAt);
+    }),
+    tasks: list(raw.tasks).map(normalizeTask),
+    spikes: list(raw.spikes).map(normalizeBoard),
+    rh: list(raw.rh).map(normalizeBoard),
+    next: list(raw.next).map(String),
+    log: list(raw.log).map(function (row) {
+      return { date: row.date || "", text: row.text || "" };
     }),
     errors: errors.map(function (e) {
       return { file: e.file || "file", message: e.error || "could not be read" };
@@ -156,14 +217,19 @@ export function normalizeUsage(raw, fetchedAt) {
 
 // The effective open state of each section for a view. An explicit choice wins. Otherwise expanded mode opens
 // everything, and a view with no saved mode opens its openByDefault sections.
+// Minimal (chosen) keeps only the sections marked keepInMinimal open; the default view opens openByDefault ones.
 export function sectionOpenState(view, prefs) {
   const mode = prefs.mode || VIEW_DEFAULT_MODE[view];
   const open = {};
   for (const section of VIEW_SECTIONS[view]) {
     if (typeof prefs.open[section.id] === "boolean") {
       open[section.id] = prefs.open[section.id];
+    } else if (mode === "expanded") {
+      open[section.id] = true;
+    } else if (prefs.mode) {
+      open[section.id] = Boolean(section.keepInMinimal);
     } else {
-      open[section.id] = mode === "expanded" || (!prefs.mode && section.openByDefault);
+      open[section.id] = Boolean(section.openByDefault);
     }
   }
   return open;
@@ -191,7 +257,9 @@ export function buildViewModel(store, route, prefs, now) {
     route: route,
     now: now,
     mode: prefs.mode || VIEW_DEFAULT_MODE[view],
+    modeChosen: Boolean(prefs.mode),
     open: open,
+    prefsOpen: prefs.open,
     conn: store.conn,
     usage: usageView(store, now),
     projects: null,

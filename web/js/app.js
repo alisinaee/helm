@@ -199,6 +199,16 @@ function toggleSection(route, id) {
   render();
 }
 
+// Phase rows and deferred lists: flip the state the button shows (aria-expanded) and remember it per project.
+function toggleItem(route, el) {
+  const key = el.getAttribute("data-item");
+  const expanded = el.getAttribute("aria-expanded") === "true";
+  updatePrefs(route, function (prefs) {
+    prefs.open[key] = !expanded;
+  });
+  render();
+}
+
 function setAllSections(route, value) {
   updatePrefs(route, function (prefs) {
     for (const section of VIEW_SECTIONS[route.name]) {
@@ -215,6 +225,8 @@ function onClick(event) {
   const action = el.getAttribute("data-action");
   if (action === "toggle-section") {
     toggleSection(route, el.getAttribute("data-section"));
+  } else if (action === "toggle-item") {
+    toggleItem(route, el);
   } else if (action === "set-mode") {
     setMode(route, el.getAttribute("data-mode"));
   } else if (action === "cycle-theme") {

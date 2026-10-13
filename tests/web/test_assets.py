@@ -83,7 +83,8 @@ class AssetTests(unittest.TestCase):
     def test_js_files_are_modules_with_imports_checked(self):
         for name in ("app.js", "api.js", "state.js", "router.js", "dom.js", "format.js"):
             self.assertTrue(os.path.isfile(os.path.join(WEB, "js", name)), name)
-        for name in ("home.js", "topbar.js", "usage.js", "kpi.js"):
+        for name in ("home.js", "topbar.js", "usage.js", "kpi.js", "tasks.js", "phases.js", "running.js",
+                     "needsyou.js", "next.js", "recent.js", "extras.js", "legend.js"):
             self.assertTrue(os.path.isfile(os.path.join(WEB, "js", "views", name)), name)
 
 
