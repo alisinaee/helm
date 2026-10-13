@@ -13,6 +13,8 @@ from datetime import datetime
 from roadmap.core.extras import extra_file
 from roadmap.core.parsers import error_entry
 from roadmap.core.snapshot import build_snapshot
+from roadmap.errors import RoadmapError
+from roadmap.services import control
 from roadmap.store import config as config_store
 
 BASE_FILES = ("tasks.json", "jobs.json", "autonomy.json", "issues.json", "questions.json", "comments.json",
@@ -40,9 +42,26 @@ def load_snapshot(project_id, now=None):
             names.append(name)
     files = {name: _read_text(folder, name, errors) for name in names}
     moment = now if now is not None else datetime.now().astimezone()
-    snap = build_snapshot(files, project_cfg, moment)
+    snap = build_snapshot(files, project_cfg, moment, control=_control_view(entry["id"]))
     snap["errors"] = errors + snap["errors"]
     return snap
+
+
+def _control_view(project_id):
+    """The snapshot's control key: stopped, blocked, reason, overrideUntil and the warnings (budget and weekly).
+    An unreadable control file gives an error marker instead of failing the snapshot."""
+    try:
+        state = control.read_state(project_id)
+    except RoadmapError:
+        return {"error": "control file unreadable"}
+    if not state:
+        return {"stopped": False, "blocked": False, "reason": "", "overrideUntil": None, "warn": []}
+    block = state.get("block") if isinstance(state.get("block"), dict) else None
+    stopped = state.get("stop") is True
+    reason = str(block.get("reason", "")) if block else ("stopped by user" if stopped else "")
+    return {"stopped": stopped, "blocked": block is not None, "reason": reason,
+            "overrideUntil": state.get("overrideUntil") if isinstance(state.get("overrideUntil"), str) else None,
+            "warn": [str(w) for w in (state.get("warn") or [])][:6]}
 
 
 def _read_text(folder, name, errors):

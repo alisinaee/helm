@@ -109,6 +109,21 @@ review gate (WP13/R1) must be signed before the 1.0.0 release (WP14).
   symlinked file.
 - **Denials are logged** at most once a minute per project in `hooks.log`. Nothing the agent wrote is executed.
 
+### Command route, rate limit and phone allowlist (WP23, built)
+
+- `POST /api/v1/cmd` takes the same guard as usage sync (same-origin or Origin, `X-Roadmap-CSRF`, JSON, 4 KB),
+  then runs only ops registered in the command registry. Unknown ops are 404, and invalid arguments 422.
+- At most 10 ops per second per process; the 11th is `429` with `Retry-After`. The limiter counts ops that reach
+  dispatch, so a rejected request does not spend it.
+- Ops run from `gui` skip the agent guard, because the guard is for an agent's shell. For that call only, the
+  process hides `CLAUDECODE` under a lock, so the existing guard in `services/agentguard.py` sees a person, not an
+  agent. Calls from `cli`, `agent` and `phone` keep the guard. Phone calls never run a loosening op.
+- Phone listener: the route is `403` unless `phoneWrites` is true. Then the allowlist is `question.answer`,
+  `comment.add`, `task.status`, `control.stop` and `undo`. The phone's csrf value is `HMAC(phone token, "csrf")`,
+  served only on the cookie-authenticated phone `/api/v1/meta`; the main token never reaches the phone.
+- Every accepted op writes one activity line: time, source, op and a summary of at most 60 characters with no free text.
+  The activity log keeps the newest 500 lines. Rejected requests are not logged as writes.
+
 ## Known limits
 
 - The usage endpoint and its beta header are not a documented public API. A change on Anthropic's side fails the read

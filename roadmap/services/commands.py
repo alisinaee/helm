@@ -14,10 +14,13 @@ Internal ops (public False) are the inverses that undo runs; run() refuses them 
 import contextlib
 import datetime
 import re
+import shlex
+import threading
 
 from roadmap.core import parsers, planfmt
 from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import activity, budget, comments, issues, jobs, questions, queue, records, tasks
+from roadmap.services import agentguard
 from roadmap.store import jsonl, lock, schema
 
 UNDO_FILE = "undo.jsonl"
@@ -74,17 +77,43 @@ def _check_task_status(a):
     if status not in TASK_STATUSES:
         raise _usage("status '" + status + "' is not valid (allowed: " + "|".join(TASK_STATUSES) + ")",
                      "roadmap task list --phase " + _text(a.get("id")).split(".")[0])
-    return {"id": _id(a, "id", "task id"), "status": status}
+    tokens = a.get("tokensK")
+    if tokens is not None and (isinstance(tokens, bool) or not isinstance(tokens, int) or tokens < 0):
+        raise _usage("tokensK must be a whole number of thousands of tokens, 0 or more")
+    note = a.get("note")
+    if note is not None and not isinstance(note, str):
+        raise _usage("note must be text")
+    return {"id": _id(a, "id", "task id"), "status": status, "tokensK": tokens, "note": note}
 
 
 def _h_task_status(data_dir, a, now):
-    prior = tasks.get(data_dir, a["id"]).get("status") or "todo"
-    if prior == a["status"]:
-        return {"id": a["id"], "status": prior, "changed": False}, a["id"] + " already " + prior, None
-    tasks.apply(data_dir, _set_records(a["id"] + " status=" + a["status"]))
+    """Set the status (and optionally the note and tokens). Undo restores the prior status and note. Tokens feed
+    the budget once per task (budget.record_task_tokens); that spend is not reversed by undo."""
+    before = tasks.get(data_dir, a["id"])
+    prior = before.get("status") or "todo"
+    parts = [a["id"], "status=" + a["status"]]
+    if a["tokensK"] is not None:
+        parts.append("tokensK=" + str(a["tokensK"]))
+    if a["note"] is not None:
+        parts.append("note=" + shlex.quote(" ".join(a["note"].split())))
+    tasks.apply(data_dir, _set_records(" ".join(parts)))
+    fed = False
+    if a["tokensK"] is not None:
+        fed = budget.record_task_tokens(data_dir, a["id"], _task_model(before), float(a["tokensK"]))
     summary = a["id"] + " " + prior + "->" + a["status"]
-    return ({"id": a["id"], "status": a["status"], "changed": True, "was": prior}, summary,
-            {"op": "task.status", "args": {"id": a["id"], "status": prior}})
+    inverse = None
+    if prior != a["status"] or a["note"] is not None:
+        inverse_args = {"id": a["id"], "status": prior}
+        if a["note"] is not None:
+            inverse_args["note"] = before.get("note") or ""
+        inverse = {"op": "task.status", "args": inverse_args}
+    return ({"id": a["id"], "status": a["status"], "changed": prior != a["status"], "was": prior,
+             "budgetFed": fed}, summary, inverse)
+
+
+def _task_model(task):
+    model = task.get("model")
+    return model if isinstance(model, str) and model.strip() else "unknown"
 
 
 def _set_records(text):
@@ -400,12 +429,45 @@ def _h_undo(data_dir, a, now):
 # ---------------------------------------------------------------- registry
 
 class _Op(object):
-    __slots__ = ("check", "handler", "public")
+    """One registry entry. logs False means the service already writes its own activity line (control, rules), so
+    run() takes that line instead of adding one."""
+    __slots__ = ("check", "handler", "public", "logs")
 
-    def __init__(self, check, handler, public=True):
+    def __init__(self, check, handler, public=True, logs=True):
         self.check = check
         self.handler = handler
         self.public = public
+        self.logs = logs
+
+
+# The caller's source and project for the op that is running on this thread (the HTTP server runs one thread per
+# request, so a thread-local is per call). Handlers read them; see cmdops.
+_CTX = threading.local()
+
+
+@contextlib.contextmanager
+def context(source, project_id=None):
+    """Set the source and project for ops run inside the block, restoring the outer values after."""
+    saved = (getattr(_CTX, "source", None), getattr(_CTX, "project", None))
+    _CTX.source, _CTX.project = source, project_id
+    try:
+        yield
+    finally:
+        _CTX.source, _CTX.project = saved
+
+
+def current_source():
+    """The source of the op running on this thread: gui, cli, agent or phone. cli when no context is set."""
+    return getattr(_CTX, "source", None) or "cli"
+
+
+def current_project():
+    """The project id of the op running on this thread, or None."""
+    return getattr(_CTX, "project", None)
+
+
+def _load_ops():
+    from roadmap.services import cmdops  # noqa: F401  (importing registers the control, rules and budget ops)
 
 
 OPS = {
@@ -432,6 +494,7 @@ OPS = {
 
 def public_ops():
     """The op names a caller may run, sorted."""
+    _load_ops()
     return sorted(name for name, op in OPS.items() if op.public)
 
 
@@ -439,6 +502,7 @@ def run(op, args, source, data_dir, now=None):
     """Validate, write, log and reply. Returns {ok, data, activity, undo}. Errors raise RoadmapError with a next."""
     if source not in activity.SOURCES:
         raise _usage("source '" + str(source) + "' is not valid (allowed: " + "|".join(activity.SOURCES) + ")")
+    _load_ops()
     entry = OPS.get(op)
     if entry is None or not entry.public:
         raise _usage("unknown op '" + str(op) + "' (allowed: " + "|".join(public_ops()) + ")", "roadmap status")
@@ -446,15 +510,34 @@ def run(op, args, source, data_dir, now=None):
         raise _usage("args must be an object")
     records.require_dir(data_dir)
     clean = entry.check(args or {})
-    data, summary, inverse = entry.handler(data_dir, clean, now)
-    line = activity.append(data_dir, source, op, summary, undo=inverse is not None, now=now)
+    with context(source, current_project()):
+        before = _newest_id(data_dir)
+        data, summary, inverse = entry.handler(data_dir, clean, now)
+    if entry.logs:
+        line = activity.append(data_dir, source, op, summary, undo=inverse is not None, now=now)
+    else:
+        line = _newest_line(data_dir)
+        if line is None or line["id"] == before:  # the service wrote nothing, so log the op here
+            line = activity.append(data_dir, source, op, summary, undo=inverse is not None, now=now)
     if inverse is not None:
         _remember(data_dir, line["id"], summary, inverse, now)
     return {"ok": True, "data": data, "activity": line["id"], "undo": inverse is not None}
 
 
+def _newest_line(data_dir):
+    lines = activity.recent(data_dir, 1)
+    return lines[-1] if lines else None
+
+
+def _newest_id(data_dir):
+    line = _newest_line(data_dir)
+    return line["id"] if line else None
+
+
 def _execute(data_dir, op, args, now):
-    """Run an internal inverse. It writes but logs nothing: undo writes its own activity line."""
+    """Run an internal inverse. It writes but logs nothing itself (undo writes its own line), except services that
+    always log, which keep their own line."""
+    _load_ops()
     entry = OPS.get(op)
     if entry is None:
         raise RoadmapError("usage", "no inverse op " + str(op), EXIT_USAGE)
@@ -488,10 +571,15 @@ def locate(project_id, next_cmd):
 
 
 def write(project_id, op, payload, next_cmd):
-    """Run one op for a CLI call on the project's data folder and return the reply."""
-    data_dir = locate(project_id, next_cmd)
+    """Run one op for a CLI call on the project's data folder and return the reply. The control state is recomputed
+    after the write (best effort)."""
     with next_on_error(next_cmd):
-        return run(op, payload, "cli", data_dir)
+        project, data_dir = tasks.resolve(project_id)
+    with next_on_error(next_cmd), context("cli", project["id"]):
+        reply = run(op, payload, "cli", data_dir)
+    from roadmap.services import control
+    control.after_write(project["id"])
+    return reply
 
 
 def json_data(reply):

@@ -22,7 +22,8 @@ marked `...`.
 | GET | `/api/v1/projects` | `{projects: [summary, ...]}` |
 | GET | `/api/v1/projects/{id}/snapshot` | the project snapshot. `ETag`; `304` on a matching `If-None-Match` |
 | GET | `/api/v1/usage` | the stored plan usage |
-| POST | `/api/v1/usage/sync` | reads the plan usage now, then returns the `/api/v1/usage` object. **The only write route** |
+| POST | `/api/v1/usage/sync` | reads the plan usage now, then returns the `/api/v1/usage` object |
+| POST | `/api/v1/cmd` | runs one command-registry op: body `{op, args, project?}`, reply `{ok, data, activity, undo}` (see below) |
 | GET | `/data.json` | **deprecated** alias of the first registered project's snapshot. Removed in 2.0 |
 | GET | `/`, `/<file>` | the pages under `web/` (not JSON; see [Pages](#pages)) |
 
@@ -160,6 +161,31 @@ Failure to read gives `502` with code `usage_unavailable`. The message is the pl
 `keychain item not found, sign in to Claude Code first`, `keychain access denied or failed (exit 36)`, or
 `usage endpoint answered HTTP 401`. The token is never in a message.
 
+### POST /api/v1/cmd
+
+The single write path for the GUI (WP21 registry, WP23 ops). Body: JSON, at most 4 KB, `{"op": "<name>", "args": {...}, "project": "<id>"}`.
+`project` is optional and defaults to the first registered project. The reply is `{ok, data, activity, undo}`: the
+activity id (for example `A812`) and whether `POST /api/v1/cmd {"op":"undo","args":{"activity":"A812"}}` can reverse it.
+
+Ops: `task.status` (args `id`, `status`, optional `note`, `tokensK`), `task.start`, `task.stop`, `task.cap` (`id`,
+`value`), `subtask.toggle` (`addr`, `done`), `plan.move` (`id`, `before` or `after`), `phase.approve` (`phase`),
+`question.answer` (`id`, `value`), `comment.add` (`on`, `text`, `by`), `issue.new`, `issue.close` (`id`),
+`budget.set` (`scope`, `key`, `value`), `limit.set` (`pct` 1 to 100), `control.stop` (`task`?), `control.resume`,
+`control.override` (`hours` 1 to 4), `rules.add` (`scope`, `kind`, `text`, `value`?), `rules.rm` (`id`),
+`rules.sync` (`dryRun`?), `undo` (`activity`).
+
+Errors, in the order checked: `403 forbidden` (CSRF, origin, or not allowed on this listener), `413` (body over
+4 KB), `415` (not JSON), `404 unknown_op`, `422 invalid_args` (`error.problems` lists the first problem), `429
+rate_limited` (more than 10 ops per second in this process), `409` (conflict or agent refused), `404 not_found`.
+
+Agent guard: ops that loosen control (`control.resume`, `control.override`, `budget.set`, `task.cap`, `limit.set`,
+`rules.*`, `phase.approve`) are refused from an agent shell, with `409 agent_refused`. A browser (`gui`) call is not an
+agent call and is not refused for that reason.
+
+Phone listener: `POST /api/v1/cmd` is `403` unless config `phoneWrites` is `true`. With it, only `question.answer`,
+`comment.add`, `task.status`, `control.stop` and `undo` run, and the phone's own csrf value (from `GET /api/v1/meta`
+on the phone, cookie-authenticated) is required. A resume, a limit change or an undo that would resume is refused.
+
 ### GET /data.json (deprecated)
 
 Returns the snapshot of the first registered project, exactly as `/api/v1/projects/{id}/snapshot` does, with the same
@@ -207,8 +233,8 @@ A project file that is broken does not produce any of these: the reply is `200` 
 
 ## Write rules
 
-`POST /api/v1/usage/sync` is the only route that changes anything. Its checks run in this order, and the first
-failure stops the request before any work is done:
+`POST /api/v1/usage/sync` and `POST /api/v1/cmd` are the only routes that change anything. Their checks run in this order,
+and the first failure stops the request before any work is done:
 
 1. `Host` is allowed (421 otherwise).
 2. The route and method exist (404 or 405).

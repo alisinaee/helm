@@ -147,6 +147,41 @@ class FailureLimiter:
             return max(1, int(self.window_s - (now - self._times[0])) + 1)
 
 
+CMD_PATH = "/api/v1/cmd"
+CMD_OPS_PER_S = 10
+CMD_WINDOW_S = 1.0
+# Ops a phone call may run when phoneWrites is true. Stopping is safe; resuming or raising limits is never allowed.
+PHONE_OPS = frozenset(["question.answer", "comment.add", "task.status", "control.stop", "undo"])
+
+
+def phone_csrf(token):
+    """The phone listener's CSRF value: HMAC-SHA256 keyed with the phone token over the word 'csrf'. The phone pages
+    carry it in their csrf meta tag; the raw token never goes to the page."""
+    return hmac.new(token.encode("utf-8"), b"csrf", "sha256").hexdigest()
+
+
+class RateLimiter:
+    """At most limit events per window_s seconds, counted per process. allow() records an event and returns False
+    once the window is full."""
+
+    def __init__(self, limit=CMD_OPS_PER_S, window_s=CMD_WINDOW_S, clock=time.monotonic):
+        self.limit = limit
+        self.window_s = window_s
+        self._clock = clock
+        self._times = collections.deque()
+        self._lock = threading.Lock()
+
+    def allow(self):
+        with self._lock:
+            now = self._clock()
+            while self._times and now - self._times[0] >= self.window_s:
+                self._times.popleft()
+            if len(self._times) >= self.limit:
+                return False
+            self._times.append(now)
+            return True
+
+
 def security_headers(csp=CSP):
     """The headers that go on every response, as (name, value) pairs."""
     return [
