@@ -9,8 +9,8 @@ import sys
 
 from roadmap.commands.task import apply_records, plan_failure, print_diff
 from roadmap.core import planfmt
-from roadmap.errors import EXIT_NOT_FOUND, RoadmapError
-from roadmap.services import tasks
+from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
+from roadmap.services import commands, tasks
 
 TEMPLATE = """Plan text: UTF-8, one record per line. Blank lines and lines starting with # are ignored.
 P <id> <status> | <name>
@@ -62,6 +62,69 @@ def register(sub, common):
 
     template = actions.add_parser("template", parents=[common], help="print the plan grammar and an example")
     template.set_defaults(handler=_template)
+
+    view = actions.add_parser("view", parents=[common, project],
+                              help="phases and their open tasks, in plan order (at most 15 lines)")
+    view.set_defaults(handler=_view)
+
+    move = actions.add_parser("move", parents=[common, project], help="move a task before or after another task")
+    move.add_argument("id", metavar="P2.4", help="task to move")
+    move.add_argument("--before", metavar="ID", default=None, help="put the task before this task")
+    move.add_argument("--after", metavar="ID", default=None, help="put the task after this task")
+    move.set_defaults(handler=_move)
+
+
+VIEW_MAX = 15
+TITLE_SHOWN = 44
+
+
+def view_lines(doc):
+    """Phase lines and their open tasks, in plan order, at most VIEW_MAX lines."""
+    tasks_list = [t for t in doc["tasks"] if isinstance(t, dict)]
+    lines = []
+    for phase in doc["phases"]:
+        if not isinstance(phase, dict) or not isinstance(phase.get("id"), str):
+            continue
+        mine = [t for t in tasks_list if _phase_of(t) == phase["id"]]
+        done = sum(1 for t in mine if t.get("status") == "done")
+        partial = sum(1 for t in mine if t.get("status") == "partial")
+        pct = round(100 * (done + 0.5 * partial) / len(mine)) if mine else 0
+        lines.append("%s %s %d%% %s" % (phase["id"], phase.get("status", "todo"), pct, phase.get("name", "")))
+        for task in mine:
+            if task.get("status") != "done":
+                title = " ".join(str(task.get("title", "")).split())
+                lines.append("  %s %s %s" % (task.get("id"), task.get("status", "todo"),
+                                            title[:TITLE_SHOWN]))
+    if not lines:
+        return ["no phases yet (next: roadmap plan import <file>)"]
+    if len(lines) > VIEW_MAX:
+        return lines[:VIEW_MAX - 1] + ["... %d more lines: roadmap task list" % (len(lines) - VIEW_MAX + 1)]
+    return lines
+
+
+def _view(args):
+    _, data_dir = tasks.resolve(args.project)
+    lines = view_lines(tasks.load(data_dir))
+    if not getattr(args, "json", False):
+        for line in lines:
+            print(line)
+        return None
+    return {"lines": lines}
+
+
+def _move(args):
+    if (args.before is None) == (args.after is None):
+        raise RoadmapError("usage", "give exactly one of --before ID or --after ID", EXIT_USAGE,
+                           next="roadmap plan move P2.4 --before P2.2")
+    where, ref = ("before", args.before) if args.before is not None else ("after", args.after)
+    reply = commands.write(args.project, "plan.move", {"id": args.id, where: ref}, "roadmap plan view")
+    if not getattr(args, "json", False):
+        if reply["data"]["moved"]:
+            print("moved %s %s %s" % (args.id, where, ref))
+        else:
+            print(args.id + " already in place")
+        return None
+    return commands.json_data(reply)
 
 
 def _import(args):

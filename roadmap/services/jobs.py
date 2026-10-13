@@ -67,17 +67,23 @@ def known_task_ids(data_dir):
     return {t["id"] for t in tasks if isinstance(t, dict) and isinstance(t.get("id"), str)}
 
 
-def start_job(data_dir, title, model, task=None):
-    """Record a new running job and return it. The task, when given, must exist in tasks.json (not_found)."""
+def start_job(data_dir, title, model, task=None, parent=None, role=None):
+    """Record a new running job and return it. The task, when given, must exist in tasks.json (not_found).
+    parent is the id of an existing job (the lead); role is lead or worker and needs a parent."""
     _require_data_dir(data_dir)
     clean_title = _clean_title(title)
     clean_model = _clean_model(model)
     clean_task = _clean_task(task, data_dir)
+    clean_role = _clean_role(role, parent)
     with lock.locked(data_dir):
         doc = _read_doc(data_dir)
+        clean_parent = _clean_parent(parent, doc["jobs"])
         job = {"id": _next_id(doc["jobs"]), "title": clean_title, "model": clean_model}
         if clean_task:
             job["task"] = clean_task
+        if clean_parent:
+            job["parent"] = clean_parent
+            job["role"] = clean_role
         job.update({"status": "running", "started": _now_iso(), "ended": None})
         doc["jobs"].append(job)
         _write_doc(data_dir, doc)
@@ -184,6 +190,28 @@ def _clean_model(model):
     text = "" if model is None else str(model).strip()
     if text not in MODELS:
         raise RoadmapError("usage", "model must be one of " + ", ".join(MODELS), EXIT_USAGE)
+    return text
+
+
+ROLES = ("lead", "worker")
+
+
+def _clean_role(role, parent):
+    if role is None or not str(role).strip():
+        return None
+    text = str(role).strip()
+    if text not in ROLES:
+        raise RoadmapError("usage", "role must be lead or worker", EXIT_USAGE)
+    if not (parent and str(parent).strip()):
+        raise RoadmapError("usage", "--role needs --parent JOB_ID", EXIT_USAGE)
+    return text
+
+
+def _clean_parent(parent, jobs):
+    if parent is None or not str(parent).strip():
+        return None
+    text = str(parent).strip()
+    _find(jobs, text)
     return text
 
 

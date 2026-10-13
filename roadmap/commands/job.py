@@ -2,7 +2,7 @@
 
 import argparse
 
-from roadmap.services import jobs
+from roadmap.services import budget, jobs
 
 DONE_WORDS = {"done": "done", "fail": "failed"}
 
@@ -25,6 +25,8 @@ def register(sub, common):
     start.add_argument("title", help="what the job does")
     start.add_argument("model", help="model name, for example opus, sonnet or haiku")
     start.add_argument("task", nargs="?", help="task id from the project's tasks.json")
+    start.add_argument("--parent", metavar="ID", default=None, help="job id of the lead this job works for")
+    start.add_argument("--role", metavar="ROLE", default=None, help="lead or worker (needs --parent)")
     start.set_defaults(handler=_start)
 
     for name, text in (("done", "mark a job done"), ("fail", "mark a job failed")):
@@ -47,7 +49,7 @@ def _data_dir(args):
 
 
 def _start(args):
-    job = jobs.start_job(_data_dir(args), args.title, args.model, args.task)
+    job = jobs.start_job(_data_dir(args), args.title, args.model, args.task, parent=args.parent, role=args.role)
     if not getattr(args, "json", False):
         print(job["id"])
         return None
@@ -56,7 +58,10 @@ def _start(args):
 
 def _finish(args):
     tokens = jobs.tokens_from_arg(args.tokens)
-    job = jobs.finish_job(_data_dir(args), args.id, args.status, args.note, tokens)
+    data_dir = _data_dir(args)
+    job = jobs.finish_job(data_dir, args.id, args.status, args.note, tokens)
+    if tokens is not None:
+        budget.record_job_spend(data_dir, job["id"], job.get("task"), job.get("model"), tokens)
     if not getattr(args, "json", False):
         print(job["id"] + " " + job["status"])
         return None

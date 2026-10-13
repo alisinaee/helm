@@ -1,6 +1,15 @@
-"""Top-level command status: the board summary of one project in at most 8 lines (docs/AGENT-INTERFACE.md section 2)."""
+"""Top-level command status: the board summary of one project in at most 8 lines and 700 characters.
 
-from roadmap.services import jobs, tasks
+Lines keep this order, and when space runs out the lowest ones go first: header, left, phase, run, ask, queue,
+issues, budget, you, next. The ask, queue, issues and budget lines come from the command layer
+(docs/AGENT-INTERFACE.md section 2; docs/PRODUCT-SPEC.md section 4).
+"""
+
+from roadmap.services import commands, jobs, tasks
+
+MAX_LINES = 8
+MAX_CHARS = 700
+HEAD = 3
 
 
 def register(sub, common):
@@ -11,9 +20,31 @@ def register(sub, common):
     parser.set_defaults(handler=_run)
 
 
+def compose(base, extras):
+    """Put the base summary lines and the four command-layer lines in priority order, then fit the budget."""
+    head, rest = base[:HEAD], base[HEAD:]
+    you = [line for line in rest if line.startswith("you:")]
+    nxt = [line for line in rest if line.startswith("next:")]
+    run = [line for line in rest if line.startswith("run:")]
+    ordered = head + run + [extras["ask"], extras["queue"], extras["issues"], extras["budget"]] + you + nxt
+    return _fit(ordered)
+
+
+def _fit(lines):
+    """Keep lines in order while they fit: at most MAX_LINES lines and MAX_CHARS characters in all."""
+    kept = []
+    for line in lines:
+        candidate = kept + [line]
+        if len(candidate) > MAX_LINES or len("\n".join(candidate)) > MAX_CHARS:
+            break
+        kept.append(line)
+    return kept
+
+
 def _run(args):
     project, data_dir = tasks.resolve(args.project)
-    lines = tasks.summary(data_dir, jobs.list_jobs(data_dir), name=project["id"])
+    base = tasks.summary(data_dir, jobs.list_jobs(data_dir), name=project["id"])
+    lines = compose(base, commands.status_extras(data_dir))
     if not getattr(args, "json", False):
         for line in lines:
             print(line)
