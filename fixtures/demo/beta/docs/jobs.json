@@ -1,0 +1,37 @@
+{
+  "jobs": [
+    {
+      "id": "j1",
+      "title": "FastAPI application scaffold and Pydantic v2 settings",
+      "model": "haiku",
+      "task": "P1.1",
+      "status": "done",
+      "started": "2026-10-13T08:00:00+03:30",
+      "ended": "2026-10-13T08:14:10+03:30",
+      "tokensK": 14.2,
+      "note": "Scaffold pass"
+    },
+    {
+      "id": "j2",
+      "title": "PostgreSQL database models and Alembic migration setup",
+      "model": "haiku",
+      "task": "P1.2",
+      "status": "done",
+      "started": "2026-10-13T08:20:00+03:30",
+      "ended": "2026-10-13T08:48:32+03:30",
+      "tokensK": 28.5,
+      "note": "Initial migration applied"
+    },
+    {
+      "id": "j3",
+      "title": "User account management and registration API endpoints",
+      "model": "sonnet",
+      "task": "P2.2",
+      "status": "done",
+      "started": "2026-10-13T09:00:00+03:30",
+      "ended": "2026-10-13T09:41:15+03:30",
+      "tokensK": 42.1,
+      "note": "Registration and profile routes completed"
+    }
+  ]
+}

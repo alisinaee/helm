@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "questions": [
+    {
+      "id": "Q1",
+      "task": "P3.3",
+      "text": "Which conflict resolution policy should be default for offline note edits?",
+      "opts": [
+        "server wins",
+        "client wins",
+        "three-way merge"
+      ],
+      "def": "three-way merge",
+      "block": true,
+      "timeoutS": 3600,
+      "status": "open",
+      "answer": null,
+      "asked": "2026-10-13T14:30:00+03:30",
+      "answered": null
+    },
+    {
+      "id": "Q2",
+      "task": "P4.2",
+      "text": "Should collaborative comment threads support markdown formatting in v1?",
+      "opts": [
+        "plain text only",
+        "basic markdown"
+      ],
+      "def": "basic markdown",
+      "block": false,
+      "timeoutS": 7200,
+      "status": "open",
+      "answer": null,
+      "asked": "2026-10-13T15:00:00+03:30",
+      "answered": null
+    }
+  ]
+}

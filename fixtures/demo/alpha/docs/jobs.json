@@ -1,0 +1,86 @@
+{
+  "jobs": [
+    {
+      "id": "j1",
+      "title": "Flutter mobile scaffold and multi-flavor configuration",
+      "model": "haiku",
+      "task": "P1.1",
+      "status": "done",
+      "started": "2026-10-13T09:00:00+03:30",
+      "ended": "2026-10-13T09:18:22+03:30",
+      "tokensK": 18.4,
+      "note": "Scaffold and flavors configured"
+    },
+    {
+      "id": "j2",
+      "title": "Keychain and keystore secure storage bridge",
+      "model": "opus",
+      "task": "P2.1",
+      "status": "done",
+      "started": "2026-10-13T09:30:15+03:30",
+      "ended": "2026-10-13T10:12:45+03:30",
+      "tokensK": 44.8,
+      "note": "iOS Keychain and Android Keystore bindings pass tests"
+    },
+    {
+      "id": "j3",
+      "title": "OAuth2 PKCE authorization flow and token refresh worker",
+      "model": "sonnet",
+      "task": "P2.2",
+      "status": "done",
+      "started": "2026-10-13T10:20:00+03:30",
+      "ended": "2026-10-13T10:55:10+03:30",
+      "tokensK": 58.2,
+      "note": "Token refresh loop verified"
+    },
+    {
+      "id": "j4",
+      "title": "SQLite schema definition and Drift migrations",
+      "model": "sonnet",
+      "task": "P3.1",
+      "status": "done",
+      "started": "2026-10-13T11:05:00+03:30",
+      "ended": "2026-10-13T11:42:30+03:30",
+      "tokensK": 49.6,
+      "note": "Schema generated and indexed"
+    },
+    {
+      "id": "j5",
+      "title": "Outbox pattern queue for offline mutations",
+      "model": "opus",
+      "task": "P3.2",
+      "status": "done",
+      "started": "2026-10-13T13:00:00+03:30",
+      "ended": "2026-10-13T13:58:12+03:30",
+      "tokensK": 68.3,
+      "note": "Persistent mutation queue functional"
+    },
+    {
+      "id": "j6",
+      "title": "Background sync worker with battery and network constraints",
+      "model": "haiku",
+      "task": "P3.5",
+      "status": "running",
+      "started": "2026-10-13T16:45:00+03:30",
+      "ended": null
+    },
+    {
+      "id": "j7",
+      "title": "Main dashboard feed with pull-to-refresh and shimmer loader",
+      "model": "sonnet",
+      "task": "P4.1",
+      "status": "running",
+      "started": "2026-10-13T16:50:00+03:30",
+      "ended": null
+    },
+    {
+      "id": "j8",
+      "title": "Interactive item detail view with collaborative comments",
+      "model": "opus",
+      "task": "P4.2",
+      "status": "running",
+      "started": "2026-10-13T17:05:00+03:30",
+      "ended": null
+    }
+  ]
+}

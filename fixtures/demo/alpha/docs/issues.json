@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "issues": [
+    {
+      "id": "I1",
+      "title": "Apple Developer provisioning profile expired for push notification capability",
+      "kind": "blocker",
+      "sev": 1,
+      "status": "open",
+      "tasks": [
+        "P5.1"
+      ],
+      "by": "cli",
+      "created": "2026-10-13T10:15:00+03:30",
+      "closed": null,
+      "note": "Blocks P5 notification work until account owner updates certs"
+    },
+    {
+      "id": "I2",
+      "title": "Drift schema migration drops temporary index on legacy devices",
+      "kind": "bug",
+      "sev": 2,
+      "status": "open",
+      "tasks": [
+        "P3.1"
+      ],
+      "by": "cli",
+      "created": "2026-10-13T11:20:00+03:30",
+      "closed": null,
+      "note": "Migration v1 to v2 needs recreateIndex step"
+    },
+    {
+      "id": "I3",
+      "title": "High memory usage during batch image compression in background",
+      "kind": "risk",
+      "sev": 2,
+      "status": "open",
+      "tasks": [
+        "P4.6"
+      ],
+      "by": "cli",
+      "created": "2026-10-13T13:40:00+03:30",
+      "closed": null,
+      "note": "Spikes to 180MB when compressing 5 high-res photos sequentially"
+    },
+    {
+      "id": "I4",
+      "title": "Clarify token refresh retry frequency when device is in low data mode",
+      "kind": "question",
+      "sev": 3,
+      "status": "open",
+      "tasks": [
+        "P2.2"
+      ],
+      "by": "cli",
+      "created": "2026-10-13T14:10:00+03:30",
+      "closed": null,
+      "note": "Determine if backoff should double under constrained network state"
+    }
+  ]
+}
