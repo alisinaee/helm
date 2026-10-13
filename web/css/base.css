@@ -101,12 +101,6 @@ a {
   outline: none;
 }
 
-.topbar-wrap,
-.band-wrap,
-.kpi-wrap {
-  min-width: 0;
-}
-
 @media (max-width: 640px) {
   .app {
     padding: 0 var(--sp-4);

@@ -10,8 +10,8 @@ const ROWS = [
   [STATE_GLYPH.hold + " " + STATE_WORD.hold, "waiting on a decision"],
   [STATE_GLYPH.deferred + " " + STATE_WORD.deferred, "parked; not counted in tasks left"],
   ["▶ running", "a job is working on this phase or task"],
-  ["~40k", "token estimate for the work; ~ means an estimate, – means no value"],
-  ["✓ model ~15k", "the check that follows the work, with its own model and estimate"],
+  ["~40k", "estimated tokens for the work; – means no value"],
+  ["✓ model ~15k", "the check after the work, with its own model and estimate"],
   ["needs you", "this task waits for the person"],
 ];
 
