@@ -41,25 +41,22 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(out, "roadmap " + __version__ + "\n")
 
-    def test_stub_command_exit_1_and_error_code(self):
-        code, out, _ = run(["open", "--json"])
-        self.assertEqual(code, 1)
-        body = json.loads(out)
-        self.assertIs(body["ok"], False)
-        self.assertEqual(body["error"]["code"], "not_implemented")
+    def test_stub_handler_raises_not_implemented(self):
+        from roadmap.errors import RoadmapError, stub
+        with self.assertRaises(RoadmapError) as ctx:
+            stub("demo")(None)
+        self.assertEqual(ctx.exception.code, "not_implemented")
+        self.assertEqual(ctx.exception.exit, 1)
+        self.assertIn("not implemented", str(ctx.exception))
 
-    def test_stub_plain_mode_writes_error_to_stderr(self):
-        code, out, err = run(["open"])
-        self.assertEqual(code, 1)
-        self.assertEqual(out, "")
-        self.assertIn("not implemented", err)
-
-    def test_every_group_is_registered_and_stubbed(self):
-        for argv in (["open"],):
+    def test_every_group_is_registered(self):
+        for argv in (["open"], ["serve"], ["doctor"], ["service", "status"], ["project", "list"], ["job", "list"],
+                     ["hooks", "status", "x"], ["usage", "show"], ["phone", "status"], ["backup"]):
             with self.subTest(argv=argv):
-                code, out, _ = run(argv + ["--json"])
-                self.assertEqual(code, 1)
-                self.assertEqual(json.loads(out)["error"]["code"], "not_implemented")
+                from roadmap.cli import build_parser
+                parser = build_parser()
+                args = parser.parse_args(argv + ["--json"])
+                self.assertTrue(callable(args.handler))
 
     def test_unknown_command_exit_2(self):
         code, out, err = run(["nosuch"])
@@ -80,9 +77,9 @@ class ShimTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIs(json.loads(proc.stdout)["ok"], True)
 
-    def test_shim_stub_exit_code(self):
-        proc = subprocess.run([SHIM, "open"], capture_output=True, text=True, check=False)
-        self.assertEqual(proc.returncode, 1)
+    def test_shim_unknown_command_exit_code(self):
+        proc = subprocess.run([SHIM, "nosuch"], capture_output=True, text=True, check=False)
+        self.assertEqual(proc.returncode, 2)
 
 
 if __name__ == "__main__":

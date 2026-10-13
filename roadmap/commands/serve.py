@@ -23,10 +23,11 @@ def register(sub, common):
     serve = sub.add_parser("serve", parents=[common], help="run the dashboard server on 127.0.0.1")
     serve.add_argument("--port", type=int, default=None, help="listener port (default: config port, 8765)")
     serve.add_argument("--no-usage-loop", action="store_true", help="do not refresh plan usage in the background")
+    serve.add_argument("--no-phone", action="store_true", help="do not start the read-only phone listener")
     serve.set_defaults(handler=run)
 
-    opener = sub.add_parser("open", parents=[common], help="open the dashboard in the browser")
-    opener.set_defaults(handler=stub("open"))
+    from roadmap.commands import open as open_cmd
+    open_cmd.register(sub, common)
 
 
 def run(args):
@@ -49,6 +50,12 @@ def run(args):
     launchd.prepare_launchd_logs()
     bound = httpd.server_address[1]
     url = "http://127.0.0.1:%d/" % bound
+    phone = None
+    if not getattr(args, "no_phone", False):
+        try:
+            phone = http_server.make_phone_server()
+        except OSError as exc:
+            logging.getLogger("roadmap").warning("phone listener not started: %s", exc.strerror or "port busy")
     stop_usage = threading.Event()
     if not args.no_usage_loop:
         threading.Thread(target=usage.run_loop, args=(stop_usage,), name="usage-loop", daemon=True).start()
@@ -69,7 +76,16 @@ def run(args):
     signal.signal(signal.SIGTERM, ask_to_stop)
     worker = threading.Thread(target=httpd.serve_forever, kwargs={"poll_interval": 0.5}, name="http", daemon=True)
     worker.start()
+    phone_worker = None
+    if phone is not None:
+        phone_worker = threading.Thread(target=phone.serve_forever, kwargs={"poll_interval": 0.5},
+                                        name="phone", daemon=True)
+        phone_worker.start()
     stopping.wait()
+    if phone is not None:
+        phone.shutdown()
+        phone_worker.join(5)
+        phone.server_close()
     httpd.shutdown()
     worker.join(5)
     httpd.server_close()
@@ -85,6 +101,7 @@ def _log_to_stderr():
         return
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s"))
+    handler.addFilter(rlog.RedactingFilter())
     handler.roadmap_stderr = True
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
