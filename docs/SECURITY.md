@@ -1,8 +1,8 @@
 # Security
 
-**Status: draft.** This describes what roadmap-board protects, against whom, and how. Items marked *built* are in the
-code and tested. Items marked *planned* come with WP13 (security hardening) and are not in the code yet. The review
-gate at the end of this file (WP13/R1) must be signed before the 1.0.0 release (WP14).
+**Status: draft, WP13 built.** This describes what roadmap-board protects, against whom, and how. Items marked *built*
+are in the code and tested. The phone mode is built (WP13), with two gaps listed in the review checklist at the end. The
+review gate (WP13/R1) must be signed before the 1.0.0 release (WP14).
 
 ## What is worth protecting
 
@@ -11,7 +11,7 @@ gate at the end of this file (WP13/R1) must be signed before the 1.0.0 release (
 | Claude Code sign-in (OAuth access token) | the login keychain, item `Claude Code-credentials`. roadmap reads it only for a usage read | it can act for your account |
 | Plan usage numbers | `usage.json` in the state folder, and `docs/autonomy.json` in each project | they are not secret, but they drive your agents' stop rules |
 | Project data | each project's `docs/` folder | it is your roadmap; roadmap reads it and writes only the job registry, usage mirror and migrations |
-| Phone token (planned) | `~/.config/roadmap-board/phone.token` | it would open the dashboard from another device |
+| Phone token | `~/.config/roadmap-board/phone.token` | it would open the dashboard from another device |
 | Logs | `~/Library/Logs/roadmap-board/` | logs must never contain a token or a query-string secret |
 
 ## Who could attack it
@@ -24,8 +24,8 @@ gate at the end of this file (WP13/R1) must be signed before the 1.0.0 release (
    the goal here is to keep the dashboard from becoming a way in, not to defend against code running as you.
 4. **Content in a project**: task descriptions, job titles and hook input come from files and from Claude Code. They
    are data, and they are shown escaped.
-5. **Someone on the network**: the server is not reachable from the network. Only the planned phone listener and its
-   tunnel would be.
+5. **Someone on the network**: the server is not reachable from the network. Only the phone listener and its
+   tunnel are.
 6. **Someone who reads your logs or your shell history.**
 
 ## Controls
@@ -57,21 +57,36 @@ gate at the end of this file (WP13/R1) must be signed before the 1.0.0 release (
   a crash cannot leave a half-written file, and two writers cannot interleave.
 - **Newer files are never overwritten.** A data file written by a newer roadmap-board gives an error and is left alone.
 - **Hooks never fail a tool call.** The hook entry prints nothing and exits 0, whatever it reads.
-- **Subprocesses are argument lists.** `shell=True` is refused by the lint. Only `services/` runs subprocesses.
+- **Subprocesses are argument lists.** `shell=True` is refused by the lint. Subprocesses run from `services/`, and from
+  the `open` command, which only opens the loopback dashboard URL.
 - **Standard library only.** No third-party code runs in the server or the CLI.
 
-### Planned (WP13)
+### Phone mode (WP13, built)
 
-- **Phone listener** on `127.0.0.1:8766`, read-only (GET routes only), and only with a token. Without
-  `phone.token` it answers `503`.
-- **Phone token** from `secrets.token_urlsafe(32)`, file mode 0600, rotated on `roadmap phone start`, deleted on
-  `roadmap phone stop`.
-- **Cookie** holds `HMAC(token, "cookie")`, not the token. Attributes: `HttpOnly; Secure; SameSite=Strict`, seven
-  days. A `?k=` parameter is removed by a redirect after it is used.
-- **Rate limit**: 10 failed attempts per minute per process.
-- **Tunnel**: `ssh -R 80:127.0.0.1:8766 nokey@localhost.run`, with its pid in the state folder. The tunnel host is
-  the only extra allowed `Host` value, and only on the phone listener.
-- **Write routes need all of the rules** above on the phone listener too. The phone listener has no write routes.
+- **Phone listener** on `127.0.0.1:8766` (`phonePort`), read-only. Only GET reaches the routes and pages; any other
+  method gets `405`. Without a usable `phone.token` every request gets `503`.
+- **Token** from `secrets.token_urlsafe(32)`, written atomically with mode 0600, rotated by `roadmap phone start`, and
+  deleted by `roadmap phone stop`. A token file that is readable by group or others is not used (`503`).
+- **Entry.** `?k=<token>` is accepted once. The answer is a `302` to the same path without `k`, with the cookie. A wrong
+  token gives `401`.
+- **Cookie** `rb_phone` holds `HMAC-SHA256(key=token, msg="cookie")`, never the token. Attributes: `HttpOnly; Secure;
+  SameSite=Strict; Path=/; Max-Age=604800` (seven days). Rotating the token invalidates every cookie.
+- **Comparisons** of the token and the cookie use `hmac.compare_digest`.
+- **Rate limit.** After 10 failed attempts within 60 seconds in one process, every phone request gets `429` with
+  `Retry-After` until the oldest failure is a minute old.
+- **Host.** The phone listener accepts `127.0.0.1:<port>`, `localhost:<port>`, and the tunnel host saved in config
+  `phoneHost` (with or without `:443`). The tunnel host is written only by `phone start` from ssh's output, never from a
+  request. Anything else gets `421`.
+- **Redirect.** The redirect target is the request path only when it is a plain absolute path. A `//host` form becomes
+  `/`, so the redirect never leaves the server.
+- **Tunnel.** `phone start` runs `ssh -o ServerAliveInterval=30 -R 80:127.0.0.1:8766 nokey@localhost.run` with its
+  output in `tunnel.log` (0600) and its pid in `tunnel.pid`. The tunnel URL is found with a regex and saved as
+  `phoneHost`. `phone start` refuses to run while a tunnel is up (exit 4).
+- **Stop.** `phone stop` signals the recorded pid only when `ps` shows an `ssh` command that names `localhost.run`. A
+  pid that is not our ssh is never signalled (exit 4, `tunnel.pid` kept). The token, the pid file and `phoneHost` are
+  removed in every case.
+- **Link.** `phone link` prints `https://<host>/?k=<token>`. That link grants read access, and it is the only output in
+  roadmap that prints the token. No other command prints or logs it (see the redaction audit in the checklist).
 
 ## Known limits
 
@@ -94,17 +109,69 @@ entry. If a secret has already leaked, rotate it in Claude Code first, then repo
 
 ## Review checklist (WP13/R1)
 
-_To be filled by the WP13 review at gate R1. Nothing here is signed yet. Each row needs a result and the name of the
-reviewer before WP14 starts. No merge until the review is signed._
+Audit of `roadmap/http` against section 3 of `docs/roadmap-board-architecture.md`, done in WP13. Each row names the
+code that implements the rule, the test that proves it (`tests/api/test_security*.py` and the other test modules named
+in the row), and the status: `done`, or `gap` with the reason. Line numbers are as of WP13.
 
-Expected results come from the WP13 acceptance tests in `tests/api/test_security.py`.
+| Requirement | Where implemented | Test name | Status |
+|---|---|---|---|
+| Bind 127.0.0.1 only, both listeners | `roadmap/http/server.py:24`, `:268`, `PhoneServer.__init__` | `test_security.Loopback.test_main_listener_binds_127_0_0_1_only`, `test_phone_listener_binds_127_0_0_1_only` | done |
+| Main listener: Host must be 127.0.0.1 or localhost on its port, else 421 | `roadmap/http/security.py:46` `host_allowed`; `server.py:77-84` `App.handle` | `test_security.HostAllowlist.test_foreign_host_is_421_everywhere`, `test_rebinding_name_and_wrong_port_are_421` | done |
+| Phone listener: loopback names, plus the saved tunnel host only | `security.py:58` `phone_host_allowed`; `server.py:120-127` `configured_tunnel_host`; `server.py:146-148` | `test_security_phone.HostRules.test_tunnel_host_is_accepted_only_when_configured`, `test_an_invalid_configured_tunnel_host_allows_nothing` | done |
+| Write route is POST only; other methods get 405 with Allow | `roadmap/http/routes.py:202-210` `match` | `test_routes.test_read_routes_refuse_post_with_allow_header`, `test_security_phone.ReadOnly.test_post_is_405_even_with_the_cookie_and_the_write_headers` | done |
+| Phone listener is read-only (no write route reachable) | `server.py:149-151` (GET only, before any route) | `test_security_phone.ReadOnly.test_post_without_any_token_is_still_405_not_401` | done |
+| Write needs Sec-Fetch-Site same-origin, or an Origin of this server | `security.py:73` `write_request_allowed`; `routes.py:104-108` `_write_guard` | `test_security.WriteChecks.test_cross_site_is_403_even_with_the_token`, `test_foreign_origin_is_403`, `test_no_sec_fetch_site_and_no_origin_is_403` | done |
+| CSRF header equal to the per-process token (32 random bytes) | `security.py:32` `new_token`; `security.py:73-87` | `test_security.WriteChecks.test_no_csrf_header_is_403`, `test_wrong_csrf_is_403` | done |
+| CSRF comparison is constant time | `security.py:37` `safe_equal` (`hmac.compare_digest`); `security.py:87` | `test_security.CsrfCompare.test_the_csrf_check_uses_hmac_compare_digest` | done |
+| Write needs Content-Type application/json, else 415 | `routes.py:104-115` | `test_security.WriteChecks.test_wrong_content_type_is_415` | done |
+| Write body at most 4096 bytes, 413 before anything runs | `security.py:14` `MAX_BODY_BYTES`; `server.py:48-62` `read_body`; `routes.py:160-162` | `test_security.WriteChecks.test_body_over_4_kb_is_413_before_anything_runs` | done |
+| Chunked request bodies refused | `server.py:49-51` `read_body` | `test_security.WriteChecks.test_chunked_body_is_refused_with_400` | done |
+| Phone listener: no token file gives 503 | `server.py:153-154` | `test_security_phone.TokenFile.test_no_token_is_503_for_every_request`, `test_default_token_source_reads_phone_token_and_503_when_missing` | done |
+| Phone token file readable by others is not used | `server.py:101-117` `read_phone_token` | `test_security_phone.TokenFile.test_a_token_file_readable_by_others_is_not_used` | done |
+| Wrong or missing token gives 401 | `server.py:174-176` `_refuse`; `server.py:169-172` | `test_security_phone.Auth.test_wrong_token_and_no_token_are_401` | done |
+| `?k=` accepted once, then 302 without `k` and with the cookie | `server.py:159-166` | `test_security_phone.Auth.test_token_redirect_strips_k_keeps_other_params_and_sets_the_cookie`, `test_redirect_to_root_when_only_k_was_given` | done |
+| Cookie is HMAC(token, "cookie"), never the token | `security.py:90` `cookie_value`; `security.py:96-101` `phone_cookie_header` | `test_security_phone.Auth.test_cookie_value_is_hmac_of_cookie_keyed_with_the_token`, `test_the_raw_token_never_appears_in_the_cookie_or_the_location` | done |
+| Cookie flags HttpOnly, Secure, SameSite=Strict, Path=/, 7 days | `security.py:96-101` | `test_security_phone.Auth.test_token_redirect_strips_k_keeps_other_params_and_sets_the_cookie` | done |
+| The raw token is not accepted as a cookie; rotation invalidates cookies | `server.py:169` | `test_security_phone.Auth.test_the_hmac_cookie_grants_access_and_the_raw_token_as_cookie_does_not`, `test_a_rotated_token_invalidates_old_cookies` | done |
+| Token and cookie comparisons are constant time | `security.py:37`; `server.py:161`, `:169` | `test_security_phone.ConstantTime.test_hmac_compare_digest_is_used_for_the_token_and_the_cookie`, `test_safe_equal_never_matches_an_empty_expected_value` | done |
+| 10 failed attempts per minute per process, then 429 | `security.py:116-152` `FailureLimiter`; `server.py:155-157` | `test_security_phone.RateLimit.test_ten_failures_in_a_minute_then_429_even_for_the_right_token`, `test_the_window_slides_and_access_comes_back_after_a_minute`, `test_nine_failures_do_not_block` | done |
+| Redirect target never leaves the server (no `//host`, never from Host) | `security.py:111` `plain_redirect_path`; `server.py:163` | `test_security_phone.Auth.test_redirect_path_never_becomes_a_foreign_host` | done |
+| Static pages come from an allowlist; a URL never reaches the filesystem | `roadmap/http/static.py:51` `lookup`; `server.py:86-98` `_static` | `test_static.test_traversal_and_odd_paths_are_404`, `test_static.test_unlisted_extension_is_404` | done |
+| CSRF token only in index.html `<meta name="csrf">`; the phone page gets an empty one | `static.py:55-62` `render`; `server.py:146-172` (phone token "") | `test_static.test_slash_is_index_html_with_the_csrf_meta_tag`; `test_security_phone.ReadOnly.test_the_phone_page_carries_no_csrf_token_of_the_main_listener` | done |
+| CSP on every reply, including errors, 421, 405, 401, 429, 503 and 302 | `security.py:15` `CSP`; `security.py:154-163` `security_headers`; `server.py:228-231` `_send` | `test_security.Headers.test_every_response_carries_the_security_headers`, `test_security_phone.Headers.test_every_phone_reply_carries_the_csp_and_security_headers`, `test_429_and_503_also_carry_the_headers` | done |
+| CSP directives present, no unsafe-inline (legacy page excepted until WP8) | `security.py:15-22` | `test_security.Headers.test_csp_has_the_required_directives`; `test_static.test_legacy_page_gets_the_only_csp_exception` | done |
+| X-Frame-Options DENY, nosniff, Referrer-Policy no-referrer, CORP same-origin | `security.py:154-163` | `test_security.Headers`; `test_security_phone.Headers` | done |
+| Access log: method, path without query, status, ms, on both listeners | `server.py:43` (query split off), `server.py:220` | `test_logging.AccessLog.test_line_has_method_path_status_and_ms_but_no_query`; `test_security_redaction.ServerRedaction.test_phone_request_with_k_never_reaches_any_log` | done |
+| server.log redacts Bearer, sk-ant and k= values; file mode 0600 | `roadmap/log.py:20-24` `_REDACTIONS`, `:44` `RedactingFilter`, `:17` `FILE_MODE` | `test_log.test_bearer_sk_ant_and_k_values_never_reach_the_file`, `test_log.test_server_log_and_rolled_files_are_mode_0600`, `test_security_redaction.ServerRedaction.test_server_log_file_is_owner_only_and_redacts_bearer_and_keys` | done |
+| stderr log handler of `roadmap serve` redacts too | `roadmap/commands/serve.py:81-89` `_log_to_stderr` has no `RedactingFilter` | none | gap: the file is outside the WP13 list. Fix: add `log.RedactingFilter()` to the handler in `commands/serve.py`. No secret is logged on that path today (see the audit rows) |
+| Keychain read as an argument list, no shell, held in memory | `roadmap/services/usage.py:54-75` `read_keychain_token` | `test_usage_collector.test_token_read_from_json` (argument list and no shell, lines 71-72) | done |
+| Keychain endpoint: redirects refused | `usage.py:47-51` `_NoRedirect`; `usage.py:78-82` `_open` | `test_security_keychain.RedirectRefusal.test_a_redirect_is_refused_before_any_second_request` | done |
+| Keychain and endpoint errors carry no token; unexpected errors give the type only | `usage.py:170-180` `collect`; `usage.py:85-110` `http_fetch` | `test_usage_collector.test_unexpected_error_hides_message_and_token`, `test_security_redaction.UsageSyncRedaction` (4 tests) | done |
+| doctor never reads the keychain secret (no `-w`) | `roadmap/services/doctor.py:174-177` `check_keychain` | `test_doctor.test_security_check_never_shows_the_token_text` | done |
+| Phone token file 0600, written atomically | `roadmap/services/tunnel.py:73-88` `_write_private` | `test_tunnel.StartTests.test_token_is_urlsafe_32_bytes_in_a_0600_file`, `test_pid_file_records_the_pid_and_is_private` | done |
+| Token rotated on every start | `tunnel.py:68-70` `new_token`; `tunnel.py:185-195` `start` | `test_tunnel.StartTests.test_each_start_rotates_the_token` | done |
+| Stop kills only a pid whose command is ssh to localhost.run | `tunnel.py:115-118` `is_our_tunnel`; `tunnel.py:217-232` `stop` | `test_tunnel.StopTests.test_stop_refuses_a_pid_that_is_not_our_ssh`, `test_stop_refuses_an_ssh_that_is_not_to_localhost_run`, `test_phone.PhoneCli.test_stop_of_a_foreign_pid_is_exit_4_and_kills_nothing` | done |
+| Stop deletes token, pid file and phoneHost | `tunnel.py:217-238` | `test_tunnel.StopTests.test_stop_kills_our_tunnel_and_deletes_token_pid_and_host` | done |
+| Tunnel URL from ssh output, never from a request | `tunnel.py:159-182` `find_tunnel_host`; `tunnel.py:185-215` | `test_tunnel.UrlParsingTests`, `test_tunnel.StartTests.test_start_runs_the_exact_ssh_command_and_saves_the_host` | done |
+| Failed tunnel start kills its ssh and removes the token (exit 6) | `tunnel.py:199-213` | `test_tunnel.StartTests.test_no_url_in_time_kills_our_pid_and_removes_the_token`, `test_missing_ssh_is_exit_6_and_no_token_is_left` | done |
+| Only `phone link` prints the token; status, start, stop and errors do not | `roadmap/commands/phone.py:29-56`; `tunnel.py:241-250` `status` | `test_security_redaction.PhoneStartRedaction.test_phone_start_stop_link_status_print_no_token_except_the_link`, `test_the_link_is_the_only_output_that_carries_the_token`, `test_a_refused_stop_prints_no_token` | done |
+| No print or log call in roadmap/ names a secret (static audit) | whole `roadmap/` package, checked with `ast` | `test_security_redaction.StaticAudit.test_no_print_or_log_call_names_a_secret` | done |
+| Keychain and usage sync print and log no secret, on success and on failure | `roadmap/services/usage.py`, `roadmap/commands/usage.py` | `test_security_redaction.UsageSyncRedaction` | done |
+| Phone start and stop print and log no secret | `roadmap/services/tunnel.py`, `roadmap/commands/phone.py` | `test_security_redaction.PhoneStartRedaction` | done |
+| HTTP server logs and redirects carry no `?k=` value | `server.py:43`, `:220`, `:163-166` | `test_security_redaction.ServerRedaction` (4 tests) | done |
+| Subprocesses are argument lists, never `shell=True` | `tools/lint_py.py` (`shell=True` rule) | `make check` (lint_py) | done |
+| `roadmap serve` starts the phone listener on 8766 | not wired: `commands/serve.py` (outside the WP13 list) only starts the main listener | none | gap: `make_phone_server()` exists and is tested. Fix: `serve` starts it in a second thread, with the same shutdown. Needs an edit to `commands/serve.py` |
+| `roadmap open` opens the dashboard with the macOS `open` tool | `roadmap/commands/open.py` (`open_dashboard`, `handle`, `RUNNER`) | `test_phone.OpenCommand` (4 tests) | gap: not registered. The stub `open` is still added by `commands/serve.py`, and listing `open` in `cli.COMMAND_MODULES` would clash with it. Fix: remove the stub lines from `commands/serve.py`, then add `"open"` to `COMMAND_MODULES` |
+| Exit codes: 4 for a busy or running state, 6 for an external failure, 3 for a missing token or host | `tunnel.py` raises `EXIT_CONFLICT`, `EXIT_EXTERNAL`, `EXIT_NOT_FOUND` | `test_phone.PhoneCli` | done |
 
-- [ ] Foreign `Host` gives 421 on every route (pending)
-- [ ] A write without `X-Roadmap-CSRF` gives 403 (pending)
-- [ ] A cross-site `Sec-Fetch-Site` gives 403 (pending)
-- [ ] A phone-listener request without the token gives 401 (planned, pending)
-- [ ] `?k=` never appears in `server.log` (pending)
-- [ ] The phone token never appears in CLI output, logs or replies (planned, pending)
-- [ ] The keychain secret never appears in CLI output, logs or replies (pending)
-- [ ] Every header in the CSP list is sent on every reply, including errors (pending)
-- [ ] Reviewer: __________   Date: __________   Result: __________
+**Deviation from section 3.** The spec says `phone link` sets `phoneHost`. WP13 has `phone start` save it, from the
+URL in ssh's output, because `phone start` is the step that knows the address. `phone link` only reads it.
+`phone stop` clears it.
+
+**Known gaps at WP13 close** (both are outside the WP13 file list and need a small edit by the head):
+1. `roadmap serve` does not start the phone listener yet (row above).
+2. `roadmap open` is not registered yet (row above).
+3. The stderr log handler of `roadmap serve` has no redaction filter (row above). Nothing on that path logs a secret today.
+
+Reviewer: __________   Date: __________   Result: __________
+(The gate is not signed. WP14 starts only after a reviewer signs it.)

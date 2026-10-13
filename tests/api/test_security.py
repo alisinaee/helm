@@ -2,6 +2,7 @@
 headers on every response."""
 
 import os
+from unittest import mock
 
 from tests.api.support import FakeSync, ServerCase
 
@@ -90,6 +91,12 @@ class WriteChecks(ServerCase):
         self.assertEqual(res.json()["error"]["code"], "too_large")
         self.assertEqual(self.sync.calls, 0)
 
+    def test_chunked_body_is_refused_with_400(self):
+        headers = self.write_headers(**{"Transfer-Encoding": "chunked"})
+        res = self.request("POST", "/api/v1/usage/sync", headers=headers, body=b"{}")
+        self.assertEqual(res.status, 400)
+        self.assertEqual(self.sync.calls, 0)
+
     def test_body_that_is_not_json_is_400(self):
         res = self.request("POST", "/api/v1/usage/sync", headers=self.write_headers(), body=b"not json")
         self.assertEqual(res.status, 400)
@@ -132,3 +139,24 @@ class Headers(ServerCase):
         self.assertEqual(res.status, 404)
         self.assertEqual(res.header("content-type"), "application/json; charset=utf-8")
         self.assertEqual(sorted(res.json()), ["error"])
+
+
+class Loopback(ServerCase):
+    def test_main_listener_binds_127_0_0_1_only(self):
+        self.assertEqual(self.httpd.server_address[0], "127.0.0.1")
+
+    def test_phone_listener_binds_127_0_0_1_only(self):
+        from roadmap.http import server as http_server
+        httpd = http_server.make_phone_server(0, token_source=lambda: "t", web_root=self.web)
+        self.addCleanup(httpd.server_close)
+        self.assertEqual(httpd.server_address[0], "127.0.0.1")
+        self.assertNotEqual(httpd.server_address[1], self.port)
+
+
+class CsrfCompare(ServerCase):
+    def test_the_csrf_check_uses_hmac_compare_digest(self):
+        import hmac
+        with mock.patch("hmac.compare_digest", wraps=hmac.compare_digest) as spy:
+            res = self.request("POST", "/api/v1/usage/sync", headers=self.write_headers(), body=b"{}")
+        self.assertEqual(res.status, 200)
+        self.assertGreaterEqual(spy.call_count, 1)

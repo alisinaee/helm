@@ -8,19 +8,25 @@ routing or the log.
 
 import os
 import socketserver
+import stat
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import parse_qsl, urlencode
 
 from roadmap.errors import EXIT_USAGE, RoadmapError
 from roadmap.http import routes, security
 from roadmap.http.static import StaticFiles, etag_of
 from roadmap.log import get_logger
 from roadmap.services import usage
+from roadmap.store import config as config_store
+from roadmap.store import paths
 
 BIND_HOST = "127.0.0.1"
 WEB_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "web")
+DEFAULT_PHONE_PORT = 8766
 access_log = get_logger("http.access")
 error_log = get_logger("http")
+phone_log = get_logger("http.phone")
 
 
 def _default_sync():
@@ -28,11 +34,13 @@ def _default_sync():
 
 
 class Request:
-    """One request: method (HEAD is served as GET), path without query, headers and the body stream."""
+    """One request: method (HEAD is served as GET), path without query, the raw query string, headers and the body
+    stream. The query is kept only for the phone listener's ?k= check; it never reaches the access log."""
 
     def __init__(self, method, target, headers, rfile, head=False):
         self.method = method
         self.path = target.split("?", 1)[0]
+        self.query = target.split("?", 1)[1] if "?" in target else ""
         self.headers = headers
         self.head = head
         self._rfile = rfile
@@ -88,6 +96,84 @@ class App:
         if routes.etag_matches(req.headers.get("If-None-Match"), etag):
             return routes.Reply(304, headers=[("ETag", etag)], csp=csp)
         return routes.Reply(200, body, ctype=entry.ctype, headers=[("ETag", etag)], csp=csp)
+
+
+def read_phone_token():
+    """The phone token from phone.token, or None. A missing, empty, unreadable or group/other-readable file gives None,
+    so the listener answers 503. The token is never logged; only the path is named when the mode is wrong."""
+    path = paths.phone_token_file()
+    try:
+        mode = stat.S_IMODE(os.stat(path).st_mode)
+    except OSError:
+        return None
+    if mode & 0o077:
+        phone_log.warning("phone token file %s is readable by others (mode %o); it is not used", path, mode)
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            token = fh.read().strip()
+    except (OSError, UnicodeDecodeError):
+        return None
+    return token or None
+
+
+def configured_tunnel_host():
+    """The tunnel host saved by `roadmap phone start` (config phoneHost), or None. Never taken from a request."""
+    try:
+        value = config_store.load().get("phoneHost")
+    except RoadmapError:
+        return None
+    return value if security.valid_tunnel_host(value) else None
+
+
+def configured_phone_port():
+    """The phone listener port from config (phonePort), 8766 by default."""
+    value = config_store.load().get("phonePort", DEFAULT_PHONE_PORT)
+    return value if isinstance(value, int) and not isinstance(value, bool) else DEFAULT_PHONE_PORT
+
+
+class PhoneApp(App):
+    """The phone listener's request rules, in this order: Host (421), GET only (405), a token must exist (503), the
+    failure limit (429), then the token: ?k= once (302 to the same path without it, with the cookie) or the cookie (401
+    otherwise). Only GET routes and the static pages are reachable; there is no write route here."""
+
+    def __init__(self, port, token_source=None, tunnel_host=None, static_files=None, limiter=None):
+        super().__init__(port, "", None, static_files)
+        self._token_source = token_source or read_phone_token
+        self._tunnel_host = tunnel_host or configured_tunnel_host
+        self.limiter = limiter or security.FailureLimiter()
+
+    def handle(self, req):
+        if not security.phone_host_allowed(req.headers.get("Host"), self.port, self._tunnel_host()):
+            return routes.error_reply(421, "misdirected_request", "this address is not allowed on the phone listener")
+        if req.method != "GET":
+            return routes.error_reply(405, "method_not_allowed", "the phone listener is read-only: GET only",
+                                      headers=[("Allow", "GET, HEAD")])
+        token = self._token_source()
+        if not token:
+            return routes.error_reply(503, "phone_off", "phone access is off: run roadmap phone start first")
+        if self.limiter.blocked():
+            return routes.error_reply(429, "rate_limited", "too many failed attempts, wait a minute",
+                                      headers=[("Retry-After", str(self.limiter.retry_after_s()))])
+        pairs = parse_qsl(req.query, keep_blank_values=True)
+        supplied = [value for name, value in pairs if name == security.PHONE_PARAM]
+        if supplied:
+            if len(supplied) == 1 and security.safe_equal(supplied[0], token):
+                rest = [(name, value) for name, value in pairs if name != security.PHONE_PARAM]
+                location = security.plain_redirect_path(req.path) + ("?" + urlencode(rest) if rest else "")
+                return routes.Reply(302, b"", ctype="text/plain; charset=utf-8",
+                                    headers=[("Location", location),
+                                             ("Set-Cookie", security.phone_cookie_header(token))])
+            return self._refuse()
+        cookie = security.cookie_from(req.headers.get("Cookie"))
+        if security.safe_equal(cookie, security.cookie_value(token)):
+            reply = routes.match(self, req)
+            return reply if reply is not None else self._static(req)
+        return self._refuse()
+
+    def _refuse(self):
+        self.limiter.record_failure()
+        return routes.error_reply(401, "unauthorized", "a valid phone link is needed (roadmap phone link)")
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -196,3 +282,19 @@ def make_server(port=0, sync=None, token=None, web_root=None):
     web_root defaults to the repository's web/ folder. Raises OSError (EADDRINUSE) when the port is busy.
     """
     return RoadmapServer(port, token or security.new_token(), sync, StaticFiles(web_root or WEB_ROOT))
+
+
+class PhoneServer(RoadmapServer):
+    """The read-only phone listener on 127.0.0.1 (default 8766). It shares the handler and the access log with the main
+    listener, and differs only in its app: PhoneApp."""
+
+    def __init__(self, port, token_source=None, tunnel_host=None, static_files=None, limiter=None):
+        ThreadingHTTPServer.__init__(self, (BIND_HOST, int(port)), _Handler)
+        self.app = PhoneApp(self.server_address[1], token_source, tunnel_host, static_files, limiter)
+
+
+def make_phone_server(port=None, token_source=None, tunnel_host=None, web_root=None, limiter=None):
+    """A bound, not yet running phone listener. port None reads phonePort from config. token_source and tunnel_host
+    replace the phone.token file and the saved tunnel host (tests pass fakes). Raises OSError when the port is busy."""
+    use_port = configured_phone_port() if port is None else port
+    return PhoneServer(use_port, token_source, tunnel_host, StaticFiles(web_root or WEB_ROOT), limiter)
