@@ -9,6 +9,6 @@ test:
 	$(PY) -m unittest discover -s tests -t .
 
 check-ui:
-	@echo "not implemented yet"
+	$(PY) tools/ui_smoke.py
 
 check-all: check check-ui

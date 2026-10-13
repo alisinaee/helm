@@ -1,0 +1,7 @@
+# WP9: UI smoke and a11y gate
+
+- `make check-ui` runs `tools/ui_smoke.py`. With Chrome installed it starts `bin/roadmap serve --port 0 --no-usage-loop --json` on 127.0.0.1 against a temporary ROADMAP_HOME that registers the split-net fixture, then dumps the DOM headlessly for the project route, the home route and `dev/tests.html`, at 1280x900 and 375x812, in light and dark. It checks that no `data-render-error` appears, that every project section is non-empty, that the home sections are non-empty, and that the self-test reports PASS. Screenshots go to `build/ui-smoke/`. Without Chrome it prints `SKIP: Chrome not found` and exits 0.
+- `make check-all` runs `check` and then `check-ui` (unchanged target order).
+- `tests/web/test_a11y_static.py` (stdlib, no browser) reads `web/js/**/*.js` template strings, `web/index.html` and `web/css`: buttons, links and form fields need an accessible name; disclosure buttons need `aria-expanded` and an `aria-controls` that names an id produced in the same file; no `on*=` handler on markup; images have `alt`; `html lang` is set; exactly one `h1`; status chips and badges contain text; the reduced-motion block disables animation and transitions; `:focus-visible` exists.
+- `tests/api/test_routes.py`: the `/data.json` equality test ignores `server_time` and `elapsed_s` at every depth (it was flaky when a running job's elapsed time moved between the two requests). Nothing else is ignored.
+- No `web/` file needed a change: the static gate found no accessibility failures in WP7 and WP8.

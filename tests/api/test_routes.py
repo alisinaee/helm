@@ -86,6 +86,19 @@ class Etag(ServerCase):
         self.assertEqual(res.json()["tasks_updated"], "2030-01-01")
 
 
+VOLATILE_KEYS = ("server_time", "elapsed_s")
+
+
+def strip_volatile(value):
+    """A copy with server_time and elapsed_s removed at every depth. Those two change between the two requests
+    (elapsed_s is measured from the clock); nothing else is dropped."""
+    if isinstance(value, dict):
+        return {key: strip_volatile(item) for key, item in value.items() if key not in VOLATILE_KEYS}
+    if isinstance(value, list):
+        return [strip_volatile(item) for item in value]
+    return value
+
+
 class DeprecatedAlias(ServerCase):
     def test_data_json_equals_first_project_snapshot(self):
         legacy = self.request("GET", "/data.json")
@@ -93,9 +106,7 @@ class DeprecatedAlias(ServerCase):
         self.assertEqual(legacy.header("Deprecation"), "true")
         self.assertIn("/api/v1/projects/%s/snapshot" % PROJECT_ID, legacy.header("Link"))
         new = self.request("GET", "/api/v1/projects/%s/snapshot" % PROJECT_ID)
-        a, b = legacy.json(), new.json()
-        a.pop("server_time")
-        b.pop("server_time")
+        a, b = strip_volatile(legacy.json()), strip_volatile(new.json())
         self.assertEqual(a, b)
 
     def test_data_json_without_projects_is_404(self):
