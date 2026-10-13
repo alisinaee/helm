@@ -155,7 +155,8 @@ function buildShellVm(route, now) {
 }
 
 function applyLayout(ui) {
-  root.setAttribute("data-nav", ui.navMini ? "mini" : "full");
+  // Below 1200 px the CSS draws the nav as a rail, so the rail's badge rules must apply there too.
+  root.setAttribute("data-nav", ui.navMini || isSheetWidth() ? "mini" : "full");
   const open = panelIsOpen(ui);
   root.setAttribute("data-panel", open ? "open" : "closed");
   setHidden("scrim", !(isSheetWidth() && open));
@@ -400,6 +401,8 @@ function onClick(event) {
     dismissToast(el.getAttribute("data-toast"));
   } else if (action === "inbox-answer" || action === "undo-line" || action === "override") {
     pageAction(action, el);
+  } else if (limitAction(action, el) || ruleAction(action, el) || settingsAction(action, el)) {
+    render();
   } else if (action === "plan-move" || action === "phase-approve") {
     sectionAction("./views/roadmap.js", action, el);
   } else if (action === "issue-close") {
@@ -408,8 +411,6 @@ function onClick(event) {
     sectionAction("./views/agents.js", action, el);
   } else if (action === "note-open" || action === "note-refresh") {
     sectionAction("./views/research.js", action, el);
-  } else if (limitAction(action, el) || ruleAction(action, el) || settingsAction(action, el)) {
-    render();
   }
 }
 
