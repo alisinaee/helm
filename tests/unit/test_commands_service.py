@@ -12,8 +12,10 @@ from tests.unit.test_cmd_support import CmdCase, at
 class RegistryTests(CmdCase):
     def test_public_ops_are_the_mvp_list(self):
         self.assertEqual(commands.public_ops(), sorted([
-            "comment.add", "issue.close", "issue.link", "issue.new", "plan.move", "question.answer",
-            "question.ask", "subtask.add", "subtask.toggle", "task.start", "task.status", "task.stop", "undo"]))
+            "budget.set", "comment.add", "control.override", "control.resume", "control.stop", "issue.close",
+            "issue.link", "issue.new", "limit.set", "phase.approve", "plan.move", "question.answer", "question.ask",
+            "rules.add", "rules.rm", "rules.sync", "subtask.add", "subtask.toggle", "task.cap", "task.start",
+            "task.status", "task.stop", "undo"]))
 
     def test_unknown_op_is_a_usage_error_with_next(self):
         with self.assertRaises(RoadmapError) as ctx:

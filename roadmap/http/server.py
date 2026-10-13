@@ -64,11 +64,26 @@ class Request:
 class App:
     """Routes one parsed request. Holds the port, the CSRF token, the usage sync hook and the static allowlist."""
 
+    cmd_source = "gui"
+
     def __init__(self, port, token, sync=None, static_files=None):
         self.port = port
         self.token = token
         self._sync = sync or _default_sync
         self.static = static_files
+        self.cmd_limiter = security.RateLimiter()
+
+    def csrf_token(self):
+        """The CSRF value the write guard compares against and the pages carry."""
+        return self.token
+
+    def page_token(self):
+        """The csrf meta value that pages carry (the main listener's pages carry the main token)."""
+        return self.csrf_token()
+
+    def op_allowed(self, op):
+        """Every registry op is allowed on the main listener; the phone listener narrows this."""
+        return True
 
     def sync(self):
         """Run the usage sync hook (the real one in production, a fake in tests)."""
@@ -90,7 +105,7 @@ class App:
         entry = self.static.lookup(req.path)
         if entry is None:
             return routes.error_reply(404, "not_found", "no such page")
-        body = self.static.render(entry, self.token)
+        body = self.static.render(entry, self.page_token())
         etag = etag_of(body)
         csp = security.CSP_LEGACY if entry.legacy else security.CSP
         if routes.etag_matches(req.headers.get("If-None-Match"), etag):
@@ -137,16 +152,34 @@ class PhoneApp(App):
     failure limit (429), then the token: ?k= once (302 to the same path without it, with the cookie) or the cookie (401
     otherwise). Only GET routes and the static pages are reachable; there is no write route here."""
 
+    cmd_source = "phone"
+
     def __init__(self, port, token_source=None, tunnel_host=None, static_files=None, limiter=None):
         super().__init__(port, "", None, static_files)
         self._token_source = token_source or read_phone_token
         self._tunnel_host = tunnel_host or configured_tunnel_host
         self.limiter = limiter or security.FailureLimiter()
 
+    def csrf_token(self):
+        token = self._token_source()
+        return security.phone_csrf(token) if token else ""
+
+    def page_token(self):
+        """Phone pages carry no csrf value; the phone reads its own from the cookie-authenticated meta route."""
+        return ""
+
+    def op_allowed(self, op):
+        """Phone writes are off unless phoneWrites is true, and then only the phone allowlist runs."""
+        return phone_writes_enabled() and op in security.PHONE_OPS
+
     def handle(self, req):
         if not security.phone_host_allowed(req.headers.get("Host"), self.port, self._tunnel_host()):
             return routes.error_reply(421, "misdirected_request", "this address is not allowed on the phone listener")
-        if req.method != "GET":
+        is_cmd = req.method == "POST" and req.path == security.CMD_PATH
+        if is_cmd and not phone_writes_enabled():
+            return routes.error_reply(403, "forbidden", "phone writes are off (set phoneWrites true to allow the "
+                                                        "phone allowlist)")
+        if req.method != "GET" and not is_cmd:
             return routes.error_reply(405, "method_not_allowed", "the phone listener is read-only: GET only",
                                       headers=[("Allow", "GET, HEAD")])
         token = self._token_source()
@@ -155,6 +188,11 @@ class PhoneApp(App):
         if self.limiter.blocked():
             return routes.error_reply(429, "rate_limited", "too many failed attempts, wait a minute",
                                       headers=[("Retry-After", str(self.limiter.retry_after_s()))])
+        if is_cmd:
+            cookie = security.cookie_from(req.headers.get("Cookie"))
+            if not security.safe_equal(cookie, security.cookie_value(token)):
+                return self._refuse()
+            return routes.match(self, req)
         pairs = parse_qsl(req.query, keep_blank_values=True)
         supplied = [value for name, value in pairs if name == security.PHONE_PARAM]
         if supplied:
@@ -174,6 +212,14 @@ class PhoneApp(App):
     def _refuse(self):
         self.limiter.record_failure()
         return routes.error_reply(401, "unauthorized", "a valid phone link is needed (roadmap phone link)")
+
+
+def phone_writes_enabled():
+    """True when config phoneWrites is true. Read on every call, so a change applies without a restart."""
+    try:
+        return config_store.load().get("phoneWrites") is True
+    except RoadmapError:
+        return False
 
 
 class _Handler(BaseHTTPRequestHandler):

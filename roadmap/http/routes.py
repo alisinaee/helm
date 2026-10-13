@@ -15,7 +15,8 @@ from roadmap.core.snapshot import SNAPSHOT_SCHEMA_VERSION
 from roadmap.errors import (EXIT_CONFLICT, EXIT_ERROR, EXIT_EXTERNAL, EXIT_INVALID_DATA, EXIT_NOT_FOUND,
                             EXIT_USAGE, RoadmapError)
 from roadmap.http import security
-from roadmap.services import loader, usage
+from roadmap.services import commands, control, loader, usage
+from roadmap.services import tasks as task_service
 from roadmap.store import config as config_store
 from roadmap.store import schema
 
@@ -32,6 +33,9 @@ STATUS_BY_CODE = {
     "conflict": 409,
     "usage_unavailable": 502,
     "invalid_input": 400,
+    "invalid_args": 422,
+    "unknown_op": 404,
+    "rate_limited": 429,
 }
 STATUS_BY_EXIT = {EXIT_USAGE: 400, EXIT_NOT_FOUND: 404, EXIT_CONFLICT: 409, EXIT_INVALID_DATA: 500, EXIT_EXTERNAL: 502}
 
@@ -103,7 +107,7 @@ def _now_iso():
 
 def _write_guard(app, req):
     """CSRF, Sec-Fetch-Site or Origin, then Content-Type, then body size. Raises before anything is done."""
-    if not security.write_request_allowed(req.headers, app.token, app.port):
+    if not security.write_request_allowed(req.headers, app.csrf_token(), app.port):
         raise RoadmapError("forbidden", "this write needs the page's own CSRF token from the same origin",
                            EXIT_ERROR)
     ctype = (req.headers.get("Content-Type") or "").split(";")[0].strip().lower()
@@ -121,14 +125,17 @@ def health(app, req, match):
 def meta(app, req, match):
     cfg = config_store.load()
     usage_cfg = cfg.get("usage") if isinstance(cfg.get("usage"), dict) else {}
-    return json_reply(200, {
+    extra = {"csrf": app.csrf_token()} if app.cmd_source == "phone" else {}  # the phone's own value, never the main one
+    body = {
         "version": __version__,
         "api_version": API_VERSION,
         "snapshot_schema_version": SNAPSHOT_SCHEMA_VERSION,
         "schema_versions": dict(schema.CURRENT),
         "poll_intervals_s": {"snapshot": 2, "usage": 30, "hidden_tab": 30},
         "usage_interval_s": usage_cfg.get("intervalS", usage.DEFAULT_INTERVAL_S),
-    })
+    }
+    body.update(extra)
+    return json_reply(200, body)
 
 
 def _summary(entry, snap):
@@ -174,6 +181,60 @@ def usage_sync(app, req, match):
     return json_reply(200, usage.show())
 
 
+def cmd(app, req, match):
+    """POST /api/v1/cmd {op, args, project?}: one registry op. Order: CSRF and origin, JSON type, body size (413),
+    JSON object (422), known op (404 unknown_op), the phone allowlist (403), the rate limit (429), the op's own
+    checks (422 with the problem), then the write, the activity line and the control recompute."""
+    _write_guard(app, req)
+    body = req.read_body()
+    try:
+        parsed = json.loads(body.decode("utf-8"))
+    except ValueError:
+        return _invalid("the body must be a JSON object with op and args")
+    if not isinstance(parsed, dict):
+        return _invalid("the body must be a JSON object with op and args")
+    op = parsed.get("op")
+    args = parsed.get("args") if parsed.get("args") is not None else {}
+    if not isinstance(args, dict):
+        return _invalid("args must be an object")
+    if not isinstance(op, str) or op not in commands.public_ops():
+        return error_reply(404, "unknown_op", "no op named '%s' (see docs/API.md)" % str(op)[:60])
+    if not app.op_allowed(op):
+        raise RoadmapError("forbidden", "op " + op + " is not allowed on this listener", EXIT_ERROR)
+    if not app.cmd_limiter.allow():
+        return error_reply(429, "rate_limited", "at most %d ops per second; wait a moment" % security.CMD_OPS_PER_S,
+                           headers=[("Retry-After", "1")])
+    project = _cmd_project(parsed.get("project"))
+    _, data_dir = task_service.resolve(project)
+    try:
+        with commands.context(app.cmd_source, project):
+            reply = commands.run(op, args, app.cmd_source, data_dir)
+    except RoadmapError as exc:
+        if exc.code == "usage":
+            return _invalid(exc.message)
+        raise
+    control.after_write(project)
+    return json_reply(200, reply)
+
+
+def _cmd_project(value):
+    """The project a cmd call acts on: the body's project, else the first registered one."""
+    entries = config_store.list_projects()
+    if value is None:
+        if not entries:
+            raise RoadmapError("not_found", "no project is registered yet", EXIT_NOT_FOUND, next="roadmap project add")
+        return entries[0]["id"]
+    if not isinstance(value, str) or not any(e["id"] == value for e in entries):
+        raise RoadmapError("not_found", "no registered project '%s'" % str(value)[:40], EXIT_NOT_FOUND,
+                           next="roadmap project list")
+    return value
+
+
+def _invalid(message):
+    """422 invalid_args with the problems list (one problem per op check, so at most this one)."""
+    return json_reply(422, {"error": {"code": "invalid_args", "message": message, "problems": [message]}})
+
+
 def legacy_data_json(app, req, match):
     """Deprecated alias: the first registered project's snapshot. Removed in 2.0."""
     entries = config_store.list_projects()
@@ -195,6 +256,7 @@ ROUTES = (
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/snapshot"), ("GET",), project_snapshot),
     (re.compile(r"/api/v1/usage"), ("GET",), usage_get),
     (re.compile(r"/api/v1/usage/sync"), ("POST",), usage_sync),
+    (re.compile(r"/api/v1/cmd"), ("POST",), cmd),
     (re.compile(r"/data\.json"), ("GET",), legacy_data_json),
 )
 

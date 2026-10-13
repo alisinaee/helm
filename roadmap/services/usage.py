@@ -304,7 +304,9 @@ def sync_once(config=None, get_token=None, fetch=None):
         _record_error(str(exc))
         raise
     stored, mirrors = _commit(dict(usage_record(reading, SOURCE_ENDPOINT), lastError=None), cfg)
-    return _result(stored, cfg, mirrors)
+    result = _result(stored, cfg, mirrors)
+    _control_after_write()
+    return result
 
 
 def show(config=None, now=None):
@@ -353,7 +355,18 @@ def push(text, config=None):
     changes.update({"updated": datetime.now().astimezone().isoformat(timespec="seconds"),
                     "source": SOURCE_PUSH, "lastError": None})
     stored, mirrors = _commit(changes, cfg)
-    return _result(stored, cfg, mirrors)
+    result = _result(stored, cfg, mirrors)
+    _control_after_write()
+    return result
+
+
+def _control_after_write():
+    """After a usage write, recompute the control state of every project (weekly limits read usage.json). Best effort:
+    control.after_write never raises."""
+    from roadmap.services import control
+    from roadmap.store import config as project_config
+    for entry in project_config.list_projects():
+        control.after_write(entry["id"])
 
 
 # ---------------------------------------------------------------- background loop

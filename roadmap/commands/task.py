@@ -5,12 +5,11 @@ write. Output follows docs/AGENT-INTERFACE.md section 2: one line per task, and 
 """
 
 import argparse
-import shlex
 import sys
 
 from roadmap.core import planfmt
 from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, RoadmapError
-from roadmap.services import tasks
+from roadmap.services import commands, tasks
 
 STATUS_FOR = {"done": "done", "start": "partial", "hold": "hold"}
 ERRORS_SHOWN = 5
@@ -122,27 +121,37 @@ def _list(args):
 
 
 def _change(args):
+    """task done|start|hold: each id goes through the registry op task.status, so every change is logged to the
+    activity log and can be undone. --tokens feeds the budget once per task (WP20 budget service)."""
     project_id, data_dir = _data(args)
     status = STATUS_FOR[args.status_word]
     for tid in args.ids:
         tasks.get(data_dir, tid)  # unknown id: exit 3 with the exact next command
-    lines = []
+    tokens = _tokens_arg(args.tokens)
     for tid in args.ids:
-        parts = [tid, "status=" + status]
-        if args.tokens is not None:
-            parts.append("tokensK=" + shlex.quote(args.tokens.strip()))
+        payload = {"id": tid, "status": status}
+        if tokens is not None:
+            payload["tokensK"] = tokens
         if args.note is not None:
-            parts.append("note=" + shlex.quote(" ".join(args.note.split())))
-        lines.append(" ".join(parts))
-    records, errors = planfmt.parse_set_text("\n".join(lines))
-    if errors:
-        raise plan_failure(errors, "roadmap task " + args.status_word + " " + args.ids[0] + " --tokens 20")
-    apply_records(data_dir, project_id, records, "roadmap task list --phase " + args.ids[0].split(".")[0])
+            payload["note"] = args.note
+        commands.write(project_id, "task.status", payload, "roadmap task list --phase " + tid.split(".")[0])
     if not getattr(args, "json", False):
         for tid in args.ids:
             print(tid + " " + status)
         return None
     return {"ids": list(args.ids), "status": status}
+
+
+def _tokens_arg(value):
+    """--tokens K as a whole number of thousands, or None when not given. Anything else is refused before any write
+    (exit 5, the same as a bad plan line)."""
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text.isdigit():
+        raise plan_failure(["tokensK '%s' is not a whole number (allowed: 0, 1, 2 ...)" % text],
+                           "roadmap task done <id> --tokens 20")
+    return int(text)
 
 
 def _set(args):

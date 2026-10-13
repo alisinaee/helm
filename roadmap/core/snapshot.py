@@ -69,7 +69,7 @@ def _budget_view(doc, tasks, phases):
     }
 
 
-def build_snapshot(files, config, now):
+def build_snapshot(files, config, now, control=None):
     """The snapshot dict. Same shape as the old server's build(), plus "project" and "schemaVersion".
 
     server_time is now in ISO 8601 with whole seconds. Parse problems go into errors[]; nothing raises.
@@ -244,7 +244,7 @@ def build_snapshot(files, config, now):
         "needsYou": needs_you,
         "agents": {"running": running_rows, "groups": groups,
                    "roots": [j["id"] for j in running_jobs if j.get("parent") not in running_ids]},
-        "control": {},
+        "control": {} if control is None else control,
         "queue": queue_all,
         "activity": activity_all[-ACTIVITY_SHOWN:],
     })
