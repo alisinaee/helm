@@ -1,16 +1,19 @@
-// Boot and the poll loop. Snapshots refresh every 2 s and plan usage every 30 s. While the tab is hidden everything
-// refreshes every 30 s. Each view renders inside its own try/catch: a failing view shows its section's error and
-// sets data-render-error on #app, and the other sections keep working.
+// Boot, the poll loop and the shell. Snapshots refresh every 2 s and plan usage every 30 s. While the tab is hidden
+// everything refreshes every 30 s. The shell (nav, top bar, toasts, help) renders on every pass; the section in
+// <main> is a module loaded on first visit (routes.js), and a section that fails renders its own error without taking
+// the shell down. Writes go through cmd.js, the one write path.
 
 import { getJson, postJson } from "./api.js";
-import { bannerHtml, patch, setHidden } from "./dom.js";
-import { buildViewModel, createStore, loadPrefs, loadTheme, nextTheme, normalizeSnapshot, normalizeUsage,
-  saveTheme, savePrefs, sectionOpenState, VIEW_SECTIONS } from "./state.js";
-import { currentRoute, homeHash, onRouteChange, projectHash } from "./router.js";
+import { bannerHtml, emptyHtml, esc, patch, setHidden, skeletonHtml } from "./dom.js";
+import { buildViewModel, createStore, isSheetWidth, loadPrefs, loadTheme, loadUi, nextTheme, normalizeSnapshot,
+  normalizeUsage, panelIsOpen, saveTheme, savePrefs, sectionOpenState, updateUi } from "./state.js";
+import { currentRoute, onRouteChange } from "./router.js";
+import { loadSection, sectionById } from "./routes.js";
+import { configureCommands, pendingValue, run } from "./cmd.js";
+import { initKeys, setKeyHooks } from "./keys.js";
+import { bnavView, navView, toggleMore } from "./views/nav.js";
 import { topbarView } from "./views/topbar.js";
-import { usageView } from "./views/usage.js";
-import { kpiView } from "./views/kpi.js";
-import { homeView, projectView } from "./views/home.js";
+import { dismissToast, setToastHold, setToastListener, toastsHtml, undoToast } from "./views/toast.js";
 
 const FAST_MS = 2000;
 const SLOW_MS = 30000;
@@ -18,12 +21,15 @@ const USAGE_MS = 30000;
 
 const root = document.getElementById("app");
 const liveRegion = document.getElementById("live-status");
+const helpDialog = document.getElementById("help");
 const store = createStore();
 const prefsCache = new Map();
 const failedSections = new Set();
+const loadedSections = new Map();
+const missingSections = new Set();
+const loadingSections = new Set();
 let timer = null;
 let busy = false;
-let pendingG = 0;
 let lastOk = null;
 
 function prefsKey(route) {
@@ -56,24 +62,132 @@ function errorHtml(sectionId, err) {
     (err && err.message ? err.message : "Unknown error") + " (" + sectionId + ")");
 }
 
+function comingSoonHtml(section) {
+  return emptyHtml("Coming soon", "<span>" + esc(section.label) + " is not built yet.</span>");
+}
+
+// The section in <main>. A module loads once; until it is in, a skeleton shows and the next render picks it up.
+function ensureLoaded(section) {
+  if (loadingSections.has(section.id)) return;
+  loadingSections.add(section.id);
+  loadSection(section).then(function (mod) {
+    loadedSections.set(section.id, mod);
+  }, function () {
+    missingSections.add(section.id);
+  }).then(function () {
+    loadingSections.delete(section.id);
+    render();
+  });
+}
+
+function mainHtml(vm) {
+  const section = sectionById(vm.route.section);
+  if (!section) return comingSoonHtml({ label: "This section" });
+  if (loadedSections.has(section.id)) return loadedSections.get(section.id).sectionView(vm);
+  if (!section.module || missingSections.has(section.id)) return comingSoonHtml(section);
+  ensureLoaded(section);
+  return '<div aria-busy="true">' + skeletonHtml(["w-60", "w-90"]) + "</div>";
+}
+
+function helpHtml() {
+  const rows = [
+    ["?", "Show this list"],
+    ["[", "Collapse or expand the navigation"],
+    ["]", "Show or hide the side panel"],
+    ["z", "Undo the newest change"],
+    ["Esc", "Close this list, or the panel sheet"],
+    ["g, then o i r w u a t e n v ,", "Go to a section: Overview, Inbox, Roadmap, Work, Issues, Agents, " +
+      "Tokens, Rules, Research, Activity, Settings"],
+    ["g, then h", "Go to All projects"],
+  ];
+  return '<dl class="help-rows">' + rows.map(function (row) {
+    return '<dt><span class="kbd">' + esc(row[0]) + '</span></dt><dd class="help-desc">' + esc(row[1]) + "</dd>";
+  }).join("") + "</dl>";
+}
+
+// The snapshots in scope: the project's, or every project's in All projects, in registry order.
+function snapshotsInScope(route) {
+  if (route.name === "project") {
+    const snap = store.snapshots[route.id];
+    return snap ? [snap] : [];
+  }
+  return (store.projects || []).map(function (p) {
+    return store.snapshots[p.id];
+  }).filter(Boolean);
+}
+
+// The control state of the project in scope, with a pending value from a write still in flight.
+function controlFor(route, snap, now) {
+  if (route.name !== "project") return null;
+  if (!snap) return { known: false, id: route.id };
+  const pending = pendingValue("control:" + route.id, snap.fetchedAt, now);
+  return {
+    known: true,
+    id: route.id,
+    stopped: pending !== undefined ? pending === true : snap.control.stopped,
+    blocked: snap.control.blocked,
+    reason: snap.control.reason,
+  };
+}
+
+// The limit rows for the top bar: the project's, else the first snapshot that has meters. Null means unknown.
+function meterRowsFor(snapshots) {
+  for (const snap of snapshots) {
+    if (snap.meters) return snap.meters;
+  }
+  return null;
+}
+
+function buildShellVm(route, now) {
+  const vm = buildViewModel(store, route, prefsFor(route), now);
+  const snapshots = snapshotsInScope(route);
+  vm.ui = loadUi();
+  vm.theme = vm.ui.theme;
+  vm.snapshotList = snapshots;
+  vm.meterRows = meterRowsFor(snapshots);
+  vm.control = controlFor(route, route.name === "project" ? store.snapshots[route.id] : null, now);
+  return vm;
+}
+
+function applyLayout(ui) {
+  root.setAttribute("data-nav", ui.navMini ? "mini" : "full");
+  const open = panelIsOpen(ui);
+  root.setAttribute("data-panel", open ? "open" : "closed");
+  setHidden("scrim", !(isSheetWidth() && open));
+}
+
 function render() {
   const route = currentRoute();
-  const vm = buildViewModel(store, route, prefsFor(route), Date.now());
-  vm.theme = loadTheme();
+  if (route.redirect) {
+    window.location.replace(route.redirect);
+    return;
+  }
+  const vm = buildShellVm(route, Date.now());
   document.title = vm.title;
-  setHidden("kpi", route.name !== "project");
+  applyLayout(vm.ui);
+  if (route.name === "project" && vm.ui.lastProject !== route.id) {
+    updateUi(function (ui) {
+      ui.lastProject = route.id;
+    });
+  }
   const sections = [
+    ["nav", function () {
+      return navView(vm);
+    }],
     ["topbar", function () {
       return topbarView(vm);
     }],
-    ["usage", function () {
-      return usageView(vm);
-    }],
-    ["kpi", function () {
-      return route.name === "project" ? kpiView(vm) : "";
-    }],
     ["main", function () {
-      return route.name === "project" ? projectView(vm) : homeView(vm);
+      return mainHtml(vm);
+    }],
+    ["bnav", function () {
+      return bnavView(vm);
+    }],
+    ["toasts", function () {
+      return toastsHtml();
+    }],
+    ["help-body", function () {
+      return helpHtml();
     }],
   ];
   for (const entry of sections) {
@@ -209,13 +323,25 @@ function toggleItem(route, el) {
   render();
 }
 
-function setAllSections(route, value) {
-  updatePrefs(route, function (prefs) {
-    for (const section of VIEW_SECTIONS[route.name]) {
-      prefs.open[section.id] = value;
-    }
+// Stop or Resume the project in scope. The pill shows the new state at once; cmd.js keeps it until a later snapshot.
+function controlOp(el) {
+  const op = el.getAttribute("data-op");
+  const project = el.getAttribute("data-project");
+  const stopping = op === "control.stop";
+  run(op, {}, {
+    project: project,
+    key: "control:" + project,
+    value: stopping,
+    label: stopping ? "Stopped" : "Resumed",
   });
-  render();
+}
+
+function openHelp() {
+  if (!helpDialog.open) helpDialog.showModal();
+}
+
+function closeHelp() {
+  if (helpDialog.open) helpDialog.close();
 }
 
 function onClick(event) {
@@ -236,53 +362,91 @@ function onClick(event) {
     render();
   } else if (action === "sync-usage") {
     syncUsage();
+  } else if (action === "control") {
+    controlOp(el);
+  } else if (action === "nav-mini") {
+    updateUi(function (ui) {
+      ui.navMini = !ui.navMini;
+    });
+    render();
+  } else if (action === "panel-toggle") {
+    updateUi(function (ui) {
+      ui.panelOpen = !panelIsOpen(ui);
+    });
+    render();
+  } else if (action === "panel-close") {
+    updateUi(function (ui) {
+      ui.panelOpen = false;
+    });
+    render();
+  } else if (action === "toggle-more") {
+    toggleMore();
+    render();
+  } else if (action === "help-open") {
+    openHelp();
+  } else if (action === "help-close") {
+    closeHelp();
+  } else if (action === "toast-undo") {
+    undoToast(el.getAttribute("data-toast"));
+  } else if (action === "toast-close") {
+    dismissToast(el.getAttribute("data-toast"));
   }
 }
 
-function onChange(event) {
-  const el = event.target;
-  if (el && el.getAttribute && el.getAttribute("data-action") === "switch-project") {
-    const value = el.value;
-    window.location.hash = value ? projectHash(value) : homeHash();
-  }
+// A toast holds its timer while the pointer or the keyboard focus is on it.
+function toastIdOf(target) {
+  const el = target && target.closest ? target.closest("[data-toast]") : null;
+  return el ? el.getAttribute("data-toast") : null;
 }
 
-function isTyping(target) {
-  return Boolean(target) && (target.isContentEditable || /^(INPUT|SELECT|TEXTAREA)$/.test(target.tagName));
+function onPointerOver(event) {
+  const id = toastIdOf(event.target);
+  if (id) setToastHold(id, true);
 }
 
-function onKeydown(event) {
-  if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || isTyping(event.target)) {
-    return;
-  }
-  const key = event.key;
-  if (key === "g") {
-    pendingG = Date.now();
-    return;
-  }
-  if (key === "h" && pendingG && Date.now() - pendingG < 1000) {
-    pendingG = 0;
-    window.location.hash = homeHash();
-    return;
-  }
-  pendingG = 0;
-  if (key === "/") {
-    event.preventDefault();
-    const switcher = document.getElementById("switcher");
-    if (switcher) switcher.focus();
-  } else if (key === "[" || key === "]") {
-    setAllSections(currentRoute(), key === "]");
-  }
+function onPointerOut(event) {
+  const id = toastIdOf(event.target);
+  if (!id) return;
+  const next = toastIdOf(event.relatedTarget);
+  if (next !== id) setToastHold(id, false);
 }
 
 function boot() {
   applyTheme(loadTheme());
+  setKeyHooks({
+    rerender: render,
+    openHelp: openHelp,
+    closeHelp: closeHelp,
+    helpOpen: function () {
+      return helpDialog.open;
+    },
+  });
+  configureCommands({
+    writable: function () {
+      return store.conn.ok !== false;
+    },
+    refresh: function () {
+      schedule(0);
+    },
+    render: render,
+    project: function () {
+      const route = currentRoute();
+      return route.name === "project" ? route.id : null;
+    },
+  });
+  setToastListener(function () {
+    patch("toasts", toastsHtml());
+  });
+  initKeys();
   document.addEventListener("click", onClick);
-  document.addEventListener("change", onChange);
-  document.addEventListener("keydown", onKeydown);
+  document.addEventListener("pointerover", onPointerOver);
+  document.addEventListener("pointerout", onPointerOut);
+  document.addEventListener("focusin", onPointerOver);
+  document.addEventListener("focusout", onPointerOut);
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden) schedule(0);
   });
+  helpDialog.addEventListener("close", render);
   onRouteChange(function () {
     render();
     schedule(0);

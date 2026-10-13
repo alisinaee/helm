@@ -85,7 +85,7 @@ export function homeView(vm) {
 export function projectView(vm) {
   const project = vm.project;
   if (project.notFound) {
-    return emptyHtml("No project with that id.", '<a href="#/">Go to Home</a>');
+    return emptyHtml("No project with that id.", '<a href="#/all/overview">Go to All projects</a>');
   }
   const snap = project.snapshot;
   if (!snap) {
