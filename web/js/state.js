@@ -266,13 +266,62 @@ export function normalizeSnapshot(raw, fetchedAt) {
     tasksUpdated: raw.tasks_updated || null,
     control: normalizeControl(raw.control),
     meters: normalizeMeters(raw.meters),
+    dayUse: normalizeUse(raw.meters, "today", "pts"),
+    weekUse: normalizeUse(raw.meters, "week", "pct"),
+    questions: list(raw.questions).map(normalizeQuestion),
+    needsYou: list(raw.needsYou).map(normalizeNeedsYou),
+    activity: list(raw.activity).map(normalizeActivity),
+    blocked: idList(raw.blocked),
+    issues: list(raw.issues).map(normalizeIssue),
   };
 }
 
-// The control key: stopped and blocked flags, and the reason text. An error marker reads as not stopped.
+// The control key: stopped and blocked flags, the reason text and the warnings. An error marker reads as not stopped.
 function normalizeControl(raw) {
   const c = raw && typeof raw === "object" ? raw : {};
-  return { stopped: c.stopped === true, blocked: c.blocked === true, reason: String(c.reason || "") };
+  return { stopped: c.stopped === true, blocked: c.blocked === true, reason: String(c.reason || ""),
+    warn: list(c.warn).map(String) };
+}
+
+// WP30 snapshot keys: open questions, needs-you rows, the activity lines (newest 15), open blockers and open issues.
+// Times are parsed once here; a missing or bad time is null.
+function timeMs(value) {
+  const ms = Date.parse(value);
+  return Number.isNaN(ms) ? null : ms;
+}
+
+function normalizeQuestion(q) {
+  return {
+    id: String(q.id || ""),
+    task: String(q.task || ""),
+    text: String(q.text || ""),
+    opts: list(q.opts).map(String),
+    def: q.def ? String(q.def) : null,
+    block: q.block === true,
+    timeoutS: num(q.timeoutS),
+    askedMs: timeMs(q.asked),
+  };
+}
+
+function normalizeNeedsYou(row) {
+  return { kind: String(row.kind || ""), id: String(row.id || ""), title: String(row.title || row.text || "") };
+}
+
+function normalizeActivity(a) {
+  return { id: String(a.id || ""), atMs: timeMs(a.at), src: String(a.src || ""), op: String(a.op || ""),
+    sum: String(a.sum || ""), undo: a.undo === true };
+}
+
+function normalizeIssue(i) {
+  return { id: String(i.id || ""), title: String(i.title || ""), kind: String(i.kind || ""),
+    status: String(i.status || ""), tasks: idList(i.tasks) };
+}
+
+// Today's or this week's usage from meters: the day's points, or the weekly percent, with tracked tokens (K).
+function normalizeUse(raw, key, field) {
+  if (!raw || typeof raw !== "object" || !raw[key] || typeof raw[key] !== "object") return null;
+  const part = raw[key];
+  return { value: num(part[field]), tokK: num(part.tokK), estPts: num(part.estPts) };
 }
 
 // meters.limits rows (WP27). Null when the snapshot has no meters, so the top bar can show "unknown".
