@@ -10,6 +10,11 @@ import { inboxHash, inboxPreviewHtml, itemHash, pageState, scopeSnapshots, watch
 import { activityRowHtml } from "./activity.js";
 import { kpiView } from "./kpi.js";
 import { runningSection } from "./running.js";
+import { extrasSection } from "./extras.js";
+import { legendSection } from "./legend.js";
+import { nextSection } from "./next.js";
+import { phasesSection } from "./phases.js";
+import { recentSection } from "./recent.js";
 
 const WARN_SHARE = 0.8;
 const WINDOW_WORD = { day: "daily", week: "weekly", total: "total" };
@@ -151,10 +156,15 @@ function projectOverview(vm) {
   const scopes = scopeSnapshots(vm);
   const now = Date.now();
   watchCountdowns();
+  // WP32 restores the sections WP30 dropped: Phases (with a link to the Roadmap), Next up, Recent progress, Extras and
+  // Legend. Each one is a section-header from the section modules, so it folds like the rest.
+  const phases = phasesSection(vm) + '<p class="ov-more"><a href="#/p/' + esc(vm.route.id) +
+    '/roadmap">Open Roadmap</a></p>';
   const main = controlBanner(vm) + kpiView(vm) +
     cardHtml("inbox", "Inbox", "", inboxPreviewHtml(vm, PREVIEW_MAX) +
-      '<p class="ov-more"><a href="' + esc(inboxHash(vm)) + '">Open Inbox</a></p>') + runningSection(vm);
-  const side = cardHtml("meters", "Meters", "", metersBody(snap)) + blockersHtml(snap) + activityHtml(snap, now);
+      '<p class="ov-more"><a href="' + esc(inboxHash(vm)) + '">Open Inbox</a></p>') + runningSection(vm) + phases;
+  const side = cardHtml("meters", "Meters", "", metersBody(snap)) + blockersHtml(snap) + activityHtml(snap, now) +
+    nextSection(vm) + recentSection(vm) + extrasSection(vm) + legendSection(vm);
   return limitBanner(worstLimit(scopes), true) +
     '<div class="ov"><div class="ov-main">' + main + '</div><div class="ov-side">' + side + "</div></div>";
 }
