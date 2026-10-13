@@ -242,9 +242,10 @@
       "title": "haiku: WP21 command layer and CLI",
       "model": "haiku",
       "task": "R5.3",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-13T19:48:34+03:30",
-      "ended": null
+      "ended": "2026-10-13T20:02:39+03:30",
+      "tokensK": 242.0
     },
     {
       "id": "j390",
