@@ -252,9 +252,20 @@
       "title": "haiku: WP22 control hooks rules",
       "model": "haiku",
       "task": "R5.4",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-13T19:48:51+03:30",
-      "ended": null
+      "ended": "2026-10-13T20:05:03+03:30",
+      "tokensK": 262.8
+    },
+    {
+      "id": "j392",
+      "title": "haiku: WP23 cmd route and security",
+      "model": "haiku",
+      "task": "R5.5",
+      "status": "done",
+      "started": "2026-10-13T20:07:41+03:30",
+      "ended": "2026-10-13T20:18:13+03:30",
+      "tokensK": 187.1
     }
   ]
 }
