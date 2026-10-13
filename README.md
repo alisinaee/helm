@@ -175,8 +175,8 @@ Every command accepts `--json` and then prints `{"ok": true, "data": ...}` or
 | `roadmap project check [<id>]` | parse each data file and print its schema version (exit 5 if one is bad) |
 | `roadmap project migrate <id>` | upgrade the data files to the current schema (backs up first) |
 | `roadmap project remove <id>` | unregister a project; its files are kept |
-| `roadmap job start "<title>" <model> [<task>] [--project ID]` | record a running job, print its id |
-| `roadmap job done\|fail <id> ["<note>"] [--tokens K]` | finish a job; a finished job cannot be finished again |
+| `roadmap job start "<title>" <model> [<task>] [--parent ID --role lead\|worker] [--project ID]` | record a running job, print its id |
+| `roadmap job done\|fail <id> ["<note>"] [--tokens K]` | finish a job; `--tokens` adds to the budget once per job id |
 | `roadmap job list [--project ID]` | list the jobs of a project |
 | `roadmap job prune [--project ID]` | remove finished jobs beyond the newest 30 (running jobs are kept) |
 | `roadmap status [--project ID]` | brief board summary: at most 8 lines, including running jobs |
@@ -187,6 +187,25 @@ Every command accepts `--json` and then prints `{"ok": true, "data": ...}` or
 | `roadmap plan import <file\|-> [--dry-run] [--replace-phase P]` | create or update phases and tasks from plan text |
 | `roadmap plan export [--phase P]` | print the plan text for a re-plan |
 | `roadmap plan template` | print the plan grammar and an example |
+| `roadmap plan view` | phases and their open tasks in plan order (at most 15 lines) |
+| `roadmap plan move <id> --before\|--after <id>` | move a task within its phase (undoable) |
+| `roadmap issue new "<title>" [--kind bug\|risk\|question\|blocker] [--sev 1-3] [--task ID]... [--note "..."]` | open an issue, print `I3 open` |
+| `roadmap issue list [--all]` | list open issues (closed ones with `--all`), at most 20 lines |
+| `roadmap issue show <I3>` | one issue on one line |
+| `roadmap issue close <I3>` | close an issue (undoable) |
+| `roadmap issue link <I3> <task>...` | link tasks to an issue (at most 5 per issue) |
+| `roadmap subtask add <P2.4> "<text>"` | add a subtask (at most 12 per task) |
+| `roadmap subtask done <P2.4/2>` | tick a subtask; ticking a done one is a no-op |
+| `roadmap ask "<question>" [--task ID] [--opt A]... [--default A] [--block] [--timeout S]` | ask the user, print `Q3 open` |
+| `roadmap ask get <Q3>` | print one line: `Q3 open` or `Q3 answered no` |
+| `roadmap ask wait <Q3> [--timeout S]` | wait (checks every 5 s, at most 1800 s) and print one line; the only waiting command |
+| `roadmap ask list` | list open questions (at most 10 lines) |
+| `roadmap answer <Q3> <option\|text>` | answer an open question |
+| `roadmap comment <ID> "<text>"` | add a comment on a task or issue |
+| `roadmap comments <ID> [--last 5]` | show the newest comments on a task or issue |
+| `roadmap inbox` | queued requests, questions answered in the last 24 h, open questions (at most 6 lines) |
+| `roadmap budget show [--phase P]` | spend by model and phase, and the limits (at most 8 lines) |
+| `roadmap undo <A812>` | reverse one change by its activity id (once) |
 | `roadmap research new <slug> "<title>"` | start research note NN (next number, template, INDEX line; at most 6 notes) |
 | `roadmap research list` | print the research index |
 | `roadmap research check` | check the caps (120 lines, 6 KB), the headings and any roadmap-plan block |
