@@ -7,12 +7,14 @@ detector that started each) is hooks-<project>.json in the state directory. Ever
 run_hook never raises: a hook must never fail a tool call.
 """
 
+import datetime
+import hashlib
 import json
 import os
 import re
 import time
 
-from roadmap.errors import EXIT_INVALID_DATA, RoadmapError
+from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, RoadmapError
 from roadmap.services import control, jobs
 from roadmap.services import queue as queue_service
 from roadmap.store import atomic, lock, paths, schema
@@ -28,6 +30,8 @@ _RESULT_RE = re.compile(r"result file[^:]*:\s*(\S+\.result\.md)")
 _COMPANION_RE = re.compile(r'companion\.mjs"?\s+(\w+)')
 _CONTROL_RE = re.compile(r"\b(wait|observe|cancel)\b")
 _CURSOR_RE = re.compile(r"cursor-review2\.sh\s+(\"[^\"]+\"|'[^']+'|[^\s&;|]+)")
+_SECRET_RE = re.compile(r"sk-[A-Za-z0-9_-]{8,}|gh[pousr]_[A-Za-z0-9]{8,}|xox[abprs]-[A-Za-z0-9-]{8,}|AKIA[0-9A-Z]{12,}"
+                        r"|(?i:bearer)\s+\S+|(?i:(?:api[_-]?key|token|secret|password|passwd)\s*[=:]\s*)\S+")
 _QUOTED_PROMPT_RE = re.compile(r"""\s+(?:"((?:[^"\\]|\\.)*)"|'([^']*)')""")
 _OPERATOR_RE = re.compile(r"\s*(?:&&|\|\||[;|&])")
 HOOK_LOCK_TIMEOUT_S = 1.0  # each lock wait in one hook event: the hook must exit well inside its 10 s budget
@@ -40,6 +44,12 @@ def _response_text(tool_response):
 
 def _squash(text):
     return re.sub(r"\s+", " ", text)
+
+
+def _summary(text, limit=60):
+    """At most limit characters of a free text (a prompt or a description), one line, with secret-looking tokens
+    replaced. Only this summary may reach a job title; logs never carry free text."""
+    return _SECRET_RE.sub("[redacted]", _squash(str(text or "")).strip())[:limit]
 
 
 def _before_operator(text):
@@ -62,7 +72,7 @@ class AgentDetector:
         description = str(tool_input.get("description") or "")
         prompt = str(tool_input.get("prompt") or "")
         return {
-            "title": model + ": " + description,
+            "title": model + ": " + _summary(description),
             "model": model,
             "text": description + " " + prompt,
             "kind": "agent",
@@ -111,7 +121,7 @@ class AgyDetector(_FileDetector):
         if not found:
             return None
         who = _COMPANION_RE.search(cmd)
-        prompt = _squash(_before_operator(cmd.split("--prompt")[-1])).strip(" \"'")[:80]
+        prompt = _summary(_before_operator(cmd.split("--prompt")[-1]).strip(" \"'"))
         title = "agy %s: %s" % (who.group(1) if who else "job", prompt)
         return {"title": title, "model": "agy", "text": cmd, "kind": "file", "watch": found.group(1),
                 "agent": ""}
@@ -130,7 +140,7 @@ class CursorDetector(_FileDetector):
         if invocation is None:
             return None
         output, prompt = invocation
-        label = _squash(prompt)[:70] if prompt else os.path.basename(output)
+        label = _summary(prompt, 70) if prompt else os.path.basename(output)
         return {"title": "Cursor Auto: " + label, "model": "cursor", "text": cmd, "kind": "file",
                 "watch": output, "agent": ""}
 
@@ -255,7 +265,7 @@ def _handle(raw, environ, cwd, now, clock, started):
             raise
         # A busy lock: return silently, so the hook exits 0 within its time budget. The next event tries again.
     if event == "Stop":
-        return _stop_pickup(payload, project, data_dir)
+        return _stop_pickup(payload, project, data_dir, now)
     return None
 
 
@@ -304,6 +314,8 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
 # ------------------------------------------------------------------ control: PreToolUse, SessionStart, Stop pickup
 
 PRE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit", "Bash", "Agent", "Task", "WebFetch", "WebSearch")
+# while the project is blocked, these roadmap commands are the only ones a Bash call may run
+ALLOWED_WHILE_BLOCKED = (("inbox",), ("status",), ("ask",), ("rules", "show"))
 PRE_TIMEOUT_S = 0.3        # a PreToolUse that takes longer lets the tool call through
 DENY_LOG_S = 60            # a denial is logged at most once a minute per project
 PICKUP_PER_SESSION = 3
@@ -321,14 +333,20 @@ def _roadmap_command(command):
     return text.startswith("roadmap ") and not any(op in text for op in _SHELL_OPERATORS)
 
 
-def _project_quiet(payload, environ, cwd):
-    """The registered project of the payload cwd, or None. Unlike _project_for, it logs nothing."""
+def _project_quiet(payload, cwd):
+    """The registered project of the payload cwd, or None. The gate never reads ROADMAP_PROJECT: an ambient variable
+    must not decide which project a tool call is denied for. Unlike _project_for, it logs nothing."""
     here = payload.get("cwd")
     here = here if isinstance(here, str) and here else cwd
     try:
-        return jobs.resolve_project(None, environ, here)
+        return jobs.resolve_project(None, {}, here)
     except RoadmapError:
         return None
+
+
+def _allowed_while_blocked(command):
+    words = command.split()[1:]
+    return any(words[:len(prefix)] == list(prefix) for prefix in ALLOWED_WHILE_BLOCKED)
 
 
 def _pre_tool_use(payload, environ, cwd, now, clock, started):
@@ -337,9 +355,11 @@ def _pre_tool_use(payload, environ, cwd, now, clock, started):
     if tool not in PRE_TOOLS:
         return None
     tool_input = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
-    if tool == "Bash" and _roadmap_command(str(tool_input.get("command") or "")):
+    command = str(tool_input.get("command") or "") if tool == "Bash" else ""
+    roadmap_cmd = tool == "Bash" and _roadmap_command(command)
+    if roadmap_cmd and _allowed_while_blocked(command):
         return None
-    project = _project_quiet(payload, environ, cwd)
+    project = _project_quiet(payload, cwd)
     if project is None or _too_slow(clock, started):
         return None
     pid = project["id"]
@@ -349,11 +369,53 @@ def _pre_tool_use(payload, environ, cwd, now, clock, started):
     if not state:
         return None
     reason = _deny_reason(state, payload, project, now)
+    if roadmap_cmd:
+        # a roadmap command outside the allowlist: denied while the project is stopped or blocked, or for the task
+        # this agent runs; otherwise it passes
+        if reason is None and not (state.get("stop") is True or isinstance(state.get("block"), dict)):
+            return None
+        reason = reason or _not_allowed_reason(command)
+    if reason is not None and state.get("stop") is not True and isinstance(state.get("block"), dict):
+        # a limit block can be stale (usage reset, override expired, budget raised): recompute before denying
+        fresh = _refresh_limits(pid, now, clock, started)
+        if fresh is None:
+            return None
+        state = fresh
+        reason = _deny_reason(fresh, payload, project, now)
+        if roadmap_cmd and reason is None and isinstance(fresh.get("block"), dict):
+            reason = _not_allowed_reason(command)
     if reason is None or _too_slow(clock, started):
         return None
     _log_denial(pid, reason, now)
     return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
                                    "permissionDecisionReason": reason}}
+
+
+def _not_allowed_reason(command):
+    return "roadmap: " + " ".join(command.split()[1:2]) + " is not allowed while blocked" + TAIL
+
+
+def _refresh_limits(pid, now, clock, started):
+    """Recompute the control state of a project inside the rest of the 300 ms budget. Returns the fresh state, or None
+    when the recompute fails or runs out of time: the call then fails open, and a stale sentinel is removed."""
+    remaining = PRE_TIMEOUT_S - (clock() - started)
+    moment = datetime.datetime.fromtimestamp(now).astimezone()
+    try:
+        if remaining <= 0:
+            raise RoadmapError("locked", "no time left in the gate budget", EXIT_CONFLICT)
+        with lock.timeout_scope(remaining):
+            fresh = control.recompute(pid, moment, timeout=remaining)
+    except Exception:
+        _drop_sentinel(pid)
+        return None
+    return None if _too_slow(clock, started) else fresh
+
+
+def _drop_sentinel(pid):
+    try:
+        os.remove(control.sentinel_path(pid))
+    except OSError:
+        pass
 
 
 def _deny_reason(state, payload, project, now):
@@ -430,26 +492,39 @@ def _session_start(project, data_dir):
                                    "additionalContext": "\n".join(lines[:INBOX_LINES])}}
 
 
-def _stop_pickup(payload, project, data_dir):
+def _stop_pickup(payload, project, data_dir, now):
     """Stop hook: surface one queued start request as decision block, once per request and 3 times per session.
-    Off with pickupOnStop false in the project config. Never while the project is stopped or blocked."""
-    if payload.get("stop_hook_active") is True:
+    The cap also counts per queued task set in the control state, so a new session id or a deleted pickup file does
+    not reset it. Off with pickupOnStop false in the project config. Never while the project is stopped or blocked."""
+    if payload.get("stop_hook_active"):  # any truthy value: this Stop already continues a block
         return None
     config_data, error = schema.read_data("roadmap_config", os.path.join(data_dir, "roadmap.config.json"))
     if error is not None or (config_data or {}).get("pickupOnStop") is False:
         return None
-    state = control.read_state(project["id"])
+    pid = project["id"]
+    state = control.read_state(pid)
     if state and (state.get("stop") is True or state.get("block")):
         return None
+    moment = datetime.datetime.fromtimestamp(now).astimezone()
     entries = queue_service.list_queue(data_dir)
     if not entries:
+        if control.pickup_record(pid):
+            _quiet(control.clear_pickup, pid, moment, timeout=HOOK_LOCK_TIMEOUT_S)
+        return None
+    key = _task_set_key(entries)
+    recorded = control.pickup_record(pid)
+    if recorded.get("key") == key and recorded.get("blocks", 0) >= PICKUP_PER_SESSION:
         return None
     folder = paths.ensure_dir(paths.state_dir())
-    path = os.path.join(folder, "pickup-" + project["id"] + ".json")
+    path = os.path.join(folder, "pickup-" + pid + ".json")
     session = str(payload.get("session_id") or "")
     try:
+        # the state folder is one lock: the file is read under it, the count is recorded (its own lock) outside it,
+        # and only then is the file written
         with lock.locked(folder, timeout=HOOK_LOCK_TIMEOUT_S):
             saved = atomic.read_json(path, default={}) if os.path.exists(path) else {}
+            if not isinstance(saved, dict):
+                saved = {}
             surfaced = saved.get("surfaced") if isinstance(saved.get("surfaced"), dict) else {}
             sessions = saved.get("sessions") if isinstance(saved.get("sessions"), dict) else {}
             if int(sessions.get(session, 0)) >= PICKUP_PER_SESSION:
@@ -458,14 +533,36 @@ def _stop_pickup(payload, project, data_dir):
             if not pending:
                 return None
             entry = pending[0]
+        # the count is recorded first: if it cannot be saved, nothing is blocked
+        control.record_pickup(pid, key, moment, timeout=HOOK_LOCK_TIMEOUT_S)
+        with lock.locked(folder, timeout=HOOK_LOCK_TIMEOUT_S):
+            saved = atomic.read_json(path, default={}) if os.path.exists(path) else {}
+            if not isinstance(saved, dict):
+                saved = {}
+            surfaced = saved.get("surfaced") if isinstance(saved.get("surfaced"), dict) else {}
+            sessions = saved.get("sessions") if isinstance(saved.get("sessions"), dict) else {}
             surfaced[_request_key(entry)] = session
             sessions[session] = int(sessions.get(session, 0)) + 1
             atomic.write_json(path, {"surfaced": surfaced, "sessions": sessions})
-    except (RoadmapError, ValueError, TypeError):
+    except (RoadmapError, ValueError, TypeError, OSError):
         return None
     _log("pickup " + str(entry.get("task")))
     return {"decision": "block", "reason": "roadmap: queued request " + str(entry.get("task"))
             + " is waiting; run roadmap inbox and start it."}
+
+
+def _task_set_key(entries):
+    """A short hash of the queued task ids (not their times): the key the Stop pickup count is kept under."""
+    names = "\n".join(sorted(str(e.get("task")) for e in entries))
+    return hashlib.sha256(names.encode("utf-8")).hexdigest()[:16]
+
+
+def _quiet(func, *args, **kwargs):
+    """Run a best-effort control write; a failure is logged by type only."""
+    try:
+        func(*args, **kwargs)
+    except Exception as exc:
+        _log("pickup count not cleared: " + type(exc).__name__)
 
 
 def _request_key(entry):
@@ -496,7 +593,7 @@ def _start(data_dir, detector, entry, regex, known, now):
     task = find_task(entry["text"], regex, known)
     title = entry["title"][:120]
     if task is None:
-        _log("skip (no task id): " + title[:60])
+        _log("skip (no task id) from detector " + detector.name)
         return None
     try:
         job = jobs.start_job(data_dir, title, entry["model"], task)
@@ -505,7 +602,7 @@ def _start(data_dir, detector, entry, regex, known, now):
             raise
         _log("skip: " + exc.message)
         return None
-    _log("start " + job["id"] + " " + title[:60])
+    _log("start %s %s task %s" % (job["id"], detector.name, task))
     return {"job": job["id"], "detector": detector.name, "kind": entry["kind"], "agent": entry["agent"],
             "watch": entry["watch"], "started": now}
 

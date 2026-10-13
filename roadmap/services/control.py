@@ -123,7 +123,18 @@ def _manual_of(saved):
         "manualAt": {k: v for k, v in (saved.get("manualAt") or {}).items() if isinstance(v, str)}
         if isinstance(saved.get("manualAt"), dict) else {},
         "overrideUntil": saved.get("overrideUntil") if isinstance(saved.get("overrideUntil"), str) else None,
+        "pickup": _pickup_of(saved.get("pickup")),
     }
+
+
+def _pickup_of(value):
+    """The Stop pickup record {key, blocks}: the hash of the queued task set and how many blocks it has had."""
+    if not isinstance(value, dict) or not isinstance(value.get("key"), str):
+        return {}
+    blocks = value.get("blocks")
+    if isinstance(blocks, bool) or not isinstance(blocks, int) or blocks < 0:
+        return {}
+    return {"key": value["key"], "blocks": blocks}
 
 
 def _armed(state):
@@ -258,15 +269,17 @@ def _evaluate(project, manual, now):
         "block": block,
         "warn": warns[:6],
         "overrideUntil": override,
+        "pickup": manual["pickup"],
         "day": _now(now).date().isoformat(),
         "updated": _iso(now),
     }
     return state
 
 
-def _mutate(project, change, now):
-    """Under the state lock: apply change(manual) to the saved manual flags, evaluate, save. Returns the state."""
-    with lock.locked(paths.ensure_dir(paths.state_dir())):
+def _mutate(project, change, now, timeout=None):
+    """Under the state lock: apply change(manual) to the saved manual flags, evaluate, save. Returns the state.
+    timeout bounds the lock wait (the hook passes its remaining budget); None keeps the default."""
+    with lock.locked(paths.ensure_dir(paths.state_dir()), timeout=timeout):
         manual = _manual_of(read_state(project["id"]) or {})
         change(manual)
         state = _evaluate(project, manual, now)
@@ -274,10 +287,37 @@ def _mutate(project, change, now):
     return state
 
 
-def recompute(project_id, now=None):
+def recompute(project_id, now=None, timeout=None):
     """Rebuild the control state and the sentinel of a project from its data. Returns the new state."""
     project = config.get_project(project_id)
-    return _mutate(project, lambda manual: None, _now(now))
+    return _mutate(project, lambda manual: None, _now(now), timeout=timeout)
+
+
+def pickup_record(project_id):
+    """The Stop pickup record {key, blocks} saved in the control state, or {}."""
+    try:
+        state = read_state(project_id)
+    except RoadmapError:
+        return {}
+    return _pickup_of((state or {}).get("pickup"))
+
+
+def record_pickup(project_id, key, now=None, timeout=None):
+    """Count one Stop pickup block for the queued task set key. A new key starts the count again."""
+    project = config.get_project(project_id)
+
+    def change(manual):
+        before = manual["pickup"]
+        blocks = before.get("blocks", 0) + 1 if before.get("key") == key else 1
+        manual["pickup"] = {"key": key, "blocks": blocks}
+
+    return _mutate(project, change, _now(now), timeout=timeout)
+
+
+def clear_pickup(project_id, now=None, timeout=None):
+    """Forget the Stop pickup count (the queue is empty, so the next request starts from zero)."""
+    project = config.get_project(project_id)
+    return _mutate(project, lambda manual: manual.update(pickup={}), _now(now), timeout=timeout)
 
 
 def recompute_all(now=None):
@@ -405,8 +445,9 @@ def set_weekly_limit(project_id, pct, now=None, source=None):
                       "setOn": moment.date().isoformat()})
         doc["limit"] = limit
         schema.write_data("autonomy", path, doc)
+        state = _mutate(project, lambda manual: None, moment)
     _log(data_dir, source or agentguard.source_name(), "limit.set", "weekly stop at %g%%" % value, moment)
-    return _mutate(project, lambda manual: None, moment)
+    return state
 
 
 def _current_limit(current, scope, key):
@@ -417,23 +458,27 @@ def _current_limit(current, scope, key):
 
 def set_budget_limit(project_id, scope, key, value, now=None, source=None):
     """Set a budget limit in thousands of tokens (value None clears it). Raising or clearing a limit is refused from
-    an agent; setting a limit where none was, or lowering one, is allowed."""
+    an agent; setting a limit where none was, or lowering one, is allowed. The current limit is read again under the
+    data-folder lock, so a limit a person set in the meantime is what a raise is compared with. The limit and the
+    control state change under that one lock."""
     if scope not in SCOPES:
         raise RoadmapError("usage", "limit scope '" + str(scope) + "' is not valid (allowed: " + "|".join(SCOPES) + ")",
                            EXIT_USAGE)
     project, data_dir = _project(project_id)
     records.require_dir(data_dir)
-    before = _current_limit(budget.get(data_dir)["limits"], scope, key)
     new = None if value is None else _number(value)
-    loosens = before is not None and (new is None or new > before)
-    if loosens:
-        agentguard.refuse_if_agent("budget.set (raising a limit)", source)
     moment = _now(now)
-    budget.set_limit(data_dir, scope, key, new)
+    with lock.locked(data_dir):
+        before = _current_limit(budget.get(data_dir)["limits"], scope, key)
+        loosens = before is not None and (new is None or new > before)
+        if loosens:
+            agentguard.refuse_if_agent("budget.set (raising a limit)", source)
+        budget.set_limit_locked(data_dir, scope, key, new)
+        state = _mutate(project, lambda manual: None, moment)
     label = scope if scope == "project" else scope[:-1] + " " + str(key)
     _log(data_dir, source or agentguard.source_name(), "budget.set",
          "limit " + label + " " + ("cleared" if new is None else "%g" % new), moment)
-    return _mutate(project, lambda manual: None, moment)
+    return state
 
 
 def set_limit_row(project_id, scope, window, kind, value, action="block", row_id=None, now=None, source=None):
@@ -484,16 +529,18 @@ def approve_phase(project_id, phase_id, now=None, source=None):
 # ------------------------------------------------------------------ inbox lines for the hooks
 
 def pending_lines(data_dir, limit=6, now=None):
-    """Up to limit short lines: queued start requests, open questions and questions answered in the last hour."""
+    """Up to limit short lines: queued start requests, open questions and questions answered in the last hour. Ids and
+    task ids only: question text and answers are free text and are never copied into agent context here."""
     moment = _now(now)
     lines = []
     for entry in queue.list_queue(data_dir):
         lines.append("queued: " + str(entry.get("task")) + " (" + str(entry.get("by") or "-") + ")")
     for question in questions.list_questions(data_dir, open_only=True):
-        lines.append("open question " + str(question.get("id")) + ": " + str(question.get("text")))
+        lines.append("open question " + str(question.get("id")) + " (" + str(question.get("task") or "-") + ")")
     for question in questions.list_questions(data_dir):
         answered = parse_time(question.get("answered"))
         if question.get("status") == "answered" and answered is not None and \
                 (moment - answered).total_seconds() <= RECENT_ANSWER_S:
-            lines.append("answered " + str(question.get("id")) + ": " + str(question.get("answer")))
+            lines.append("answered " + str(question.get("id")) + " (" + str(question.get("task") or "-")
+                         + "); read it with roadmap inbox")
     return [line[:LINE_MAX] for line in lines[:limit]]

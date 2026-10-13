@@ -25,26 +25,33 @@ def get(data_dir):
 def set_limit(data_dir, scope, key, value):
     """Set one limit in thousands of tokens. scope is project, phases, models or tasks. value None clears it."""
     records.require_dir(data_dir)
+    with lock.locked(data_dir):
+        return set_limit_locked(data_dir, scope, key, value)
+
+
+def set_limit_locked(data_dir, scope, key, value):
+    """set_limit for a caller that already holds the folder lock (the control ops hold it across the write and the
+    recompute, so the limit and the control file change together)."""
+    records.require_dir(data_dir)
     if scope not in SCOPES:
         raise RoadmapError("usage", "limit scope '" + str(scope) + "' is not valid (allowed: " + "|".join(SCOPES) + ")",
                            EXIT_USAGE)
     if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0):
         raise RoadmapError("usage", "a limit is a number of thousands of tokens, 0 or more, or empty to clear",
                            EXIT_USAGE)
-    with lock.locked(data_dir):
-        doc = _load_doc(data_dir)
-        limits = doc["limits"]
-        if scope == "project":
-            limits["project"] = None if value is None else round(float(value), 1)
+    doc = _load_doc(data_dir)
+    limits = doc["limits"]
+    if scope == "project":
+        limits["project"] = None if value is None else round(float(value), 1)
+    else:
+        if not records.ID_OK.match(str(key or "")):
+            raise RoadmapError("usage", "limit key '" + str(key) + "' is not an id", EXIT_USAGE)
+        block = limits.setdefault(scope, {})
+        if value is None:
+            block.pop(str(key), None)
         else:
-            if not records.ID_OK.match(str(key or "")):
-                raise RoadmapError("usage", "limit key '" + str(key) + "' is not an id", EXIT_USAGE)
-            block = limits.setdefault(scope, {})
-            if value is None:
-                block.pop(str(key), None)
-            else:
-                block[str(key)] = round(float(value), 1)
-        records.save("budget", data_dir, FILE, doc)
+            block[str(key)] = round(float(value), 1)
+    records.save("budget", data_dir, FILE, doc)
     return doc["limits"]
 
 

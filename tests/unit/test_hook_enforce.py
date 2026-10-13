@@ -85,7 +85,10 @@ class DenyMatrixTests(GateCase):
         self.assertEqual(reason, "roadmap: blocked: weekly usage 120% reached stopAtPercent 100%" + TAIL)
         control.override("demo", 1, now=MOMENT)
         self.assertIsNone(self.fire("Edit", now=MOMENT.timestamp() + 30 * 60))
-        self.deny_reason(self.fire("Edit", now=MOMENT.timestamp() + 2 * 3600))
+        # two hours on, the usage reading is fresh again and still over the limit: the recompute denies once more
+        later = MOMENT + datetime.timedelta(hours=2)
+        self.set_usage(120, updated=later.isoformat())
+        self.deny_reason(self.fire("Edit", now=later.timestamp()))
 
     def test_a_manual_stop_is_not_overridden(self):
         control.stop("demo", now=MOMENT)
@@ -192,11 +195,31 @@ class StopPickupTests(GateCase):
         queue.dequeue(self.docs, "P0.1")
         queue.enqueue(self.docs, "P0.1", by="lead", now=MOMENT + datetime.timedelta(minutes=5))
         self.assertIsNone(self.stop_event())  # the session has had its three
-        self.assertEqual(self.stop_event(session="s2")["decision"], "block")
+        # the same queued task set has had its three blocks in total: a new session does not reset the count
+        self.assertIsNone(self.stop_event(session="s2"))
 
     def test_stop_hook_active_never_blocks_again(self):
         queue.enqueue(self.docs, "P0.1", by="lead", now=MOMENT)
         self.assertIsNone(self.stop_event(active=True))
+        self.assertIsNone(self.stop_event(active="1"))  # any truthy value counts as already active
+
+    def test_a_new_session_and_a_deleted_pickup_file_do_not_reset_the_count(self):
+        queue.enqueue(self.docs, "P0.1", by="lead", now=MOMENT)
+        for i in range(3):
+            self.assertEqual(self.stop_event(session="new%d" % i)["decision"], "block")
+            queue.dequeue(self.docs, "P0.1")
+            queue.enqueue(self.docs, "P0.1", by="lead", now=MOMENT + datetime.timedelta(minutes=i + 1))
+            os.remove(os.path.join(self.state_dir, "pickup-demo.json"))
+        self.assertIsNone(self.stop_event(session="fresh"))  # three blocks recorded: fail open
+
+    def test_a_different_queued_task_set_gets_its_own_count(self):
+        queue.enqueue(self.docs, "P0.1", by="lead", now=MOMENT)
+        for i in range(3):
+            self.stop_event(session="x%d" % i)
+            queue.dequeue(self.docs, "P0.1")
+            queue.enqueue(self.docs, "P0.1", by="lead", now=MOMENT + datetime.timedelta(minutes=i + 1))
+        queue.enqueue(self.docs, "P1.1", by="lead", now=MOMENT)
+        self.assertEqual(self.stop_event(session="y")["decision"], "block")
 
     def test_pickup_off_in_the_project_config(self):
         queue.enqueue(self.docs, "P0.1", by="lead", now=MOMENT)

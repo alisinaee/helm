@@ -2,20 +2,41 @@
 # roadmap-board CLI shim. Follows its own symlinks to find the repo, then runs the package from there.
 # Fast path: `roadmap hook pre` (the PreToolUse gate) exits 0 at once, without starting Python, while no project has a
 # block sentinel (<state>/block-<project>). Most tool calls therefore cost no Python start.
+# The state folder is derived like paths.state_dir(): ROADMAP_HOME is stripped and expanduser'd, and then made absolute.
+# A root that is relative or not normalised (., .., doubled or trailing slashes) is left to Python, which resolves it.
 if [ "$1" = hook ] && [ "$2" = pre ]; then
+    root=
     if [ -n "$ROADMAP_HOME" ]; then
-        state=$ROADMAP_HOME/state
-    else
-        state="$HOME/Library/Application Support/roadmap-board"
+        root=$(printf '%s' "$ROADMAP_HOME" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
     fi
-    armed=
-    for sentinel in "$state"/block-*; do
-        if [ -e "$sentinel" ]; then
-            armed=1
-            break
-        fi
-    done
-    if [ -z "$armed" ]; then
+    needs_python=
+    if [ -z "$root" ]; then
+        state=$HOME/Library/Application\ Support/roadmap-board
+    else
+        case $root in
+            '~'|'~/'*) root=$HOME${root#\~} ;;
+        esac
+        case $root in
+            /*) ;;
+            *) needs_python=1 ;;
+        esac
+        case $root in
+            *//*|*/./*|*/../*|*/.|*/..|*/) needs_python=1 ;;
+        esac
+        state=$root/state
+    fi
+    if [ -z "$HOME" ]; then
+        needs_python=1
+    fi
+    if [ -z "$needs_python" ]; then
+        for sentinel in "$state"/block-*; do
+            if [ -e "$sentinel" ]; then
+                needs_python=1
+                break
+            fi
+        done
+    fi
+    if [ -z "$needs_python" ]; then
         exit 0
     fi
 fi

@@ -21,9 +21,10 @@ class AgentGuardTests(unittest.TestCase):
         self.assertEqual(ctx.exception.next, 'roadmap ask "<question>"')
         self.assertIn("control.resume", ctx.exception.message)
 
-    def test_other_claudecode_values_are_not_an_agent(self):
-        self.assertFalse(agentguard.is_agent(None, {"CLAUDECODE": "0"}))
+    def test_empty_claudecode_is_not_an_agent_and_any_other_value_is(self):
+        self.assertTrue(agentguard.is_agent(None, {"CLAUDECODE": "0"}))  # any non-empty value counts
         self.assertFalse(agentguard.is_agent(None, {"CLAUDECODE": ""}))
+        self.assertFalse(agentguard.is_agent(None, {"CLAUDECODE": "   "}))
 
     def test_source_agent_is_refused_without_the_env(self):
         with self.assertRaises(RoadmapError):

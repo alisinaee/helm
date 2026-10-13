@@ -27,6 +27,7 @@ ROLES = ("lead", "worker")
 KINDS = ("do", "dont", "budget", "done")
 BEGIN = "<!-- roadmap:rules -->"
 END = "<!-- /roadmap:rules -->"
+INTRO = "Roadmap rules (generated from docs/rules.txt by roadmap rules sync; edit the rules there):"
 TEMPLATE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates", "rules.txt")
 _SCOPE_RE = re.compile(r"^(phase|task):([A-Za-z0-9][A-Za-z0-9./-]{0,39})$")
 _LINE_RE = re.compile(r"^(R\d+)\s+(\S+)\s+(\S+)(?:\s+(\d+))?\s*\|\s?(.*?)\s*$")
@@ -259,8 +260,20 @@ def _rule_lines(lines):
     return found
 
 
+def _generated_only(lines):
+    """True when every line between the markers is the generated intro or a generated `- R…` rule line."""
+    for line in lines:
+        if line.strip() == INTRO:
+            continue
+        if line.startswith("- R") and _LINE_RE.match(line[2:]) is not None:
+            continue
+        return False
+    return True
+
+
 def _splice(existing, block):
-    """(new text, old block lines or None) for CLAUDE.md. Refuses a broken marker pair."""
+    """(new text, old block lines or None) for CLAUDE.md. Refuses a broken marker pair, and refuses a block whose
+    interior holds anything but the generated lines (the markers may be quoted in the user's own prose)."""
     if existing is None or existing == "":
         return "\n".join(block) + "\n", None
     lines = existing.split("\n")
@@ -272,8 +285,19 @@ def _splice(existing, block):
         raise RoadmapError("invalid_data", "CLAUDE.md has broken roadmap:rules markers (need one start and one end "
                            "marker, in that order); fix them by hand, nothing changed", EXIT_INVALID_DATA)
     start, stop = begins[0], ends[0]
+    if not _generated_only(lines[start + 1:stop]):
+        raise RoadmapError("invalid_data", "the text between the roadmap:rules markers in CLAUDE.md is not generated "
+                           "rules; move it out or remove the markers by hand, nothing changed", EXIT_INVALID_DATA)
     old = lines[start:stop + 1]
     return "\n".join(lines[:start] + block + lines[stop + 1:]), old
+
+
+def _read_bytes(path):
+    """The bytes of a regular file, or None when there is no such file."""
+    if not os.path.isfile(path):
+        return None
+    with open(path, "rb") as fh:
+        return fh.read()
 
 
 def sync(project, data_dir, dry_run=False, source=None, now=None):
@@ -289,22 +313,24 @@ def sync(project, data_dir, dry_run=False, source=None, now=None):
     if os.path.islink(target):
         raise RoadmapError("invalid_data", "refusing to sync into a symlinked CLAUDE.md, left unchanged",
                            EXIT_INVALID_DATA)
-    existing = None
-    if os.path.isfile(target):
-        with open(target, "r", encoding="utf-8") as fh:
-            existing = fh.read()
-    new_text, old_block = _splice(existing, block)
-    old_rules = _rule_lines(old_block or [])
-    new_rules = _rule_lines(block)
-    added = len(set(new_rules) - set(old_rules))
-    removed = len(set(old_rules) - set(new_rules))
-    changed = sum(1 for k in set(new_rules) & set(old_rules) if new_rules[k] != old_rules[k])
-    counts = {"added": added, "changed": changed, "removed": removed}
-    result = dict(counts, path=target, dryRun=bool(dry_run), written=False, backup=None)
-    if dry_run or new_text == existing:
-        return result
-    result["backup"] = backup.backup_files(project["id"], [target], now=now) if existing is not None else None
-    atomic.write_text(target, new_text)
+    with lock.locked(data_dir):
+        raw = _read_bytes(target)
+        existing = raw.decode("utf-8") if raw is not None else None
+        new_text, old_block = _splice(existing, block)
+        old_rules = _rule_lines(old_block or [])
+        new_rules = _rule_lines(block)
+        added = len(set(new_rules) - set(old_rules))
+        removed = len(set(old_rules) - set(new_rules))
+        changed = sum(1 for k in set(new_rules) & set(old_rules) if new_rules[k] != old_rules[k])
+        counts = {"added": added, "changed": changed, "removed": removed}
+        result = dict(counts, path=target, dryRun=bool(dry_run), written=False, backup=None)
+        if dry_run or new_text == existing:
+            return result
+        if _read_bytes(target) != raw:
+            raise RoadmapError("conflict", "CLAUDE.md changed while the sync ran; nothing written, run roadmap rules "
+                               "sync again", EXIT_CONFLICT)
+        result["backup"] = backup.backup_files(project["id"], [target], now=now) if raw is not None else None
+        atomic.write_text(target, new_text)
     result["written"] = True
     summary = "rules sync +%d ~%d -%d" % (added, changed, removed)
     activity.append(data_dir, source or agentguard.source_name(), "rules.sync", summary, undo=False, now=now)
