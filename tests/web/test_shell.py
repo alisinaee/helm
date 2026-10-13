@@ -99,12 +99,10 @@ class CssBudgetTests(unittest.TestCase):
             self.assertTrue(os.path.isfile(os.path.join(CSS_DIR, name)), name)
 
     def test_stub_stylesheets_are_commented_and_small(self):
-        # plan.css is filled by WP32 (its size budget is checked in tests/web/test_plan.py), so only its rules are checked.
+        # plan.css is filled by WP32 (its size budget is checked in tests/web/test_plan.py), so only the rules are checked.
         self.assertIn(".lane-head", read(os.path.join(CSS_DIR, "plan.css")))
-        for name in ("work.css",):
-            text = read(os.path.join(CSS_DIR, name))
-            self.assertTrue(text.lstrip().startswith("/*"), name)
-            self.assertLess(len(text), 400, name)
+        # work.css is filled by WP31: it must carry real rules for the Work section, not the stub.
+        self.assertIn(".wk-board", read(os.path.join(CSS_DIR, "work.css")))
 
     def test_flow_css_holds_the_overview_inbox_and_activity_styles(self):
         # WP30 filled flow.css: the question card and the activity rows. It stays well inside the 51 KB total.
