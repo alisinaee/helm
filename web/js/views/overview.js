@@ -137,7 +137,8 @@ function blockersHtml(snap) {
     return '<li class="nz-row">' + esc(i.id) + " " + esc(i.title) + (i.tasks.length
       ? " (blocks " + esc(i.tasks.join(", ")) + ")" : "") + "</li>";
   });
-  return cardHtml("blockers", "Open blockers", fmtCount(snap.blocked.length) + " tasks",
+  return cardHtml("blockers", "Open blockers", fmtCount(snap.blocked.length) +
+    (snap.blocked.length === 1 ? " task" : " tasks"),
     '<ul class="nz-list">' + tasks.concat(issues).join("") + "</ul>");
 }
 

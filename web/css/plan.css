@@ -1,6 +1,7 @@
 /* plan.css (WP32): Roadmap lanes and timeline, Issues and its form. Token-only; no colour literals. */
 .lanes, .lane-cards, .tl, .iss-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); min-width: 0; }
 .lane, .iss-form { display: grid; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); background: var(--surface-1); border-radius: var(--r-card); min-width: 0; }
+.iss-filters { margin-top: var(--sp-3); }
 .lane-head { display: grid; gap: var(--sp-1); min-width: 0; }
 .lane-toggle { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); min-height: var(--h-row); padding: 0; border: 0; background: none; color: var(--text-1); font: inherit; text-align: left; cursor: pointer; }
 .lane-caret { width: 1em; color: var(--text-3); }
