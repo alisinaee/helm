@@ -61,6 +61,10 @@ Do not read the whole plan. Run `roadmap plan export --phase P1`, change the few
 - a step is over its budget: stop and report the step and its cost;
 - a missing answer would change the plan: ask the one question and wait;
 - a check or a dry run still fails after two fixes: stop and show the lines it names.
+- a question must wait for the person: `roadmap ask "<question>" --opt A --opt B --default A`, then `roadmap ask get Q3`.
+- a blocker or risk goes into the record: `roadmap issue new "<title>"`, so the next agent sees it in `roadmap inbox`.
+- before a worker starts: `roadmap rules show --for P2.4 --model haiku --role worker` (at most 12 lines) goes in its prompt.
+- a stop from the person looks like `roadmap: stopped by user`: end your turn and run `roadmap inbox`; `--tokens K` on `job done` feeds the budget.
 
 ## 8. Done when
 `roadmap status` shows the board, and the user has approved the `you:` items.

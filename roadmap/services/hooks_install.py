@@ -19,11 +19,15 @@ LEGACY_MARKER = "jobs_auto.py"
 SETTINGS_RELPATH = os.path.join(".claude", "settings.local.json")
 HOOK_TIMEOUT_S = 10
 MERGE_ATTEMPTS = 3  # re-merge when Claude Code changed the settings file between our read and our replace
-# (event, matcher or None). PostToolUse is the only event with a matcher.
+# (event, matcher or None, suffix added to the hook command). The suffix "pre" makes the PreToolUse gate: the shim
+# exits at once, without starting Python, while no project is stopped (see bin/roadmap).
+PRE_MATCHER = "Edit|Write|MultiEdit|NotebookEdit|Bash|Agent|Task|WebFetch|WebSearch"
 EVENTS = (
-    ("PostToolUse", "Agent|Task|Bash"),
-    ("SubagentStop", None),
-    ("Stop", None),
+    ("PreToolUse", PRE_MATCHER, " pre"),
+    ("SessionStart", None, ""),
+    ("PostToolUse", "Agent|Task|Bash", ""),
+    ("SubagentStop", None, ""),
+    ("Stop", None, ""),
 )
 _UNSAFE_CHARS = set(" \t\"'$`\\;&|<>()*?[]{}!#~")
 
@@ -184,9 +188,9 @@ def _apply_install(settings, command, replace_legacy):
                 hooks[event] = kept
                 if not kept:
                     del hooks[event]
-    for event, matcher in EVENTS:
+    for event, matcher, suffix in EVENTS:
         kept, _ = _strip(_groups(hooks, event), _is_ours)
-        entry = {"type": "command", "command": command, "timeout": HOOK_TIMEOUT_S}
+        entry = {"type": "command", "command": command + suffix, "timeout": HOOK_TIMEOUT_S}
         group = {"hooks": [entry]}
         if matcher is not None:
             group = {"matcher": matcher, "hooks": [entry]}
@@ -245,9 +249,9 @@ def status(project_id):
     expected = hook_command()
     hooks = _hooks_of(_parse(_read_raw(path), path), create=False)
     events = {}
-    for event, matcher in EVENTS:
+    for event, matcher, suffix in EVENTS:
         commands = _ours_in(_groups(hooks, event))
-        if expected in commands:
+        if expected + suffix in commands:
             state = "installed"
         elif commands:
             state = "stale"

@@ -13,8 +13,9 @@ import re
 import time
 
 from roadmap.errors import EXIT_INVALID_DATA, RoadmapError
-from roadmap.services import jobs
-from roadmap.store import lock, paths, schema
+from roadmap.services import control, jobs
+from roadmap.services import queue as queue_service
+from roadmap.store import atomic, lock, paths, schema
 
 DEFAULT_PATTERN = r"^[A-Z]+[0-9]+(\.[0-9]+)?$"
 DEFAULT_DETECTORS = ("agent", "agy", "cursor")
@@ -201,33 +202,45 @@ def project_settings(data_dir):
     return pattern, [n for n in names if isinstance(n, str)]
 
 
-def run_hook(raw, environ=None, cwd=None, now=None):
-    """Handle one hook event given as stdin text. Returns nothing and never raises."""
+def run_hook(raw, environ=None, cwd=None, now=None, clock=None):
+    """Handle one hook event given as stdin text. Returns the JSON reply for Claude Code (a dict) or None.
+
+    Never raises. A PreToolUse event that fails, runs past PRE_TIMEOUT_S or finds no sentinel returns None, which
+    lets the tool call through (fail open).
+    """
+    clock = time.monotonic if clock is None else clock
+    started = clock()
     try:
-        _handle(raw, os.environ if environ is None else environ, cwd, time.time() if now is None else now)
+        return _handle(raw, os.environ if environ is None else environ, cwd, time.time() if now is None else now,
+                       clock, started)
     except Exception as exc:  # a hook must never fail a tool call: the problem goes to the log
         _log("error " + type(exc).__name__ + ": " + str(exc))
+        return None
 
 
-def _handle(raw, environ, cwd, now):
+def _handle(raw, environ, cwd, now, clock, started):
     try:
         payload = json.loads(raw) if raw and raw.strip() else {}
     except ValueError as exc:
         _log("skip: stdin is not valid JSON (" + str(exc)[:80] + ")")
-        return
+        return None
     if not isinstance(payload, dict):
         _log("skip: stdin is not a JSON object")
-        return
+        return None
     event = str(payload.get("hook_event_name") or "")
+    if event == "PreToolUse":
+        return _pre_tool_use(payload, environ, cwd, now, clock, started)
     tool = str(payload.get("tool_name") or "")
     _log(event + " " + tool)
     project = _project_for(payload, environ, cwd)
     if project is None:
-        return
+        return None
     data_dir = jobs.data_dir_of(project)
     if not os.path.isdir(data_dir):
         _log("skip: data folder missing for " + project["id"])
-        return
+        return None
+    if event == "SessionStart":
+        return _session_start(project, data_dir)
     pattern, names = project_settings(data_dir)
     regex = task_regex(pattern)
     known = jobs.known_task_ids(data_dir)
@@ -241,6 +254,9 @@ def _handle(raw, environ, cwd, now):
         if exc.code != "locked":
             raise
         # A busy lock: return silently, so the hook exits 0 within its time budget. The next event tries again.
+    if event == "Stop":
+        return _stop_pickup(payload, project, data_dir)
+    return None
 
 
 def _run_event(project, data_dir, event, payload, active, regex, known, now):
@@ -283,6 +299,177 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
         gone = set(closed)
         merged = [e for e in latest if e.get("job") not in gone] + started
         _write_state(path, project["id"], {"active": merged})
+
+
+# ------------------------------------------------------------------ control: PreToolUse, SessionStart, Stop pickup
+
+PRE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit", "Bash", "Agent", "Task", "WebFetch", "WebSearch")
+PRE_TIMEOUT_S = 0.3        # a PreToolUse that takes longer lets the tool call through
+DENY_LOG_S = 60            # a denial is logged at most once a minute per project
+PICKUP_PER_SESSION = 3
+INBOX_LINES = 3
+_SHELL_OPERATORS = (";", "&", "|", "`", "\n", "<", ">", "$(")
+
+
+def _too_slow(clock, started):
+    return clock() - started > PRE_TIMEOUT_S
+
+
+def _roadmap_command(command):
+    """True for a Bash command that is one roadmap command: it starts with 'roadmap ' and chains nothing."""
+    text = command.strip()
+    return text.startswith("roadmap ") and not any(op in text for op in _SHELL_OPERATORS)
+
+
+def _project_quiet(payload, environ, cwd):
+    """The registered project of the payload cwd, or None. Unlike _project_for, it logs nothing."""
+    here = payload.get("cwd")
+    here = here if isinstance(here, str) and here else cwd
+    try:
+        return jobs.resolve_project(None, environ, here)
+    except RoadmapError:
+        return None
+
+
+def _pre_tool_use(payload, environ, cwd, now, clock, started):
+    """The PreToolUse decision: a deny reply when the project is stopped or blocked, otherwise None."""
+    tool = str(payload.get("tool_name") or "")
+    if tool not in PRE_TOOLS:
+        return None
+    tool_input = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
+    if tool == "Bash" and _roadmap_command(str(tool_input.get("command") or "")):
+        return None
+    project = _project_quiet(payload, environ, cwd)
+    if project is None or _too_slow(clock, started):
+        return None
+    pid = project["id"]
+    if not os.path.exists(control.sentinel_path(pid)):
+        return None
+    state = control.read_state(pid)
+    if not state:
+        return None
+    reason = _deny_reason(state, payload, project, now)
+    if reason is None or _too_slow(clock, started):
+        return None
+    _log_denial(pid, reason, now)
+    return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
+                                   "permissionDecisionReason": reason}}
+
+
+def _deny_reason(state, payload, project, now):
+    """The one line that denies a tool call, or None when the state lets it run."""
+    tail = ". Run roadmap inbox, then end your turn."
+    if state.get("stop") is True:
+        stamp = control.clock_text(state.get("stoppedAt"))
+        ref = state.get("stopRef")
+        return "roadmap: stopped by user" + (" at " + stamp if stamp else "") + (" (" + ref + ")" if ref else "") + tail
+    stopped = state.get("stopTasks") or []
+    if stopped:
+        task = _task_of_agent(project, str(payload.get("agent_id") or ""))
+        if task is not None and task in stopped:
+            text = (state.get("taskBlocks") or {}).get(task) or "stopped"
+            return "roadmap: task " + task + " " + str(text) + tail
+    block = state.get("block")
+    if isinstance(block, dict):
+        until = control.parse_time(state.get("overrideUntil"))
+        overridden = until is not None and until.timestamp() > now and block.get("overridable") is True
+        if not overridden:
+            return "roadmap: blocked: " + str(block.get("reason", "limit reached")) + tail
+    return None
+
+
+def _task_of_agent(project, agent_id):
+    """The task of the job that runs this subagent, or None. The hook state maps agent ids to job ids."""
+    if not agent_id:
+        return None
+    try:
+        data, error = schema.read_data("hooks", paths.hooks_file(project["id"]))
+        if error is not None or not data:
+            return None
+        wanted = {e.get("job") for e in data.get("active") or [] if isinstance(e, dict) and e.get("agent") == agent_id}
+        if not wanted:
+            return None
+        for job in jobs.list_jobs(jobs.data_dir_of(project)):
+            if job.get("id") in wanted:
+                return job.get("task")
+    except (RoadmapError, OSError, ValueError):
+        return None
+    return None
+
+
+def _log_denial(pid, reason, now):
+    """Log a denial, at most once a minute per project (the stamp file's mtime is the last log time)."""
+    try:
+        folder = paths.ensure_dir(paths.state_dir())
+        stamp = os.path.join(folder, "deny-" + pid)
+        last = os.path.getmtime(stamp) if os.path.exists(stamp) else 0.0
+        if now - last < DENY_LOG_S:
+            return
+        with open(stamp, "a", encoding="utf-8"):
+            pass
+        os.utime(stamp, (now, now))
+    except OSError:
+        return
+    _log("denied " + pid + ": " + reason)
+
+
+def _session_start(project, data_dir):
+    """Up to INBOX_LINES lines for the agent's context: the stop line first, then queued and answered items."""
+    lines = []
+    try:
+        state = control.read_state(project["id"])
+    except RoadmapError:
+        state = None
+    if state and state.get("stop") is True:
+        stamp = control.clock_text(state.get("stoppedAt"))
+        lines.append("roadmap: stopped by user at " + stamp + ". Run roadmap inbox.")
+    lines += control.pending_lines(data_dir, limit=INBOX_LINES - len(lines))
+    if not lines:
+        return None
+    return {"hookSpecificOutput": {"hookEventName": "SessionStart",
+                                   "additionalContext": "\n".join(lines[:INBOX_LINES])}}
+
+
+def _stop_pickup(payload, project, data_dir):
+    """Stop hook: surface one queued start request as decision block, once per request and 3 times per session.
+    Off with pickupOnStop false in the project config. Never while the project is stopped or blocked."""
+    if payload.get("stop_hook_active") is True:
+        return None
+    config_data, error = schema.read_data("roadmap_config", os.path.join(data_dir, "roadmap.config.json"))
+    if error is not None or (config_data or {}).get("pickupOnStop") is False:
+        return None
+    state = control.read_state(project["id"])
+    if state and (state.get("stop") is True or state.get("block")):
+        return None
+    entries = queue_service.list_queue(data_dir)
+    if not entries:
+        return None
+    folder = paths.ensure_dir(paths.state_dir())
+    path = os.path.join(folder, "pickup-" + project["id"] + ".json")
+    session = str(payload.get("session_id") or "")
+    try:
+        with lock.locked(folder, timeout=HOOK_LOCK_TIMEOUT_S):
+            saved = atomic.read_json(path, default={}) if os.path.exists(path) else {}
+            surfaced = saved.get("surfaced") if isinstance(saved.get("surfaced"), dict) else {}
+            sessions = saved.get("sessions") if isinstance(saved.get("sessions"), dict) else {}
+            if int(sessions.get(session, 0)) >= PICKUP_PER_SESSION:
+                return None
+            pending = [e for e in entries if _request_key(e) not in surfaced]
+            if not pending:
+                return None
+            entry = pending[0]
+            surfaced[_request_key(entry)] = session
+            sessions[session] = int(sessions.get(session, 0)) + 1
+            atomic.write_json(path, {"surfaced": surfaced, "sessions": sessions})
+    except (RoadmapError, ValueError, TypeError):
+        return None
+    _log("pickup " + str(entry.get("task")))
+    return {"decision": "block", "reason": "roadmap: queued request " + str(entry.get("task"))
+            + " is waiting; run roadmap inbox and start it."}
+
+
+def _request_key(entry):
+    return str(entry.get("task")) + "@" + str(entry.get("at"))
 
 
 def _verdict_of(now):
