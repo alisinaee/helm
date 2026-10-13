@@ -1,0 +1,10 @@
+{
+  "limit": {
+    "kind": "weekly",
+    "stopAtPercent": 80,
+    "setBy": "the person",
+    "setOn": "2026-10-13",
+    "note": "Work until weekly usage reaches the stop percent."
+  },
+  "usage": {}
+}

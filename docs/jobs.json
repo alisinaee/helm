@@ -1,0 +1,259 @@
+{
+  "schemaVersion": 1,
+  "jobs": [
+    {
+      "id": "j364",
+      "title": "haiku: WP1 roadmap-board skeleton",
+      "model": "haiku",
+      "task": "R1.1",
+      "status": "done",
+      "started": "2026-10-13T17:26:13+03:30",
+      "ended": "2026-10-13T17:29:47+03:30",
+      "tokensK": 111.1
+    },
+    {
+      "id": "j365",
+      "title": "haiku: WP2 roadmap-board store",
+      "model": "haiku",
+      "task": "R1.2",
+      "status": "done",
+      "started": "2026-10-13T17:30:11+03:30",
+      "ended": "2026-10-13T17:34:11+03:30",
+      "tokensK": 105.7
+    },
+    {
+      "id": "j366",
+      "title": "haiku: WP3 roadmap-board core move",
+      "model": "haiku",
+      "task": "R1.3",
+      "status": "done",
+      "started": "2026-10-13T17:30:20+03:30",
+      "ended": "2026-10-13T17:33:15+03:30",
+      "tokensK": 115.7
+    },
+    {
+      "id": "j367",
+      "title": "haiku: WP4 jobs and hooks services",
+      "model": "haiku",
+      "task": "R1.4",
+      "status": "done",
+      "started": "2026-10-13T17:34:32+03:30",
+      "ended": "2026-10-13T17:39:36+03:30",
+      "tokensK": 156.8
+    },
+    {
+      "id": "j368",
+      "title": "haiku: WP6 usage service",
+      "model": "haiku",
+      "task": "R1.6",
+      "status": "done",
+      "started": "2026-10-13T17:34:41+03:30",
+      "ended": "2026-10-13T17:38:31+03:30",
+      "tokensK": 135.0
+    },
+    {
+      "id": "j369",
+      "title": "haiku: WP6 lint fix and commit WP4+6",
+      "model": "haiku",
+      "task": "R1.6",
+      "status": "done",
+      "started": "2026-10-13T17:39:57+03:30",
+      "ended": "2026-10-13T17:40:36+03:30",
+      "tokensK": 156.8
+    },
+    {
+      "id": "j370",
+      "title": "haiku: WP5 HTTP server and API v1",
+      "model": "haiku",
+      "task": "R1.5",
+      "status": "done",
+      "started": "2026-10-13T17:41:00+03:30",
+      "ended": "2026-10-13T17:51:52+03:30",
+      "tokensK": 186.3
+    },
+    {
+      "id": "j371",
+      "title": "haiku: WP10 projects and hooks installer",
+      "model": "haiku",
+      "task": "R1.8",
+      "status": "done",
+      "started": "2026-10-13T17:41:09+03:30",
+      "ended": "2026-10-13T17:45:34+03:30",
+      "tokensK": 156.2
+    },
+    {
+      "id": "j372",
+      "title": "haiku: WP7 web shell and design system",
+      "model": "haiku",
+      "task": "R1.7",
+      "status": "done",
+      "started": "2026-10-13T17:52:58+03:30",
+      "ended": "2026-10-13T18:06:05+03:30",
+      "tokensK": 208.6
+    },
+    {
+      "id": "j373",
+      "title": "haiku: WP11 launchd service and doctor",
+      "model": "haiku",
+      "task": "R1.9",
+      "status": "done",
+      "started": "2026-10-13T17:53:10+03:30",
+      "ended": "2026-10-13T18:02:38+03:30",
+      "tokensK": 185.3
+    },
+    {
+      "id": "j374",
+      "title": "haiku: WP8 web sections",
+      "model": "haiku",
+      "task": "R2.1",
+      "status": "done",
+      "started": "2026-10-13T18:06:31+03:30",
+      "ended": "2026-10-13T18:19:01+03:30",
+      "tokensK": 231.4
+    },
+    {
+      "id": "j375",
+      "title": "haiku: WP12 docs and skill draft",
+      "model": "haiku",
+      "task": "R2.3",
+      "status": "done",
+      "started": "2026-10-13T18:06:42+03:30",
+      "ended": "2026-10-13T18:16:35+03:30",
+      "tokensK": 240.7
+    },
+    {
+      "id": "j376",
+      "title": "haiku: WP13 security hardening",
+      "model": "haiku",
+      "task": "R3.1",
+      "status": "done",
+      "started": "2026-10-13T18:17:21+03:30",
+      "ended": "2026-10-13T18:31:16+03:30",
+      "tokensK": 222.8
+    },
+    {
+      "id": "j377",
+      "title": "haiku: WP9 UI smoke and a11y gate",
+      "model": "haiku",
+      "task": "R2.2",
+      "status": "done",
+      "started": "2026-10-13T18:19:18+03:30",
+      "ended": "2026-10-13T18:26:22+03:30",
+      "tokensK": 134.6
+    },
+    {
+      "id": "j378",
+      "title": "haiku: WP8 polish minimal view and narrow layout",
+      "model": "haiku",
+      "task": "R2.1",
+      "status": "done",
+      "started": "2026-10-13T18:27:08+03:30",
+      "ended": "2026-10-13T18:35:45+03:30"
+    },
+    {
+      "id": "j379",
+      "title": "Cursor Auto: R1 security review of roadmap-board",
+      "model": "cursor",
+      "task": "R3.2",
+      "status": "done",
+      "started": "2026-10-13T18:32:40+03:30",
+      "ended": "2026-10-13T19:28:37+03:30",
+      "note": "security review R1 finished: 7 findings"
+    },
+    {
+      "id": "j380",
+      "title": "opus: WP15 Opus design token-lean interface",
+      "model": "opus",
+      "task": "R4.1",
+      "status": "done",
+      "started": "2026-10-13T18:43:33+03:30",
+      "ended": "2026-10-13T18:46:07+03:30"
+    },
+    {
+      "id": "j381",
+      "title": "haiku: WP16.1 plan format and tasks service",
+      "model": "haiku",
+      "task": "R4.2",
+      "status": "done",
+      "started": "2026-10-13T18:46:25+03:30",
+      "ended": "2026-10-13T18:55:27+03:30",
+      "tokensK": 166.4
+    },
+    {
+      "id": "j382",
+      "title": "opus: WP19 Opus product scope light Jira",
+      "model": "opus",
+      "task": "R5.1",
+      "status": "done",
+      "started": "2026-10-13T18:47:33+03:30",
+      "ended": "2026-10-13T18:50:06+03:30"
+    },
+    {
+      "id": "j383",
+      "title": "haiku: WP14 fix security review R1 findings",
+      "model": "haiku",
+      "task": "R3.2",
+      "status": "done",
+      "started": "2026-10-13T19:28:15+03:30",
+      "ended": "2026-10-13T19:37:19+03:30",
+      "tokensK": 174.1
+    },
+    {
+      "id": "j384",
+      "title": "haiku: WP16.2 task plan status commands",
+      "model": "haiku",
+      "task": "R4.2",
+      "status": "done",
+      "started": "2026-10-13T19:28:23+03:30",
+      "ended": "2026-10-13T19:32:57+03:30",
+      "tokensK": 120.2
+    },
+    {
+      "id": "j385",
+      "title": "Cursor Auto: WP14 security review gate R1 of the repo",
+      "model": "cursor",
+      "task": "R3.2",
+      "status": "running",
+      "started": "2026-10-13T19:28:37+03:30",
+      "ended": null
+    },
+    {
+      "id": "j386",
+      "title": "haiku: WP17 skills research agent-guide",
+      "model": "haiku",
+      "task": "R4.3",
+      "status": "done",
+      "started": "2026-10-13T19:33:21+03:30",
+      "ended": "2026-10-13T19:41:02+03:30",
+      "tokensK": 129.4
+    },
+    {
+      "id": "j388",
+      "title": "haiku: WP20 data and snapshot",
+      "model": "haiku",
+      "task": "R5.2",
+      "status": "done",
+      "started": "2026-10-13T19:37:47+03:30",
+      "ended": "2026-10-13T19:47:39+03:30",
+      "tokensK": 186.5
+    },
+    {
+      "id": "j389",
+      "title": "haiku: WP21 command layer and CLI",
+      "model": "haiku",
+      "task": "R5.3",
+      "status": "running",
+      "started": "2026-10-13T19:48:34+03:30",
+      "ended": null
+    },
+    {
+      "id": "j390",
+      "title": "haiku: WP22 control hooks rules",
+      "model": "haiku",
+      "task": "R5.4",
+      "status": "running",
+      "started": "2026-10-13T19:48:51+03:30",
+      "ended": null
+    }
+  ]
+}
