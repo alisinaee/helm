@@ -69,9 +69,10 @@ def _budget_view(doc, tasks, phases):
     }
 
 
-def build_snapshot(files, config, now, control=None, meters=None):
+def build_snapshot(files, config, now, control=None, meters=None, rules=None):
     """The snapshot dict. Same shape as the old server's build(), plus "project" and "schemaVersion".
     meters (WP27: limits, today, week) is added only when given, so a snapshot built without it is unchanged.
+    rules (WP33b: the parsed docs/rules.txt list) is added only when given, for the same reason.
 
     server_time is now in ISO 8601 with whole seconds. Parse problems go into errors[]; nothing raises.
     """
@@ -251,4 +252,6 @@ def build_snapshot(files, config, now, control=None, meters=None):
     })
     if meters is not None:
         out["meters"] = meters
+    if rules is not None:
+        out["rules"] = rules
     return out

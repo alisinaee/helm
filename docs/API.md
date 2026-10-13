@@ -118,8 +118,15 @@ Since WP27 the snapshot also has `meters`, computed from the limit rows and the 
 block or unknown), `est` (true for a project's share estimate, shown with "≈"), `paceAt` (the local time the pace of
 the last two hours reaches the limit, or null) and `src` (config, limits, autonomy or budget). `today` holds `pts` (the
 account's measured points today), `tokK` (the project's tracked thousands of tokens today) and `estPts` (its estimate).
-`week` holds `pct` (the weekly account percent), `tokK` and `estPts` for seven days. Unknown values are null. A
-snapshot without these keys is unchanged.
+`week` holds `pct` (the weekly account percent), `tokK` and `estPts` for seven days. Unknown values are null. Each `limits` item also has `action` (block or warn, the row's own action;
+read-through rows from autonomy.json and budget.json give theirs, default block). A snapshot without these keys is
+unchanged.
+
+Since WP33b the snapshot also has `rules`: the list of rules from the project's `docs/rules.txt`, each `{id, scope,
+kind, value, text}` (`value` is the number for a budget rule, else null). At most 60 rules; a line that is not a valid
+rule, or whose text is over 160 characters, is skipped. A missing or unreadable file gives `[]`. Without the key the
+snapshot is unchanged.
+
 
 `ETag` is a strong tag: the first 32 hex characters of a SHA-256 over the snapshot content with `server_time` left
 out, in quotes, for example `"c8f6148f5af0d6c7135ea34e7b0bf70e"`. Send it back as `If-None-Match`. When nothing has
