@@ -70,6 +70,12 @@ function goToSection(key) {
 }
 
 function onKeydown(event) {
+  // Alt+arrow bindings (WP32, roadmap cards) are the only Alt keys; they are not used while typing.
+  if (event.altKey && !event.ctrlKey && !event.metaKey && !isTyping(event.target) && extra.has("Alt+" + event.key)) {
+    event.preventDefault();
+    extra.get("Alt+" + event.key)(event);
+    return;
+  }
   if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || isTyping(event.target)) {
     return;
   }
