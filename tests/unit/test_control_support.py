@@ -1,9 +1,11 @@
 """Shared fixture for the WP22 tests: a temp ROADMAP_HOME with one registered project (id demo) that has phases,
 tasks with caps, and a budget file the tests fill in. Nothing touches the real home, the real projects or ~/.claude."""
 
+import datetime
 import json
 import os
 
+from roadmap.services import ledger
 from roadmap.store import config
 from tests.unit.test_store_support import HomeCase
 
@@ -18,6 +20,9 @@ TASKS = {
     ],
 }
 ROADMAP_CONFIG = {"schemaVersion": 1, "id": "demo", "title": "Demo", "hookDetectors": []}
+# the reading is as fresh as the MOMENT the control tests recompute at (WP27: older than 30 minutes is unknown)
+USAGE_AT = datetime.datetime(2026, 10, 13, 14, 2, tzinfo=datetime.timezone.utc)
+USAGE_UPDATED = USAGE_AT.isoformat()
 
 
 def write_json(path, obj):
@@ -79,8 +84,11 @@ class ControlCase(HomeCase):
             "jobs": [],
         })
 
-    def set_usage(self, weekly):
-        write_json(os.path.join(self.state_dir, "usage.json"), {"schemaVersion": 1, "weeklyPercent": weekly})
+    def set_usage(self, weekly, updated=USAGE_UPDATED):
+        """A usage reading as a sync leaves it: usage.json and one ledger reading (WP27: pct and acct rows need both)."""
+        write_json(os.path.join(self.state_dir, "usage.json"),
+                   {"schemaVersion": 1, "weeklyPercent": weekly, "updated": updated})
+        ledger.record_reading(weekly, None, now=USAGE_AT)
 
     def read_tasks(self):
         return read_json(os.path.join(self.docs, "tasks.json"))

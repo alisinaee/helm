@@ -120,6 +120,10 @@ there. They live in the project's own `docs/roadmap.config.json`, so they travel
 }
 ```
 
+WP27 additions: the usage ledger is `state/ledger.json` (14 local days, at most 4 KB; a corrupt file is moved to
+`ledger.json.corrupt` and started again). Global limit rows are the config key `limits` (a list). Project limit rows
+are the budget key `limitRows` (a list, next to the existing `limits` object of budget caps).
+
 `extras` lists optional Markdown files and the parser each one uses (`core/extras.py`: `spikes`, `testing`,
 `roadmap`). A project with no extras has `"extras": {}`.
 
@@ -194,6 +198,17 @@ The rules, implemented in `store/schema.py` and `store/migrations.py`:
   runs `lsof` (read-only) to name a process that holds a port.
 - **`doctor.py`**: runs each check and returns rows with `ok|warn|fail`, a detail and a fix. It never reads the
   keychain secret.
+- **`ledger.py`** (WP27): the usage ledger. `record_reading` adds the points since the last reading of the weekly
+  window (the first reading of a day is compared with yesterday's last one; a reset adds the new value).
+  `record_spend` adds a finished job's thousands of tokens to its project for the day. `rate` is points per thousand
+  tokens over seven days, with no estimate under 200k tracked; `estimate` is a project's token share of the points.
+  `pace_per_hour` is the slope of the last two hours of readings.
+- **`limits.py`** (WP27): the limit rows. `check_spec` allows only the valid scope, window and kind combinations.
+  `evaluate_rows` reads usage (fresh within 30 minutes), the ledger and the budget, and gives each row a state:
+  warn at 80%, block at 100% (action block only), unknown when a value is missing or stale (never blocks). Any failure
+  gives an empty list, which is ok, and is logged once a minute. `meters` and `show_lines` serve the snapshot and
+  `limit show`. Stores: global config rows, project `limitRows`, and the read-through AUTO (autonomy stop) and BUD
+  (project budget) rows.
 - **`loader.py`**: reads a registered project's files from `<path>/<dataDir>` and gives the text of each to
   `core.snapshot`. A missing file is not an error; a file that cannot be read becomes an `errors[]` entry.
 

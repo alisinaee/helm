@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 
 from roadmap.errors import EXIT_INVALID_DATA, EXIT_USAGE, RoadmapError
 from roadmap.log import get_logger
+from roadmap.services import ledger
 from roadmap.store import config as config_store
 from roadmap.store import lock, paths, schema
 
@@ -286,8 +287,19 @@ def mirror_to_projects(cfg, record):
 
 def _commit(changes, cfg):
     stored = _update_store(changes)
+    _record_ledger(changes, stored)
     mirrors = mirror_to_projects(cfg, stored) if _mirror_enabled(cfg) else []
     return stored, mirrors
+
+
+def _record_ledger(changes, stored):
+    """Add a weekly reading to the usage ledger (WP27, services/ledger.py). Best effort: the usage is saved already."""
+    if "weeklyPercent" not in changes:
+        return
+    try:
+        ledger.record_reading(stored.get("weeklyPercent"), stored.get("fiveHourPercent"), datetime.now().astimezone())
+    except Exception as exc:  # the ledger is derived data; a failure must not fail the sync
+        log.warning("usage ledger not updated: %s", type(exc).__name__)
 
 
 def _result(stored, cfg, mirrors):
@@ -361,12 +373,10 @@ def push(text, config=None):
 
 
 def _control_after_write():
-    """After a usage write, recompute the control state of every project (weekly limits read usage.json). Best effort:
-    control.after_write never raises."""
+    """After a usage write, recompute the control state of every project: the limit rows read usage and the ledger.
+    Best effort: control.recompute_all never raises."""
     from roadmap.services import control
-    from roadmap.store import config as project_config
-    for entry in project_config.list_projects():
-        control.after_write(entry["id"])
+    control.recompute_all()
 
 
 # ---------------------------------------------------------------- background loop

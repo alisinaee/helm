@@ -2,9 +2,10 @@
 
 Every write recomputes <state>/control-<project>.json: {stop, stoppedAt, stopRef, manualTasks, stopTasks, block,
 taskBlocks, warn, overrideUntil}. The manual flags (stop, manualTasks, overrideUntil) are kept in the same file; the
-limits (project budget, phase and task caps, weekly usage against autonomy.json stopAtPercent) are recomputed from
-the data each time. The sentinel <state>/block-<project> exists only while something blocks: a stop, a stopped task
-or a limit. The PreToolUse hook reads only these two files and fails open (services/hooks.py).
+limits (phase and task caps; the limit rows of services/limits.py: global, project, the weekly stop and the project
+budget) are recomputed from the data each time, and a global row reaches every project through recompute_all.
+The sentinel <state>/block-<project> exists only while something blocks: a stop, a stopped task or a limit. The
+PreToolUse hook reads only these two files and fails open (services/hooks.py).
 
 The write order of each op is: lock, validate, write, recompute, activity line. The activity line comes before the
 recompute of a stop, so the stop can name its own activity id (A812).
@@ -14,10 +15,12 @@ import datetime
 import os
 
 from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
-from roadmap.services import activity, agentguard, budget, jobs, queue, questions, records, tasks
+from roadmap.services import activity, agentguard, budget, jobs, limits, queue, questions, records, tasks
+from roadmap.log import get_logger
 from roadmap.store import atomic, config, lock, paths, schema
 
 STATE_VERSION = 1
+log = get_logger("services.control")
 WARN_PCT = 80
 BLOCK_PCT = 100
 OVERRIDE_MIN_H = 1
@@ -155,25 +158,6 @@ def _spent_rows(bud):
     return rows
 
 
-def _weekly_percent():
-    """The weekly usage percent from the usage store, or None when there is no reading."""
-    try:
-        data = atomic.read_json(paths.usage_file(), default=None)
-    except RoadmapError:
-        return None
-    return _number(data.get("weeklyPercent")) if isinstance(data, dict) else None
-
-
-def _stop_at(data_dir):
-    """stopAtPercent from autonomy.json (default 100)."""
-    data, error = schema.read_data("autonomy", os.path.join(data_dir, "autonomy.json"))
-    if error is not None:
-        raise RoadmapError("newer_schema", error["message"], EXIT_INVALID_DATA)
-    limit = (data or {}).get("limit")
-    value = _number(limit.get("stopAtPercent")) if isinstance(limit, dict) else None
-    return 100.0 if value is None else value
-
-
 def _load_budget(data_dir, warns):
     if not os.path.isdir(data_dir):
         return None
@@ -205,18 +189,11 @@ def _evaluate(project, manual, now):
     if bud is None:
         bud = {"spent": {}, "limits": {"project": None, "phases": {}, "models": {}, "tasks": {}}}
     spent = _spent_rows(bud)
-    limits = bud["limits"]
-    spent_total = sum(sum(models.values()) for models in spent.values())
-    pct = _pct(spent_total, _number(limits.get("project")))
-    if pct is not None:
-        if pct >= BLOCK_PCT:
-            reasons.append("project budget %d%% used" % int(pct))
-        elif pct >= WARN_PCT:
-            warns.append("project budget at %d%%" % int(pct))
+    caps = bud["limits"]
     phase_of = {t["id"]: t.get("phase") for t in rows}
     task_total = {tid: sum(models.values()) for tid, models in spent.items()}
 
-    for phase_id, cap in (limits.get("phases") or {}).items():
+    for phase_id, cap in (caps.get("phases") or {}).items():
         used = sum(total for tid, total in task_total.items() if phase_of.get(tid) == phase_id)
         pct = _pct(used, _number(cap))
         if pct is None:
@@ -228,9 +205,9 @@ def _evaluate(project, manual, now):
         elif pct >= WARN_PCT:
             warns.append("phase " + phase_id + " at %d%%" % int(pct))
 
-    caps = {t["id"]: _number(t.get("capK")) for t in rows if _number(t.get("capK")) is not None}
-    caps.update({tid: _number(v) for tid, v in (limits.get("tasks") or {}).items() if _number(v) is not None})
-    for tid, cap in caps.items():
+    task_caps = {t["id"]: _number(t.get("capK")) for t in rows if _number(t.get("capK")) is not None}
+    task_caps.update({tid: _number(v) for tid, v in (caps.get("tasks") or {}).items() if _number(v) is not None})
+    for tid, cap in task_caps.items():
         pct = _pct(task_total.get(tid, 0.0), cap)
         if pct is None:
             continue
@@ -239,23 +216,20 @@ def _evaluate(project, manual, now):
         elif pct >= WARN_PCT:
             warns.append("task " + tid + " at %d%%" % int(pct))
 
-    for model, cap in (limits.get("models") or {}).items():
+    for model, cap in (caps.get("models") or {}).items():
         used = sum(models.get(model, 0.0) for models in spent.values())
         pct = _pct(used, _number(cap))
         if pct is not None and pct >= BLOCK_PCT:
             warns.append("model " + model + " over its cap (warning only)")
 
-    weekly = _weekly_percent()
-    if weekly is not None:
-        try:
-            stop_at = _stop_at(data_dir) if os.path.isdir(data_dir) else 100.0
-        except RoadmapError as exc:
-            stop_at = 100.0
-            warns.append("autonomy.json unreadable: " + exc.message[:60])
-        if weekly >= stop_at:
-            reasons.append("weekly usage %d%% reached stopAtPercent %d%%" % (int(weekly), int(stop_at)))
-        elif weekly >= stop_at * WARN_PCT / 100.0:
-            warns.append("weekly usage at %d%%" % int(weekly))
+    # the account and project limit rows (services/limits.py): global rows fan out to every project this way
+    applied = limits.evaluate_rows(project, now)
+    for row in applied:
+        if row["state"] == "block":
+            reasons.append(limits.describe(row))
+        elif row["state"] == "warn":
+            warns.append(limits.describe(row))
+    blocking_scopes = {row["scope"] for row in applied if row["state"] == "block"}
 
     stopped_at = manual["stoppedAt"] if manual["stop"] else None
     for tid in manual["manualTasks"]:
@@ -268,7 +242,8 @@ def _evaluate(project, manual, now):
 
     block = None
     if reasons:
-        block = {"reason": "; ".join(reasons), "scope": "project", "overridable": True}
+        block = {"reason": "; ".join(reasons), "scope": "global" if blocking_scopes == {"global"} else "project",
+                 "overridable": True}
     state = {
         "schemaVersion": STATE_VERSION,
         "project": project["id"],
@@ -283,6 +258,7 @@ def _evaluate(project, manual, now):
         "block": block,
         "warn": warns[:6],
         "overrideUntil": override,
+        "day": _now(now).date().isoformat(),
         "updated": _iso(now),
     }
     return state
@@ -304,11 +280,25 @@ def recompute(project_id, now=None):
     return _mutate(project, lambda manual: None, _now(now))
 
 
+def recompute_all(now=None):
+    """Recompute every registered project. A global limit row therefore blocks every project's sentinel at once.
+    Called after a usage reading, a finished job and a limit change. Returns {project id: state or None}."""
+    moment = _now(now)
+    states = {}
+    for entry in config.list_projects():
+        try:
+            states[entry["id"]] = recompute(entry["id"], moment)
+        except Exception as exc:  # one broken project must not stop the others
+            log.warning("control recompute failed for %s: %s", entry.get("id"), type(exc).__name__)
+            states[entry["id"]] = None
+    return states
+
+
 def after_write(project_id, now=None):
-    """Best effort recompute for the other ops after their write. Never raises: a broken limit file must not break
-    a write that has already been saved. Returns the state, or None."""
+    """Best effort recompute after a write (fan-out to every project). Never raises: a broken limit file must not
+    break a write that has already been saved. Returns the state of project_id, or None."""
     try:
-        return recompute(project_id, now)
+        return recompute_all(now).get(project_id)
     except Exception:  # the write is done; the next recompute repairs the state
         return None
 
@@ -419,10 +409,10 @@ def set_weekly_limit(project_id, pct, now=None, source=None):
     return _mutate(project, lambda manual: None, moment)
 
 
-def _current_limit(limits, scope, key):
+def _current_limit(current, scope, key):
     if scope == "project":
-        return _number(limits.get("project"))
-    return _number((limits.get(scope) or {}).get(key))
+        return _number(current.get("project"))
+    return _number((current.get(scope) or {}).get(key))
 
 
 def set_budget_limit(project_id, scope, key, value, now=None, source=None):
@@ -444,6 +434,31 @@ def set_budget_limit(project_id, scope, key, value, now=None, source=None):
     _log(data_dir, source or agentguard.source_name(), "budget.set",
          "limit " + label + " " + ("cleared" if new is None else "%g" % new), moment)
     return _mutate(project, lambda manual: None, moment)
+
+
+def set_limit_row(project_id, scope, window, kind, value, action="block", row_id=None, now=None, source=None):
+    """Set a limit row (services/limits.py): the same scope, window and kind replace the row that is there. Always
+    refused from an agent. Returns {row, prior}. The weekly stop (kind acct) writes autonomy.json as limit set <pct>
+    does; a project total budget writes the budget. Every project is recomputed, so a global row reaches all of them."""
+    agentguard.refuse_if_agent("limit.set", source)
+    spec = limits.check_spec(scope, window, kind, value, action)
+    project, data_dir = _project(project_id)
+    moment = _now(now)
+    prior, row = limits.write_row(project, data_dir, spec, row_id=row_id, now=moment)
+    _log(data_dir, source or agentguard.source_name(), "limit.set", limits.label(row) + " set", moment)
+    recompute_all(moment)
+    return {"row": row, "prior": prior}
+
+
+def remove_limit_row(project_id, row_id, now=None, source=None):
+    """Remove a limit row by id (L3, AUTO or BUD). Always refused from an agent. Returns the removed row."""
+    agentguard.refuse_if_agent("limit.rm", source)
+    project, data_dir = _project(project_id)
+    moment = _now(now)
+    removed = limits.remove_row(project, data_dir, row_id, now=moment)
+    _log(data_dir, source or agentguard.source_name(), "limit.rm", limits.label(removed) + " removed", moment)
+    recompute_all(moment)
+    return removed
 
 
 def approve_phase(project_id, phase_id, now=None, source=None):

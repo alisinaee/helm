@@ -2,7 +2,7 @@
 
 import argparse
 
-from roadmap.services import budget, jobs
+from roadmap.services import budget, control, jobs
 
 DONE_WORDS = {"done": "done", "fail": "failed"}
 
@@ -58,10 +58,12 @@ def _start(args):
 
 def _finish(args):
     tokens = jobs.tokens_from_arg(args.tokens)
-    data_dir = _data_dir(args)
+    project = jobs.resolve_project(args.project)
+    data_dir = jobs.data_dir_of(project)
     job = jobs.finish_job(data_dir, args.id, args.status, args.note, tokens)
     if tokens is not None:
         budget.record_job_spend(data_dir, job["id"], job.get("task"), job.get("model"), tokens)
+        control.after_write(project["id"])  # the spend can reach a limit row (WP27)
     if not getattr(args, "json", False):
         print(job["id"] + " " + job["status"])
         return None
