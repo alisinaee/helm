@@ -1,0 +1,15 @@
+#!/bin/sh
+# roadmap-board CLI shim. Follows its own symlinks to find the repo, then runs the package from there.
+src=$0
+while [ -h "$src" ]; do
+    dir=$(cd -P "$(dirname "$src")" && pwd)
+    src=$(readlink "$src")
+    case $src in
+        /*) ;;
+        *) src=$dir/$src ;;
+    esac
+done
+root=$(cd -P "$(dirname "$src")/.." && pwd)
+PYTHONPATH=$root
+export PYTHONPATH
+exec python3 -m roadmap "$@"
