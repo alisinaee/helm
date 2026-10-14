@@ -101,8 +101,9 @@ function accountHtml(vm, rows) {
 function capRow(scope, key, name, budgetRow) {
   const spent = budgetRow ? fmtTokens(budgetRow.spent) : MISSING;
   const cap = budgetRow && budgetRow.limit != null ? String(budgetRow.limit) : "";
-  return '<li class="spend-row"><span class="spend-name">' + esc(name) + '</span><span class="spend-val num">' +
-    esc(spent) + (cap ? " of " + esc(cap) + "k" : " (no cap)") + "</span>" +
+  return '<li class="row-grid tk-spend"><span class="rg-t spend-name" title="' + esc(name) + '">' + esc(name) +
+    '</span><span class="rg-num num spend-val">' + esc(spent) + '</span><span class="rg-num num">' +
+    esc(cap ? "of " + cap + "k" : "no cap") + "</span>" +
     '<label class="lim-field"><span class="lim-label">Cap in thousands</span>' +
     '<input class="lim-num" type="number" min="1" step="1" value="' + esc(cap) + '" data-focus="cap-' + esc(scope) +
     "-" + esc(key) + '"></label>' +
