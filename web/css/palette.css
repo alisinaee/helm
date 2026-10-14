@@ -1,0 +1,12 @@
+/* Command palette (WP61b): a modal dialog. Colours are tokens; each row is the shared .row-grid with its own tracks. */
+#palette{width:min(560px,calc(100vw - 32px));max-height:min(70vh,560px);margin:12vh auto 0;padding:0;overflow:hidden;border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface-1);color:var(--text-1);box-shadow:var(--shadow-2)}
+#palette::backdrop{background:var(--scrim)}
+.palette-body{display:grid;gap:var(--sp-2);padding:var(--sp-3);box-sizing:border-box}
+#palette-input{width:100%;box-sizing:border-box;min-height:var(--h-control);padding:0 var(--sp-2);border:1px solid var(--line);border-radius:var(--r-control);background:var(--surface-0);color:var(--text-1);font:inherit;font-size:var(--fs-15)}
+#palette-list{display:grid;gap:2px;max-height:50vh;overflow:auto}
+.palette-opt{display:grid;--rg:6rem minmax(0,1fr) 5rem;min-height:var(--h-row);padding:0 var(--sp-2);border-radius:var(--r-control);color:var(--text-2);font-size:var(--fs-13);cursor:pointer}
+.palette-opt.is-active{background:var(--sel);color:var(--text-1)}
+.palette-id{color:var(--text-3);font-family:var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.palette-status{margin:0;color:var(--text-3);font-size:var(--fs-13)}
+#palette-input:focus-visible,.palette-opt:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (max-width:600px){#palette{width:calc(100vw - 16px);margin-top:8px}#palette-input{min-height:44px}.palette-opt{min-height:44px}}
