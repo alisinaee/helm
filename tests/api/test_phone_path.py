@@ -17,8 +17,36 @@ class PhonePathHelper(ServerCase):
         out = routes._phone_public(snap)
         self.assertNotIn("path", out["project"])
         self.assertEqual(out["meters"]["where"], "~/Works/app")
-        self.assertEqual(out["list"], ["~", HOME + "2/x"])
+        self.assertEqual(out["list"], ["~", "…/" + HOME.split("/")[-1] + "2/x"])
         self.assertIn("path", snap["project"], "the input must not be mutated")
+
+    def test_other_absolute_paths_keep_only_their_last_two_segments(self):
+        snap = {"a": "/Users/bob/app/src", "b": "/home/carol/proj", "c": "/private/var/folders/x/y/z",
+                "d": "/tmp/run", "e": "open /Users/bob/app now", "f": "/var/x"}
+        out = routes._phone_public(snap)
+        self.assertEqual(out["a"], "…/app/src")
+        self.assertEqual(out["b"], "…/carol/proj")
+        self.assertEqual(out["c"], "…/y/z")
+        self.assertEqual(out["d"], "…/tmp/run")
+        self.assertEqual(out["e"], "open …/bob/app now")
+        self.assertEqual(out["f"], "…/var/x")
+
+    def test_home_inside_a_sentence_is_rewritten(self):
+        out = routes._phone_public({"msg": "see " + HOME + "/Works/app, then stop"})
+        self.assertEqual(out["msg"], "see ~/Works/app, then stop")
+
+    def test_urls_numbers_relative_and_plain_text_are_unchanged(self):
+        snap = {"u": "https://example.com/a/b", "n": 12, "f": 1.5, "t": True, "z": None,
+                "r": "a/b", "frac": "1/2", "plain": "nothing here", "list": ["x/y", {"deep": "ok"}]}
+        out = routes._phone_public(snap)
+        self.assertEqual(out, snap)
+
+    def test_nested_values_are_scrubbed_and_the_input_is_not_mutated(self):
+        snap = {"project": {"id": "x", "path": "/tmp/p"}, "rows": [{"where": "/home/dev/app/x"}]}
+        out = routes._phone_public(snap)
+        self.assertEqual(out["rows"][0]["where"], "…/app/x")
+        self.assertEqual(snap["rows"][0]["where"], "/home/dev/app/x")
+        self.assertEqual(snap["project"]["path"], "/tmp/p")
 
     def test_localhost_app_keeps_project_path(self):
         res = self.request("GET", "/api/v1/projects/%s/snapshot" % PROJECT_ID)

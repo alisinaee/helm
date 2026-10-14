@@ -143,6 +143,14 @@ review gate (WP13/R1) must be signed before the 1.0.0 release (WP14).
 - **The agent guard is a speed bump, not a security boundary (WP22).** A local process running as you can send the
   two browser headers itself, and it can read the CSRF token from `GET /`. That process is then taken for the person's
   browser. The guard catches accidents (an agent that does not know it should ask), not a deliberate local attacker.
+- **Accept can be reached without the person (review R7.1 finding 2).** A bare TTY counts as a person, so an agent that
+  strips `CLAUDECODE`, `CURSOR_*` or `AGY_*` and runs under a PTY can accept a feature. Accepted because a local
+  process that deliberately hides itself is outside this tool's threat model. Mitigation: accept is person-only by
+  policy, every accept is written to the activity log with its source, and undo is available.
+- **Forged browser headers reach accept (review R7.1 finding 3).** A local process can send `Origin`,
+  `Sec-Fetch-Site` and the CSRF token it reads from `GET /`, so the request is taken for the browser. Accepted for the
+  same reason as above; the guard is a speed bump (WP22). Mitigation: accept is person-only by policy, the activity log
+  records the request source, and undo is available.
 - **A project whose own files cannot be read gets none of its own limit rows** (`autonomy.json` or `budget.json` with
   a newer schema or a corrupt value). The global day and week rows still apply, and the log says so once a minute.
   This is fail open for that project's own rows, by design (`unknown` never blocks).
