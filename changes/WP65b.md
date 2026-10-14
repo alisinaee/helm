@@ -1,0 +1,9 @@
+# WP65b: commands and notify gap tests
+
+- Source of the rows: the agy staffer reviews `docs/reviews/agy-g3-commands.md` and `docs/reviews/agy-g4-notify.md`. Each row was read against the code and grepped against `tests/`. Rows already asserted by an existing test were dropped, and the rest were written.
+- Dropped as already covered: commands.py 183 (subtask.toggle), 240 and 251 (plan.move, self-move), 294 and 304 (question.ask, question.answer), 323 (comment.add), 338 and 350 (issue.new, issue.close), 712 (inbox_lines); cmdops.py 81 (control.stop).
+- Wrong row: cmdops.py limit.set is called with `kind: "tokens"` in the review, but the accepted kind is `tok` (`limits.check_spec`). The test uses `tok`.
+- New `tests/unit/test_commands_gaps.py` (19 tests): the already-queued stop conflict, task.start and task.stop replies, subtask.add reply, issue.link and its undo, the phone undo rule, a failing inverse (`undoFailed`, then retry), `commands.write`, the exact ask, queue and issues lines, and the registry ops control.override, limit.rm and rules.sync (dry run).
+- New `tests/unit/test_notify_watch_gaps.py` (19 tests): `_macos`, `_run_osascript`, the once-a-minute `_log_once`, the unreadable config, the empty-title fallback, `project_of` for an unknown folder, `notify_dir` with no runner, an unknown folder and a raising body callback; watch `--max` above 86400, a file change with no news (keeps polling), the 60-character answer cap; skills with no templates, `templates()` on a missing folder, plain `list` "not installed", plain `install` conflict, backup and create lines, and the `--project` next hint on conflict.
+- Real bugs found: none. No `expectedFailure` was added and `roadmap/` is unchanged.
+- Test-only changes: `roadmap/` untouched. No network, no keychain, no osascript (runners are injected or the platform is patched), temp ROADMAP_HOME only.
