@@ -250,6 +250,22 @@ class NeverRaiseTests(unittest.TestCase):
             self.assertEqual(features.derive(items, [], [])["counts"]["total"], 2)
 
 
+class SnapshotRowsTests(unittest.TestCase):
+    def test_rows_drop_the_task_list_and_keep_acc_only_while_not_done(self):
+        feats = [feat("F1", acc="shipped"), feat("F2", acc="still open")]
+        tasks = [task("A.1", "done", feats=["F1"]), task("A.2", "todo", feats=["F2"])]
+        first, second = features.snapshot_rows(features.derive(feats, tasks, [])["rows"])
+        self.assertNotIn("tasks", first)
+        self.assertNotIn("acc", first)
+        self.assertEqual(second["acc"], "still open")
+        self.assertEqual(set(first), set(features.SNAPSHOT_ROW_KEYS))
+        self.assertEqual((first["done"], first["total"], first["state"]), (1, 1, "done"))
+
+    def test_bad_input_gives_no_rows(self):
+        self.assertEqual(features.snapshot_rows(None), [])
+        self.assertEqual(features.snapshot_rows([{"id": "F1"}]), [{"id": "F1"}])
+
+
 class TaskFeatsTests(unittest.TestCase):
     def tasks_text(self, extra):
         base = {"id": "A.1", "phase": "A", "title": "x", "status": "todo", "tokensK": 1, "thinking": "low",

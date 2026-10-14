@@ -131,9 +131,11 @@ rule, or whose text is over 160 characters, is skipped. A missing or unreadable 
 snapshot is unchanged.
 
 Since WP52 the snapshot also has `features`: `{rows, uncovered, orphans, counts}` from `docs/features.json` and the
-tasks' `feats`. Each row is `{id, title, acc, prio, parent, phase, hold, accepted, tasks, done, total, estK, spentK,
-blocked, running, state}`, where `state` is `hold`, `uncovered`, `done`, `doing` or `todo` (first match). `uncovered`
-and `orphans` list feature ids and task ids. A project without `features.json` gets an empty derive.
+tasks' `feats`. Each row is `{id, title, prio, parent, phase, hold, accepted, done, total, estK, spentK, blocked,
+running, state}` plus `acc` only while the feature is not done (WP53b), where `state` is `hold`, `uncovered`, `done`,
+`doing` or `todo` (first match). The row has no task id list: a feature's tasks are the snapshot tasks whose `feats`
+name it (its own and its sub-features'). `uncovered` and `orphans` list feature ids and task ids. A project without
+`features.json` gets an empty derive. The `GET` feature route and the CLI `feature` output keep the full row.
 
 Since WP47 the snapshot also has `workflow`, always present (empty lists for a project with no jobs or tasks).
 `spans` holds the newest 200 jobs in start order, each as `[id, task, model, role, parent, startEpoch, endEpoch,

@@ -213,6 +213,23 @@ def _row(f, ordered, tasks_by_id, spent, running, blocked_ids):
     }
 
 
+# The snapshot row (WP53b): the derived row without the task id list, and acc only while the feature is not done.
+SNAPSHOT_ROW_KEYS = ("id", "title", "prio", "parent", "phase", "hold", "accepted", "done", "total", "estK", "spentK",
+                     "blocked", "running", "state")
+
+
+def snapshot_rows(rows):
+    """The rows the snapshot carries: SNAPSHOT_ROW_KEYS, plus acc for a feature that is not done. The Planner reads a
+    feature's tasks from each task's feats in the snapshot, so the id list is left out. Never raises."""
+    out = []
+    for row in rows if isinstance(rows, list) else []:
+        slim = {key: row[key] for key in SNAPSHOT_ROW_KEYS if key in row}
+        if row.get("state") != "done" and row.get("acc"):
+            slim["acc"] = row["acc"]
+        out.append(slim)
+    return out
+
+
 def _task_totals(task_list, spent):
     """Each task once: the global figures."""
     return {

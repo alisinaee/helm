@@ -237,11 +237,15 @@ function rulesHtml(task, snap) {
   }), ""));
 }
 
-// WP55: the features that name this task. The planner's rows carry their task ids, so the chips come from there.
+// WP55: the features that name this task (its feats in the snapshot).
 function featureRowsOf(snap, taskId) {
   const rows = snap.features && Array.isArray(snap.features.rows) ? snap.features.rows : [];
+  const task = (snap.tasks || []).find(function (t) {
+    return t.id === taskId;
+  });
+  const feats = task && Array.isArray(task.feats) ? task.feats : [];
   return rows.filter(function (row) {
-    return (row.tasks || []).indexOf(taskId) >= 0;
+    return feats.indexOf(row.id) >= 0;
   });
 }
 

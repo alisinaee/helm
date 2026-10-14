@@ -209,6 +209,8 @@ function normalizeTask(t) {
     // WP31: measured spend (thousands), from the budget row, for the Work list.
     spentK: num(t.spentK),
     dod: typeof t.dod === "string" && t.dod ? t.dod : null,
+    // WP53b: the feature ids this task names (its feats), for the Planner and the drawer's feature chips.
+    feats: list(t.feats).map(String),
   };
 }
 

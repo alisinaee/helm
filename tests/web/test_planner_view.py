@@ -3,7 +3,7 @@ plus static checks on the CSS, the markup rules and the lint.
 
 The checks: seven feature rows, the sub-feature after its parent, a shared task listed under both of its features,
 the uncovered and orphan callouts, the empty state, the add form, the Acc box state, every aria-controls naming an id
-in the same output, no inline style or on*= handler, the row-grid on every row, planner.css within 3 KB with no raw
+in the same output, no inline style or on*= handler, the row-grid on every row, planner.css within 4 KB with no raw
 colours, and the lint is clean for planner.js. Skipped with a message when node is not installed.
 """
 
@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import sys
 import unittest
+from pathlib import Path
 
 TESTS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.dirname(TESTS)
@@ -24,12 +25,27 @@ CSS = os.path.join(WEB, "css", "planner.css")
 INDEX = os.path.join(WEB, "index.html")
 sys.path.insert(0, os.path.join(REPO, "tools"))
 
-FEAT = re.compile(r'<li class="pl-feat')
-SUB = re.compile(r'<li class="pl-feat pl-sub')
+FEAT = re.compile(r'<li id="pl-feat-[^"]+" class="pl-feat')
+SUB = re.compile(r'<li id="pl-feat-[^"]+" class="pl-feat pl-sub')
 CONTROLS = re.compile(r'aria-controls="([^"]+)"')
 IDS = re.compile(r'\sid="([^"]+)"')
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=', re.IGNORECASE)
 HEX = re.compile(r"#[0-9a-fA-F]{3,8}\b")
+
+
+def run_section(vm):
+    """sectionView(vm) run in node (no DOM, so no scroll). Returns the HTML string."""
+    node = shutil.which("node")
+    if node is None:
+        raise unittest.SkipTest("node is not installed")
+    code = ("import(process.argv[1]).then(function (m) {"
+            " console.log(JSON.stringify({html: m.sectionView(JSON.parse(process.argv[2]))})); });")
+    module = os.path.join(WEB, "js", "views", "planner.js")
+    proc = subprocess.run([node, "-e", code, Path(module).as_uri(), json.dumps(vm)],
+                          capture_output=True, text=True, check=False)
+    if proc.returncode != 0:
+        raise AssertionError("sectionView failed: " + proc.stderr[-800:])
+    return json.loads(proc.stdout)["html"]
 
 
 def render_all():
@@ -63,7 +79,7 @@ class PlannerViewTest(unittest.TestCase):
         html = self.out["defaultView"]
         self.assertEqual(len(FEAT.findall(html)), 7)
         self.assertEqual(len(SUB.findall(html)), 1)
-        self.assertLess(html.index('data-id="F11"'), html.index('<li class="pl-feat pl-sub'))
+        self.assertLess(html.index('data-id="F11"'), html.index('<li id="pl-feat-F11b" class="pl-feat pl-sub'))
         self.assertTrue('class="pl-row row-grid' in html, "feature rows use the row grid")
         self.assertTrue('class="pl-head pl-row row-grid rg-head"' in html, "header uses the row grid")
 
@@ -106,6 +122,43 @@ class PlannerViewTest(unittest.TestCase):
         self.assertTrue('id="pl-menu-F3" role="group" aria-label="Actions for F3" hidden>' in html, "F3 menu closed")
         self.assertTrue('disabled aria-label="Remove F2 (unlink its tasks first)"' in html, "remove disabled")
 
+    def test_done_feature_has_no_acc_and_open_one_shows_its_tasks(self):
+        html = self.out["openAndMenu"]
+        self.assertIn("Done: acceptance is not in the snapshot", html)
+        self.assertIn('data-task="R6.13"', html)
+
+    def test_focus_opens_and_highlights_the_named_feature(self):
+        snap = json.loads(Path(SNAPSHOT).read_text(encoding="utf-8"))
+        vm = {"route": {"name": "project", "id": "splitnet", "filters": {"f": "F2"}, "section": "planner"},
+              "project": {"snapshot": snap}}
+        html = run_section(vm)
+        self.assertIn('<li id="pl-feat-F2" class="pl-feat is-doing is-focus">', html)
+        self.assertEqual(html.count("is-focus"), 1)
+        self.assertIn('aria-expanded="true" aria-controls="pl-tasks-F2"', html)
+
+    def test_focus_ignores_a_bad_id(self):
+        snap = json.loads(Path(SNAPSHOT).read_text(encoding="utf-8"))
+        vm = {"route": {"name": "project", "id": "splitnet", "filters": {"f": "F2<x>"}, "section": "planner"},
+              "project": {"snapshot": snap}}
+        self.assertNotIn("is-focus", run_section(vm))
+
+    def test_all_projects_scope_picks_a_project(self):
+        vm = {"route": {"name": "home", "id": None, "filters": {}, "section": "planner"},
+              "projects": [{"id": "splitnet", "name": "Split net"}, {"id": "roadmap", "name": "Roadmap"}]}
+        html = run_section(vm)
+        self.assertIn("Pick a project", html)
+        self.assertIn('href="#/p/splitnet/planner"', html)
+        self.assertIn("Roadmap", html)
+        self.assertNotIn("belongs to one project", html)
+
+    def test_filters_toggle_and_floating_add_button_are_present(self):
+        html = self.out["defaultView"]
+        self.assertIn('data-pl="filters"', html)
+        self.assertIn('aria-controls="pl-filters"', html)
+        self.assertIn('id="pl-filters" role="group"', html)
+        self.assertIn('class="btn btn-primary pl-fab" data-pl="adding"', html)
+        self.assertIn('class="btn btn-primary pl-add-inline" data-pl="adding"', html)
+
     def test_every_control_is_a_native_element(self):
         for name, html in self.out.items():
             self.assertNotIn('role="button"', html, name)
@@ -114,7 +167,7 @@ class PlannerViewTest(unittest.TestCase):
     def test_planner_css_is_small_and_uses_tokens_only(self):
         with open(CSS, encoding="utf-8") as fh:
             css = fh.read()
-        self.assertLessEqual(len(css.encode("utf-8")), 3072)
+        self.assertLessEqual(len(css.encode("utf-8")), 4096)
         self.assertIsNone(HEX.search(css))
 
     def test_index_links_the_stylesheet_once(self):

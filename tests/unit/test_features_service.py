@@ -211,7 +211,8 @@ class ViewsAndStatus(FeatureCase):
         self.assertEqual(view["orphans"], [t["id"] for t in json.loads(text)["tasks"]])
 
     def test_snapshot_counts_orphans_and_uncovered(self):
-        text = open(os.path.join(FIXTURE_DIR, "tasks.json"), encoding="utf-8").read()
+        with open(os.path.join(FIXTURE_DIR, "tasks.json"), encoding="utf-8") as fh:
+            text = fh.read()
         first = json.loads(text)["tasks"][0]["id"]
         feats = {"schemaVersion": 1, "features": [
             {"id": "F1", "title": "Covered", "acc": "", "prio": 2, "parent": None, "phase": None, "hold": False,
@@ -224,14 +225,18 @@ class ViewsAndStatus(FeatureCase):
         view = build_snapshot(files, {"id": "splitnet"}, PINNED_NOW)
         self.assertEqual(view["features"]["uncovered"], ["F2"])
         self.assertEqual(view["features"]["orphans"], [t["id"] for t in tasks_doc["tasks"][1:]])
-        self.assertIn(first, view["features"]["rows"][0]["tasks"])
+        # the rows carry no task list; the task itself names its feature in feats
+        self.assertNotIn("tasks", view["features"]["rows"][0])
+        self.assertEqual(view["tasks"][0]["feats"], ["F1"])
+        self.assertEqual(view["tasks"][0]["id"], first)
         self.assertEqual(view["errors"], [])
 
     def test_sixty_features_snapshot_size_stays_near_measured_size(self):
-        """The brief asks for at most 6 KB for 60 features. The row fields it lists are about 246 bytes each with
-        short text, so 60 rows measure about 15 KB. This test guards that measured size (a regression bound), not the
-        6 KB target, which the row shape cannot meet."""
-        text = open(os.path.join(FIXTURE_DIR, "tasks.json"), encoding="utf-8").read()
+        """WP53b: the rows drop the task id list and keep acc only for features that are not done. The 14 fixed keys
+        cost about 190 bytes a row, so 60 rows cannot reach 6 KB or 8 KB; they measure about 14 KB here (was 15.9 KB).
+        This test guards that measured size (a regression bound) and the row shape."""
+        with open(os.path.join(FIXTURE_DIR, "tasks.json"), encoding="utf-8") as fh:
+            text = fh.read()
         task_ids = [t["id"] for t in json.loads(text)["tasks"]][:120]
         tasks_doc = json.loads(text)
         feats = []
@@ -249,7 +254,10 @@ class ViewsAndStatus(FeatureCase):
         self.assertEqual(len(full["features"]["rows"]), 60)
         size = len(json.dumps(full["features"], separators=(",", ":")))
         self.assertEqual(set(base) | {"features"}, set(full))
-        self.assertLessEqual(size, 16 * 1024, "features key is %d bytes" % size)
+        self.assertLessEqual(size, 15 * 1024, "features key is %d bytes" % size)
+        for row in full["features"]["rows"]:
+            self.assertNotIn("tasks", row)
+            self.assertEqual("acc" in row, row["state"] != "done", row["id"])
 
 
 if __name__ == "__main__":
