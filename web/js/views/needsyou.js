@@ -3,6 +3,7 @@
 import { sectionHtml } from "../dom.js";
 import { fmtCount } from "../format.js";
 import { taskListHtml } from "./tasks.js";
+import { sectionRef } from "./next.js";
 
 export function needsSection(vm) {
   const tasks = vm.project.snapshot.tasks.filter(function (t) {
@@ -12,5 +13,6 @@ export function needsSection(vm) {
   const body = tasks.length
     ? '<div class="needs-list">' + taskListHtml(tasks) + "</div>"
     : '<p class="placeholder">No actions pending.</p>';
-  return sectionHtml({ id: "needs", title: "Needs you", summary: summary, open: vm.open.needs, body: body });
+  const html = sectionHtml({ id: "needs", title: "Needs you", summary: summary, open: vm.open.needs, body: body });
+  return sectionRef(html, vm.project.snapshot.id, "needsyou.needs", "Needs you", tasks.length);
 }
