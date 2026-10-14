@@ -1,0 +1,226 @@
+{
+  "features": [
+    {
+      "id": "F1",
+      "title": "Agent to GUI bridge",
+      "acc": "One write path through /cmd, used by the CLI and by hooks",
+      "prio": 2,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F2",
+      "title": "Planner",
+      "acc": "Features and tasks linked both ways; uncovered and orphan callouts; person accepts",
+      "prio": 1,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F3",
+      "title": "Roadmap visual",
+      "acc": "Lanes and timeline, approve; usable at 1440 px and 375 px",
+      "prio": 1,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F4",
+      "title": "Progress manager",
+      "acc": "Meters, blockers and live job tokens in the Overview",
+      "prio": 1,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F5",
+      "title": "Phase, task and subtask manager",
+      "acc": "Create, edit and move phases, tasks and subtasks in GUI and CLI",
+      "prio": 2,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F6",
+      "title": "Light Jira/Trello board",
+      "acc": "Board, list and tree with drag and drop; search finds tasks",
+      "prio": 2,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F7",
+      "title": "Issues",
+      "acc": "Bugs, risks and blockers; an open blocker gates next",
+      "prio": 2,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F8",
+      "title": "Agent questions and Inbox",
+      "acc": "Agents ask the person; Inbox and desktop notifications",
+      "prio": 2,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F9",
+      "title": "Task comments",
+      "acc": "Flat comment thread on tasks and issues, with caps",
+      "prio": 3,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F10",
+      "title": "Token usage and limits",
+      "acc": "Day and week limits, global and per project; soft when usage is stale",
+      "prio": 1,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F11",
+      "title": "Start and stop from the GUI",
+      "acc": "Start reaches an open session; Stop is enforced; answers from the GUI",
+      "prio": 1,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F12",
+      "title": "Rules applied to agents",
+      "acc": "Agent and Claude rules attached at pickup, not left to the lead",
+      "prio": 2,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F13",
+      "title": "Agents workflow map",
+      "acc": "Workflow map and time-axis timeline with handoffs",
+      "prio": 2,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F14",
+      "title": "Token-lean agent interface",
+      "acc": "Status in 8 lines or fewer; full-cycle agent token cost measured",
+      "prio": 1,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F15",
+      "title": "Haiku skills and install",
+      "acc": "Skills of 3.2 KB or less; one command installs them",
+      "prio": 3,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F16",
+      "title": "One-step research onboarding",
+      "acc": "New project goes research, plan, approve in one command",
+      "prio": 2,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F17",
+      "title": "Any project as a service; split-net cutover",
+      "acc": "Any project runs as a service; split-net cutover done safely",
+      "prio": 1,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F18",
+      "title": "App shell",
+      "acc": "Left nav, right panel, full-width layout",
+      "prio": 2,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F19",
+      "title": "Alignment, dark/light and accessibility",
+      "acc": "Rows align at a glance in dark and light; passes the a11y gate",
+      "prio": 2,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F20",
+      "title": "Phone access",
+      "acc": "Phone listener, responsive pages, read-only from a phone",
+      "prio": 3,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F21",
+      "title": "Cmd-K palette and search",
+      "acc": "Cmd-K jumps to a task or issue and runs Start, Stop or Answer",
+      "prio": 2,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F22",
+      "title": "Security and release 1.0",
+      "acc": "Security hardened; release 1.0 shipped and reviewed",
+      "prio": 1,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
+    }
+  ],
+  "updated": "2026-10-14",
+  "schemaVersion": 1
+}
