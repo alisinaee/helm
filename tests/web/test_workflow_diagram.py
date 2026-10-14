@@ -77,9 +77,9 @@ class DiagramSourceTests(unittest.TestCase):
         text = read_text(WORKFLOW)
         self.assertIsNone(re.search(r'^import[^\n]*"\.\./graph/', text, re.MULTILINE), "static graph import")
         dynamic = re.findall(r'import\("\.\./graph/([a-z]+)\.js"\)', text)
-        self.assertEqual(sorted(dynamic), ["layout", "model", "render"])
-        load = text[text.index("function loadGraph()"):text.index("function mapOpts(")]
-        self.assertEqual(len(re.findall(r'import\("\.\./graph/', load)), 3)
+        self.assertEqual(sorted(dynamic), ["layout", "minimap", "model", "render"])
+        load = text[text.index("function loadGraph()"):text.index("function narrow()")]
+        self.assertEqual(len(re.findall(r'import\("\.\./graph/', load)), 4)
 
     def test_viewport_and_render_are_separate_modules(self):
         self.assertTrue(os.path.isfile(os.path.join(GRAPH_DIR, "viewport.js")))

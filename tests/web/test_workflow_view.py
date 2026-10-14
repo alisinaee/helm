@@ -106,11 +106,13 @@ class WorkflowViewTests(unittest.TestCase):
             self.assertEqual(table_rows, timeline_bars, name)
             self.assertEqual(table_rows, case["jobs"], name)
 
-    def test_empty_state_reads_as_the_spec_says(self):
+    def test_a_project_without_jobs_still_maps_its_tasks(self):
+        # The Map is the default view and draws tasks, so a project with no job spans shows its flow, not the
+        # "No jobs recorded yet." note (that note stays with the Timeline and the Table).
         empty = self.out["sections"]["empty"]
-        self.assertIn("No jobs recorded yet.", empty)
-        self.assertIn("roadmap job start", empty)
-        self.assertIn('href="#/p/empty/agents"', empty)
+        self.assertIn('data-wf-view="map"', empty)
+        self.assertIn("data-wf-map-host", empty)
+        self.assertNotIn("No jobs recorded yet.", empty)
 
     def test_no_inline_style_or_handler_in_any_output(self):
         for html in markup(self.out):
@@ -137,11 +139,37 @@ class WorkflowViewTests(unittest.TestCase):
         self.assertIn('class="wf-detail row-grid wf-cols"', timeline)
         self.assertIn('class="rg-num num"', self.out["cases"]["running"]["table"])
 
-    def test_views_and_ranges_are_links_in_the_url(self):
-        timeline = self.out["sections"]["timeline"]
-        self.assertIn('aria-current="page">Timeline', timeline)
-        self.assertIn("#/p/alpha/workflow/map?f=range%3Aweek", timeline)
-        self.assertIn("#/p/alpha/workflow/timeline?f=range%3Aall", timeline)
+    def test_the_map_is_the_default_view_and_views_are_links_in_the_url(self):
+        # The harness renders the Map after the graph modules load (the second call), so the map section is checked.
+        mapped = self.out["sections"]["map"]
+        self.assertIn('aria-current="page">Map', mapped)
+        self.assertIn("#/p/alpha/workflow/timeline?f=range%3Aweek", mapped)
+        self.assertIn("#/p/alpha/workflow/table?f=range%3Aweek", mapped)
+        self.assertIn("#/p/alpha/workflow/map?f=range%3Aweek", mapped)
+        source = read_text(os.path.join(WEB, "js", "views", "workflow.js"))
+        self.assertIn('return route.name === "project" ? "map" : "timeline";', source)
+
+    def test_map_controls_are_labelled_buttons(self):
+        mapped = self.out["sections"]["map"]
+        for label in ("Zoom out", "Zoom in", "Fit to screen", "Centre on Now (N)", "Go to Start (S)",
+                      "Show all phases"):
+            self.assertIn('aria-label="' + label + '"', mapped)
+        self.assertIn('data-wf-map-op="now"', mapped)
+        self.assertIn('data-wf-map-op="start"', mapped)
+
+    def test_map_state_is_in_the_f_param_and_the_breadcrumb_is_a_phase_list(self):
+        source = read_text(os.path.join(WEB, "js", "views", "workflow.js"))
+        self.assertIn("/^(st|ag|ph|all|x):(.*)$/", source)
+        self.assertIn('data-wf-frame="', source)
+        self.assertIn('(f.collapsed ? "+" : "-") + f.lane', source)
+        self.assertIsNone(re.search(r"\bord:", source), "the old ord: token is gone")
+
+    def test_legend_names_only_what_the_map_draws(self):
+        mapped = self.out["sections"]["map"]
+        self.assertIn("Sequence", mapped)
+        self.assertIn("Dependency", mapped)
+        self.assertIn("You are here (Now)", mapped)
+        self.assertNotIn("Depends on", "".join(markup(self.out)))
 
     def test_global_scope_has_one_lane_per_project(self):
         all_html = self.out["sections"]["all"]
@@ -167,6 +195,56 @@ class WorkflowViewTests(unittest.TestCase):
 
     def test_index_links_the_stylesheet_once(self):
         self.assertEqual(read_text(os.path.join(WEB, "index.html")).count('href="/css/map.css"'), 1)
+
+
+class WorkflowMapTests(unittest.TestCase):
+    """The Map (R7.14 E): the toolbar, the legend, the Now centring, the keys and the phase state in f=."""
+
+    @classmethod
+    def setUpClass(cls):
+        if shutil.which("node") is None:
+            raise unittest.SkipTest("node is not installed")
+        cls.out = render()
+        cls.source = read_text(os.path.join(WEB, "js", "views", "workflow.js"))
+
+    def test_toolbar_is_real_buttons_with_labels(self):
+        mapped = self.out["sections"]["map"]
+        for label, text in (("Fit to screen", "Fit"), ("Centre on Now (N)", "Now"), ("Go to Start (S)", "Start")):
+            self.assertRegex(mapped, r'<button type="button" class="btn btn-small" data-wf-map-op="[a-z-]+" '
+                                     r'aria-label="%s"[^>]*>%s</button>' % (re.escape(label), text))
+
+    def test_map_legend_names_the_drawn_items_and_the_table_legend_has_no_edges(self):
+        legend = re.search(r'<ul class="wf-legend".*?</ul>', self.out["sections"]["map"]).group(0)
+        self.assertIn("You are here (Now)", legend)
+        self.assertIn("Todo", legend)
+        table = re.search(r'<ul class="wf-legend".*?</ul>', self.out["sections"]["table"]).group(0)
+        self.assertNotIn("Handoff", table)
+        self.assertNotIn("Sequence", table)
+
+    def test_map_opens_centred_on_now_and_keeps_the_user_view_after(self):
+        self.assertIn('api.centerOn("now", true)', self.source)
+        self.assertIn("if (opening) openAtNow(api, st.flow);", self.source)
+        self.assertIn("const view = opening ? undefined : st.view;", self.source)
+
+    def test_n_and_s_keys_and_the_arrows_are_wired(self):
+        self.assertIn("/^[nNsS]$/.test(e.key)", self.source)
+        self.assertIn('mapOp(e.key === "n" || e.key === "N" ? "now" : "start")', self.source)
+        self.assertIn('if (lastModel.view === "map") return;', self.source)
+
+    def test_minimap_mounts_above_640_and_chips_replace_it_below(self):
+        self.assertIn("mountMinimap(host.parentNode", self.source)
+        self.assertIn('NARROW_Q = "(max-width: 640px)"', self.source)
+        self.assertIn('<nav class="wfg-chips" aria-label="Phases">', self.source)
+        self.assertIn('data-wf-frame="', self.source)
+
+    def test_map_filters_and_phase_folds_ride_in_f(self):
+        self.assertIn("#/p/alpha/workflow/map?f=range%3Aweek%2Cst%3Adoing", self.out["sections"]["map"])
+        self.assertIn('keep.push((f.collapsed ? "+" : "-") + f.lane);', self.source)
+        self.assertIn("window.location.hash = mapHash(route, rangeOf(route), { x: keep.join(\"|\") });", self.source)
+
+    def test_a_capped_or_folded_map_says_how_many_items_it_shows(self):
+        self.assertIn("'<p class=\"wfg-note\">Showing ' + shown + \" of \" + matched + \" items\" +", self.source)
+        self.assertIn('(flow.capped ? " (the view caps at " + flow.cap + ")" : "")', self.source)
 
 
 if __name__ == "__main__":
