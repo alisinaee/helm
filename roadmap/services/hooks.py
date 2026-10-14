@@ -17,7 +17,7 @@ import time
 
 from roadmap import log as roadmap_log
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, RoadmapError
-from roadmap.services import control, jobs, rules
+from roadmap.services import control, jobs, presence, rules
 from roadmap.services import queue as queue_service
 from roadmap.store import atomic, lock, paths, schema
 
@@ -251,6 +251,7 @@ def _handle(raw, environ, cwd, now, clock, started):
     if not os.path.isdir(data_dir):
         _log("skip: data folder missing for " + project["id"])
         return None
+    _touch_presence(project, now)
     if event == "SessionStart":
         return _session_start(project, data_dir, clock, started)
     pattern, names = project_settings(data_dir)
@@ -365,6 +366,7 @@ def _pre_tool_use(payload, environ, cwd, now, clock, started):
     project = _project_quiet(payload, cwd)
     if project is None or _too_slow(clock, started):
         return None
+    _touch_presence(project, now)
     pid = project["id"]
     if not os.path.exists(control.sentinel_path(pid)):
         return None
@@ -392,6 +394,14 @@ def _pre_tool_use(payload, environ, cwd, now, clock, started):
     _log_denial(pid, reason, now)
     return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
                                    "permissionDecisionReason": reason}}
+
+
+def _touch_presence(project, now):
+    """Stamp that a session is open for this project (R7.1). Throttled inside presence; never raises or logs."""
+    try:
+        presence.touch_hook(jobs.data_dir_of(project), now)
+    except Exception:  # presence is advisory: a hook never fails because of it
+        pass
 
 
 def _not_allowed_reason(command):

@@ -4,8 +4,9 @@ import json
 import os
 import time
 import unittest
+from unittest import mock
 
-from roadmap.services import hooks
+from roadmap.services import hooks, presence
 from roadmap.store import lock
 from tests.unit.test_jobs_support import FixtureCase, ROADMAP_CONFIG, run_cli, write_json
 from tests.unit.test_store_support import mode_of
@@ -236,6 +237,41 @@ class CommandTitleAndBusyLockTests(HookTestCase):
         self.assertLess(time.monotonic() - start, 5)
         self.assertEqual(self.read_jobs(), [])
         self.assertIsNone(self.state_active())
+
+
+class PresenceStampTests(HookTestCase):
+    """R7.1 T3: hook events stamp the project's presence, and a presence failure never changes a hook's result."""
+
+    def hook_stamp(self):
+        with open(presence.file_for(self.docs), encoding="utf-8") as fh:
+            return json.load(fh)["hook"]
+
+    def test_session_start_stamps_presence(self):
+        self.fire(hook_event_name="SessionStart")
+        self.assertEqual(presence.state(self.docs), presence.OPEN)
+
+    def test_stop_event_stamps_presence(self):
+        self.fire(hook_event_name="Stop")
+        self.assertEqual(presence.state(self.docs), presence.OPEN)
+
+    def test_pre_tool_use_stamps_presence_for_the_project_of_the_cwd(self):
+        hooks.run_hook(json.dumps({"hook_event_name": "PreToolUse", "tool_name": "Bash", "cwd": self.project,
+                                   "tool_input": {"command": "ls"}}))
+        self.assertEqual(presence.state(self.docs), presence.OPEN)
+
+    def test_repeated_events_write_the_stamp_at_most_once_per_throttle(self):
+        self.fire(hook_event_name="Stop")
+        first = self.hook_stamp()
+        self.fire(hook_event_name="Stop")
+        self.assertEqual(self.hook_stamp(), first)
+
+    def test_a_failing_presence_write_does_not_change_the_hook_reply(self):
+        with mock.patch.object(presence, "touch_hook", side_effect=RuntimeError("disk gone")):
+            code, out, err = run_cli(["hook"], stdin_text=json.dumps({"hook_event_name": "Stop",
+                                                                      "cwd": self.project}))
+            reply = hooks.run_hook(json.dumps({"hook_event_name": "SessionStart", "cwd": self.project}))
+        self.assertEqual((code, out, err), (0, "", ""))
+        self.assertIsNone(reply)
 
 
 if __name__ == "__main__":
