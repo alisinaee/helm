@@ -8,6 +8,7 @@ import unittest
 
 from roadmap.core import features
 from roadmap.core.parsers import parse_feats, parse_tasks
+from roadmap.services import features as feature_service
 
 
 def task(tid, state="todo", tokens=10, feats=None):
@@ -51,7 +52,8 @@ class StateMatrixTests(unittest.TestCase):
         self.assertEqual(row(result, "F4")["state"], "doing")
         self.assertEqual(row(result, "F5")["state"], "todo")
         self.assertEqual(result["uncovered"], ["F2"])
-        self.assertEqual(result["counts"], {"total": 5, "done": 1, "doing": 1, "todo": 1, "uncovered": 1})
+        # hold is its own count and not part of total, so the four states add up to total
+        self.assertEqual(result["counts"], {"total": 4, "done": 1, "doing": 1, "todo": 1, "uncovered": 1, "hold": 1})
 
     def test_hold_with_no_tasks_is_not_uncovered(self):
         result = features.derive([feat("F1", hold=True)], [], [])
@@ -191,6 +193,19 @@ class CapsAndErrorsTests(unittest.TestCase):
         self.assertEqual([r["title"] for r in result["rows"]], ["first"])
         self.assertTrue(any("more than once" in e for e in result["errors"]))
 
+    def test_phase_must_be_a_phase_id(self):
+        self.assertInvalid(feat("F1", phase="P1-x"), "phase must be a phase id")
+        self.assertInvalid(feat("F1", phase=7), "phase must be a phase id")
+        self.assertEqual(features.derive([feat("F1", phase="P1")], [], [])["rows"][0]["phase"], "P1")
+        self.assertIsNone(features.derive([feat("F1", phase="")], [], [])["rows"][0]["phase"])
+
+    def test_accepted_must_be_a_real_date(self):
+        for bad in ("yes", "2026-13-01", "2026-02-30", "2026-10-1", 20261014, True):
+            self.assertInvalid(feat("F1", accepted=bad), "accepted must look like 2026-10-14")
+        self.assertEqual(features.derive([feat("F1", accepted="2026-10-14")], [], [])["rows"][0]["accepted"],
+                         "2026-10-14")
+        self.assertIsNone(features.derive([feat("F1", accepted="")], [], [])["rows"][0]["accepted"])
+
     def test_cap_of_sixty_features(self):
         raw = [feat("F" + str(n)) for n in range(1, 62)]
         result = features.derive(raw, [], [])
@@ -231,21 +246,21 @@ class NeverRaiseTests(unittest.TestCase):
             with tempfile.TemporaryDirectory() as folder:
                 with open(os.path.join(folder, "features.json"), "w", encoding="utf-8") as fh:
                     fh.write(text)
-                items, errors = features.load(folder)
+                items, errors = feature_service.load(folder)
                 self.assertEqual(items, [], text)
                 self.assertTrue(errors, text)
                 self.assertIn(fragment, errors[0]["error"], text)
 
     def test_load_missing_file_is_empty(self):
         with tempfile.TemporaryDirectory() as folder:
-            self.assertEqual(features.load(folder), ([], []))
+            self.assertEqual(feature_service.load(folder), ([], []))
 
     def test_load_reads_schema_one_features(self):
         with tempfile.TemporaryDirectory() as folder:
             doc = {"schemaVersion": 1, "features": [feat("F1"), feat("F2", parent="F1")]}
             with open(os.path.join(folder, "features.json"), "w", encoding="utf-8") as fh:
                 json.dump(doc, fh)
-            items, errors = features.load(folder)
+            items, errors = feature_service.load(folder)
             self.assertEqual(errors, [])
             self.assertEqual([f["id"] for f in items], ["F1", "F2"])
             self.assertEqual(features.derive(items, [], [])["counts"]["total"], 2)

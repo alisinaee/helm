@@ -1,46 +1,28 @@
 """Planner features (docs/features.json): derive feature rows, coverage and orphan tasks.
 
-derive(features, tasks, jobs, issues=None) is pure: it takes the raw feature list (see load), the parsed tasks
-(parse_tasks), the parsed jobs (parse_jobs) and the parsed issues. It never raises. A feature that fails a rule is
-left out of rows and named in errors. validate(features) returns the same error strings.
+derive(features, tasks, jobs, issues=None) is pure: it takes the raw feature list (read by
+roadmap.services.features.load), the parsed tasks (parse_tasks), the parsed jobs (parse_jobs) and the parsed issues.
+It never raises. A feature that fails a rule is left out of rows and named in errors. validate(features) returns the
+same error strings.
 
 Rules (spec section 2): ids F1..F99, at most 60 features, title <= 80, acc <= 160, prio 1..3, one parent level only.
 A task lists up to 3 features in feats; it counts once in taskTotals and in each of its features' figures.
 """
 
-import os
+import datetime
+import re
 
-from roadmap.core.parsers import FEAT_ID_RE, ISSUE_OPEN, error_entry
-from roadmap.errors import RoadmapError
-from roadmap.store import schema
+from roadmap.core.parsers import FEAT_ID_RE, ISSUE_OPEN
+from roadmap.core.planfmt import PHASE_ID_RE
 
 FEATURES_FILE = "features.json"
+DATE_RE = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
 MAX_FEATURES = 60
 TITLE_MAX = 80
 ACC_MAX = 160
 PRIO_DEFAULT = 2
 PRIOS = (1, 2, 3)
 STATES = ("hold", "uncovered", "done", "doing", "todo")
-
-
-def load(data_dir):
-    """(raw feature list, errors) from data_dir/features.json at the current schema. A missing file is empty.
-    A newer or corrupt file gives an errors entry and an empty list. Never raises."""
-    path = os.path.join(data_dir, FEATURES_FILE)
-    try:
-        data, error = schema.read_data("features", path)
-    except RoadmapError as exc:
-        return [], [error_entry(FEATURES_FILE, ValueError(exc.message))]
-    except Exception as exc:  # any unreadable file becomes an errors entry
-        return [], [error_entry(FEATURES_FILE, exc)]
-    if error is not None:
-        return [], [{"file": FEATURES_FILE, "error": error["message"]}]
-    if data is None:
-        return [], []
-    items = data.get("features")
-    if not isinstance(items, list):
-        return [], [error_entry(FEATURES_FILE, ValueError("features.json has no features array"))]
-    return items, []
 
 
 def validate(features):
@@ -92,10 +74,12 @@ def derive(features, tasks, jobs, issues=None):
         rows.append(_row(f, ordered, tasks_by_id, spent, running, blocked_ids))
 
     uncovered = [r["id"] for r in rows if r["state"] == "uncovered"]
-    counts = {"total": len(rows)}
+    # total is the features that are not on hold, so done + doing + todo + uncovered == total; hold is its own count.
+    counts = {"total": sum(1 for r in rows if r["state"] != "hold")}
     for state in ("done", "doing", "todo"):
         counts[state] = sum(1 for r in rows if r["state"] == state)
     counts["uncovered"] = len(uncovered)
+    counts["hold"] = sum(1 for r in rows if r["state"] == "hold")
     return {
         "rows": rows,
         "uncovered": uncovered,
@@ -170,6 +154,12 @@ def _field_errors(raw, index):
     parent = raw.get("parent")
     if parent is not None and (not isinstance(parent, str) or not FEAT_ID_RE.match(parent)):
         errs.append(label + ": parent must be a feature id or null")
+    phase = raw.get("phase")
+    if phase not in (None, "") and (not isinstance(phase, str) or not PHASE_ID_RE.match(phase)):
+        errs.append(label + ": phase must be a phase id or null")
+    accepted = raw.get("accepted")
+    if accepted not in (None, "") and not _is_date(accepted):
+        errs.append(label + ": accepted must look like 2026-10-14")
     if errs:
         return None, errs
     return {
@@ -178,10 +168,21 @@ def _field_errors(raw, index):
         "acc": " ".join(acc.split()),
         "prio": prio,
         "parent": parent,
-        "phase": raw["phase"] if isinstance(raw.get("phase"), str) and raw["phase"] else None,
+        "phase": phase or None,
         "hold": raw.get("hold") is True,
-        "accepted": raw["accepted"] if isinstance(raw.get("accepted"), str) and raw["accepted"] else None,
+        "accepted": accepted or None,
     }, []
+
+
+def _is_date(value):
+    """True for a YYYY-MM-DD string that is a real calendar date."""
+    if not isinstance(value, str) or not DATE_RE.match(value):
+        return False
+    try:
+        datetime.date.fromisoformat(value)
+    except ValueError:
+        return False
+    return True
 
 
 # ---------------------------------------------------------------- derived figures
