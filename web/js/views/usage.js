@@ -3,6 +3,7 @@
 
 import { bannerHtml, esc, meterHtml, skeletonHtml } from "../dom.js";
 import { fmtAge, fmtPercent, fmtResets } from "../format.js";
+import { copyButton, refSummary } from "../ref.js";
 
 function toneFor(pct) {
   if (pct == null) return "accent";
@@ -52,9 +53,13 @@ export function usageView(vm) {
   ) : bannerHtml("danger", "Could not load account usage.", u.error || "");
   const updatedHtml = u.loaded && u.ageNow != null ? '<span class="band-sub">Updated ' +
     esc(fmtAge(u.ageNow)) + "</span>" : "";
+  const pid = vm.route && vm.route.name === "project" ? vm.route.id : (vm.projects && vm.projects[0]
+    ? vm.projects[0].id : "");
+  const copy = copyButton("section", "usage.band", "Usage", { project: pid,
+    sum: refSummary("section", u.loaded ? 2 : 0) });
   return '<div class="band' + compact + '">' + body +
     '<div class="band-actions">' + statusLine(u) + updatedHtml +
     '<button type="button" class="btn" data-action="sync-usage" data-focus="sync"' +
-    (syncing ? " disabled" : "") + ">" + (syncing ? "Syncing" : "Sync now") + "</button>" +
+    (syncing ? " disabled" : "") + ">" + (syncing ? "Syncing" : "Sync now") + "</button>" + copy +
     syncLine(u.sync) + "</div></div>";
 }

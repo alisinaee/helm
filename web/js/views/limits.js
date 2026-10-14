@@ -5,6 +5,7 @@
 
 import { esc } from "../dom.js";
 import { fmtTokens } from "../format.js";
+import { copyButton, refSummary } from "../ref.js";
 import { run } from "../cmd.js";
 import { showToast } from "./toast.js";
 
@@ -168,7 +169,9 @@ function presetsHtml(scope) {
 export function limitsHtml(scope, rows) {
   const list = rowsForScope(scope, rows);
   const head = '<div class="lim-bar"><h3 class="lim-h">Limits</h3>' +
-    '<button type="button" class="btn btn-small" data-action="lim-add" data-focus="lim-add">+ Add limit</button></div>';
+    '<button type="button" class="btn btn-small" data-action="lim-add" data-focus="lim-add">+ Add limit</button>' +
+    copyButton("section", "tokens.limits", "Limits", { project: ctx.pid,
+      sum: refSummary("section", list.length) }) + "</div>";
   if (!list.length) {
     return '<div class="lim-block">' + head + presetsHtml(scope) +
       '<p class="lim-note">No limits; full weekly allowance available.</p></div>';

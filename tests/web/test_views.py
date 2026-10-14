@@ -125,7 +125,7 @@ class FinishedRowTests(unittest.TestCase):
 
     def test_finished_titles_keep_the_full_text_in_the_title_attribute(self):
         html = render()["expanded"]
-        self.assertIn('<p class="fin-title" title="', html)
+        self.assertIn('<p class="fin-title rg-t" title="', html)
 
 
 class StaticModuleTests(unittest.TestCase):

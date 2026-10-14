@@ -5,6 +5,7 @@
 
 import { bannerHtml, chipHtml, esc, meterHtml } from "../dom.js";
 import { MISSING, fmtPercent, fmtTokens } from "../format.js";
+import { copyButton, refSummary } from "../ref.js";
 import { pageState } from "./inbox.js";
 import { attachLimitListeners, limitsHtml, setLimitContext } from "./limits.js";
 import { usageView } from "./usage.js";
@@ -88,14 +89,16 @@ function metersHtml(rows, snap, isProject) {
 }
 
 // Account card: the 5-hour and weekly percent (usage.js), and the project's stop at weekly percent when set.
-function accountHtml(vm, rows) {
+function accountHtml(vm, rows, pid) {
   const ceiling = rows.filter(function (row) {
     return row.kind === "acct";
   });
   const note = ceiling.length ? '<p class="page-note">Project stop: ' + esc(fmtPercent(ceiling[0].limit)) +
     " of weekly budget.</p>" : "";
-  return '<section class="ov-card tk-card" aria-labelledby="tk-account"><h3 id="tk-account" class="lim-h">' +
-    "Account</h3>" + usageView(vm) + note + "</section>";
+  const copy = copyButton("section", "tokens.account", "Account", { project: pid,
+    sum: refSummary("section", rows.length) });
+  return '<section class="ov-card tk-card" aria-labelledby="tk-account"><div class="lim-bar">' +
+    '<h3 id="tk-account" class="lim-h">Account</h3>' + copy + "</div>" + usageView(vm) + note + "</section>";
 }
 
 function capRow(scope, key, name, budgetRow) {
@@ -161,7 +164,10 @@ function overrideHtml(pid) {
   const options = OVERRIDE_HOURS.map(function (h) {
     return '<option value="' + h + '">' + h + (h === 1 ? " hour" : " hours") + "</option>";
   }).join("");
-  return '<section class="ov-card" aria-labelledby="tk-override"><h3 id="tk-override" class="lim-h">Override</h3>' +
+  const copy = copyButton("section", "tokens.override", "Override", { project: pid,
+    sum: refSummary("section", OVERRIDE_HOURS.length) });
+  return '<section class="ov-card" aria-labelledby="tk-override"><div class="lim-bar">' +
+    '<h3 id="tk-override" class="lim-h">Override</h3>' + copy + "</div>" +
     '<p class="page-note">Temporarily ignore limits; logged in Activity.</p>' +
     '<div class="tk-override"><label class="lim-field"><span class="lim-label">For</span>' +
     '<select class="lim-select" data-focus="ov-hours">' + options + "</select></label>" +
@@ -211,14 +217,19 @@ export function sectionView(vm) {
       : "All projects. Global limits and every project's spend.") + "</p></div>";
   const meters = '<section class="ov-card" aria-label="Meters">' +
     metersHtml(rows, snap, isProject) + "</section>";
+  const spendCount = isProject ? (snap.tasks || []).filter(function (t) {
+    return typeof t.tokensK === "number";
+  }).length : (vm.snapshotList || []).length;
   const spend = isProject
-    ? '<section class="ov-card" aria-labelledby="tk-spend"><h3 id="tk-spend" class="lim-h">' +
-      "Spend</h3>" + spendHtml(snap) + "</section>"
-    : '<section class="ov-card" aria-labelledby="tk-spend"><h3 id="tk-spend" class="lim-h">' +
-      "Spend</h3>" + projectTableHtml(vm) + "</section>";
+    ? '<section class="ov-card" aria-labelledby="tk-spend"><div class="lim-bar">' +
+      '<h3 id="tk-spend" class="lim-h">Spend</h3>' + copyButton("section", "tokens.spend", "Spend",
+        { project: pid, sum: refSummary("section", spendCount) }) + "</div>" + spendHtml(snap) + "</section>"
+    : '<section class="ov-card" aria-labelledby="tk-spend"><div class="lim-bar">' +
+      '<h3 id="tk-spend" class="lim-h">Spend</h3>' + copyButton("section", "tokens.spend", "Spend",
+        { project: pid, sum: refSummary("section", spendCount) }) + "</div>" + projectTableHtml(vm) + "</section>";
   const override = isProject ? overrideHtml(pid) : "";
   return head + notice + meters + '<section class="ov-card" aria-label="Limits">' + limitsHtml(scope, rows) +
-    "</section>" + accountHtml(vm, rows) + spend + override +
+    "</section>" + accountHtml(vm, rows, pid) + spend + override +
     '<section class="ov-card" aria-label="Accuracy">' + accuracyHtml() + "</section>";
 }
 

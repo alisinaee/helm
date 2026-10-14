@@ -4,6 +4,7 @@
 
 import { chipHtml, esc, sectionHtml } from "../dom.js";
 import { fmtCount, fmtDuration, fmtTokens, MISSING } from "../format.js";
+import { copyButton, refSummary } from "../ref.js";
 import { modelChip, timerHtml } from "./tasks.js";
 
 let watching = false;
@@ -35,12 +36,17 @@ export function watchTimers() {
   }
 }
 
-function runItemHtml(job) {
+// The copy-reference button of a job row (ref rb:<project>/job/<id>). pid is the project slug of the snapshot.
+function jobCopyHtml(job, pid) {
+  return copyButton("job", job.id, job.title || job.id, { project: pid, sum: refSummary("job", job) });
+}
+
+function runItemHtml(job, pid) {
   return '<div class="row-grid run-item"><span class="rg-chips"><span class="rdot" aria-hidden="true"></span>' +
     '<span class="run-id">' + esc(job.id) + "</span>" +
     (job.task ? chipHtml(job.task, "neutral") : "") + modelChip(job.model) + "</span>" +
     '<p class="run-title rg-t" title="' + esc(job.title) + '">' + esc(job.title) + "</p>" +
-    '<span class="rg-num">' + timerHtml(job) + "</span></div>";
+    '<span class="rg-num">' + timerHtml(job) + "</span>" + jobCopyHtml(job, pid) + "</div>";
 }
 
 // The model chip already says "haiku" or "opus", so a title that starts with that word and a colon drops it.
@@ -54,20 +60,21 @@ export function shortTitle(job) {
   return title.toLowerCase().indexOf(prefix) === 0 ? title.slice(prefix.length) : title;
 }
 
-function finishedRowHtml(job) {
+function finishedRowHtml(job, pid) {
   const ok = job.status === "done";
   const tokens = typeof job.tokensK === "number" ? "~" + fmtTokens(job.tokensK) : MISSING;
   return '<li class="fin-row row-grid"><div class="fin-main">' +
     '<p class="fin-meta"><span class="fin-state">' + (ok ? "✓ done" : "✗ failed") + "</span>" +
     modelChip(job.model) + "</p>" +
-    '<p class="fin-title" title="' + esc(job.title) + '">' + esc(shortTitle(job)) + "</p></div>" +
+    '<p class="fin-title rg-t" title="' + esc(job.title) + '">' + esc(shortTitle(job)) + "</p></div>" +
     '<span class="rg-num">' + esc(fmtDuration(job.elapsedS)) + "</span>" +
-    '<span class="rg-num">' + esc(tokens) + "</span></li>";
+    '<span class="rg-num">' + esc(tokens) + "</span>" + jobCopyHtml(job, pid) + "</li>";
 }
 
 export function runningSection(vm) {
   watchTimers();
   const snap = vm.project.snapshot;
+  const pid = snap.id;
   const running = snap.running;
   const finished = snap.jobs.filter(function (job) {
     return job.status !== "running";
@@ -75,11 +82,15 @@ export function runningSection(vm) {
     return (b.endedMs || 0) - (a.endedMs || 0);
   }).slice(0, 6);
   let body = running.length
-    ? '<div class="run-list">' + running.map(runItemHtml).join("") + "</div>"
+    ? '<div class="run-list">' + running.map(function (job) {
+      return runItemHtml(job, pid);
+    }).join("") + "</div>"
     : '<p class="placeholder">Nothing is running.</p>';
   body += '<p class="sub-head">Recently finished <span class="sub-note">duration and tokens</span></p>';
   body += finished.length
-    ? '<ul class="fin-list">' + finished.map(finishedRowHtml).join("") + "</ul>"
+    ? '<ul class="fin-list">' + finished.map(function (job) {
+      return finishedRowHtml(job, pid);
+    }).join("") + "</ul>"
     : '<p class="placeholder">No finished jobs yet.</p>';
   return sectionHtml({
     id: "running",
