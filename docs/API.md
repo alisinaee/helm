@@ -135,7 +135,7 @@ tasks' `feats`. Each row is `{id, title, prio, parent, phase, hold, accepted, do
 running, state}` plus `acc` only while the feature is not done (WP53b), where `state` is `hold`, `uncovered`, `done`,
 `doing` or `todo` (first match). The row has no task id list: a feature's tasks are the snapshot tasks whose `feats`
 name it (its own and its sub-features'). `uncovered` and `orphans` list feature ids and task ids. A project without
-`features.json` gets an empty derive. The `GET` feature route and the CLI `feature` output keep the full row.
+`features.json` gets an empty derive. The CLI `feature` output keeps the full row.
 
 Since WP47 the snapshot also has `workflow`, always present (empty lists for a project with no jobs or tasks).
 `spans` holds the newest 200 jobs in start order, each as `[id, task, model, role, parent, startEpoch, endEpoch,
@@ -214,9 +214,9 @@ The single write path for the GUI (WP21 registry, WP23 ops). Body: JSON, at most
 activity id (for example `A812`) and whether `POST /api/v1/cmd {"op":"undo","args":{"activity":"A812"}}` can reverse it.
 
 Ops: `task.status` (args `id`, `status`, optional `note`, `tokensK`), `task.rename` (`id`, `title`: 1 to 120
-characters, no control characters; undoable), `task.start`, `task.stop`, `task.cap` (`id`,
-`value`), `subtask.toggle` (`addr`, `done`), `plan.move` (`id`, `before` or `after`), `phase.approve` (`phase`),
-`question.answer` (`id`, `value`), `comment.add` (`on`, `text`, `by`), `issue.new`, `issue.close` (`id`),
+characters, no control characters; undoable), `task.start` (`id`, `by`?), `task.stop` (`id`, `by`?), `task.cap` (`id`,
+`value`), `subtask.toggle` (`addr`, `done`?), `subtask.add` (`id`, `title`?), `plan.move` (`id`, `before` or `after`), `phase.approve` (`phase`),
+`question.ask` (`text`?, `task`?, `opts`?, `default`?, `block`?, `timeout`?), `question.answer` (`id`, `value`), `comment.add` (`on`, `text`, `by`), `issue.new` (`title`?, `tasks`?, `kind`?, `sev`?, `note`?, `by`?), `issue.close` (`id`), `issue.link` (`id`, `tasks`),
 `budget.set` (`scope`, `key`, `value`), `limit.set` (`pct` 1 to 100, or the WP27 row form `scope`, `window`, `kind`,
 `value`, `action` and optional `id`), `limit.rm` (`id`: L3, AUTO or BUD), `control.stop` (`task`?), `control.resume`,
 `control.override` (`hours` 1 to 4), `rules.add` (`scope`, `kind`, `text`, `value`?), `rules.rm` (`id`),
@@ -224,12 +224,12 @@ characters, no control characters; undoable), `task.start`, `task.stop`, `task.c
 
 Feature ops (WP52): `feature.add` (`title`, `acc`?, `prio`?, `phase`?, `parent`?), `feature.set` (`id` and any of
 `title`, `acc`, `prio`, `phase`, `parent`, `hold`), `feature.link` (`task`, `feats` of 1 to 3 feature ids),
-`feature.unlink` (`task`, `feats`), `feature.accept` (`id`, `on`?, `confirm`?, `date`?), `feature.rm` (`id`, only when
+`feature.unlink` (`task`, `feats` of 1 to 3 feature ids), `feature.accept` (`id`, `on`?, `confirm`?, `date`?), `feature.rm` (`id`, only when
 the feature has no tasks and no sub-features). `feature.accept` is for the person: an agent shell, or a phone call,
 gets `409 agent_refused` with `next: ask the person`.
 
-Errors, in the order checked: `403 forbidden` (CSRF, origin, or not allowed on this listener), `413` (body over
-4 KB), `415` (not JSON), `404 unknown_op`, `422 invalid_args` (`error.problems` lists the first problem), `429
+Errors, in the order checked: `403 forbidden` (CSRF, origin, or not allowed on this listener), `415` (not JSON),
+`413` (body over 4 KB), `422 invalid_args`, `404 unknown_op` (`error.problems` lists the first problem), `429
 rate_limited` (more than 10 ops per second in this process), `409` (conflict or agent refused), `404 not_found`.
 
 Agent guard: ops that loosen control (`control.resume`, `control.override`, `budget.set`, `task.cap`, `limit.set`,
