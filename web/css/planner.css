@@ -1,0 +1,181 @@
+/* Planner (WP53): rows use the shared .row-grid tracks; numbers right-aligned, titles ellipsize. */
+
+.pl-head,
+.pl-row,
+.pl-task {
+  --rg: 24px 52px minmax(0, 1fr) 52px 36px 120px 64px 72px 72px 40px 76px 40px 32px;
+  min-height: var(--h-row);
+  font-size: var(--fs-13);
+}
+
+.pl-task {
+  color: var(--text-2);
+  font-size: var(--fs-11);
+}
+
+.pl-head {
+  padding: 0 0 var(--sp-1);
+  color: var(--text-3);
+  font-size: var(--fs-11);
+}
+
+.pl-list,
+.pl-tasks,
+.pl-callout-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pl-feat {
+  border-top: 1px solid var(--track);
+}
+
+.pl-row,
+.pl-tasks {
+  padding-block: var(--sp-1);
+}
+
+.pl-sub .pl-main {
+  padding-left: var(--sp-4);
+}
+
+.pl-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pl-title,
+.pl-acctext {
+  color: var(--text-3);
+  font-size: var(--fs-11);
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+.pl-bar .meter {
+  min-width: 0;
+}
+
+.pl-bar .tone-neutral .meter-fill {
+  background: var(--text-3);
+}
+
+.pl-state {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.pl-acc {
+  display: flex;
+  justify-content: center;
+}
+
+.pl-acc input,
+.pl-check input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.pl-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: var(--sp-1) 0 0 var(--sp-4);
+}
+
+.pl-task .pl-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.pl-unlink {
+  grid-column: 11 / span 3;
+  justify-self: start;
+}
+
+.pl-pick .pl-select {
+  grid-column: 2 / -1;
+}
+
+.pl-select {
+  min-height: var(--h-row);
+  max-width: 100%;
+}
+
+.pl-callouts {
+  display: grid;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
+.pl-callout {
+  border: 1px solid var(--track);
+  border-radius: var(--r-card);
+  padding: var(--sp-1) var(--sp-2);
+}
+
+.pl-callout-list li,
+.pl-filters,
+.pl-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.pl-filters {
+  margin-bottom: var(--sp-2);
+}
+
+.pl-add {
+  display: grid;
+  gap: var(--sp-2);
+  max-width: 36rem;
+  margin-bottom: var(--sp-3);
+}
+
+.pl-err {
+  color: var(--danger);
+  margin: 0;
+}
+
+@media (max-width: 639px) {
+  .pl-head,
+  .pl-opt,
+  .pl-task .pl-opt {
+    display: none;
+  }
+
+  .pl-main {
+    flex: 1 1 100%;
+  }
+
+  .pl-bar {
+    flex: 1 1 8rem;
+  }
+
+  .pl-unlink {
+    grid-column: auto;
+  }
+
+  .pl-row .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .pl-row > .pl-caret {
+    margin-left: 0;
+  }
+}

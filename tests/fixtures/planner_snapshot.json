@@ -1,0 +1,52 @@
+{
+  "phases": [
+    {"id": "R1", "name": "Bridge", "state": "done", "done": 2, "total": 2, "progress": 1.0},
+    {"id": "R4", "name": "Agent interface", "state": "todo", "done": 0, "total": 1, "progress": 0.0},
+    {"id": "R6", "name": "Views", "state": "partial", "done": 1, "total": 4, "progress": 0.25},
+    {"id": "R7", "name": "Features backend", "state": "todo", "done": 0, "total": 1, "progress": 0.0}
+  ],
+  "tasks": [
+    {"id": "R1.3", "title": "CLI write path", "state": "done", "phase": "R1", "model": "haiku", "tokensK": 30.0},
+    {"id": "R1.4", "title": "Hook write path", "state": "done", "phase": "R1", "model": "haiku", "tokensK": 30.0},
+    {"id": "R6.23", "title": "Planner design (Opus)", "state": "done", "phase": "R6", "model": "opus",
+      "tokensK": 50.0},
+    {"id": "R6.13", "title": "Uncovered and orphan callouts", "state": "todo", "phase": "R6", "model": "sonnet",
+      "tokensK": 40.0},
+    {"id": "R6.6", "title": "Roadmap lanes and timeline", "state": "todo", "phase": "R6", "model": "haiku",
+      "tokensK": 45.0},
+    {"id": "R6.11", "title": "Token charts", "state": "partial", "phase": "R6", "model": "haiku", "tokensK": 25.0},
+    {"id": "R4.1", "title": "Status in 8 lines", "state": "todo", "phase": "R4", "model": "haiku", "tokensK": 20.0},
+    {"id": "R4.4", "title": "Release notes", "state": "todo", "phase": "R4", "model": "haiku", "tokensK": 10.0},
+    {"id": "R7.1", "title": "Features backend", "state": "todo", "phase": "R7", "model": "haiku", "tokensK": 70.0}
+  ],
+  "blocked": ["R4.4"],
+  "features": {
+    "rows": [
+      {"id": "F1", "title": "Agent bridge", "acc": "One write path: CLI, hooks and GUI", "prio": 1,
+        "parent": null, "phase": "R1", "hold": false, "accepted": "2026-10-10", "tasks": ["R1.3", "R1.4"],
+        "done": 2, "total": 2, "estK": 60.0, "spentK": 58.0, "blocked": 0, "running": 0, "state": "done"},
+      {"id": "F2", "title": "Planner", "acc": "Features and tasks trace both ways; uncovered and orphans shown",
+        "prio": 1, "parent": null, "phase": "R6", "hold": false, "accepted": null,
+        "tasks": ["R6.23", "R6.13"], "done": 1, "total": 2, "estK": 90.0, "spentK": 45.0, "blocked": 0,
+        "running": 0, "state": "doing"},
+      {"id": "F3", "title": "Roadmap visual", "acc": "Lanes and timeline; usable at 1440 and 375", "prio": 2,
+        "parent": null, "phase": "R6", "hold": false, "accepted": null, "tasks": ["R1.3", "R6.6"],
+        "done": 1, "total": 2, "estK": 75.0, "spentK": 0.0, "blocked": 0, "running": 1, "state": "doing"},
+      {"id": "F11", "title": "Interactive control", "acc": "Start, stop and answers from the GUI", "prio": 2,
+        "parent": null, "phase": null, "hold": false, "accepted": null, "tasks": [], "done": 0, "total": 0,
+        "estK": null, "spentK": null, "blocked": 0, "running": 0, "state": "uncovered"},
+      {"id": "F11b", "title": "Start wakes a session", "acc": "", "prio": 2, "parent": "F11", "phase": null,
+        "hold": false, "accepted": null, "tasks": [], "done": 0, "total": 0, "estK": null, "spentK": null,
+        "blocked": 0, "running": 0, "state": "uncovered"},
+      {"id": "F14", "title": "Token-lean agent interface", "acc": "Status in 8 lines or fewer", "prio": 3,
+        "parent": null, "phase": "R4", "hold": false, "accepted": null, "tasks": ["R4.1"], "done": 0, "total": 1,
+        "estK": 20.0, "spentK": 0.0, "blocked": 0, "running": 0, "state": "todo"},
+      {"id": "F21", "title": "Palette and search", "acc": "", "prio": 3, "parent": null, "phase": null,
+        "hold": true, "accepted": null, "tasks": [], "done": 0, "total": 0, "estK": null, "spentK": null,
+        "blocked": 0, "running": 0, "state": "hold"}
+    ],
+    "uncovered": ["F11", "F11b"],
+    "orphans": ["R6.11", "R4.4", "R7.1"],
+    "counts": {"total": 7, "done": 1, "doing": 2, "todo": 1, "uncovered": 2, "hold": 1}
+  }
+}
