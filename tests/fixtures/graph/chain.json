@@ -1,0 +1,126 @@
+{
+ "now": 1791979200000,
+ "project": {
+  "id": "chain",
+  "title": "Chain"
+ },
+ "phases": [
+  {
+   "id": "P1",
+   "title": "Engine",
+   "approved": true
+  }
+ ],
+ "tasks": [
+  {
+   "id": "P1.1",
+   "title": "Parser",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T09:00:00Z",
+    "done": "2026-10-14T09:20:00Z"
+   },
+   "tokensK": 120
+  },
+  {
+   "id": "P1.2",
+   "title": "Lexer",
+   "phase": "P1",
+   "state": "doing",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T09:30:00Z"
+   },
+   "tokensK": 40
+  },
+  {
+   "id": "P1.3",
+   "title": "Emitter",
+   "phase": "P1",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {}
+  },
+  {
+   "id": "P1.4",
+   "title": "Docs",
+   "phase": "P1",
+   "state": "todo",
+   "model": "haiku",
+   "at": {}
+  }
+ ],
+ "jobs": [
+  {
+   "id": "J1",
+   "title": "Job J1"
+  },
+  {
+   "id": "J2",
+   "title": "Job J2"
+  },
+  {
+   "id": "J3",
+   "title": "Job J3"
+  }
+ ],
+ "queue": [],
+ "issues": [],
+ "blocked": [],
+ "workflow": {
+  "spans": [
+   [
+    "J1",
+    "P1.1",
+    "opus",
+    "lead",
+    null,
+    1791975600,
+    1791976800,
+    "done",
+    120
+   ],
+   [
+    "J2",
+    "P1.2",
+    "haiku",
+    "worker",
+    "J1",
+    1791977400,
+    null,
+    "running",
+    40
+   ],
+   [
+    "J3",
+    "P1.3",
+    "sonnet",
+    "worker",
+    "J2",
+    1791978000,
+    null,
+    "running",
+    null
+   ]
+  ],
+  "edges": {
+   "after": [
+    [
+     "P1.1",
+     "P1.2"
+    ],
+    [
+     "P1.2",
+     "P1.3"
+    ],
+    [
+     "P1.3",
+     "P1.4"
+    ]
+   ],
+   "block": []
+  }
+ }
+}

@@ -1,0 +1,20 @@
+{
+ "now": 1791979200000,
+ "project": {
+  "id": "empty",
+  "title": "Empty"
+ },
+ "phases": [],
+ "tasks": [],
+ "jobs": [],
+ "queue": [],
+ "issues": [],
+ "blocked": [],
+ "workflow": {
+  "spans": [],
+  "edges": {
+   "after": [],
+   "block": []
+  }
+ }
+}

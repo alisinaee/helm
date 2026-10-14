@@ -1,0 +1,5521 @@
+{
+ "now": 1791979200000,
+ "project": {
+  "id": "big",
+  "title": "Big"
+ },
+ "phases": [
+  {
+   "id": "P1",
+   "title": "Phase 1",
+   "approved": true
+  },
+  {
+   "id": "P2",
+   "title": "Phase 2",
+   "approved": true
+  },
+  {
+   "id": "P3",
+   "title": "Phase 3",
+   "approved": true
+  },
+  {
+   "id": "P4",
+   "title": "Phase 4",
+   "approved": true
+  },
+  {
+   "id": "P5",
+   "title": "Phase 5",
+   "approved": true
+  },
+  {
+   "id": "P6",
+   "title": "Phase 6",
+   "approved": false
+  },
+  {
+   "id": "P7",
+   "title": "Phase 7",
+   "approved": false
+  }
+ ],
+ "tasks": [
+  {
+   "id": "P1.1",
+   "title": "Task P1.1",
+   "phase": "P1",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:51:00Z",
+    "done": "2026-10-14T10:51:00Z"
+   },
+   "tokensK": 2
+  },
+  {
+   "id": "P1.2",
+   "title": "Task P1.2",
+   "phase": "P1",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:52:00Z",
+    "done": "2026-10-14T10:52:00Z"
+   },
+   "tokensK": 3
+  },
+  {
+   "id": "P1.3",
+   "title": "Task P1.3",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:53:00Z",
+    "done": "2026-10-14T10:53:00Z"
+   },
+   "tokensK": 4
+  },
+  {
+   "id": "P1.4",
+   "title": "Task P1.4",
+   "phase": "P1",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:54:00Z",
+    "done": "2026-10-14T10:54:00Z"
+   },
+   "tokensK": 5
+  },
+  {
+   "id": "P1.5",
+   "title": "Task P1.5",
+   "phase": "P1",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:55:00Z",
+    "done": "2026-10-14T10:55:00Z"
+   },
+   "tokensK": 6
+  },
+  {
+   "id": "P1.6",
+   "title": "Task P1.6",
+   "phase": "P1",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:56:00Z",
+    "done": "2026-10-14T10:56:00Z"
+   },
+   "tokensK": 7
+  },
+  {
+   "id": "P1.7",
+   "title": "Task P1.7",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:57:00Z",
+    "done": "2026-10-14T10:57:00Z"
+   },
+   "tokensK": 8
+  },
+  {
+   "id": "P1.8",
+   "title": "Task P1.8",
+   "phase": "P1",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:58:00Z",
+    "done": "2026-10-14T10:58:00Z"
+   },
+   "tokensK": 9
+  },
+  {
+   "id": "P1.9",
+   "title": "Task P1.9",
+   "phase": "P1",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:59:00Z",
+    "done": "2026-10-14T10:59:00Z"
+   },
+   "tokensK": 10
+  },
+  {
+   "id": "P1.10",
+   "title": "Task P1.10",
+   "phase": "P1",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:00:00Z",
+    "done": "2026-10-14T10:00:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P1.11",
+   "title": "Task P1.11",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:01:00Z",
+    "done": "2026-10-14T10:01:00Z"
+   },
+   "tokensK": 12
+  },
+  {
+   "id": "P1.12",
+   "title": "Task P1.12",
+   "phase": "P1",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:02:00Z",
+    "done": "2026-10-14T10:02:00Z"
+   },
+   "tokensK": 13
+  },
+  {
+   "id": "P1.13",
+   "title": "Task P1.13",
+   "phase": "P1",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:03:00Z",
+    "done": "2026-10-14T10:03:00Z"
+   },
+   "tokensK": 14
+  },
+  {
+   "id": "P1.14",
+   "title": "Task P1.14",
+   "phase": "P1",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:04:00Z",
+    "done": "2026-10-14T10:04:00Z"
+   },
+   "tokensK": 15
+  },
+  {
+   "id": "P1.15",
+   "title": "Task P1.15",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:05:00Z",
+    "done": "2026-10-14T10:05:00Z"
+   },
+   "tokensK": 16
+  },
+  {
+   "id": "P1.16",
+   "title": "Task P1.16",
+   "phase": "P1",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:06:00Z",
+    "done": "2026-10-14T10:06:00Z"
+   },
+   "tokensK": 17
+  },
+  {
+   "id": "P1.17",
+   "title": "Task P1.17",
+   "phase": "P1",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:07:00Z",
+    "done": "2026-10-14T10:07:00Z"
+   },
+   "tokensK": 18
+  },
+  {
+   "id": "P1.18",
+   "title": "Task P1.18",
+   "phase": "P1",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:08:00Z",
+    "done": "2026-10-14T10:08:00Z"
+   },
+   "tokensK": 19
+  },
+  {
+   "id": "P1.19",
+   "title": "Task P1.19",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:09:00Z",
+    "done": "2026-10-14T10:09:00Z"
+   },
+   "tokensK": 20
+  },
+  {
+   "id": "P1.20",
+   "title": "Task P1.20",
+   "phase": "P1",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:10:00Z",
+    "done": "2026-10-14T10:10:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P1.21",
+   "title": "Task P1.21",
+   "phase": "P1",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:11:00Z",
+    "done": "2026-10-14T10:11:00Z"
+   },
+   "tokensK": 22
+  },
+  {
+   "id": "P1.22",
+   "title": "Task P1.22",
+   "phase": "P1",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:12:00Z",
+    "done": "2026-10-14T10:12:00Z"
+   },
+   "tokensK": 23
+  },
+  {
+   "id": "P1.23",
+   "title": "Task P1.23",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:13:00Z",
+    "done": "2026-10-14T10:13:00Z"
+   },
+   "tokensK": 24
+  },
+  {
+   "id": "P1.24",
+   "title": "Task P1.24",
+   "phase": "P1",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:14:00Z",
+    "done": "2026-10-14T10:14:00Z"
+   },
+   "tokensK": 25
+  },
+  {
+   "id": "P1.25",
+   "title": "Task P1.25",
+   "phase": "P1",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:15:00Z",
+    "done": "2026-10-14T10:15:00Z"
+   },
+   "tokensK": 26
+  },
+  {
+   "id": "P1.26",
+   "title": "Task P1.26",
+   "phase": "P1",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:16:00Z",
+    "done": "2026-10-14T10:16:00Z"
+   },
+   "tokensK": 27
+  },
+  {
+   "id": "P1.27",
+   "title": "Task P1.27",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:17:00Z",
+    "done": "2026-10-14T10:17:00Z"
+   },
+   "tokensK": 28
+  },
+  {
+   "id": "P1.28",
+   "title": "Task P1.28",
+   "phase": "P1",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:18:00Z",
+    "done": "2026-10-14T10:18:00Z"
+   },
+   "tokensK": 29
+  },
+  {
+   "id": "P1.29",
+   "title": "Task P1.29",
+   "phase": "P1",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:19:00Z",
+    "done": "2026-10-14T10:19:00Z"
+   },
+   "tokensK": 30
+  },
+  {
+   "id": "P1.30",
+   "title": "Task P1.30",
+   "phase": "P1",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:20:00Z",
+    "done": "2026-10-14T10:20:00Z"
+   },
+   "tokensK": 31
+  },
+  {
+   "id": "P1.31",
+   "title": "Task P1.31",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:21:00Z",
+    "done": "2026-10-14T10:21:00Z"
+   },
+   "tokensK": 32
+  },
+  {
+   "id": "P1.32",
+   "title": "Task P1.32",
+   "phase": "P1",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:22:00Z",
+    "done": "2026-10-14T10:22:00Z"
+   },
+   "tokensK": 33
+  },
+  {
+   "id": "P1.33",
+   "title": "Task P1.33",
+   "phase": "P1",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:23:00Z",
+    "done": "2026-10-14T10:23:00Z"
+   },
+   "tokensK": 34
+  },
+  {
+   "id": "P1.34",
+   "title": "Task P1.34",
+   "phase": "P1",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:24:00Z",
+    "done": "2026-10-14T10:24:00Z"
+   },
+   "tokensK": 35
+  },
+  {
+   "id": "P1.35",
+   "title": "Task P1.35",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:25:00Z",
+    "done": "2026-10-14T10:25:00Z"
+   },
+   "tokensK": 36
+  },
+  {
+   "id": "P1.36",
+   "title": "Task P1.36",
+   "phase": "P1",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:26:00Z",
+    "done": "2026-10-14T10:26:00Z"
+   },
+   "tokensK": 37
+  },
+  {
+   "id": "P1.37",
+   "title": "Task P1.37",
+   "phase": "P1",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:27:00Z",
+    "done": "2026-10-14T10:27:00Z"
+   },
+   "tokensK": 38
+  },
+  {
+   "id": "P1.38",
+   "title": "Task P1.38",
+   "phase": "P1",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:28:00Z",
+    "done": "2026-10-14T10:28:00Z"
+   },
+   "tokensK": 39
+  },
+  {
+   "id": "P1.39",
+   "title": "Task P1.39",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:29:00Z",
+    "done": "2026-10-14T10:29:00Z"
+   },
+   "tokensK": 40
+  },
+  {
+   "id": "P1.40",
+   "title": "Task P1.40",
+   "phase": "P1",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:30:00Z",
+    "done": "2026-10-14T10:30:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P1.41",
+   "title": "Task P1.41",
+   "phase": "P1",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:31:00Z",
+    "done": "2026-10-14T10:31:00Z"
+   },
+   "tokensK": 2
+  },
+  {
+   "id": "P1.42",
+   "title": "Task P1.42",
+   "phase": "P1",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:32:00Z",
+    "done": "2026-10-14T10:32:00Z"
+   },
+   "tokensK": 3
+  },
+  {
+   "id": "P1.43",
+   "title": "Task P1.43",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:33:00Z",
+    "done": "2026-10-14T10:33:00Z"
+   },
+   "tokensK": 4
+  },
+  {
+   "id": "P1.44",
+   "title": "Task P1.44",
+   "phase": "P1",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:34:00Z",
+    "done": "2026-10-14T10:34:00Z"
+   },
+   "tokensK": 5
+  },
+  {
+   "id": "P1.45",
+   "title": "Task P1.45",
+   "phase": "P1",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:35:00Z",
+    "done": "2026-10-14T10:35:00Z"
+   },
+   "tokensK": 6
+  },
+  {
+   "id": "P1.46",
+   "title": "Task P1.46",
+   "phase": "P1",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:36:00Z",
+    "done": "2026-10-14T10:36:00Z"
+   },
+   "tokensK": 7
+  },
+  {
+   "id": "P1.47",
+   "title": "Task P1.47",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:37:00Z",
+    "done": "2026-10-14T10:37:00Z"
+   },
+   "tokensK": 8
+  },
+  {
+   "id": "P1.48",
+   "title": "Task P1.48",
+   "phase": "P1",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:38:00Z",
+    "done": "2026-10-14T10:38:00Z"
+   },
+   "tokensK": 9
+  },
+  {
+   "id": "P1.49",
+   "title": "Task P1.49",
+   "phase": "P1",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:39:00Z",
+    "done": "2026-10-14T10:39:00Z"
+   },
+   "tokensK": 10
+  },
+  {
+   "id": "P1.50",
+   "title": "Task P1.50",
+   "phase": "P1",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:40:00Z",
+    "done": "2026-10-14T10:40:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P2.1",
+   "title": "Task P2.1",
+   "phase": "P2",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:41:00Z",
+    "done": "2026-10-14T10:41:00Z"
+   },
+   "tokensK": 3
+  },
+  {
+   "id": "P2.2",
+   "title": "Task P2.2",
+   "phase": "P2",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:42:00Z",
+    "done": "2026-10-14T10:42:00Z"
+   },
+   "tokensK": 5
+  },
+  {
+   "id": "P2.3",
+   "title": "Task P2.3",
+   "phase": "P2",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:43:00Z",
+    "done": "2026-10-14T10:43:00Z"
+   },
+   "tokensK": 7
+  },
+  {
+   "id": "P2.4",
+   "title": "Task P2.4",
+   "phase": "P2",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:44:00Z",
+    "done": "2026-10-14T10:44:00Z"
+   },
+   "tokensK": 9
+  },
+  {
+   "id": "P2.5",
+   "title": "Task P2.5",
+   "phase": "P2",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:45:00Z",
+    "done": "2026-10-14T10:45:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P2.6",
+   "title": "Task P2.6",
+   "phase": "P2",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:46:00Z",
+    "done": "2026-10-14T10:46:00Z"
+   },
+   "tokensK": 13
+  },
+  {
+   "id": "P2.7",
+   "title": "Task P2.7",
+   "phase": "P2",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:47:00Z",
+    "done": "2026-10-14T10:47:00Z"
+   },
+   "tokensK": 15
+  },
+  {
+   "id": "P2.8",
+   "title": "Task P2.8",
+   "phase": "P2",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:48:00Z",
+    "done": "2026-10-14T10:48:00Z"
+   },
+   "tokensK": 17
+  },
+  {
+   "id": "P2.9",
+   "title": "Task P2.9",
+   "phase": "P2",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:49:00Z",
+    "done": "2026-10-14T10:49:00Z"
+   },
+   "tokensK": 19
+  },
+  {
+   "id": "P2.10",
+   "title": "Task P2.10",
+   "phase": "P2",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:50:00Z",
+    "done": "2026-10-14T10:50:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P2.11",
+   "title": "Task P2.11",
+   "phase": "P2",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:51:00Z",
+    "done": "2026-10-14T10:51:00Z"
+   },
+   "tokensK": 23
+  },
+  {
+   "id": "P2.12",
+   "title": "Task P2.12",
+   "phase": "P2",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:52:00Z",
+    "done": "2026-10-14T10:52:00Z"
+   },
+   "tokensK": 25
+  },
+  {
+   "id": "P2.13",
+   "title": "Task P2.13",
+   "phase": "P2",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:53:00Z",
+    "done": "2026-10-14T10:53:00Z"
+   },
+   "tokensK": 27
+  },
+  {
+   "id": "P2.14",
+   "title": "Task P2.14",
+   "phase": "P2",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:54:00Z",
+    "done": "2026-10-14T10:54:00Z"
+   },
+   "tokensK": 29
+  },
+  {
+   "id": "P2.15",
+   "title": "Task P2.15",
+   "phase": "P2",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:55:00Z",
+    "done": "2026-10-14T10:55:00Z"
+   },
+   "tokensK": 31
+  },
+  {
+   "id": "P2.16",
+   "title": "Task P2.16",
+   "phase": "P2",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:56:00Z",
+    "done": "2026-10-14T10:56:00Z"
+   },
+   "tokensK": 33
+  },
+  {
+   "id": "P2.17",
+   "title": "Task P2.17",
+   "phase": "P2",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:57:00Z",
+    "done": "2026-10-14T10:57:00Z"
+   },
+   "tokensK": 35
+  },
+  {
+   "id": "P2.18",
+   "title": "Task P2.18",
+   "phase": "P2",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:58:00Z",
+    "done": "2026-10-14T10:58:00Z"
+   },
+   "tokensK": 37
+  },
+  {
+   "id": "P2.19",
+   "title": "Task P2.19",
+   "phase": "P2",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:59:00Z",
+    "done": "2026-10-14T10:59:00Z"
+   },
+   "tokensK": 39
+  },
+  {
+   "id": "P2.20",
+   "title": "Task P2.20",
+   "phase": "P2",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:00:00Z",
+    "done": "2026-10-14T10:00:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P2.21",
+   "title": "Task P2.21",
+   "phase": "P2",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:01:00Z",
+    "done": "2026-10-14T10:01:00Z"
+   },
+   "tokensK": 3
+  },
+  {
+   "id": "P2.22",
+   "title": "Task P2.22",
+   "phase": "P2",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:02:00Z",
+    "done": "2026-10-14T10:02:00Z"
+   },
+   "tokensK": 5
+  },
+  {
+   "id": "P2.23",
+   "title": "Task P2.23",
+   "phase": "P2",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:03:00Z",
+    "done": "2026-10-14T10:03:00Z"
+   },
+   "tokensK": 7
+  },
+  {
+   "id": "P2.24",
+   "title": "Task P2.24",
+   "phase": "P2",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:04:00Z",
+    "done": "2026-10-14T10:04:00Z"
+   },
+   "tokensK": 9
+  },
+  {
+   "id": "P2.25",
+   "title": "Task P2.25",
+   "phase": "P2",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:05:00Z",
+    "done": "2026-10-14T10:05:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P2.26",
+   "title": "Task P2.26",
+   "phase": "P2",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:06:00Z",
+    "done": "2026-10-14T10:06:00Z"
+   },
+   "tokensK": 13
+  },
+  {
+   "id": "P2.27",
+   "title": "Task P2.27",
+   "phase": "P2",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:07:00Z",
+    "done": "2026-10-14T10:07:00Z"
+   },
+   "tokensK": 15
+  },
+  {
+   "id": "P2.28",
+   "title": "Task P2.28",
+   "phase": "P2",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:08:00Z",
+    "done": "2026-10-14T10:08:00Z"
+   },
+   "tokensK": 17
+  },
+  {
+   "id": "P2.29",
+   "title": "Task P2.29",
+   "phase": "P2",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:09:00Z",
+    "done": "2026-10-14T10:09:00Z"
+   },
+   "tokensK": 19
+  },
+  {
+   "id": "P2.30",
+   "title": "Task P2.30",
+   "phase": "P2",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:10:00Z",
+    "done": "2026-10-14T10:10:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P2.31",
+   "title": "Task P2.31",
+   "phase": "P2",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:11:00Z",
+    "done": "2026-10-14T10:11:00Z"
+   },
+   "tokensK": 23
+  },
+  {
+   "id": "P2.32",
+   "title": "Task P2.32",
+   "phase": "P2",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:12:00Z",
+    "done": "2026-10-14T10:12:00Z"
+   },
+   "tokensK": 25
+  },
+  {
+   "id": "P2.33",
+   "title": "Task P2.33",
+   "phase": "P2",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:13:00Z",
+    "done": "2026-10-14T10:13:00Z"
+   },
+   "tokensK": 27
+  },
+  {
+   "id": "P2.34",
+   "title": "Task P2.34",
+   "phase": "P2",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:14:00Z",
+    "done": "2026-10-14T10:14:00Z"
+   },
+   "tokensK": 29
+  },
+  {
+   "id": "P2.35",
+   "title": "Task P2.35",
+   "phase": "P2",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:15:00Z",
+    "done": "2026-10-14T10:15:00Z"
+   },
+   "tokensK": 31
+  },
+  {
+   "id": "P2.36",
+   "title": "Task P2.36",
+   "phase": "P2",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:16:00Z",
+    "done": "2026-10-14T10:16:00Z"
+   },
+   "tokensK": 33
+  },
+  {
+   "id": "P2.37",
+   "title": "Task P2.37",
+   "phase": "P2",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:17:00Z",
+    "done": "2026-10-14T10:17:00Z"
+   },
+   "tokensK": 35
+  },
+  {
+   "id": "P2.38",
+   "title": "Task P2.38",
+   "phase": "P2",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:18:00Z",
+    "done": "2026-10-14T10:18:00Z"
+   },
+   "tokensK": 37
+  },
+  {
+   "id": "P2.39",
+   "title": "Task P2.39",
+   "phase": "P2",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:19:00Z",
+    "done": "2026-10-14T10:19:00Z"
+   },
+   "tokensK": 39
+  },
+  {
+   "id": "P2.40",
+   "title": "Task P2.40",
+   "phase": "P2",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:20:00Z",
+    "done": "2026-10-14T10:20:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P2.41",
+   "title": "Task P2.41",
+   "phase": "P2",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:21:00Z",
+    "done": "2026-10-14T10:21:00Z"
+   },
+   "tokensK": 3
+  },
+  {
+   "id": "P2.42",
+   "title": "Task P2.42",
+   "phase": "P2",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:22:00Z",
+    "done": "2026-10-14T10:22:00Z"
+   },
+   "tokensK": 5
+  },
+  {
+   "id": "P2.43",
+   "title": "Task P2.43",
+   "phase": "P2",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:23:00Z",
+    "done": "2026-10-14T10:23:00Z"
+   },
+   "tokensK": 7
+  },
+  {
+   "id": "P2.44",
+   "title": "Task P2.44",
+   "phase": "P2",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:24:00Z",
+    "done": "2026-10-14T10:24:00Z"
+   },
+   "tokensK": 9
+  },
+  {
+   "id": "P2.45",
+   "title": "Task P2.45",
+   "phase": "P2",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:25:00Z",
+    "done": "2026-10-14T10:25:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P2.46",
+   "title": "Task P2.46",
+   "phase": "P2",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:26:00Z",
+    "done": "2026-10-14T10:26:00Z"
+   },
+   "tokensK": 13
+  },
+  {
+   "id": "P2.47",
+   "title": "Task P2.47",
+   "phase": "P2",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:27:00Z",
+    "done": "2026-10-14T10:27:00Z"
+   },
+   "tokensK": 15
+  },
+  {
+   "id": "P2.48",
+   "title": "Task P2.48",
+   "phase": "P2",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:28:00Z",
+    "done": "2026-10-14T10:28:00Z"
+   },
+   "tokensK": 17
+  },
+  {
+   "id": "P2.49",
+   "title": "Task P2.49",
+   "phase": "P2",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:29:00Z",
+    "done": "2026-10-14T10:29:00Z"
+   },
+   "tokensK": 19
+  },
+  {
+   "id": "P2.50",
+   "title": "Task P2.50",
+   "phase": "P2",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:30:00Z",
+    "done": "2026-10-14T10:30:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P3.1",
+   "title": "Task P3.1",
+   "phase": "P3",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:31:00Z",
+    "done": "2026-10-14T10:31:00Z"
+   },
+   "tokensK": 4
+  },
+  {
+   "id": "P3.2",
+   "title": "Task P3.2",
+   "phase": "P3",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:32:00Z",
+    "done": "2026-10-14T10:32:00Z"
+   },
+   "tokensK": 7
+  },
+  {
+   "id": "P3.3",
+   "title": "Task P3.3",
+   "phase": "P3",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:33:00Z",
+    "done": "2026-10-14T10:33:00Z"
+   },
+   "tokensK": 10
+  },
+  {
+   "id": "P3.4",
+   "title": "Task P3.4",
+   "phase": "P3",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:34:00Z",
+    "done": "2026-10-14T10:34:00Z"
+   },
+   "tokensK": 13
+  },
+  {
+   "id": "P3.5",
+   "title": "Task P3.5",
+   "phase": "P3",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:35:00Z",
+    "done": "2026-10-14T10:35:00Z"
+   },
+   "tokensK": 16
+  },
+  {
+   "id": "P3.6",
+   "title": "Task P3.6",
+   "phase": "P3",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:36:00Z",
+    "done": "2026-10-14T10:36:00Z"
+   },
+   "tokensK": 19
+  },
+  {
+   "id": "P3.7",
+   "title": "Task P3.7",
+   "phase": "P3",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:37:00Z",
+    "done": "2026-10-14T10:37:00Z"
+   },
+   "tokensK": 22
+  },
+  {
+   "id": "P3.8",
+   "title": "Task P3.8",
+   "phase": "P3",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:38:00Z",
+    "done": "2026-10-14T10:38:00Z"
+   },
+   "tokensK": 25
+  },
+  {
+   "id": "P3.9",
+   "title": "Task P3.9",
+   "phase": "P3",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:39:00Z",
+    "done": "2026-10-14T10:39:00Z"
+   },
+   "tokensK": 28
+  },
+  {
+   "id": "P3.10",
+   "title": "Task P3.10",
+   "phase": "P3",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:40:00Z",
+    "done": "2026-10-14T10:40:00Z"
+   },
+   "tokensK": 31
+  },
+  {
+   "id": "P3.11",
+   "title": "Task P3.11",
+   "phase": "P3",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:41:00Z",
+    "done": "2026-10-14T10:41:00Z"
+   },
+   "tokensK": 34
+  },
+  {
+   "id": "P3.12",
+   "title": "Task P3.12",
+   "phase": "P3",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:42:00Z",
+    "done": "2026-10-14T10:42:00Z"
+   },
+   "tokensK": 37
+  },
+  {
+   "id": "P3.13",
+   "title": "Task P3.13",
+   "phase": "P3",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:43:00Z",
+    "done": "2026-10-14T10:43:00Z"
+   },
+   "tokensK": 40
+  },
+  {
+   "id": "P3.14",
+   "title": "Task P3.14",
+   "phase": "P3",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:44:00Z",
+    "done": "2026-10-14T10:44:00Z"
+   },
+   "tokensK": 3
+  },
+  {
+   "id": "P3.15",
+   "title": "Task P3.15",
+   "phase": "P3",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:45:00Z",
+    "done": "2026-10-14T10:45:00Z"
+   },
+   "tokensK": 6
+  },
+  {
+   "id": "P3.16",
+   "title": "Task P3.16",
+   "phase": "P3",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:46:00Z",
+    "done": "2026-10-14T10:46:00Z"
+   },
+   "tokensK": 9
+  },
+  {
+   "id": "P3.17",
+   "title": "Task P3.17",
+   "phase": "P3",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:47:00Z",
+    "done": "2026-10-14T10:47:00Z"
+   },
+   "tokensK": 12
+  },
+  {
+   "id": "P3.18",
+   "title": "Task P3.18",
+   "phase": "P3",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:48:00Z",
+    "done": "2026-10-14T10:48:00Z"
+   },
+   "tokensK": 15
+  },
+  {
+   "id": "P3.19",
+   "title": "Task P3.19",
+   "phase": "P3",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:49:00Z",
+    "done": "2026-10-14T10:49:00Z"
+   },
+   "tokensK": 18
+  },
+  {
+   "id": "P3.20",
+   "title": "Task P3.20",
+   "phase": "P3",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:50:00Z",
+    "done": "2026-10-14T10:50:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P3.21",
+   "title": "Task P3.21",
+   "phase": "P3",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:51:00Z",
+    "done": "2026-10-14T10:51:00Z"
+   },
+   "tokensK": 24
+  },
+  {
+   "id": "P3.22",
+   "title": "Task P3.22",
+   "phase": "P3",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:52:00Z",
+    "done": "2026-10-14T10:52:00Z"
+   },
+   "tokensK": 27
+  },
+  {
+   "id": "P3.23",
+   "title": "Task P3.23",
+   "phase": "P3",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:53:00Z",
+    "done": "2026-10-14T10:53:00Z"
+   },
+   "tokensK": 30
+  },
+  {
+   "id": "P3.24",
+   "title": "Task P3.24",
+   "phase": "P3",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:54:00Z",
+    "done": "2026-10-14T10:54:00Z"
+   },
+   "tokensK": 33
+  },
+  {
+   "id": "P3.25",
+   "title": "Task P3.25",
+   "phase": "P3",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:55:00Z",
+    "done": "2026-10-14T10:55:00Z"
+   },
+   "tokensK": 36
+  },
+  {
+   "id": "P3.26",
+   "title": "Task P3.26",
+   "phase": "P3",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:56:00Z",
+    "done": "2026-10-14T10:56:00Z"
+   },
+   "tokensK": 39
+  },
+  {
+   "id": "P3.27",
+   "title": "Task P3.27",
+   "phase": "P3",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:57:00Z",
+    "done": "2026-10-14T10:57:00Z"
+   },
+   "tokensK": 2
+  },
+  {
+   "id": "P3.28",
+   "title": "Task P3.28",
+   "phase": "P3",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:58:00Z",
+    "done": "2026-10-14T10:58:00Z"
+   },
+   "tokensK": 5
+  },
+  {
+   "id": "P3.29",
+   "title": "Task P3.29",
+   "phase": "P3",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:59:00Z",
+    "done": "2026-10-14T10:59:00Z"
+   },
+   "tokensK": 8
+  },
+  {
+   "id": "P3.30",
+   "title": "Task P3.30",
+   "phase": "P3",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:00:00Z",
+    "done": "2026-10-14T10:00:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P3.31",
+   "title": "Task P3.31",
+   "phase": "P3",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:01:00Z",
+    "done": "2026-10-14T10:01:00Z"
+   },
+   "tokensK": 14
+  },
+  {
+   "id": "P3.32",
+   "title": "Task P3.32",
+   "phase": "P3",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:02:00Z",
+    "done": "2026-10-14T10:02:00Z"
+   },
+   "tokensK": 17
+  },
+  {
+   "id": "P3.33",
+   "title": "Task P3.33",
+   "phase": "P3",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:03:00Z",
+    "done": "2026-10-14T10:03:00Z"
+   },
+   "tokensK": 20
+  },
+  {
+   "id": "P3.34",
+   "title": "Task P3.34",
+   "phase": "P3",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:04:00Z",
+    "done": "2026-10-14T10:04:00Z"
+   },
+   "tokensK": 23
+  },
+  {
+   "id": "P3.35",
+   "title": "Task P3.35",
+   "phase": "P3",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:05:00Z",
+    "done": "2026-10-14T10:05:00Z"
+   },
+   "tokensK": 26
+  },
+  {
+   "id": "P3.36",
+   "title": "Task P3.36",
+   "phase": "P3",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:06:00Z",
+    "done": "2026-10-14T10:06:00Z"
+   },
+   "tokensK": 29
+  },
+  {
+   "id": "P3.37",
+   "title": "Task P3.37",
+   "phase": "P3",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:07:00Z",
+    "done": "2026-10-14T10:07:00Z"
+   },
+   "tokensK": 32
+  },
+  {
+   "id": "P3.38",
+   "title": "Task P3.38",
+   "phase": "P3",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:08:00Z",
+    "done": "2026-10-14T10:08:00Z"
+   },
+   "tokensK": 35
+  },
+  {
+   "id": "P3.39",
+   "title": "Task P3.39",
+   "phase": "P3",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:09:00Z",
+    "done": "2026-10-14T10:09:00Z"
+   },
+   "tokensK": 38
+  },
+  {
+   "id": "P3.40",
+   "title": "Task P3.40",
+   "phase": "P3",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:10:00Z",
+    "done": "2026-10-14T10:10:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P3.41",
+   "title": "Task P3.41",
+   "phase": "P3",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:11:00Z",
+    "done": "2026-10-14T10:11:00Z"
+   },
+   "tokensK": 4
+  },
+  {
+   "id": "P3.42",
+   "title": "Task P3.42",
+   "phase": "P3",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:12:00Z",
+    "done": "2026-10-14T10:12:00Z"
+   },
+   "tokensK": 7
+  },
+  {
+   "id": "P3.43",
+   "title": "Task P3.43",
+   "phase": "P3",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:13:00Z",
+    "done": "2026-10-14T10:13:00Z"
+   },
+   "tokensK": 10
+  },
+  {
+   "id": "P3.44",
+   "title": "Task P3.44",
+   "phase": "P3",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:14:00Z",
+    "done": "2026-10-14T10:14:00Z"
+   },
+   "tokensK": 13
+  },
+  {
+   "id": "P3.45",
+   "title": "Task P3.45",
+   "phase": "P3",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:15:00Z",
+    "done": "2026-10-14T10:15:00Z"
+   },
+   "tokensK": 16
+  },
+  {
+   "id": "P3.46",
+   "title": "Task P3.46",
+   "phase": "P3",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:16:00Z",
+    "done": "2026-10-14T10:16:00Z"
+   },
+   "tokensK": 19
+  },
+  {
+   "id": "P3.47",
+   "title": "Task P3.47",
+   "phase": "P3",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:17:00Z",
+    "done": "2026-10-14T10:17:00Z"
+   },
+   "tokensK": 22
+  },
+  {
+   "id": "P3.48",
+   "title": "Task P3.48",
+   "phase": "P3",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:18:00Z",
+    "done": "2026-10-14T10:18:00Z"
+   },
+   "tokensK": 25
+  },
+  {
+   "id": "P3.49",
+   "title": "Task P3.49",
+   "phase": "P3",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:19:00Z",
+    "done": "2026-10-14T10:19:00Z"
+   },
+   "tokensK": 28
+  },
+  {
+   "id": "P3.50",
+   "title": "Task P3.50",
+   "phase": "P3",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:20:00Z",
+    "done": "2026-10-14T10:20:00Z"
+   },
+   "tokensK": 31
+  },
+  {
+   "id": "P4.1",
+   "title": "Task P4.1",
+   "phase": "P4",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:21:00Z",
+    "done": "2026-10-14T10:21:00Z"
+   },
+   "tokensK": 5
+  },
+  {
+   "id": "P4.2",
+   "title": "Task P4.2",
+   "phase": "P4",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:22:00Z",
+    "done": "2026-10-14T10:22:00Z"
+   },
+   "tokensK": 9
+  },
+  {
+   "id": "P4.3",
+   "title": "Task P4.3",
+   "phase": "P4",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:23:00Z",
+    "done": "2026-10-14T10:23:00Z"
+   },
+   "tokensK": 13
+  },
+  {
+   "id": "P4.4",
+   "title": "Task P4.4",
+   "phase": "P4",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:24:00Z",
+    "done": "2026-10-14T10:24:00Z"
+   },
+   "tokensK": 17
+  },
+  {
+   "id": "P4.5",
+   "title": "Task P4.5",
+   "phase": "P4",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:25:00Z",
+    "done": "2026-10-14T10:25:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P4.6",
+   "title": "Task P4.6",
+   "phase": "P4",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:26:00Z",
+    "done": "2026-10-14T10:26:00Z"
+   },
+   "tokensK": 25
+  },
+  {
+   "id": "P4.7",
+   "title": "Task P4.7",
+   "phase": "P4",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:27:00Z",
+    "done": "2026-10-14T10:27:00Z"
+   },
+   "tokensK": 29
+  },
+  {
+   "id": "P4.8",
+   "title": "Task P4.8",
+   "phase": "P4",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:28:00Z",
+    "done": "2026-10-14T10:28:00Z"
+   },
+   "tokensK": 33
+  },
+  {
+   "id": "P4.9",
+   "title": "Task P4.9",
+   "phase": "P4",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:29:00Z",
+    "done": "2026-10-14T10:29:00Z"
+   },
+   "tokensK": 37
+  },
+  {
+   "id": "P4.10",
+   "title": "Task P4.10",
+   "phase": "P4",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:30:00Z",
+    "done": "2026-10-14T10:30:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P4.11",
+   "title": "Task P4.11",
+   "phase": "P4",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:31:00Z",
+    "done": "2026-10-14T10:31:00Z"
+   },
+   "tokensK": 5
+  },
+  {
+   "id": "P4.12",
+   "title": "Task P4.12",
+   "phase": "P4",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:32:00Z",
+    "done": "2026-10-14T10:32:00Z"
+   },
+   "tokensK": 9
+  },
+  {
+   "id": "P4.13",
+   "title": "Task P4.13",
+   "phase": "P4",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:33:00Z",
+    "done": "2026-10-14T10:33:00Z"
+   },
+   "tokensK": 13
+  },
+  {
+   "id": "P4.14",
+   "title": "Task P4.14",
+   "phase": "P4",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:34:00Z",
+    "done": "2026-10-14T10:34:00Z"
+   },
+   "tokensK": 17
+  },
+  {
+   "id": "P4.15",
+   "title": "Task P4.15",
+   "phase": "P4",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:35:00Z",
+    "done": "2026-10-14T10:35:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P4.16",
+   "title": "Task P4.16",
+   "phase": "P4",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:36:00Z",
+    "done": "2026-10-14T10:36:00Z"
+   },
+   "tokensK": 25
+  },
+  {
+   "id": "P4.17",
+   "title": "Task P4.17",
+   "phase": "P4",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:37:00Z",
+    "done": "2026-10-14T10:37:00Z"
+   },
+   "tokensK": 29
+  },
+  {
+   "id": "P4.18",
+   "title": "Task P4.18",
+   "phase": "P4",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:38:00Z",
+    "done": "2026-10-14T10:38:00Z"
+   },
+   "tokensK": 33
+  },
+  {
+   "id": "P4.19",
+   "title": "Task P4.19",
+   "phase": "P4",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:39:00Z",
+    "done": "2026-10-14T10:39:00Z"
+   },
+   "tokensK": 37
+  },
+  {
+   "id": "P4.20",
+   "title": "Task P4.20",
+   "phase": "P4",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:40:00Z",
+    "done": "2026-10-14T10:40:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P4.21",
+   "title": "Task P4.21",
+   "phase": "P4",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:41:00Z",
+    "done": "2026-10-14T10:41:00Z"
+   },
+   "tokensK": 5
+  },
+  {
+   "id": "P4.22",
+   "title": "Task P4.22",
+   "phase": "P4",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:42:00Z",
+    "done": "2026-10-14T10:42:00Z"
+   },
+   "tokensK": 9
+  },
+  {
+   "id": "P4.23",
+   "title": "Task P4.23",
+   "phase": "P4",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:43:00Z",
+    "done": "2026-10-14T10:43:00Z"
+   },
+   "tokensK": 13
+  },
+  {
+   "id": "P4.24",
+   "title": "Task P4.24",
+   "phase": "P4",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:44:00Z",
+    "done": "2026-10-14T10:44:00Z"
+   },
+   "tokensK": 17
+  },
+  {
+   "id": "P4.25",
+   "title": "Task P4.25",
+   "phase": "P4",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:45:00Z",
+    "done": "2026-10-14T10:45:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P4.26",
+   "title": "Task P4.26",
+   "phase": "P4",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:46:00Z",
+    "done": "2026-10-14T10:46:00Z"
+   },
+   "tokensK": 25
+  },
+  {
+   "id": "P4.27",
+   "title": "Task P4.27",
+   "phase": "P4",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:47:00Z",
+    "done": "2026-10-14T10:47:00Z"
+   },
+   "tokensK": 29
+  },
+  {
+   "id": "P4.28",
+   "title": "Task P4.28",
+   "phase": "P4",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:48:00Z",
+    "done": "2026-10-14T10:48:00Z"
+   },
+   "tokensK": 33
+  },
+  {
+   "id": "P4.29",
+   "title": "Task P4.29",
+   "phase": "P4",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:49:00Z",
+    "done": "2026-10-14T10:49:00Z"
+   },
+   "tokensK": 37
+  },
+  {
+   "id": "P4.30",
+   "title": "Task P4.30",
+   "phase": "P4",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:50:00Z",
+    "done": "2026-10-14T10:50:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P4.31",
+   "title": "Task P4.31",
+   "phase": "P4",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:51:00Z",
+    "done": "2026-10-14T10:51:00Z"
+   },
+   "tokensK": 5
+  },
+  {
+   "id": "P4.32",
+   "title": "Task P4.32",
+   "phase": "P4",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:52:00Z",
+    "done": "2026-10-14T10:52:00Z"
+   },
+   "tokensK": 9
+  },
+  {
+   "id": "P4.33",
+   "title": "Task P4.33",
+   "phase": "P4",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:53:00Z",
+    "done": "2026-10-14T10:53:00Z"
+   },
+   "tokensK": 13
+  },
+  {
+   "id": "P4.34",
+   "title": "Task P4.34",
+   "phase": "P4",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:54:00Z",
+    "done": "2026-10-14T10:54:00Z"
+   },
+   "tokensK": 17
+  },
+  {
+   "id": "P4.35",
+   "title": "Task P4.35",
+   "phase": "P4",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:55:00Z",
+    "done": "2026-10-14T10:55:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P4.36",
+   "title": "Task P4.36",
+   "phase": "P4",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:56:00Z",
+    "done": "2026-10-14T10:56:00Z"
+   },
+   "tokensK": 25
+  },
+  {
+   "id": "P4.37",
+   "title": "Task P4.37",
+   "phase": "P4",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:57:00Z",
+    "done": "2026-10-14T10:57:00Z"
+   },
+   "tokensK": 29
+  },
+  {
+   "id": "P4.38",
+   "title": "Task P4.38",
+   "phase": "P4",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:58:00Z",
+    "done": "2026-10-14T10:58:00Z"
+   },
+   "tokensK": 33
+  },
+  {
+   "id": "P4.39",
+   "title": "Task P4.39",
+   "phase": "P4",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:59:00Z",
+    "done": "2026-10-14T10:59:00Z"
+   },
+   "tokensK": 37
+  },
+  {
+   "id": "P4.40",
+   "title": "Task P4.40",
+   "phase": "P4",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:00:00Z",
+    "done": "2026-10-14T10:00:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P4.41",
+   "title": "Task P4.41",
+   "phase": "P4",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:01:00Z",
+    "done": "2026-10-14T10:01:00Z"
+   },
+   "tokensK": 5
+  },
+  {
+   "id": "P4.42",
+   "title": "Task P4.42",
+   "phase": "P4",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:02:00Z",
+    "done": "2026-10-14T10:02:00Z"
+   },
+   "tokensK": 9
+  },
+  {
+   "id": "P4.43",
+   "title": "Task P4.43",
+   "phase": "P4",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:03:00Z",
+    "done": "2026-10-14T10:03:00Z"
+   },
+   "tokensK": 13
+  },
+  {
+   "id": "P4.44",
+   "title": "Task P4.44",
+   "phase": "P4",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:04:00Z",
+    "done": "2026-10-14T10:04:00Z"
+   },
+   "tokensK": 17
+  },
+  {
+   "id": "P4.45",
+   "title": "Task P4.45",
+   "phase": "P4",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:05:00Z",
+    "done": "2026-10-14T10:05:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P4.46",
+   "title": "Task P4.46",
+   "phase": "P4",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:06:00Z",
+    "done": "2026-10-14T10:06:00Z"
+   },
+   "tokensK": 25
+  },
+  {
+   "id": "P4.47",
+   "title": "Task P4.47",
+   "phase": "P4",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:07:00Z",
+    "done": "2026-10-14T10:07:00Z"
+   },
+   "tokensK": 29
+  },
+  {
+   "id": "P4.48",
+   "title": "Task P4.48",
+   "phase": "P4",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:08:00Z",
+    "done": "2026-10-14T10:08:00Z"
+   },
+   "tokensK": 33
+  },
+  {
+   "id": "P4.49",
+   "title": "Task P4.49",
+   "phase": "P4",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:09:00Z",
+    "done": "2026-10-14T10:09:00Z"
+   },
+   "tokensK": 37
+  },
+  {
+   "id": "P4.50",
+   "title": "Task P4.50",
+   "phase": "P4",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:10:00Z",
+    "done": "2026-10-14T10:10:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P5.1",
+   "title": "Task P5.1",
+   "phase": "P5",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:11:00Z",
+    "done": "2026-10-14T10:11:00Z"
+   },
+   "tokensK": 6
+  },
+  {
+   "id": "P5.2",
+   "title": "Task P5.2",
+   "phase": "P5",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:12:00Z",
+    "done": "2026-10-14T10:12:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P5.3",
+   "title": "Task P5.3",
+   "phase": "P5",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:13:00Z",
+    "done": "2026-10-14T10:13:00Z"
+   },
+   "tokensK": 16
+  },
+  {
+   "id": "P5.4",
+   "title": "Task P5.4",
+   "phase": "P5",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:14:00Z",
+    "done": "2026-10-14T10:14:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P5.5",
+   "title": "Task P5.5",
+   "phase": "P5",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:15:00Z",
+    "done": "2026-10-14T10:15:00Z"
+   },
+   "tokensK": 26
+  },
+  {
+   "id": "P5.6",
+   "title": "Task P5.6",
+   "phase": "P5",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:16:00Z",
+    "done": "2026-10-14T10:16:00Z"
+   },
+   "tokensK": 31
+  },
+  {
+   "id": "P5.7",
+   "title": "Task P5.7",
+   "phase": "P5",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:17:00Z",
+    "done": "2026-10-14T10:17:00Z"
+   },
+   "tokensK": 36
+  },
+  {
+   "id": "P5.8",
+   "title": "Task P5.8",
+   "phase": "P5",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:18:00Z",
+    "done": "2026-10-14T10:18:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P5.9",
+   "title": "Task P5.9",
+   "phase": "P5",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:19:00Z",
+    "done": "2026-10-14T10:19:00Z"
+   },
+   "tokensK": 6
+  },
+  {
+   "id": "P5.10",
+   "title": "Task P5.10",
+   "phase": "P5",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:20:00Z",
+    "done": "2026-10-14T10:20:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P5.11",
+   "title": "Task P5.11",
+   "phase": "P5",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:21:00Z",
+    "done": "2026-10-14T10:21:00Z"
+   },
+   "tokensK": 16
+  },
+  {
+   "id": "P5.12",
+   "title": "Task P5.12",
+   "phase": "P5",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:22:00Z",
+    "done": "2026-10-14T10:22:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P5.13",
+   "title": "Task P5.13",
+   "phase": "P5",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:23:00Z",
+    "done": "2026-10-14T10:23:00Z"
+   },
+   "tokensK": 26
+  },
+  {
+   "id": "P5.14",
+   "title": "Task P5.14",
+   "phase": "P5",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:24:00Z",
+    "done": "2026-10-14T10:24:00Z"
+   },
+   "tokensK": 31
+  },
+  {
+   "id": "P5.15",
+   "title": "Task P5.15",
+   "phase": "P5",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:25:00Z",
+    "done": "2026-10-14T10:25:00Z"
+   },
+   "tokensK": 36
+  },
+  {
+   "id": "P5.16",
+   "title": "Task P5.16",
+   "phase": "P5",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:26:00Z",
+    "done": "2026-10-14T10:26:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P5.17",
+   "title": "Task P5.17",
+   "phase": "P5",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:27:00Z",
+    "done": "2026-10-14T10:27:00Z"
+   },
+   "tokensK": 6
+  },
+  {
+   "id": "P5.18",
+   "title": "Task P5.18",
+   "phase": "P5",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:28:00Z",
+    "done": "2026-10-14T10:28:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P5.19",
+   "title": "Task P5.19",
+   "phase": "P5",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:29:00Z",
+    "done": "2026-10-14T10:29:00Z"
+   },
+   "tokensK": 16
+  },
+  {
+   "id": "P5.20",
+   "title": "Task P5.20",
+   "phase": "P5",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:30:00Z",
+    "done": "2026-10-14T10:30:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P5.21",
+   "title": "Task P5.21",
+   "phase": "P5",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:31:00Z",
+    "done": "2026-10-14T10:31:00Z"
+   },
+   "tokensK": 26
+  },
+  {
+   "id": "P5.22",
+   "title": "Task P5.22",
+   "phase": "P5",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:32:00Z",
+    "done": "2026-10-14T10:32:00Z"
+   },
+   "tokensK": 31
+  },
+  {
+   "id": "P5.23",
+   "title": "Task P5.23",
+   "phase": "P5",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:33:00Z",
+    "done": "2026-10-14T10:33:00Z"
+   },
+   "tokensK": 36
+  },
+  {
+   "id": "P5.24",
+   "title": "Task P5.24",
+   "phase": "P5",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:34:00Z",
+    "done": "2026-10-14T10:34:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P5.25",
+   "title": "Task P5.25",
+   "phase": "P5",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:35:00Z",
+    "done": "2026-10-14T10:35:00Z"
+   },
+   "tokensK": 6
+  },
+  {
+   "id": "P5.26",
+   "title": "Task P5.26",
+   "phase": "P5",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:36:00Z",
+    "done": "2026-10-14T10:36:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P5.27",
+   "title": "Task P5.27",
+   "phase": "P5",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:37:00Z",
+    "done": "2026-10-14T10:37:00Z"
+   },
+   "tokensK": 16
+  },
+  {
+   "id": "P5.28",
+   "title": "Task P5.28",
+   "phase": "P5",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:38:00Z",
+    "done": "2026-10-14T10:38:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P5.29",
+   "title": "Task P5.29",
+   "phase": "P5",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:39:00Z",
+    "done": "2026-10-14T10:39:00Z"
+   },
+   "tokensK": 26
+  },
+  {
+   "id": "P5.30",
+   "title": "Task P5.30",
+   "phase": "P5",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:40:00Z",
+    "done": "2026-10-14T10:40:00Z"
+   },
+   "tokensK": 31
+  },
+  {
+   "id": "P5.31",
+   "title": "Task P5.31",
+   "phase": "P5",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:41:00Z",
+    "done": "2026-10-14T10:41:00Z"
+   },
+   "tokensK": 36
+  },
+  {
+   "id": "P5.32",
+   "title": "Task P5.32",
+   "phase": "P5",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:42:00Z",
+    "done": "2026-10-14T10:42:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P5.33",
+   "title": "Task P5.33",
+   "phase": "P5",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:43:00Z",
+    "done": "2026-10-14T10:43:00Z"
+   },
+   "tokensK": 6
+  },
+  {
+   "id": "P5.34",
+   "title": "Task P5.34",
+   "phase": "P5",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:44:00Z",
+    "done": "2026-10-14T10:44:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P5.35",
+   "title": "Task P5.35",
+   "phase": "P5",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:45:00Z",
+    "done": "2026-10-14T10:45:00Z"
+   },
+   "tokensK": 16
+  },
+  {
+   "id": "P5.36",
+   "title": "Task P5.36",
+   "phase": "P5",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:46:00Z",
+    "done": "2026-10-14T10:46:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P5.37",
+   "title": "Task P5.37",
+   "phase": "P5",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:47:00Z",
+    "done": "2026-10-14T10:47:00Z"
+   },
+   "tokensK": 26
+  },
+  {
+   "id": "P5.38",
+   "title": "Task P5.38",
+   "phase": "P5",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:48:00Z",
+    "done": "2026-10-14T10:48:00Z"
+   },
+   "tokensK": 31
+  },
+  {
+   "id": "P5.39",
+   "title": "Task P5.39",
+   "phase": "P5",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:49:00Z",
+    "done": "2026-10-14T10:49:00Z"
+   },
+   "tokensK": 36
+  },
+  {
+   "id": "P5.40",
+   "title": "Task P5.40",
+   "phase": "P5",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:50:00Z",
+    "done": "2026-10-14T10:50:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P5.41",
+   "title": "Task P5.41",
+   "phase": "P5",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:51:00Z",
+    "done": "2026-10-14T10:51:00Z"
+   },
+   "tokensK": 6
+  },
+  {
+   "id": "P5.42",
+   "title": "Task P5.42",
+   "phase": "P5",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:52:00Z",
+    "done": "2026-10-14T10:52:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P5.43",
+   "title": "Task P5.43",
+   "phase": "P5",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:53:00Z",
+    "done": "2026-10-14T10:53:00Z"
+   },
+   "tokensK": 16
+  },
+  {
+   "id": "P5.44",
+   "title": "Task P5.44",
+   "phase": "P5",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:54:00Z",
+    "done": "2026-10-14T10:54:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P5.45",
+   "title": "Task P5.45",
+   "phase": "P5",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:55:00Z",
+    "done": "2026-10-14T10:55:00Z"
+   },
+   "tokensK": 26
+  },
+  {
+   "id": "P5.46",
+   "title": "Task P5.46",
+   "phase": "P5",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:56:00Z",
+    "done": "2026-10-14T10:56:00Z"
+   },
+   "tokensK": 31
+  },
+  {
+   "id": "P5.47",
+   "title": "Task P5.47",
+   "phase": "P5",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:57:00Z",
+    "done": "2026-10-14T10:57:00Z"
+   },
+   "tokensK": 36
+  },
+  {
+   "id": "P5.48",
+   "title": "Task P5.48",
+   "phase": "P5",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:58:00Z",
+    "done": "2026-10-14T10:58:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P5.49",
+   "title": "Task P5.49",
+   "phase": "P5",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:59:00Z",
+    "done": "2026-10-14T10:59:00Z"
+   },
+   "tokensK": 6
+  },
+  {
+   "id": "P5.50",
+   "title": "Task P5.50",
+   "phase": "P5",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:00:00Z",
+    "done": "2026-10-14T10:00:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P6.1",
+   "title": "Task P6.1",
+   "phase": "P6",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:01:00Z",
+    "done": "2026-10-14T10:01:00Z"
+   },
+   "tokensK": 7
+  },
+  {
+   "id": "P6.2",
+   "title": "Task P6.2",
+   "phase": "P6",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:02:00Z",
+    "done": "2026-10-14T10:02:00Z"
+   },
+   "tokensK": 13
+  },
+  {
+   "id": "P6.3",
+   "title": "Task P6.3",
+   "phase": "P6",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:03:00Z",
+    "done": "2026-10-14T10:03:00Z"
+   },
+   "tokensK": 19
+  },
+  {
+   "id": "P6.4",
+   "title": "Task P6.4",
+   "phase": "P6",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:04:00Z",
+    "done": "2026-10-14T10:04:00Z"
+   },
+   "tokensK": 25
+  },
+  {
+   "id": "P6.5",
+   "title": "Task P6.5",
+   "phase": "P6",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:05:00Z",
+    "done": "2026-10-14T10:05:00Z"
+   },
+   "tokensK": 31
+  },
+  {
+   "id": "P6.6",
+   "title": "Task P6.6",
+   "phase": "P6",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:06:00Z",
+    "done": "2026-10-14T10:06:00Z"
+   },
+   "tokensK": 37
+  },
+  {
+   "id": "P6.7",
+   "title": "Task P6.7",
+   "phase": "P6",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:07:00Z",
+    "done": "2026-10-14T10:07:00Z"
+   },
+   "tokensK": 3
+  },
+  {
+   "id": "P6.8",
+   "title": "Task P6.8",
+   "phase": "P6",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:08:00Z",
+    "done": "2026-10-14T10:08:00Z"
+   },
+   "tokensK": 9
+  },
+  {
+   "id": "P6.9",
+   "title": "Task P6.9",
+   "phase": "P6",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:09:00Z",
+    "done": "2026-10-14T10:09:00Z"
+   },
+   "tokensK": 15
+  },
+  {
+   "id": "P6.10",
+   "title": "Task P6.10",
+   "phase": "P6",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:10:00Z",
+    "done": "2026-10-14T10:10:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P6.11",
+   "title": "Task P6.11",
+   "phase": "P6",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:11:00Z",
+    "done": "2026-10-14T10:11:00Z"
+   },
+   "tokensK": 27
+  },
+  {
+   "id": "P6.12",
+   "title": "Task P6.12",
+   "phase": "P6",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:12:00Z",
+    "done": "2026-10-14T10:12:00Z"
+   },
+   "tokensK": 33
+  },
+  {
+   "id": "P6.13",
+   "title": "Task P6.13",
+   "phase": "P6",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:13:00Z",
+    "done": "2026-10-14T10:13:00Z"
+   },
+   "tokensK": 39
+  },
+  {
+   "id": "P6.14",
+   "title": "Task P6.14",
+   "phase": "P6",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:14:00Z",
+    "done": "2026-10-14T10:14:00Z"
+   },
+   "tokensK": 5
+  },
+  {
+   "id": "P6.15",
+   "title": "Task P6.15",
+   "phase": "P6",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:15:00Z",
+    "done": "2026-10-14T10:15:00Z"
+   },
+   "tokensK": 11
+  },
+  {
+   "id": "P6.16",
+   "title": "Task P6.16",
+   "phase": "P6",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:16:00Z",
+    "done": "2026-10-14T10:16:00Z"
+   },
+   "tokensK": 17
+  },
+  {
+   "id": "P6.17",
+   "title": "Task P6.17",
+   "phase": "P6",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:17:00Z",
+    "done": "2026-10-14T10:17:00Z"
+   },
+   "tokensK": 23
+  },
+  {
+   "id": "P6.18",
+   "title": "Task P6.18",
+   "phase": "P6",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:18:00Z",
+    "done": "2026-10-14T10:18:00Z"
+   },
+   "tokensK": 29
+  },
+  {
+   "id": "P6.19",
+   "title": "Task P6.19",
+   "phase": "P6",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:19:00Z",
+    "done": "2026-10-14T10:19:00Z"
+   },
+   "tokensK": 35
+  },
+  {
+   "id": "P6.20",
+   "title": "Task P6.20",
+   "phase": "P6",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:20:00Z",
+    "done": "2026-10-14T10:20:00Z"
+   },
+   "tokensK": 1
+  },
+  {
+   "id": "P6.21",
+   "title": "Task P6.21",
+   "phase": "P6",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:21:00Z",
+    "done": "2026-10-14T10:21:00Z"
+   },
+   "tokensK": 7
+  },
+  {
+   "id": "P6.22",
+   "title": "Task P6.22",
+   "phase": "P6",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:22:00Z",
+    "done": "2026-10-14T10:22:00Z"
+   },
+   "tokensK": 13
+  },
+  {
+   "id": "P6.23",
+   "title": "Task P6.23",
+   "phase": "P6",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:23:00Z",
+    "done": "2026-10-14T10:23:00Z"
+   },
+   "tokensK": 19
+  },
+  {
+   "id": "P6.24",
+   "title": "Task P6.24",
+   "phase": "P6",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:24:00Z",
+    "done": "2026-10-14T10:24:00Z"
+   },
+   "tokensK": 25
+  },
+  {
+   "id": "P6.25",
+   "title": "Task P6.25",
+   "phase": "P6",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:25:00Z",
+    "done": "2026-10-14T10:25:00Z"
+   },
+   "tokensK": 31
+  },
+  {
+   "id": "P6.26",
+   "title": "Task P6.26",
+   "phase": "P6",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:26:00Z",
+    "done": "2026-10-14T10:26:00Z"
+   },
+   "tokensK": 37
+  },
+  {
+   "id": "P6.27",
+   "title": "Task P6.27",
+   "phase": "P6",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T08:27:00Z",
+    "done": "2026-10-14T10:27:00Z"
+   },
+   "tokensK": 3
+  },
+  {
+   "id": "P6.28",
+   "title": "Task P6.28",
+   "phase": "P6",
+   "state": "done",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T08:28:00Z",
+    "done": "2026-10-14T10:28:00Z"
+   },
+   "tokensK": 9
+  },
+  {
+   "id": "P6.29",
+   "title": "Task P6.29",
+   "phase": "P6",
+   "state": "done",
+   "model": "agy",
+   "at": {
+    "doing": "2026-10-14T08:29:00Z",
+    "done": "2026-10-14T10:29:00Z"
+   },
+   "tokensK": 15
+  },
+  {
+   "id": "P6.30",
+   "title": "Task P6.30",
+   "phase": "P6",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T08:30:00Z",
+    "done": "2026-10-14T10:30:00Z"
+   },
+   "tokensK": 21
+  },
+  {
+   "id": "P6.31",
+   "title": "Task P6.31",
+   "phase": "P6",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 27
+  },
+  {
+   "id": "P6.32",
+   "title": "Task P6.32",
+   "phase": "P6",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 33
+  },
+  {
+   "id": "P6.33",
+   "title": "Task P6.33",
+   "phase": "P6",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 39
+  },
+  {
+   "id": "P6.34",
+   "title": "Task P6.34",
+   "phase": "P6",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 5
+  },
+  {
+   "id": "P6.35",
+   "title": "Task P6.35",
+   "phase": "P6",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 11
+  },
+  {
+   "id": "P6.36",
+   "title": "Task P6.36",
+   "phase": "P6",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 17
+  },
+  {
+   "id": "P6.37",
+   "title": "Task P6.37",
+   "phase": "P6",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 23
+  },
+  {
+   "id": "P6.38",
+   "title": "Task P6.38",
+   "phase": "P6",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 29
+  },
+  {
+   "id": "P6.39",
+   "title": "Task P6.39",
+   "phase": "P6",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 35
+  },
+  {
+   "id": "P6.40",
+   "title": "Task P6.40",
+   "phase": "P6",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 1
+  },
+  {
+   "id": "P6.41",
+   "title": "Task P6.41",
+   "phase": "P6",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 7
+  },
+  {
+   "id": "P6.42",
+   "title": "Task P6.42",
+   "phase": "P6",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 13
+  },
+  {
+   "id": "P6.43",
+   "title": "Task P6.43",
+   "phase": "P6",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 19
+  },
+  {
+   "id": "P6.44",
+   "title": "Task P6.44",
+   "phase": "P6",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 25
+  },
+  {
+   "id": "P6.45",
+   "title": "Task P6.45",
+   "phase": "P6",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 31
+  },
+  {
+   "id": "P6.46",
+   "title": "Task P6.46",
+   "phase": "P6",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 37
+  },
+  {
+   "id": "P6.47",
+   "title": "Task P6.47",
+   "phase": "P6",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 3
+  },
+  {
+   "id": "P6.48",
+   "title": "Task P6.48",
+   "phase": "P6",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 9
+  },
+  {
+   "id": "P6.49",
+   "title": "Task P6.49",
+   "phase": "P6",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 15
+  },
+  {
+   "id": "P6.50",
+   "title": "Task P6.50",
+   "phase": "P6",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 21
+  },
+  {
+   "id": "P7.1",
+   "title": "Task P7.1",
+   "phase": "P7",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 8
+  },
+  {
+   "id": "P7.2",
+   "title": "Task P7.2",
+   "phase": "P7",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 15
+  },
+  {
+   "id": "P7.3",
+   "title": "Task P7.3",
+   "phase": "P7",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 22
+  },
+  {
+   "id": "P7.4",
+   "title": "Task P7.4",
+   "phase": "P7",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 29
+  },
+  {
+   "id": "P7.5",
+   "title": "Task P7.5",
+   "phase": "P7",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 36
+  },
+  {
+   "id": "P7.6",
+   "title": "Task P7.6",
+   "phase": "P7",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 3
+  },
+  {
+   "id": "P7.7",
+   "title": "Task P7.7",
+   "phase": "P7",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 10
+  },
+  {
+   "id": "P7.8",
+   "title": "Task P7.8",
+   "phase": "P7",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 17
+  },
+  {
+   "id": "P7.9",
+   "title": "Task P7.9",
+   "phase": "P7",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 24
+  },
+  {
+   "id": "P7.10",
+   "title": "Task P7.10",
+   "phase": "P7",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 31
+  },
+  {
+   "id": "P7.11",
+   "title": "Task P7.11",
+   "phase": "P7",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 38
+  },
+  {
+   "id": "P7.12",
+   "title": "Task P7.12",
+   "phase": "P7",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 5
+  },
+  {
+   "id": "P7.13",
+   "title": "Task P7.13",
+   "phase": "P7",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 12
+  },
+  {
+   "id": "P7.14",
+   "title": "Task P7.14",
+   "phase": "P7",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 19
+  },
+  {
+   "id": "P7.15",
+   "title": "Task P7.15",
+   "phase": "P7",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 26
+  },
+  {
+   "id": "P7.16",
+   "title": "Task P7.16",
+   "phase": "P7",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 33
+  },
+  {
+   "id": "P7.17",
+   "title": "Task P7.17",
+   "phase": "P7",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 40
+  },
+  {
+   "id": "P7.18",
+   "title": "Task P7.18",
+   "phase": "P7",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 7
+  },
+  {
+   "id": "P7.19",
+   "title": "Task P7.19",
+   "phase": "P7",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 14
+  },
+  {
+   "id": "P7.20",
+   "title": "Task P7.20",
+   "phase": "P7",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 21
+  },
+  {
+   "id": "P7.21",
+   "title": "Task P7.21",
+   "phase": "P7",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 28
+  },
+  {
+   "id": "P7.22",
+   "title": "Task P7.22",
+   "phase": "P7",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 35
+  },
+  {
+   "id": "P7.23",
+   "title": "Task P7.23",
+   "phase": "P7",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 2
+  },
+  {
+   "id": "P7.24",
+   "title": "Task P7.24",
+   "phase": "P7",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 9
+  },
+  {
+   "id": "P7.25",
+   "title": "Task P7.25",
+   "phase": "P7",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 16
+  },
+  {
+   "id": "P7.26",
+   "title": "Task P7.26",
+   "phase": "P7",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 23
+  },
+  {
+   "id": "P7.27",
+   "title": "Task P7.27",
+   "phase": "P7",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 30
+  },
+  {
+   "id": "P7.28",
+   "title": "Task P7.28",
+   "phase": "P7",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 37
+  },
+  {
+   "id": "P7.29",
+   "title": "Task P7.29",
+   "phase": "P7",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 4
+  },
+  {
+   "id": "P7.30",
+   "title": "Task P7.30",
+   "phase": "P7",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 11
+  },
+  {
+   "id": "P7.31",
+   "title": "Task P7.31",
+   "phase": "P7",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 18
+  },
+  {
+   "id": "P7.32",
+   "title": "Task P7.32",
+   "phase": "P7",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 25
+  },
+  {
+   "id": "P7.33",
+   "title": "Task P7.33",
+   "phase": "P7",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 32
+  },
+  {
+   "id": "P7.34",
+   "title": "Task P7.34",
+   "phase": "P7",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 39
+  },
+  {
+   "id": "P7.35",
+   "title": "Task P7.35",
+   "phase": "P7",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 6
+  },
+  {
+   "id": "P7.36",
+   "title": "Task P7.36",
+   "phase": "P7",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 13
+  },
+  {
+   "id": "P7.37",
+   "title": "Task P7.37",
+   "phase": "P7",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 20
+  },
+  {
+   "id": "P7.38",
+   "title": "Task P7.38",
+   "phase": "P7",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 27
+  },
+  {
+   "id": "P7.39",
+   "title": "Task P7.39",
+   "phase": "P7",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 34
+  },
+  {
+   "id": "P7.40",
+   "title": "Task P7.40",
+   "phase": "P7",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 1
+  },
+  {
+   "id": "P7.41",
+   "title": "Task P7.41",
+   "phase": "P7",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 8
+  },
+  {
+   "id": "P7.42",
+   "title": "Task P7.42",
+   "phase": "P7",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 15
+  },
+  {
+   "id": "P7.43",
+   "title": "Task P7.43",
+   "phase": "P7",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 22
+  },
+  {
+   "id": "P7.44",
+   "title": "Task P7.44",
+   "phase": "P7",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 29
+  },
+  {
+   "id": "P7.45",
+   "title": "Task P7.45",
+   "phase": "P7",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 36
+  },
+  {
+   "id": "P7.46",
+   "title": "Task P7.46",
+   "phase": "P7",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 3
+  },
+  {
+   "id": "P7.47",
+   "title": "Task P7.47",
+   "phase": "P7",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {},
+   "tokensK": 10
+  },
+  {
+   "id": "P7.48",
+   "title": "Task P7.48",
+   "phase": "P7",
+   "state": "todo",
+   "model": "agy",
+   "at": {},
+   "tokensK": 17
+  },
+  {
+   "id": "P7.49",
+   "title": "Task P7.49",
+   "phase": "P7",
+   "state": "todo",
+   "model": "opus",
+   "at": {},
+   "tokensK": 24
+  },
+  {
+   "id": "P7.50",
+   "title": "Task P7.50",
+   "phase": "P7",
+   "state": "todo",
+   "model": "haiku",
+   "at": {},
+   "tokensK": 31
+  }
+ ],
+ "jobs": [
+  {
+   "id": "J31",
+   "title": "Job J31"
+  },
+  {
+   "id": "J32",
+   "title": "Job J32"
+  },
+  {
+   "id": "J33",
+   "title": "Job J33"
+  },
+  {
+   "id": "J34",
+   "title": "Job J34"
+  },
+  {
+   "id": "J35",
+   "title": "Job J35"
+  }
+ ],
+ "queue": [],
+ "issues": [],
+ "blocked": [],
+ "workflow": {
+  "spans": [
+   [
+    "J31",
+    "P6.31",
+    "haiku",
+    "worker",
+    null,
+    1791977460,
+    null,
+    "running",
+    2
+   ],
+   [
+    "J32",
+    "P6.32",
+    "haiku",
+    "worker",
+    null,
+    1791977520,
+    null,
+    "running",
+    2
+   ],
+   [
+    "J33",
+    "P6.33",
+    "haiku",
+    "worker",
+    null,
+    1791977580,
+    null,
+    "running",
+    2
+   ],
+   [
+    "J34",
+    "P6.34",
+    "haiku",
+    "worker",
+    null,
+    1791977640,
+    null,
+    "running",
+    2
+   ],
+   [
+    "J35",
+    "P6.35",
+    "haiku",
+    "worker",
+    null,
+    1791977700,
+    null,
+    "running",
+    2
+   ]
+  ],
+  "edges": {
+   "after": [
+    [
+     "P1.1",
+     "P1.2"
+    ],
+    [
+     "P1.2",
+     "P1.3"
+    ],
+    [
+     "P1.3",
+     "P1.4"
+    ],
+    [
+     "P1.4",
+     "P1.5"
+    ],
+    [
+     "P1.5",
+     "P1.6"
+    ],
+    [
+     "P1.6",
+     "P1.7"
+    ],
+    [
+     "P1.7",
+     "P1.8"
+    ],
+    [
+     "P1.8",
+     "P1.9"
+    ],
+    [
+     "P1.9",
+     "P1.10"
+    ],
+    [
+     "P1.10",
+     "P1.11"
+    ],
+    [
+     "P1.11",
+     "P1.12"
+    ],
+    [
+     "P1.12",
+     "P1.13"
+    ],
+    [
+     "P1.13",
+     "P1.14"
+    ],
+    [
+     "P1.14",
+     "P1.15"
+    ],
+    [
+     "P1.15",
+     "P1.16"
+    ],
+    [
+     "P1.16",
+     "P1.17"
+    ],
+    [
+     "P1.17",
+     "P1.18"
+    ],
+    [
+     "P1.18",
+     "P1.19"
+    ],
+    [
+     "P1.19",
+     "P1.20"
+    ],
+    [
+     "P1.20",
+     "P1.21"
+    ],
+    [
+     "P1.21",
+     "P1.22"
+    ],
+    [
+     "P1.22",
+     "P1.23"
+    ],
+    [
+     "P1.23",
+     "P1.24"
+    ],
+    [
+     "P1.24",
+     "P1.25"
+    ],
+    [
+     "P1.25",
+     "P1.26"
+    ],
+    [
+     "P1.26",
+     "P1.27"
+    ],
+    [
+     "P1.27",
+     "P1.28"
+    ],
+    [
+     "P1.28",
+     "P1.29"
+    ],
+    [
+     "P1.29",
+     "P1.30"
+    ],
+    [
+     "P1.30",
+     "P1.31"
+    ],
+    [
+     "P1.31",
+     "P1.32"
+    ],
+    [
+     "P1.32",
+     "P1.33"
+    ],
+    [
+     "P1.33",
+     "P1.34"
+    ],
+    [
+     "P1.34",
+     "P1.35"
+    ],
+    [
+     "P1.35",
+     "P1.36"
+    ],
+    [
+     "P1.36",
+     "P1.37"
+    ],
+    [
+     "P1.37",
+     "P1.38"
+    ],
+    [
+     "P1.38",
+     "P1.39"
+    ],
+    [
+     "P1.39",
+     "P1.40"
+    ],
+    [
+     "P1.40",
+     "P1.41"
+    ],
+    [
+     "P1.41",
+     "P1.42"
+    ],
+    [
+     "P1.42",
+     "P1.43"
+    ],
+    [
+     "P1.43",
+     "P1.44"
+    ],
+    [
+     "P1.44",
+     "P1.45"
+    ],
+    [
+     "P1.45",
+     "P1.46"
+    ],
+    [
+     "P1.46",
+     "P1.47"
+    ],
+    [
+     "P1.47",
+     "P1.48"
+    ],
+    [
+     "P1.48",
+     "P1.49"
+    ],
+    [
+     "P1.49",
+     "P1.50"
+    ],
+    [
+     "P1.50",
+     "P2.1"
+    ],
+    [
+     "P2.1",
+     "P2.2"
+    ],
+    [
+     "P2.2",
+     "P2.3"
+    ],
+    [
+     "P2.3",
+     "P2.4"
+    ],
+    [
+     "P2.4",
+     "P2.5"
+    ],
+    [
+     "P2.5",
+     "P2.6"
+    ],
+    [
+     "P2.6",
+     "P2.7"
+    ],
+    [
+     "P2.7",
+     "P2.8"
+    ],
+    [
+     "P2.8",
+     "P2.9"
+    ],
+    [
+     "P2.9",
+     "P2.10"
+    ],
+    [
+     "P2.10",
+     "P2.11"
+    ],
+    [
+     "P2.11",
+     "P2.12"
+    ],
+    [
+     "P2.12",
+     "P2.13"
+    ],
+    [
+     "P2.13",
+     "P2.14"
+    ],
+    [
+     "P2.14",
+     "P2.15"
+    ],
+    [
+     "P2.15",
+     "P2.16"
+    ],
+    [
+     "P2.16",
+     "P2.17"
+    ],
+    [
+     "P2.17",
+     "P2.18"
+    ],
+    [
+     "P2.18",
+     "P2.19"
+    ],
+    [
+     "P2.19",
+     "P2.20"
+    ],
+    [
+     "P2.20",
+     "P2.21"
+    ],
+    [
+     "P2.21",
+     "P2.22"
+    ],
+    [
+     "P2.22",
+     "P2.23"
+    ],
+    [
+     "P2.23",
+     "P2.24"
+    ],
+    [
+     "P2.24",
+     "P2.25"
+    ],
+    [
+     "P2.25",
+     "P2.26"
+    ],
+    [
+     "P2.26",
+     "P2.27"
+    ],
+    [
+     "P2.27",
+     "P2.28"
+    ],
+    [
+     "P2.28",
+     "P2.29"
+    ],
+    [
+     "P2.29",
+     "P2.30"
+    ],
+    [
+     "P2.30",
+     "P2.31"
+    ],
+    [
+     "P2.31",
+     "P2.32"
+    ],
+    [
+     "P2.32",
+     "P2.33"
+    ],
+    [
+     "P2.33",
+     "P2.34"
+    ],
+    [
+     "P2.34",
+     "P2.35"
+    ],
+    [
+     "P2.35",
+     "P2.36"
+    ],
+    [
+     "P2.36",
+     "P2.37"
+    ],
+    [
+     "P2.37",
+     "P2.38"
+    ],
+    [
+     "P2.38",
+     "P2.39"
+    ],
+    [
+     "P2.39",
+     "P2.40"
+    ],
+    [
+     "P2.40",
+     "P2.41"
+    ],
+    [
+     "P2.41",
+     "P2.42"
+    ],
+    [
+     "P2.42",
+     "P2.43"
+    ],
+    [
+     "P2.43",
+     "P2.44"
+    ],
+    [
+     "P2.44",
+     "P2.45"
+    ],
+    [
+     "P2.45",
+     "P2.46"
+    ],
+    [
+     "P2.46",
+     "P2.47"
+    ],
+    [
+     "P2.47",
+     "P2.48"
+    ],
+    [
+     "P2.48",
+     "P2.49"
+    ],
+    [
+     "P2.49",
+     "P2.50"
+    ],
+    [
+     "P2.50",
+     "P3.1"
+    ],
+    [
+     "P3.1",
+     "P3.2"
+    ],
+    [
+     "P3.2",
+     "P3.3"
+    ],
+    [
+     "P3.3",
+     "P3.4"
+    ],
+    [
+     "P3.4",
+     "P3.5"
+    ],
+    [
+     "P3.5",
+     "P3.6"
+    ],
+    [
+     "P3.6",
+     "P3.7"
+    ],
+    [
+     "P3.7",
+     "P3.8"
+    ],
+    [
+     "P3.8",
+     "P3.9"
+    ],
+    [
+     "P3.9",
+     "P3.10"
+    ],
+    [
+     "P3.10",
+     "P3.11"
+    ],
+    [
+     "P3.11",
+     "P3.12"
+    ],
+    [
+     "P3.12",
+     "P3.13"
+    ],
+    [
+     "P3.13",
+     "P3.14"
+    ],
+    [
+     "P3.14",
+     "P3.15"
+    ],
+    [
+     "P3.15",
+     "P3.16"
+    ],
+    [
+     "P3.16",
+     "P3.17"
+    ],
+    [
+     "P3.17",
+     "P3.18"
+    ],
+    [
+     "P3.18",
+     "P3.19"
+    ],
+    [
+     "P3.19",
+     "P3.20"
+    ],
+    [
+     "P3.20",
+     "P3.21"
+    ],
+    [
+     "P3.21",
+     "P3.22"
+    ],
+    [
+     "P3.22",
+     "P3.23"
+    ],
+    [
+     "P3.23",
+     "P3.24"
+    ],
+    [
+     "P3.24",
+     "P3.25"
+    ],
+    [
+     "P3.25",
+     "P3.26"
+    ],
+    [
+     "P3.26",
+     "P3.27"
+    ],
+    [
+     "P3.27",
+     "P3.28"
+    ],
+    [
+     "P3.28",
+     "P3.29"
+    ],
+    [
+     "P3.29",
+     "P3.30"
+    ],
+    [
+     "P3.30",
+     "P3.31"
+    ],
+    [
+     "P3.31",
+     "P3.32"
+    ],
+    [
+     "P3.32",
+     "P3.33"
+    ],
+    [
+     "P3.33",
+     "P3.34"
+    ],
+    [
+     "P3.34",
+     "P3.35"
+    ],
+    [
+     "P3.35",
+     "P3.36"
+    ],
+    [
+     "P3.36",
+     "P3.37"
+    ],
+    [
+     "P3.37",
+     "P3.38"
+    ],
+    [
+     "P3.38",
+     "P3.39"
+    ],
+    [
+     "P3.39",
+     "P3.40"
+    ],
+    [
+     "P3.40",
+     "P3.41"
+    ],
+    [
+     "P3.41",
+     "P3.42"
+    ],
+    [
+     "P3.42",
+     "P3.43"
+    ],
+    [
+     "P3.43",
+     "P3.44"
+    ],
+    [
+     "P3.44",
+     "P3.45"
+    ],
+    [
+     "P3.45",
+     "P3.46"
+    ],
+    [
+     "P3.46",
+     "P3.47"
+    ],
+    [
+     "P3.47",
+     "P3.48"
+    ],
+    [
+     "P3.48",
+     "P3.49"
+    ],
+    [
+     "P3.49",
+     "P3.50"
+    ],
+    [
+     "P3.50",
+     "P4.1"
+    ],
+    [
+     "P4.1",
+     "P4.2"
+    ],
+    [
+     "P4.2",
+     "P4.3"
+    ],
+    [
+     "P4.3",
+     "P4.4"
+    ],
+    [
+     "P4.4",
+     "P4.5"
+    ],
+    [
+     "P4.5",
+     "P4.6"
+    ],
+    [
+     "P4.6",
+     "P4.7"
+    ],
+    [
+     "P4.7",
+     "P4.8"
+    ],
+    [
+     "P4.8",
+     "P4.9"
+    ],
+    [
+     "P4.9",
+     "P4.10"
+    ],
+    [
+     "P4.10",
+     "P4.11"
+    ],
+    [
+     "P4.11",
+     "P4.12"
+    ],
+    [
+     "P4.12",
+     "P4.13"
+    ],
+    [
+     "P4.13",
+     "P4.14"
+    ],
+    [
+     "P4.14",
+     "P4.15"
+    ],
+    [
+     "P4.15",
+     "P4.16"
+    ],
+    [
+     "P4.16",
+     "P4.17"
+    ],
+    [
+     "P4.17",
+     "P4.18"
+    ],
+    [
+     "P4.18",
+     "P4.19"
+    ],
+    [
+     "P4.19",
+     "P4.20"
+    ],
+    [
+     "P4.20",
+     "P4.21"
+    ],
+    [
+     "P4.21",
+     "P4.22"
+    ],
+    [
+     "P4.22",
+     "P4.23"
+    ],
+    [
+     "P4.23",
+     "P4.24"
+    ],
+    [
+     "P4.24",
+     "P4.25"
+    ],
+    [
+     "P4.25",
+     "P4.26"
+    ],
+    [
+     "P4.26",
+     "P4.27"
+    ],
+    [
+     "P4.27",
+     "P4.28"
+    ],
+    [
+     "P4.28",
+     "P4.29"
+    ],
+    [
+     "P4.29",
+     "P4.30"
+    ],
+    [
+     "P4.30",
+     "P4.31"
+    ],
+    [
+     "P4.31",
+     "P4.32"
+    ],
+    [
+     "P4.32",
+     "P4.33"
+    ],
+    [
+     "P4.33",
+     "P4.34"
+    ],
+    [
+     "P4.34",
+     "P4.35"
+    ],
+    [
+     "P4.35",
+     "P4.36"
+    ],
+    [
+     "P4.36",
+     "P4.37"
+    ],
+    [
+     "P4.37",
+     "P4.38"
+    ],
+    [
+     "P4.38",
+     "P4.39"
+    ],
+    [
+     "P4.39",
+     "P4.40"
+    ],
+    [
+     "P4.40",
+     "P4.41"
+    ],
+    [
+     "P4.41",
+     "P4.42"
+    ],
+    [
+     "P4.42",
+     "P4.43"
+    ],
+    [
+     "P4.43",
+     "P4.44"
+    ],
+    [
+     "P4.44",
+     "P4.45"
+    ],
+    [
+     "P4.45",
+     "P4.46"
+    ],
+    [
+     "P4.46",
+     "P4.47"
+    ],
+    [
+     "P4.47",
+     "P4.48"
+    ],
+    [
+     "P4.48",
+     "P4.49"
+    ],
+    [
+     "P4.49",
+     "P4.50"
+    ],
+    [
+     "P4.50",
+     "P5.1"
+    ],
+    [
+     "P5.1",
+     "P5.2"
+    ],
+    [
+     "P5.2",
+     "P5.3"
+    ],
+    [
+     "P5.3",
+     "P5.4"
+    ],
+    [
+     "P5.4",
+     "P5.5"
+    ],
+    [
+     "P5.5",
+     "P5.6"
+    ],
+    [
+     "P5.6",
+     "P5.7"
+    ],
+    [
+     "P5.7",
+     "P5.8"
+    ],
+    [
+     "P5.8",
+     "P5.9"
+    ],
+    [
+     "P5.9",
+     "P5.10"
+    ],
+    [
+     "P5.10",
+     "P5.11"
+    ],
+    [
+     "P5.11",
+     "P5.12"
+    ],
+    [
+     "P5.12",
+     "P5.13"
+    ],
+    [
+     "P5.13",
+     "P5.14"
+    ],
+    [
+     "P5.14",
+     "P5.15"
+    ],
+    [
+     "P5.15",
+     "P5.16"
+    ],
+    [
+     "P5.16",
+     "P5.17"
+    ],
+    [
+     "P5.17",
+     "P5.18"
+    ],
+    [
+     "P5.18",
+     "P5.19"
+    ],
+    [
+     "P5.19",
+     "P5.20"
+    ],
+    [
+     "P5.20",
+     "P5.21"
+    ],
+    [
+     "P5.21",
+     "P5.22"
+    ],
+    [
+     "P5.22",
+     "P5.23"
+    ],
+    [
+     "P5.23",
+     "P5.24"
+    ],
+    [
+     "P5.24",
+     "P5.25"
+    ],
+    [
+     "P5.25",
+     "P5.26"
+    ],
+    [
+     "P5.26",
+     "P5.27"
+    ],
+    [
+     "P5.27",
+     "P5.28"
+    ],
+    [
+     "P5.28",
+     "P5.29"
+    ],
+    [
+     "P5.29",
+     "P5.30"
+    ],
+    [
+     "P5.30",
+     "P5.31"
+    ],
+    [
+     "P5.31",
+     "P5.32"
+    ],
+    [
+     "P5.32",
+     "P5.33"
+    ],
+    [
+     "P5.33",
+     "P5.34"
+    ],
+    [
+     "P5.34",
+     "P5.35"
+    ],
+    [
+     "P5.35",
+     "P5.36"
+    ],
+    [
+     "P5.36",
+     "P5.37"
+    ],
+    [
+     "P5.37",
+     "P5.38"
+    ],
+    [
+     "P5.38",
+     "P5.39"
+    ],
+    [
+     "P5.39",
+     "P5.40"
+    ],
+    [
+     "P5.40",
+     "P5.41"
+    ],
+    [
+     "P5.41",
+     "P5.42"
+    ],
+    [
+     "P5.42",
+     "P5.43"
+    ],
+    [
+     "P5.43",
+     "P5.44"
+    ],
+    [
+     "P5.44",
+     "P5.45"
+    ],
+    [
+     "P5.45",
+     "P5.46"
+    ],
+    [
+     "P5.46",
+     "P5.47"
+    ],
+    [
+     "P5.47",
+     "P5.48"
+    ],
+    [
+     "P5.48",
+     "P5.49"
+    ],
+    [
+     "P5.49",
+     "P5.50"
+    ],
+    [
+     "P5.50",
+     "P6.1"
+    ],
+    [
+     "P6.1",
+     "P6.2"
+    ],
+    [
+     "P6.2",
+     "P6.3"
+    ],
+    [
+     "P6.3",
+     "P6.4"
+    ],
+    [
+     "P6.4",
+     "P6.5"
+    ],
+    [
+     "P6.5",
+     "P6.6"
+    ],
+    [
+     "P6.6",
+     "P6.7"
+    ],
+    [
+     "P6.7",
+     "P6.8"
+    ],
+    [
+     "P6.8",
+     "P6.9"
+    ],
+    [
+     "P6.9",
+     "P6.10"
+    ],
+    [
+     "P6.10",
+     "P6.11"
+    ],
+    [
+     "P6.11",
+     "P6.12"
+    ],
+    [
+     "P6.12",
+     "P6.13"
+    ],
+    [
+     "P6.13",
+     "P6.14"
+    ],
+    [
+     "P6.14",
+     "P6.15"
+    ],
+    [
+     "P6.15",
+     "P6.16"
+    ],
+    [
+     "P6.16",
+     "P6.17"
+    ],
+    [
+     "P6.17",
+     "P6.18"
+    ],
+    [
+     "P6.18",
+     "P6.19"
+    ],
+    [
+     "P6.19",
+     "P6.20"
+    ],
+    [
+     "P6.20",
+     "P6.21"
+    ],
+    [
+     "P6.21",
+     "P6.22"
+    ],
+    [
+     "P6.22",
+     "P6.23"
+    ],
+    [
+     "P6.23",
+     "P6.24"
+    ],
+    [
+     "P6.24",
+     "P6.25"
+    ],
+    [
+     "P6.25",
+     "P6.26"
+    ],
+    [
+     "P6.26",
+     "P6.27"
+    ],
+    [
+     "P6.27",
+     "P6.28"
+    ],
+    [
+     "P6.28",
+     "P6.29"
+    ],
+    [
+     "P6.29",
+     "P6.30"
+    ],
+    [
+     "P6.30",
+     "P6.31"
+    ],
+    [
+     "P6.31",
+     "P6.32"
+    ],
+    [
+     "P6.32",
+     "P6.33"
+    ],
+    [
+     "P6.33",
+     "P6.34"
+    ],
+    [
+     "P6.34",
+     "P6.35"
+    ],
+    [
+     "P6.35",
+     "P6.36"
+    ],
+    [
+     "P6.36",
+     "P6.37"
+    ],
+    [
+     "P6.37",
+     "P6.38"
+    ],
+    [
+     "P6.38",
+     "P6.39"
+    ],
+    [
+     "P6.39",
+     "P6.40"
+    ],
+    [
+     "P6.40",
+     "P6.41"
+    ],
+    [
+     "P6.41",
+     "P6.42"
+    ],
+    [
+     "P6.42",
+     "P6.43"
+    ],
+    [
+     "P6.43",
+     "P6.44"
+    ],
+    [
+     "P6.44",
+     "P6.45"
+    ],
+    [
+     "P6.45",
+     "P6.46"
+    ],
+    [
+     "P6.46",
+     "P6.47"
+    ],
+    [
+     "P6.47",
+     "P6.48"
+    ],
+    [
+     "P6.48",
+     "P6.49"
+    ],
+    [
+     "P6.49",
+     "P6.50"
+    ],
+    [
+     "P6.50",
+     "P7.1"
+    ],
+    [
+     "P7.1",
+     "P7.2"
+    ],
+    [
+     "P7.2",
+     "P7.3"
+    ],
+    [
+     "P7.3",
+     "P7.4"
+    ],
+    [
+     "P7.4",
+     "P7.5"
+    ],
+    [
+     "P7.5",
+     "P7.6"
+    ],
+    [
+     "P7.6",
+     "P7.7"
+    ],
+    [
+     "P7.7",
+     "P7.8"
+    ],
+    [
+     "P7.8",
+     "P7.9"
+    ],
+    [
+     "P7.9",
+     "P7.10"
+    ],
+    [
+     "P7.10",
+     "P7.11"
+    ],
+    [
+     "P7.11",
+     "P7.12"
+    ],
+    [
+     "P7.12",
+     "P7.13"
+    ],
+    [
+     "P7.13",
+     "P7.14"
+    ],
+    [
+     "P7.14",
+     "P7.15"
+    ],
+    [
+     "P7.15",
+     "P7.16"
+    ],
+    [
+     "P7.16",
+     "P7.17"
+    ],
+    [
+     "P7.17",
+     "P7.18"
+    ],
+    [
+     "P7.18",
+     "P7.19"
+    ],
+    [
+     "P7.19",
+     "P7.20"
+    ],
+    [
+     "P7.20",
+     "P7.21"
+    ],
+    [
+     "P7.21",
+     "P7.22"
+    ],
+    [
+     "P7.22",
+     "P7.23"
+    ],
+    [
+     "P7.23",
+     "P7.24"
+    ],
+    [
+     "P7.24",
+     "P7.25"
+    ],
+    [
+     "P7.25",
+     "P7.26"
+    ],
+    [
+     "P7.26",
+     "P7.27"
+    ],
+    [
+     "P7.27",
+     "P7.28"
+    ],
+    [
+     "P7.28",
+     "P7.29"
+    ],
+    [
+     "P7.29",
+     "P7.30"
+    ],
+    [
+     "P7.30",
+     "P7.31"
+    ],
+    [
+     "P7.31",
+     "P7.32"
+    ],
+    [
+     "P7.32",
+     "P7.33"
+    ],
+    [
+     "P7.33",
+     "P7.34"
+    ],
+    [
+     "P7.34",
+     "P7.35"
+    ],
+    [
+     "P7.35",
+     "P7.36"
+    ],
+    [
+     "P7.36",
+     "P7.37"
+    ],
+    [
+     "P7.37",
+     "P7.38"
+    ],
+    [
+     "P7.38",
+     "P7.39"
+    ],
+    [
+     "P7.39",
+     "P7.40"
+    ],
+    [
+     "P7.40",
+     "P7.41"
+    ],
+    [
+     "P7.41",
+     "P7.42"
+    ],
+    [
+     "P7.42",
+     "P7.43"
+    ],
+    [
+     "P7.43",
+     "P7.44"
+    ],
+    [
+     "P7.44",
+     "P7.45"
+    ],
+    [
+     "P7.45",
+     "P7.46"
+    ],
+    [
+     "P7.46",
+     "P7.47"
+    ],
+    [
+     "P7.47",
+     "P7.48"
+    ],
+    [
+     "P7.48",
+     "P7.49"
+    ],
+    [
+     "P7.49",
+     "P7.50"
+    ]
+   ],
+   "block": []
+  }
+ }
+}
