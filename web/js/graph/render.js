@@ -208,7 +208,9 @@ export function buildMap(graph, lay, pid) {
   vp.appendChild(el("g", { class: "wfg-bands" }, bands));
   vp.appendChild(el("g", { class: "wfg-edges" }, edges));
   vp.appendChild(el("g", { class: "wfg-nodes" }, nodes));
-  const svg = el("svg", { class: "wfg-svg", role: "group", "aria-label": "Workflow diagram",
+  // tabindex 0 puts the canvas itself in the tab order (one stop, before the nodes) so + - 0 Escape work from it;
+  // the nodes keep their own tabindex 0. The global :focus-visible outline in base.css is the focus ring.
+  const svg = el("svg", { class: "wfg-svg", role: "group", tabindex: 0, "aria-label": "Workflow diagram",
     "aria-describedby": "wf-legend" }, [defs, vp]);
   return { svg: svg, vp: vp, box: { w: lay.width, h: lay.height } };
 }
