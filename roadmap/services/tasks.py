@@ -13,7 +13,7 @@ import re
 from roadmap.core import parsers, planfmt
 from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import jobs
-from roadmap.store import backup, config, lock, schema
+from roadmap.store import atomic, backup, config, lock, schema
 
 BACKUP_OVER = 10
 QUERY_LIMIT = 20
@@ -34,8 +34,21 @@ class PlanError(RoadmapError):
         self.usage = usage
 
 
+FEATURES_FILE = "features.json"
+FEATURES_VERSION = 1
+
+
 def tasks_path(data_dir):
     return os.path.join(data_dir, jobs.TASKS_FILE)
+
+
+def features_path(data_dir):
+    return os.path.join(data_dir, FEATURES_FILE)
+
+
+def load_features(data_dir):
+    """Feature dicts in file order (docs/features.json). A missing file gives an empty list."""
+    return [dict(f) for f in _features_load(data_dir)["features"] if isinstance(f, dict)]
 
 
 def resolve(project_id=None):
@@ -92,6 +105,7 @@ def query(data_dir, phase=None, status=None, needs_you=False, limit=QUERY_LIMIT)
 def apply(data_dir, records, dry_run=False, replace_phase=None, project_id=None):
     """Upsert parsed records (from planfmt.parse_plan or parse_set_text) into tasks.json and return the diff.
 
+    Feature records (F lines) go to docs/features.json and link records (L lines) add feature ids to tasks' feats.
     Validation covers the whole input before any write. A failure raises PlanError and writes nothing. With no change
     nothing is written (so updated is not bumped). A write that changes more than 10 tasks backs the file up first;
     project_id names that backup folder, and when it is None the registered project for data_dir is used."""
@@ -103,18 +117,24 @@ def apply(data_dir, records, dry_run=False, replace_phase=None, project_id=None)
     with lock.locked(data_dir):
         before = load(data_dir)
         doc = copy.deepcopy(before)
-        problems, input_ids = _apply_records(doc, records, replace_phase)
+        fbefore = _features_load(data_dir)
+        fdoc = copy.deepcopy(fbefore)
+        problems, input_ids = _apply_records(doc, records, replace_phase, fdoc)
         if problems:
             raise _plan_error(problems)
-        diff = _diff(before, doc, input_ids)
+        diff = _diff(before, doc, input_ids, fbefore, fdoc)
         if dry_run or diff["changed"] == 0:
             diff.update(dry_run=dry_run, wrote=False, backup=None)
             return diff
         folder = None
         if diff["tasks_touched"] > BACKUP_OVER:
             folder = backup.backup_files(project_id or _registered_id(data_dir), [path])
-        doc["updated"] = planfmt.today()
-        schema.write_data("tasks", path, doc)
+        if diff["tasks_touched"] or diff["phases_added"] or diff["phases_changed"]:
+            doc["updated"] = planfmt.today()
+            schema.write_data("tasks", path, doc)
+        if diff["features_added"] or diff["features_changed"]:
+            fdoc["updated"] = planfmt.today()
+            _features_write(data_dir, fdoc)
         diff.update(dry_run=False, wrote=True, backup=folder)
     return diff
 
@@ -125,6 +145,7 @@ def describe(diff):
         return "0 changed (no write)" if diff["dry_run"] else "0 changed"
     parts = []
     for count, sign in ((len(diff["phases_added"]), "+P"), (len(diff["phases_changed"]), "~P"),
+                        (len(diff["features_added"]), "+F"), (len(diff["features_changed"]), "~F"),
                         (len(diff["tasks_added"]), "+T"), (len(diff["tasks_changed"]), "~T"),
                         (len(diff["tasks_removed"]), "-T"), (diff["tasks_unchanged"], "=T")):
         if count:
@@ -171,13 +192,17 @@ def summary(data_dir, jobs_list=(), name=None):
 
 # ---------------------------------------------------------------- apply
 
-def _apply_records(doc, records, replace_phase):
-    """Apply records to doc in memory. Returns (problems, input_task_ids); problems are (kind, text, next) tuples."""
+def _apply_records(doc, records, replace_phase, fdoc):
+    """Apply records to doc (tasks) and fdoc (features) in memory. Returns (problems, input_task_ids); problems are
+    (kind, text, next) tuples."""
     problems = []
     unique = []
     seen = {}
     for rec in records:
-        kind = "phase" if rec["kind"] == "phase" else "task"
+        if rec["kind"] == "link":
+            unique.append(rec)
+            continue
+        kind = rec["kind"] if rec["kind"] in ("phase", "feature") else "task"
         key = (kind, rec["id"])
         if key in seen:
             problems.append(("invalid", _line(rec, "duplicate " + kind + " id " + rec["id"] + " (first on line "
@@ -207,8 +232,14 @@ def _apply_records(doc, records, replace_phase):
             doc["phases"].append(phases[pid])
         touch(pid)
 
+    features = _index(fdoc["features"])
+    _apply_features(fdoc, features, phases, unique, problems)
+
     for rec in unique:
-        if rec["kind"] == "phase":
+        if rec["kind"] in ("phase", "feature"):
+            continue
+        if rec["kind"] == "link":
+            _apply_link(tasks, features, rec, problems)
             continue
         tid = rec["id"]
         input_ids.add(tid)
@@ -220,6 +251,11 @@ def _apply_records(doc, records, replace_phase):
                                  "roadmap status"))
                 continue
             touch(pid)
+            missing = [fid for fid in (rec.get("feats") or []) if fid not in features]
+            if missing:
+                problems.append(("missing", _line(rec, "feature " + missing[0] + " does not exist (allowed: an F line "
+                                                  "in this input, or an existing feature id)"), None))
+                continue
             if tid in tasks:
                 _update_task(tasks[tid], rec)
             elif rec["model"] is None or rec["thinking"] is None:
@@ -259,6 +295,77 @@ def _apply_records(doc, records, replace_phase):
     return problems, input_ids
 
 
+def _apply_features(fdoc, features, phases, unique, problems):
+    """Upsert the F records into fdoc (features index in features). Each F line sets every field except accepted,
+    which only the person sets. Checks: phase exists, parent exists and is top level, and the 60-feature cap."""
+    added = []
+    for rec in unique:
+        if rec["kind"] != "feature":
+            continue
+        fid = rec["id"]
+        if rec["phase"] is not None and rec["phase"] not in phases:
+            problems.append(("missing", _line(rec, "phase " + rec["phase"] + " does not exist (allowed: a P "
+                                              + rec["phase"] + " line in this input, or an existing phase id)"),
+                             "roadmap status"))
+            continue
+        entry = {"id": fid, "title": rec["title"], "acc": rec["acc"], "prio": rec["prio"], "parent": rec["parent"],
+                 "phase": rec["phase"], "hold": rec["hold"],
+                 "accepted": features[fid].get("accepted") if fid in features else None}
+        if fid in features:
+            features[fid].clear()
+            features[fid].update(entry)
+        else:
+            features[fid] = entry
+            fdoc["features"].append(entry)
+            added.append(rec)
+    for rec in unique:
+        if rec["kind"] != "feature":
+            continue
+        parent = rec["parent"]
+        if parent is None:
+            continue
+        if parent not in features:
+            problems.append(("missing", _line(rec, "parent " + parent + " does not exist (allowed: an F line in this "
+                                              "input, or an existing feature id, or -)"), None))
+        elif features[parent].get("parent"):
+            problems.append(("invalid", _line(rec, "parent " + parent + " is itself a sub-feature (allowed: a "
+                                              "top-level feature; only one level of sub-features)"), None))
+        elif any(f.get("parent") == rec["id"] for f in fdoc["features"]):
+            problems.append(("invalid", _line(rec, rec["id"] + " has sub-features, so it cannot have a parent "
+                                              "(allowed: one level only)"), None))
+    if len(fdoc["features"]) > planfmt.FEATURES_MAX and added:
+        problems.append(("invalid", _line(added[0], "the file would have " + str(len(fdoc["features"]))
+                                          + " features (allowed: up to " + str(planfmt.FEATURES_MAX) + ")"), None))
+
+
+def _apply_link(tasks, features, rec, problems):
+    """An L line: append the feature to each named task's feats, once. Errors when the feature or a task is unknown,
+    or when a task would have more than FEAT_MAX_PER_TASK features."""
+    fid = rec["feature"]
+    if fid not in features:
+        problems.append(("missing", _line(rec, "feature " + fid + " does not exist (allowed: an F line in this input, "
+                                          "or an existing feature id)"), None))
+        return
+    for tid in rec["tasks"]:
+        task = tasks.get(tid)
+        if task is None:
+            pid = tid.split(".")[0]
+            problems.append(("missing", _line(rec, "no task " + tid + " in tasks.json (allowed: an existing task id; "
+                                              "list them with roadmap task list --phase " + pid + ")"),
+                             "roadmap task list --phase " + pid))
+            continue
+        feats = list(task.get("feats") or [])
+        if fid in feats:
+            continue
+        if len(feats) >= planfmt.FEAT_MAX_PER_TASK:
+            problems.append(("invalid", _line(rec, tid + " already has " + str(planfmt.FEAT_MAX_PER_TASK)
+                                             + " features (allowed: up to " + str(planfmt.FEAT_MAX_PER_TASK)
+                                             + " per task)"), None))
+            continue
+        feats.append(fid)
+        task["feats"] = feats
+
+
 def _check_after(doc, records):
     """Problems with the after lists that this input sets: each id must be a task in the file, must not be the task
     itself, and must not close a loop (the dependency must not already lead back to the task). Checked against the
@@ -266,7 +373,7 @@ def _check_after(doc, records):
     tasks = {t["id"]: t for t in doc["tasks"] if isinstance(t, dict) and isinstance(t.get("id"), str)}
     problems = []
     for rec in records:
-        if rec["kind"] == "phase":
+        if rec["kind"] not in ("task", "set"):
             continue
         fields_after = rec.get("after") if rec["kind"] == "task" else rec["fields"].get("after")
         if fields_after is None or rec["id"] not in tasks:
@@ -312,6 +419,11 @@ def _update_task(task, rec):
                        ("note", rec["note"]), ("after", rec.get("after"))):
         if value is not None:
             task[key] = value
+    if rec.get("feats") is not None:
+        if rec["feats"]:
+            task["feats"] = list(rec["feats"])
+        else:
+            task.pop("feats", None)
     if rec["needsUser"] is True:
         task["needsUser"] = True
 
@@ -326,6 +438,8 @@ def _new_task(rec):
         task["note"] = rec["note"]
     if rec.get("after"):
         task["after"] = list(rec["after"])
+    if rec.get("feats"):
+        task["feats"] = list(rec["feats"])
     return task
 
 
@@ -363,17 +477,22 @@ def _plan_error(problems):
 
 # ---------------------------------------------------------------- diff
 
-def _diff(before, after, input_ids):
+def _diff(before, after, input_ids, fbefore=None, fafter=None):
     field_diffs = []
     phases_added, phases_changed, _ = _compare(before["phases"], after["phases"], field_diffs)
     tasks_added, tasks_changed, tasks_removed = _compare(before["tasks"], after["tasks"], field_diffs)
+    features_added, features_changed = [], []
+    if fbefore is not None and fafter is not None:
+        features_added, features_changed, _ = _compare(fbefore["features"], fafter["features"], field_diffs)
     changed = (len(phases_added) + len(phases_changed) + len(tasks_added) + len(tasks_changed)
-               + len(tasks_removed))
+               + len(tasks_removed) + len(features_added) + len(features_changed))
     return {
         "changed": changed,
         "tasks_touched": len(tasks_added) + len(tasks_changed) + len(tasks_removed),
         "phases_added": phases_added,
         "phases_changed": phases_changed,
+        "features_added": features_added,
+        "features_changed": features_changed,
         "tasks_added": tasks_added,
         "tasks_changed": tasks_changed,
         "tasks_removed": tasks_removed,
@@ -576,6 +695,31 @@ def _sub_at(task, task_id, index, addr):
 
 def _empty():
     return {"schemaVersion": schema.current_version("tasks"), "updated": "", "phases": [], "tasks": []}
+
+
+def _features_load(data_dir):
+    """The features document (schemaVersion 1, features list). Written by the features helper below only, so the
+    feature service can replace this one place later. A missing file gives an empty document; a newer file is
+    newer_schema; bad JSON is invalid_data."""
+    path = features_path(data_dir)
+    data = atomic.read_json(path, default=None)
+    if data is None:
+        return {"schemaVersion": FEATURES_VERSION, "updated": "", "features": []}
+    if not isinstance(data, dict) or not isinstance(data.get("features"), list):
+        raise RoadmapError("invalid_data", "features.json needs a 'features' list; fix it, then retry: " + path,
+                           EXIT_INVALID_DATA)
+    found = data.get("schemaVersion", FEATURES_VERSION)
+    if not isinstance(found, int) or found > FEATURES_VERSION:
+        raise RoadmapError("newer_schema", "features.json was written by a newer roadmap-board; left unchanged: "
+                           + path, EXIT_INVALID_DATA)
+    return data
+
+
+def _features_write(data_dir, fdoc):
+    """Save the features document at FEATURES_VERSION. The caller holds the directory lock."""
+    out = dict(fdoc)
+    out["schemaVersion"] = FEATURES_VERSION
+    atomic.write_json(features_path(data_dir), out)
 
 
 def _require_dir(data_dir):

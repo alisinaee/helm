@@ -15,12 +15,20 @@ THINKING = ("low", "medium", "high")
 CHECKS = ("none", "sonnet", "opus")
 SET_KEYS = ("status", "tokensK", "model", "thinking", "needsUser", "check", "checkK", "note", "title", "after")
 AFTER_MAX = 5                          # most task ids in a task's after list
+FEAT_MAX_PER_TASK = 3                  # most feature ids in a task's feats list
+FEATURES_MAX = 60                      # most features in docs/features.json
+FEAT_TITLE_MAX = 80
+FEAT_ACC_MAX = 160
+PRIOS = ("1", "2", "3")
 PLAN_ALLOWED = ("P <id> <status> | <name>  or  T <id> <status> <tokensK> <model>/<thinking> "
-                "[!] [c:<check>/<checkK>] | <title> [# <note>]")
+                "[!] [c:<check>/<checkK>] [a:<ids>] [f:<feats>] | <title> [# <note>]  or  "
+                "F <id> <-|hold> <1|2|3> <phase|-> <parent|-> | <title> [# <acceptance>]  or  "
+                "L <featureId> <taskId> [<taskId>...]")
 SET_ALLOWED = "<id> key=value ...; keys: " + ", ".join(SET_KEYS)
 _KEEP = object()  # marks a set value of "-": keep the current value
 
 PHASE_ID_RE = re.compile(r"^[A-Za-z0-9]+$")
+FEAT_ID_RE = re.compile(r"^F[1-9][0-9]?$")
 TASK_ID_RE = re.compile(r"^[A-Za-z0-9]+\.[0-9]+$")
 ANY_ID_RE = re.compile(r"^[A-Za-z0-9]+(\.[0-9]+)?$")
 _INT_RE = re.compile(r"^[0-9]+$")
@@ -75,10 +83,18 @@ def parse_plan(text):
             rec, problem = _parse_phase(line, lineno)
         elif head == "T":
             rec, problem = _parse_task(line, lineno)
+        elif head == "F":
+            rec, problem = _parse_feature(line, lineno)
+        elif head == "L":
+            rec, problem = _parse_link(line, lineno)
         else:
-            rec, problem = None, _problem(lineno, "unknown record '" + head + "' (allowed: P, T, #, blank)")
+            rec, problem = None, _problem(lineno, "unknown record '" + head + "' (allowed: P, T, #, blank) "
+                                          "(also: F, L)")
         if problem is not None:
             errors.append(problem)
+            continue
+        if rec["kind"] == "link":
+            records.append(rec)
             continue
         key = (rec["kind"], rec["id"])
         if key in seen:
@@ -149,6 +165,12 @@ def _parse_task(line, lineno):
         if problem is not None:
             return None, problem
         idx += 1
+    feats = None
+    if idx < len(tokens) and tokens[idx].startswith("f:"):
+        feats, problem = _parse_feats(tokens[idx][2:], lineno)
+        if problem is not None:
+            return None, problem
+        idx += 1
     if idx != len(tokens):
         return None, _problem(lineno, "unexpected '" + tokens[idx] + "' (allowed: !, c:<check>/<checkK>)")
     title, hashsep, note = rest.partition(" # ")
@@ -164,8 +186,78 @@ def _parse_task(line, lineno):
            "title": title, "status": None if status == "-" else status,
            "tokensK": tokens_k, "thinking": None if thinking == "-" else thinking,
            "model": None if model == "-" else model, "needsUser": needs,
-           "check": check, "checkK": check_k, "note": note, "after": after}
+           "check": check, "checkK": check_k, "note": note, "after": after, "feats": feats}
     return rec, None
+
+
+def _parse_feats(text, lineno):
+    """The f:<ids> token of a task line: feature ids such as F3,F7, or None for f:- (keep the current list)."""
+    if text == "-":
+        return None, None
+    ids = [part.strip() for part in text.split(",")]
+    for fid in ids:
+        if not FEAT_ID_RE.match(fid):
+            return None, _problem(lineno, "feature id '" + fid + "' must look like F3 (allowed: F1 to F99, comma "
+                                  "separated)")
+    if len(ids) > FEAT_MAX_PER_TASK:
+        return None, _problem(lineno, "f: has " + str(len(ids)) + " features (allowed: up to "
+                              + str(FEAT_MAX_PER_TASK) + " per task)")
+    return ids, None
+
+
+def _parse_feature(line, lineno):
+    """F <id> <-|hold> <prio> <phase|-> <parent|-> | <title> [# <acceptance>]. A feature line sets every field:
+    '-' for status means not held, '-' for phase or parent means none, and no acceptance means empty."""
+    shape = "feature line needs an id, status, prio, phase, parent and '| title' (allowed: " + PLAN_ALLOWED + ")"
+    head, sep, rest = line.partition("|")
+    tokens = head.split()
+    if not sep or len(tokens) != 6:
+        return None, _problem(lineno, shape)
+    _, fid, status, prio, phase, parent = tokens
+    if not FEAT_ID_RE.match(fid):
+        return None, _problem(lineno, "feature id '" + fid + "' must look like F3 (allowed: F1 to F99)")
+    if status not in ("-", "hold"):
+        return None, _problem(lineno, "status '" + status + "' is not valid (allowed: -|hold)")
+    if prio not in PRIOS:
+        return None, _problem(lineno, "prio '" + prio + "' is not valid (allowed: 1|2|3)")
+    if phase != "-" and not PHASE_ID_RE.match(phase):
+        return None, _problem(lineno, "phase '" + phase + "' has a dot or a symbol (allowed: phase id or -)")
+    if parent != "-" and not FEAT_ID_RE.match(parent):
+        return None, _problem(lineno, "parent '" + parent + "' must look like F3 (allowed: feature id or -)")
+    if parent == fid:
+        return None, _problem(lineno, fid + " cannot be its own parent (allowed: another feature id or -)")
+    title, hashsep, acc = rest.partition(" # ")
+    if not hashsep and rest.rstrip().endswith(" #"):
+        return None, _problem(lineno, "acceptance is empty (allowed: '# ' followed by text, or no '#')")
+    title = " ".join(title.split())
+    if not title:
+        return None, _problem(lineno, "feature title is empty (allowed: text after the '|')")
+    if len(title) > FEAT_TITLE_MAX:
+        return None, _problem(lineno, "feature title is " + str(len(title)) + " characters (allowed: up to "
+                              + str(FEAT_TITLE_MAX) + ")")
+    acc = " ".join(acc.split()) if hashsep else ""
+    if len(acc) > FEAT_ACC_MAX:
+        return None, _problem(lineno, "acceptance is " + str(len(acc)) + " characters (allowed: up to "
+                              + str(FEAT_ACC_MAX) + ")")
+    rec = {"kind": "feature", "line": lineno, "id": fid, "hold": status == "hold", "prio": int(prio),
+           "phase": None if phase == "-" else phase, "parent": None if parent == "-" else parent,
+           "title": title, "acc": acc}
+    return rec, None
+
+
+def _parse_link(line, lineno):
+    """L <featureId> <taskId> [<taskId>...]: adds the feature to each task's feats (idempotent)."""
+    shape = "link line needs a feature id and at least one task id (allowed: L <featureId> <taskId> [<taskId>...])"
+    tokens = line.split()
+    if len(tokens) < 3:
+        return None, _problem(lineno, shape)
+    fid = tokens[1]
+    if not FEAT_ID_RE.match(fid):
+        return None, _problem(lineno, "feature id '" + fid + "' must look like F3 (allowed: F1 to F99)")
+    for tid in tokens[2:]:
+        if not TASK_ID_RE.match(tid):
+            return None, _problem(lineno, "task id '" + tid + "' must look like P1.2 (allowed: <phase>.<number>)")
+    return {"kind": "link", "line": lineno, "feature": fid, "tasks": tokens[2:]}, None
 
 
 def _parse_after_token(text, lineno):
@@ -301,6 +393,20 @@ def format_phase(phase):
     return "P " + str(phase.get("id", "")) + " " + status + " | " + _one_line(phase.get("name", ""))
 
 
+def format_feature(feature):
+    """One plan line for a feature dict. Parses back with parse_plan (round trip), keeping the stored fields."""
+    prio = feature.get("prio") if feature.get("prio") in (1, 2, 3) else 2
+    phase = feature.get("phase") if isinstance(feature.get("phase"), str) and feature.get("phase") else "-"
+    parent = feature.get("parent") if isinstance(feature.get("parent"), str) and feature.get("parent") else "-"
+    status = "hold" if feature.get("hold") is True else "-"
+    line = " ".join(["F", str(feature.get("id", "")), status, str(prio), phase, parent])
+    line += " | " + _one_line(feature.get("title", ""))
+    acc = feature.get("acc")
+    if isinstance(acc, str) and acc.strip():
+        line += " # " + _one_line(acc)
+    return line
+
+
 def format_task(task):
     """One plan line for a task dict. Missing fields print as '-'. Parses back with parse_plan."""
     status = task.get("status") if task.get("status") in TASK_STATUSES else "-"
@@ -317,6 +423,9 @@ def format_task(task):
     after = task.get("after")
     if isinstance(after, list) and after:
         parts.append("a:" + ",".join(str(tid) for tid in after))
+    feats = task.get("feats")
+    if isinstance(feats, list) and feats:
+        parts.append("f:" + ",".join(str(fid) for fid in feats))
     line = " ".join(parts) + " | " + _one_line(task.get("title", ""))
     note = task.get("note")
     if isinstance(note, str) and note.strip():
