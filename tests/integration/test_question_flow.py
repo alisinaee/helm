@@ -33,7 +33,7 @@ class QuestionFlowTests(unittest.TestCase):
 
         lines = server.snapshot(sandbox.pid)["activity"]
         ops = [(line["op"], line["src"]) for line in lines]
-        self.assertIn(("question.ask", "cli"), ops)  # the asking line (src is 'cli' today, see the expected failure)
+        self.assertIn(("question.ask", "agent"), ops)  # the asking line: an agent shell is logged as 'agent'.
         self.assertIn(("question.answer", "gui"), ops)
         self.assertIn("Q1 answered yes", [line["sum"] for line in lines if line["op"] == "question.answer"])
 
@@ -43,10 +43,8 @@ class QuestionFlowTests(unittest.TestCase):
         self.assertEqual(got.stdout.strip(), qid + " open")
         self.assertIn(qid, json.dumps(server.snapshot(sandbox.pid)["questions"]))
 
-    @unittest.expectedFailure
     def test_agent_shell_writes_are_logged_with_source_agent(self):
-        """Known bug, see changes/WP38.md: commands.write hard-codes source 'cli', so an ask from an agent shell is
-        logged as src 'cli' (roadmap/services/commands.py:590)."""
+        """commands.write logs an ask from an agent shell as src 'agent' (it was hard-coded 'cli'; changes/WP38.md)."""
         sandbox, server = stack(self)
         sandbox.cli_json(["ask", "Which region?"], agent=True)
         lines = server.snapshot(sandbox.pid)["activity"]

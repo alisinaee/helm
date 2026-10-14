@@ -1,8 +1,7 @@
 """WP27 gap tests: the ledger and limit branches that test_wp27_limits.py does not reach (see changes/agy-verify.md).
 
 Same rules as test_wp27_limits.py: temp ROADMAP_HOME and temp project (HomeCase / ControlCase), injected times built
-by at(), never the real clock. Two tests are expectedFailure because they show a real bug in services/limits.py;
-the bug is recorded in changes/agy-verify.md and the service code is not changed here.
+by at(), never the real clock. Two tests once showed bugs in services/limits.py; both are fixed (changes/R3-fixes.md).
 """
 
 import datetime
@@ -208,7 +207,6 @@ class LimitsGapTests(ControlCase):
             limits.rm(self.project, "X9", now=self.now)
         self.assertEqual(cm.exception.code, "usage")
 
-    @unittest.expectedFailure
     def test_rm_that_raises_not_found_leaves_the_budget_file_unchanged(self):
         # BUG (services/limits.py:541-545): mutate_project pops a stored row whose id matches even when the row is
         # malformed, _clean_row then returns None, the save happens, and rm raises not_found. The file has changed.
@@ -222,7 +220,6 @@ class LimitsGapTests(ControlCase):
         with open(path, encoding="utf-8") as fh:
             self.assertEqual(fh.read(), before)
 
-    @unittest.expectedFailure
     def test_removing_a_warning_budget_returns_it_with_its_warn_action(self):
         # BUG (services/limits.py:532): remove_row builds the prior BUD row with action "block" even when the budget
         # stores limitAction "warn", so an undo of `limit rm BUD` would restore a blocking budget.

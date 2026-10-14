@@ -17,7 +17,7 @@ from roadmap.core.snapshot import SNAPSHOT_SCHEMA_VERSION
 from roadmap.errors import (EXIT_CONFLICT, EXIT_ERROR, EXIT_EXTERNAL, EXIT_INVALID_DATA, EXIT_NOT_FOUND,
                             EXIT_USAGE, RoadmapError)
 from roadmap.http import security
-from roadmap.services import commands, control, loader, usage
+from roadmap.services import agentguard, commands, control, loader, usage
 from roadmap.services import tasks as task_service
 from roadmap.store import config as config_store
 from roadmap.store import schema
@@ -171,7 +171,7 @@ def usage_sync(app, req, match):
     body = req.read_body()
     if body.strip():
         try:
-            parsed = json.loads(body.decode("utf-8"))
+            parsed = security.strict_json_loads(body.decode("utf-8"))
         except ValueError:
             raise RoadmapError("invalid_input", "the body must be JSON or empty", EXIT_USAGE)
         if not isinstance(parsed, dict):
@@ -190,7 +190,7 @@ def cmd(app, req, match):
     _write_guard(app, req)
     body = req.read_body()
     try:
-        parsed = json.loads(body.decode("utf-8"))
+        parsed = security.strict_json_loads(body.decode("utf-8"))
     except ValueError:
         return _invalid("the body must be a JSON object with op and args")
     if not isinstance(parsed, dict):
@@ -208,15 +208,28 @@ def cmd(app, req, match):
                            headers=[("Retry-After", "1")])
     project = _cmd_project(parsed.get("project"))
     _, data_dir = task_service.resolve(project)
+    source, proven = _cmd_source(app, req)
     try:
-        with commands.context(app.cmd_source, project):
-            reply = commands.run(op, args, app.cmd_source, data_dir)
+        with agentguard.browser_proven(proven), commands.context(source, project):
+            reply = commands.run(op, args, source, data_dir)
     except RoadmapError as exc:
         if exc.code == "usage":
             return _invalid(exc.message)
         raise
     control.after_write(project)
     return json_reply(200, reply)
+
+
+def _cmd_source(app, req):
+    """(source, proven) of a cmd call on the main listener. A write is 'gui' only when the browser proof is on the
+    request (Origin of this server and Sec-Fetch-Site same-origin). Any other write is labelled 'agent', so the guard
+    refuses its loosening ops: only a proven browser or a real CLI process may loosen. The phone listener keeps its
+    own source."""
+    if app.cmd_source != "gui":
+        return app.cmd_source, False
+    if security.browser_proof(req.headers, app.port):
+        return "gui", True
+    return "agent", False
 
 
 def _cmd_project(value):

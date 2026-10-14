@@ -25,6 +25,7 @@ class CmdCase(ServerCase):
     def post(self, body, headers=None, raw=None):
         payload = raw if raw is not None else json.dumps(body).encode("utf-8")
         sent = self.write_headers()
+        sent["Origin"] = "http://127.0.0.1:%d" % self.port  # the browser proof a page's own write carries (WP22)
         if headers is not None:
             sent = headers
         return self.request("POST", "/api/v1/cmd", headers=sent, body=payload)

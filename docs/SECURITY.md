@@ -1,7 +1,7 @@
 # Security
 
 **Status: draft, WP13 built.** This describes what roadmap-board protects, against whom, and how. Items marked *built*
-are in the code and tested. The phone mode is built (WP13), with two gaps listed in the review checklist at the end. The
+are in the code and tested. The phone mode is built (WP13). No gap is open in the review checklist after WP22. The
 review gate (WP13/R1) must be signed before the 1.0.0 release (WP14).
 
 ## What is worth protecting
@@ -103,7 +103,8 @@ review gate (WP13/R1) must be signed before the 1.0.0 release (WP14).
   the gate; the next write rebuilds it, and a corrupt control file refuses writes until someone fixes or removes it.
 - **Agent refusals.** Ops that loosen control (`resume`, `override`, `limit set`, raising or clearing a budget, `phase
   approve`, `rules add|rm|sync`) are refused when `CLAUDECODE=1` or the source is `agent`. The refusal names
-  `roadmap ask "<question>"`. Stopping is never refused.
+  `roadmap ask "<question>"`. Stopping is never refused. A dashboard write is `gui` only with the browser proof
+  described below; any other write on the main listener is `agent`, so it cannot loosen control.
 - **Writes outside the project.** `rules sync` writes only between `<!-- roadmap:rules -->` and
   `<!-- /roadmap:rules -->` in the project's `CLAUDE.md`, makes a backup first, refuses broken markers and refuses a
   symlinked file.
@@ -115,9 +116,15 @@ review gate (WP13/R1) must be signed before the 1.0.0 release (WP14).
   then runs only ops registered in the command registry. Unknown ops are 404, and invalid arguments 422.
 - At most 10 ops per second per process; the 11th is `429` with `Retry-After`. The limiter counts ops that reach
   dispatch, so a rejected request does not spend it.
-- Ops run from `gui` skip the agent guard, because the guard is for an agent's shell. For that call only, the
-  process hides `CLAUDECODE` under a lock, so the existing guard in `services/agentguard.py` sees a person, not an
-  agent. Calls from `cli`, `agent` and `phone` keep the guard. Phone calls never run a loosening op.
+- **Browser proof (WP22).** A dashboard write is `gui` only when its request carries an `Origin` of this server and
+  `Sec-Fetch-Site: same-origin` (`security.browser_proof`). The HTTP layer sets a thread-local flag for that one
+  request (`services/agentguard.py` `browser_proven`), so the guard lets the person's click through. The process
+  environment is never changed, so no other thread sees a cleared `CLAUDECODE`. Any other write on the main listener
+  is labelled `agent` and cannot loosen control. Calls from `cli` and `phone` keep the guard. Phone calls never run a
+  loosening op.
+- **Activity source.** A CLI write inside an agent's shell is logged as `agent`, and as `cli` otherwise.
+- **Undo.** `undo` claims a change under the folder lock before it runs the inverse, so two undos of one change
+  cannot both run. A phone may undo only a change whose own activity line came from the phone.
 - Phone listener: the route is `403` unless `phoneWrites` is true. Then the allowlist is `question.answer`,
   `comment.add`, `task.status`, `control.stop` and `undo`. The phone's csrf value is `HMAC(phone token, "csrf")`,
   served only on the cookie-authenticated phone `/api/v1/meta`; the main token never reaches the phone.
@@ -133,6 +140,18 @@ review gate (WP13/R1) must be signed before the 1.0.0 release (WP14).
 - The keychain prompt is the operating system's. Choosing Always Allow lets the `security` tool read that item without
   asking again. Revoke it in Keychain Access if you no longer want the usage feature.
 - A process running as you can read the same files. roadmap does not add a boundary between you and your own code.
+- **The agent guard is a speed bump, not a security boundary (WP22).** A local process running as you can send the
+  two browser headers itself, and it can read the CSRF token from `GET /`. That process is then taken for the person's
+  browser. The guard catches accidents (an agent that does not know it should ask), not a deliberate local attacker.
+- **A project whose own files cannot be read gets none of its own limit rows** (`autonomy.json` or `budget.json` with
+  a newer schema or a corrupt value). The global day and week rows still apply, and the log says so once a minute.
+  This is fail open for that project's own rows, by design (`unknown` never blocks).
+- **Undo is last write wins.** Undoing an old change does not check that the object still holds the value the change
+  set; a later change to the same object is overwritten.
+- **Weekly readings.** A reading above 100 percent is kept (it is real over-allowance), up to 1000. A drop of less than
+  10 points is treated as jitter and adds nothing; a larger drop is the weekly reset.
+- **Ledger size.** The ledger keeps the current week whole. When a week does not fit in 4 KB, the oldest day's
+  per-project tokens are merged into one `_other` entry: the total stays right, the per-project split does not.
 
 ## Reporting a problem
 
@@ -147,57 +166,58 @@ entry. If a secret has already leaked, rotate it in Claude Code first, then repo
 
 Audit of `roadmap/http` against section 3 of `docs/roadmap-board-architecture.md`, done in WP13. Each row names the
 code that implements the rule, the test that proves it (`tests/api/test_security*.py` and the other test modules named
-in the row), and the status: `done`, or `gap` with the reason. Line numbers are as of WP13.
+in the row), and the status: `done`, or `gap` with the reason. Line numbers were re-checked against the code in WP22;
+the test names were checked against `tests/`. Paths in the R1 and R2 rows are under `roadmap/`.
 
 | Requirement | Where implemented | Test name | Status |
 |---|---|---|---|
-| Bind 127.0.0.1 only, both listeners | `roadmap/http/server.py:24`, `:268`, `PhoneServer.__init__` | `test_security.Loopback.test_main_listener_binds_127_0_0_1_only`, `test_phone_listener_binds_127_0_0_1_only` | done |
-| Main listener: Host must be 127.0.0.1 or localhost on its port, else 421 | `roadmap/http/security.py:46` `host_allowed`; `server.py:77-84` `App.handle` | `test_security.HostAllowlist.test_foreign_host_is_421_everywhere`, `test_rebinding_name_and_wrong_port_are_421` | done |
-| Phone listener: loopback names, plus the saved tunnel host only | `security.py:58` `phone_host_allowed`; `server.py:120-127` `configured_tunnel_host`; `server.py:146-148` | `test_security_phone.HostRules.test_tunnel_host_is_accepted_only_when_configured`, `test_an_invalid_configured_tunnel_host_allows_nothing` | done |
-| Write route is POST only; other methods get 405 with Allow | `roadmap/http/routes.py:202-210` `match` | `test_routes.test_read_routes_refuse_post_with_allow_header`, `test_security_phone.ReadOnly.test_post_is_405_even_with_the_cookie_and_the_write_headers` | done |
-| Phone listener is read-only (no write route reachable) | `server.py:149-151` (GET only, before any route) | `test_security_phone.ReadOnly.test_post_without_any_token_is_still_405_not_401` | done |
-| Write needs Sec-Fetch-Site same-origin, or an Origin of this server | `security.py:73` `write_request_allowed`; `routes.py:104-108` `_write_guard` | `test_security.WriteChecks.test_cross_site_is_403_even_with_the_token`, `test_foreign_origin_is_403`, `test_no_sec_fetch_site_and_no_origin_is_403` | done |
-| CSRF header equal to the per-process token (32 random bytes) | `security.py:32` `new_token`; `security.py:73-87` | `test_security.WriteChecks.test_no_csrf_header_is_403`, `test_wrong_csrf_is_403` | done |
-| CSRF comparison is constant time | `security.py:37` `safe_equal` (`hmac.compare_digest`); `security.py:87` | `test_security.CsrfCompare.test_the_csrf_check_uses_hmac_compare_digest` | done |
-| Write needs Content-Type application/json, else 415 | `routes.py:104-115` | `test_security.WriteChecks.test_wrong_content_type_is_415` | done |
-| Write body at most 4096 bytes, 413 before anything runs | `security.py:14` `MAX_BODY_BYTES`; `server.py:48-62` `read_body`; `routes.py:160-162` | `test_security.WriteChecks.test_body_over_4_kb_is_413_before_anything_runs` | done |
-| Chunked request bodies refused | `server.py:49-51` `read_body` | `test_security.WriteChecks.test_chunked_body_is_refused_with_400` | done |
-| Phone listener: no token file gives 503 | `server.py:153-154` | `test_security_phone.TokenFile.test_no_token_is_503_for_every_request`, `test_default_token_source_reads_phone_token_and_503_when_missing` | done |
-| Phone token file readable by others is not used | `server.py:101-117` `read_phone_token` | `test_security_phone.TokenFile.test_a_token_file_readable_by_others_is_not_used` | done |
-| Wrong or missing token gives 401 | `server.py:174-176` `_refuse`; `server.py:169-172` | `test_security_phone.Auth.test_wrong_token_and_no_token_are_401` | done |
-| `?k=` accepted once, then 302 without `k` and with the cookie | `server.py:159-166` | `test_security_phone.Auth.test_token_redirect_strips_k_keeps_other_params_and_sets_the_cookie`, `test_redirect_to_root_when_only_k_was_given` | done |
-| Cookie is HMAC(token, "cookie"), never the token | `security.py:90` `cookie_value`; `security.py:96-101` `phone_cookie_header` | `test_security_phone.Auth.test_cookie_value_is_hmac_of_cookie_keyed_with_the_token`, `test_the_raw_token_never_appears_in_the_cookie_or_the_location` | done |
-| Cookie flags HttpOnly, Secure, SameSite=Strict, Path=/, 7 days | `security.py:96-101` | `test_security_phone.Auth.test_token_redirect_strips_k_keeps_other_params_and_sets_the_cookie` | done |
-| The raw token is not accepted as a cookie; rotation invalidates cookies | `server.py:169` | `test_security_phone.Auth.test_the_hmac_cookie_grants_access_and_the_raw_token_as_cookie_does_not`, `test_a_rotated_token_invalidates_old_cookies` | done |
-| Token and cookie comparisons are constant time | `security.py:37`; `server.py:161`, `:169` | `test_security_phone.ConstantTime.test_hmac_compare_digest_is_used_for_the_token_and_the_cookie`, `test_safe_equal_never_matches_an_empty_expected_value` | done |
-| 10 failed attempts per minute per process, then 429 | `security.py:116-152` `FailureLimiter`; `server.py:155-157` | `test_security_phone.RateLimit.test_ten_failures_in_a_minute_then_429_even_for_the_right_token`, `test_the_window_slides_and_access_comes_back_after_a_minute`, `test_nine_failures_do_not_block` | done |
-| Redirect target never leaves the server (no `//host`, never from Host) | `security.py:111` `plain_redirect_path`; `server.py:163` | `test_security_phone.Auth.test_redirect_path_never_becomes_a_foreign_host` | done |
-| Static pages come from an allowlist; a URL never reaches the filesystem | `roadmap/http/static.py:51` `lookup`; `server.py:86-98` `_static` | `test_static.test_traversal_and_odd_paths_are_404`, `test_static.test_unlisted_extension_is_404` | done |
-| CSRF token only in index.html `<meta name="csrf">`; the phone page gets an empty one | `static.py:55-62` `render`; `server.py:146-172` (phone token "") | `test_static.test_slash_is_index_html_with_the_csrf_meta_tag`; `test_security_phone.ReadOnly.test_the_phone_page_carries_no_csrf_token_of_the_main_listener` | done |
-| CSP on every reply, including errors, 421, 405, 401, 429, 503 and 302 | `security.py:15` `CSP`; `security.py:154-163` `security_headers`; `server.py:228-231` `_send` | `test_security.Headers.test_every_response_carries_the_security_headers`, `test_security_phone.Headers.test_every_phone_reply_carries_the_csp_and_security_headers`, `test_429_and_503_also_carry_the_headers` | done |
-| CSP directives present, no unsafe-inline (legacy page excepted until WP8) | `security.py:15-22` | `test_security.Headers.test_csp_has_the_required_directives`; `test_static.test_legacy_page_gets_the_only_csp_exception` | done |
-| X-Frame-Options DENY, nosniff, Referrer-Policy no-referrer, CORP same-origin | `security.py:154-163` | `test_security.Headers`; `test_security_phone.Headers` | done |
-| Access log: method, path without query, status, ms, on both listeners | `server.py:43` (query split off), `server.py:220` | `test_logging.AccessLog.test_line_has_method_path_status_and_ms_but_no_query`; `test_security_redaction.ServerRedaction.test_phone_request_with_k_never_reaches_any_log` | done |
-| server.log redacts Bearer, sk-ant and k= values; file mode 0600 | `roadmap/log.py:20-24` `_REDACTIONS`, `:44` `RedactingFilter`, `:17` `FILE_MODE` | `test_log.test_bearer_sk_ant_and_k_values_never_reach_the_file`, `test_log.test_server_log_and_rolled_files_are_mode_0600`, `test_security_redaction.ServerRedaction.test_server_log_file_is_owner_only_and_redacts_bearer_and_keys` | done |
-| stderr log handler of `roadmap serve` redacts too | `roadmap/commands/serve.py:81-89` `_log_to_stderr` has no `RedactingFilter` | none | gap: the file is outside the WP13 list. Fix: add `log.RedactingFilter()` to the handler in `commands/serve.py`. No secret is logged on that path today (see the audit rows) |
-| Keychain read as an argument list, no shell, held in memory | `roadmap/services/usage.py:54-75` `read_keychain_token` | `test_usage_collector.test_token_read_from_json` (argument list and no shell, lines 71-72) | done |
-| Keychain endpoint: redirects refused | `usage.py:47-51` `_NoRedirect`; `usage.py:78-82` `_open` | `test_security_keychain.RedirectRefusal.test_a_redirect_is_refused_before_any_second_request` | done |
-| Keychain and endpoint errors carry no token; unexpected errors give the type only | `usage.py:170-180` `collect`; `usage.py:85-110` `http_fetch` | `test_usage_collector.test_unexpected_error_hides_message_and_token`, `test_security_redaction.UsageSyncRedaction` (4 tests) | done |
-| doctor never reads the keychain secret (no `-w`) | `roadmap/services/doctor.py:174-177` `check_keychain` | `test_doctor.test_security_check_never_shows_the_token_text` | done |
-| Phone token file 0600, written atomically | `roadmap/services/tunnel.py:73-88` `_write_private` | `test_tunnel.StartTests.test_token_is_urlsafe_32_bytes_in_a_0600_file`, `test_pid_file_records_the_pid_and_is_private` | done |
-| Token rotated on every start | `tunnel.py:68-70` `new_token`; `tunnel.py:185-195` `start` | `test_tunnel.StartTests.test_each_start_rotates_the_token` | done |
-| Stop kills only a pid whose command is ssh to localhost.run | `tunnel.py:115-118` `is_our_tunnel`; `tunnel.py:217-232` `stop` | `test_tunnel.StopTests.test_stop_refuses_a_pid_that_is_not_our_ssh`, `test_stop_refuses_an_ssh_that_is_not_to_localhost_run`, `test_phone.PhoneCli.test_stop_of_a_foreign_pid_is_exit_4_and_kills_nothing` | done |
-| Stop deletes token, pid file and phoneHost | `tunnel.py:217-238` | `test_tunnel.StopTests.test_stop_kills_our_tunnel_and_deletes_token_pid_and_host` | done |
-| Tunnel URL from ssh output, never from a request | `tunnel.py:159-182` `find_tunnel_host`; `tunnel.py:185-215` | `test_tunnel.UrlParsingTests`, `test_tunnel.StartTests.test_start_runs_the_exact_ssh_command_and_saves_the_host` | done |
-| Failed tunnel start kills its ssh and removes the token (exit 6) | `tunnel.py:199-213` | `test_tunnel.StartTests.test_no_url_in_time_kills_our_pid_and_removes_the_token`, `test_missing_ssh_is_exit_6_and_no_token_is_left` | done |
-| Only `phone link` prints the token; status, start, stop and errors do not | `roadmap/commands/phone.py:29-56`; `tunnel.py:241-250` `status` | `test_security_redaction.PhoneStartRedaction.test_phone_start_stop_link_status_print_no_token_except_the_link`, `test_the_link_is_the_only_output_that_carries_the_token`, `test_a_refused_stop_prints_no_token` | done |
+| Bind 127.0.0.1 only, both listeners | `roadmap/http/server.py:24` `BIND_HOST`; `server.py:317` `RoadmapServer.server_bind`; `server.py:337` `PhoneServer.__init__` | `test_security.Loopback.test_main_listener_binds_127_0_0_1_only`, `test_phone_listener_binds_127_0_0_1_only` | done |
+| Main listener: Host must be 127.0.0.1 or localhost on its port, else 421 | `roadmap/http/security.py:48` `host_allowed`; `roadmap/http/server.py:92` `App.handle` | `test_security.HostAllowlist.test_foreign_host_is_421_everywhere`, `test_rebinding_name_and_wrong_port_are_421` | done |
+| Phone listener: loopback names, plus the saved tunnel host only | `roadmap/http/security.py:55` `phone_host_allowed`; `server.py:135` `configured_tunnel_host`; `server.py:176` `PhoneApp.handle` | `test_security_phone.HostRules.test_tunnel_host_is_accepted_only_when_configured`, `test_an_invalid_configured_tunnel_host_allows_nothing` | done |
+| Write route is POST only; other methods get 405 with Allow | `roadmap/http/routes.py:362` `match` (405 with Allow when the method is wrong); `server.py:103` (static pages GET only) | `test_routes.test_read_routes_refuse_post_with_allow_header`, `test_security_phone.ReadOnly.test_post_is_405_even_with_the_cookie_and_the_write_headers` | done |
+| Phone listener is read-only (no write route reachable) | `roadmap/http/server.py:182` `PhoneApp.handle` (GET only, before any route) | `test_security_phone.ReadOnly.test_post_without_any_token_is_still_405_not_401` | done |
+| Write needs Sec-Fetch-Site same-origin, or an Origin of this server | `roadmap/http/security.py:70` `write_request_allowed`; `roadmap/http/routes.py:110` `_write_guard` | `test_security.WriteChecks.test_cross_site_is_403_even_with_the_token`, `test_foreign_origin_is_403`, `test_no_sec_fetch_site_and_no_origin_is_403` | done |
+| CSRF header equal to the per-process token (32 random bytes) | `roadmap/http/security.py:34` `new_token`; `security.py:70` `write_request_allowed` | `test_security.WriteChecks.test_no_csrf_header_is_403`, `test_wrong_csrf_is_403` | done |
+| CSRF comparison is constant time | `roadmap/http/security.py:39` `safe_equal` (`hmac.compare_digest`); `security.py:84` | `test_security.CsrfCompare.test_the_csrf_check_uses_hmac_compare_digest` | done |
+| Write needs Content-Type application/json, else 415 | `roadmap/http/routes.py:115-118` `_write_guard` | `test_security.WriteChecks.test_wrong_content_type_is_415` | done |
+| Write body at most 4096 bytes, 413 before anything runs | `roadmap/http/security.py:17` `MAX_BODY_BYTES`; `server.py:48` `Request.read_body`; `routes.py:171` `usage_sync`, `routes.py:191` `cmd` | `test_security.WriteChecks.test_body_over_4_kb_is_413_before_anything_runs` | done |
+| Chunked request bodies refused | `roadmap/http/server.py:50-51` `Request.read_body` | `test_security.WriteChecks.test_chunked_body_is_refused_with_400` | done |
+| Phone listener: no token file gives 503 | `roadmap/http/server.py:186-187` `PhoneApp.handle` | `test_security_phone.TokenFile.test_no_token_is_503_for_every_request`, `test_default_token_source_reads_phone_token_and_503_when_missing` | done |
+| Phone token file readable by others is not used | `roadmap/http/server.py:116` `read_phone_token` (mode check) | `test_security_phone.TokenFile.test_a_token_file_readable_by_others_is_not_used` | done |
+| Wrong or missing token gives 401 | `roadmap/http/server.py:212` `PhoneApp._refuse`; `server.py:191-210` (auth checks) | `test_security_phone.Auth.test_wrong_token_and_no_token_are_401` | done |
+| `?k=` accepted once, then 302 without `k` and with the cookie | `roadmap/http/server.py:196-205` `PhoneApp.handle` | `test_security_phone.Auth.test_token_redirect_strips_k_keeps_other_params_and_sets_the_cookie`, `test_redirect_to_root_when_only_k_was_given` | done |
+| Cookie is HMAC(token, "cookie"), never the token | `roadmap/http/security.py:107` `cookie_value`; `security.py:113` `phone_cookie_header` | `test_security_phone.Auth.test_cookie_value_is_hmac_of_cookie_keyed_with_the_token`, `test_the_raw_token_never_appears_in_the_cookie_or_the_location` | done |
+| Cookie flags HttpOnly, Secure, SameSite=Strict, Path=/, 7 days | `roadmap/http/security.py:113` `phone_cookie_header` | `test_security_phone.Auth.test_token_redirect_strips_k_keeps_other_params_and_sets_the_cookie` | done |
+| The raw token is not accepted as a cookie; rotation invalidates cookies | `roadmap/http/server.py:206-207` `PhoneApp.handle` | `test_security_phone.Auth.test_the_hmac_cookie_grants_access_and_the_raw_token_as_cookie_does_not`, `test_a_rotated_token_invalidates_old_cookies` | done |
+| Token and cookie comparisons are constant time | `roadmap/http/security.py:39` `safe_equal`; `server.py:199`, `server.py:207` | `test_security_phone.ConstantTime.test_hmac_compare_digest_is_used_for_the_token_and_the_cookie`, `test_safe_equal_never_matches_an_empty_expected_value` | done |
+| 10 failed attempts per minute per process, then 429 | `roadmap/http/security.py:133` `FailureLimiter`; `server.py:188-190` | `test_security_phone.RateLimit.test_ten_failures_in_a_minute_then_429_even_for_the_right_token`, `test_the_window_slides_and_access_comes_back_after_a_minute`, `test_nine_failures_do_not_block` | done |
+| Redirect target never leaves the server (no `//host`, never from Host) | `roadmap/http/security.py:128` `plain_redirect_path`; `server.py:201` | `test_security_phone.Auth.test_redirect_path_never_becomes_a_foreign_host` | done |
+| Static pages come from an allowlist; a URL never reaches the filesystem | `roadmap/http/static.py:56` `StaticFiles.lookup`; `server.py:101` `App._static` | `test_static.test_traversal_and_odd_paths_are_404`, `test_static.test_unlisted_extension_is_404` | done |
+| CSRF token only in index.html `<meta name="csrf">`; the phone page gets an empty one | `roadmap/http/static.py:60` `render`; `server.py:167` `PhoneApp.page_token` (empty) | `test_static.test_slash_is_index_html_with_the_csrf_meta_tag`; `test_security_phone.ReadOnly.test_the_phone_page_carries_no_csrf_token_of_the_main_listener` | done |
+| CSP on every reply, including errors, 421, 405, 401, 429, 503 and 302 | `roadmap/http/security.py:18` `CSP`; `security.py:206` `security_headers`; `server.py:274` `_Handler._send` | `test_security.Headers.test_every_response_carries_the_security_headers`, `test_security_phone.Headers.test_every_phone_reply_carries_the_csp_and_security_headers`, `test_429_and_503_also_carry_the_headers` | done |
+| CSP directives present, no unsafe-inline (legacy page excepted until WP8) | `roadmap/http/security.py:18` `CSP`; `security.py:22` `CSP_LEGACY` | `test_security.Headers.test_csp_has_the_required_directives`; `test_static.test_legacy_page_gets_the_only_csp_exception` | done |
+| X-Frame-Options DENY, nosniff, Referrer-Policy no-referrer, CORP same-origin | `roadmap/http/security.py:206` `security_headers` | `test_security.Headers`; `test_security_phone.Headers` | done |
+| Access log: method, path without query, status, ms, on both listeners | `roadmap/http/server.py:42` (query split off in `Request`); `server.py:266` (access log line) | `test_logging.AccessLog.test_line_has_method_path_status_and_ms_but_no_query`; `test_security_redaction.ServerRedaction.test_phone_request_with_k_never_reaches_any_log` | done |
+| server.log redacts Bearer, sk-ant and k= values; file mode 0600 | `roadmap/log.py:17` `FILE_MODE`; `log.py:20` `_REDACTIONS`; `log.py:44` `RedactingFilter` | `test_log.test_bearer_sk_ant_and_k_values_never_reach_the_file`, `test_log.test_server_log_and_rolled_files_are_mode_0600`, `test_security_redaction.ServerRedaction.test_server_log_file_is_owner_only_and_redacts_bearer_and_keys` | done |
+| stderr log handler of `roadmap serve` redacts too | `roadmap/commands/serve.py:107` (`_log_to_stderr` adds `RedactingFilter`) | none | done (closed after WP13; checked in WP22) |
+| Keychain read as an argument list, no shell, held in memory | `roadmap/services/usage.py:55` `read_keychain_token` | `test_usage_collector.test_token_read_from_json` (argument list and no shell, lines 71-72) | done |
+| Keychain endpoint: redirects refused | `roadmap/services/usage.py:48` `_NoRedirect`; `usage.py:79` `_open` | `test_security_keychain.RedirectRefusal.test_a_redirect_is_refused_before_any_second_request` | done |
+| Keychain and endpoint errors carry no token; unexpected errors give the type only | `roadmap/services/usage.py:171` `collect`; `usage.py:86` `http_fetch` | `test_usage_collector.test_unexpected_error_hides_message_and_token`, `test_security_redaction.UsageSyncRedaction` (4 tests) | done |
+| doctor never reads the keychain secret (no `-w`) | `roadmap/services/doctor.py:191` `check_keychain` | `test_doctor.test_security_check_never_shows_the_token_text` | done |
+| Phone token file 0600, written atomically | `roadmap/services/tunnel.py:84` `_write_private` | `test_tunnel.StartTests.test_token_is_urlsafe_32_bytes_in_a_0600_file`, `test_pid_file_records_the_pid_and_is_private` | done |
+| Token rotated on every start | `roadmap/services/tunnel.py:79` `new_token`; `tunnel.py:224` `start` | `test_tunnel.StartTests.test_each_start_rotates_the_token` | done |
+| Stop kills only a pid whose command is ssh to localhost.run | `roadmap/services/tunnel.py:126` `is_our_tunnel`; `tunnel.py:258` `stop` | `test_tunnel.StopTests.test_stop_refuses_a_pid_that_is_not_our_ssh`, `test_stop_refuses_an_ssh_that_is_not_to_localhost_run`, `test_phone.PhoneCli.test_stop_of_a_foreign_pid_is_exit_4_and_kills_nothing` | done |
+| Stop deletes token, pid file and phoneHost | `roadmap/services/tunnel.py:258` `stop` | `test_tunnel.StopTests.test_stop_kills_our_tunnel_and_deletes_token_pid_and_host` | done |
+| Tunnel URL from ssh output, never from a request | `roadmap/services/tunnel.py:198` `find_tunnel_host`; `tunnel.py:208` `_wait_for_host` | `test_tunnel.UrlParsingTests`, `test_tunnel.StartTests.test_start_runs_the_exact_ssh_command_and_saves_the_host` | done |
+| Failed tunnel start kills its ssh and removes the token (exit 6) | `roadmap/services/tunnel.py:224` `start` (cleanup on failure) | `test_tunnel.StartTests.test_no_url_in_time_kills_our_pid_and_removes_the_token`, `test_missing_ssh_is_exit_6_and_no_token_is_left` | done |
+| Only `phone link` prints the token; status, start, stop and errors do not | `roadmap/commands/phone.py:49` `handle_link`; `tunnel.py:290` `status` | `test_security_redaction.PhoneStartRedaction.test_phone_start_stop_link_status_print_no_token_except_the_link`, `test_the_link_is_the_only_output_that_carries_the_token`, `test_a_refused_stop_prints_no_token` | done |
 | No print or log call in roadmap/ names a secret (static audit) | whole `roadmap/` package, checked with `ast` | `test_security_redaction.StaticAudit.test_no_print_or_log_call_names_a_secret` | done |
 | Keychain and usage sync print and log no secret, on success and on failure | `roadmap/services/usage.py`, `roadmap/commands/usage.py` | `test_security_redaction.UsageSyncRedaction` | done |
 | Phone start and stop print and log no secret | `roadmap/services/tunnel.py`, `roadmap/commands/phone.py` | `test_security_redaction.PhoneStartRedaction` | done |
-| HTTP server logs and redirects carry no `?k=` value | `server.py:43`, `:220`, `:163-166` | `test_security_redaction.ServerRedaction` (4 tests) | done |
-| Subprocesses are argument lists, never `shell=True` | `tools/lint_py.py` (`shell=True` rule) | `make check` (lint_py) | done |
-| `roadmap serve` starts the phone listener on 8766 | not wired: `commands/serve.py` (outside the WP13 list) only starts the main listener | none | gap: `make_phone_server()` exists and is tested. Fix: `serve` starts it in a second thread, with the same shutdown. Needs an edit to `commands/serve.py` |
-| `roadmap open` opens the dashboard with the macOS `open` tool | `roadmap/commands/open.py` (`open_dashboard`, `handle`, `RUNNER`) | `test_phone.OpenCommand` (4 tests) | gap: not registered. The stub `open` is still added by `commands/serve.py`, and listing `open` in `cli.COMMAND_MODULES` would clash with it. Fix: remove the stub lines from `commands/serve.py`, then add `"open"` to `COMMAND_MODULES` |
+| HTTP server logs and redirects carry no `?k=` value | `roadmap/http/server.py:42`, `server.py:266`, `server.py:201` | `test_security_redaction.ServerRedaction` (4 tests) | done |
+| Subprocesses are argument lists, never `shell=True` | `tools/lint_py.py` (`shell=True` rule, lines 116-117) | `make check` (lint_py) | done |
+| `roadmap serve` starts the phone listener on 8766 | `roadmap/commands/serve.py:56-61` (starts it unless `--no-phone`), `serve.py:82-86` (thread and shutdown) | none | done (closed after WP13; checked in WP22) |
+| `roadmap open` opens the dashboard with the macOS `open` tool | `roadmap/commands/serve.py:31-32` registers `open` through `roadmap/commands/open.py` `register` (`:47`) and `handle` (`:55`) | `test_phone.OpenCommand` (4 tests) | done (registered through serve; checked in WP22) |
 | Exit codes: 4 for a busy or running state, 6 for an external failure, 3 for a missing token or host | `tunnel.py` raises `EXIT_CONFLICT`, `EXIT_EXTERNAL`, `EXIT_NOT_FOUND` | `test_phone.PhoneCli` | done |
 | R1-1 Symlinks: `.claude`, `settings.local.json` and backup sources are refused when they are symlinks; the settings real path must stay in the project's `.claude`; reads use O_NOFOLLOW; a new file is 0600 unless the original regular file had another mode | `services/hooks_install.py` `settings_file`, `_read_raw`; `store/atomic.py` `write_json`, `_mode_of` (lstat); `store/backup.py` `backup_files` | `test_hooks_install.SettingsSafetyTests.test_symlinked_claude_folder_is_refused_and_the_target_is_untouched`; `test_store_backup.BackupSymlinkTests` | done (R1 finding 1) |
 | R1-2 Tunnel host: only `*.localhost.run` and `*.lhr.life` are accepted; ssh runs with `StrictHostKeyChecking=yes` and a private `known_hosts`; the Host allowlist takes `phoneHost` only if it passes the same check | `services/tunnel.py` `valid_tunnel_host`, `find_tunnel_host`, `start` argv; `http/security.py` `phone_host_allowed` | `test_tunnel.HostAndPidSafetyTests.test_only_a_tunnel_domain_host_is_taken_from_the_banner`; `test_tunnel.StartTests.test_start_runs_the_exact_ssh_command_and_saves_the_host` | done (R1 finding 2) |
@@ -220,10 +240,8 @@ in the row), and the status: `done`, or `gap` with the reason. Line numbers are 
 URL in ssh's output, because `phone start` is the step that knows the address. `phone link` only reads it.
 `phone stop` clears it.
 
-**Known gaps at WP13 close** (both are outside the WP13 file list and need a small edit by the head):
-1. `roadmap serve` does not start the phone listener yet (row above).
-2. `roadmap open` is not registered yet (row above).
-3. The stderr log handler of `roadmap serve` has no redaction filter (row above). Nothing on that path logs a secret today.
+**Gaps at WP13 close, all closed:** `roadmap serve` starts the phone listener, `roadmap open` is registered, and the
+stderr log handler has the redaction filter. Each is checked in its row above (WP22).
 
 Reviewer: __________   Date: __________   Result: __________
 (The gate is not signed. WP14 starts only after a reviewer signs it.)

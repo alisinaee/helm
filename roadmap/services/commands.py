@@ -29,6 +29,7 @@ ACTIVITY_ID = re.compile(r"^A[0-9]+$")
 INBOX_MAX_LINES = 6
 INBOX_LOOKBACK = datetime.timedelta(hours=24)
 TASK_STATUSES = ("todo", "partial", "done", "hold")
+TOKENS_K_MAX = 10000000        # ten billion tokens: no real task, and a bound the budget sums can take
 
 
 # ---------------------------------------------------------------- validation helpers
@@ -78,8 +79,9 @@ def _check_task_status(a):
         raise _usage("status '" + status + "' is not valid (allowed: " + "|".join(TASK_STATUSES) + ")",
                      "roadmap task list --phase " + _text(a.get("id")).split(".")[0])
     tokens = a.get("tokensK")
-    if tokens is not None and (isinstance(tokens, bool) or not isinstance(tokens, int) or tokens < 0):
-        raise _usage("tokensK must be a whole number of thousands of tokens, 0 or more")
+    if tokens is not None and (isinstance(tokens, bool) or not isinstance(tokens, int)
+                               or not 0 <= tokens <= TOKENS_K_MAX):
+        raise _usage("tokensK must be a whole number of thousands of tokens, from 0 to " + str(TOKENS_K_MAX))
     note = a.get("note")
     if note is not None and not isinstance(note, str):
         raise _usage("note must be text")
@@ -421,23 +423,57 @@ def _check_undo(a):
     return {"activity": value}
 
 
+def _undo_state(entries, target):
+    """'undid' when the change is undone, 'undoing' while an undo holds it, None when it can be undone. A claim whose
+    run failed (undoFailed) is released."""
+    state = None
+    for e in entries:
+        if e.get("undid") == target:
+            state = "undid"
+        elif e.get("undoing") == target:
+            state = "undoing"
+        elif e.get("undoFailed") == target:
+            state = None
+    return state
+
+
 def _h_undo(data_dir, a, now):
+    """Undo one change. The check and a claim ('undoing') are written under the folder lock before the inverse runs,
+    so two undo calls for one change cannot both run it. The inverse takes its own locks, so it runs outside ours.
+    A phone may undo only a change the phone itself made (its own origin line)."""
     path = records.file_of(data_dir, UNDO_FILE)
-    entries, _ = jsonl.read_objects(path)
     target = a["activity"]
-    if any(e.get("undid") == target for e in entries):
-        raise records.conflict(target + " is already undone; not changed", "roadmap status")
-    found = [e for e in entries if e.get("activity") == target]
-    if not found:
-        raise RoadmapError("not_found", "no undo for " + target + " (only changes that can be reversed)",
-                           EXIT_NOT_FOUND, next="roadmap status")
-    entry = found[-1]
-    _execute(data_dir, entry["op"], entry.get("args") or {}, now)
+    with lock.locked(data_dir):
+        entries, _ = jsonl.read_objects(path)
+        if _undo_state(entries, target) is not None:
+            raise records.conflict(target + " is already undone or being undone; not changed", "roadmap status")
+        found = [e for e in entries if e.get("activity") == target]
+        if not found:
+            raise RoadmapError("not_found", "no undo for " + target + " (only changes that can be reversed)",
+                               EXIT_NOT_FOUND, next="roadmap status")
+        entry = found[-1]
+        if current_source() == "phone" and _origin_source(data_dir, target) != "phone":
+            raise RoadmapError("forbidden", "the phone may undo only its own changes", EXIT_USAGE)
+        jsonl.append_line(path, {"undoing": target, "at": records.now_iso(now)})
+    try:
+        _execute(data_dir, entry["op"], entry.get("args") or {}, now)
+    except Exception:
+        with lock.locked(data_dir):
+            jsonl.append_line(path, {"undoFailed": target, "at": records.now_iso(now)})
+        raise
     with lock.locked(data_dir):
         jsonl.append_line(path, {"undid": target, "at": records.now_iso(now)})
         jsonl.keep_newest(path, UNDO_KEEP)
     return ({"undone": target, "op": entry["op"], "sum": entry.get("sum", "")},
             "undid " + target + ": " + str(entry.get("sum", "")), None)
+
+
+def _origin_source(data_dir, activity_id):
+    """The source of the activity line a change was logged under, or None when that line is gone."""
+    for line in activity.recent(data_dir, 100000):
+        if line.get("id") == activity_id:
+            return line.get("src")
+    return None
 
 
 # ---------------------------------------------------------------- registry
@@ -590,8 +626,9 @@ def write(project_id, op, payload, next_cmd):
     after the write (best effort)."""
     with next_on_error(next_cmd):
         project, data_dir = tasks.resolve(project_id)
-    with next_on_error(next_cmd), context("cli", project["id"]):
-        reply = run(op, payload, "cli", data_dir)
+    source = agentguard.source_name()  # 'agent' inside an agent's shell, else 'cli'
+    with next_on_error(next_cmd), context(source, project["id"]):
+        reply = run(op, payload, source, data_dir)
     from roadmap.services import control
     control.after_write(project["id"])
     return reply

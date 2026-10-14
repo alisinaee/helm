@@ -128,7 +128,7 @@ The entries run the absolute path of the roadmap shim, because the desktop app g
 ```
 
 - `limit` is the person's rule for how far Claude may work alone. Change `stopAtPercent` only when the person says so,
-  and tell them the new value. `roadmap project migrate` keeps it.
+  and tell them the new value. `roadmap project migrate <id>` keeps it.
 - `usage` is written by roadmap, not by hand. It is a copy of the global `usage.json`, written into each project
   whenever usage is synced or pushed.
 
@@ -150,9 +150,10 @@ Stop working when `weeklyPercent` reaches `stopAtPercent`. A stale or missing re
 say so and ask the person.
 
 ## 4. Changing tasks (use the CLI, not JSON)
-Never edit `docs/tasks.json` or `docs/jobs.json` by hand. Record work with `roadmap job start|done|fail` and
-`roadmap task done|start|hold`, and bulk changes with `roadmap task set --dry-run`. Plan new work with
-`roadmap plan import --dry-run`. The `roadmap-update` skill (day-to-day) and `roadmap-plan-new` skill
+Never edit `docs/tasks.json` or `docs/jobs.json` by hand. Record work with `roadmap job start "<title>" <model> <task-id>`, `roadmap job done <id> "<note>"` or
+`roadmap job fail <id> "<reason>"`, and
+`roadmap task done <id>`, `roadmap task start <id>` or `roadmap task hold <id>`, and bulk changes with `roadmap task set --dry-run`. Plan new work with
+`roadmap plan import <file> --dry-run`. The `roadmap-update` skill (day-to-day) and `roadmap-plan-new` skill
 (new projects) give the steps and the budgets.
 
 ## 5. Project settings (docs/roadmap.config.json)
@@ -202,7 +203,7 @@ read by the server. Convert it to `extras` as shown in the README's migration se
 - **Check three widths.** 375, 768 and 1280 px, with no horizontal scroll, in light and dark.
 - **The web page has no inline style or script.** The Content Security Policy blocks them. Put styles in the CSS files
   and the state in data attributes.
-- **Plugin mods did not run hooks in the desktop app. Classic hooks did.** Install hooks with `roadmap hooks install`.
+- **Plugin mods did not run hooks in the desktop app. Classic hooks did.** Install hooks with `roadmap hooks install <project-id>`.
 - **Hooks never fail a tool call**, so a hook problem shows up as a missing job, not an error. Check
   `roadmap hooks status <project-id>` and the hook log in `~/Library/Logs/roadmap-board/hooks.log`.
 
@@ -212,7 +213,7 @@ Older projects have a copy of the dashboard in `tools/roadmap-web/` (`server.py`
 `usage_collector.py`) and a `install.py` step. The new tool replaces all of it. The data files stay where they are.
 
 1. Confirm `roadmap version` works. If not, the clone is not installed (section 1).
-2. Keep `docs/tasks.json`, `docs/jobs.json` and `docs/autonomy.json` as they are. `roadmap project init` keeps them.
+2. Keep `docs/tasks.json`, `docs/jobs.json` and `docs/autonomy.json` as they are. `roadmap project init <path>` keeps them.
 3. Convert `docs/roadmap.config.json` to the `extras` layout (section 5), if the project has one.
 4. Register and check:
 
@@ -235,4 +236,4 @@ Older projects have a copy of the dashboard in `tools/roadmap-web/` (`server.py`
 - The old `scripts/install.py`, `scripts/server.py`, `scripts/jobs.py` and `scripts/jobs_auto.py` are retired. Nothing
   copies them into projects any more.
 - `templates/` (the starter `tasks.json`, `jobs.json`, `autonomy.json` and `roadmap.config.json`) now live in the
-  roadmap clone, under `roadmap/templates/`. `roadmap project init` writes them.
+  roadmap clone, under `roadmap/templates/`. `roadmap project init <path>` writes them.

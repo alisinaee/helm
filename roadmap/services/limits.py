@@ -13,6 +13,7 @@ for action block) or unknown. Unknown never blocks. A failure of the whole evalu
 """
 
 import datetime
+import math
 import os
 import re
 import time
@@ -29,6 +30,7 @@ ACTIONS = ("block", "warn")
 WARN_PCT = 80.0
 BLOCK_PCT = 100.0
 USAGE_STALE_S = 1800
+USAGE_CLOCK_SKEW_S = 60     # a reading this much in the future is a clock problem, not a fresh reading
 LOG_EVERY_S = 60
 AUTO_ID = "AUTO"
 BUDGET_ID = "BUD"
@@ -46,7 +48,7 @@ def _usage(message, next_cmd="roadmap limit show"):
 
 
 def _num(value):
-    return isinstance(value, (int, float)) and not isinstance(value, bool) and value == value
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
 
 
 def _now(now):
@@ -190,7 +192,7 @@ def _usage_state(moment):
     if not _num(weekly):
         return None, False
     age = _age(data.get("updated"), moment)
-    return float(weekly), age is not None and age <= USAGE_STALE_S
+    return float(weekly), age is not None and -USAGE_CLOCK_SKEW_S <= age <= USAGE_STALE_S
 
 
 def _age(text, moment):
@@ -285,8 +287,15 @@ def _judge(row, used, est, ctx):
 
 
 def _evaluate_rows(project, moment):
+    """The global rows always apply, even when the project's own files cannot be read (a bad schemaVersion written into
+    docs/autonomy.json must not switch off the account limits). The project's own rows are skipped then, and logged."""
     data_dir = jobs.data_dir_of(project)
-    doc, stored, bud, auto = _project_state(data_dir)
+    try:
+        doc, stored, bud, auto = _project_state(data_dir)
+    except Exception as exc:
+        _log_once("limits: the project files of %s cannot be read (%s); only the global rows apply"
+                  % (project.get("id"), type(exc).__name__))
+        doc, stored, bud, auto = None, [], None, None
     rows = global_rows() + stored + [row for row in (bud, auto) if row is not None]
     ctx = _Context(project["id"], doc, moment)
     out = []
@@ -299,7 +308,8 @@ def _evaluate_rows(project, moment):
 def evaluate_rows(project, now=None, strict=False):
     """Every row that applies to a project (global, its own and the read-through rows), each with its state.
 
-    Never raises unless strict: a failure gives an empty list, which means ok (fail open), and is logged once a minute.
+    Never raises unless strict: a failure of the whole evaluation gives an empty list, which means ok (fail open), and
+    is logged once a minute. A project file that cannot be read drops only that project's own rows (see _evaluate_rows).
     """
     moment = _now(now)
     try:
@@ -526,31 +536,30 @@ def remove_row(project, data_dir, row_id, now=None):
     if row_id == AUTO_ID:
         return _remove_autonomy(data_dir, row_id)
     if row_id == BUDGET_ID:
-        bud = budget.get(data_dir)["limits"].get("project")
+        doc = budget.get(data_dir)
+        bud = doc["limits"].get("project")
         if bud is None:
             raise RoadmapError("not_found", "no project budget to remove", EXIT_NOT_FOUND, next="roadmap limit show")
-        prior = _bud_row(bud, "block")
+        prior = _bud_row(bud, "warn" if doc.get("limitAction") == "warn" else "block")
         budget.set_project_limit(data_dir, None)
         return prior
 
-    def mutate_project(doc):
-        items = doc["limitRows"]
+    def take(items, scope, store):
+        """Pop the row with this id when it is a valid row. A malformed row is not a limit row: it is left alone, so
+        the call fails with not_found and the file does not change."""
         index = next((i for i, item in enumerate(items) if isinstance(item, dict) and item.get("id") == row_id), None)
         if index is None:
             return None
-        return _clean_row(items.pop(index), "project", "limits")
+        row = _clean_row(items[index], scope, store)
+        if row is not None:
+            items.pop(index)
+        return row
 
-    removed = budget.update(data_dir, mutate_project)
+    removed = budget.update(data_dir, lambda doc: take(doc["limitRows"], "project", "limits"))
     if removed is not None:
         return removed
 
-    def mutate_global(items):
-        index = next((i for i, item in enumerate(items) if isinstance(item, dict) and item.get("id") == row_id), None)
-        if index is None:
-            return None
-        return _clean_row(items.pop(index), "global", "config")
-
-    removed = config_store.update_limits(mutate_global)
+    removed = config_store.update_limits(lambda items: take(items, "global", "config"))
     if removed is None:
         raise RoadmapError("not_found", "no limit row " + row_id, EXIT_NOT_FOUND, next="roadmap limit show")
     return removed
