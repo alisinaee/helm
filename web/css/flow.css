@@ -26,8 +26,8 @@
 .qc-task { color: var(--accent); }
 .qc-text { margin: 0; font-size: var(--fs-15); font-weight: 600; color: var(--text-1); overflow-wrap: anywhere; }
 .qc-line { margin: 0; color: var(--text-2); }
-.qc-opts { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
-.qc-opt { min-height: var(--h-control); }
+.qc-opts { --rg: repeat(auto-fill, minmax(11rem, 1fr)); row-gap: var(--sp-2); }
+.qc-opt { min-height: var(--h-control); white-space: normal; }
 .qc-key { font-family: var(--font-mono); color: var(--text-3); }
 .qc-opt.btn-primary .qc-key { color: var(--on-accent); }
 .qc-def { font-size: var(--fs-11); opacity: 0.85; }
@@ -40,7 +40,7 @@
 .nz-kind { font-size: var(--fs-11); color: var(--text-3); }
 .mt-row { display: grid; gap: var(--sp-1); }
 .mt-label, .mt-text, .mt-pace, .mt-line { margin: 0; font-size: var(--fs-12); color: var(--text-2); }
-.act-row { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr) auto; gap: var(--sp-2); align-items: start;
+.act-row { --rg: 6.5rem minmax(0, 1fr) auto; display: grid; grid-template-columns: var(--rg); gap: var(--sp-2); align-items: start;
   min-height: var(--h-row); font-size: var(--fs-13); }
 .act-time { color: var(--text-3); font-size: var(--fs-12); }
 .act-main { min-width: 0; overflow-wrap: anywhere; color: var(--text-1); }
@@ -49,6 +49,7 @@
 /* Phone: one column, touch targets of 44 px. */
 @media (max-width: 599px) {
   .qc-opt, .ov-actions .btn, .act-row .btn { min-height: 44px; }
+  .qc-opts > .btn { margin-left: 0; }
   .act-row { grid-template-columns: minmax(0, 1fr); }
   .act-row .btn { justify-self: start; }
 }
@@ -56,8 +57,6 @@
 /* Agents, Research (WP34). */
 .ag-list, .ag-kids { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
 .ag-kids { padding-left: var(--sp-3); border-left: 2px solid var(--track); }
-.ag-line { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); align-items: center; min-width: 0;
-  font-size: var(--fs-13); }
 .ag-title { font-weight: 600; color: var(--text-1); }
 .nz-list .btn { display: grid; width: 100%; text-align: left; }
 .note-text { margin: 0; padding: var(--sp-3); max-height: 60vh; overflow: auto; white-space: pre-wrap;

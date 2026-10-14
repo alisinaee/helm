@@ -61,15 +61,16 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
   const stop = '<button type="button" class="btn btn-small" data-action="agent-stop" data-project="' + esc(pid) +
     '" data-task="' + esc(job.task || "") + '" data-focus="stop-' + esc(pid) + "-" + esc(job.id) + '"' +
     (job.task ? "" : " disabled") + ' aria-label="Stop ' + esc(label) + '">Stop</button>';
-  const tokens = job.tokensK == null ? "tokens: " + MISSING : "tokens so far " + fmtTokens(job.tokensK);
-  const row = '<li class="ag-row" data-depth="' + depth + '"><div class="ag-line">' +
-    chipHtml(job.model || "model", "neutral") + " " +
-    (job.role ? chipHtml(job.role, "neutral") + " " : "") +
-    '<span class="ag-title">' + esc(label) + "</span> " + taskHtml + " " +
-    '<span class="ag-tail"><span class="num" data-started-ms="' +
-    esc(String(job.startedMs == null ? "" : job.startedMs)) + '">' +
-    esc(elapsedText(job, now)) + "</span> " +
-    '<span class="num">' + esc(tokens) + "</span> " + badge + " " + handed + " " + stop + "</span></div>";
+  const tokens = job.tokensK == null ? MISSING : fmtTokens(job.tokensK);
+  const row = '<li class="ag-row" data-depth="' + depth + '"><div class="row-grid rg-agent">' +
+    '<span class="rg-chips">' + chipHtml(job.model || "model", "neutral") +
+    (job.role ? chipHtml(job.role, "neutral") : "") + badge + "</span>" +
+    '<span class="rg-main"><span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
+    (handed ? " " + handed : "") + "</span>" +
+    '<span class="rg-chips">' + taskHtml + "</span>" +
+    '<span class="rg-num num" data-started-ms="' + esc(String(job.startedMs == null ? "" : job.startedMs)) + '">' +
+    esc(elapsedText(job, now)) + "</span>" +
+    '<span class="rg-num num">' + esc(tokens) + "</span>" + stop + "</div>";
   if (!children.length) return row + "</li>";
   return row + '<ul class="ag-kids" aria-label="Workers of ' + esc(label) + '">' + children.map(function (child) {
     return agentRowHtml(child, pid, tree, blocked, now, depth + 1);
@@ -80,7 +81,8 @@ function finishedHtml(job) {
   const word = STATUS_WORDS[job.status] || job.status;
   const kind = job.status === "failed" ? "danger" : "success";
   const tokens = job.tokensK == null ? MISSING : fmtTokens(job.tokensK);
-  return '<li class="act-row"><span class="act-time num">' + esc(fmtDuration(job.elapsedS)) + "</span>" +
+  return '<li class="act-row row-grid rg-fin"><span class="act-time num">' +
+    esc(fmtDuration(job.elapsedS)) + "</span>" +
     '<span class="act-main"><span class="act-sum">' + esc(job.title || job.id) + "</span> " +
     chipHtml(job.model || "model", "neutral") + " " + chipHtml(word, kind) + "</span>" +
     '<span class="act-tok num">' + esc(tokens) + "</span></li>";
@@ -92,8 +94,10 @@ function projectBlock(entry, now, showName) {
   const tree = agentTree(snap);
   const blocked = snap.blocked || [];
   const heading = showName ? '<h3 class="grp-h">' + esc(entry.name) + "</h3>" : "";
+  const head = '<li class="row-grid rg-agent rg-head" aria-hidden="true"><span>Model</span><span>Job</span>' +
+    '<span>Task</span><span class="rg-num">Elapsed</span><span class="rg-num">Tokens</span><span></span></li>';
   const live = tree.roots.length
-    ? '<ul class="ag-list" aria-label="Running agents">' + tree.roots.map(function (job) {
+    ? '<ul class="ag-list" aria-label="Running agents">' + head + tree.roots.map(function (job) {
       return agentRowHtml(job, entry.id, tree, blocked, now, 0);
     }).join("") + "</ul>"
     : emptyHtml("No agents running.");

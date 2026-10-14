@@ -123,7 +123,7 @@ export function questionCardHtml(entry, now, showProject) {
   const task = q.task ? ' <a class="qc-task" href="' + esc(itemHash(pid, q.task)) + '">' + esc(q.task) + "</a>" : "";
   const blocks = q.block ? chipHtml("Blocks work", "warning") : "";
   const options = q.opts.length
-    ? '<div class="qc-opts" role="group" aria-label="Answers for ' + esc(q.id) + '">' +
+    ? '<div class="qc-opts row-grid" role="group" aria-label="Answers for ' + esc(q.id) + '">' +
       q.opts.map(function (opt, i) {
         return optionHtml(pid, q, opt, i);
       }).join("") + "</div>"

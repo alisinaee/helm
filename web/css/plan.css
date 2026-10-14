@@ -7,7 +7,7 @@
 .lane-caret { width: 1em; color: var(--text-3); }
 .lane-id { font-family: var(--font-mono); font-weight: 600; }
 .lane-name { font-weight: 600; overflow-wrap: anywhere; }
-.lane-stats, .lane-act, .tl-label, .tl-text, .rc-top, .rc-meta, .iss-top { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); align-items: center; margin: 0; font-size: var(--fs-12); color: var(--text-2); }
+.lane-stats, .lane-act, .tl-label, .tl-text, .rc-top, .rc-meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); align-items: center; margin: 0; font-size: var(--fs-12); color: var(--text-2); }
 .lane-meter { flex: 1 1 8rem; min-width: 6rem; }
 .lane-empty { color: var(--text-3); font-size: var(--fs-12); }
 .lane-cards { display: flex; flex-wrap: wrap; gap: var(--sp-2); }

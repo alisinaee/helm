@@ -78,9 +78,9 @@ function rowHtml(vm, issue) {
   const id = esc(issue.id);
   const detail = "#/p/" + encodeURIComponent(vm.route.id) + "/issues/i/" + encodeURIComponent(issue.id);
   return '<li class="iss is-' + esc(issue.kind || "issue") + '" data-issue="' + id + '">' +
-    '<p class="iss-top">' + chipHtml(issue.kind || "issue", KIND_TONE[issue.kind] || "neutral") +
+    '<p class="iss-top row-grid">' + chipHtml(issue.kind || "issue", KIND_TONE[issue.kind] || "neutral") +
     chipHtml("sev " + (issue.sev == null ? MISSING : issue.sev), "neutral") +
-    '<span class="iss-status">' + esc(issue.status || "open") + "</span></p>" +
+    '<span class="iss-status rg-num">' + esc(issue.status || "open") + "</span></p>" +
     '<p class="iss-title"><a href="' + esc(detail) + '">' + id + " " + esc(issue.title) + "</a></p>" +
     linksHtml(vm, issue) +
     '<p class="iss-act"><button type="button" class="btn btn-small" data-action="issue-close" data-issue="' + id +

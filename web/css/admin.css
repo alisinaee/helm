@@ -2,7 +2,7 @@
 
 .lim-h { margin: 0; font-size: var(--fs-15); }
 .lim-h2 { margin: var(--sp-3) 0 var(--sp-1); font-size: var(--fs-13); color: var(--text-2); }
-.lim-bar, .lim-presets, .rule-tabs, .lim-edit, .tk-override, .lim-head, .spend-row, .met-head {
+.lim-bar, .lim-presets, .rule-tabs, .lim-edit, .tk-override, .spend-row, .met-head {
   display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
 .lim-edit, .tk-override { align-items: flex-end; }
 .lim-block, .lim-list, .spend-list, .rule-list { display: grid; gap: var(--sp-2); padding: 0; margin: 0; list-style: none; }

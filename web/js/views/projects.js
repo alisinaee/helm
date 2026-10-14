@@ -71,25 +71,18 @@ export function sortRows(list) {
   });
 }
 
+// One fixed slot per count (questions, blockers, running) so the numbers line up down the panel; then the lock chip.
+function countBadge(kind, n, icon, one, many) {
+  return '<span class="p-badge" data-kind="' + kind + '" title="' + esc(plural(n, one, many)) + '">' +
+    iconHtml(icon) + esc(n) + '<span class="sr-only"> ' + esc(plural(n, one, many)) + "</span></span>";
+}
+
 function badgesHtml(facts) {
-  const parts = [];
-  if (facts.questions) {
-    parts.push('<span class="p-badge" data-kind="question" title="' + esc(plural(facts.questions, "open question",
-      "open questions")) + '">' + iconHtml("inbox") + esc(facts.questions) + '<span class="sr-only"> ' +
-      esc(plural(facts.questions, "open question", "open questions")) + "</span></span>");
-  }
-  if (facts.blockers) {
-    parts.push('<span class="p-badge" data-kind="blocker" title="' + esc(plural(facts.blockers, "open blocker",
-      "open blockers")) + '">' + iconHtml("issues") + esc(facts.blockers) + '<span class="sr-only"> ' +
-      esc(plural(facts.blockers, "open blocker", "open blockers")) + "</span></span>");
-  }
-  if (facts.running > 0) {
-    parts.push('<span class="p-badge" data-kind="running" title="' + esc(plural(facts.running, "job running",
-      "jobs running")) + '">' + iconHtml("agents") + esc(facts.running) + '<span class="sr-only"> ' +
-      esc(plural(facts.running, "job running", "jobs running")) + "</span></span>");
-  }
-  if (facts.blocked) parts.push('<span class="p-chip" title="A usage limit is blocking this project">Locked</span>');
-  return parts.join("");
+  const q = facts.questions ? countBadge("question", facts.questions, "inbox", "open question", "open questions") : "";
+  const b = facts.blockers ? countBadge("blocker", facts.blockers, "issues", "open blocker", "open blockers") : "";
+  const r = facts.running > 0 ? countBadge("running", facts.running, "agents", "job running", "jobs running") : "";
+  const lock = facts.blocked ? '<span class="p-chip" title="A usage limit is blocking this project">Locked</span>' : "";
+  return "<span>" + q + "</span><span>" + b + "</span><span>" + r + "</span>" + lock;
 }
 
 function rowHtml(facts, route, current) {
@@ -102,7 +95,7 @@ function rowHtml(facts, route, current) {
     '</span><span class="p-word">' + esc(facts.word) + "</span></span>" +
     '<span class="p-meter">' + meterHtml(pct, facts.blocked ? "danger" : "accent") + '<span class="sr-only"> ' +
     esc(pct + "% done") + "</span></span>" +
-    '<span class="p-badges">' + badgesHtml(facts) + "</span></a></li>";
+    '<span class="p-badges row-grid">' + badgesHtml(facts) + "</span></a></li>";
 }
 
 function allRowHtml(rows, route) {
