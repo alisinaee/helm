@@ -1,7 +1,17 @@
 """Command group project: register projects and keep their data files healthy."""
 
+import argparse
+import json
+import os
+
+from roadmap.commands import research
 from roadmap.errors import EXIT_INVALID_DATA, RoadmapError
 from roadmap.services import projects
+from roadmap.store import config, lock, schema
+
+PLAN_TEMPLATE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates",
+                             "plan_template.json")
+FIRST_NOTE = ("scope", "Project scope and first questions")
 
 
 def register(sub, common):
@@ -37,6 +47,13 @@ def register(sub, common):
     migrate = actions.add_parser("migrate", parents=[common], help="upgrade a project's data files (backs up first)")
     migrate.add_argument("id", help="project id")
     migrate.set_defaults(handler=_migrate)
+
+    new = actions.add_parser("new", parents=[common],
+                             help="start a project: init, plan with phase P1 not approved, optional research note 1")
+    new.add_argument("path", help="project folder (must exist)")
+    new.add_argument("--name", help="display name (default: the folder name)")
+    new.add_argument("--research", action="store_true", help="also create research note 01 from the template")
+    new.set_defaults(handler=_new)
 
 
 def _wants_json(args):
@@ -122,3 +139,55 @@ def _migrate(args):
             print("backup: " + result["backup"])
         return None
     return result
+
+
+def _new(args):
+    """Init the folder, register it, write the plan template (phase P1, approved false) into a tasks.json that has no
+    phases or tasks yet, and with --research create note 01. Safe to run again: existing files, notes and the
+    registration are kept."""
+    init = projects.init_project(args.path)
+    entry = _registered_entry(init["path"])
+    if entry is None:
+        entry = projects.add_project(args.path, args.name, config.DEFAULT_DATA_DIR)
+    plan = _write_plan_template(init["dataDir"])
+    note = _first_note(entry["id"], init["dataDir"]) if args.research else None
+    if not _wants_json(args):
+        print("registered " + entry["id"] + " -> " + entry["path"])
+        print("created: " + (", ".join(init["created"]) or "nothing"))
+        print("plan: " + ("phase P1 written, not approved" if plan["written"] else "kept (tasks.json has phases)"))
+        if args.research:
+            print("research: " + (note["file"] if note else "kept (a note exists)"))
+        print("next: read the research, then approve phase P1 with: roadmap phase approve P1")
+        return None
+    return {"project": entry, "created": init["created"], "kept": init["kept"], "plan": plan, "research": note}
+
+
+def _registered_entry(folder):
+    for entry in config.list_projects():
+        if os.path.abspath(entry["path"]) == folder:
+            return projects.describe(entry)
+    return None
+
+
+def _write_plan_template(data_dir):
+    """Write the plan template when tasks.json holds no phases and no tasks yet. Returns {phase, approved, written}."""
+    path = os.path.join(data_dir, "tasks.json")
+    with lock.locked(data_dir):
+        current, error = schema.read_data("tasks", path)
+        if error is not None:
+            raise RoadmapError("newer_schema", error["message"], EXIT_INVALID_DATA)
+        if current and (current.get("phases") or current.get("tasks")):
+            return {"phase": None, "approved": None, "written": False}
+        with open(PLAN_TEMPLATE, "r", encoding="utf-8") as fh:
+            body = json.load(fh)
+        schema.write_data("tasks", path, body)
+    return {"phase": "P1", "approved": False, "written": True}
+
+
+def _first_note(project_id, data_dir):
+    """Create research note 01 unless a note exists. Returns the note's data, or None when one exists."""
+    folder = os.path.join(data_dir, research.RESEARCH_DIR)
+    if research._notes(folder):
+        return None
+    slug, title = FIRST_NOTE
+    return research._new(argparse.Namespace(project=project_id, slug=slug, title=title, json=True))

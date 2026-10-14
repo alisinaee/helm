@@ -95,7 +95,9 @@ def start_job(data_dir, title, model, task=None, parent=None, role=None, environ
 
 def finish_job(data_dir, job_id, status, note=None, tokens_k=None):
     """Mark a running job done or failed, with an optional note and thousands of tokens used.
-    Finishing a job that is not running is a conflict (exit 4); an unknown id is not_found (exit 3)."""
+    Finishing a job that is not running is a conflict (exit 4); an unknown id is not_found (exit 3).
+    tokens_k is the final total of the job. Progress already counted (progressK) is not counted again: the budget
+    takes tokens_k minus progressK (see budget_remainder). A total below the counted progress is a usage error."""
     _require_data_dir(data_dir)
     if status not in ("done", "failed"):
         raise RoadmapError("usage", "status must be done or failed", EXIT_USAGE)
@@ -106,6 +108,10 @@ def finish_job(data_dir, job_id, status, note=None, tokens_k=None):
         if job.get("status") != "running":
             raise RoadmapError("conflict", wanted + " is already " + str(job.get("status")) + "; not changed",
                                EXIT_CONFLICT)
+        counted = _counted(job)
+        if tokens_k is not None and float(tokens_k) < counted:
+            raise RoadmapError("usage", wanted + " already counted " + _fmt_k(counted) + " of progress; --tokens "
+                               "must be the job's final total, at least that", EXIT_USAGE)
         job["status"] = status
         job["ended"] = _now_iso()
         if tokens_k is not None:
@@ -114,6 +120,32 @@ def finish_job(data_dir, job_id, status, note=None, tokens_k=None):
             job["note"] = str(note).strip()
         _write_doc(data_dir, doc)
     return dict(job)
+
+
+def progress_job(data_dir, job_id, tokens_k):
+    """Record the live tokens of a running job (thousands). Returns (job, new_k) where new_k is the amount that is
+    not yet counted in the budget: tokens_k minus the progress already counted, zero when nothing moved.
+    The job's tokensK shows the reading while it runs. A reading below the counted progress, or on a job that is not
+    running, is refused and nothing changes (usage, conflict)."""
+    _require_data_dir(data_dir)
+    wanted = str(job_id or "").strip()
+    value = _progress_value(tokens_k)
+    with lock.locked(data_dir):
+        doc = _read_doc(data_dir)
+        job = _find(doc["jobs"], wanted)
+        if job.get("status") != "running":
+            raise RoadmapError("conflict", wanted + " is already " + str(job.get("status")) + "; progress needs a "
+                               "running job", EXIT_CONFLICT)
+        counted = _counted(job)
+        if value < counted:
+            raise RoadmapError("usage", "progress cannot go down: " + wanted + " already counted " + _fmt_k(counted),
+                               EXIT_USAGE)
+        new_k = round(value - counted, 1)
+        if new_k > 0:
+            job["progressK"] = round(value, 1)
+            job["tokensK"] = round(value, 1)
+            _write_doc(data_dir, doc)
+    return dict(job), new_k
 
 
 def list_jobs(data_dir):
@@ -163,6 +195,34 @@ def _read_doc(data_dir):
 
 def _write_doc(data_dir, doc):
     schema.write_data("jobs", jobs_path(data_dir), doc)
+
+
+def _counted(job):
+    """The progress already counted for a job (thousands). A missing or odd value counts as zero."""
+    value = job.get("progressK")
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value or value < 0:
+        return 0.0
+    return float(value)
+
+
+def budget_remainder(job, tokens_k):
+    """The thousands of tokens a finished job adds to the budget: its final total minus the progress counted."""
+    return round(max(float(tokens_k) - _counted(job), 0.0), 1)
+
+
+def _progress_value(value):
+    """Parse a progress reading (thousands of tokens): a finite number of zero or more."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        raise RoadmapError("usage", "--tokens needs a number (thousands of tokens)", EXIT_USAGE)
+    if not math.isfinite(number) or number < 0:
+        raise RoadmapError("usage", "--tokens must be a number of zero or more (thousands of tokens)", EXIT_USAGE)
+    return number
+
+
+def _fmt_k(value):
+    return ("%g" % round(value, 1)) + "k"
 
 
 def _next_id(jobs):

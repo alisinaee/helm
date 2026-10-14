@@ -36,6 +36,13 @@ def register(sub, common):
         parser.add_argument("--tokens", metavar="K", help="tokens used, in thousands")
         parser.set_defaults(handler=_finish, status=DONE_WORDS[name])
 
+    progress = actions.add_parser("progress", parents=[common, project],
+                                  help="record the live tokens of a running job (optional)")
+    progress.add_argument("id", help="job id")
+    progress.add_argument("--tokens", metavar="K", required=True,
+                          help="tokens used so far, in thousands (the job's running total)")
+    progress.set_defaults(handler=_progress)
+
     listing = actions.add_parser("list", parents=[common, project], help="list jobs")
     listing.set_defaults(handler=_list)
 
@@ -62,10 +69,29 @@ def _finish(args):
     data_dir = jobs.data_dir_of(project)
     job = jobs.finish_job(data_dir, args.id, args.status, args.note, tokens)
     if tokens is not None:
-        budget.record_job_spend(data_dir, job["id"], job.get("task"), job.get("model"), tokens)
+        # progress already counted in the budget (job progress) is not counted again
+        remainder = jobs.budget_remainder(job, tokens)
+        budget.record_job_spend(data_dir, job["id"], job.get("task"), job.get("model"), remainder)
         control.after_write(project["id"])  # the spend can reach a limit row (WP27)
     if not getattr(args, "json", False):
         print(job["id"] + " " + job["status"])
+        return None
+    return job
+
+
+def _progress(args):
+    """Record a running job's live tokens. Only the part not yet counted goes to the budget, under a key that is
+    unique to this reading, so the job's final spend (job done --tokens) adds just the rest."""
+    value = jobs.tokens_from_arg(args.tokens)
+    project = jobs.resolve_project(args.project)
+    data_dir = jobs.data_dir_of(project)
+    job, new_k = jobs.progress_job(data_dir, args.id, value)
+    if new_k > 0:
+        key = job["id"] + "@" + repr(job["progressK"])
+        budget.record_job_spend(data_dir, key, job.get("task"), job.get("model"), new_k)
+        control.after_write(project["id"])
+    if not getattr(args, "json", False):
+        print("%s progress %sk" % (job["id"], repr(job["progressK"])))
         return None
     return job
 

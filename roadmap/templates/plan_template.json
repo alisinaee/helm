@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "updated": "",
+  "phases": [
+    {
+      "id": "P1",
+      "name": "Phase 1",
+      "status": "todo",
+      "approved": false
+    }
+  ],
+  "tasks": []
+}
