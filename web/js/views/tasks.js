@@ -7,6 +7,7 @@
 import { run } from "../cmd.js";
 import { chipHtml, esc } from "../dom.js";
 import { fmtDuration, fmtTokens, MISSING } from "../format.js";
+import { copyButton, refSummary } from "../ref.js";
 import { showToast } from "./toast.js";
 
 const MODEL_KINDS = ["haiku", "sonnet", "opus", "cursor", "agy"];
@@ -27,6 +28,28 @@ export function modelKind(model) {
 
 export function modelChip(model) {
   return chipHtml(model || "model?", modelKind(model));
+}
+
+// Copy-reference buttons (R7.12, ref.js). Each one is a sibling of the row's toggles and links, never nested in them.
+// The task object is snapshot-shaped: feats, and subs as {t, d}.
+export function taskCopyHtml(project, snap, task) {
+  return copyButton("task", task.id, task.id + " " + task.title, {
+    project: project,
+    sum: refSummary("task", task, snap),
+  });
+}
+
+export function phaseCopyHtml(project, phase) {
+  return copyButton("phase", phase.id, phase.name, { project: project, sum: refSummary("phase", phase, null) });
+}
+
+export function sectionCopyHtml(project, id, label, count) {
+  return copyButton("section", id, label, { project: project, sum: refSummary("section", count, null) });
+}
+
+// A subtask ref is the task id, ".s", and the 1-based index (the same index as the subtask address).
+export function subCopyHtml(project, taskId, index, sub) {
+  return copyButton("sub", taskId + ".s" + (index + 1), sub.t, { project: project, sum: refSummary("sub", sub, null) });
 }
 
 function tokensText(k) {
@@ -70,18 +93,19 @@ function shownTitle(task) {
   return entry && Date.now() < entry.until ? entry.title : task.title;
 }
 
-function rowHtml(task, cls, cells, jobs) {
+// copy is the optional copy-reference button (taskCopyHtml); it goes at the end of the title cell.
+function rowHtml(task, cls, cells, jobs, copy) {
   const jobHtml = jobs && jobs.length ? '<span class="job-chips">' + jobs.map(jobChipHtml).join("") + "</span>" : "";
   const title = shownTitle(task);
   return '<div class="task-row ' + cls + '">' + idHtml(task) +
     '<span class="t-main"><span class="t-title" title="' + esc(title) + '" tabindex="0" role="button" ' +
     'aria-label="Edit title for ' + esc(task.id) + '" data-tt-id="' +
     esc(task.id) + '">' + esc(title) + "</span>" +
-    noteHtml(task) + jobHtml + "</span>" + cells + "</div>";
+    noteHtml(task) + jobHtml + (copy || "") + "</span>" + cells + "</div>";
 }
 
 // One active task (todo, partial, done or hold) with its jobs; jobs are the running and recent jobs of the task.
-export function taskRowHtml(task, jobs) {
+export function taskRowHtml(task, jobs, copy) {
   const running = (jobs || []).some(function (j) {
     return j.status === "running";
   });
@@ -96,15 +120,15 @@ export function taskRowHtml(task, jobs) {
     '<span class="t-needs">' + (task.needsUser && !done
       ? '<span class="chip chip-warning" title="this task waits on you">needs you</span>'
       : "") + "</span>";
-  return rowHtml(task, cls, cells, jobs);
+  return rowHtml(task, cls, cells, jobs, copy);
 }
 
 // A deferred task: muted, with one deferred chip in place of the token and model cells.
-export function deferredRowHtml(task) {
+export function deferredRowHtml(task, copy) {
   const cells = '<span class="t-tokens"></span><span class="t-think"></span>' +
     '<span class="t-model">' + chipHtml("deferred", "defer") + "</span>" +
     '<span class="t-check"></span><span class="t-needs"></span>';
-  return rowHtml(task, "is-deferred", cells, []);
+  return rowHtml(task, "is-deferred", cells, [], copy);
 }
 
 export function taskListHtml(tasks) {

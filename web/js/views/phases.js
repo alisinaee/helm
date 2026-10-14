@@ -5,7 +5,9 @@
 
 import { chipHtml, esc, meterHtml, sectionHtml } from "../dom.js";
 import { fmtCount, fmtPercent, fmtTokens, MISSING } from "../format.js";
-import { deferredRowHtml, jobChipHtml, STATE_GLYPH, STATE_WORD, taskRowHtml } from "./tasks.js";
+import {
+  deferredRowHtml, jobChipHtml, phaseCopyHtml, STATE_GLYPH, STATE_WORD, taskCopyHtml, taskRowHtml,
+} from "./tasks.js";
 
 const TONE = { done: "success", partial: "accent", todo: "accent", hold: "warning" };
 
@@ -78,6 +80,8 @@ function jobsByTaskOf(phase, tasks, jobById) {
 
 function phaseBodyHtml(vm, phase, tasks, jobById) {
   const placed = jobsByTaskOf(phase, tasks, jobById);
+  const snap = vm.project.snapshot;
+  const project = vm.route.id;
   const live = tasks.filter(function (t) {
     return t.state !== "deferred";
   });
@@ -90,7 +94,7 @@ function phaseBodyHtml(vm, phase, tasks, jobById) {
   }
   if (live.length) {
     html += live.map(function (t) {
-      return taskRowHtml(t, placed.byTask[t.id] || []);
+      return taskRowHtml(t, placed.byTask[t.id] || [], taskCopyHtml(project, snap, t));
     }).join("");
   } else if (!placed.floats.length) {
     html += '<p class="phase-empty">No tasks in this phase.</p>';
@@ -102,7 +106,9 @@ function phaseBodyHtml(vm, phase, tasks, jobById) {
       '" data-action="toggle-item" data-item="defer:' + esc(phase.id) + '" data-focus="item-defer:' +
       esc(phase.id) + '">' + (open ? "▾" : "▸") + " " + fmtCount(defs.length) + " deferred</button>" +
       '<div class="defer-list" id="' + listId + '"' + (open ? "" : " hidden") + ">" +
-      defs.map(deferredRowHtml).join("") + "</div>";
+      defs.map(function (t) {
+        return deferredRowHtml(t, taskCopyHtml(project, snap, t));
+      }).join("") + "</div>";
   }
   return html;
 }
@@ -111,7 +117,8 @@ function phaseHtml(vm, phase, tasks, jobById) {
   const open = phaseIsOpen(vm, phase);
   const bodyId = "phase-" + phase.id + "-body";
   const body = open ? phaseBodyHtml(vm, phase, tasks, jobById) : "";
-  return '<div class="phase">' + phaseRowHtml(vm, phase, open) + '<div class="phase-body" id="' + bodyId +
+  return '<div class="phase">' + phaseRowHtml(vm, phase, open) + phaseCopyHtml(vm.route.id, phase) +
+    '<div class="phase-body" id="' + bodyId +
     '"' + (open ? "" : " hidden") + ">" + body + "</div></div>";
 }
 
