@@ -36,8 +36,10 @@
 ### Plan text format (UTF-8, one record per line)
 
 ```
-line    := phase | task | comment | blank
+line    := phase | task | feature | link | comment | blank
 phase   := "P" SP id SP status SP "|" SP name
+feature := "F" SP fid SP ("-"|"hold") SP prio SP (phase|"-") SP (parentFid|"-") SP "|" SP title [SP "#" SP acceptance]
+link    := "L" SP fid SP taskId (SP taskId)*      ; adds the feature to each task's feats, idempotent
 task    := "T" SP id SP status SP tokensK SP model "/" thinking [SP "!"] [SP "c:" check "/" checkK] SP "|" SP title [SP "#" SP note]
 comment := "#" text
 id      := [A-Za-z0-9]+ ("." [0-9]+)?      ; task id must start with "<phase>."
