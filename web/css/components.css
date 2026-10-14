@@ -972,6 +972,13 @@
   font-size: var(--fs-11);
 }
 
+/* Copy reference (R7.12) */
+.ref-col,.ref-copy{width:1.5rem;height:1.5rem}
+.ref-copy{display:grid;place-items:center;padding:0;background:none;border:0;border-radius:var(--r-card);color:var(--text-2);opacity:.4;cursor:pointer}
+.ref-copy:hover,.ref-copy:focus-visible,.row-grid:hover .ref-copy{opacity:1}
+@media (hover:none){.ref-copy{opacity:1}}
+.ref-text{width:100%;min-width:0}
+
 .rg-agent { --rg: 9rem minmax(0, 1fr) 4rem 4.5rem 4.5rem 4rem; font-size: var(--fs-13); }
 .rg-fin { --rg: 4.5rem minmax(0, 1fr) 4rem; }
 
