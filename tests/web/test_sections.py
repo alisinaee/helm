@@ -126,7 +126,8 @@ class SectionRenderTests(unittest.TestCase):
         self.assertIn('data-qid="Q1"', html)
 
     def test_countdown_carries_the_deadline_and_the_task_link(self):
-        # The countdown text itself is written by the page's ticker from the real clock, so only the attributes are fixed.
+        # The countdown text itself is written by the page's ticker from the real clock, so only the attributes
+        # are fixed.
         html = self.out["inboxProject"]
         self.assertIn('data-deadline-ms="', html)
         self.assertIn('data-word="Defaults to yes in "', html)

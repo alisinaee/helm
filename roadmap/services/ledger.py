@@ -248,7 +248,8 @@ def project_id_for_dir(data_dir):
     """The registered project whose data folder is data_dir, or None."""
     want = os.path.abspath(data_dir)
     for entry in config_store.list_projects():
-        folder = os.path.join(os.path.abspath(entry.get("path", "")), entry.get("dataDir") or config_store.DEFAULT_DATA_DIR)
+        folder = os.path.join(os.path.abspath(entry.get("path", "")),
+                              entry.get("dataDir") or config_store.DEFAULT_DATA_DIR)
         if folder == want:
             return entry["id"]
     return None

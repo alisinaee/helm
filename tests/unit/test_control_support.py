@@ -85,7 +85,8 @@ class ControlCase(HomeCase):
         })
 
     def set_usage(self, weekly, updated=USAGE_UPDATED):
-        """A usage reading as a sync leaves it: usage.json and one ledger reading (WP27: pct and acct rows need both)."""
+        """A usage reading as a sync leaves it: usage.json and one ledger reading
+        (WP27: pct and acct rows need both)."""
         write_json(os.path.join(self.state_dir, "usage.json"),
                    {"schemaVersion": 1, "weeklyPercent": weekly, "updated": updated})
         ledger.record_reading(weekly, None, now=USAGE_AT)

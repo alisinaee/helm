@@ -23,7 +23,8 @@ def _project_option():
 def register(sub, common):
     """Add the feature group and its actions."""
     project = _project_option()
-    group = sub.add_parser("feature", parents=[common], help="planner features: add, list, show, link, unlink, accept, rm")
+    group = sub.add_parser(
+        "feature", parents=[common], help="planner features: add, list, show, link, unlink, accept, rm")
     actions = group.add_subparsers(dest="action", metavar="ACTION", required=True)
 
     add = actions.add_parser("add", parents=[common, project], help="add a feature")

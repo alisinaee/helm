@@ -118,8 +118,8 @@ def add(data_dir, title, acc="", prio=2, phase=None, parent=None):
     with lock.locked(data_dir):
         doc = load_doc(data_dir)
         if len(doc["features"]) >= core.MAX_FEATURES:
-            raise records.conflict("features are at the most allowed (" + str(core.MAX_FEATURES) + "); remove one first",
-                                   NEXT_LIST)
+            raise records.conflict("features are at the most allowed (" + str(core.MAX_FEATURES)
+                                   + "); remove one first", NEXT_LIST)
         fid = records.next_number("F", doc["features"])
         if int(fid[1:]) > ID_MAX:
             raise records.conflict("feature ids run out after F" + str(ID_MAX), NEXT_LIST)

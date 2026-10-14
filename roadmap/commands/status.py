@@ -32,8 +32,8 @@ def compose(base, extras):
     gate = [extras["gate"]] if extras.get("gate") else []
     meters = [extras["limits"]] if extras.get("limits") else []
     plan = [extras["features"]] if extras.get("features") else []
-    ordered = (head + run + gate + [extras["ask"], extras["queue"], extras["issues"]] + plan + [extras["budget"]] + meters
-               + you + nxt)
+    ordered = (head + run + gate + [extras["ask"], extras["queue"], extras["issues"]] + plan + [extras["budget"]]
+               + meters + you + nxt)
     return _fit(ordered)
 
 

@@ -15,7 +15,8 @@ class RegistryTests(CmdCase):
             "budget.set", "comment.add", "control.override", "control.resume", "control.stop",
             "feature.accept", "feature.add", "feature.link", "feature.rm", "feature.set", "feature.unlink",
             "issue.close",
-            "issue.link", "issue.new", "limit.rm", "limit.set", "phase.approve", "plan.move", "question.answer", "question.ask",
+            "issue.link", "issue.new", "limit.rm", "limit.set", "phase.approve", "plan.move", "question.answer",
+            "question.ask",
             "rules.add", "rules.rm", "rules.sync", "subtask.add", "subtask.toggle", "task.cap", "task.start",
             "task.status", "task.stop", "undo"]))
 

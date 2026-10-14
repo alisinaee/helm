@@ -7,6 +7,7 @@ in the same output, no inline style or on*= handler, the row-grid on every row, 
 colours, and the lint is clean for planner.js. Skipped with a message when node is not installed.
 """
 
+import importlib
 import json
 import os
 import re
@@ -176,7 +177,11 @@ class PlannerViewTest(unittest.TestCase):
         self.assertEqual(index.count('href="/css/planner.css"'), 1)
 
     def test_lint_is_clean_for_the_planner(self):
-        import lint_js
+        sys.path.insert(0, os.path.join(REPO, "tools"))
+        try:
+            lint_js = importlib.import_module("lint_js")
+        finally:
+            sys.path.pop(0)
 
         issues = [issue for issue in lint_js.run(REPO) if "planner" in issue]
         self.assertEqual(issues, [])

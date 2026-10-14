@@ -1,4 +1,5 @@
-"""WP33 checks for the Tokens, Rules and Settings screens: the files exist and resolve, admin.css stays within its budget
+"""WP33 checks for the Tokens, Rules and Settings screens: the files exist and resolve, admin.css stays within its
+budget
 and uses tokens only, no inline style or handler appears in the new files, and the views render in node (skipped when
 node is not installed) from a synthetic snapshot that carries meters.limits.
 """

@@ -51,7 +51,8 @@ def validate(features):
 def derive(features, tasks, jobs, issues=None):
     """The planner view: rows, uncovered and orphans, counts, taskTotals and errors. Never raises."""
     kept, errors = _check(features)
-    task_list = [t for t in tasks if isinstance(t, dict) and isinstance(t.get("id"), str)] if isinstance(tasks, list) else []
+    task_list = ([t for t in tasks if isinstance(t, dict) and isinstance(t.get("id"), str)]
+                 if isinstance(tasks, list) else [])
     job_list = [j for j in jobs if isinstance(j, dict)] if isinstance(jobs, list) else []
     kept_ids = {f["id"] for f in kept}
     children = {f["id"]: [] for f in kept}

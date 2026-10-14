@@ -1,4 +1,5 @@
-"""Checks for the right panel (WP29): the Projects and Details views, the panel's CSS budget, and the write ops it calls.
+"""Checks for the right panel (WP29): the Projects and Details views, the panel's CSS budget, and the write ops it
+calls.
 
 The views are plain functions that return HTML strings, so tests/web/render_panel.mjs (run in node) builds the view
 models from tests/fixtures/golden_snapshot.json plus the issues, questions, comments, queue, subtasks and rules that the
@@ -182,7 +183,8 @@ class PanelSourceTests(unittest.TestCase):
             ops.update(RUN_OP.findall(read(os.path.join(WEB, "js", "views", name))))
         ops.update(re.findall(r'queueTask\(el, "([a-z]+\.[a-z]+)"\)', read(os.path.join(WEB, "js", "views",
                                                                                          "panel.js"))))
-        registered = set(REGISTERED.findall(read(COMMANDS))) | set(REGISTERED_HERE.findall(read(CMDOPS))) | set(REGISTERED_HERE.findall(read(FEATOPS)))
+        registered = (set(REGISTERED.findall(read(COMMANDS))) | set(REGISTERED_HERE.findall(read(CMDOPS)))
+                      | set(REGISTERED_HERE.findall(read(FEATOPS))))
         self.assertTrue(ops, "the panel sends no ops")
         self.assertEqual(sorted(ops - registered), [], "ops missing from services/commands.py")
 
