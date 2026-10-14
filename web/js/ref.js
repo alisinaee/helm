@@ -1,7 +1,7 @@
 // Copy reference (R7.12): the board ref (rb:<project>/<kind>/<id>), the one-line state summary a button carries,
 // and the copy itself. Values come from the snapshot already in the browser; nothing is fetched.
 // Markup goes through esc().
-// The button is handled by panel.js onClick (data-side="copy-ref"), so no inline handler is needed.
+// The button is a global action: app.js onClick handles data-action="copy-ref", so no inline handler is needed.
 
 import { esc } from "./dom.js";
 import { showToast } from "./views/toast.js";
@@ -87,9 +87,9 @@ export function refText(ref, summary) {
   return head + "\n" + fitted;
 }
 
-// The copy button markup. Its data-ref and data-sum are read back by copyRef().
+// The copy button markup. Its data-ref and data-sum are read back by copyRef(). Keep it a sibling of a toggle button.
 export function refButtonHtml(ref, label, summary) {
-  return '<button type="button" class="ref-copy" data-side="copy-ref" data-ref="' + esc(ref) +
+  return '<button type="button" class="ref-copy" data-action="copy-ref" data-ref="' + esc(ref) +
     '" data-sum="' + esc(summary || "") + '" aria-label="Copy reference to ' + esc(label) +
     '"><svg class="ico" aria-hidden="true" focusable="false"><use href="/icons.svg#i-copy"/></svg></button>';
 }

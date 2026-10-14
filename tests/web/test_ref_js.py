@@ -16,6 +16,7 @@ REPO = os.path.dirname(TESTS)
 WEB = os.path.join(REPO, "web")
 REF_JS = os.path.join(WEB, "js", "ref.js")
 PANEL_JS = os.path.join(WEB, "js", "views", "panel.js")
+APP_JS = os.path.join(WEB, "js", "app.js")
 ICONS = os.path.join(WEB, "icons.svg")
 CSS = os.path.join(WEB, "css", "components.css")
 REF_RE = re.compile(r"^rb:[a-z0-9-]+(/[a-z]+/[A-Za-z0-9._-]+)?$")
@@ -130,7 +131,8 @@ class RefHelperTests(unittest.TestCase):
 
     def test_copy_button_markup(self):
         html = self.out["button"]
-        self.assertIn('data-side="copy-ref"', html)
+        self.assertIn('data-action="copy-ref"', html)
+        self.assertNotIn("data-side=", html)
         self.assertIn('data-ref="rb:roadmap-board/task/R3.2"', html)
         self.assertIn('data-sum="task &quot;x&quot;"', html)
         self.assertIn('aria-label="Copy reference to Planner &lt;filters&gt;"', html)
@@ -148,10 +150,20 @@ class RefStaticTests(unittest.TestCase):
         self.assertNotIn("console.log", source)
         self.assertIn('import { esc } from "./dom.js";', source)
 
-    def test_panel_has_one_copy_ref_branch(self):
+    def test_app_dispatches_copy_ref_as_a_global_action(self):
+        app = read(APP_JS)
+        self.assertIn('import { copyRef } from "./ref.js";', app)
+        self.assertEqual(app.count('action === "copy-ref"'), 1)
+        self.assertIn('copyRef(el);', app)
+        # the branch must not re-render: copying changes nothing on the page
+        branch = app[app.index('action === "copy-ref"'):]
+        branch = branch[:branch.index("\n  }", branch.index("copyRef(el);"))]
+        self.assertNotIn("render()", branch)
+
+    def test_panel_no_longer_handles_copy_ref(self):
         source = read(PANEL_JS)
-        self.assertEqual(source.count('kind === "copy-ref") copyRef(el);'), 1)
-        self.assertIn('import { copyRef } from "../ref.js";', source)
+        self.assertNotIn("copy-ref", source)
+        self.assertNotIn("copyRef", source)
 
     def test_icon_symbol_exists(self):
         self.assertIn('<symbol id="i-copy"', read(ICONS))
