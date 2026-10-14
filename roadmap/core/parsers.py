@@ -73,7 +73,8 @@ def parse_feats(value, name="tasks.json", task_id="?"):
     feats, errors = [], []
     for item in value:
         if not isinstance(item, str) or not FEAT_ID_RE.match(item):
-            errors.append(error_entry(name, ValueError("task " + task_id + ": " + repr(item)[:40] + " is not a feature id")))
+            errors.append(error_entry(name, ValueError("task " + task_id + ": " + repr(item)[:40]
+                                                      + " is not a feature id")))
             continue
         if item in feats:
             continue

@@ -217,7 +217,8 @@ class NeverRaiseTests(unittest.TestCase):
                 for jobs in self.CORRUPT_JOBS + [None]:
                     for issues in self.CORRUPT_ISSUES + [None]:
                         result = features.derive(raw, tasks, jobs, issues)
-                        self.assertEqual(set(result), {"rows", "uncovered", "orphans", "counts", "taskTotals", "errors"})
+                        self.assertEqual(set(result),
+                                         {"rows", "uncovered", "orphans", "counts", "taskTotals", "errors"})
 
     def test_validate_never_raises(self):
         for raw in self.CORRUPT_FEATURES:

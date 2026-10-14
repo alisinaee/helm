@@ -99,7 +99,8 @@ class CssBudgetTests(unittest.TestCase):
             self.assertTrue(os.path.isfile(os.path.join(CSS_DIR, name)), name)
 
     def test_stub_stylesheets_are_commented_and_small(self):
-        # plan.css is filled by WP32 (its size budget is checked in tests/web/test_plan.py), so only the rules are checked.
+        # plan.css is filled by WP32 (its size budget is checked in tests/web/test_plan.py), so only the rules
+        # are checked.
         self.assertIn(".lane-head", read(os.path.join(CSS_DIR, "plan.css")))
         # work.css is filled by WP31: it must carry real rules for the Work section, not the stub.
         self.assertIn(".wk-board", read(os.path.join(CSS_DIR, "work.css")))

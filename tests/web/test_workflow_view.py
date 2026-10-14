@@ -1,4 +1,5 @@
-"""The Workflow view (WP48), rendered in node by tests/web/render_workflow.mjs from tests/fixtures/workflow_snapshot.json.
+"""The Workflow view (WP48), rendered in node by tests/web/render_workflow.mjs from
+tests/fixtures/workflow_snapshot.json.
 
 Checks: the four cases (empty, running, blocked, handoff) render their lanes, bars, arrows and cards; every bar and card
 is a focusable button with an aria-label and an SVG title; the Table has one row per job bar; the empty state reads as

@@ -1,4 +1,5 @@
-"""Issue commands on the CLI: new, list, show, close, link. Output shape, error exits with next:, and the undo of close."""
+"""Issue commands on the CLI: new, list, show, close, link.
+Output shape, error exits with next:, and the undo of close."""
 
 from roadmap.services import issues
 from tests.unit.test_cmd_support import CmdCase

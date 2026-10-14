@@ -1,4 +1,5 @@
-"""WP52: the feature service and its ops (roadmap/services/features.py, featops.py), the snapshot key and the status line.
+"""WP52: the feature service and its ops (roadmap/services/features.py, featops.py), the snapshot key and the
+status line.
 
 Runs in-process under a temp ROADMAP_HOME with the demo project from CmdCase (tasks P1.1 to P1.3 and P2.1). Agent
 refusal is tested with CLAUDECODE set in this process only; the environment is restored after each test.

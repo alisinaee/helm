@@ -1,4 +1,5 @@
-"""tools/gen_facts.py: FACTS.md names every top-level command, is deterministic apart from the date line, and stays under
+"""tools/gen_facts.py: FACTS.md names every top-level command, is deterministic apart from the date line, and stays
+under
 the size cap. The generator runs with a temporary ROADMAP_HOME and never touches the real state."""
 
 import os

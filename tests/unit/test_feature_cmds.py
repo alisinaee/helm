@@ -157,7 +157,8 @@ class StatusLine(FeatureCli):
         lines = out.splitlines()
         feature_lines = [line for line in lines if line.startswith("features:")]
         self.assertEqual(len(feature_lines), 1)
-        self.assertRegex(feature_lines[0], r"^features: 2 \(\d+ done, \d+ doing, \d+ todo, 1 uncovered; \d+ orphan tasks\)$")
+        self.assertRegex(feature_lines[0],
+                         r"^features: 2 \(\d+ done, \d+ doing, \d+ todo, 1 uncovered; \d+ orphan tasks\)$")
         self.assertLessEqual(len(lines), 8)
         self.assertLessEqual(len(out.rstrip("\n")), 700)
 

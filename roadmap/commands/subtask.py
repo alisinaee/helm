@@ -1,4 +1,5 @@
-"""Command group subtask: add a subtask to a task, and tick or untick one (P2.4/2). Writes go through the command layer."""
+"""Command group subtask: add a subtask to a task, and tick or untick one (P2.4/2).
+Writes go through the command layer."""
 
 import argparse
 

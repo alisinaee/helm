@@ -26,7 +26,8 @@ def register(sub, common):
                         help="legacy: stopAtPercent of the weekly usage, 1 to 100")
     weekly.add_argument("--scope", choices=("global", "project"), default=None, help="default: project")
     weekly.add_argument("--window", choices=("day", "week", "total"), default=None)
-    weekly.add_argument("--pct", type=float, default=None, metavar="N", help="a share of the weekly allowance, 0 to 100")
+    weekly.add_argument(
+        "--pct", type=float, default=None, metavar="N", help="a share of the weekly allowance, 0 to 100")
     weekly.add_argument("--tokens", type=float, default=None, metavar="K", help="thousands of tokens")
     weekly.add_argument("--warn", action="store_true", help="warn at 100%% instead of blocking")
     weekly.add_argument("--project", default=None, metavar="ID")

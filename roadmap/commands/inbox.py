@@ -1,4 +1,5 @@
-"""Command inbox: what needs the user or the next agent, in at most 6 lines (queued requests, answers, open questions)."""
+"""Command inbox: what needs the user or the next agent, in at most 6 lines
+(queued requests, answers, open questions)."""
 
 import argparse
 
@@ -17,7 +18,8 @@ def _project_option():
 
 def register(sub, common):
     """Add the inbox command."""
-    parser = sub.add_parser("inbox", parents=[common, _project_option()], help="queued requests, answers and open questions")
+    parser = sub.add_parser(
+        "inbox", parents=[common, _project_option()], help="queued requests, answers and open questions")
     parser.set_defaults(handler=_run)
 
 

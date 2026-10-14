@@ -8,6 +8,7 @@ every aria-controls names an id in the same output, no inline style or on*= hand
 Skipped with a message when node is not installed.
 """
 
+import importlib
 import json
 import os
 import re
@@ -151,7 +152,7 @@ class WorkViewTests(unittest.TestCase):
             self.assertTrue(os.path.isfile(os.path.join(WEB, "js", "views", name)), name)
         sys.path.insert(0, os.path.join(REPO, "tools"))
         try:
-            import lint_js
+            lint_js = importlib.import_module("lint_js")
         finally:
             sys.path.pop(0)
         issues = [i for i in lint_js.run(REPO) if any(("views/" + n) in i for n in WORK_FILES)]
