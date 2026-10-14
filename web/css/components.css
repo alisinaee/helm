@@ -560,10 +560,7 @@
 }
 
 .run-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sp-1) var(--sp-2);
+  --rg: 4rem 5.5rem minmax(0, 1fr) 4.5rem;
   min-height: var(--h-row);
   padding: var(--sp-1) 0;
   min-width: 0;
@@ -593,7 +590,6 @@
 
 .page-note { max-width: 90ch; }
 .act-tok { text-align: right; }
-.ag-tail { display: flex; align-items: center; gap: var(--sp-2); white-space: nowrap; }
 .spend-row { align-items: flex-end; }
 
 .placeholder {
@@ -831,10 +827,6 @@
   font-size: var(--fs-12);
 }
 
-.needs-list .task-row {
-  padding-left: var(--sp-4);
-}
-
 .t-id {
   white-space: nowrap;
   font-weight: 600;
@@ -946,25 +938,62 @@
   animation: live-pulse 2s ease-in-out infinite;
 }
 
+/* ---------- Row grid (WP36): fixed tracks set by --rg, numbers right-aligned, the action at the right edge ---------- */
+
+.row-grid {
+  display: grid;
+  grid-template-columns: var(--rg);
+  column-gap: var(--sp-2);
+  align-items: center;
+  min-width: 0;
+}
+
+.rg-chips,
+.rg-main {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.rg-t {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rg-num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.row-grid > .btn {
+  justify-self: end;
+  width: 100%;
+}
+
+.rg-head {
+  color: var(--text-3);
+  font-size: var(--fs-11);
+}
+
+.rg-agent { --rg: 9rem minmax(0, 1fr) 4rem 4.5rem 4.5rem 4rem; font-size: var(--fs-13); }
+.rg-fin { --rg: 4.5rem minmax(0, 1fr) 4rem; }
+
+.iss-top { --rg: 5.5rem 4.5rem minmax(0, 1fr); }
+.lim-head { --rg: minmax(0, 1fr) 5.5rem 4.5rem 3.25rem; }
+
 /* ---------- Side column: running, needs, next, recent, extras, legend ---------- */
 
 .run-item {
-  display: grid;
-  gap: 2px;
+  --rg: 10rem minmax(0, 1fr) 4.5rem;
   min-height: var(--h-row);
   padding: var(--sp-1) 0;
   border-top: 1px solid var(--track);
-}
-
-.run-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sp-2);
-}
-
-.run-top .timer {
-  margin-left: auto;
 }
 
 .run-id {
@@ -984,9 +1013,7 @@
 }
 
 .fin-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 56px 56px;
-  column-gap: var(--sp-2);
+  --rg: minmax(0, 1fr) 4.5rem 4rem;
   align-items: start;
   min-height: var(--h-row);
   padding: var(--sp-1) 0;
@@ -1025,13 +1052,6 @@
   color: var(--text-1);
 }
 
-.fin-dur,
-.fin-tok {
-  padding-top: 2px;
-  color: var(--text-2);
-  text-align: right;
-  white-space: nowrap;
-}
 
 .next-list {
   display: grid;
@@ -1062,14 +1082,12 @@
   color: var(--text-2);
 }
 
-.needs-list .task-row {
-  font-size: var(--fs-12);
-}
-
 /* The 360 px side column is too narrow for seven columns: the title runs full width, the model chip and tokens sit under it. */
 .needs-list .task-row {
   grid-template-columns: 56px minmax(0, 1fr) auto auto;
   row-gap: 2px;
+  padding-left: var(--sp-4);
+  font-size: var(--fs-12);
 }
 
 .needs-list .task-row .t-main {
@@ -1229,7 +1247,23 @@
     display: none;
   }
 
-  .fin-row {
-    grid-template-columns: minmax(0, 1fr) 48px 48px;
+  .row-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-1) var(--sp-2);
   }
+
+  .rg-main {
+    flex: 1 1 100%;
+  }
+
+  .row-grid > .btn {
+    width: auto;
+    margin-left: auto;
+  }
+
+  .rg-head {
+    display: none;
+  }
+
 }

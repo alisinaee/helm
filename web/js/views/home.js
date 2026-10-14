@@ -20,10 +20,10 @@ function runRow(job, showProject) {
   const project = showProject && job.projectId
     ? ' <a href="' + esc(projectHash(job.projectId)) + '">' + esc(job.projectName) + "</a>"
     : "";
-  return '<div class="run-row"><span class="run-task">' + esc(job.task || job.id) + "</span>" +
+  return '<div class="row-grid run-row"><span class="run-task">' + esc(job.task || job.id) + "</span>" +
     chipHtml(job.model || "model?", model) +
     '<span class="run-title" title="' + esc(job.title) + '">' + esc(job.title || "") + project + "</span>" +
-    '<span class="run-time">' + esc(fmtDuration(job.elapsedNow)) + "</span></div>";
+    '<span class="run-time rg-num">' + esc(fmtDuration(job.elapsedNow)) + "</span></div>";
 }
 
 function runList(jobs, showProject) {

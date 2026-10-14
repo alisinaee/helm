@@ -36,10 +36,11 @@ export function watchTimers() {
 }
 
 function runItemHtml(job) {
-  return '<div class="run-item"><div class="run-top"><span class="rdot" aria-hidden="true"></span>' +
+  return '<div class="row-grid run-item"><span class="rg-chips"><span class="rdot" aria-hidden="true"></span>' +
     '<span class="run-id">' + esc(job.id) + "</span>" +
-    (job.task ? chipHtml(job.task, "neutral") : "") + modelChip(job.model) + timerHtml(job) + "</div>" +
-    '<p class="run-title" title="' + esc(job.title) + '">' + esc(job.title) + "</p></div>";
+    (job.task ? chipHtml(job.task, "neutral") : "") + modelChip(job.model) + "</span>" +
+    '<p class="run-title rg-t" title="' + esc(job.title) + '">' + esc(job.title) + "</p>" +
+    '<span class="rg-num">' + timerHtml(job) + "</span></div>";
 }
 
 // The model chip already says "haiku" or "opus", so a title that starts with that word and a colon drops it.
@@ -56,12 +57,12 @@ export function shortTitle(job) {
 function finishedRowHtml(job) {
   const ok = job.status === "done";
   const tokens = typeof job.tokensK === "number" ? "~" + fmtTokens(job.tokensK) : MISSING;
-  return '<li class="fin-row"><div class="fin-main">' +
+  return '<li class="fin-row row-grid"><div class="fin-main">' +
     '<p class="fin-meta"><span class="fin-state">' + (ok ? "✓ done" : "✗ failed") + "</span>" +
     modelChip(job.model) + "</p>" +
     '<p class="fin-title" title="' + esc(job.title) + '">' + esc(shortTitle(job)) + "</p></div>" +
-    '<span class="fin-dur num">' + esc(fmtDuration(job.elapsedS)) + "</span>" +
-    '<span class="fin-tok num">' + esc(tokens) + "</span></li>";
+    '<span class="rg-num">' + esc(fmtDuration(job.elapsedS)) + "</span>" +
+    '<span class="rg-num">' + esc(tokens) + "</span></li>";
 }
 
 export function runningSection(vm) {

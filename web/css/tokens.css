@@ -52,6 +52,7 @@
   --r-control: 6px;
   --r-card: 8px;
 
+  --rg: minmax(0, 1fr) auto;
   --w-nav: 232px;
   --w-rail: 56px;
   --w-side: 320px;

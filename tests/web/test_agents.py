@@ -104,8 +104,8 @@ class AgentsResearchTests(unittest.TestCase):
         depths = [int(d) for d in TREE_ROW.findall(html)]
         self.assertEqual(depths.count(0), 2)     # J1 and J4 are the roots
         self.assertEqual(depths.count(1), 2)     # J2 and J3 are workers under J1
-        lead = html.index('<span class="ag-title">job J1</span>')
-        worker = html.index('<span class="ag-title">job J2</span>')
+        lead = html.index('<span class="rg-t ag-title" title="job J1">job J1</span>')
+        worker = html.index('<span class="rg-t ag-title" title="job J2">job J2</span>')
         self.assertLess(lead, worker)
         self.assertLess(worker, html.index("job J4"))
 
@@ -114,7 +114,7 @@ class AgentsResearchTests(unittest.TestCase):
         self.assertIn("handed to tests, docs", html)
         self.assertIn(">blocked<", html)
         self.assertIn('href="#/p/splitnet/work/i/P1.1"', html)
-        self.assertIn("tokens so far", html)
+        self.assertIn('class="rg-num num">', html)
         self.assertIn("data-started-ms=", html)
 
     def test_each_row_has_a_stop_button_and_a_task_less_job_has_it_disabled(self):
@@ -127,7 +127,7 @@ class AgentsResearchTests(unittest.TestCase):
     def test_only_the_last_ten_finished_jobs_are_listed(self):
         html = self.out["agentsProject"]
         self.assertIn("Last 10 finished", html)
-        self.assertEqual(html.count('<li class="act-row">'), 10)
+        self.assertEqual(html.count('<li class="act-row row-grid rg-fin">'), 10)
         self.assertIn("Failed", html)
 
     def test_empty_state_reads_as_the_spec_says(self):

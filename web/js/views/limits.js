@@ -144,7 +144,8 @@ export function limitRowHtml(row, scope) {
   const body = editable(row, scope) ? editorHtml(row, scope) : readOnlyHtml(row, scope);
   return '<li class="lim-row' + (sheetOpen ? " is-sheet" : "") + '" id="lim-' + esc(row.id) + '" data-state="' +
     esc(state) + '">' +
-    '<div class="lim-head"><span class="lim-title">' + esc(titleText(row, est)) + "</span>" +
+    '<div class="lim-head row-grid"><span class="lim-title rg-t" title="' + esc(titleText(row, est)) + '">' +
+    esc(titleText(row, est)) + "</span>" +
     '<span class="chip chip-' + esc(STATE_TONE[state]) + '">' + esc(STATE_WORDS[state]) + "</span>" +
     '<span class="lim-id">' + esc(row.id) + "</span>" +
     '<button type="button" class="btn btn-small lim-edit-btn" data-action="lim-sheet" data-row="' + esc(row.id) +
