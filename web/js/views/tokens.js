@@ -37,7 +37,7 @@ function primaryRow(rows, window) {
 }
 
 function paceLine(row, window, unknown) {
-  if (unknown) return "Usage is stale, so this limit is not measured right now.";
+  if (unknown) return "Usage data is outdated; limit unmeasured.";
   if (row.state === "block") return "Limit reached.";
   if (row.paceAt) return "At this pace: limit reached about " + row.paceAt.slice(11, 16);
   return window === "day" ? "Won't reach today" : "Won't reach this week";
@@ -82,7 +82,7 @@ function metersHtml(rows, snap, isProject) {
     (dayPts == null ? "" : ". Used today " + fmtPercent(dayPts));
   const weekFallback = isProject ? "No weekly limit for this project" : "No weekly limit" +
     (weekPct == null ? "" : ". Account at " + fmtPercent(weekPct));
-  const legend = '<p class="met-legend">The tick at ' + WARN_AT + "% is the warning line.</p>";
+  const legend = '<p class="met-legend">Marker at ' + WARN_AT + "% indicates warning threshold.</p>";
   return '<div class="met-row">' + meterCard("Today", "day", dayRow, dayFallback, null) +
     meterCard("This week", "week", weekRow, weekFallback, dayTickFor(weekRow, dayPts)) + "</div>" + legend;
 }
@@ -93,7 +93,7 @@ function accountHtml(vm, rows) {
     return row.kind === "acct";
   });
   const note = ceiling.length ? '<p class="page-note">Project stop: ' + esc(fmtPercent(ceiling[0].limit)) +
-    " of weekly (from autonomy.json).</p>" : "";
+    " of weekly budget.</p>" : "";
   return '<section class="ov-card tk-card" aria-labelledby="tk-account"><h3 id="tk-account" class="lim-h">' +
     "Account</h3>" + usageView(vm) + note + "</section>";
 }
@@ -104,7 +104,7 @@ function capRow(scope, key, name, budgetRow) {
   return '<li class="row-grid tk-spend"><span class="rg-t spend-name" title="' + esc(name) + '">' + esc(name) +
     '</span><span class="rg-num num spend-val">' + esc(spent) + '</span><span class="rg-num num">' +
     esc(cap ? "of " + cap + "k" : "no cap") + "</span>" +
-    '<label class="lim-field"><span class="lim-label">Cap in thousands</span>' +
+    '<label class="lim-field"><span class="lim-label">Token limit (thousands)</span>' +
     '<input class="lim-num" type="number" min="1" step="1" value="' + esc(cap) + '" data-focus="cap-' + esc(scope) +
     "-" + esc(key) + '"></label>' +
     '<button type="button" class="btn btn-small" data-action="spend-cap" data-scope="' + esc(scope) +
@@ -161,21 +161,19 @@ function overrideHtml(pid) {
     return '<option value="' + h + '">' + h + (h === 1 ? " hour" : " hours") + "</option>";
   }).join("");
   return '<section class="ov-card" aria-labelledby="tk-override"><h3 id="tk-override" class="lim-h">Override</h3>' +
-    '<p class="page-note">Lets this project run past its stops for a while. Logged in Activity.</p>' +
+    '<p class="page-note">Temporarily ignore limits; logged in Activity.</p>' +
     '<div class="tk-override"><label class="lim-field"><span class="lim-label">For</span>' +
     '<select class="lim-select" data-focus="ov-hours">' + options + "</select></label>" +
     '<button type="button" class="btn" data-action="lim-override" data-focus="ov-go">Override</button></div></section>';
 }
 
 function accuracyHtml() {
-  return '<div class="acc"><p class="acc-line">Project percentages are estimates (≈). ' +
-    '<span class="acc-more">Token counts are exact for reported jobs.</span></p>' +
+  return '<div class="acc"><p class="acc-line">Percentages are estimates; ' +
+    '<span class="acc-more">reported token counts exact.</span></p>' +
     "<details><summary>How these limits are measured</summary><ol>" +
-    "<li>Usage outside these projects, such as chats or other machines, " +
-    "counts in global limits and makes project estimates high.</li>" +
-    "<li>Tokens are counted when a job ends, so a long running job shows up late.</li>" +
+    "<li>External usage skews project estimates higher.</li>" +
+    "<li>Tokens are counted when jobs finish.</li>" +
     "<li>When the reader is off, those hours are added at the next reading, but they land on that day.</li>" +
-    "<li>Project % figures are estimates shown with ≈. Token figures are exact for reported jobs.</li>" +
     "</ol></details></div>";
 }
 
@@ -203,11 +201,11 @@ export function sectionView(vm) {
     return Array.isArray(s.meters);
   });
   const notice = measured ? "" : bannerHtml("warning", "Limits are not measured yet.",
-    "The snapshot has no meters. Usage may still be loading.");
+    "Usage data still loading; limits unavailable.");
   const title = isProject ? "Tokens for " + vm.project.name : "Tokens for all projects";
   const head = '<div class="page-head"><h2 class="page-title">' + esc(title) + "</h2>" +
     '<p class="page-note">' + esc(isProject
-      ? "This project only. Its own limits and spend, plus All projects limits that apply to it."
+      ? "Project limits, spend, and applicable global limits."
       : "All projects. Global limits and every project's spend.") + "</p></div>";
   const meters = '<section class="ov-card" aria-label="Meters">' +
     metersHtml(rows, snap, isProject) + "</section>";

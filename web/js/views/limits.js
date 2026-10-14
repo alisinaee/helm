@@ -61,10 +61,10 @@ export function previewText(kind, window, value) {
   if (!Number.isFinite(v) || v <= 0) return "Enter a value above 0.";
   if (kind === "tok") {
     const shown = v >= 1000 ? (v / 1000).toFixed(1) + "M" : String(v) + "k";
-    return "≈ " + shown + " tokens. Exact for jobs that report their tokens.";
+    return "≈ " + shown + " tokens; exact if reported.";
   }
-  const where = window === "week" ? "of your weekly allowance" : "of weekly, per day";
-  const hint = window === "day" ? " A fair day is about " + FAIR_DAY + "%." : "";
+  const where = window === "week" ? "of your weekly allowance" : "of weekly limit per day";
+  const hint = window === "day" ? " Daily average is about " + FAIR_DAY + "%." : "";
   return "≈ " + v + "% " + where + "." + hint;
 }
 
@@ -100,7 +100,7 @@ function editorHtml(row, scope) {
     : '<input class="lim-num" type="number" min="1" step="1" value="' + esc(value) +
       '" aria-label="Limit for ' + esc(id) + ', thousands of tokens" data-focus="num-' + esc(id) +
       '" data-row="' + esc(id) + '">';
-  const unitOpts = [{ value: "pct", text: "% of weekly" }, { value: "tok", text: "tokens" }];
+  const unitOpts = [{ value: "pct", text: "% of weekly limit" }, { value: "tok", text: "tokens" }];
   const winOpts = windowOptions(row, scope).map(function (w) {
     return { value: w, text: WINDOW_WORDS[w] };
   });
@@ -109,7 +109,7 @@ function editorHtml(row, scope) {
       'data-field="window" data-row="' + esc(id) + '"') +
     selectHtml("unit", "Unit", unitOpts, isPct ? "pct" : "tok", "unit-" + id).replace('data-field="unit"',
       'data-field="unit" data-row="' + esc(id) + '"') +
-    '<div class="lim-value"><span class="lim-label" aria-hidden="true">' + esc(isPct ? "Limit" : "Thousands") +
+    '<div class="lim-value"><span class="lim-label" aria-hidden="true">' + esc(isPct ? "Limit" : "Tokens (k)") +
     "</span>" +
     '<div class="lim-stepper">' +
     '<button type="button" class="btn btn-small step" data-action="lim-step" data-row="' + esc(id) +
@@ -126,8 +126,8 @@ function editorHtml(row, scope) {
 }
 
 function readOnlyHtml(row, scope) {
-  const from = row.src === "autonomy" ? "from autonomy.json (the weekly stop)" :
-    row.src === "budget" ? "from budget.json (the project token budget)" :
+  const from = row.src === "autonomy" ? "from weekly stop policy" :
+    row.src === "budget" ? "from project token budget" :
       row.scope === "global" && scope === "project" ? "from All projects, applies to this project" :
         "and its action is not in the snapshot yet, so it cannot be edited here";
   return '<p class="lim-readonly">Read only, ' + esc(from) + ".</p>" +
@@ -171,14 +171,14 @@ export function limitsHtml(scope, rows) {
     '<button type="button" class="btn btn-small" data-action="lim-add" data-focus="lim-add">+ Add limit</button></div>';
   if (!list.length) {
     return '<div class="lim-block">' + head + presetsHtml(scope) +
-      '<p class="lim-note">No limits. Agents may use your whole weekly allowance.</p></div>';
+      '<p class="lim-note">No limits; full weekly allowance available.</p></div>';
   }
   const add = addOpen ? presetsHtml(scope) : "";
   return '<div class="lim-block">' + head + add +
     '<ul class="lim-list">' + list.map(function (row) {
       return limitRowHtml(row, scope);
     }).join("") + "</ul>" +
-    '<p class="lim-note">Warn shows a banner. Stop blocks agents from starting new work.</p></div>';
+    '<p class="lim-note">Warn alerts; Stop pauses new work.</p></div>';
 }
 
 // The args for limit.set from a row with some fields replaced.
@@ -255,7 +255,7 @@ export function limitAction(action, el) {
     const raw = field ? field.value.trim() : "";
     const value = raw === "" ? null : Number(raw);
     if (value !== null && (!Number.isFinite(value) || value <= 0)) {
-      showToast({ text: "A cap is a number of thousands above 0, or empty for no cap.", tone: "danger" });
+      showToast({ text: "Enter thousands above 0, or clear.", tone: "danger" });
       return true;
     }
     if (scope === "tasks") {

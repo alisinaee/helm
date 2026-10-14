@@ -110,7 +110,7 @@ function headHtml(ctx) {
 
 function bodyHtml(ctx) {
   if (!ctx.all.length) {
-    return emptyHtml("No tasks in this project yet.", "<span>Tasks come from the project's task file.</span>");
+    return emptyHtml("No tasks in this project yet.", "<span>Tasks load from the project plan.</span>");
   }
   if (!ctx.shown.length) {
     return filterBarHtml(ctx) + emptyHtml("No tasks match these filters.",
@@ -124,15 +124,15 @@ function bodyHtml(ctx) {
 export function sectionView(vm) {
   const route = vm.route;
   if (route.name !== "project" || !vm.project) {
-    return emptyHtml("Work belongs to one project.", '<a href="#/all/overview">Go to All projects</a>');
+    return emptyHtml("Select a project to view work.", '<a href="#/all/overview">Go to All projects</a>');
   }
   if (vm.project.notFound) {
-    return emptyHtml("No project with that id.", '<a href="#/all/overview">Go to All projects</a>');
+    return emptyHtml("Project not found.", '<a href="#/all/overview">Go to All projects</a>');
   }
   const snap = vm.project.snapshot;
   if (!snap) {
     if (vm.project.error) {
-      return bannerHtml("danger", "Could not load this project. Retrying.", vm.project.error.message);
+      return bannerHtml("danger", "Failed loading project; retrying automatically.", vm.project.error.message);
     }
     return '<div aria-busy="true">' + skeletonHtml(["w-60", "w-90"]) + "</div>";
   }

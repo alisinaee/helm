@@ -103,7 +103,7 @@ function groupKey(task, group) {
 function groupLabel(ctx, task, group) {
   if (group === "phase") return task.phaseName + " (" + task.phase + ")";
   if (group === "status") return STATE_LABEL[task.state] || task.state;
-  return task.model || "No model";
+  return task.model || "Unassigned model";
 }
 
 // Tasks in group order: each group keeps the sort, groups follow the first task they reach in that sort.
@@ -157,7 +157,7 @@ function headHtml(ctx, allChecked, shownIds) {
       (on ? (sort.dir === "desc" ? " ▾" : " ▴") : "") + "</button></th>";
   }).join("");
   const all = '<th scope="col" class="wk-c-sel"><input type="checkbox" data-wk="select-all" data-ids="' +
-    esc(shownIds.join(",")) + '" data-focus="wk-select-all" aria-label="Select all shown tasks"' +
+    esc(shownIds.join(",")) + '" data-focus="wk-select-all" aria-label="Select all visible tasks"' +
     (allChecked ? " checked" : "") +
     "></th>";
   return "<thead><tr>" + all + cells + '<th scope="col" class="wk-c-flags">Flags</th></tr></thead>';

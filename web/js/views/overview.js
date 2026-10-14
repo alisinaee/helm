@@ -56,10 +56,10 @@ function limitBanner(worst, inProject) {
   const pct = Math.round(worst.share * 100);
   const word = WINDOW_WORD[row.window] || "";
   const title = row.scope === "global"
-    ? "Usage across all projects is at " + pct + "% of the " + word + " limit."
+    ? "All projects usage: " + pct + "% of the " + word + " limit."
     : worst.pname + " is at " + pct + "% of its " + word + " limit.";
   const detail = amountText(row) + (row.est ? " (an estimate)." : ".") +
-    (row.state === "block" ? " Work is stopped by this limit." : " Work keeps running.");
+    (row.state === "block" ? " Work stopped by limit." : " Work continues.");
   const tone = row.state === "block" ? "danger" : "warning";
   const button = inProject
     ? '<p class="ov-actions"><button type="button" class="btn" data-action="override" data-project="' +
@@ -75,11 +75,11 @@ function controlBanner(vm) {
   if (!c || !c.known) return "";
   const offline = vm.conn.ok === false ? " disabled" : "";
   if (c.stopped) {
-    return '<div class="banner banner-warning ov-control"><p class="banner-title">Stopped. No agent starts a new job.' +
+    return '<div class="banner banner-warning ov-control"><p class="banner-title">Stopped. No new jobs will run.' +
       '</p><p class="ov-actions"><button type="button" class="btn" data-action="control" data-op="control.resume" ' +
       'data-project="' + esc(c.id) + '" data-focus="control"' + offline + ">Resume</button></p></div>";
   }
-  const title = c.blocked ? "Blocked by a limit. Agents wait." : "Running. Agents may start jobs.";
+  const title = c.blocked ? "Limit reached; execution paused." : "Running. Agents may start jobs.";
   const detail = c.blocked && c.reason ? '<p class="banner-detail">' + esc(c.reason) + "</p>" : "";
   return '<div class="banner ov-control"><p class="banner-title">' + esc(title) + "</p>" + detail +
     '<p class="ov-actions"><button type="button" class="btn" data-action="control" data-op="control.stop" ' +
@@ -92,7 +92,7 @@ function limitLineHtml(row) {
   const label = (row.scope === "global" ? "All projects" : "This project") + ", " + (WINDOW_WORD[row.window] || "");
   const text = row.used == null || row.limit == null ? MISSING
     : (row.est ? "≈ " : "") + amountText(row);
-  const pace = row.paceAt ? '<p class="mt-pace">At this pace the limit is reached about ' +
+  const pace = row.paceAt ? '<p class="mt-pace">Projected limit reached at ' +
     esc(String(row.paceAt).slice(11, 16)) + "</p>" : "";
   return '<li class="mt-row"><p class="mt-label">' + esc(label) + "</p>" + meterHtml(share, tone) +
     '<p class="mt-text">' + esc(text) + "</p>" + pace + "</li>";
@@ -102,7 +102,7 @@ function limitLineHtml(row) {
 function metersBody(snap) {
   const day = snap.dayUse;
   const week = snap.weekUse;
-  if (!snap.meters) return '<p class="placeholder">Usage is unknown until the next reading.</p>';
+  if (!snap.meters) return '<p class="placeholder">Usage pending next sync.</p>';
   const rows = snap.meters;
   const today = day && day.value != null ? "Today: " + round1(day.value) + " points of your weekly allowance"
     : "Today: " + MISSING;
@@ -112,7 +112,7 @@ function metersBody(snap) {
     ", this week " + (week && week.tokK != null ? fmtTokens(week.tokK) : MISSING) + ".";
   const list = rows.length
     ? '<ul class="mt-list">' + rows.map(limitLineHtml).join("") + "</ul>"
-    : '<p class="placeholder">No limits set. Agents may use your whole weekly allowance.</p>';
+    : '<p class="placeholder">No limits set; full allowance available.</p>';
   return '<p class="mt-line">' + esc(today) + "</p><p class=\"mt-line\">" + esc(thisWeek) + "</p>" +
     '<p class="mt-line">' + esc(tokens) + "</p>" + list;
 }

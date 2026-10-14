@@ -8,9 +8,9 @@ export function needsSection(vm) {
   const tasks = vm.project.snapshot.tasks.filter(function (t) {
     return t.needsUser && t.state !== "done";
   });
-  const summary = tasks.length ? fmtCount(tasks.length) + " waiting on you" : "Nothing waiting on you";
+  const summary = tasks.length ? fmtCount(tasks.length) + " awaiting action" : "Nothing waiting on you";
   const body = tasks.length
     ? '<div class="needs-list">' + taskListHtml(tasks) + "</div>"
-    : '<p class="placeholder">Nothing waits on you.</p>';
+    : '<p class="placeholder">No actions pending.</p>';
   return sectionHtml({ id: "needs", title: "Needs you", summary: summary, open: vm.open.needs, body: body });
 }

@@ -119,7 +119,7 @@ class AdminRender(unittest.TestCase):
 
     def test_limit_rows_show_source_for_read_only_rows(self):
         html = self.out["project_tokens"]
-        self.assertIn("Read only, from autonomy.json", html)
+        self.assertIn("Read only, from weekly stop policy", html)
         self.assertIn("Read only, from All projects", html)
 
     def test_editor_fields_have_labels(self):
@@ -135,7 +135,7 @@ class AdminRender(unittest.TestCase):
 
     def test_empty_state_has_the_presets(self):
         html = self.out["empty_tokens"]
-        self.assertIn("No limits. Agents may use your whole weekly allowance.", html)
+        self.assertIn("No limits; full weekly allowance available.", html)
         self.assertIn("Stay under 10% a day", html)
 
     def test_spend_and_override_sections(self):

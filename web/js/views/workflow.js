@@ -369,12 +369,12 @@ function modelText(it) {
 }
 
 function barTitle(it) {
-  if (it.kind === "queue") return "Task " + it.task + " queued, waiting for a worker";
+  if (it.kind === "queue") return "Task " + it.task + " queued, waiting for agent";
   if (it.kind === "blocked") return "Task " + it.task + " blocked since " + clock(it.start);
   const who = "Job " + it.job + " " + (it.model || "model") + (it.role ? " " + it.role : "") +
     (it.task ? ", task " + it.task : "");
   const when = clock(it.start) + "–" + (it.end == null ? "now" : clock(it.end));
-  const tokens = it.tokensK == null ? "tokens unknown" : fmtTokens(it.tokensK) + " tokens";
+  const tokens = it.tokensK == null ? "unknown token count" : fmtTokens(it.tokensK) + " tokens";
   const pre = it.pname && it.pname !== it.pid ? it.pname + ": " : "";
   return pre + who + ", " + it.word + ", " + when + ", " + tokens;
 }
@@ -665,20 +665,20 @@ function mapSvg(kit, ctx) {
     return l.id;
   });
   const chips = '<div class="wfg-bar">' + orderSeg + '<span class="wfg-count" aria-live="polite">' + shown + " of " +
-    total + " nodes</span></div>" + '<div class="wfg-chips-row">' +
+    total + " items</span></div>" + '<div class="wfg-chips-row">' +
     chipsHtml(route, range, "Status", "st", MAP_STATUS, mapList(opts.st)) +
     chipsHtml(route, range, "Agent", "ag", MAP_AGENT, mapList(opts.ag)) +
     chipsHtml(route, range, "Phase", "ph", phases, mapList(opts.ph)) + "</div>";
   const banner = graph.stats.collapsed.length && !filters.expand
-    ? '<p class="wfg-note">Done phases are collapsed to keep the diagram fast. <a href="' +
-      esc(mapHash(route, range, { all: "1" })) + '">Show all (slow)</a></p>' : "";
+    ? '<p class="wfg-note">Completed phases collapsed for faster rendering.<a href="' +
+      esc(mapHash(route, range, { all: "1" })) + '">Show all phases</a></p>' : "";
   if (!shown) {
-    return chips + '<p class="wf-hint">No nodes match these filters. <a href="' + esc(mapHash(route, range, {
+    return chips + '<p class="wf-hint">No tasks match these filters.<a href="' + esc(mapHash(route, range, {
       st: "", ag: "", ph: "" })) + '">Clear filters</a></p>';
   }
   const ctl = '<div class="wfg-ctl" role="toolbar" aria-label="Diagram controls">' + ctlHtml("Zoom out", "out", "−") +
     ctlHtml("Zoom in", "in", "+") + ctlHtml("Fit to screen", "fit", "Fit") + ctlHtml("Actual size", "100", "100%") +
-    ctlHtml("Clear focus", "focus-off", "Focus off") + "</div>";
+    ctlHtml("Clear focus", "focus-off", "Reset focus") + "</div>";
   // Focus mode lasts while its node's Details is open: Escape goes back to Projects (panel.js), which drops it here.
   st.focus = route.item ? st.focus : null;
   if (activeMap && activeMap.focus !== st.focus) syncFocus(ctx.pid, st.focus, graph);
@@ -712,9 +712,9 @@ function mountMaps() {
 
 function mapBody(route, raw, range) {
   if (route.name !== "project") {
-    return '<p class="wf-hint">Open a project to see its diagram. Timeline and Table show every project.</p>';
+    return '<p class="wf-hint">Select a project to view diagram.</p>';
   }
-  if (graphFailed) return bannerHtml("danger", "Could not load the diagram. Timeline and Table still work.", "");
+  if (graphFailed) return bannerHtml("danger", "Diagram failed to load.", "");
   if (!graphKit) {
     loadGraph();
     return '<div aria-busy="true">' + skeletonHtml(["w-60", "w-90"]) + "</div>";
@@ -743,7 +743,7 @@ export function tableHtml(model) {
   });
   const head = "<tr><th scope=\"col\">Status</th><th scope=\"col\">Job</th><th scope=\"col\">Task</th>" +
     "<th scope=\"col\">Model</th><th scope=\"col\" class=\"rg-num\">Start</th><th scope=\"col\" class=\"rg-num\">" +
-    "Duration</th><th scope=\"col\" class=\"rg-num\">Tokens K</th><th scope=\"col\">Action</th></tr>";
+    "Duration</th><th scope=\"col\" class=\"rg-num\">Tokens (thousands)</th><th scope=\"col\">Action</th></tr>";
   const body = rows.map(function (it) {
     const task = it.task ? esc(it.task) + (model.multi ? " · " + esc(it.pname) : "") : MISSING;
     return "<tr>" + "<td>" + statusChip(it.word, it.status) + "</td>" + '<td class="wf-id">' + esc(it.job) + "</td>" +
@@ -761,7 +761,7 @@ export function tableHtml(model) {
 function detailHtml(model, key) {
   const it = key && model ? model.byKey.get(key) : null;
   if (!it) {
-    return '<span class="wf-hint">Hover or focus a bar or card to see its details here.</span>';
+    return '<span class="wf-hint">Select an item to view details.</span>';
   }
   if (it.kind === "task") {
     const approve = it.approved ? "" : '<a class="btn btn-small" href="' + esc(projectHash(it.pid, "roadmap")) + '">' +
@@ -814,7 +814,7 @@ function legendHtml() {
     '<li><span class="wf-key wf-k-blocked" aria-hidden="true"></span>Blocked or failed</li>' +
     '<li><span class="wf-key wf-k-queued" aria-hidden="true"></span>Queued</li>' +
     '<li><span class="wf-edge-key wf-e-handoff" aria-hidden="true"></span>Handoff</li>' +
-    '<li><span class="wf-edge-key wf-e-after" aria-hidden="true"></span>Depends on (Map)</li>' +
+    '<li><span class="wf-edge-key wf-e-after" aria-hidden="true"></span>Depends on</li>' +
     '<li><span class="wf-edge-key wf-e-block" aria-hidden="true"></span>Blocker</li>' +
     "</ul>";
 }
