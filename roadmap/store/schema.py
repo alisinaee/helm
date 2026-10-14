@@ -20,6 +20,7 @@ CURRENT = {
     "comments": 1,
     "budget": 1,
     "queue": 1,
+    "features": 1,
 }
 
 

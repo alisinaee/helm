@@ -5,6 +5,7 @@ errors entry {"file", "error"} and an empty result. Pure functions, no file I/O.
 """
 
 import json
+import re
 from datetime import datetime
 
 STATES = ("done", "partial", "todo", "hold")
@@ -22,6 +23,8 @@ Q_TEXT_MAX = 200
 OPTS_MAX = 5
 COMMENT_MAX = 280
 ACTIVITY_SUM_MAX = 60
+FEAT_ID_RE = re.compile(r"^F[1-9][0-9]?$")   # planner feature ids F1..F99
+FEATS_MAX = 3                  # features per task
 
 
 def error_entry(name, exc):
@@ -60,6 +63,26 @@ def parse_subs(value, name="tasks.json", task_id="?"):
             break
         subs.append({"t": title, "d": item.get("d") is True})
     return subs, errors
+
+
+def parse_feats(value, name="tasks.json", task_id="?"):
+    """Feature ids from a task's feats list: at most FEATS_MAX valid ids (F1..F99). The first id is the primary one.
+    Returns (feats, errors). Bad ids are skipped with an error entry; nothing raises."""
+    if not isinstance(value, list):
+        return [], [error_entry(name, ValueError("task " + task_id + ": feats is not a list"))]
+    feats, errors = [], []
+    for item in value:
+        if not isinstance(item, str) or not FEAT_ID_RE.match(item):
+            errors.append(error_entry(name, ValueError("task " + task_id + ": " + repr(item)[:40] + " is not a feature id")))
+            continue
+        if item in feats:
+            continue
+        if len(feats) >= FEATS_MAX:
+            errors.append(error_entry(name, ValueError("task " + task_id + ": more than " + str(FEATS_MAX)
+                                                       + " features, the rest are ignored")))
+            break
+        feats.append(item)
+    return feats, errors
 
 
 def parse_ts(s):
@@ -125,6 +148,9 @@ def parse_tasks(text, name="tasks.json"):
                     extra_errors.append(error_entry(name, ValueError("task " + task["id"] + ": capK is not a number")))
                 else:
                     task["capK"] = cap
+            if "feats" in t:
+                task["feats"], errs = parse_feats(t["feats"], name, task["id"])
+                extra_errors.extend(errs)
             tasks.append(task)
         return {"updated": str(j.get("updated", "")), "phases": phases, "tasks": tasks}, extra_errors
     except Exception as exc:  # any malformed input becomes an errors entry
