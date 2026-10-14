@@ -208,12 +208,17 @@ def remove(data_dir, fid):
 
 
 def restore(data_dir, feature):
-    """Put back a feature that rm removed (undo). The id must be free."""
+    """Put back a feature that rm removed (undo). The id must be free and its phase must exist, as apply_records
+    requires. The caller has checked the accepted date and that the caller may restore an accepted feature."""
     records.require_dir(data_dir)
     with lock.locked(data_dir):
         doc = load_doc(data_dir)
         if any(f.get("id") == feature["id"] for f in doc["features"]):
             raise records.conflict(feature["id"] + " already exists; not restored", NEXT_LIST)
+        phase = feature.get("phase")
+        if phase is not None and phase not in _phase_ids(data_dir):
+            raise RoadmapError("not_found", "phase " + str(phase) + " does not exist (allowed: a phase id in "
+                               "tasks.json)", EXIT_NOT_FOUND, next="roadmap task list")
         doc["features"].append(dict(feature))
         problems = core.validate(doc["features"])
         if problems:

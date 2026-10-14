@@ -17,6 +17,7 @@ from roadmap.errors import RoadmapError
 from roadmap.services import commands, features, tasks
 from roadmap.store import lock
 from tests.unit.test_cmd_support import CmdCase
+from tests.unit.test_feature_guard import person_tty
 
 FIXTURE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "fixtures", "splitnet")
 PINNED_NOW = datetime.datetime(2026, 10, 13, 12, 0, 0, tzinfo=datetime.timezone.utc)
@@ -143,26 +144,29 @@ class AcceptRules(FeatureCase):
 
     def test_a_person_accepts_with_todays_date_and_undo_clears_it(self):
         self.add("Visual")
-        with self.assertRaises(RoadmapError) as ctx:
+        with person_tty(), self.assertRaises(RoadmapError) as ctx:
             self.op("feature.accept", {"id": "F1", "on": True})
         self.assertEqual(ctx.exception.code, "conflict")
-        reply = self.op("feature.accept", {"id": "F1", "on": True, "confirm": True})
-        self.assertEqual(features.load_doc(self.data)["features"][0]["accepted"], planfmt.today())
-        commands.run("undo", {"activity": reply["activity"]}, "cli", self.data)
+        with person_tty():
+            reply = self.op("feature.accept", {"id": "F1", "on": True, "confirm": True})
+            self.assertEqual(features.load_doc(self.data)["features"][0]["accepted"], planfmt.today())
+            commands.run("undo", {"activity": reply["activity"]}, "cli", self.data)
         self.assertIsNone(features.load_doc(self.data)["features"][0]["accepted"])
 
     def test_a_done_feature_accepts_without_confirm(self):
         self.add("Visual")
         self.op("feature.link", {"task": "P1.1", "feats": ["F1"]})
         self.op("task.status", {"id": "P1.1", "status": "done"})
-        self.op("feature.accept", {"id": "F1", "on": True})
+        with person_tty():
+            self.op("feature.accept", {"id": "F1", "on": True})
         self.assertIsNotNone(features.load_doc(self.data)["features"][0]["accepted"])
 
 
 class ApplyRecords(FeatureCase):
     def test_apply_keeps_accepted_and_is_idempotent(self):
         self.add("Visual")
-        self.op("feature.accept", {"id": "F1", "on": True, "confirm": True})
+        with person_tty():
+            self.op("feature.accept", {"id": "F1", "on": True, "confirm": True})
         with lock.locked(self.data):
             result = features.apply_records(self.data, [features.record_of("F1", "Visual", "new acc", 1)])
         self.assertEqual(result["changed"], ["F1"])

@@ -4,8 +4,11 @@ feature.add, feature.set, feature.link, feature.unlink, feature.accept and featu
 internal: undo uses it to put back a removed feature. Each op returns (data, summary, inverse), so commands.run logs
 one activity line and stores the inverse in undo.jsonl.
 
-feature.accept is for the person only. It is refused when the source is agent, when the shell has CLAUDECODE set
-(agentguard.is_agent), or when the source is phone; the refusal names "ask the person" as the next step.
+feature.accept is for the person only. It runs only with agentguard.person_context: a browser click with the
+same-origin proof, or an interactive terminal (TTY) with no agent marker. Agents, the phone and bare non-TTY CLI shells
+(Cursor, agy, scripts) are refused, and the refusal names "ask the person" as the next step. Undo runs under the
+caller's context, so the person can undo their own accept or clear; an agent's undo of it is refused and stays
+retryable. feature.restore keeps an accepted date only when the person runs the undo.
 cmdops imports this module, so the ops are registered whenever the registry loads.
 """
 
@@ -19,6 +22,7 @@ ACC_MAX = 160
 TITLE_MAX = 80
 LINK_MAX = 3
 NEXT_LIST = "roadmap feature list"
+SEPARATOR = " # "
 
 
 # ---------------------------------------------------------------- argument checks
@@ -55,15 +59,22 @@ def _prio(value):
     return value
 
 
+def _no_separator(text, label):
+    """The plan line writes title # acc, so the separator may not appear inside either part (planfmt splits on it)."""
+    if SEPARATOR in text:
+        raise commands._usage(label + " may not contain ' # ' (the plan line separator); reword it", NEXT_LIST)
+    return text
+
+
 def _acc(a):
     text = " ".join(commands._text(a.get("acc")).split())
     if len(text) > ACC_MAX:
         raise commands._usage("acc is " + str(len(text)) + " characters; the limit is " + str(ACC_MAX), NEXT_LIST)
-    return text
+    return _no_separator(text, "acc")
 
 
 def _title(a):
-    return records.text_field(a.get("title"), "title", TITLE_MAX)
+    return _no_separator(records.text_field(a.get("title"), "title", TITLE_MAX), "title")
 
 
 def _check_add(a):
@@ -147,11 +158,10 @@ def _check_accept(a):
 
 
 def _refuse_accept():
-    """Acceptance is the person's. Agents (CLAUDECODE or source agent) and the phone are refused."""
-    source = commands.current_source()
-    if source == "phone" or agentguard.is_agent(source):
-        raise RoadmapError("agent_refused", "feature accept is for the person; an agent or the phone cannot accept a "
-                           "feature", EXIT_CONFLICT, next="ask the person")
+    """Acceptance is the person's only: see agentguard.person_context. Everything else is refused."""
+    if not agentguard.person_context(commands.current_source()):
+        raise RoadmapError("agent_refused", "feature accept is for the person; an agent, the phone or a script "
+                           "cannot accept a feature", EXIT_CONFLICT, next="ask the person")
 
 
 def _h_accept(data_dir, a, now):
@@ -180,12 +190,17 @@ def _check_restore(a):
     feature = a.get("feature")
     if not isinstance(feature, dict) or not FEAT_ID_RE.match(str(feature.get("id", ""))):
         raise commands._usage("feature restore needs a feature record")
-    return {"feature": feature}
+    accepted = features.check_date(feature.get("accepted")) if feature.get("accepted") is not None else None
+    return {"feature": dict(feature, accepted=accepted)}
 
 
 def _h_restore(data_dir, a, now):
-    features.restore(data_dir, a["feature"])
-    return {"id": a["feature"]["id"], "restored": True}, a["feature"]["id"] + " restored", None
+    feature = a["feature"]
+    if feature.get("accepted") and not agentguard.person_context(commands.current_source()):
+        raise RoadmapError("agent_refused", feature["id"] + " was accepted by the person; only the person's undo can "
+                           "restore it", EXIT_CONFLICT, next="ask the person")
+    features.restore(data_dir, feature)
+    return {"id": feature["id"], "restored": True}, feature["id"] + " restored", None
 
 
 # ---------------------------------------------------------------- registration
