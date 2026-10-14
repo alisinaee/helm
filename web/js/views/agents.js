@@ -5,6 +5,7 @@
 import { run } from "../cmd.js";
 import { chipHtml, emptyHtml, esc } from "../dom.js";
 import { MISSING, fmtDuration, fmtTokens } from "../format.js";
+import { copyButton, refSummary } from "../ref.js";
 import { itemHash, pageState, scopeSnapshots } from "./inbox.js";
 
 const FINISHED_MAX = 10;
@@ -70,7 +71,8 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     '<span class="rg-chips">' + taskHtml + "</span>" +
     '<span class="rg-num num" data-started-ms="' + esc(String(job.startedMs == null ? "" : job.startedMs)) + '">' +
     esc(elapsedText(job, now)) + "</span>" +
-    '<span class="rg-num num">' + esc(tokens) + "</span>" + stop + "</div>";
+    '<span class="rg-num num">' + esc(tokens) + "</span>" + stop +
+    copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) }) + "</div>";
   if (!children.length) return row + "</li>";
   return row + '<ul class="ag-kids" aria-label="Workers of ' + esc(label) + '">' + children.map(function (child) {
     return agentRowHtml(child, pid, tree, blocked, now, depth + 1);
@@ -95,7 +97,8 @@ function projectBlock(entry, now, showName) {
   const blocked = snap.blocked || [];
   const heading = showName ? '<h3 class="grp-h">' + esc(entry.name) + "</h3>" : "";
   const head = '<li class="row-grid rg-agent rg-head" aria-hidden="true"><span>Model</span><span>Job</span>' +
-    '<span>Task</span><span class="rg-num">Elapsed</span><span class="rg-num">Tokens</span><span></span></li>';
+    '<span>Task</span><span class="rg-num">Elapsed</span><span class="rg-num">Tokens</span><span></span><span></span>' +
+    "</li>";
   const live = tree.roots.length
     ? '<ul class="ag-list" aria-label="Running agents">' + head + tree.roots.map(function (job) {
       return agentRowHtml(job, entry.id, tree, blocked, now, 0);
