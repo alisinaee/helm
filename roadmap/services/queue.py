@@ -1,7 +1,7 @@
 """Start queue (queue.json): tasks waiting to be started, at most 50 entries, oldest first."""
 
 from roadmap.errors import EXIT_USAGE, RoadmapError
-from roadmap.services import records
+from roadmap.services import notify, records
 from roadmap.store import lock
 
 FILE = "queue.json"
@@ -23,6 +23,9 @@ def enqueue(data_dir, task, by="", now=None):
         entry = {"task": task_id, "by": str(by or ""), "at": records.now_iso(now)}
         doc["entries"].append(entry)
         records.save("queue", data_dir, FILE, doc)
+    # outside the lock: the notification never holds up the queue (it never raises either)
+    notify.notify_dir(data_dir, "start", "Start queued", lambda project: "Start " + task_id + " queued. Open a Claude "
+                      "session in " + project + " or run: roadmap watch")
     return dict(entry)
 
 
