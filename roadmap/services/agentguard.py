@@ -12,12 +12,15 @@ The refusal names `roadmap ask` as the next step, so the agent asks the person i
 
 import contextlib
 import os
+import sys
 import threading
 
 from roadmap.errors import EXIT_CONFLICT, RoadmapError
 
 ENV = "CLAUDECODE"
 ASK_NEXT = 'roadmap ask "<question>"'
+# Env names that mark an agent's shell beyond CLAUDECODE (Claude Code's own, Cursor, agy/Antigravity, Codex).
+AGENT_ENV_PREFIXES = ("CLAUDE_CODE_", "CURSOR_", "AGY_", "ANTIGRAVITY_", "CODEX_")
 _TL = threading.local()
 
 
@@ -58,3 +61,34 @@ def refuse_if_agent(op, source=None, environ=None):
     if is_agent(source, environ):
         raise RoadmapError("agent_refused", op + " is refused from an agent; ask the person instead", EXIT_CONFLICT,
                            next=ASK_NEXT)
+
+
+def agent_marked(environ=None):
+    """True when the environment has an agent marker with a non-empty value: CLAUDECODE or a known agent prefix."""
+    environ = os.environ if environ is None else environ
+    for key, value in environ.items():
+        if str(value).strip() == "":
+            continue
+        if key == ENV or str(key).startswith(AGENT_ENV_PREFIXES):
+            return True
+    return False
+
+
+def _isatty(stream):
+    try:
+        return stream is not None and bool(stream.isatty())
+    except (AttributeError, ValueError, OSError):
+        return False
+
+
+def person_context(source, environ=None, stdin=None, stdout=None):
+    """True only when the call is provably the person's. That is a browser click with the same-origin proof (source
+    gui), or an interactive terminal CLI (source cli, stdin and stdout are TTYs, no agent marker in the environment).
+    An agent, the phone, a bare non-TTY cli (a Cursor, agy or script shell) and anything unproven are not the person."""
+    if source == "gui":
+        return gui_proven()
+    if source != "cli" or agent_marked(environ):
+        return False
+    stdin = sys.stdin if stdin is None else stdin
+    stdout = sys.stdout if stdout is None else stdout
+    return _isatty(stdin) and _isatty(stdout)

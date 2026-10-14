@@ -12,6 +12,7 @@ from unittest import mock
 
 from roadmap.core import planfmt
 from tests.unit.test_cmd_support import CmdCase
+from tests.unit.test_feature_guard import person_tty
 
 ROW = re.compile(r"^F\d+ (todo|doing|done|hold|uncovered) \d+/\d+ \d+K/\d+K blk\d+ .+$")
 
@@ -128,17 +129,19 @@ class Accept(FeatureCli):
         self.add("Visual")
         self.cli(["feature", "link", "F1", "P1.1"])
         self.cli(["task", "done", "P1.1"])
-        code, out, err = self.cli(["feature", "accept", "F1"])
+        with person_tty():
+            code, out, err = self.cli(["feature", "accept", "F1"])
         self.assertEqual((code, out.strip()), (0, "F1 accepted " + planfmt.today()), err)
 
     def test_accept_of_an_unfinished_feature_needs_yes(self):
         self.add("Visual")
-        code, _, err = self.cli(["feature", "accept", "F1"])
-        self.assertEqual(code, 4)
-        self.assertIn("--yes", err)
-        code, out, _ = self.cli(["feature", "accept", "F1", "--yes"])
-        self.assertEqual(code, 0)
-        code, out, _ = self.cli(["feature", "accept", "F1", "--off"])
+        with person_tty():
+            code, _, err = self.cli(["feature", "accept", "F1"])
+            self.assertEqual(code, 4)
+            self.assertIn("--yes", err)
+            code, out, _ = self.cli(["feature", "accept", "F1", "--yes"])
+            self.assertEqual(code, 0)
+            code, out, _ = self.cli(["feature", "accept", "F1", "--off"])
         self.assertEqual(out.strip(), "F1 not accepted")
 
 
