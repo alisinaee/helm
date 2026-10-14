@@ -1,0 +1,132 @@
+{
+ "now": 1791979200000,
+ "project": {
+  "id": "fan-in",
+  "title": "Fan in"
+ },
+ "phases": [
+  {
+   "id": "P1",
+   "title": "Engine",
+   "approved": true
+  },
+  {
+   "id": "P2",
+   "title": "Shell",
+   "approved": false
+  }
+ ],
+ "tasks": [
+  {
+   "id": "P1.1",
+   "title": "Schema",
+   "phase": "P1",
+   "state": "done",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T09:00:00Z",
+    "done": "2026-10-14T09:10:00Z"
+   },
+   "tokensK": 80
+  },
+  {
+   "id": "P1.2",
+   "title": "Store",
+   "phase": "P1",
+   "state": "done",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T09:05:00Z",
+    "done": "2026-10-14T09:12:00Z"
+   },
+   "tokensK": 30
+  },
+  {
+   "id": "P1.3",
+   "title": "Cache",
+   "phase": "P1",
+   "state": "doing",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T09:15:00Z"
+   },
+   "tokensK": 12
+  },
+  {
+   "id": "P1.4",
+   "title": "Merge",
+   "phase": "P1",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {}
+  },
+  {
+   "id": "P2.1",
+   "title": "Pane",
+   "phase": "P2",
+   "state": "todo",
+   "model": "agy",
+   "at": {}
+  }
+ ],
+ "jobs": [
+  {
+   "id": "J1",
+   "title": "Job J1"
+  },
+  {
+   "id": "J2",
+   "title": "Job J2"
+  }
+ ],
+ "queue": [],
+ "issues": [],
+ "blocked": [],
+ "workflow": {
+  "spans": [
+   [
+    "J1",
+    "P1.1",
+    "opus",
+    "lead",
+    null,
+    1791975600,
+    1791976200,
+    "done",
+    80
+   ],
+   [
+    "J2",
+    "P1.2",
+    "haiku",
+    "worker",
+    "J1",
+    1791975900,
+    1791976300,
+    "done",
+    30
+   ]
+  ],
+  "edges": {
+   "after": [
+    [
+     "P1.1",
+     "P1.4"
+    ],
+    [
+     "P1.2",
+     "P1.4"
+    ],
+    [
+     "P1.3",
+     "P1.4"
+    ],
+    [
+     "P1.4",
+     "P2.1"
+    ]
+   ],
+   "block": []
+  }
+ }
+}

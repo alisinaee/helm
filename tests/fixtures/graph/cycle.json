@@ -1,0 +1,76 @@
+{
+ "now": 1791979200000,
+ "project": {
+  "id": "cycle",
+  "title": "Cycle"
+ },
+ "phases": [
+  {
+   "id": "P1",
+   "title": "Engine",
+   "approved": true
+  }
+ ],
+ "tasks": [
+  {
+   "id": "P1.1",
+   "title": "A",
+   "phase": "P1",
+   "state": "todo",
+   "model": "haiku",
+   "at": {}
+  },
+  {
+   "id": "P1.2",
+   "title": "B",
+   "phase": "P1",
+   "state": "todo",
+   "model": "haiku",
+   "at": {}
+  },
+  {
+   "id": "P1.3",
+   "title": "C",
+   "phase": "P1",
+   "state": "todo",
+   "model": "sonnet",
+   "at": {}
+  },
+  {
+   "id": "P1.4",
+   "title": "D",
+   "phase": "P1",
+   "state": "todo",
+   "model": "agy",
+   "at": {}
+  }
+ ],
+ "jobs": [],
+ "queue": [],
+ "issues": [],
+ "blocked": [],
+ "workflow": {
+  "spans": [],
+  "edges": {
+   "after": [
+    [
+     "P1.1",
+     "P1.2"
+    ],
+    [
+     "P1.2",
+     "P1.3"
+    ],
+    [
+     "P1.3",
+     "P1.1"
+    ],
+    [
+     "P1.3",
+     "P1.4"
+    ]
+   ],
+   "block": []
+  }
+ }
+}

@@ -1,0 +1,206 @@
+{
+ "now": 1791979200000,
+ "project": {
+  "id": "with-blockers",
+  "title": "With blockers"
+ },
+ "phases": [
+  {
+   "id": "P1",
+   "title": "Engine",
+   "approved": true
+  },
+  {
+   "id": "P2",
+   "title": "Shell",
+   "approved": false
+  }
+ ],
+ "tasks": [
+  {
+   "id": "P1.1",
+   "title": "Parser",
+   "phase": "P1",
+   "state": "doing",
+   "model": "opus",
+   "at": {
+    "doing": "2026-10-14T09:00:00Z"
+   },
+   "tokensK": 60
+  },
+  {
+   "id": "P1.2",
+   "title": "Lexer",
+   "phase": "P1",
+   "state": "blocked",
+   "model": "haiku",
+   "at": {
+    "doing": "2026-10-14T09:20:00Z"
+   },
+   "tokensK": 10
+  },
+  {
+   "id": "P2.1",
+   "title": "Pane",
+   "phase": "P2",
+   "state": "todo",
+   "model": "agy",
+   "at": {}
+  },
+  {
+   "id": "P2.2",
+   "title": "Badge",
+   "phase": "P2",
+   "state": "blocked",
+   "model": "sonnet",
+   "at": {
+    "doing": "2026-10-14T09:25:00Z"
+   }
+  }
+ ],
+ "jobs": [
+  {
+   "id": "J1",
+   "title": "Job J1"
+  },
+  {
+   "id": "J2",
+   "title": "Job J2"
+  },
+  {
+   "id": "J3",
+   "title": "Job J3"
+  },
+  {
+   "id": "J4",
+   "title": "Job J4"
+  },
+  {
+   "id": "J5",
+   "title": "Job J5"
+  },
+  {
+   "id": "J6",
+   "title": "Job J6"
+  }
+ ],
+ "queue": [
+  {
+   "task": "P2.1",
+   "by": "cli"
+  }
+ ],
+ "issues": [
+  {
+   "id": "I1",
+   "kind": "blocker",
+   "status": "open",
+   "tasks": [
+    "P1.2"
+   ],
+   "title": "Waiting on API"
+  },
+  {
+   "id": "I2",
+   "kind": "blocker",
+   "status": "open",
+   "tasks": [
+    "P2.2"
+   ],
+   "title": "Design sign-off"
+  }
+ ],
+ "blocked": [],
+ "workflow": {
+  "spans": [
+   [
+    "J1",
+    "P1.1",
+    "haiku",
+    "worker",
+    null,
+    1791975700,
+    1791975750,
+    "done",
+    3
+   ],
+   [
+    "J2",
+    "P1.1",
+    "sonnet",
+    "worker",
+    "J1",
+    1791975800,
+    1791975850,
+    "done",
+    3
+   ],
+   [
+    "J3",
+    "P1.1",
+    "haiku",
+    "worker",
+    "J1",
+    1791975900,
+    1791975950,
+    "done",
+    3
+   ],
+   [
+    "J4",
+    "P1.1",
+    "sonnet",
+    "worker",
+    "J1",
+    1791976000,
+    1791976050,
+    "done",
+    3
+   ],
+   [
+    "J5",
+    "P1.1",
+    "haiku",
+    "worker",
+    "J1",
+    1791976100,
+    null,
+    "running",
+    3
+   ],
+   [
+    "J6",
+    "P1.2",
+    "agy",
+    "worker",
+    "J1",
+    1791976500,
+    null,
+    "running",
+    2
+   ]
+  ],
+  "edges": {
+   "after": [
+    [
+     "P1.1",
+     "P1.2"
+    ],
+    [
+     "P1.2",
+     "P2.2"
+    ]
+   ],
+   "block": [
+    [
+     "I1",
+     "P1.2"
+    ],
+    [
+     "I2",
+     "P2.2"
+    ]
+   ]
+  }
+ }
+}
