@@ -121,8 +121,9 @@ class NotifyHookTests(HomeCase):
         args = self.fake.call_args[0]
         self.assertEqual(args[0], "start")
         self.assertEqual(args[3], "demo")
-        self.assertEqual(args[2], 'Start P2.4 queued; no session open. Run: cd ' + self.project
-                         + ' && claude "roadmap watch"')
+        self.assertEqual(args[2], "Start P2.4 queued; no session open. Open a Claude session for demo or run: "
+                         "roadmap watch")
+        self.assertNotIn(self.project, args[2])
 
     def test_with_a_session_open_the_text_says_so_and_nothing_is_launched(self):
         presence.touch_hook(self.data)
