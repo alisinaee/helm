@@ -94,17 +94,31 @@ def snapshot_etag(snap):
     return '"%s"' % hashlib.sha256(raw).hexdigest()[:32]
 
 
+_ABS_PATH = re.compile(r"(?<![\w.~:/])/[^\s\"'`<>()\[\]{}]+")  # URLs (after ':' or '/') are left alone
+
+
 def _phone_public(snap):
-    """The snapshot as the phone listener may show it: project.path dropped, and any absolute home path becomes ~."""
+    """The snapshot as the phone listener may show it: project.path dropped; in every string value the home folder
+    becomes ~ and any other absolute path becomes ...last-two-segments. Keys and numbers are not changed."""
     home = os.path.expanduser("~").rstrip("/")
+    home_re = re.compile(re.escape(home) + r"(?!\w)") if home else None
+
+    def shorten(match):
+        segs = [s for s in match.group(0).split("/") if s]
+        return "…/" + "/".join(segs[-2:]) if segs else "…"
+
+    def scrub_text(text):
+        if home_re is not None:
+            text = home_re.sub("~", text)
+        return _ABS_PATH.sub(shorten, text)
 
     def scrub(value):
         if isinstance(value, dict):
             return {k: scrub(v) for k, v in value.items()}
         if isinstance(value, list):
             return [scrub(v) for v in value]
-        if isinstance(value, str) and home and (value == home or value.startswith(home + "/")):
-            return "~" + value[len(home):]
+        if isinstance(value, str):
+            return scrub_text(value)
         return value
 
     out = scrub(snap)
