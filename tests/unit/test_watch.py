@@ -8,10 +8,12 @@ import time
 
 from roadmap.commands import watch
 from roadmap.errors import RoadmapError
-from roadmap.services import questions, queue, records
-from roadmap.store import config
+from roadmap.services import presence, questions, queue, records
+from roadmap.store import atomic, config
 from tests.unit.test_jobs_support import run_cli
 from tests.unit.test_store_support import HomeCase
+
+WALL_BASE = 1e9
 
 
 class FakeTime:
@@ -124,3 +126,76 @@ class WatchCliTests(HomeCase):
         code, out, _ = run_cli(["watch", "--project", "demo", "--max", "1", "--json"])
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(out), {"ok": True, "data": {"event": "timeout", "line": "timeout"}})
+
+
+class WatchPresenceTests(HomeCase):
+    """wait() stamps presence while it polls, refreshes the stamp every 30 s, and clears it on every exit."""
+
+    def setUp(self):
+        super().setUp()
+        self.data = os.path.join(self.tmp, "data")
+        os.makedirs(self.data)
+        self.fake = FakeTime()
+
+    def wall(self):
+        return WALL_BASE + self.fake.now
+
+    def doc(self):
+        return atomic.read_json(presence.file_for(self.data), default={})
+
+    def run_watch(self, max_s, during=None):
+        def sleep(seconds):
+            if during is not None:
+                during(len(self.fake.sleeps))
+            self.fake.sleep(seconds)
+
+        return watch.wait(self.data, max_s, sleep=sleep, clock=self.fake.clock, wall=self.wall)
+
+    def test_watching_is_visible_while_polling_and_cleared_after_a_timeout(self):
+        seen = []
+
+        def look(poll):
+            seen.append((presence.state(self.data, now=self.wall()), self.doc().get("watchPid")))
+
+        self.assertEqual(self.run_watch(max_s=4, during=look)["event"], "timeout")
+        self.assertEqual(seen[0], ("watching", os.getpid()))
+        self.assertEqual(presence.state(self.data, now=self.wall()), "none")
+        self.assertEqual(self.doc().get("watch"), None)
+        self.assertIsNone(self.doc().get("watchPid"))
+
+    def test_the_watch_stamp_is_refreshed_every_30_seconds(self):
+        stamps = []
+
+        def look(poll):
+            stamps.append((self.fake.now, self.doc().get("watch")))
+
+        self.run_watch(max_s=70, during=look)
+        # the first stamp is written at the start; a refresh happens once 30 s have passed, then again at 60 s
+        starts = [(now, stamp) for now, stamp in stamps if stamp is not None]
+        self.assertEqual(starts[0][1], WALL_BASE + 0)
+        self.assertEqual(starts[-1][1], WALL_BASE + 60)
+        self.assertIn(WALL_BASE + 30, [stamp for _, stamp in stamps])
+
+    def test_an_event_clears_the_watch_stamp_too(self):
+        def add(poll):
+            if poll == 0:
+                queue.enqueue(self.data, "P1.1", by="gui", now=None)
+                os.utime(os.path.join(self.data, queue.FILE), (2e9, 2e9))
+
+        self.assertEqual(self.run_watch(max_s=10, during=add)["line"], "start P1.1")
+        self.assertIsNone(self.doc().get("watch"))
+        self.assertIsNone(self.doc().get("watchPid"))
+
+    def test_ctrl_c_during_the_wait_still_clears_the_watch_stamp(self):
+        def interrupt(poll):
+            raise KeyboardInterrupt
+
+        with self.assertRaises(KeyboardInterrupt):
+            self.run_watch(max_s=10, during=interrupt)
+        self.assertIsNone(self.doc().get("watch"))
+        self.assertIsNone(self.doc().get("watchPid"))
+
+    def test_a_missing_data_folder_writes_no_presence(self):
+        with self.assertRaises(RoadmapError):
+            watch.wait(os.path.join(self.tmp, "nope"), 5, sleep=self.fake.sleep, clock=self.fake.clock, wall=self.wall)
+        self.assertFalse(os.path.exists(presence.file_for(os.path.join(self.tmp, "nope"))))

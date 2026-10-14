@@ -11,11 +11,12 @@ import os
 import time
 
 from roadmap.errors import EXIT_USAGE, RoadmapError
-from roadmap.services import commands, questions, queue, records
+from roadmap.services import commands, presence, questions, queue, records
 
 DEFAULT_MAX_S = 1800
 MAX_LIMIT_S = 86400
 POLL_S = 2
+PRESENCE_REFRESH_S = 30
 ANSWER_MAX = 60
 NEXT = "roadmap status"
 
@@ -49,24 +50,39 @@ def _run(args):
     return {"event": event["event"], "line": event["line"]}
 
 
-def wait(data_dir, max_s, sleep=time.sleep, clock=time.monotonic, poll_s=POLL_S):
+def wait(data_dir, max_s, sleep=time.sleep, clock=time.monotonic, poll_s=POLL_S, wall=time.time):
     """Block until something new appears in the queue or the questions, or max_s seconds pass. Returns a dict with
-    event (start, stop, answer or timeout) and line (the one printed line)."""
+    event (start, stop, answer or timeout) and line (the one printed line). While it polls, the presence watch stamp
+    is kept fresh (every PRESENCE_REFRESH_S) so the board knows a session is listening; it is cleared on every exit,
+    including Ctrl-C."""
     records.require_dir(data_dir)
     stamps = _stamps(data_dir)
     seen = _known(data_dir)
     start = clock()
-    while True:
-        now_stamps = _stamps(data_dir)
-        if now_stamps != stamps:
-            stamps = now_stamps
-            event = _new_event(data_dir, seen)
-            if event is not None:
-                return event
-        remaining = max_s - (clock() - start)
-        if remaining <= 0:
-            return {"event": "timeout", "line": "timeout"}
-        sleep(min(poll_s, remaining))
+    refreshed = start
+    _mark_watching(data_dir, wall)
+    try:
+        while True:
+            now_stamps = _stamps(data_dir)
+            if now_stamps != stamps:
+                stamps = now_stamps
+                event = _new_event(data_dir, seen)
+                if event is not None:
+                    return event
+            remaining = max_s - (clock() - start)
+            if remaining <= 0:
+                return {"event": "timeout", "line": "timeout"}
+            if clock() - refreshed >= PRESENCE_REFRESH_S:
+                refreshed = clock()
+                _mark_watching(data_dir, wall)
+            sleep(min(poll_s, remaining))
+    finally:
+        presence.clear_watch(data_dir)
+
+
+def _mark_watching(data_dir, wall):
+    """Stamp this process as the session watching the project (presence never raises)."""
+    presence.set_watch(data_dir, os.getpid(), now=wall())
 
 
 def _stamps(data_dir):
