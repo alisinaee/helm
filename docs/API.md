@@ -138,7 +138,8 @@ and `orphans` list feature ids and task ids. A project without `features.json` g
 Since WP47 the snapshot also has `workflow`, always present (empty lists for a project with no jobs or tasks).
 `spans` holds the newest 200 jobs in start order, each as `[id, task, model, role, parent, startEpoch, endEpoch,
 status, tokensK]`: epochs are whole seconds, `endEpoch` is null while the job runs, `role` and `parent` are null
-when unset. Jobs whose last moment (end, or start while running) is more than 7 days old are dropped. `edges.after`
+when unset. A running job's `tokensK` is its live reading from `job progress` (WP62); `job done --tokens K` then adds
+only K minus the progress already counted, so the budget never counts the same tokens twice. Jobs whose last moment (end, or start while running) is more than 7 days old are dropped. `edges.after`
 is `[from, to]` for each task's `after` list (from is the task waited for, to the waiting task; only ids that are
 tasks in tasks.json). `edges.block` is `[issueId, taskId]` for each open blocker issue and its tasks.
 
