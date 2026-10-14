@@ -9,6 +9,7 @@ export const SECTIONS = [
   { id: "work", label: "Work", icon: "work", module: "./views/work.js", bottom: true },
   { id: "issues", label: "Issues", icon: "issues", module: "./views/issues.js", bottom: true },
   { id: "agents", label: "Agents", icon: "agents", module: "./views/agents.js", bottom: false },
+  { id: "workflow", label: "Workflow", icon: "workflow", module: "./views/workflow.js", bottom: false },
   { id: "tokens", label: "Tokens", icon: "tokens", module: "./views/tokens.js", bottom: false },
   { id: "rules", label: "Rules", icon: "rules", module: "./views/rules.js", bottom: false },
   { id: "research", label: "Research", icon: "research", module: "./views/research.js", bottom: false },

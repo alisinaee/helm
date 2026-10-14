@@ -1,0 +1,640 @@
+{
+ "now": 1791979200000,
+ "empty": {
+  "project": {
+   "id": "empty",
+   "title": "Empty app"
+  },
+  "phases": [
+   {
+    "id": "P1",
+    "title": "Engine",
+    "approved": true
+   },
+   {
+    "id": "P2",
+    "title": "Shell",
+    "approved": false
+   },
+   {
+    "id": "P3",
+    "title": "Ship",
+    "approved": true
+   }
+  ],
+  "tasks": [
+   {
+    "id": "P1.1",
+    "title": "Engine <b>core</b>",
+    "phase": "P1",
+    "state": "done",
+    "model": "opus",
+    "tokensK": 120,
+    "at": {
+     "doing": "2026-10-14T11:00:00Z",
+     "done": "2026-10-14T11:11:40Z"
+    }
+   },
+   {
+    "id": "P1.2",
+    "title": "Parser",
+    "phase": "P1",
+    "state": "doing",
+    "model": "haiku",
+    "tokensK": 40,
+    "at": {
+     "doing": "2026-10-14T11:38:20Z"
+    }
+   },
+   {
+    "id": "P1.3",
+    "title": "Fixtures",
+    "phase": "P1",
+    "state": "todo",
+    "model": "sonnet",
+    "at": {}
+   },
+   {
+    "id": "P2.1",
+    "title": "Pane",
+    "phase": "P2",
+    "state": "todo",
+    "model": "haiku",
+    "at": {}
+   },
+   {
+    "id": "P2.2",
+    "title": "Badge",
+    "phase": "P2",
+    "state": "block",
+    "at": {
+     "doing": "2026-10-14T11:26:40Z",
+     "blocked": "2026-10-14T11:45:00Z"
+    }
+   },
+   {
+    "id": "P3.1",
+    "title": "Release",
+    "phase": "P3",
+    "state": "todo",
+    "at": {}
+   }
+  ],
+  "jobs": [],
+  "queue": [],
+  "blocked": [],
+  "workflow": {
+   "spans": [],
+   "edges": {
+    "after": [],
+    "block": []
+   }
+  }
+ },
+ "running": {
+  "project": {
+   "id": "alpha",
+   "title": "Alpha"
+  },
+  "phases": [
+   {
+    "id": "P1",
+    "title": "Engine",
+    "approved": true
+   },
+   {
+    "id": "P2",
+    "title": "Shell",
+    "approved": false
+   },
+   {
+    "id": "P3",
+    "title": "Ship",
+    "approved": true
+   }
+  ],
+  "tasks": [
+   {
+    "id": "P1.1",
+    "title": "Engine <b>core</b>",
+    "phase": "P1",
+    "state": "done",
+    "model": "opus",
+    "tokensK": 120,
+    "at": {
+     "doing": "2026-10-14T11:00:00Z",
+     "done": "2026-10-14T11:11:40Z"
+    }
+   },
+   {
+    "id": "P1.2",
+    "title": "Parser",
+    "phase": "P1",
+    "state": "doing",
+    "model": "haiku",
+    "tokensK": 40,
+    "at": {
+     "doing": "2026-10-14T11:38:20Z"
+    }
+   },
+   {
+    "id": "P1.3",
+    "title": "Fixtures",
+    "phase": "P1",
+    "state": "todo",
+    "model": "sonnet",
+    "at": {}
+   },
+   {
+    "id": "P2.1",
+    "title": "Pane",
+    "phase": "P2",
+    "state": "todo",
+    "model": "haiku",
+    "at": {}
+   },
+   {
+    "id": "P2.2",
+    "title": "Badge",
+    "phase": "P2",
+    "state": "block",
+    "at": {
+     "doing": "2026-10-14T11:26:40Z",
+     "blocked": "2026-10-14T11:45:00Z"
+    }
+   },
+   {
+    "id": "P3.1",
+    "title": "Release",
+    "phase": "P3",
+    "state": "todo",
+    "at": {}
+   }
+  ],
+  "jobs": [
+   {
+    "id": "J1",
+    "title": "Job J1 <i>work</i>"
+   },
+   {
+    "id": "J2",
+    "title": "Job J2 <i>work</i>"
+   },
+   {
+    "id": "J3",
+    "title": "Job J3 <i>work</i>"
+   },
+   {
+    "id": "J4",
+    "title": "Job J4 <i>work</i>"
+   },
+   {
+    "id": "J6",
+    "title": "Job J6 <i>work</i>"
+   }
+  ],
+  "queue": [
+   {
+    "task": "P2.1",
+    "by": "cli"
+   }
+  ],
+  "blocked": [],
+  "workflow": {
+   "spans": [
+    [
+     "J1",
+     "P1.1",
+     "opus",
+     "lead",
+     null,
+     1791975600,
+     1791976300,
+     "done",
+     120
+    ],
+    [
+     "J2",
+     "P1.2",
+     "opus",
+     "lead",
+     null,
+     1791977900,
+     null,
+     "running",
+     40
+    ],
+    [
+     "J3",
+     "P1.1",
+     "haiku",
+     "worker",
+     "J1",
+     1791975700,
+     1791976200,
+     "done",
+     12
+    ],
+    [
+     "J4",
+     "P1.2",
+     "haiku",
+     "worker",
+     "J2",
+     1791977950,
+     null,
+     "running",
+     9
+    ],
+    [
+     "J6",
+     "P1.3",
+     "sonnet",
+     "worker",
+     "J1",
+     1791976800,
+     1791977100,
+     "done",
+     null
+    ]
+   ],
+   "edges": {
+    "after": [
+     [
+      "P1.2",
+      "P1.3"
+     ],
+     [
+      "P1.3",
+      "P3.1"
+     ]
+    ],
+    "block": []
+   }
+  }
+ },
+ "blocked": {
+  "project": {
+   "id": "beta",
+   "title": "Beta"
+  },
+  "phases": [
+   {
+    "id": "P1",
+    "title": "Engine",
+    "approved": true
+   },
+   {
+    "id": "P2",
+    "title": "Shell",
+    "approved": false
+   },
+   {
+    "id": "P3",
+    "title": "Ship",
+    "approved": true
+   }
+  ],
+  "tasks": [
+   {
+    "id": "P1.1",
+    "title": "Engine <b>core</b>",
+    "phase": "P1",
+    "state": "done",
+    "model": "opus",
+    "tokensK": 120,
+    "at": {
+     "doing": "2026-10-14T11:00:00Z",
+     "done": "2026-10-14T11:11:40Z"
+    }
+   },
+   {
+    "id": "P1.2",
+    "title": "Parser",
+    "phase": "P1",
+    "state": "doing",
+    "model": "haiku",
+    "tokensK": 40,
+    "at": {
+     "doing": "2026-10-14T11:38:20Z"
+    }
+   },
+   {
+    "id": "P1.3",
+    "title": "Fixtures",
+    "phase": "P1",
+    "state": "todo",
+    "model": "sonnet",
+    "at": {}
+   },
+   {
+    "id": "P2.1",
+    "title": "Pane",
+    "phase": "P2",
+    "state": "todo",
+    "model": "haiku",
+    "at": {}
+   },
+   {
+    "id": "P2.2",
+    "title": "Badge",
+    "phase": "P2",
+    "state": "block",
+    "at": {
+     "doing": "2026-10-14T11:26:40Z",
+     "blocked": "2026-10-14T11:45:00Z"
+    }
+   },
+   {
+    "id": "P3.1",
+    "title": "Release",
+    "phase": "P3",
+    "state": "todo",
+    "at": {}
+   }
+  ],
+  "jobs": [
+   {
+    "id": "J1",
+    "title": "Job J1 <i>work</i>"
+   },
+   {
+    "id": "J2",
+    "title": "Job J2 <i>work</i>"
+   },
+   {
+    "id": "J3",
+    "title": "Job J3 <i>work</i>"
+   },
+   {
+    "id": "J4",
+    "title": "Job J4 <i>work</i>"
+   },
+   {
+    "id": "J6",
+    "title": "Job J6 <i>work</i>"
+   }
+  ],
+  "queue": [],
+  "blocked": [
+   "P2.2"
+  ],
+  "workflow": {
+   "spans": [
+    [
+     "J1",
+     "P1.1",
+     "opus",
+     "lead",
+     null,
+     1791975600,
+     1791976300,
+     "done",
+     120
+    ],
+    [
+     "J2",
+     "P1.2",
+     "opus",
+     "lead",
+     null,
+     1791977900,
+     null,
+     "running",
+     40
+    ],
+    [
+     "J3",
+     "P1.1",
+     "haiku",
+     "worker",
+     "J1",
+     1791975700,
+     1791976200,
+     "done",
+     12
+    ],
+    [
+     "J4",
+     "P1.2",
+     "haiku",
+     "worker",
+     "J2",
+     1791977950,
+     null,
+     "running",
+     9
+    ],
+    [
+     "J6",
+     "P1.3",
+     "sonnet",
+     "worker",
+     "J1",
+     1791976800,
+     1791977100,
+     "done",
+     null
+    ],
+    [
+     "J5",
+     "P1.2",
+     "agy",
+     "worker",
+     "J2",
+     1791977400,
+     1791977500,
+     "failed",
+     5
+    ],
+    [
+     "J7",
+     "P2.2",
+     "cursor",
+     "docs",
+     null,
+     1791977200,
+     1791978300,
+     "done",
+     3
+    ]
+   ],
+   "edges": {
+    "after": [
+     [
+      "P1.2",
+      "P1.3"
+     ]
+    ],
+    "block": [
+     [
+      "I1",
+      "P2.2"
+     ]
+    ]
+   }
+  }
+ },
+ "handoff": {
+  "project": {
+   "id": "gamma",
+   "title": "Gamma"
+  },
+  "phases": [
+   {
+    "id": "P1",
+    "title": "Engine",
+    "approved": true
+   },
+   {
+    "id": "P2",
+    "title": "Shell",
+    "approved": false
+   },
+   {
+    "id": "P3",
+    "title": "Ship",
+    "approved": true
+   }
+  ],
+  "tasks": [
+   {
+    "id": "P1.1",
+    "title": "Engine <b>core</b>",
+    "phase": "P1",
+    "state": "done",
+    "model": "opus",
+    "tokensK": 120,
+    "at": {
+     "doing": "2026-10-14T11:00:00Z",
+     "done": "2026-10-14T11:11:40Z"
+    }
+   },
+   {
+    "id": "P1.2",
+    "title": "Parser",
+    "phase": "P1",
+    "state": "doing",
+    "model": "haiku",
+    "tokensK": 40,
+    "at": {
+     "doing": "2026-10-14T11:38:20Z"
+    }
+   },
+   {
+    "id": "P1.3",
+    "title": "Fixtures",
+    "phase": "P1",
+    "state": "todo",
+    "model": "sonnet",
+    "at": {}
+   },
+   {
+    "id": "P2.1",
+    "title": "Pane",
+    "phase": "P2",
+    "state": "todo",
+    "model": "haiku",
+    "at": {}
+   },
+   {
+    "id": "P2.2",
+    "title": "Badge",
+    "phase": "P2",
+    "state": "block",
+    "at": {
+     "doing": "2026-10-14T11:26:40Z",
+     "blocked": "2026-10-14T11:45:00Z"
+    }
+   },
+   {
+    "id": "P3.1",
+    "title": "Release",
+    "phase": "P3",
+    "state": "todo",
+    "at": {}
+   }
+  ],
+  "jobs": [
+   {
+    "id": "J1",
+    "title": "Job J1 <i>work</i>"
+   },
+   {
+    "id": "J2",
+    "title": "Job J2 <i>work</i>"
+   },
+   {
+    "id": "J3",
+    "title": "Job J3 <i>work</i>"
+   },
+   {
+    "id": "J4",
+    "title": "Job J4 <i>work</i>"
+   },
+   {
+    "id": "J6",
+    "title": "Job J6 <i>work</i>"
+   }
+  ],
+  "queue": [],
+  "blocked": [],
+  "workflow": {
+   "spans": [
+    [
+     "K1",
+     "P1.1",
+     "opus",
+     "lead",
+     null,
+     1791976200,
+     1791978600,
+     "done",
+     80
+    ],
+    [
+     "K2",
+     "P1.1",
+     "haiku",
+     "worker",
+     "K1",
+     1791976400,
+     1791977700,
+     "done",
+     11
+    ],
+    [
+     "K3",
+     "P1.2",
+     "agy",
+     "worker",
+     "K1",
+     1791977800,
+     1791978300,
+     "done",
+     4
+    ],
+    [
+     "K4",
+     "P1.2",
+     "sonnet",
+     "worker",
+     "K1",
+     1791978200,
+     null,
+     "running",
+     8
+    ]
+   ],
+   "edges": {
+    "after": [
+     [
+      "P1.1",
+      "P1.2"
+     ]
+    ],
+    "block": []
+   }
+  }
+ }
+}
