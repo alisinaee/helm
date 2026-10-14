@@ -140,8 +140,8 @@ The migration (autonomy v1 to v2), new files and `schemaVersion` refusal can lea
   - Delete `legacy.html` once step 6 is stable.
 
 ### Critical files for implementation
-- /Users/ali/Works/roadmap-board/roadmap/services/hooks.py
-- /Users/ali/Works/roadmap-board/roadmap/services/queue.py
-- /Users/ali/Works/roadmap-board/roadmap/store/config.py
-- /Users/ali/Works/roadmap-board/docs/skill-draft/SKILL.md
-- /Users/ali/Works/split_net/.claude/settings.local.json
+- ~/Works/roadmap-board/roadmap/services/hooks.py
+- ~/Works/roadmap-board/roadmap/services/queue.py
+- ~/Works/roadmap-board/roadmap/store/config.py
+- ~/Works/roadmap-board/docs/skill-draft/SKILL.md
+- ~/Works/split_net/.claude/settings.local.json

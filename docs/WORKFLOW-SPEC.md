@@ -144,8 +144,8 @@
 3. **CSS budget: raise the cap to 56 KB, or trim more?** I recommend: W0 trims what it can, and we raise `CSS_TOTAL_MAX` to 56 KB to cover the remainder, with a hard limit of 4.5 KB on `map.css`. The alternative is to drop the Roadmap's token-proportional Timeline styles in `plan.css`, because Workflow covers the same need.
 
 ### Critical files for implementation
-- `/Users/ali/Works/roadmap-board/roadmap/core/snapshot.py`
-- `/Users/ali/Works/roadmap-board/roadmap/services/jobs.py`
-- `/Users/ali/Works/roadmap-board/roadmap/services/commands.py`
-- `/Users/ali/Works/roadmap-board/web/js/routes.js` (plus the new `web/js/views/workflow.js` and `web/css/map.css`)
-- `/Users/ali/Works/roadmap-board/tests/web/test_shell.py` (`CSS_TOTAL_MAX`)
+- `~/Works/roadmap-board/roadmap/core/snapshot.py`
+- `~/Works/roadmap-board/roadmap/services/jobs.py`
+- `~/Works/roadmap-board/roadmap/services/commands.py`
+- `~/Works/roadmap-board/web/js/routes.js` (plus the new `web/js/views/workflow.js` and `web/css/map.css`)
+- `~/Works/roadmap-board/tests/web/test_shell.py` (`CSS_TOTAL_MAX`)

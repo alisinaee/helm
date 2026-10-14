@@ -135,8 +135,8 @@ So this option needs no vendor folder, no change to the allowlist or CSP, and no
 2. **Job nodes:** show them as pills hanging under their task (compact, which I recommend), or as separate nodes in an "Agents" lane so handoff chains read as their own flow (clearer handoffs, and the graph roughly doubles in size)?
 
 ### Critical Files for Implementation
-- /Users/ali/Works/roadmap-board/web/js/views/workflow.js
-- /Users/ali/Works/roadmap-board/web/js/graph/layout.js (new)
-- /Users/ali/Works/roadmap-board/web/js/graph/viewport.js (new)
-- /Users/ali/Works/roadmap-board/roadmap/http/security.py (CSP; unchanged, used for the check)
-- /Users/ali/Works/roadmap-board/tests/web/test_workflow_view.py
+- ~/Works/roadmap-board/web/js/views/workflow.js
+- ~/Works/roadmap-board/web/js/graph/layout.js (new)
+- ~/Works/roadmap-board/web/js/graph/viewport.js (new)
+- ~/Works/roadmap-board/roadmap/http/security.py (CSP; unchanged, used for the check)
+- ~/Works/roadmap-board/tests/web/test_workflow_view.py

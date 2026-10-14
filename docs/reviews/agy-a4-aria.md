@@ -2,9 +2,9 @@
 
 | file:line | element | accessible name present? (text, aria-label or labelledby) | aria-expanded/aria-controls present if it toggles? | problem |
 |---|---|---|---|---|
-| [limits.js:170](file:///Users/ali/Works/roadmap-board/web/js/views/limits.js#L170) | `<button>` (`.btn`) | Yes (`+ Add limit` text) | No | Toggles add preset buttons (`addOpen`), but lacks `aria-expanded` and `aria-controls` |
-| [nav.js:77](file:///Users/ali/Works/roadmap-board/web/js/views/nav.js#L77) | `<button>` (`.nav-collapse`) | Yes (`aria-label` and text) | No | Toggles navigation rail between mini and full (`ui.navMini`), but lacks `aria-expanded` and `aria-controls="nav"` |
-| [topbar.js:22](file:///Users/ali/Works/roadmap-board/web/js/views/topbar.js#L22) | `<button>` (`.crumb-proj`) | Yes (project name + `.sr-only` text) | No | Toggles side panel open/closed (`ui.panelOpen`), but lacks `aria-expanded` and `aria-controls="side"` |
+| [limits.js:170](file://~/Works/roadmap-board/web/js/views/limits.js#L170) | `<button>` (`.btn`) | Yes (`+ Add limit` text) | No | Toggles add preset buttons (`addOpen`), but lacks `aria-expanded` and `aria-controls` |
+| [nav.js:77](file://~/Works/roadmap-board/web/js/views/nav.js#L77) | `<button>` (`.nav-collapse`) | Yes (`aria-label` and text) | No | Toggles navigation rail between mini and full (`ui.navMini`), but lacks `aria-expanded` and `aria-controls="nav"` |
+| [topbar.js:22](file://~/Works/roadmap-board/web/js/views/topbar.js#L22) | `<button>` (`.crumb-proj`) | Yes (project name + `.sr-only` text) | No | Toggles side panel open/closed (`ui.panelOpen`), but lacks `aria-expanded` and `aria-controls="side"` |
 
 **OK elements count:** 124
 

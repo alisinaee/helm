@@ -300,8 +300,8 @@ Every JSON file gets its own kind in `schema.py` and is covered by backups and m
 5. **Agent guard:** should agents be locked out of resume, override, raising limits and editing rules (recommended), or trusted with them?
 
 ### Critical Files for Implementation
-- /Users/ali/Works/roadmap-board/roadmap/services/hooks.py
-- /Users/ali/Works/roadmap-board/roadmap/services/hooks_install.py
-- /Users/ali/Works/roadmap-board/roadmap/store/schema.py
-- /Users/ali/Works/roadmap-board/roadmap/services/jobs.py
-- /Users/ali/Works/roadmap-board/docs/AGENT-INTERFACE.md
+- ~/Works/roadmap-board/roadmap/services/hooks.py
+- ~/Works/roadmap-board/roadmap/services/hooks_install.py
+- ~/Works/roadmap-board/roadmap/store/schema.py
+- ~/Works/roadmap-board/roadmap/services/jobs.py
+- ~/Works/roadmap-board/docs/AGENT-INTERFACE.md
