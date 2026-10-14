@@ -297,6 +297,8 @@ export function normalizeSnapshot(raw, fetchedAt) {
     queue: list(raw.queue).map(function (q) {
       return { task: String(q.task || ""), by: String(q.by || "") };
     }),
+    // WP55: the Planner and the drawer's feature chips read the features block (rows, uncovered, orphans) as it comes.
+    features: raw.features && typeof raw.features === "object" ? raw.features : null,
     rules: Array.isArray(raw.rules) ? raw.rules.map(function (r) {
       return { id: String(r.id || ""), scope: String(r.scope || ""), kind: String(r.kind || ""),
         text: String(r.text || ""), value: num(r.value) };

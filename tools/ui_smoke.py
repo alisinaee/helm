@@ -30,8 +30,8 @@ CHROME_APP = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 CHROME_NAMES = ("chromium", "chromium-browser", "google-chrome")
 # Every section of the router's registry (web/js/routes.js) in nav order, settings last. The unit test in
 # tests/web/test_ui_smoke_sections.py requires this list to match routes.js, so a new section must be added here.
-SECTIONS = ("overview", "inbox", "roadmap", "work", "issues", "agents", "workflow", "tokens", "rules", "research",
-            "activity", "settings")
+SECTIONS = ("overview", "inbox", "roadmap", "planner", "work", "issues", "agents", "workflow", "tokens", "rules",
+            "research", "activity", "settings")
 WORK_VIEWS = ("board", "list", "tree")
 # (width, height, theme). Headless Chrome cannot go below about 500 px.
 COMBOS = ((1440, 900, "dark"), (1440, 900, "light"), (1024, 768, "dark"), (768, 1024, "dark"), (500, 900, "dark"))

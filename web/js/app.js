@@ -11,6 +11,7 @@ import { currentRoute, onRouteChange } from "./router.js";
 import { loadSection, sectionById } from "./routes.js";
 import { configureCommands, pendingValue, run } from "./cmd.js";
 import { initKeys, setKeyHooks } from "./keys.js";
+import { featureLinkChange } from "./views/details.js";
 import { bnavView, navView, toggleMore } from "./views/nav.js";
 import { pageAction } from "./views/inbox.js";
 import { limitAction } from "./views/limits.js";
@@ -77,6 +78,8 @@ function ensureLoaded(section) {
   loadingSections.add(section.id);
   loadSection(section).then(function (mod) {
     loadedSections.set(section.id, mod);
+    // The Planner binds its delegated listeners once, on the <main> element that stays in place across renders.
+    if (section.id === "planner" && typeof mod.bind === "function") mod.bind(document.getElementById("main"));
   }, function () {
     missingSections.add(section.id);
   }).then(function () {
@@ -422,6 +425,12 @@ function sectionAction(path, action, el) {
   });
 }
 
+// The Work drawer's "Link to feature" picker (WP55). details.js owns the write; this only routes the change event.
+function onChange(event) {
+  const el = event.target;
+  if (el && el.getAttribute && el.getAttribute("data-side") === "feat-link") featureLinkChange(el);
+}
+
 // A toast holds its timer while the pointer or the keyboard focus is on it.
 function toastIdOf(target) {
   const el = target && target.closest ? target.closest("[data-toast]") : null;
@@ -469,6 +478,7 @@ function boot() {
   initKeys();
   initPanel({ render: render });
   document.addEventListener("click", onClick);
+  document.addEventListener("change", onChange);
   document.addEventListener("rb:render", render);
   document.addEventListener("pointerover", onPointerOver);
   document.addEventListener("pointerout", onPointerOut);

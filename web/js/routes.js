@@ -6,6 +6,7 @@ export const SECTIONS = [
   { id: "overview", label: "Overview", icon: "overview", module: "./views/overview.js", bottom: true },
   { id: "inbox", label: "Inbox", icon: "inbox", module: "./views/inbox.js", bottom: true },
   { id: "roadmap", label: "Roadmap", icon: "roadmap", module: "./views/roadmap.js", bottom: false },
+  { id: "planner", label: "Planner", icon: "planner", module: "./views/planner.js", bottom: false },
   { id: "work", label: "Work", icon: "work", module: "./views/work.js", bottom: true },
   { id: "issues", label: "Issues", icon: "issues", module: "./views/issues.js", bottom: true },
   { id: "agents", label: "Agents", icon: "agents", module: "./views/agents.js", bottom: false },

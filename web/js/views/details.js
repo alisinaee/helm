@@ -4,7 +4,7 @@
 // has them; this build's snapshot has neither for a task yet, so those parts are hidden rather than invented.
 
 import { bannerHtml, emptyHtml, esc, meterHtml } from "../dom.js";
-import { pendingValue } from "../cmd.js";
+import { pendingValue, run } from "../cmd.js";
 import { fmtTokens } from "../format.js";
 import { rowFacts } from "./projects.js";
 
@@ -237,12 +237,56 @@ function rulesHtml(task, snap) {
   }), ""));
 }
 
+// WP55: the features that name this task. The planner's rows carry their task ids, so the chips come from there.
+function featureRowsOf(snap, taskId) {
+  const rows = snap.features && Array.isArray(snap.features.rows) ? snap.features.rows : [];
+  return rows.filter(function (row) {
+    return (row.tasks || []).indexOf(taskId) >= 0;
+  });
+}
+
+// Feature chips link to the Planner with that feature opened. A task with no feature gets a picker that links it.
+// The section is left out when the snapshot has no features block (an older build).
+function featureHtml(vm, snap, task) {
+  if (!snap.features) return "";
+  const project = esc(vm.route.id);
+  const linked = featureRowsOf(snap, task.id);
+  if (linked.length) {
+    const chips = linked.map(function (row) {
+      return '<li><a class="chip chip-neutral" href="#/p/' + project + "/planner?f=" + encodeURIComponent(row.id) +
+        '">' + esc(row.id + " " + row.title) + "</a></li>";
+    }).join("");
+    return sectionHtml("Feature", '<ul class="d-list">' + chips + "</ul>");
+  }
+  const rows = Array.isArray(snap.features.rows) ? snap.features.rows : [];
+  if (!rows.length) return sectionHtml("Feature", '<p class="d-meta">No features yet.</p>');
+  const off = disabledAttr(vm);
+  const options = rows.map(function (row) {
+    return '<option value="' + esc(row.id) + '">' + esc(row.id + " " + row.title) + "</option>";
+  }).join("");
+  const field = "feat-link-" + task.id;
+  return sectionHtml("Feature", '<p class="d-meta">Not linked to a feature.</p>' +
+    '<label for="' + esc(field) + '">Link to feature <select id="' + esc(field) +
+    '" data-side="feat-link" data-id="' + esc(task.id) + '" data-focus="feat-link"' + off + ">" +
+    '<option value="">Choose a feature</option>' + options + "</select></label>");
+}
+
+// The drawer's feature picker (app.js routes the change event here). The write goes through cmd.js run().
+export function featureLinkChange(el) {
+  const feat = el.value;
+  const task = el.getAttribute("data-id");
+  if (!feat || !task) return;
+  el.blur();
+  run("feature.link", { task: task, feats: [feat] }, { label: "Linked " + task + " to " + feat });
+}
+
 function taskView(vm, snap, task, now) {
   const state = pick(taskKey(vm.route.id, task.id, "status"), snap, now, task.state);
   return '<div class="d-head"><p class="d-id">' + esc(task.id) + " · " + esc(task.phase) + '</p><h3 class="d-title">' +
     esc(task.title) + "</h3>" +
     '<p class="d-meta">' + esc(planLine(task)) + "</p></div>" +
-    statusHtml(task, state, vm) + queueHtml(task, snap, vm, now) + capHtml(task, snap, vm, now) +
+    statusHtml(task, state, vm) + featureHtml(vm, snap, task) + queueHtml(task, snap, vm, now) +
+    capHtml(task, snap, vm, now) +
     subsHtml(task, snap, vm, now) + commentsHtml(task, snap, vm, now) + linkedHtml(task, snap) +
     rulesHtml(task, snap) +
     (task.dod ? sectionHtml("Definition of done", '<p>' + esc(task.dod) + "</p>") : "");
