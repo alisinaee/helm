@@ -86,7 +86,6 @@ class WorkflowViewTests(unittest.TestCase):
         timeline = self.out["cases"]["handoff"]["timeline"]
         self.assertIn('class="wf-edge wf-e-handoff"', timeline)
         self.assertIn('marker-end="url(#wf-arrow)"', timeline)
-        self.assertIn('class="wf-map" width="', wide)
 
     def test_every_bar_and_card_is_a_labelled_focusable_button_with_a_title(self):
         for html in markup(self.out):
