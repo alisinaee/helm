@@ -9,7 +9,7 @@ import { fmtTokens } from "../format.js";
 import { pendingValue, run } from "../cmd.js";
 import { bindKey } from "../keys.js";
 import { buildHash } from "../router.js";
-import { modelChip } from "./tasks.js";
+import { modelChip, sectionCopyHtml, taskCopyHtml } from "./tasks.js";
 
 export const COLUMNS = [
   { key: "todo", state: "todo", label: "Todo" },
@@ -45,6 +45,7 @@ export function workTasks(snap, now) {
       id: t.id,
       order: index,
       title: t.title,
+      feats: t.feats || [],
       phase: t.phase,
       phaseName: names[t.phase] || t.phase,
       state: pending !== undefined ? pending : t.state,
@@ -60,6 +61,19 @@ export function workTasks(snap, now) {
     });
   });
   return out;
+}
+
+// The task shape the copy-reference summary reads (ref.js): the feature ids, and subtasks as {t, d}.
+export function copyItem(task) {
+  return {
+    id: task.id,
+    title: task.title,
+    state: task.state,
+    feats: task.feats,
+    subs: task.subs.map(function (s) {
+      return { t: s.t, d: s.done };
+    }),
+  };
 }
 
 // Filter tokens: needs, blocked, model:<name>, phase:<id>, status:<todo|doing|hold|done>. Values of one kind match any
@@ -193,6 +207,7 @@ export function actionsHtml(task) {
 }
 
 function cardHtml(ctx, task) {
+  const copy = taskCopyHtml(ctx.pid, ctx.snap, copyItem(task));
   const flags = [];
   if (task.model) flags.push(modelChip(task.model));
   if (task.needsUser) flags.push(chipHtml("needs you", "warning"));
@@ -215,13 +230,14 @@ function cardHtml(ctx, task) {
     '" data-focus="wk-title-' + esc(task.id) + '" title="' + esc(task.title) + '">' + esc(task.title) +
     "</a>" + (pct == null ? "" : meterHtml(pct, "accent")) + '<p class="wk-meta">' + meta + "</p>" +
     '<div class="wk-acts" role="group" aria-label="' + esc("Actions for " + task.id) + '">' + actionsHtml(task) +
-    "</div></li>";
+    copy + "</div></li>";
 }
 
 function columnHtml(ctx, col, items) {
   const on = ctx.col === col.key ? "true" : "false";
   const head = '<h3 class="wk-col-head" id="wk-col-' + col.key + '"><span>' + esc(col.label) +
-    '</span><span class="wk-count num">' + items.length + "</span></h3>";
+    '</span><span class="wk-count num">' + items.length + "</span>" +
+    sectionCopyHtml(ctx.pid, "board." + col.key, col.label + " column", items.length) + "</h3>";
   const body = items.length
     ? items.map(function (t) {
       return cardHtml(ctx, t);

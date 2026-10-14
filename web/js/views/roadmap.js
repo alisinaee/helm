@@ -11,7 +11,7 @@ import { bindKey } from "../keys.js";
 import { chipHtml, emptyHtml, esc, meterHtml } from "../dom.js";
 import { fmtCount, fmtTokens, MISSING } from "../format.js";
 import { pageState } from "./inbox.js";
-import { modelChip, STATE_GLYPH, STATE_WORD } from "./tasks.js";
+import { modelChip, phaseCopyHtml, STATE_GLYPH, STATE_WORD, taskCopyHtml } from "./tasks.js";
 import { showToast } from "./toast.js";
 
 const NO_PLAN = "No plan yet. Ask the lead to run plan import.";
@@ -62,7 +62,7 @@ function spendOf(snap, pid) {
   return row ? { spent: row.spent, limit: row.limit } : { spent: null, limit: null };
 }
 
-function cardHtml(snap, task, pos, count) {
+function cardHtml(project, snap, task, pos, count) {
   const word = STATE_WORD[task.state] || task.state;
   const glyph = STATE_GLYPH[task.state] || "○";
   const blocked = snap.blocked.indexOf(task.id) >= 0;
@@ -81,7 +81,7 @@ function cardHtml(snap, task, pos, count) {
     '" data-dir="up" aria-label="Move ' + id + ' up"' + (pos === 0 ? " disabled" : "") + ">Up</button>" +
     '<button type="button" class="btn btn-small" data-action="plan-move" data-task="' + id +
     '" data-dir="down" aria-label="Move ' + id + ' down"' + (pos === count - 1 ? " disabled" : "") + ">Down</button>" +
-    "</p></li>";
+    taskCopyHtml(project, snap, task) + "</p></li>";
 }
 
 // Lanes start open. The phone view stacks them, and each one folds with its header button.
@@ -98,7 +98,7 @@ function laneHtml(vm, snap, phase) {
     return phaseOf(t) === pid && t.state !== "done";
   });
   const cards = tasks.map(function (t, i) {
-    return cardHtml(snap, t, i, tasks.length);
+    return cardHtml(vm.route.id, snap, t, i, tasks.length);
   }).join("");
   const est = estimateK(snap, pid);
   const money = spendOf(snap, pid);
@@ -119,12 +119,12 @@ function laneHtml(vm, snap, phase) {
     '" aria-controls="lane-' + id + '-body" data-action="toggle-item" data-item="lane:' + id +
     '" data-focus="item-lane:' + id + '"><span class="lane-caret" aria-hidden="true">' + (open ? "▾" : "▸") +
     '</span><span class="lane-id">' + id + '</span><span class="lane-name">' + esc(phase.name) + "</span></button>" +
-    '<div class="lane-act">' + act + "</div>" + stats + "</div>" +
+    '<div class="lane-act">' + act + phaseCopyHtml(vm.route.id, phase) + "</div>" + stats + "</div>" +
     '<ol class="lane-cards" id="lane-' + id + '-body" data-lane="' + id + '" aria-label="Tasks in ' + id + '"' +
     (open ? "" : " hidden") + ">" + body + "</ol></li>";
 }
 
-function barHtml(snap, phase, max) {
+function barHtml(project, snap, phase, max) {
   const pid = phase.id;
   const est = estimateK(snap, pid);
   const spent = spendOf(snap, pid).spent;
@@ -134,18 +134,19 @@ function barHtml(snap, phase, max) {
     (spent == null ? MISSING : fmtTokens(spent));
   return '<li class="tl-row"><p class="tl-label"><span class="lane-id">' + esc(pid) +
     '</span><span class="lane-name">' +
-    esc(phase.name) + '</span><span class="lane-state">' + esc(STATE_WORD[phase.state] || phase.state) + "</span></p>" +
+    esc(phase.name) + '</span><span class="lane-state">' + esc(STATE_WORD[phase.state] || phase.state) + "</span>" +
+    phaseCopyHtml(project, phase) + "</p>" +
     '<div class="tl-track" aria-hidden="true"><div class="tl-bar" data-pct="' + barPct + '">' +
     '<div class="tl-spent" data-pct="' + spentPct + '"></div></div></div>' +
     '<p class="tl-text num">' + esc(text) + "</p></li>";
 }
 
-function timelineHtml(snap) {
+function timelineHtml(project, snap) {
   const max = snap.phases.reduce(function (m, p) {
     return Math.max(m, estimateK(snap, p.id) || 0);
   }, 0);
   return '<ol class="tl" aria-label="Phases by estimated tokens">' + snap.phases.map(function (p) {
-    return barHtml(snap, p, max);
+    return barHtml(project, snap, p, max);
   }).join("") + "</ol>" +
     '<p class="page-note">Bar length is the estimate; the filled part is what is spent so far.</p>';
 }
@@ -170,7 +171,7 @@ export function sectionView(vm) {
   const snap = vm.project.snapshot;
   current = snap;
   if (!snap.phases.length) return emptyHtml(NO_PLAN);
-  const body = vm.route.view === "timeline" ? timelineHtml(snap)
+  const body = vm.route.view === "timeline" ? timelineHtml(vm.route.id, snap)
     : '<ol class="lanes">' + snap.phases.map(function (p) {
       return laneHtml(vm, snap, p);
     }).join("") + "</ol>";
