@@ -2,17 +2,17 @@
   "schemaVersion": 2,
   "limit": {
     "kind": "weekly",
-    "stopAtPercent": 80,
+    "stopAtPercent": 95,
     "setBy": "the person",
-    "setOn": "2026-10-13",
-    "note": "Work until weekly usage reaches the stop percent."
+    "setOn": "2026-10-14",
+    "note": "Raised to 95% by the person on 2026-10-14."
   },
   "usage": {
-    "weeklyPercent": 67,
-    "fiveHourPercent": 56,
+    "weeklyPercent": 82,
+    "fiveHourPercent": 34,
     "weeklyResetsAt": "2026-10-16T08:00:00Z",
-    "fiveHourResetsAt": "2026-10-13T16:50:00Z",
-    "updated": "2026-10-13T20:00:20+03:30",
+    "fiveHourResetsAt": "2026-10-14T09:50:00Z",
+    "updated": "2026-10-14T08:57:58+03:30",
     "source": "manual push"
   }
 }

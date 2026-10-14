@@ -213,9 +213,10 @@
       "title": "Cursor Auto: WP14 security review gate R1 of the repo",
       "model": "cursor",
       "task": "R3.2",
-      "status": "running",
+      "status": "failed",
       "started": "2026-10-13T19:28:37+03:30",
-      "ended": null
+      "ended": "2026-10-13T22:03:22+03:30",
+      "note": "stale or test artifact"
     },
     {
       "id": "j386",
@@ -258,6 +259,15 @@
       "tokensK": 262.8
     },
     {
+      "id": "j391",
+      "title": "Cursor Auto: WP22 enforcement review. Read-only review of roadmap/services/control.",
+      "model": "cursor",
+      "task": "R5.6",
+      "status": "done",
+      "started": "2026-10-13T20:07:31+03:30",
+      "ended": "2026-10-13T20:24:36+03:30"
+    },
+    {
       "id": "j392",
       "title": "haiku: WP23 cmd route and security",
       "model": "haiku",
@@ -266,6 +276,691 @@
       "started": "2026-10-13T20:07:41+03:30",
       "ended": "2026-10-13T20:18:13+03:30",
       "tokensK": 187.1
+    },
+    {
+      "id": "j393",
+      "title": "opus: WP26 Opus UI shell re-plan",
+      "model": "opus",
+      "task": "R5.6",
+      "status": "done",
+      "started": "2026-10-13T20:07:56+03:30",
+      "ended": "2026-10-13T20:10:21+03:30",
+      "tokensK": 52.2
+    },
+    {
+      "id": "j394",
+      "title": "haiku: WP27 ledger limits service",
+      "model": "haiku",
+      "task": "R6.1",
+      "status": "done",
+      "started": "2026-10-13T20:21:17+03:30",
+      "ended": "2026-10-13T20:39:41+03:30",
+      "tokensK": 321.0
+    },
+    {
+      "id": "j395",
+      "title": "haiku: WP28 app shell router command layer",
+      "model": "haiku",
+      "task": "R6.2",
+      "status": "done",
+      "started": "2026-10-13T20:21:29+03:30",
+      "ended": "2026-10-13T20:38:19+03:30",
+      "tokensK": 299.9
+    },
+    {
+      "id": "j396",
+      "title": "haiku: WP29 right panel Projects and Details",
+      "model": "haiku",
+      "task": "R6.3",
+      "status": "done",
+      "started": "2026-10-13T20:40:05+03:30",
+      "ended": "2026-10-13T21:39:55+03:30",
+      "tokensK": 265.3
+    },
+    {
+      "id": "j397",
+      "title": "haiku: WP30 overview inbox activity",
+      "model": "haiku",
+      "task": "R6.4",
+      "status": "done",
+      "started": "2026-10-13T20:40:16+03:30",
+      "ended": "2026-10-13T21:37:12+03:30",
+      "tokensK": 253.6
+    },
+    {
+      "id": "j398",
+      "title": "opus: Opus allocation plan agy cursor haiku",
+      "model": "opus",
+      "task": "R5.6",
+      "status": "done",
+      "started": "2026-10-13T20:43:16+03:30",
+      "ended": "2026-10-13T20:43:53+03:30"
+    },
+    {
+      "id": "j399",
+      "title": "haiku: WP22 fix R2 hook review findings",
+      "model": "haiku",
+      "task": "R5.4",
+      "status": "done",
+      "started": "2026-10-13T20:44:24+03:30",
+      "ended": "2026-10-13T21:36:13+03:30",
+      "tokensK": 220.3
+    },
+    {
+      "id": "j400",
+      "title": "agy: demo fixtures (3 projects) for roadmap-board",
+      "model": "agy",
+      "task": "R6.7",
+      "status": "failed",
+      "started": "2026-10-13T20:44:41+03:30",
+      "ended": "2026-10-13T21:27:16+03:30",
+      "note": "network outage, rerun"
+    },
+    {
+      "id": "j401",
+      "title": "agy job:  \"WP33 read-only audit task for agy: change NO files, run no commands. Read /Use",
+      "model": "agy",
+      "task": "R6.7",
+      "status": "done",
+      "started": "2026-10-13T20:44:41+03:30",
+      "ended": "2026-10-13T21:26:32+03:30"
+    },
+    {
+      "id": "j402",
+      "title": "Cursor Auto: s sentinel, file corruption or concurrent writers; (3) anything that c",
+      "model": "cursor",
+      "task": "R5.4",
+      "status": "done",
+      "started": "2026-10-13T20:44:46+03:30",
+      "ended": "2026-10-13T21:26:32+03:30"
+    },
+    {
+      "id": "j403",
+      "title": "agy: API.md vs routes.py mismatches",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "failed",
+      "started": "2026-10-13T20:54:02+03:30",
+      "ended": "2026-10-13T20:55:51+03:30"
+    },
+    {
+      "id": "j404",
+      "title": "agy: README commands vs real CLI",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "failed",
+      "started": "2026-10-13T20:54:04+03:30",
+      "ended": "2026-10-13T20:55:51+03:30"
+    },
+    {
+      "id": "j405",
+      "title": "agy: skill drafts command check",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "failed",
+      "started": "2026-10-13T20:55:51+03:30",
+      "ended": "2026-10-13T20:57:37+03:30"
+    },
+    {
+      "id": "j406",
+      "title": "agy: aria/role/tabindex audit of views",
+      "model": "agy",
+      "task": "R2.2",
+      "status": "failed",
+      "started": "2026-10-13T20:55:51+03:30",
+      "ended": "2026-10-13T20:57:37+03:30"
+    },
+    {
+      "id": "j407",
+      "title": "agy: README: interactive project manager section",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "failed",
+      "started": "2026-10-13T20:57:37+03:30",
+      "ended": "2026-10-13T20:59:23+03:30"
+    },
+    {
+      "id": "j408",
+      "title": "agy: ARCHITECTURE: data files table",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "failed",
+      "started": "2026-10-13T20:57:37+03:30",
+      "ended": "2026-10-13T20:59:23+03:30"
+    },
+    {
+      "id": "j409",
+      "title": "agy: CHANGELOG entries from change notes",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "failed",
+      "started": "2026-10-13T20:59:23+03:30",
+      "ended": "2026-10-13T21:01:09+03:30"
+    },
+    {
+      "id": "j410",
+      "title": "agy: test gaps in limits and ledger",
+      "model": "agy",
+      "task": "R6.1",
+      "status": "failed",
+      "started": "2026-10-13T20:59:23+03:30",
+      "ended": "2026-10-13T21:01:09+03:30"
+    },
+    {
+      "id": "j411",
+      "title": "agy: demo fixtures (3 projects)",
+      "model": "agy",
+      "task": "R6.7",
+      "status": "done",
+      "started": "2026-10-13T21:27:16+03:30",
+      "ended": "2026-10-13T21:45:30+03:30"
+    },
+    {
+      "id": "j412",
+      "title": "agy: colour literals and UI string audit",
+      "model": "agy",
+      "task": "R2.2",
+      "status": "done",
+      "started": "2026-10-13T21:27:18+03:30",
+      "ended": "2026-10-13T21:38:21+03:30"
+    },
+    {
+      "id": "j414",
+      "title": "agy: API.md vs routes.py mismatches",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "done",
+      "started": "2026-10-13T21:38:21+03:30",
+      "ended": "2026-10-13T21:40:01+03:30"
+    },
+    {
+      "id": "j415",
+      "title": "haiku: WP31 Work Board List Tree",
+      "model": "haiku",
+      "task": "R6.5",
+      "status": "done",
+      "started": "2026-10-13T21:39:16+03:30",
+      "ended": "2026-10-13T22:05:11+03:30",
+      "tokensK": 296.1
+    },
+    {
+      "id": "j416",
+      "title": "haiku: WP33 Tokens limits Rules Settings",
+      "model": "haiku",
+      "task": "R6.7",
+      "status": "done",
+      "started": "2026-10-13T21:39:28+03:30",
+      "ended": "2026-10-13T22:03:41+03:30",
+      "tokensK": 294.6
+    },
+    {
+      "id": "j417",
+      "title": "agy: README commands vs real CLI",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "done",
+      "started": "2026-10-13T21:40:01+03:30",
+      "ended": "2026-10-13T21:41:43+03:30"
+    },
+    {
+      "id": "j418",
+      "title": "haiku: WP32 Roadmap lanes and Issues",
+      "model": "haiku",
+      "task": "R6.6",
+      "status": "done",
+      "started": "2026-10-13T21:40:11+03:30",
+      "ended": "2026-10-13T22:02:27+03:30",
+      "tokensK": 290.8
+    },
+    {
+      "id": "j419",
+      "title": "agy: skill drafts command check",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "failed",
+      "started": "2026-10-13T21:41:43+03:30",
+      "ended": "2026-10-13T21:42:32+03:30"
+    },
+    {
+      "id": "j420",
+      "title": "agy: aria/role/tabindex audit of views",
+      "model": "agy",
+      "task": "R2.2",
+      "status": "failed",
+      "started": "2026-10-13T21:42:32+03:30",
+      "ended": "2026-10-13T21:43:06+03:30"
+    },
+    {
+      "id": "j421",
+      "title": "agy: README: interactive project manager section",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "failed",
+      "started": "2026-10-13T21:43:06+03:30",
+      "ended": "2026-10-13T21:43:29+03:30"
+    },
+    {
+      "id": "j422",
+      "title": "agy: ARCHITECTURE: data files table",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "done",
+      "started": "2026-10-13T21:43:29+03:30",
+      "ended": "2026-10-13T21:46:08+03:30"
+    },
+    {
+      "id": "j423",
+      "title": "agy: CHANGELOG entries from change notes",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "done",
+      "started": "2026-10-13T21:45:30+03:30",
+      "ended": "2026-10-13T21:51:45+03:30"
+    },
+    {
+      "id": "j424",
+      "title": "agy: test gaps in limits and ledger",
+      "model": "agy",
+      "task": "R6.1",
+      "status": "done",
+      "started": "2026-10-13T21:46:08+03:30",
+      "ended": "2026-10-13T21:48:07+03:30"
+    },
+    {
+      "id": "j425",
+      "title": "agy: skill drafts command check",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "failed",
+      "started": "2026-10-13T22:03:14+03:30",
+      "ended": "2026-10-13T22:03:21+03:30"
+    },
+    {
+      "id": "j426",
+      "title": "agy: aria/role/tabindex audit of views",
+      "model": "agy",
+      "task": "R2.2",
+      "status": "failed",
+      "started": "2026-10-13T22:03:16+03:30",
+      "ended": "2026-10-13T22:03:21+03:30"
+    },
+    {
+      "id": "j427",
+      "title": "agy: README: interactive project manager section",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "failed",
+      "started": "2026-10-13T22:03:21+03:30",
+      "ended": "2026-10-13T22:03:26+03:30"
+    },
+    {
+      "id": "j428",
+      "title": "haiku: WP34 Agents Research notes route undo",
+      "model": "haiku",
+      "task": "R6.8",
+      "status": "done",
+      "started": "2026-10-13T22:03:32+03:30",
+      "ended": "2026-10-13T22:15:54+03:30",
+      "tokensK": 226.0
+    },
+    {
+      "id": "j429",
+      "title": "haiku: WP33b snapshot action and rules fields",
+      "model": "haiku",
+      "task": "R6.6",
+      "status": "done",
+      "started": "2026-10-13T22:03:52+03:30",
+      "ended": "2026-10-13T22:09:12+03:30",
+      "tokensK": 99.4
+    },
+    {
+      "id": "j430",
+      "title": "haiku: Verify agy batch fixtures changelog architecture tests",
+      "model": "haiku",
+      "task": "R2.3",
+      "status": "done",
+      "started": "2026-10-13T22:05:28+03:30",
+      "ended": "2026-10-13T22:14:45+03:30",
+      "tokensK": 186.2
+    },
+    {
+      "id": "j431",
+      "title": "Cursor Auto: s sentinel, concurrent writers; (3) anything that lets an AI agent rai",
+      "model": "cursor",
+      "task": "R5.4",
+      "status": "failed",
+      "started": "2026-10-13T22:15:21+03:30",
+      "ended": "2026-10-14T08:44:19+03:30",
+      "note": "duplicate registration of one Cursor review"
+    },
+    {
+      "id": "j432",
+      "title": "haiku: Final responsive visual pass and CSS trim",
+      "model": "haiku",
+      "task": "R6.8",
+      "status": "done",
+      "started": "2026-10-13T22:16:16+03:30",
+      "ended": "2026-10-13T22:25:28+03:30",
+      "tokensK": 101.9
+    },
+    {
+      "id": "j433",
+      "title": "Cursor Auto: s sentinel, concurrent writers; (3) anything that lets an AI agent rai",
+      "model": "cursor",
+      "task": "R5.4",
+      "status": "failed",
+      "started": "2026-10-13T22:41:36+03:30",
+      "ended": "2026-10-14T08:44:19+03:30",
+      "note": "duplicate registration of one Cursor review"
+    },
+    {
+      "id": "j434",
+      "title": "Cursor Auto: s sentinel, concurrent writers; (3) anything that lets an AI agent rai",
+      "model": "cursor",
+      "task": "R5.4",
+      "status": "done",
+      "started": "2026-10-14T08:29:30+03:30",
+      "ended": "2026-10-14T09:03:30+03:30",
+      "note": "review landed: R3 findings"
+    },
+    {
+      "id": "j435",
+      "title": "agy: skill drafts command check",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "done",
+      "started": "2026-10-14T08:29:57+03:30",
+      "ended": "2026-10-14T08:34:18+03:30"
+    },
+    {
+      "id": "j436",
+      "title": "agy: aria/role/tabindex audit of views",
+      "model": "agy",
+      "task": "R2.2",
+      "status": "done",
+      "started": "2026-10-14T08:29:59+03:30",
+      "ended": "2026-10-14T08:38:40+03:30"
+    },
+    {
+      "id": "j437",
+      "title": "agy: README: interactive project manager section",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "done",
+      "started": "2026-10-14T08:34:18+03:30",
+      "ended": "2026-10-14T08:36:53+03:30"
+    },
+    {
+      "id": "j438",
+      "title": "agy: SECURITY.md checklist vs code",
+      "model": "agy",
+      "task": "R3.1",
+      "status": "done",
+      "started": "2026-10-14T08:36:53+03:30",
+      "ended": "2026-10-14T08:46:56+03:30"
+    },
+    {
+      "id": "j439",
+      "title": "haiku: WP36 cosmetic fixes and wide screen check",
+      "model": "haiku",
+      "task": "R6.9",
+      "status": "done",
+      "started": "2026-10-14T08:37:11+03:30",
+      "ended": "2026-10-14T08:52:50+03:30",
+      "tokensK": 471.5
+    },
+    {
+      "id": "j440",
+      "title": "haiku: WP37 release 1.0 prep",
+      "model": "haiku",
+      "task": "R6.11",
+      "status": "done",
+      "started": "2026-10-14T08:40:33+03:30",
+      "ended": "2026-10-14T08:50:46+03:30",
+      "tokensK": 132.1
+    },
+    {
+      "id": "j441",
+      "title": "haiku: WP38 end-to-end integration tests",
+      "model": "haiku",
+      "task": "R6.12",
+      "status": "done",
+      "started": "2026-10-14T08:40:45+03:30",
+      "ended": "2026-10-14T08:58:22+03:30",
+      "tokensK": 198.6
+    },
+    {
+      "id": "j442",
+      "title": "opus: WP39 Opus gap analysis vs vision",
+      "model": "opus",
+      "task": "R6.13",
+      "status": "done",
+      "started": "2026-10-14T08:40:52+03:30",
+      "ended": "2026-10-14T08:41:56+03:30",
+      "tokensK": 48.6
+    },
+    {
+      "id": "j443",
+      "title": "haiku: WP40 notifications and roadmap watch",
+      "model": "haiku",
+      "task": "R6.14",
+      "status": "done",
+      "started": "2026-10-14T08:48:22+03:30",
+      "ended": "2026-10-14T08:58:54+03:30",
+      "tokensK": 165.0
+    },
+    {
+      "id": "j444",
+      "title": "haiku: WP41 rules with pickups",
+      "model": "haiku",
+      "task": "R6.15",
+      "status": "done",
+      "started": "2026-10-14T08:48:28+03:30",
+      "ended": "2026-10-14T08:53:10+03:30",
+      "tokensK": 102.3
+    },
+    {
+      "id": "j445",
+      "title": "haiku: WP42 Haiku sized skills and skills install",
+      "model": "haiku",
+      "task": "R6.16",
+      "status": "done",
+      "started": "2026-10-14T08:48:36+03:30",
+      "ended": "2026-10-14T08:56:26+03:30",
+      "tokensK": 116.5
+    },
+    {
+      "id": "j446",
+      "title": "haiku: WP43 default port 8780 and doctor warning",
+      "model": "haiku",
+      "task": "R6.17",
+      "status": "done",
+      "started": "2026-10-14T08:48:43+03:30",
+      "ended": "2026-10-14T08:54:48+03:30",
+      "tokensK": 102.9
+    },
+    {
+      "id": "j447",
+      "title": "agy: WP45 command palette module (new file)",
+      "model": "agy",
+      "task": "R2.3",
+      "status": "done",
+      "started": "2026-10-14T08:48:57+03:30",
+      "ended": "2026-10-14T08:59:22+03:30"
+    },
+    {
+      "id": "j448",
+      "title": "agy: test gaps list for hooks.py and control.py",
+      "model": "agy",
+      "task": "R5.4",
+      "status": "done",
+      "started": "2026-10-14T08:48:59+03:30",
+      "ended": "2026-10-14T08:51:30+03:30"
+    },
+    {
+      "id": "j449",
+      "title": "opus: WP46 Opus workflow map section design",
+      "model": "opus",
+      "task": "R6.20",
+      "status": "done",
+      "started": "2026-10-14T08:52:01+03:30",
+      "ended": "2026-10-14T08:53:49+03:30",
+      "tokensK": 49.2
+    },
+    {
+      "id": "j450",
+      "title": "haiku: WP47 workflow data backend",
+      "model": "haiku",
+      "task": "R6.21",
+      "status": "done",
+      "started": "2026-10-14T08:54:05+03:30",
+      "ended": "2026-10-14T09:03:23+03:30",
+      "tokensK": 153.9
+    },
+    {
+      "id": "j451",
+      "title": "haiku: R3 fix Cursor findings and known bugs",
+      "model": "haiku",
+      "task": "R6.21",
+      "status": "done",
+      "started": "2026-10-14T08:59:20+03:30",
+      "ended": "2026-10-14T09:18:53+03:30",
+      "tokensK": 306.7
+    },
+    {
+      "id": "j452",
+      "title": "opus: WP49 Opus Planner section and feature traceability",
+      "model": "opus",
+      "task": "R6.23",
+      "status": "done",
+      "started": "2026-10-14T09:01:39+03:30",
+      "ended": "2026-10-14T09:03:31+03:30",
+      "tokensK": 54.7
+    },
+    {
+      "id": "j453",
+      "title": "haiku: WP50 Planner core features.py and schema",
+      "model": "haiku",
+      "task": "R6.24",
+      "status": "done",
+      "started": "2026-10-14T09:03:54+03:30",
+      "ended": "2026-10-14T09:10:24+03:30",
+      "tokensK": 102.0
+    },
+    {
+      "id": "j454",
+      "title": "haiku: WP51 Planner plan format F and L records",
+      "model": "haiku",
+      "task": "R6.25",
+      "status": "done",
+      "started": "2026-10-14T09:04:02+03:30",
+      "ended": "2026-10-14T09:10:37+03:30",
+      "tokensK": 117.6
+    },
+    {
+      "id": "j455",
+      "title": "haiku: WP53 Planner view planner.js and css",
+      "model": "haiku",
+      "task": "R6.27",
+      "status": "done",
+      "started": "2026-10-14T09:04:12+03:30",
+      "ended": "2026-10-14T09:19:05+03:30",
+      "tokensK": 194.3
+    },
+    {
+      "id": "j456",
+      "title": "haiku: WP48 Workflow section timeline map table",
+      "model": "haiku",
+      "task": "R6.22",
+      "status": "done",
+      "started": "2026-10-14T09:04:26+03:30",
+      "ended": "2026-10-14T09:23:04+03:30",
+      "tokensK": 297.2
+    },
+    {
+      "id": "j457",
+      "title": "haiku: WP52 Planner features service ops CLI and snapshot",
+      "model": "haiku",
+      "task": "R6.26",
+      "status": "done",
+      "started": "2026-10-14T09:10:38+03:30",
+      "ended": "2026-10-14T09:22:01+03:30",
+      "tokensK": 216.2
+    },
+    {
+      "id": "j458",
+      "title": "opus: WP57 Opus task decomposition and agy playbook",
+      "model": "opus",
+      "task": "R6.26",
+      "status": "done",
+      "started": "2026-10-14T09:16:14+03:30",
+      "ended": "2026-10-14T09:19:00+03:30"
+    },
+    {
+      "id": "j459",
+      "title": "opus: WP70 Opus workflow diagram engine decision",
+      "model": "opus",
+      "task": "R6.22",
+      "status": "done",
+      "started": "2026-10-14T09:22:01+03:30",
+      "ended": "2026-10-14T09:24:36+03:30",
+      "tokensK": 48.6
+    },
+    {
+      "id": "j460",
+      "title": "haiku: WP71 workflow graph model and layout",
+      "model": "haiku",
+      "task": "R6.32",
+      "status": "done",
+      "started": "2026-10-14T09:24:53+03:30",
+      "ended": "2026-10-14T09:33:51+03:30",
+      "tokensK": 162.0
+    },
+    {
+      "id": "j461",
+      "title": "haiku: Planner route wire-up and Work drawer feature chip",
+      "model": "haiku",
+      "task": "R6.29",
+      "status": "done",
+      "started": "2026-10-14T09:34:11+03:30",
+      "ended": "2026-10-14T09:42:11+03:30",
+      "tokensK": 132.5
+    },
+    {
+      "id": "j465",
+      "title": "haiku: WP72 workflow diagram renderer and viewport",
+      "model": "haiku",
+      "task": "R6.33",
+      "status": "running",
+      "started": "2026-10-14T09:34:43+03:30",
+      "ended": null
+    },
+    {
+      "id": "j473",
+      "title": "haiku: Planner fixes feature open global note snapshot size",
+      "model": "haiku",
+      "task": "R6.33",
+      "status": "running",
+      "started": "2026-10-14T09:45:45+03:30",
+      "ended": null
+    },
+    {
+      "id": "j474",
+      "title": "haiku: WP56 seed features for roadmap-board and sync preserving feats",
+      "model": "haiku",
+      "task": "R6.30",
+      "status": "done",
+      "started": "2026-10-14T09:45:54+03:30",
+      "ended": "2026-10-14T09:49:19+03:30"
+    },
+    {
+      "id": "j475",
+      "title": "haiku: Palette hook-up keys.js app.js",
+      "model": "haiku",
+      "task": "R6.33",
+      "status": "running",
+      "started": "2026-10-14T09:46:00+03:30",
+      "ended": null
     }
   ]
 }

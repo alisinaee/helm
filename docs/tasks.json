@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-13",
+  "updated": "2026-10-14",
   "phases": [
     {
       "id": "R1",
@@ -24,7 +24,17 @@
     {
       "id": "R5",
       "name": "Interactive project manager MVP",
+      "status": "done"
+    },
+    {
+      "id": "R6",
+      "name": "App shell UI and usage limits",
       "status": "partial"
+    },
+    {
+      "id": "R7",
+      "name": "Remaining work",
+      "status": "todo"
     }
   ],
   "tasks": [
@@ -39,7 +49,10 @@
       "needsUser": false,
       "note": "WP1 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 111k tokens, commit 30ce8d6 in ~/Works/roadmap-board",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F17"
+      ]
     },
     {
       "id": "R1.2",
@@ -52,7 +65,10 @@
       "needsUser": false,
       "note": "WP2 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 106k tokens, commit 1c41c65",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F17"
+      ]
     },
     {
       "id": "R1.3",
@@ -65,7 +81,10 @@
       "needsUser": false,
       "note": "WP3 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 116k tokens, commit f2c7146; golden test equals old server output",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F1"
+      ]
     },
     {
       "id": "R1.4",
@@ -78,7 +97,10 @@
       "needsUser": false,
       "note": "WP4 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 157k tokens, commit 4caa8ce",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F1"
+      ]
     },
     {
       "id": "R1.5",
@@ -91,7 +113,10 @@
       "needsUser": false,
       "note": "WP5 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 186k tokens, commit ae85b9d, 264 tests",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F1"
+      ]
     },
     {
       "id": "R1.6",
@@ -104,7 +129,10 @@
       "needsUser": false,
       "note": "WP6 | spec: docs/roadmap-board-architecture.md section 6 | 2026-10-13 built, 47 tests, commit c026314; test_cli stub list needs update; run_loop wiring in WP5/WP11 | lint fixed, commit c3d6ca1; run_loop wired later (WP5/WP11)",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F10"
+      ]
     },
     {
       "id": "R1.7",
@@ -117,7 +145,10 @@
       "needsUser": false,
       "note": "WP7 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 209k tokens, commit f8cfcf2",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F18"
+      ]
     },
     {
       "id": "R1.8",
@@ -130,7 +161,10 @@
       "needsUser": false,
       "note": "WP10 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 156k tokens, commit 4861e52",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F17"
+      ]
     },
     {
       "id": "R1.9",
@@ -143,7 +177,10 @@
       "needsUser": false,
       "note": "WP11 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 185k tokens, commit 79b15a8 (+serve wiring), 350 tests",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F17"
+      ]
     },
     {
       "id": "R2.1",
@@ -156,7 +193,10 @@
       "needsUser": false,
       "note": "WP8 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 231k tokens, commit e941c50",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F3"
+      ]
     },
     {
       "id": "R2.2",
@@ -169,7 +209,10 @@
       "needsUser": false,
       "note": "WP9 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 135k tokens, commit a92b174; make check-ui runs headless Chrome",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F19"
+      ]
     },
     {
       "id": "R2.3",
@@ -180,9 +223,12 @@
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
-      "note": "WP12 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 241k tokens, commit 8d48fe5, 366 tests; skill draft in repo docs/skill-draft",
+      "note": "WP12 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 241k tokens, commit 8d48fe5, 366 tests; skill draft in repo docs/skill-draft | agy verification done 2026-10-13 commit f937de3: fixtures accepted, changelog/architecture corrected, 22 gap tests; 2 real limits.py bugs record",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F15"
+      ]
     },
     {
       "id": "R3.1",
@@ -195,7 +241,11 @@
       "needsUser": false,
       "note": "WP13 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 223k tokens, commit f118183 + 79dd854 (serve phone listener, open, redaction)",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F20",
+        "F22"
+      ]
     },
     {
       "id": "R3.2",
@@ -208,7 +258,11 @@
       "needsUser": true,
       "note": "WP14 | spec: docs/roadmap-board-architecture.md section 6 | R1 review (Cursor Auto) found 7; all fixed commit d2714fd (174k tokens); cutover still waits on the keychain Allow",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F17",
+        "F22"
+      ]
     },
     {
       "id": "R4.1",
@@ -221,7 +275,11 @@
       "needsUser": false,
       "note": "WP15 | person request 2026-10-13: separate general project, research-first onboarding, very low token cost for agents | done 2026-10-13, 53k tokens; design in roadmap-board/docs/AGENT-INTERFACE.md; UI kit decision: keep own design system",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F14",
+        "F16"
+      ]
     },
     {
       "id": "R4.2",
@@ -234,7 +292,11 @@
       "needsUser": false,
       "note": "WP16 | person request 2026-10-13: separate general project, research-first onboarding, very low token cost for agents | 16.1 done 166k tokens commit 8238e5f, 534 tests; 16.2 commands next | 16.2 done 120k tokens commit 609102a, 564 tests",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F5",
+        "F14"
+      ]
     },
     {
       "id": "R4.3",
@@ -247,7 +309,11 @@
       "needsUser": false,
       "note": "WP17 | person request 2026-10-13: separate general project, research-first onboarding, very low token cost for agents | done 2026-10-13, 129k tokens commit f9b7f3e, 607 tests; skills are drafts in roadmap-board/docs/skill-draft (install at cutover)",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F15",
+        "F16"
+      ]
     },
     {
       "id": "R4.4",
@@ -260,7 +326,10 @@
       "needsUser": false,
       "note": "WP18 | person request 2026-10-13: separate general project, research-first onboarding, very low token cost for agents",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
     },
     {
       "id": "R5.1",
@@ -273,7 +342,10 @@
       "needsUser": false,
       "note": "WP19 | person request 2026-10-13: planner, progress, tasks/subtasks/phases, issues, overall, token manager, agent+subagent rules, Claude rules | done 2026-10-13, 187k tokens in 3 Opus runs; spec in roadmap-board/docs/PRODUCT-SPEC.md",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F6"
+      ]
     },
     {
       "id": "R5.2",
@@ -286,7 +358,12 @@
       "needsUser": false,
       "note": "WP20 | spec: roadmap-board/docs/PRODUCT-SPEC.md section 6 | done 2026-10-13, 186k tokens commit ef02f4a, 648 tests",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F5",
+        "F7",
+        "F9"
+      ]
     },
     {
       "id": "R5.3",
@@ -299,20 +376,29 @@
       "needsUser": false,
       "note": "WP21 | spec: roadmap-board/docs/PRODUCT-SPEC.md section 6 | done 2026-10-13, 242k tokens commit 5c50c6e, 726 tests at HEAD",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F1",
+        "F7",
+        "F8"
+      ]
     },
     {
       "id": "R5.4",
       "phase": "R5",
       "title": "control hooks (PreToolUse deny, SessionStart, Stop pickup) + rules",
-      "status": "partial",
+      "status": "done",
       "tokensK": 120,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
-      "note": "WP22 | spec: roadmap-board/docs/PRODUCT-SPEC.md section 6 | built 2026-10-13, 263k tokens commit cbc8594, 819 tests; Cursor Auto review of enforcement pending",
+      "note": "WP22 | spec: roadmap-board/docs/PRODUCT-SPEC.md section 6 | built 2026-10-13, 263k tokens commit cbc8594, 819 tests; Cursor Auto review of enforcement pending | R2 review (Cursor) 8 findings fixed commit 6697f19 (220k tokens), 981 tests | R3 (Cursor /cmd+limits) 10 findings + 4 known bugs fixed comm",
       "check": "sonnet",
-      "checkK": 15
+      "checkK": 15,
+      "feats": [
+        "F11",
+        "F12"
+      ]
     },
     {
       "id": "R5.5",
@@ -325,33 +411,653 @@
       "needsUser": false,
       "note": "WP23 | spec: roadmap-board/docs/PRODUCT-SPEC.md section 6 | done 2026-10-13, 187k tokens commit d977030, 856 tests; gaps: undo of task tokens does not reverse budget spend; rules.rm undo re-adds under new id",
       "check": "sonnet",
-      "checkK": 15
+      "checkK": 15,
+      "feats": [
+        "F1"
+      ]
     },
     {
       "id": "R5.6",
       "phase": "R5",
-      "title": "web shell, Overview, Work (interactive)",
+      "title": "UI shell re-plan (left nav, right project/general panel, Jira/Trello-style) by Opus",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "note": "WP26 | person request 2026-10-13: sidebar left for sections, right panel for projects/general, modern Jira/Trello feel; replaces WP24/WP25 scope | done, 2 Opus runs 119k tokens; spec roadmap-board/docs/UI-SPEC.md; person decisions: all 4 Opus recommendations accepted",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "R6.1",
+      "phase": "R6",
+      "title": "usage ledger + limits service (daily/weekly, global+project) + CLI + ops",
+      "status": "done",
+      "tokensK": 110,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP27 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 321k tokens commit 2b70408, 908 tests",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F10"
+      ]
+    },
+    {
+      "id": "R6.2",
+      "phase": "R6",
+      "title": "roadmap-board UI: app shell, router, command layer, nav/topbar/toast",
+      "status": "done",
+      "tokensK": 110,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP28 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 300k tokens commit 83f0d72, 907 tests",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F18"
+      ]
+    },
+    {
+      "id": "R6.3",
+      "phase": "R6",
+      "title": "roadmap-board UI: right panel (Projects, Details)",
+      "status": "done",
+      "tokensK": 110,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP29 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 265k tokens commit 53e0466, 981 tests; gaps: Enter binding, lock glyph, questions/blockers only for loaded project, rules/DoD hidden (not in snapshot)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F18"
+      ]
+    },
+    {
+      "id": "R6.4",
+      "phase": "R6",
+      "title": "roadmap-board UI: Overview, Inbox, Activity",
+      "status": "done",
+      "tokensK": 90,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP30 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 254k tokens commit 358435b, 981 tests; gap: question.answer has no inverse (no Undo toast); Overview lost Phases/Next/Recent/Extras/Legend/usage band until Roadmap (WP32)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F4",
+        "F8"
+      ]
+    },
+    {
+      "id": "R6.5",
+      "phase": "R6",
+      "title": "roadmap-board UI: Work (Board, List, Tree) with drag and drop",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP31 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 296k tokens commit 85b46af, 1039 tests; CSS total 52214/52224 bytes (budget almost used)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "R6.6",
+      "phase": "R6",
+      "title": "roadmap-board UI: Roadmap lanes/timeline and Issues",
+      "status": "done",
+      "tokensK": 90,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP32 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 291k tokens commit d4ed638, 1039 tests; gaps: real mouse DnD not verified (dispatched events), plan.move refuses cross-phase, light/1440 not visually verified",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F3",
+        "F7"
+      ]
+    },
+    {
+      "id": "R6.7",
+      "phase": "R6",
+      "title": "roadmap-board UI: Tokens + limits editor, Rules, Settings",
+      "status": "done",
+      "tokensK": 110,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP33 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 295k tokens commit dd5c5ff, 1039 tests; limit editor read-only until snapshot has action+rules (WP33b done 1e27aa7: snapshot now has meters.limits[].action and rules[])",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F10"
+      ]
+    },
+    {
+      "id": "R6.8",
+      "phase": "R6",
+      "title": "roadmap-board UI: Agents live, Research, final responsive pass",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP34 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 226k tokens commit eaf0fd5, 1122 tests; CSS budget exceeded 52990>52224 (trim in responsive pass); Lighthouse not run",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F20"
+      ]
+    },
+    {
+      "id": "R6.9",
+      "phase": "R6",
+      "title": "roadmap-board UI: final responsive + visual pass, ui_smoke for the new shell",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP35 | 6e11fff + 0adc52d (WP35b): CSS budget met, ui_smoke rewritten for the new shell (81 page runs, 65 screenshots ok), 3 visual fixes; left cosmetic: agents Stop wrap, tokens cap input offset, roadmap approve on finished phases; 1124 tests",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F19"
+      ]
+    },
+    {
+      "id": "R6.10",
+      "phase": "R6",
+      "title": "roadmap-board UI: wide screens + cosmetic leftovers",
+      "status": "done",
+      "tokensK": 100,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP36 | 092a44e + aee47ad (rule 0 row alignment on 8 lists); CSS cap raised to 64 KB; Activity/Limits rows not visually verified (no fixture data)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F18"
+      ]
+    },
+    {
+      "id": "R6.11",
+      "phase": "R6",
+      "title": "release 1.0 prep (changelog, version, README polish, skill install script)",
+      "status": "done",
+      "tokensK": 80,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP37 | done 2026-10-14, 132k tokens commit b420703; version 1.0.0 set (not tagged); release checklist docs/RELEASE.md; legacy.html removal needs http/static.py+security.py changes",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R6.12",
+      "phase": "R6",
+      "title": "end-to-end integration tests (agent <-> GUI loop, stop/resume hook, limits)",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP38 | done 2026-10-14, 199k tokens commit f2a51f8, 22 integration tests; bug found: commands.py:589-590 logs agent-shell ask as source cli (expectedFailure)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F11"
+      ]
+    },
+    {
+      "id": "R6.13",
+      "phase": "R6",
+      "title": "Opus gap analysis vs the vision + backlog",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "note": "WP39 | done 2026-10-14, 48.6k tokens; roadmap-board/docs/GAP-ANALYSIS.md: 8 improvements + cutover rollout order",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R6.14",
+      "phase": "R6",
+      "title": "desktop notifications (queue/question/limit) + `roadmap watch` long-poll",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP40 | done 2026-10-14, 165k tokens commit a22d346, 22 tests; gap: `watch` not in hooks.ALLOWED_WHILE_BLOCKED (add in fix pass)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F8"
+      ]
+    },
+    {
+      "id": "R6.15",
+      "phase": "R6",
+      "title": "rules + definition of done attached to Stop/SessionStart pickups",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP41 | done 2026-10-14, 102k tokens commit ee25bdf, 11 tests",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F12"
+      ]
+    },
+    {
+      "id": "R6.16",
+      "phase": "R6",
+      "title": "Haiku-sized skills (<=3.2 KB) + `roadmap skills install`",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP42 | done 2026-10-14, 116k tokens commit f5bd522, 24 tests; skills 2299/2436 bytes; --target DIR = project folder (skills go to DIR/.claude/skills/)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F15"
+      ]
+    },
+    {
+      "id": "R6.17",
+      "phase": "R6",
+      "title": "default port 8780 + doctor port warning",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP43 | done 2026-10-14, 103k tokens commit 803d4f4, 12 tests; default port 8780, doctor warns on foreign 8765",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F17"
+      ]
+    },
+    {
+      "id": "R6.18",
+      "phase": "R6",
+      "title": "`project new --research` + live job progress tokens + stale-usage pill",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP44 | spec: roadmap-board/docs/GAP-ANALYSIS.md section 2",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F4",
+        "F10",
+        "F16"
+      ]
+    },
+    {
+      "id": "R6.19",
+      "phase": "R6",
+      "title": "command palette (Cmd-K)",
+      "status": "todo",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "cursor",
+      "needsUser": false,
+      "note": "WP45 | spec: roadmap-board/docs/GAP-ANALYSIS.md section 2",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F6",
+        "F21"
+      ]
+    },
+    {
+      "id": "R6.20",
+      "phase": "R6",
+      "title": "Workflow map section (visual map + timeline) - Opus design",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "note": "WP46 | done 2026-10-14, 49k tokens; spec roadmap-board/docs/WORKFLOW-SPEC.md; decisions: lanes by role/model, add task `after`, CSS cap 64 KB",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R6.21",
+      "phase": "R6",
+      "title": "workflow data (job history 200, task at/after, snapshot.workflow, auto parent job)",
+      "status": "done",
+      "tokensK": 75,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP47 | done 2026-10-14, 154k tokens commit 4e0ece3, 24 tests, suite 1254 OK",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R6.22",
+      "phase": "R6",
+      "title": "roadmap-board UI: Workflow section (timeline, map, table)",
+      "status": "partial",
+      "tokensK": 115,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP48 | commit b4a72b0 (SVG timeline/map/table, 18 tests, ui_smoke ok); light mode, 500px, keyboard, Stop/Start click not verified; direction may change: Opus WP70 diagram engine decision pending",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R6.23",
+      "phase": "R6",
+      "title": "Planner section (features/epics -> tasks traceability) - Opus design",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "note": "WP49 | done 2026-10-14, 55k tokens; docs/PLANNER-SPEC.md; decisions: own section, feats<=3, only person accepts",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R6.24",
+      "phase": "R6",
+      "title": "roadmap-board Planner B1: core features.py + schema + task feats",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP50 | done 2026-10-14, 102k tokens commit 19fb451, 31 tests",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R6.25",
+      "phase": "R6",
+      "title": "roadmap-board Planner B2: plan format F/L records",
+      "status": "partial",
+      "tokensK": 35,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP51 | commit c3070bb, 22 tests; gap: plan export does not emit F lines yet (format_feature + tasks.load_features)",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R6.26",
+      "phase": "R6",
+      "title": "roadmap-board Planner B3: features service, ops, CLI",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP52 | done 2026-10-14 commit 2f2326a (WP52+54 together), 216k tokens, 1398 tests; snapshot features ~15.8 KB for 60 rows (spec said 6 KB): decide to drop acc/tasks from rows; feature accept needs --yes if not done",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R6.27",
+      "phase": "R6",
+      "title": "roadmap-board Planner V1: planner.js + planner.css",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP53 | done 2026-10-14, 194k tokens commit 42b408b, 14 tests; WP55 wires route: call bind(sectionEl) once, scope from vm.route.id",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R6.28",
+      "phase": "R6",
+      "title": "roadmap-board Planner B4: snapshot features key",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP54 | done 2026-10-14 commit 2f2326a (WP52+54 together), 216k tokens, 1398 tests; snapshot features ~15.8 KB for 60 rows (spec said 6 KB): decide to drop acc/tasks from rows; feature accept needs --yes if not done",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R6.29",
+      "phase": "R6",
+      "title": "roadmap-board Planner V2: wire-up + Work drawer chip",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP55 | commit fc722cf: Planner route, nav, drawer feature chip + link select, ui_smoke includes planner; gaps: ?f= does not open the feature (planner.js), global scope copy 'Planner belongs to one project'",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R6.30",
+      "phase": "R6",
+      "title": "roadmap-board Planner S1: seed 22 features for roadmap-board + docs",
+      "status": "todo",
+      "tokensK": 15,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP56 | spec: roadmap-board/docs/PLANNER-SPEC.md section 5",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R6.31",
+      "phase": "R6",
+      "title": "Workflow diagram engine decision (Opus)",
+      "status": "done",
+      "tokensK": 49,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "note": "WP70 | done, 49k tokens; own SVG engine, nothing vendored",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R6.32",
+      "phase": "R6",
+      "title": "roadmap-board Workflow diagram A: graph model + layered layout (new files)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP71 | done 2026-10-14 commit a6d4bf0 (graph model+layout, 18 tests, suite 1416 OK)",
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R6.33",
+      "phase": "R6",
+      "title": "roadmap-board Workflow diagram B: renderer + pan/zoom/pinch + integration",
       "status": "todo",
       "tokensK": 120,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
-      "note": "WP24 | spec: roadmap-board/docs/PRODUCT-SPEC.md section 6",
+      "note": "WP72 | spec: roadmap-board/docs/WORKFLOW-DIAGRAM-SPEC.md section 3",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ]
     },
     {
-      "id": "R5.7",
-      "phase": "R5",
-      "title": "web Roadmap, Issues, Tokens, Rules (interactive)",
+      "id": "R6.34",
+      "phase": "R6",
+      "title": "roadmap-board Workflow diagram C: touch/mouse/CSP verification",
       "status": "todo",
-      "tokensK": 100,
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "note": "WP73 | spec: roadmap-board/docs/WORKFLOW-DIAGRAM-SPEC.md section 3",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R7.1",
+      "phase": "R7",
+      "title": "Start from the GUI wakes an open session",
+      "status": "todo",
+      "tokensK": 40,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
-      "note": "WP25 | spec: roadmap-board/docs/PRODUCT-SPEC.md section 6",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F11"
+      ]
+    },
+    {
+      "id": "R7.2",
+      "phase": "R7",
+      "title": "Measure full-cycle agent token cost end to end and record it",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F14"
+      ]
+    },
+    {
+      "id": "R7.3",
+      "phase": "R7",
+      "title": "Inline title edit for tasks and plan lines in the GUI",
+      "status": "todo",
+      "tokensK": 25,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F5"
+      ]
+    },
+    {
+      "id": "R7.4",
+      "phase": "R7",
+      "title": "Planner gaps: confirm F/L plan export round-trip and the orphan Assign picker",
+      "status": "todo",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R7.5",
+      "phase": "R7",
+      "title": "Finish row alignment across sections; check at 1440 and 375 px",
+      "status": "todo",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F19"
+      ]
+    },
+    {
+      "id": "R7.6",
+      "phase": "R7",
+      "title": "Docs refresh: README, agent guide and skills match the 1.0 commands",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.7",
+      "phase": "R7",
+      "title": "Plain-words pass over GUI labels, status text and docs",
+      "status": "todo",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F14"
+      ]
     }
   ]
 }
