@@ -75,7 +75,7 @@ export function navView(vm) {
   return '<div class="nav-list">' + list + "</div>" +
     '<div class="nav-foot">' + linkHtml(vm, SETTINGS, counts) +
     '<button type="button" class="nav-collapse" data-action="nav-mini" aria-label="' +
-    (mini ? "Expand navigation" : "Collapse navigation") + '">' + icon("collapse") +
+    (mini ? "Expand navigation" : "Collapse menu") + '">' + icon("collapse") +
     '<span class="nav-l">' + (mini ? "Expand" : "Collapse") + "</span></button></div>";
 }
 

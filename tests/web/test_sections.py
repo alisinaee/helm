@@ -154,7 +154,7 @@ class SectionRenderTests(unittest.TestCase):
 
     def test_limit_banner_shows_at_eighty_percent_with_override(self):
         html = self.out["overviewProject"]
-        self.assertIn("Usage across all projects is at 90% of the daily limit.", html)
+        self.assertIn("All projects usage: 90% of the daily limit.", html)
         self.assertIn('data-action="override"', html)
         self.assertIn("Override for 1 hour", html)
 
@@ -164,7 +164,7 @@ class SectionRenderTests(unittest.TestCase):
 
     def test_global_limit_banner_has_no_override_button(self):
         html = self.out["overviewAll"]
-        self.assertIn("Usage across all projects is at 90% of the daily limit.", html)
+        self.assertIn("All projects usage: 90% of the daily limit.", html)
         self.assertNotIn('data-action="override"', html)
 
     def test_running_banner_has_one_stop_button(self):
@@ -175,7 +175,7 @@ class SectionRenderTests(unittest.TestCase):
         html = self.out["overviewProject"]
         self.assertIn("Today: 9 points of your weekly allowance", html)
         self.assertIn("This week: 62% of your weekly allowance", html)
-        self.assertIn("At this pace the limit is reached about 16:40", html)
+        self.assertIn("Projected limit reached at 16:40", html)
         self.assertIn("≈ 120k of 500k tokens", html)
 
     def test_overview_shows_the_inbox_preview_and_the_blocker(self):

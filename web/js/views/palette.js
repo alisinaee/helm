@@ -186,7 +186,7 @@ function ensureDialog() {
   input.autocomplete = "off";
   input.spellcheck = false;
   input.setAttribute("role", "combobox");
-  input.setAttribute("aria-label", "Search tasks, issues, questions or type > for commands");
+  input.setAttribute("aria-label", "Search items or type > for commands");
   input.setAttribute("aria-autocomplete", "list");
   input.setAttribute("aria-controls", "palette-list");
   input.setAttribute("aria-expanded", "false");

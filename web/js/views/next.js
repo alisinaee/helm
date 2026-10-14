@@ -12,7 +12,7 @@ export function nextSection(vm) {
     ? '<ol class="next-list">' + items.map(function (item) {
       return "<li>" + esc(item) + "</li>";
     }).join("") + "</ol>"
-    : '<p class="placeholder">Nothing queued.</p>';
+    : '<p class="placeholder">Queue is empty.</p>';
   return sectionHtml({
     id: "next",
     title: "Next up",

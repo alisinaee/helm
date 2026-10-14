@@ -34,7 +34,7 @@ export function sectionView() {
   const ui = loadUi();
   applyDensity(ui.density);
   return '<div class="page-head"><h2 class="page-title">Settings</h2>' +
-    '<p class="page-note">Preferences for this browser. Project settings live in the project files.</p></div>' +
+    '<p class="page-note">Browser preferences only; projects keep separate settings.</p></div>' +
     '<section class="ov-card" aria-labelledby="set-look"><h3 id="set-look" class="lim-h">Appearance</h3>' +
     '<p class="lim-label">Theme</p>' + choiceHtml("Theme", THEMES, ui.theme, "set-theme") +
     '<p class="lim-label">Density</p>' + choiceHtml("Density", DENSITIES, ui.density, "set-density") +
