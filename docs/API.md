@@ -130,6 +130,13 @@ kind, value, text}` (`value` is the number for a budget rule, else null). At mos
 rule, or whose text is over 160 characters, is skipped. A missing or unreadable file gives `[]`. Without the key the
 snapshot is unchanged.
 
+Since WP47 the snapshot also has `workflow`, always present (empty lists for a project with no jobs or tasks).
+`spans` holds the newest 200 jobs in start order, each as `[id, task, model, role, parent, startEpoch, endEpoch,
+status, tokensK]`: epochs are whole seconds, `endEpoch` is null while the job runs, `role` and `parent` are null
+when unset. Jobs whose last moment (end, or start while running) is more than 7 days old are dropped. `edges.after`
+is `[from, to]` for each task's `after` list (from is the task waited for, to the waiting task; only ids that are
+tasks in tasks.json). `edges.block` is `[issueId, taskId]` for each open blocker issue and its tasks.
+
 `ETag` is a strong tag: the first 32 hex characters of a SHA-256 over the snapshot content with `server_time` left
 out, in quotes, for example `"c8f6148f5af0d6c7135ea34e7b0bf70e"`. Send it back as `If-None-Match`. When nothing has
 changed the reply is `304` with no body, and the `ETag` header again. A running job's duration moves with the

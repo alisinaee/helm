@@ -88,7 +88,8 @@ def _check_task_status(a):
 
 def _h_task_status(data_dir, a, now):
     """Set the status (and optionally the note and tokens). Undo restores the prior status and note. Tokens feed
-    the budget once per task (budget.record_task_tokens); that spend is not reversed by undo."""
+    the budget once per task (budget.record_task_tokens); that spend is not reversed by undo. The task's at map gets
+    the time of this change under its new status (newest only; the other statuses keep their old times)."""
     before = tasks.get(data_dir, a["id"])
     prior = before.get("status") or "todo"
     parts = [a["id"], "status=" + a["status"]]
@@ -96,7 +97,10 @@ def _h_task_status(data_dir, a, now):
         parts.append("tokensK=" + str(a["tokensK"]))
     if a["note"] is not None:
         parts.append("note=" + shlex.quote(" ".join(a["note"].split())))
-    tasks.apply(data_dir, _set_records(" ".join(parts)))
+    set_records = _set_records(" ".join(parts))
+    stamp = before.get("at") if isinstance(before.get("at"), dict) else {}
+    set_records[0]["fields"]["at"] = dict(stamp, **{a["status"]: records.now_iso(now)})
+    tasks.apply(data_dir, set_records)
     fed = False
     if a["tokensK"] is not None:
         fed = budget.record_task_tokens(data_dir, a["id"], _task_model(before), float(a["tokensK"]))

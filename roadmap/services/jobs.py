@@ -14,7 +14,8 @@ from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXI
 from roadmap.store import atomic, config, lock, schema
 
 MODELS = ("haiku", "sonnet", "opus", "cursor", "agy", "head")
-KEEP_FINISHED = 30
+KEEP_FINISHED = 200
+PARENT_ENV = "ROADMAP_PARENT_JOB"
 JOBS_FILE = "jobs.json"
 TASKS_FILE = "tasks.json"
 TITLE_MAX = 200
@@ -67,17 +68,19 @@ def known_task_ids(data_dir):
     return {t["id"] for t in tasks if isinstance(t, dict) and isinstance(t.get("id"), str)}
 
 
-def start_job(data_dir, title, model, task=None, parent=None, role=None):
+def start_job(data_dir, title, model, task=None, parent=None, role=None, environ=None):
     """Record a new running job and return it. The task, when given, must exist in tasks.json (not_found).
-    parent is the id of an existing job (the lead); role is lead or worker and needs a parent."""
+    parent is the id of an existing job (the lead); role is lead or worker and needs a parent.
+    With no parent given, the parent is $ROADMAP_PARENT_JOB (environ, default os.environ). A worker with no parent
+    and exactly one running lead (role lead, or model head) gets that lead as its parent."""
     _require_data_dir(data_dir)
     clean_title = _clean_title(title)
     clean_model = _clean_model(model)
     clean_task = _clean_task(task, data_dir)
-    clean_role = _clean_role(role, parent)
     with lock.locked(data_dir):
         doc = _read_doc(data_dir)
-        clean_parent = _clean_parent(parent, doc["jobs"])
+        clean_parent = _resolve_parent(parent, role, doc["jobs"], environ)
+        clean_role = _clean_role(role, clean_parent)
         job = {"id": _next_id(doc["jobs"]), "title": clean_title, "model": clean_model}
         if clean_task:
             job["task"] = clean_task
@@ -213,6 +216,26 @@ def _clean_parent(parent, jobs):
     text = str(parent).strip()
     _find(jobs, text)
     return text
+
+
+def _resolve_parent(parent, role, jobs_list, environ):
+    """The parent job id for a new job: an explicit parent, else $ROADMAP_PARENT_JOB, else (worker only) the one
+    running lead. Returns None when there is none. An unknown id is not_found, as for --parent."""
+    explicit = str(parent).strip() if parent is not None else ""
+    if not explicit:
+        env = os.environ if environ is None else environ
+        explicit = str(env.get(PARENT_ENV, "") or "").strip()
+    if not explicit and str(role or "").strip() == "worker":
+        return _sole_running_lead(jobs_list)
+    return _clean_parent(explicit or None, jobs_list)
+
+
+def _sole_running_lead(jobs_list):
+    """The id of the only running job that is a lead (role lead, or model head), or None when there are zero or
+    several of them."""
+    leads = [j for j in jobs_list if isinstance(j, dict) and j.get("status") == "running"
+             and (j.get("role") == "lead" or j.get("model") == "head")]
+    return str(leads[0].get("id")) if len(leads) == 1 else None
 
 
 def _clean_task(task, data_dir):

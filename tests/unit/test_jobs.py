@@ -140,23 +140,23 @@ class JobCommandTests(FixtureCase):
         code, out, _ = run_cli(["job", "list"])
         self.assertEqual((code, out), (0, "no jobs\n"))
 
-    def test_prune_keeps_running_and_newest_thirty_finished(self):
+    def test_prune_keeps_running_and_newest_two_hundred_finished(self):
         rows = []
-        for n in range(1, 36):
+        for n in range(1, 206):
             status = "running" if n in (1, 2) else "done"
             rows.append({"id": "j%d" % n, "title": "t", "model": "haiku", "status": status,
                          "started": "2026-10-01T00:00:00+00:00",
-                         "ended": "2026-10-01T00:%02d:00+00:00" % n if status != "running" else None})
+                         "ended": "2026-10-01T%02d:%02d:00+00:00" % (n // 60, n % 60) if status != "running" else None})
         self.write_jobs({"schemaVersion": 1, "jobs": rows})
         code, out, _ = run_cli(["job", "prune", "--json"])
         self.assertEqual(code, 0)
         data = json.loads(out)["data"]
-        self.assertEqual(data, {"removed": 3, "kept": 32})
+        self.assertEqual(data, {"removed": 3, "kept": 202})
         kept = {j["id"] for j in self.read_jobs()}
         self.assertIn("j1", kept)
         self.assertIn("j2", kept)
         self.assertNotIn("j3", kept)  # the three oldest finished jobs go
-        self.assertIn("j35", kept)
+        self.assertIn("j205", kept)
 
     def test_corrupt_file_stops_with_invalid_data_and_is_left_alone(self):
         with open(self.jobs_file(), "w", encoding="utf-8") as fh:

@@ -13,7 +13,8 @@ TASK_STATUSES = PHASE_STATUSES
 MODELS = ("haiku", "sonnet", "opus")
 THINKING = ("low", "medium", "high")
 CHECKS = ("none", "sonnet", "opus")
-SET_KEYS = ("status", "tokensK", "model", "thinking", "needsUser", "check", "checkK", "note", "title")
+SET_KEYS = ("status", "tokensK", "model", "thinking", "needsUser", "check", "checkK", "note", "title", "after")
+AFTER_MAX = 5                          # most task ids in a task's after list
 PLAN_ALLOWED = ("P <id> <status> | <name>  or  T <id> <status> <tokensK> <model>/<thinking> "
                 "[!] [c:<check>/<checkK>] | <title> [# <note>]")
 SET_ALLOWED = "<id> key=value ...; keys: " + ", ".join(SET_KEYS)
@@ -133,12 +134,18 @@ def _parse_task(line, lineno):
     needs = None
     check = None
     check_k = None
+    after = None
     idx = 5
     if idx < len(tokens) and tokens[idx] == "!":
         needs = True
         idx += 1
     if idx < len(tokens) and tokens[idx].startswith("c:"):
         check, check_k, problem = _parse_check(tokens[idx][2:], lineno)
+        if problem is not None:
+            return None, problem
+        idx += 1
+    if idx < len(tokens) and tokens[idx].startswith("a:"):
+        after, problem = _parse_after_token(tokens[idx][2:], lineno)
         if problem is not None:
             return None, problem
         idx += 1
@@ -157,8 +164,33 @@ def _parse_task(line, lineno):
            "title": title, "status": None if status == "-" else status,
            "tokensK": tokens_k, "thinking": None if thinking == "-" else thinking,
            "model": None if model == "-" else model, "needsUser": needs,
-           "check": check, "checkK": check_k, "note": note}
+           "check": check, "checkK": check_k, "note": note, "after": after}
     return rec, None
+
+
+def _parse_after_token(text, lineno):
+    """The a:<ids> token of a task line: a list of task ids, or None for a:- (keep the current list)."""
+    if text == "-":
+        return None, None
+    ids, problem = parse_after(text)
+    if problem is not None:
+        return None, _problem(lineno, problem)
+    return ids, None
+
+
+def parse_after(text):
+    """A task's after list from 'P2.2,P2.3': (ids, None), or (None, problem) when an id is not a task id or there
+    are more than AFTER_MAX ids. Empty text gives [] (which clears the list in a set line)."""
+    if not text.strip():
+        return [], None
+    ids = [part.strip() for part in text.split(",")]
+    for tid in ids:
+        if not TASK_ID_RE.match(tid):
+            return None, ("after id '" + tid + "' must look like P2.2 (allowed: task ids, up to "
+                          + str(AFTER_MAX) + ", comma separated)")
+    if len(ids) > AFTER_MAX:
+        return None, ("after has " + str(len(ids)) + " ids (allowed: up to " + str(AFTER_MAX) + ")")
+    return ids, None
 
 
 def _parse_check(text, lineno):
@@ -217,6 +249,13 @@ def parse_set_line(line, lineno=1):
 def _set_value(key, value, lineno):
     if key == "note":
         return value, None
+    if key == "after":
+        if value == "-":
+            return _KEEP, None
+        ids, problem = parse_after(value)
+        if problem is not None:
+            return None, _problem(lineno, problem)
+        return ids, None
     if key == "title":
         if not value.strip():
             return None, _problem(lineno, "title is empty (allowed: any text)")
@@ -275,6 +314,9 @@ def format_task(task):
     check_k = _format_number(task.get("checkK"))
     if check != "none" or check_k not in ("0", "-"):
         parts.append("c:" + check + "/" + check_k)
+    after = task.get("after")
+    if isinstance(after, list) and after:
+        parts.append("a:" + ",".join(str(tid) for tid in after))
     line = " ".join(parts) + " | " + _one_line(task.get("title", ""))
     note = task.get("note")
     if isinstance(note, str) and note.strip():
