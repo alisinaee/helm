@@ -26,7 +26,8 @@ roadmap project add <split-net> --name "split-net"
 roadmap project check split-net
 ```
 
-`project init` writes the template data files only where they are missing, so existing `docs/` files stay as they are.
+`project init` takes a folder path (here `<split-net>`), not a project id. `project add`, `project check`, and the
+later commands take the id `split-net`. `project init` writes the template data files only where they are missing, so existing `docs/` files stay as they are.
 `project check` must print a schema version for each file and no error.
 
 Rollback: `roadmap project remove split-net`. The files are kept.
