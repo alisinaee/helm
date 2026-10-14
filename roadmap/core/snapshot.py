@@ -88,6 +88,15 @@ def _span(job):
             _round_k(job.get("tokensK"))]
 
 
+# R7.10: a feature row leaves out these keys when they are empty (null or false). The Planner reads a missing key as
+# that empty value, so the GUI shows the same thing.
+FEATURE_EMPTY_OMITTED = ("parent", "phase", "accepted")
+
+
+def _drop_empty_feature_keys(row):
+    return {key: value for key, value in row.items() if not (key in FEATURE_EMPTY_OMITTED and not value)}
+
+
 def _features_view(text, tasks, jobs_list, issues_open, errors):
     """The features key (WP52): rows, uncovered, orphans and counts from docs/features.json text. Absent text is an
     empty derive. Bad JSON or a bad feature goes into errors; nothing raises."""
@@ -103,7 +112,8 @@ def _features_view(text, tasks, jobs_list, issues_open, errors):
             errors.append(error_entry("features.json", exc))
     view = feature_rules.derive(raw, tasks, jobs_list, issues_open)
     errors.extend({"file": "features.json", "error": message} for message in view["errors"])
-    return {"rows": feature_rules.snapshot_rows(view["rows"]), "uncovered": view["uncovered"],
+    return {"rows": [_drop_empty_feature_keys(row) for row in feature_rules.snapshot_rows(view["rows"])],
+            "uncovered": view["uncovered"],
             "orphans": view["orphans"], "counts": view["counts"]}
 
 
