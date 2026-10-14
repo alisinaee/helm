@@ -3,7 +3,7 @@
 // gets an Undo toast. Rows read through from autonomy.json or budget.json are shown read-only with their source.
 // The client does no maths on the limits: the slider and stepper only move the value the server will check.
 
-import { emptyHtml, esc } from "../dom.js";
+import { esc } from "../dom.js";
 import { fmtTokens } from "../format.js";
 import { run } from "../cmd.js";
 import { showToast } from "./toast.js";
@@ -170,7 +170,7 @@ export function limitsHtml(scope, rows) {
     '<button type="button" class="btn btn-small" data-action="lim-add" data-focus="lim-add">+ Add limit</button></div>';
   if (!list.length) {
     return '<div class="lim-block">' + head + presetsHtml(scope) +
-      emptyHtml("No limits. Agents may use your whole weekly allowance.", "") + "</div>";
+      '<p class="lim-note">No limits. Agents may use your whole weekly allowance.</p></div>';
   }
   const add = addOpen ? presetsHtml(scope) : "";
   return '<div class="lim-block">' + head + add +

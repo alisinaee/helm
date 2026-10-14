@@ -66,9 +66,10 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     chipHtml(job.model || "model", "neutral") + " " +
     (job.role ? chipHtml(job.role, "neutral") + " " : "") +
     '<span class="ag-title">' + esc(label) + "</span> " + taskHtml + " " +
-    '<span class="num" data-started-ms="' + esc(String(job.startedMs == null ? "" : job.startedMs)) + '">' +
+    '<span class="ag-tail"><span class="num" data-started-ms="' +
+    esc(String(job.startedMs == null ? "" : job.startedMs)) + '">' +
     esc(elapsedText(job, now)) + "</span> " +
-    '<span class="num">' + esc(tokens) + "</span> " + badge + " " + handed + " " + stop + "</div>";
+    '<span class="num">' + esc(tokens) + "</span> " + badge + " " + handed + " " + stop + "</span></div>";
   if (!children.length) return row + "</li>";
   return row + '<ul class="ag-kids" aria-label="Workers of ' + esc(label) + '">' + children.map(function (child) {
     return agentRowHtml(child, pid, tree, blocked, now, depth + 1);
@@ -81,8 +82,8 @@ function finishedHtml(job) {
   const tokens = job.tokensK == null ? MISSING : fmtTokens(job.tokensK);
   return '<li class="act-row"><span class="act-time num">' + esc(fmtDuration(job.elapsedS)) + "</span>" +
     '<span class="act-main"><span class="act-sum">' + esc(job.title || job.id) + "</span> " +
-    chipHtml(job.model || "model", "neutral") + " " + chipHtml(word, kind) + " " +
-    '<span class="num">' + esc(tokens) + "</span></span></li>";
+    chipHtml(job.model || "model", "neutral") + " " + chipHtml(word, kind) + "</span>" +
+    '<span class="act-tok num">' + esc(tokens) + "</span></li>";
 }
 
 // One block per project in view: its live tree and its finished jobs.

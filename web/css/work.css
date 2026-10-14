@@ -47,6 +47,7 @@
 .wk-col[data-on=false]{display:none}
 .wk-tabs{display:flex;gap:var(--sp-1)}
 .wk-tab,.wk-chip,.wk-views button,.wk-card .btn,.wk-menu summary{min-height:44px}
+.wk-chip{max-width:48%;text-align:left}
 .wk-card .wk-acts{opacity:1}
 .wk-table thead,.wk-c-sel,.wk-c-phase,.wk-c-est,.wk-c-spent,.wk-c-cap,.wk-bulk{display:none}
 .wk-table tr{display:flex;flex-wrap:wrap;gap:4px var(--sp-2);padding:var(--sp-2) 0;min-height:44px;border-bottom:1px solid var(--track)}
