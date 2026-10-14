@@ -209,3 +209,39 @@ class ActivityFileTests(CmdCase):
             row = json.loads(fh.readline())
         self.assertEqual(row["activity"], "A1")
         self.assertEqual(row["op"], "task.status")
+
+
+class StartApprovalTests(CmdCase):
+    """WP62b on the GUI path: task.status to partial (a start) is refused in a phase with approved false."""
+
+    def set_approved(self, phase, value):
+        doc = self.read_json("tasks.json")
+        for p in doc["phases"]:
+            if p.get("id") == phase:
+                p["approved"] = value
+        with open(os.path.join(self.data, "tasks.json"), "w", encoding="utf-8") as fh:
+            json.dump(doc, fh)
+
+    def test_start_in_unapproved_phase_is_refused_and_writes_nothing(self):
+        self.set_approved("P1", False)
+        before = self.read_json("tasks.json")
+        with self.assertRaises(RoadmapError) as ctx:
+            self.op("task.status", {"id": "P1.1", "status": "partial"}, now=at(0))
+        self.assertEqual(ctx.exception.code, "conflict")
+        self.assertEqual(ctx.exception.exit, EXIT_CONFLICT)
+        self.assertIn("not approved", ctx.exception.message)
+        self.assertIn("phase approve P1", ctx.exception.next)
+        self.assertEqual(self.read_json("tasks.json"), before)
+        self.assertEqual(self.read_lines("activity.jsonl"), [])
+
+    def test_done_in_unapproved_phase_is_not_blocked(self):
+        self.set_approved("P1", False)
+        reply = self.op("task.status", {"id": "P1.1", "status": "done"}, now=at(0))
+        self.assertTrue(reply["ok"])
+
+    def test_start_in_approved_or_other_phase_works(self):
+        self.set_approved("P1", False)
+        self.set_approved("P2", True)
+        self.assertTrue(self.op("task.status", {"id": "P2.1", "status": "partial"}, now=at(0))["ok"])
+        self.set_approved("P1", True)
+        self.assertTrue(self.op("task.status", {"id": "P1.1", "status": "partial"}, now=at(1))["ok"])
