@@ -97,11 +97,11 @@ export function toastsHtml() {
   return toasts.map(function (t) {
     const undo = t.undo
       ? '<button type="button" class="btn" data-action="toast-undo" data-toast="' + esc(t.id) +
-        '" data-focus="undo-' + esc(t.id) + '">Undo</button>'
+        '" data-focus="undo-' + esc(t.id) + '" aria-label="Undo ' + esc(t.text) + '">Undo</button>'
       : "";
     return '<div class="toast" data-tone="' + esc(t.tone) + '" data-toast="' + esc(t.id) + '">' +
       '<p class="toast-text">' + esc(t.text) + "</p>" + undo +
       '<button type="button" class="btn" data-action="toast-close" data-toast="' + esc(t.id) +
-      '" aria-label="Dismiss notification">×</button></div>';
+      '" aria-label="Dismiss notification: ' + esc(t.text) + '">×</button></div>';
   }).join("");
 }

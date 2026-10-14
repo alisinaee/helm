@@ -108,7 +108,8 @@ function capRow(scope, key, name, budgetRow) {
     '<input class="lim-num" type="number" min="1" step="1" value="' + esc(cap) + '" data-focus="cap-' + esc(scope) +
     "-" + esc(key) + '"></label>' +
     '<button type="button" class="btn btn-small" data-action="spend-cap" data-scope="' + esc(scope) +
-    '" data-key="' + esc(key) + '" data-focus="save-' + esc(scope) + "-" + esc(key) + '">Save cap</button></li>';
+    '" data-key="' + esc(key) + '" aria-label="Save cap for ' + esc(name) +
+    '" data-focus="save-' + esc(scope) + "-" + esc(key) + '">Save cap</button></li>';
 }
 
 // Spend for one project: the project cap, phase, model and the top five tasks by spend. Caps are set here.
@@ -164,7 +165,8 @@ function overrideHtml(pid) {
     '<p class="page-note">Temporarily ignore limits; logged in Activity.</p>' +
     '<div class="tk-override"><label class="lim-field"><span class="lim-label">For</span>' +
     '<select class="lim-select" data-focus="ov-hours">' + options + "</select></label>" +
-    '<button type="button" class="btn" data-action="lim-override" data-focus="ov-go">Override</button></div></section>';
+    '<button type="button" class="btn" data-action="lim-override" aria-label="Apply override for ' + esc(pid) +
+    '" data-focus="ov-go">Override</button></div></section>';
 }
 
 function accuracyHtml() {

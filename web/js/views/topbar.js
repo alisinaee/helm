@@ -117,7 +117,7 @@ export function topbarView(vm) {
     '<div class="top-tools">' + controlHtml(vm) + metersHtml(vm) + connHtml(vm.conn) +
     '<button type="button" class="btn" data-action="cycle-theme" data-focus="theme" aria-label="Theme: ' +
     esc(themeLabel(theme)) + '. Change theme">' + esc(themeLabel(theme)) + "</button>" +
-    '<button type="button" class="btn" data-action="help-open" data-focus="help"' +
+    '<button type="button" class="btn" data-action="help-open" data-focus="help" aria-haspopup="dialog"' +
     ' aria-label="Keyboard shortcuts">?</button>' +
     "</div></div>";
 }

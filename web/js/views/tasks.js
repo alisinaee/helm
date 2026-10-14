@@ -74,7 +74,8 @@ function rowHtml(task, cls, cells, jobs) {
   const jobHtml = jobs && jobs.length ? '<span class="job-chips">' + jobs.map(jobChipHtml).join("") + "</span>" : "";
   const title = shownTitle(task);
   return '<div class="task-row ' + cls + '">' + idHtml(task) +
-    '<span class="t-main"><span class="t-title" title="' + esc(title) + '" tabindex="0" data-tt-id="' +
+    '<span class="t-main"><span class="t-title" title="' + esc(title) + '" tabindex="0" role="button" ' +
+    'aria-label="Edit title for ' + esc(task.id) + '" data-tt-id="' +
     esc(task.id) + '">' + esc(title) + "</span>" +
     noteHtml(task) + jobHtml + "</span>" + cells + "</div>";
 }

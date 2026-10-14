@@ -25,7 +25,8 @@ function taskHtml(ctx, task) {
   if (task.blocked) flags.push(chipHtml("blocked", "danger"));
   return '<li class="wk-tree-task" data-wk-task="' + esc(task.id) + '" data-state="' + esc(task.state) + '">' +
     '<div class="wk-tree-row"><span class="wk-id num">' + esc(task.id) + "</span>" +
-    '<a class="wk-title" href="' + esc(taskHref(ctx, task.id)) + '" data-focus="wk-title-' + esc(task.id) +
+    '<a class="wk-title" href="' + esc(taskHref(ctx, task.id)) + '" aria-label="Task ' + esc(task.id) + ": " +
+    esc(task.title) + '" data-focus="wk-title-' + esc(task.id) +
     '">' + esc(task.title) + "</a>" +
     '<span class="wk-word">' + esc(STATE_LABEL[task.state] || task.state) + "</span>" + flags.join("") + "</div>" +
     subtaskHtml(task) + "</li>";
