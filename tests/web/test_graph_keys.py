@@ -70,7 +70,8 @@ class KeyPlanTest(unittest.TestCase):
         self.assertEqual(out["minus"], {"op": "zoom", "f": 0.8})
         self.assertEqual(out["zero"], {"op": "fit"})
         self.assertEqual(out["esc"], {"op": "clear"})
-        self.assertEqual(out["right"]["op"], "focus")
+        # R7.14 D: Right walks the path order (Up and Down keep the nearest-node focus).
+        self.assertEqual(out["right"], {"op": "walk", "step": 1})
         self.assertEqual(out["shiftRight"]["op"], "pan")
         self.assertIsNone(out["other"])
 

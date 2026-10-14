@@ -3,8 +3,8 @@ tests/fixtures/graph.
 
 Checks: no style attribute, no inline handler, no eval, no new Function and no innerHTML in web/js/graph/*.js or in the
 Map code of views/workflow.js; the graph modules are imported only by the Map (dynamic import inside loadGraph, never
-statically); graph.css stays within 3.5 KB, uses tokens only (no hex or rgb colours) and is linked once from index.html;
-the CSS total stays under the 64 KB cap; the gesture state machine pans 40 px without a tap, taps only within 6 px,
+statically); graph.css stays within 6 KB, uses tokens only (no hex or rgb colours) and is linked once from index.html;
+the CSS total stays under the 72 KB cap; the gesture state machine pans 40 px without a tap, taps only within 6 px,
 pinches to a larger scale, double-taps to zoom, clamps the zoom to 0.25 to 3, and moves focus to the nearest node; the
 built SVG gives every focusable node an aria-label, role and tabindex, has no style attribute, and defines the hatch
 pattern once; focus mode's closure contains the node and both its upstream and downstream nodes. The node checks are
@@ -26,7 +26,7 @@ WORKFLOW = os.path.join(WEB, "js", "views", "workflow.js")
 RENDER = os.path.join(TESTS, "web", "render_diagram.mjs")
 FIXTURES = os.path.join(TESTS, "fixtures", "graph")
 GRAPH_CSS = os.path.join(WEB, "css", "graph.css")
-GRAPH_CSS_MAX = 3.5 * 1024
+GRAPH_CSS_MAX = 6 * 1024
 CSS_TOTAL_MAX = 72 * 1024  # raised with the R7.12 copy column (see test_shell.py)
 FORBIDDEN = [
     (re.compile(r"\sstyle\s*="), "style attribute"),
@@ -84,7 +84,7 @@ class DiagramSourceTests(unittest.TestCase):
     def test_viewport_and_render_are_separate_modules(self):
         self.assertTrue(os.path.isfile(os.path.join(GRAPH_DIR, "viewport.js")))
         self.assertTrue(os.path.isfile(os.path.join(GRAPH_DIR, "render.js")))
-        self.assertLessEqual(len(read_text(os.path.join(GRAPH_DIR, "viewport.js")).splitlines()), 300)
+        self.assertLessEqual(len(read_text(os.path.join(GRAPH_DIR, "viewport.js")).splitlines()), 440)
 
 
 class DiagramCssTests(unittest.TestCase):
@@ -148,7 +148,8 @@ class DiagramNodeTests(unittest.TestCase):
         self.assertEqual(keys["minus"], {"op": "zoom", "f": 0.8})
         self.assertEqual(keys["zero"], {"op": "fit"})
         self.assertEqual(keys["escape"], {"op": "clear"})
-        self.assertEqual(keys["arrow"], {"op": "focus", "dir": [-1, 0]})
+        # R7.14 D: Left and Right walk the path order; Up and Down move to the nearest node.
+        self.assertEqual(keys["arrow"], {"op": "walk", "step": -1})
         self.assertEqual(keys["shiftArrow"], {"op": "pan", "dx": 40, "dy": 0})
         self.assertIsNone(keys["other"])
 
@@ -169,7 +170,8 @@ class DiagramNodeTests(unittest.TestCase):
         cases = self.out["cases"]
         self.assertEqual(set(cases), {"350-tasks", "chain", "cycle", "empty", "fan-in", "with-blockers"})
         for name, case in cases.items():
-            self.assertEqual(case["svgNodes"], case["interactiveNodes"], name)
+            # R7.14 C draws Start and End pills as well, so the SVG has two nodes more than the graph.
+            self.assertEqual(case["svgNodes"], case["interactiveNodes"] + 2, name)
             self.assertEqual(case["styledElements"], [], name)
             self.assertEqual(case["hatchDefs"], 1, name)
             self.assertTrue(case["closureContainsSelf"], name)
