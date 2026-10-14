@@ -50,9 +50,9 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
   const children = tree.kids.get(job.id) || [];
   const taskHtml = job.task
     ? '<a href="' + esc(itemHash(pid, job.task)) + '">' + esc(job.task) + "</a>"
-    : '<span class="mt-label">no task</span>';
+    : '<span class="mt-label">No task assigned</span>';
   const handed = children.length
-    ? chipHtml("handed to " + children.map(function (c) {
+    ? chipHtml("Delegated to " + children.map(function (c) {
       return c.role || c.model || "worker";
     }).join(", "), "neutral")
     : "";
@@ -106,7 +106,7 @@ function projectBlock(entry, now, showName) {
     ? '<ol class="act-list" aria-label="Last finished jobs">' + done.map(finishedHtml).join("") + "</ol>"
     : '<p class="ov-sum">No finished jobs yet.</p>';
   return '<section class="ov-card" aria-label="Agents">' + heading + live +
-    '<h3 class="ov-h">Last ' + FINISHED_MAX + " finished</h3>" + past + "</section>";
+    '<h3 class="ov-h">Recently finished jobs</h3>' + past + "</section>";
 }
 
 export function sectionView(vm) {

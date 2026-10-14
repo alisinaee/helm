@@ -187,8 +187,8 @@ export function actionsHtml(task) {
     (task.state !== "todo" ? '<button type="button" class="btn btn-small" data-wk="status" data-task="' +
       esc(task.id) + '" data-from="' + esc(task.state) + '" data-to="todo">Move to Todo</button>' : "") +
     '<button type="button" class="btn btn-small" data-wk="run-start" data-task="' + esc(task.id) +
-    '">Queue run</button><button type="button" class="btn btn-small" data-wk="run-stop" data-task="' +
-    esc(task.id) + '">Stop run</button></div></details>';
+    '">Queue task</button><button type="button" class="btn btn-small" data-wk="run-stop" data-task="' +
+    esc(task.id) + '">Stop task</button></div></details>';
   return quick + more;
 }
 
@@ -254,7 +254,7 @@ export function boardView(ctx) {
   const hint = ctx.fine
     ? "Drag a card to another column, or use its buttons. Keys: s Start, d Done, h Hold, x Reopen. " +
       "Alt+Up and Alt+Down move the focused card one column."
-    : "Use a card's buttons to change its status. Keys: s Start, d Done, h Hold, x Reopen.";
+    : "Use buttons or keys s/d/h/x.";
   return '<p class="wk-hint">' + esc(hint) + "</p>" + tabsHtml(ctx) + '<div class="wk-board">' + cols + "</div>";
 }
 

@@ -28,8 +28,10 @@ export function extrasSection(vm) {
   const snap = vm.project.snapshot;
   if (!snap.spikes.length && !snap.rh.length) return "";
   const parts = [];
-  if (snap.spikes.length) parts.push("spikes " + fmtCount(passed(snap.spikes)) + "/" + fmtCount(snap.spikes.length));
-  if (snap.rh.length) parts.push("real hardware " + fmtCount(passed(snap.rh)) + "/" + fmtCount(snap.rh.length));
+  if (snap.spikes.length) {
+    parts.push("Research spikes: " + fmtCount(passed(snap.spikes)) + "/" + fmtCount(snap.spikes.length));
+  }
+  if (snap.rh.length) parts.push("Hardware checks: " + fmtCount(passed(snap.rh)) + "/" + fmtCount(snap.rh.length));
   const body = (snap.spikes.length ? boardHtml("Spike board", snap.spikes) : "") +
     (snap.rh.length ? boardHtml("Real-hardware board", snap.rh) : "");
   return sectionHtml({ id: "extras", title: "Extras", summary: parts.join(" · ") + " passed",

@@ -111,7 +111,7 @@ class AgentsResearchTests(unittest.TestCase):
 
     def test_rows_show_model_role_task_elapsed_tokens_and_badges(self):
         html = self.out["agentsProject"]
-        self.assertIn("handed to tests, docs", html)
+        self.assertIn("Delegated to tests, docs", html)
         self.assertIn(">blocked<", html)
         self.assertIn('href="#/p/splitnet/work/i/P1.1"', html)
         self.assertIn('class="rg-num num">', html)
@@ -126,7 +126,7 @@ class AgentsResearchTests(unittest.TestCase):
 
     def test_only_the_last_ten_finished_jobs_are_listed(self):
         html = self.out["agentsProject"]
-        self.assertIn("Last 10 finished", html)
+        self.assertIn("Recently finished jobs", html)
         self.assertEqual(html.count('<li class="act-row row-grid rg-fin">'), 10)
         self.assertIn("Failed", html)
 

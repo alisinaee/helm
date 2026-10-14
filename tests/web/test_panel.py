@@ -134,8 +134,8 @@ class PanelRenderTests(unittest.TestCase):
 
     def test_rules_and_definition_of_done_are_hidden_when_absent(self):
         html = self.views["detailsTask"]
-        self.assertNotIn("Rules that apply", html)
-        self.assertNotIn("Definition of done", html)
+        self.assertNotIn("Applicable rules", html)
+        self.assertNotIn("Completion criteria", html)
 
     def test_rules_show_only_those_that_apply_to_the_task(self):
         html = self.views["detailsRules"]
@@ -150,16 +150,16 @@ class PanelRenderTests(unittest.TestCase):
 
     def test_project_card_shows_when_nothing_is_selected(self):
         html = self.views["detailsCard"]
-        self.assertIn("Tasks left", html)
+        self.assertIn("Remaining tasks", html)
         self.assertIn("Open Work for this project", html)
 
     def test_missing_item_says_it_is_not_open_and_offers_back(self):
         html = self.views["detailsMissing"]
-        self.assertIn("not open in this project", html)
+        self.assertIn("Item not found or closed.", html)
         self.assertIn('data-side="back"', html)
 
     def test_all_scope_details_ask_for_a_project(self):
-        self.assertIn("Choose a project to see its details.", self.views["detailsHome"])
+        self.assertIn("Select a project to view details.", self.views["detailsHome"])
 
 
 class PanelSourceTests(unittest.TestCase):
@@ -179,7 +179,7 @@ class PanelSourceTests(unittest.TestCase):
 
     def test_queued_waiting_wording_and_copy_command_are_in_details(self):
         text = read(os.path.join(WEB, "js", "views", "details.js"))
-        self.assertIn("Queued, waiting for a session", text)
+        self.assertIn("Queued: waiting for terminal session", text)
         self.assertIn('data-side="copy-launch"', text)
         self.assertIn("export function copyLaunch(el)", text)
         self.assertNotIn("innerHTML", text)

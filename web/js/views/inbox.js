@@ -12,7 +12,7 @@ import { currentRoute, projectHash } from "../router.js";
 
 const ARM_MS = 2000;
 const KEY_MAX = 4;
-const TIME_UP = "Time is up. The default applies shortly.";
+const TIME_UP = "Time expired; applying default choice.";
 let armedUntil = 0;
 let counting = false;
 
@@ -127,7 +127,7 @@ export function questionCardHtml(entry, now, showProject) {
       q.opts.map(function (opt, i) {
         return optionHtml(pid, q, opt, i);
       }).join("") + "</div>"
-    : '<p class="qc-foot">This question has no options. Answer it in the terminal.</p>';
+    : '<p class="qc-foot">No options. Answer in terminal.</p>';
   let timer = "";
   if (q.askedMs != null && q.timeoutS != null) {
     const deadline = q.askedMs + q.timeoutS * 1000;
@@ -153,7 +153,7 @@ export function inboxBody(vm) {
   const scopes = scopeSnapshots(vm);
   const showProject = vm.route.name !== "project";
   const c = collect(scopes);
-  if (!c.questions.length && !c.needs.length) return emptyHtml("All quiet. Nothing needs you.");
+  if (!c.questions.length && !c.needs.length) return emptyHtml("Inbox empty. No actions pending.");
   let html = "";
   for (const s of scopes) {
     const cards = c.questions.filter(function (e) {
@@ -187,7 +187,7 @@ export function inboxPreviewHtml(vm, limit) {
       esc(e.q.id) + "</a> " + esc(e.q.text) + (showProject ? " " + chipHtml(e.pname, "neutral") : "") + "</li>");
   }
   for (const e of c.needs) rows.push(needRowHtml(e, showProject));
-  if (!rows.length) return '<p class="placeholder">All quiet. Nothing needs you.</p>';
+  if (!rows.length) return '<p class="placeholder">Inbox empty. No actions pending.</p>';
   const more = rows.length > limit
     ? '<p class="ov-more"><a href="' + esc(inboxHash(vm)) + '">Open Inbox (' + (rows.length - limit) +
       " more)</a></p>"

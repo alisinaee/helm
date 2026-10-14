@@ -27,7 +27,7 @@ function runRow(job, showProject) {
 }
 
 function runList(jobs, showProject) {
-  if (!jobs.length) return '<p class="placeholder">Nothing is running.</p>';
+  if (!jobs.length) return '<p class="placeholder">No active runs.</p>';
   return '<div class="run-list">' + jobs.map(function (job) {
     return runRow(job, showProject);
   }).join("") + "</div>";
@@ -85,7 +85,7 @@ export function homeView(vm) {
 export function projectView(vm) {
   const project = vm.project;
   if (project.notFound) {
-    return emptyHtml("No project with that id.", '<a href="#/all/overview">Go to All projects</a>');
+    return emptyHtml("Project not found.", '<a href="#/all/overview">Go to All projects</a>');
   }
   const snap = project.snapshot;
   if (!snap) {

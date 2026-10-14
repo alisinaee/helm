@@ -109,13 +109,13 @@ class SectionRenderTests(unittest.TestCase):
             self.assertEqual(missing, [], name)
 
     def test_empty_states_use_the_spec_words(self):
-        self.assertIn("All quiet. Nothing needs you.", self.out["inboxGolden"])
+        self.assertIn("Inbox empty. No actions pending.", self.out["inboxGolden"])
         self.assertIn("No open blockers.", self.out["overviewGolden"])
         self.assertIn("No activity yet.", self.out["activityGolden"])
 
     def test_loading_inbox_shows_a_skeleton_not_the_empty_text(self):
         self.assertIn('aria-busy="true"', self.out["inboxLoading"])
-        self.assertNotIn("All quiet", self.out["inboxLoading"])
+        self.assertNotIn("Inbox empty", self.out["inboxLoading"])
 
     def test_question_card_has_one_button_per_option_and_a_default(self):
         html = self.out["inboxProject"]
@@ -141,7 +141,7 @@ class SectionRenderTests(unittest.TestCase):
     def test_question_without_options_has_no_answer_buttons(self):
         html = self.out["inboxProject"]
         self.assertIn("Keep the old file?", html)
-        self.assertIn("This question has no options.", html)
+        self.assertIn("No options. Answer in terminal.", html)
 
     def test_global_inbox_is_grouped_by_project(self):
         html = self.out["inboxAll"]
