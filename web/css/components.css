@@ -590,7 +590,7 @@
 
 .page-note { max-width: 90ch; }
 .act-tok { text-align: right; }
-.spend-row { align-items: flex-end; }
+.tk-spend { --rg: minmax(0, 1fr) 5.5rem 6.5rem 7rem 6.5rem; min-height: var(--h-row); }
 
 .placeholder {
   color: var(--text-2);
@@ -659,7 +659,8 @@
 .phase-grid,
 .phase-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 120px 72px 80px 56px;
+  grid-template-columns: minmax(0, 1fr) minmax(2rem, 5rem) minmax(2.5rem, 4rem) minmax(2.5rem, 4.5rem)
+    minmax(2rem, 3rem);
   column-gap: var(--sp-3);
   align-items: center;
   padding: 0 var(--sp-4);
@@ -766,6 +767,8 @@
   color: var(--text-2);
   font-size: var(--fs-12);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ph-pct {
