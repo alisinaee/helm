@@ -5,6 +5,7 @@ and the extras files) to its text, or to None when the file is missing. config i
 roadmap.config.json. now is the moment to measure running jobs and the recent window from.
 """
 
+import json
 from datetime import timedelta
 
 from roadmap.core.extras import parse_extras
@@ -19,6 +20,9 @@ RECENT_WINDOW = timedelta(minutes=30)               # finished jobs shown under 
 RECENT_MAX = 2
 ACTIVITY_SHOWN = 15                                 # log lines on the Overview
 COMMENTS_SHOWN = 3                                  # newest comments per target
+WORKFLOW_SPANS = 200                                # newest job spans in the workflow key
+WORKFLOW_DAYS = timedelta(days=7)                   # jobs that ended (or started) longer ago are dropped
+AFTER_MAX = 5                                       # most task ids in one after list
 
 
 def _missing(name):
@@ -67,6 +71,57 @@ def _budget_view(doc, tasks, phases):
         "tasks": {tid: row(task_spent.get(tid, 0.0), limits["tasks"].get(tid)) for tid in task_ids},
         "spent": spent,
     }
+
+
+def _round_k(value):
+    return round(float(value), 1) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
+def _span(job):
+    """One job as a compact list: [id, task, model, role, parent, startEpoch, endEpoch|null, status, tokensK]."""
+    start = parse_ts(job.get("started"))
+    end = None if job["status"] == "running" else parse_ts(job.get("ended"))
+    return [job["id"], job.get("task"), job.get("model") or None, job.get("role"), job.get("parent"),
+            int(start.timestamp()), int(end.timestamp()) if end else None, job["status"],
+            _round_k(job.get("tokensK"))]
+
+
+def _after_edges(tasks_text, known):
+    """[from, to] pairs from each task's after list in the raw tasks.json text: from is the task waited for, to the
+    waiting task. Only ids that are tasks in this file count; a bad file gives no edges."""
+    try:
+        raw = json.loads(tasks_text) if tasks_text else {}
+    except ValueError:
+        return []
+    items = raw.get("tasks") if isinstance(raw, dict) else None
+    edges = []
+    for task in items if isinstance(items, list) else []:
+        if not isinstance(task, dict) or task.get("id") not in known or not isinstance(task.get("after"), list):
+            continue
+        for dep in task["after"][:AFTER_MAX]:
+            if isinstance(dep, str) and dep in known:
+                edges.append([dep, task["id"]])
+    return edges
+
+
+def _workflow_view(jobs, issues_open, tasks_text, task_ids, moment):
+    """The workflow key: the newest job spans (at most WORKFLOW_SPANS, in start order, jobs older than WORKFLOW_DAYS
+    dropped) and the edges: after from tasks.json, and block from open blocker issues to their tasks."""
+    cutoff = moment - WORKFLOW_DAYS
+    spans = []
+    for job in jobs:
+        start = parse_ts(job.get("started"))
+        if start is None:
+            continue
+        last = parse_ts(job.get("ended")) if job["status"] != "running" else None
+        if (last or start) < cutoff:
+            continue
+        spans.append((start, _span(job)))
+    spans.sort(key=lambda pair: pair[0])
+    block = [[issue["id"], tid] for issue in issues_open if issue["kind"] == "blocker"
+             for tid in issue["tasks"] if tid in task_ids]
+    return {"spans": [row for _, row in spans[-WORKFLOW_SPANS:]],
+            "edges": {"after": _after_edges(tasks_text, task_ids), "block": block}}
 
 
 def build_snapshot(files, config, now, control=None, meters=None, rules=None):
@@ -238,6 +293,7 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None):
         if j.get("parent") in running_ids:
             groups.setdefault(j["parent"], []).append(j["id"])
     out.update({
+        "workflow": _workflow_view(jobs, issues_open, tasks_text, {t["id"] for t in tasks}, moment),
         "issues": issues_open,
         "questions": questions_open,
         "comments": {target: rows[-COMMENTS_SHOWN:] for target, rows in by_target.items()},

@@ -5,10 +5,11 @@ write. Output follows docs/AGENT-INTERFACE.md section 2: one line per task, and 
 """
 
 import argparse
+import shlex
 import sys
 
 from roadmap.core import planfmt
-from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, RoadmapError
+from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import commands, tasks
 
 STATUS_FOR = {"done": "done", "start": "partial", "hold": "hold"}
@@ -54,7 +55,10 @@ def register(sub, common):
 
     bulk = actions.add_parser("set", parents=[common, project],
                               help="bulk patch from stdin, one 'ID key=value ...' line per task")
-    bulk.add_argument("source", nargs="?", default="-", help="a file, or - for stdin (default -)")
+    bulk.add_argument("source", nargs="?", default=None,
+                      help="a file, or - for stdin (default -); with --after, the task id, for example P2.4")
+    bulk.add_argument("--after", metavar="IDS", default=None,
+                      help="task ids this task waits for, comma separated (at most 5); an empty value clears them")
     bulk.add_argument("--dry-run", action="store_true", help="show what would change, write nothing")
     bulk.set_defaults(handler=_set)
 
@@ -74,6 +78,8 @@ def apply_records(data_dir, project_id, records, next_cmd, dry_run=False, replac
         return tasks.apply(data_dir, records, dry_run=dry_run, replace_phase=replace_phase, project_id=project_id)
     except tasks.PlanError as exc:
         exit_code = EXIT_NOT_FOUND if exc.exit == EXIT_NOT_FOUND else EXIT_INVALID_DATA
+        if exc.usage:
+            exit_code = EXIT_USAGE
         cmd = exc.next if exc.next and exc.next.startswith("roadmap ") else next_cmd
         raise plan_failure(exc.errors, cmd, exit_code)
 
@@ -156,11 +162,29 @@ def _tokens_arg(value):
 
 def _set(args):
     project_id, data_dir = _data(args)
-    text = _read_source(args.source)
+    if args.after is not None:
+        return _set_after(args, project_id, data_dir)
+    source = args.source or "-"
+    text = _read_source(source)
     records, errors = planfmt.parse_set_text(text)
-    next_cmd = "roadmap task set " + args.source + " --dry-run"
+    next_cmd = "roadmap task set " + source + " --dry-run"
     if errors:
         raise plan_failure(errors, next_cmd)
+    diff = apply_records(data_dir, project_id, records, next_cmd, dry_run=args.dry_run)
+    return print_diff(diff, getattr(args, "json", False))
+
+
+def _set_after(args, project_id, data_dir):
+    """task set <id> --after P2.2,P2.3: the same bulk path with one after=... line for the task named."""
+    tid = (args.source or "").strip()
+    if not tid or tid == "-":
+        raise plan_failure(["--after needs a task id first (allowed: task set <id> --after P2.2,P2.3)"],
+                           "roadmap task list")
+    line = tid + " after=" + shlex.quote(args.after.replace(" ", ""))
+    records, errors = planfmt.parse_set_text(line)
+    next_cmd = "roadmap task show " + tid
+    if errors:
+        raise plan_failure(errors, next_cmd, EXIT_USAGE)
     diff = apply_records(data_dir, project_id, records, next_cmd, dry_run=args.dry_run)
     return print_diff(diff, getattr(args, "json", False))
 

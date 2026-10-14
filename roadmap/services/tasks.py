@@ -25,11 +25,13 @@ _NEXT_FIX = "fix the lines above, then run the same command with --dry-run"
 
 
 class PlanError(RoadmapError):
-    """Validation failed and nothing was written. errors holds every problem as 'line N: ... (allowed: ...)'."""
+    """Validation failed and nothing was written. errors holds every problem as 'line N: ... (allowed: ...)'.
+    usage is True when every problem is an after-list problem, which exits with the usage code (2)."""
 
-    def __init__(self, errors, exit_code, next_cmd):
+    def __init__(self, errors, exit_code, next_cmd, usage=False):
         super().__init__("invalid_plan", "\n".join(errors), exit_code, next=next_cmd)
         self.errors = list(errors)
+        self.usage = usage
 
 
 def tasks_path(data_dir):
@@ -253,14 +255,61 @@ def _apply_records(doc, records, replace_phase):
         mine = [t for t in doc["tasks"] if isinstance(t, dict) and _phase_of(t) == pid]
         if mine:
             phase["status"] = _recompute(mine)
+    problems.extend(_check_after(doc, unique))
     return problems, input_ids
+
+
+def _check_after(doc, records):
+    """Problems with the after lists that this input sets: each id must be a task in the file, must not be the task
+    itself, and must not close a loop (the dependency must not already lead back to the task). Checked against the
+    whole file after the input is applied; kind 'usage' gives the usage exit code."""
+    tasks = {t["id"]: t for t in doc["tasks"] if isinstance(t, dict) and isinstance(t.get("id"), str)}
+    problems = []
+    for rec in records:
+        if rec["kind"] == "phase":
+            continue
+        fields_after = rec.get("after") if rec["kind"] == "task" else rec["fields"].get("after")
+        if fields_after is None or rec["id"] not in tasks:
+            continue
+        for dep in fields_after:
+            if dep == rec["id"]:
+                problems.append(("usage", _line(rec, rec["id"] + " cannot be after itself (allowed: other task ids "
+                                                "in after)"), None))
+            elif dep not in tasks:
+                pid = dep.split(".")[0]
+                problems.append(("usage", _line(rec, "after id " + dep + " is not a task in tasks.json (allowed: an "
+                                                "existing task id; list them with roadmap task list --phase " + pid
+                                                + ")"), "roadmap task list --phase " + pid))
+            elif _reaches(tasks, dep, rec["id"]):
+                problems.append(("usage", _line(rec, "after " + dep + " would make a loop: " + dep + " already leads "
+                                                "back to " + rec["id"] + " (allowed: an after list with no loops)"),
+                                 "roadmap task show " + rec["id"]))
+    return problems
+
+
+def _reaches(tasks, start, goal):
+    """True when start is goal or follows after lists to reach goal."""
+    seen = set()
+    stack = [start]
+    while stack:
+        current = stack.pop()
+        if current == goal:
+            return True
+        if current in seen:
+            continue
+        seen.add(current)
+        task = tasks.get(current)
+        after = task.get("after") if isinstance(task, dict) else None
+        if isinstance(after, list):
+            stack.extend(dep for dep in after if isinstance(dep, str))
+    return False
 
 
 def _update_task(task, rec):
     task["title"] = rec["title"]
     for key, value in (("status", rec["status"]), ("tokensK", rec["tokensK"]), ("thinking", rec["thinking"]),
                        ("model", rec["model"]), ("check", rec["check"]), ("checkK", rec["checkK"]),
-                       ("note", rec["note"])):
+                       ("note", rec["note"]), ("after", rec.get("after"))):
         if value is not None:
             task[key] = value
     if rec["needsUser"] is True:
@@ -275,6 +324,8 @@ def _new_task(rec):
             "check": rec["check"] or "none", "checkK": 0 if rec["checkK"] is None else rec["checkK"]}
     if rec["note"] is not None:
         task["note"] = rec["note"]
+    if rec.get("after"):
+        task["after"] = list(rec["after"])
     return task
 
 
@@ -282,8 +333,10 @@ def _apply_set(task, fields):
     for key, value in fields.items():
         if key == "note" and value == "":
             task.pop("note", None)
+        elif key == "after" and not value:
+            task.pop("after", None)
         else:
-            task[key] = value
+            task[key] = list(value) if key == "after" else value
 
 
 def _recompute(tasks):
@@ -302,7 +355,10 @@ def _plan_error(problems):
     next_cmd = _NEXT_FIX
     if len(missing) == len(problems) and missing[0][2]:
         next_cmd = missing[0][2]
-    return PlanError([p[1] for p in problems], exit_code, next_cmd)
+    usage_only = all(p[0] == "usage" for p in problems)
+    if usage_only and problems[0][2]:
+        next_cmd = problems[0][2]
+    return PlanError([p[1] for p in problems], EXIT_USAGE if usage_only else exit_code, next_cmd, usage=usage_only)
 
 
 # ---------------------------------------------------------------- diff
