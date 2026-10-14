@@ -16,4 +16,4 @@ Rules every UI package must satisfy (priority order from the skill):
 9. Navigation: predictable back, deep links (hash routes), bottom nav <= 5 items, no overloaded nav.
 10. Tables/boards: filters + bulk actions, empty states with one sentence and one action.
 
-Pre-delivery: check light and dark, 375 and 1440, console errors empty, CSP clean, `wc -c web/css/*.css` <= 51 KB.
+Pre-delivery: check light and dark, 375 and 1440, console errors empty, CSP clean, `wc -c web/css/*.css` <= 72 KB (CSS_TOTAL_MAX in tests/web/test_shell.py).

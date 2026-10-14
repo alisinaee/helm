@@ -24,7 +24,7 @@ ICON_REF = re.compile(r"icons\.svg#(i-[A-Za-z0-9-]+)")
 SYMBOL_ID = re.compile(r'<symbol\b[^>]*\bid="(i-[A-Za-z0-9-]+)"')
 SECTION_MODULE = re.compile(r'module:\s*("[^"]+"|null)')
 INLINE = re.compile(r"""\sstyle\s*=|\son[a-z]{3,}\s*=""", re.IGNORECASE)
-CSS_TOTAL_MAX = 64 * 1024  # raised from 51 KB on 2026-10-14: row-alignment rule 0 and the Workflow map need room
+CSS_TOTAL_MAX = 72 * 1024  # raised from 51 KB, then 64 KB, on 2026-10-14: rule 0 rows, Workflow map, copy-ref column
 SHELL_CSS_MAX = 8 * 1024
 ICONS_MAX = 5 * 1024
 SHELL_FILES = ("shell.css", "panel.css", "work.css", "plan.css", "admin.css", "flow.css")
