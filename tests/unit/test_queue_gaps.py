@@ -2,7 +2,7 @@
 session, folder and project path (roadmap/services/loader.py). Current behaviour: the notification names the project
 id only, the launch runs on a daemon thread, and the notify call is made outside the queue lock. Nothing notifies or
 launches for real: notify.notify, queue._spawn and launcher.maybe_launch are replaced, and ROADMAP_HOME is a temp
-folder. Two real bugs are kept as expectedFailure tests (loader.py:28)."""
+folder. The empty and null project path cases (loader.py project_folder) are covered too."""
 
 import os
 import pathlib
@@ -120,7 +120,6 @@ class LoaderGapTests(HomeCase):
     def test_project_path_of_a_non_dict_entry_is_none(self):
         self.assertIsNone(loader._project_path(123))
 
-    @unittest.expectedFailure
     def test_an_empty_registered_path_does_not_read_the_working_directory(self):
         # BUG (roadmap/services/loader.py:28): os.path.join("", "docs") is the relative "docs", so the snapshot reads
         # whatever docs/ the process's working directory holds.
@@ -138,7 +137,6 @@ class LoaderGapTests(HomeCase):
             loader.load_snapshot("demo")
         self.assertIsNone(build.call_args.args[0]["tasks.json"])
 
-    @unittest.expectedFailure
     def test_a_null_registered_path_does_not_raise(self):
         # BUG (roadmap/services/loader.py:28): project_folder() joins a None path and raises TypeError before the
         # fail-open _project_path() is reached, so load_snapshot is not fail-open for such an entry.

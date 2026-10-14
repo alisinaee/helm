@@ -24,8 +24,13 @@ LSOF_TIMEOUT_S = 5
 
 
 def project_folder(entry):
-    """The data folder of a registered project entry: its path joined with dataDir."""
-    return os.path.join(entry["path"], entry.get("dataDir") or config_store.DEFAULT_DATA_DIR)
+    """The data folder of a registered project entry: its path joined with dataDir. None when the entry has no
+    usable path (empty, null or not text), so no relative folder is ever read from the working directory."""
+    root = _project_path(entry)
+    if root is None:
+        return None
+    data_dir = entry.get("dataDir")
+    return os.path.join(root, data_dir if isinstance(data_dir, str) and data_dir else config_store.DEFAULT_DATA_DIR)
 
 
 def load_snapshot(project_id, now=None):
@@ -52,6 +57,8 @@ def load_snapshot(project_id, now=None):
 def _session_view(folder):
     """The presence state of the project's data folder: "watching", "open" or "none". Any error gives None, so the
     snapshot omits the session key (fail-open). Never raises."""
+    if folder is None:
+        return None
     try:
         return presence.state(folder)
     except Exception:
@@ -59,10 +66,13 @@ def _session_view(folder):
 
 
 def _project_path(entry):
-    """The registered project root, the directory the Copy command cds into. Any error gives None (fail-open)."""
+    """The registered project root, the directory the Copy command cds into. An empty, null or non-text path gives
+    None, and so does any error (fail-open)."""
     try:
         path = entry.get("path")
-        return str(path) if path else None
+        if isinstance(path, os.PathLike):
+            path = os.fspath(path)
+        return path if isinstance(path, str) and path else None
     except Exception:
         return None
 
@@ -73,6 +83,8 @@ def _rules_view(folder):
     A missing file gives []. A file that cannot be read or decoded gives [] too. Lines that are not valid rules
     (including text longer than rules.MAX_TEXT) are skipped, as `roadmap rules check` reports them. Never raises.
     """
+    if folder is None:
+        return []
     try:
         _, parsed, _ = rules.read(folder)
     except Exception:
@@ -100,6 +112,8 @@ def _control_view(project_id):
 
 def _read_text(folder, name, errors):
     """The text of folder/name, or None when the file is missing. Other failures are noted in errors."""
+    if folder is None:
+        return None
     if not _plain_name(name):
         errors.append(error_entry(str(name), ValueError("a data file name must be a plain file name")))
         return None
