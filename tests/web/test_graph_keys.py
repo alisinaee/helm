@@ -74,6 +74,53 @@ class KeyPlanTest(unittest.TestCase):
         self.assertEqual(out["shiftRight"]["op"], "pan")
         self.assertIsNone(out["other"])
 
+class RenderMarkupTest(unittest.TestCase):
+    """R7.14 C: the flow markup (arrows, frames, Now flag, copy slot) and the CSS budget, checked in source."""
+
+    def setUp(self):
+        self.render = source("render.js")
+        with open(os.path.join(REPO, "web", "css", "graph.css"), encoding="utf-8") as f:
+            self.css = f.read()
+
+    def test_no_style_attribute_or_handler_is_set(self):
+        self.assertNotIn("setAttribute(\"style\"", self.render)
+        self.assertNotIn("addEventListener", self.render)
+        self.assertIsNone(re.search(r"\bon[a-z]+\s*[:=]\s*[\"']", self.render))
+
+    def test_one_arrow_marker_per_edge_class(self):
+        m = re.search(r"const MARKERS = \[(.*?)\];", self.render)
+        self.assertIsNotNone(m, "MARKERS list not found")
+        names = re.findall(r'"([a-z]+)"', m.group(1))
+        self.assertEqual(names, ["sequence", "dependency", "handoff", "blocker", "lead"])
+        self.assertIn('"marker-end": marker', self.render)
+        self.assertIn('id: "wfg-arrow-" + type', self.render)
+        for selector in (".wfg-arrow{", ".wfg-arrow-dependency{", ".wfg-arrow-handoff{", ".wfg-arrow-blocker{",
+                         ".wfg-arrow-lead{"):
+            self.assertIn(selector, self.css)
+
+    def test_edges_are_classed_and_styled_in_css(self):
+        self.assertIn('"wfg-e wfg-e-" + e.type', self.render)
+        for name in ("dependency", "handoff", "blocker", "lead"):
+            self.assertIn(".wfg-e-%s{" % name, self.css, name)
+        self.assertIn("stroke-dasharray", self.css)
+
+    def test_now_flag_is_drawn(self):
+        self.assertIn('"You are here"', self.render)
+        self.assertIn('"wfg-flag"', self.render)
+        self.assertIn(".wfg-flag-box{", self.css)
+
+    def test_every_node_has_an_empty_copy_slot(self):
+        self.assertIn('el("g", { class: "wfg-ref" })', self.render)
+        self.assertGreaterEqual(self.render.count('"wfg-ref"'), 1)
+
+    def test_reduced_motion_stops_the_pulse(self):
+        self.assertIn("prefers-reduced-motion: reduce", self.css)
+        self.assertIn(".wfg-s-doing .wfg-glyph{animation:none}", self.css)
+
+    def test_graph_css_stays_within_its_budget(self):
+        self.assertLessEqual(len(self.css.encode("utf-8")), 6 * 1024, "graph.css over 6 KB")
+
+
 
 if __name__ == "__main__":
     unittest.main()

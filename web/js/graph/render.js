@@ -1,13 +1,19 @@
-// Workflow diagram renderer (WP72, WP70-B). buildMap(graph, lay) builds one SVG with createElementNS: lane bands,
-// edges, nodes and a viewport <g> that viewport.js moves. Markup is never built from strings, and there are no style
-// attributes: geometry is SVG attributes, colour comes from classes on the tokens, and the hatch pattern is defined
-// once in <defs>. Loaded only in the Map view. Every node is a focusable <g role="button"> with an aria-label.
-// closureOf() and the focus classes implement focus mode.
+// Workflow diagram renderer (WP72, R7.14 C). buildMap(graph, lay, pid) draws the left-to-right flow of flowLayout()
+// (graph/layout.js): Start and End pills, one frame per phase (a folded phase is a card), a card per node by state,
+// orthogonal edges with rounded corners and one arrowhead marker per class, parallel brackets, the "You are here" flag
+// and an empty copy slot (class wfg-ref) in every node. lay is the flowLayout() result, or the layout() result whose
+// `flow` field holds it. Markup comes from createElementNS: no style attributes, no handlers (CSP), and colour comes
+// from the classes in graph.css. Loaded only in the Map view. Focus mode and the closure helpers are unchanged.
 
 import { mountViewport } from "./viewport.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const PAD = 16;
+const CORNER = 8;
+const MARKERS = ["sequence", "dependency", "handoff", "blocker", "lead"];
+const GLYPH = { done: "✓", doing: "●", todo: "○", blocked: "✕", defer: "–" };
+const FOLD_OPEN = "▾";
+const FOLD_SHUT = "▸";
 
 function el(tag, attrs, kids) {
   const node = document.createElementNS(NS, tag);
@@ -27,6 +33,11 @@ function txt(s) {
 function clip(s, max) {
   const t = String(s || "");
   return t.length > max ? t.slice(0, max - 1) + "…" : t;
+}
+
+function push(map, key, value) {
+  if (!map.has(key)) map.set(key, []);
+  map.get(key).push(value);
 }
 
 // The ids reachable from key, following edges forward (downstream) or backward (upstream), over all edge types.
@@ -49,11 +60,13 @@ function reach(edges, start, forward) {
 
 // Focus mode: the node itself, its upstream and its downstream closure. Null when no node is focused.
 export function closureOf(graph, key) {
-  if (!key || !graph || !graph.nodes.some(function (n) {
+  if (!key || !graph) return null;
+  const known = key === "start" || key === "end" || (graph.nodes || []).some(function (n) {
     return n.id === key;
-  })) return null;
-  const up = reach(graph.edges, key, false);
-  const down = reach(graph.edges, key, true);
+  });
+  if (!known) return null;
+  const up = reach(graph.edges || [], key, false);
+  const down = reach(graph.edges || [], key, true);
   const out = new Set();
   up.forEach(function (id) {
     out.add(id);
@@ -66,6 +79,25 @@ export function closureOf(graph, key) {
 
 function statusOf(n) {
   return n.status || "todo";
+}
+
+function glyphOf(status) {
+  return GLYPH[status] || GLYPH.todo;
+}
+
+function dateText(ms) {
+  if (typeof ms !== "number" || !isFinite(ms)) return "";
+  const d = new Date(ms);
+  return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+}
+
+function frameLabel(f) {
+  return "Phase " + f.label + ", " + f.done + " of " + f.total + " done";
+}
+
+function numsOf(f) {
+  const k = f.tokensK ? "  " + (Math.round(f.tokensK * 10) / 10) + "K" : "";
+  return f.done + "/" + f.total + k;
 }
 
 function nodeLabel(n) {
@@ -81,7 +113,6 @@ function nodeLabel(n) {
   }
   if (n.type === "issue") return "Blocking issue " + n.issue + " " + n.label;
   if (n.type === "queue") return n.label + " waiting";
-  if (n.type === "phase") return "Phase " + n.label + ", " + n.done + " of " + n.total + " done";
   return n.label || n.id;
 }
 
@@ -90,18 +121,19 @@ function boxAttrs(p) {
 }
 
 function taskNode(n, p, pid) {
+  const st = statusOf(n);
   const x = p.x;
   const y = p.y;
-  const cls = "wfg-n wfg-task wfg-s-" + statusOf(n);
-  return el("g", { class: cls, tabindex: 0, role: "button", "aria-label": nodeLabel(n), "data-wf-item": n.id,
-    "data-wf-task": n.task || "", "data-wf-pid": pid, "data-cx": x + p.w / 2, "data-cy": y + p.h / 2 }, [
-    el("rect", Object.assign({ class: "wfg-box", rx: 6, fill: statusOf(n) === "blocked" ? "url(#wfg-hatch)" : null },
+  return el("g", { class: "wfg-n wfg-task wfg-s-" + st, tabindex: 0, role: "button", "aria-label": nodeLabel(n),
+    "data-wf-item": n.id, "data-wf-task": n.task || "", "data-wf-pid": pid, "data-cx": x + p.w / 2,
+    "data-cy": y + p.h / 2 }, [
+    el("title", null, [txt(n.title || n.label || n.id)]),
+    el("rect", Object.assign({ class: "wfg-box", rx: 6, fill: st === "blocked" ? "url(#wfg-hatch)" : null },
       boxAttrs(p))),
-    el("circle", { class: "wfg-dot", cx: x + 10, cy: y + 14, r: 4 }),
-    el("text", { class: "wfg-id", x: x + 19, y: y + 18 }, [txt(n.task || "")]),
-    n.after ? el("text", { class: "wfg-sub", x: x + p.w - 8, y: y + 18, "text-anchor": "end" },
-      [txt("after " + n.after)]) : null,
-    el("text", { class: "wfg-t", x: x + 10, y: y + 35 }, [txt(clip(n.title || n.label, 24))]),
+    el("text", { class: "wfg-glyph", x: x + 10, y: y + 18 }, [txt(glyphOf(st))]),
+    el("text", { class: "wfg-id", x: x + 26, y: y + 18 }, [txt(n.task || "")]),
+    el("text", { class: "wfg-t", x: x + 10, y: y + 35 }, [txt(clip(n.title || n.label, 22))]),
+    el("g", { class: "wfg-ref" }),
   ]);
 }
 
@@ -140,30 +172,118 @@ function queueNode(n, p, pid) {
   ]);
 }
 
-// A collapsed phase: one node for its done tasks, focusable, with no task to open.
+// A folded phase's done tasks: one focusable node with no task to open.
 function collapseNode(n, p, pid) {
   return el("g", { class: "wfg-n wfg-task wfg-s-done", tabindex: 0, role: "button", "aria-label": n.label,
     "data-wf-item": n.id, "data-wf-task": "", "data-wf-pid": pid, "data-cx": p.x + p.w / 2,
     "data-cy": p.y + p.h / 2 }, [
-    el("rect", Object.assign({ rx: 6 }, boxAttrs(p))),
-    el("text", { class: "wfg-t", x: p.x + 10, y: p.y + 26 }, [txt(n.label)]),
+    el("rect", Object.assign({ class: "wfg-box", rx: 6 }, boxAttrs(p))),
+    el("text", { class: "wfg-glyph", x: p.x + 10, y: p.y + 18 }, [txt(glyphOf("done"))]),
+    el("text", { class: "wfg-t", x: p.x + 26, y: p.y + 26 }, [txt(clip(n.label, 22))]),
   ]);
 }
 
-// A phase band: the lane rectangle, the label on the left and the done/total and tokens K in fixed right columns.
-function phaseGroup(n, p, band, width) {
-  const tokens = n.tokensK ? (Math.round(n.tokensK * 10) / 10) + "K" : "";
-  return el("g", { class: "wfg-phase", role: "group", "aria-label": nodeLabel(n) }, [
-    el("rect", { class: "wfg-band", x: 0, y: band.y, width: width, height: band.h, rx: 6 }),
-    el("text", { class: "wfg-ph", x: 10, y: p.y + 18 }, [txt(clip(n.label, 16))]),
-    el("text", { class: "wfg-num", x: 150, y: p.y + 18, "text-anchor": "end" }, [txt(n.done + "/" + n.total)]),
-    el("text", { class: "wfg-num", x: 150, y: p.y + 34, "text-anchor": "end" }, [txt(tokens)]),
+// A folded phase: a 200 by 56 card with its progress and an expand glyph. The card is the node for that frame.
+function cardNode(f, p, pid) {
+  const st = f.total > 0 && f.done >= f.total ? "done" : "todo";
+  return el("g", { class: "wfg-n wfg-card wfg-s-" + st, tabindex: 0, role: "button",
+    "aria-label": frameLabel(f) + ", folded. Expand", "data-wf-item": f.id, "data-wf-task": "", "data-wf-pid": pid,
+    "data-cx": p.x + p.w / 2, "data-cy": p.y + p.h / 2 }, [
+    el("rect", { class: "wfg-box", rx: 8, x: p.x, y: p.y, width: p.w, height: p.h }),
+    el("text", { class: "wfg-glyph", x: p.x + 12, y: p.y + 24 }, [txt(glyphOf(st))]),
+    el("text", { class: "wfg-t", x: p.x + 28, y: p.y + 24 }, [txt(clip(f.lane, 8) + " " + clip(f.label, 14))]),
+    el("text", { class: "wfg-num", x: p.x + 12, y: p.y + 45 }, [txt(numsOf(f))]),
+    el("text", { class: "wfg-fold-glyph", x: p.x + p.w - 14, y: p.y + 31, "text-anchor": "middle" }, [txt(FOLD_SHUT)]),
   ]);
 }
 
-function edgePath(e, d) {
-  return el("path", { class: "wfg-e wfg-e-" + e.type, d: d, "marker-end": "url(#wfg-arrow)", "data-from": e.from,
-    "data-to": e.to });
+// The title tab of an open phase: id and name on the left, done/total and tokens K on the right.
+function frameBand(f) {
+  return el("g", { class: "wfg-frame", role: "group", "aria-label": frameLabel(f) }, [
+    el("rect", { class: "wfg-band", x: f.x, y: f.y, width: f.w, height: f.h, rx: 8 }),
+    el("rect", { class: "wfg-tab", x: f.title.x, y: f.title.y, width: f.title.w, height: f.title.h, rx: 4 }),
+    el("text", { class: "wfg-ph", x: f.title.x + 8, y: f.title.y + 17 },
+      [txt(clip(f.lane, 8) + " " + clip(f.label, 14))]),
+    el("text", { class: "wfg-num", x: f.slot.x - 6, y: f.title.y + 17, "text-anchor": "end" }, [txt(numsOf(f))]),
+  ]);
+}
+
+// The fold toggle of an open phase, placed before the phase's first node in focus order.
+function foldNode(f, pid) {
+  const s = f.slot;
+  return el("g", { class: "wfg-fold", tabindex: 0, role: "button", "aria-label": "Collapse phase " + f.label,
+    "aria-expanded": "true", "data-wf-fold": f.id, "data-wf-pid": pid }, [
+    el("rect", { class: "wfg-fold-box", x: s.x, y: s.y, width: s.w, height: s.h, rx: 4 }),
+    el("text", { class: "wfg-glyph", x: s.x + s.w / 2, y: s.y + 16, "text-anchor": "middle" }, [txt(FOLD_OPEN)]),
+  ]);
+}
+
+// Start and End: pills at the ends of the path. Start shows the project and its first date; End shows "n left".
+function endpointNode(id, p, pid, label, sub) {
+  return el("g", { class: "wfg-n wfg-end wfg-" + id, tabindex: 0, role: "button",
+    "aria-label": sub ? label + ", " + sub : label, "data-wf-item": id, "data-wf-task": "", "data-wf-pid": pid,
+    "data-cx": p.x + p.w / 2, "data-cy": p.y + p.h / 2 }, [
+    el("rect", { class: "wfg-pill-box", rx: 22, x: p.x, y: p.y, width: p.w, height: p.h }),
+    el("text", { class: "wfg-pt", x: p.x + p.w / 2, y: p.y + 18, "text-anchor": "middle" }, [txt(clip(label, 16))]),
+    el("text", { class: "wfg-num", x: p.x + p.w / 2, y: p.y + 34, "text-anchor": "middle" }, [txt(sub || "")]),
+  ]);
+}
+
+function parallelNode(b) {
+  return el("g", { class: "wfg-par-group", role: "group", "aria-label": "Parallel work, " + b.members.length +
+    " tasks" }, [el("rect", { class: "wfg-par", x: b.x, y: b.y, width: b.w, height: b.h, rx: 8 })]);
+}
+
+// The "You are here" flag above the Now node, a bar down to it, and a 2 px halo on the node.
+function nowMarks(now) {
+  if (!now || !now.box) return [];
+  const b = now.box;
+  const halo = el("rect", { class: "wfg-halo", x: b.x - 3, y: b.y - 3, width: b.w + 6, height: b.h + 6, rx: 8 });
+  if (!now.flag) return [halo];
+  const f = now.flag;
+  const bottom = f.y + f.h;
+  const bar = b.y + b.h > bottom ? el("rect", { class: "wfg-nowbar", x: b.x - 6, y: bottom, width: 3,
+    height: b.y + b.h - bottom }) : null;
+  const flag = el("g", { class: "wfg-flag", role: "img", "aria-label": "You are here" }, [
+    el("rect", { class: "wfg-flag-box", x: f.x, y: f.y, width: f.w, height: f.h, rx: 4 }),
+    el("text", { class: "wfg-flag-t", x: f.x + f.w / 2, y: f.y + 14, "text-anchor": "middle" }, [txt("You are here")]),
+  ]);
+  return [halo, bar, flag];
+}
+
+// Rounded orthogonal polyline: each interior corner is cut back by up to CORNER and joined with a quadratic curve.
+function roundPath(pts) {
+  if (!Array.isArray(pts) || pts.length < 2) return null;
+  let d = "M" + pts[0][0] + " " + pts[0][1];
+  for (let i = 1; i < pts.length - 1; i += 1) {
+    const p = pts[i];
+    const a = pts[i - 1];
+    const b = pts[i + 1];
+    const l1 = Math.abs(p[0] - a[0]) + Math.abs(p[1] - a[1]);
+    const l2 = Math.abs(b[0] - p[0]) + Math.abs(b[1] - p[1]);
+    const r = Math.min(CORNER, l1 / 2, l2 / 2);
+    if (r <= 0) {
+      d += "L" + p[0] + " " + p[1];
+    } else {
+      d += "L" + (p[0] + Math.sign(a[0] - p[0]) * r) + " " + (p[1] + Math.sign(a[1] - p[1]) * r) +
+        "Q" + p[0] + " " + p[1] + " " + (p[0] + Math.sign(b[0] - p[0]) * r) + " " +
+        (p[1] + Math.sign(b[1] - p[1]) * r);
+    }
+  }
+  const last = pts[pts.length - 1];
+  return d + "L" + last[0] + " " + last[1];
+}
+
+function edgeNode(e, d, lead) {
+  const type = lead ? "lead" : e.type;
+  const marker = MARKERS.indexOf(type) >= 0 ? "url(#wfg-arrow-" + type + ")" : null;
+  return el("path", { class: "wfg-e wfg-e-" + e.type + (lead ? " wfg-e-lead" : ""), d: d, "marker-end": marker,
+    "data-from": e.from, "data-to": e.to });
+}
+
+function markerFor(type) {
+  return el("marker", { id: "wfg-arrow-" + type, viewBox: "0 0 8 8", refX: 7, refY: 4, markerWidth: 7,
+    markerHeight: 7, orient: "auto" }, [el("path", { class: "wfg-arrow wfg-arrow-" + type, d: "M0 0L8 4L0 8z" })]);
 }
 
 function nodeFor(n, p, pid) {
@@ -174,45 +294,120 @@ function nodeFor(n, p, pid) {
   return null;
 }
 
-// The whole diagram as one SVG element. lay is layout(graph, ...) from graph/layout.js.
+// The whole diagram as one SVG element. Nodes are appended in path order, so Tab follows the path.
 export function buildMap(graph, lay, pid) {
-  const defs = el("defs", null, [
-    el("marker", { id: "wfg-arrow", viewBox: "0 0 8 8", refX: 7, refY: 4, markerWidth: 7, markerHeight: 7,
-      orient: "auto-start-reverse" }, [el("path", { class: "wfg-arrow", d: "M0 0L8 4L0 8z" })]),
+  const g = graph && Array.isArray(graph.nodes) ? graph : { nodes: [], edges: [] };
+  const flow = lay && lay.flow && !lay.frames ? lay.flow : lay || {};
+  const boxes = flow.boxes || {};
+  const path = Array.isArray(flow.path) ? flow.path : [];
+  const frames = Array.isArray(flow.frames) ? flow.frames : [];
+  const routes = flow.routes || {};
+  const byId = new Map(g.nodes.map(function (n) {
+    return [n.id, n];
+  }));
+  const framesById = new Map(frames.map(function (f) {
+    return [f.id, f];
+  }));
+  const framesByLane = new Map(frames.map(function (f) {
+    return [f.lane, f];
+  }));
+  const idx = new Map(path.map(function (id, i) {
+    return [id, i];
+  }));
+  const curIdx = flow.now && idx.has(flow.now.node) ? idx.get(flow.now.node) : -1;
+  const pillsOf = new Map();
+  const issuesOf = new Map();
+  g.nodes.forEach(function (n) {
+    if (n.type === "job" && n.parent) push(pillsOf, n.parent, n);
+    if (n.type === "issue" && n.task) push(issuesOf, "task:" + n.task, n);
+  });
+
+  const nodes = [];
+  const done = new Set();
+  const folded = new Set();
+  const put = function (id, node) {
+    done.add(id);
+    if (!node) return;
+    if (curIdx >= 0 && idx.has(id) && idx.get(id) > curIdx) {
+      node.setAttribute("class", node.getAttribute("class") + " wfg-after");
+    }
+    nodes.push(node);
+  };
+  const emit = function (n) {
+    if (done.has(n.id) || !boxes[n.id]) return;
+    put(n.id, nodeFor(n, boxes[n.id], pid));
+  };
+  const foldFor = function (lane) {
+    const f = framesByLane.get(lane);
+    if (!f || f.collapsed || folded.has(f.id)) return;
+    folded.add(f.id);
+    nodes.push(foldNode(f, pid));
+  };
+
+  path.forEach(function (id) {
+    if (id === "start" || id === "end") {
+      const p = boxes[id];
+      if (!p) return;
+      if (id === "start") {
+        const s = g.start || {};
+        put(id, endpointNode(id, p, pid, "Start: " + (s.label || "Project"), dateText(s.date)));
+      } else {
+        put(id, endpointNode(id, p, pid, "End", ""));
+      }
+      return;
+    }
+    const fr = framesById.get(id);
+    if (fr) {
+      if (fr.collapsed && boxes[id]) put(id, cardNode(fr, boxes[id], pid));
+      return;
+    }
+    const n = byId.get(id);
+    if (!n) return;
+    foldFor(n.lane);
+    (issuesOf.get(id) || []).forEach(emit);
+    emit(n);
+    (pillsOf.get(id) || []).forEach(emit);
+  });
+  g.nodes.forEach(function (n) {
+    if (n.type !== "phase") emit(n);
+  });
+
+  const edges = [];
+  const seenEdge = new Set();
+  const before = function (id) {
+    return curIdx >= 0 && idx.has(id) && idx.get(id) <= curIdx;
+  };
+  (g.edges || []).concat(g.sequence || []).forEach(function (e) {
+    if (!e || seenEdge.has(e.id)) return;
+    seenEdge.add(e.id);
+    const d = roundPath(routes[e.id]);
+    if (!d) return;
+    const lead = e.type === "sequence" && before(e.from) && before(e.to);
+    edges.push(edgeNode(e, d, lead));
+  });
+
+  const bands = [];
+  frames.forEach(function (f) {
+    if (!f.collapsed) bands.push(frameBand(f));
+  });
+  (flow.parallel || []).forEach(function (b) {
+    bands.push(parallelNode(b));
+  });
+
+  const defs = el("defs", null, MARKERS.map(markerFor).concat([
     el("pattern", { id: "wfg-hatch", width: 6, height: 6, patternUnits: "userSpaceOnUse",
       patternTransform: "rotate(45)" }, [el("rect", { class: "wfg-hatch-bg", width: 6, height: 6 }),
       el("path", { class: "wfg-hatch-line", d: "M0 0V6" })]),
-  ]);
+  ]));
   const vp = el("g", { class: "wfg-vp", transform: "translate(0 0) scale(1)" });
-  const bandOf = new Map(lay.lanes.map(function (b) {
-    return [b.id, b];
-  }));
-  const bands = [];
-  const edges = [];
-  const nodes = [];
-  graph.nodes.forEach(function (n) {
-    const p = lay.pos[n.id];
-    if (!p) return;
-    if (n.type === "phase") {
-      const band = bandOf.get(n.lane);
-      if (band) bands.push(phaseGroup(n, p, band, lay.width));
-      return;
-    }
-    const g = nodeFor(n, p, pid);
-    if (g) nodes.push(g);
-  });
-  graph.edges.forEach(function (e) {
-    const d = lay.paths[e.id];
-    if (d) edges.push(edgePath(e, d));
-  });
   vp.appendChild(el("g", { class: "wfg-bands" }, bands));
   vp.appendChild(el("g", { class: "wfg-edges" }, edges));
-  vp.appendChild(el("g", { class: "wfg-nodes" }, nodes));
+  vp.appendChild(el("g", { class: "wfg-nodes" }, nodes.concat(nowMarks(flow.now))));
   // tabindex 0 puts the canvas itself in the tab order (one stop, before the nodes) so + - 0 Escape work from it;
   // the nodes keep their own tabindex 0. The global :focus-visible outline in base.css is the focus ring.
   const svg = el("svg", { class: "wfg-svg", role: "group", tabindex: 0, "aria-label": "Workflow diagram",
     "aria-describedby": "wf-legend" }, [defs, vp]);
-  return { svg: svg, vp: vp, box: { w: lay.width, h: lay.height } };
+  return { svg: svg, vp: vp, box: { w: flow.width || 0, h: flow.height || 0 } };
 }
 
 // Focus mode on an existing SVG: classes only. Nodes outside the closure dim, and so do edges that leave it.
