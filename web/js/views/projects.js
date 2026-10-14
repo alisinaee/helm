@@ -7,6 +7,7 @@
 import { bannerHtml, emptyHtml, esc, meterHtml, skeletonHtml } from "../dom.js";
 import { sectionById } from "../routes.js";
 import { buildHash } from "../router.js";
+import { copyButton } from "../ref.js";
 
 const ICON_PATH = "/icons.svg#i-";
 
@@ -96,7 +97,8 @@ function rowHtml(facts, route, current) {
     '</span><span class="p-word">' + esc(facts.word) + "</span></span>" +
     '<span class="p-meter">' + meterHtml(pct, facts.blocked ? "danger" : "accent") + '<span class="sr-only"> ' +
     esc(pct + "% done") + "</span></span>" +
-    '<span class="p-badges row-grid">' + badgesHtml(facts) + "</span></a></li>";
+    '<span class="p-badges row-grid">' + badgesHtml(facts) + "</span></a>" +
+    copyButton("project", facts.id, facts.name, { project: facts.id }) + "</li>";
 }
 
 function allRowHtml(rows, route) {

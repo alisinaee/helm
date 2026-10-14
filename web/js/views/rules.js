@@ -5,6 +5,7 @@
 import { bannerHtml, chipHtml, emptyHtml, esc } from "../dom.js";
 import { run } from "../cmd.js";
 import { pageState } from "./inbox.js";
+import { copyButton, refSummary } from "../ref.js";
 import { showToast } from "./toast.js";
 
 const MAX_TEXT = 160;
@@ -36,7 +37,7 @@ function tabOf(id) {
   return TABS[0];
 }
 
-function listHtml(rules, activeTab) {
+function listHtml(rules, activeTab, project) {
   const group = tabOf(activeTab);
   const shown = rules.filter(function (r) {
     return group.id === "all" ? true : group.test(r.scope);
@@ -49,7 +50,8 @@ function listHtml(rules, activeTab) {
       ' <span class="rule-text">' + esc(r.text) + value + "</span></span>" +
       '<span class="rule-scope">' + esc(r.scope) + "</span>" +
       '<button type="button" class="btn btn-small" data-action="rule-rm" data-id="' + esc(r.id) +
-      '" data-focus="rm-' + esc(r.id) + '" aria-label="Delete rule ' + esc(r.id) + '">Delete</button></li>';
+      '" data-focus="rm-' + esc(r.id) + '" aria-label="Delete rule ' + esc(r.id) + '">Delete</button>' +
+      copyButton("rule", r.id, "rule " + r.id, { project: project, sum: refSummary("rule", r) }) + "</li>";
   }).join("") + "</ul>";
 }
 
@@ -113,11 +115,13 @@ export function sectionView(vm) {
   projectNow = vm.route.id;
   const snap = vm.project.snapshot;
   const rules = snap.rules;
+  const sectionCopy = rules == null ? "" : copyButton("section", "rules.list", "rules",
+    { project: vm.route.id, sum: refSummary("section", { count: rules.length }) });
   const head = '<div class="page-head"><h2 class="page-title">Rules</h2><p class="page-note">Rules for agents in ' +
-    esc(vm.project.name) + ".</p></div>";
+    esc(vm.project.name) + ".</p>" + sectionCopy + "</div>";
   const notice = rules == null ? bannerHtml("warning", "Rules are not in the snapshot yet.",
     "Add and sync still work. The list appears when the snapshot carries rules.") : "";
-  const list = rules == null ? "" : listHtml(rules, tab);
+  const list = rules == null ? "" : listHtml(rules, tab, vm.route.id);
   return head + notice + tabsHtml(tab) + '<section class="ov-card" aria-label="Rules">' + list + "</section>" +
     addFormHtml() + syncHtml();
 }
