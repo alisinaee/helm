@@ -10,6 +10,7 @@ import datetime
 import os
 import re
 
+from roadmap.core import features as core_features
 from roadmap.core import parsers, planfmt
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import features as feature_store
@@ -181,14 +182,28 @@ def apply(data_dir, records, dry_run=False, replace_phase=None, project_id=None)
         if dry_run or diff["changed"] == 0:
             diff.update(dry_run=dry_run, wrote=False, backup=None)
             return diff
+        features_write = bool(diff["features_added"] or diff["features_changed"])
+        if features_write:
+            # Every feature rule runs on the whole list before any write, so a features failure cannot follow a
+            # committed tasks.json.
+            feature_problems = core_features.validate(fdoc["features"])
+            if feature_problems:
+                raise RoadmapError("usage", "; ".join(feature_problems[:3]), EXIT_USAGE,
+                                   next=feature_store.NEXT_LIST)
         folder = None
         if diff["tasks_touched"] > BACKUP_OVER:
             folder = backup.backup_files(project_id or _registered_id(data_dir), [path])
-        if diff["tasks_touched"] or diff["phases_added"] or diff["phases_changed"]:
+        tasks_write = bool(diff["tasks_touched"] or diff["phases_added"] or diff["phases_changed"])
+        if tasks_write:
             doc["updated"] = planfmt.today()
             schema.write_data("tasks", path, doc)
-        if diff["features_added"] or diff["features_changed"]:
-            feature_store.apply_records(data_dir, records)  # the F lines, already validated above (WP52)
+        if features_write:
+            try:
+                feature_store.apply_records(data_dir, records)  # the F lines, already validated above (WP52)
+            except Exception:
+                if tasks_write:  # roll tasks.json back to the state read at the start of this call
+                    schema.write_data("tasks", path, before)
+                raise
         diff.update(dry_run=False, wrote=True, backup=folder)
     return diff
 
@@ -312,6 +327,7 @@ def _apply_records(doc, records, replace_phase, fdoc):
                 continue
             if tid in tasks:
                 _update_task(tasks[tid], rec)
+                _merge_task_feats(tasks[tid], rec, problems)
             elif rec["model"] is None or rec["thinking"] is None:
                 problems.append(("invalid", _line(rec, "a new task needs a model and a thinking level "
                                                   "(allowed: " + "|".join(planfmt.MODELS) + " / "
@@ -387,9 +403,10 @@ def _apply_features(fdoc, features, phases, unique, problems):
         elif any(f.get("parent") == rec["id"] for f in fdoc["features"]):
             problems.append(("invalid", _line(rec, rec["id"] + " has sub-features, so it cannot have a parent "
                                               "(allowed: one level only)"), None))
-    if len(fdoc["features"]) > planfmt.FEATURES_MAX and added:
-        problems.append(("invalid", _line(added[0], "the file would have " + str(len(fdoc["features"]))
-                                          + " features (allowed: up to " + str(planfmt.FEATURES_MAX) + ")"), None))
+    if len(fdoc["features"]) > planfmt.FEATURES_MAX:
+        text = ("the file would have " + str(len(fdoc["features"])) + " features (allowed: up to "
+                + str(planfmt.FEATURES_MAX) + ")")
+        problems.append(("invalid", _line(added[0], text) if added else text, None))
 
 
 def _apply_link(tasks, features, rec, problems):
@@ -473,13 +490,25 @@ def _update_task(task, rec):
                        ("note", rec["note"]), ("after", rec.get("after"))):
         if value is not None:
             task[key] = value
-    if rec.get("feats") is not None:
-        if rec["feats"]:
-            task["feats"] = list(rec["feats"])
-        else:
-            task.pop("feats", None)
     if rec["needsUser"] is True:
         task["needsUser"] = True
+
+
+def _merge_task_feats(task, rec, problems):
+    """The f: ids of a T line on an existing task are added to its feats, like L lines (f:- adds nothing).
+    Errors when the task would have more than FEAT_MAX_PER_TASK features."""
+    if not rec.get("feats"):
+        return
+    feats = list(task.get("feats") or [])
+    for fid in rec["feats"]:
+        if fid not in feats:
+            feats.append(fid)
+    if len(feats) > planfmt.FEAT_MAX_PER_TASK:
+        problems.append(("invalid", _line(rec, str(task.get("id")) + " would have " + str(len(feats))
+                                         + " features (allowed: up to " + str(planfmt.FEAT_MAX_PER_TASK)
+                                         + " per task)"), None))
+        return
+    task["feats"] = feats
 
 
 def _new_task(rec):
