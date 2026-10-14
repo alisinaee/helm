@@ -59,7 +59,7 @@
 .kbd{display:inline-block;min-width:20px;padding:0 var(--sp-1);border:1px solid var(--line);border-radius:4px;background:var(--surface-2);font-family:var(--font-mono);font-size:var(--fs-11);text-align:center}
 @media (max-width:1199px){
 .app{grid-template-columns:var(--w-rail) minmax(0,1fr) 0;grid-template-areas:"nav top" "nav main"}
-.side{position:fixed;top:0;right:0;bottom:0;z-index:var(--z-over);width:min(360px,100vw);transform:translateX(100%);transition:transform var(--t-fast);box-shadow:var(--shadow-2)}
+.side{position:fixed;top:0;right:0;bottom:0;width:min(360px,100vw);transform:translateX(100%);transition:transform var(--t-fast);box-shadow:var(--shadow-2)}
 .app[data-panel="open"] .side{transform:none;visibility:visible}
 }
 @media (max-width:640px){
