@@ -11,7 +11,7 @@ import os
 import re
 
 from roadmap.core import parsers, planfmt
-from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
+from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import features as feature_store
 from roadmap.services import jobs
 from roadmap.store import atomic, backup, config, lock, schema
@@ -114,6 +114,26 @@ def get(data_dir, task_id):
             return dict(task)
     raise RoadmapError("not_found", "no task " + str(task_id), EXIT_NOT_FOUND,
                        next="roadmap task list --phase " + str(task_id).split(".")[0])
+
+
+def unapproved_phases(data_dir):
+    """Ids of the phases whose approved flag is explicitly false (WP62b), in file order. A phase without the key
+    (every project before WP62) counts as approved."""
+    return [p["id"] for p in load(data_dir)["phases"]
+            if isinstance(p, dict) and isinstance(p.get("id"), str) and p.get("approved") is False]
+
+
+def start_refusal(data_dir, task_ids):
+    """The conflict (exit 4) when a task to start sits in a phase that is not approved, else None. The check covers
+    all ids before anything is written, so one refused id refuses the whole call."""
+    blocked = set(unapproved_phases(data_dir))
+    for tid in task_ids:
+        phase = _phase_of(get(data_dir, tid))
+        if phase in blocked:
+            return RoadmapError("conflict", "phase " + phase + " is not approved", EXIT_CONFLICT,
+                                next="ask the person to approve it (GUI Roadmap > Approve, or roadmap phase approve "
+                                     + phase + ")")
+    return None
 
 
 def query(data_dir, phase=None, status=None, needs_you=False, limit=QUERY_LIMIT):
