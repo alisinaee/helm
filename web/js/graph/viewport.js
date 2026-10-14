@@ -1,19 +1,23 @@
-// Workflow diagram viewport (WP72, WP70-B). The gesture state machine is pure (pointer and wheel input in, view out),
-// so the node tests can drive it with synthetic events. mountViewport() binds it to one SVG with Pointer Events and
-// pointer capture: one pointer pans, two pinch-zoom, the wheel zooms at the cursor, and a pointer that moves 6 px or
-// less is a tap (select). Two taps within 300 ms and 24 px zoom 2x. The view is { k, x, y } in screen pixels; the
-// viewport <g> gets transform="translate(x y) scale(k)" as an attribute. Keys: + and - zoom, 0 fits, Shift+arrows pan
-// 40 px, arrows move focus to the nearest node in that direction, Escape clears the focus.
+// Workflow diagram viewport (WP72, WP70-B, R7.14 D). The gesture state machine is pure (pointer and wheel input in,
+// view out), so the node tests can drive it with synthetic events. mountViewport() binds it to one SVG with Pointer
+// Events and pointer capture: one pointer pans, two pinch-zoom, the wheel zooms at the cursor, and a pointer that moves
+// 6 px or less is a tap (select). Two taps within 300 ms and 24 px zoom 2x. The view is { k, x, y } in screen pixels;
+// the viewport <g> gets transform="translate(x y) scale(k)" as an attribute, and every change is pushed to subscribers
+// (the minimap reads it there). Keys: + and - zoom, 0 fits, Escape clears, N centres on Now, S on Start (eased, or
+// instant under reduced motion), Left and Right walk the path order node by node, Up and Down move to the nearest node
+// in that direction, Shift+arrows pan 40 px. Ctrl, Meta and Alt combinations are left to the browser.
 
 export const MIN_K = 0.25;
 export const MAX_K = 3;
 export const TAP_PX = 6;
+export const GLIDE_MS = 240;
 const DOUBLE_MS = 300;
 const DOUBLE_PX = 24;
 const PAN_STEP = 40;
 const FIT_PAD = 16;
 const OPEN_MIN_K = 0.6;
-const STEP = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+const STEP = { ArrowUp: [0, -1], ArrowDown: [0, 1] };
+const FOCUSABLE = "[data-wf-item]";
 
 export function clampK(k) {
   return Math.min(MAX_K, Math.max(MIN_K, k));
@@ -37,6 +41,32 @@ export function fitView(box, size) {
 export function openView(box, size) {
   const k = Math.max(OPEN_MIN_K, Math.min(1, (size.w - 2 * FIT_PAD) / Math.max(1, box.w)));
   return { k: clampK(k), x: Math.max(FIT_PAD, (size.w - box.w * k) / 2), y: FIT_PAD };
+}
+
+// Eased progress for a glide: quick start, soft landing. t is clamped to [0, 1].
+export function ease(t) {
+  const c = Math.min(1, Math.max(0, t));
+  return 1 - Math.pow(1 - c, 3);
+}
+
+// The view between a and b at progress p (0 to 1), component by component.
+export function tween(a, b, p) {
+  return { k: a.k + (b.k - a.k) * p, x: a.x + (b.x - a.x) * p, y: a.y + (b.y - a.y) * p };
+}
+
+// The view at scale k that puts the layout point pt in the centre of a screen of size {w, h}.
+export function centreView(k, size, pt) {
+  return { k: k, x: size.w / 2 - pt.x * k, y: size.h / 2 - pt.y * k };
+}
+
+// True when the person asked for less motion. Node has no matchMedia, so there it is false.
+export function reducedMotion() {
+  try {
+    return typeof globalThis.matchMedia === "function" &&
+      globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch (err) {
+    return false;
+  }
 }
 
 // taps is an object { last } that the caller keeps, so a double tap still counts after the SVG is rebuilt.
@@ -129,12 +159,19 @@ export function createGestures(start, taps) {
   };
 }
 
-// What a key does: zoom, fit, pan (Shift+arrows), focus (arrows) or clear (Escape). Null for every other key.
+// What a key does. Null for every other key. Left and Right walk the path; Up and Down go to the nearest node.
 export function keyPlan(key, shift) {
   if (key === "+" || key === "=") return { op: "zoom", f: 1.25 };
   if (key === "-" || key === "_") return { op: "zoom", f: 0.8 };
   if (key === "0") return { op: "fit" };
   if (key === "Escape") return { op: "clear" };
+  if (key === "n" || key === "N") return { op: "now" };
+  if (key === "s" || key === "S") return { op: "start" };
+  if (key === "ArrowLeft" || key === "ArrowRight") {
+    const d = key === "ArrowLeft" ? -1 : 1;
+    if (shift) return { op: "pan", dx: -d * PAN_STEP, dy: 0 };
+    return { op: "walk", step: d };
+  }
   const dir = STEP[key];
   if (!dir) return null;
   if (shift) return { op: "pan", dx: -dir[0] * PAN_STEP, dy: -dir[1] * PAN_STEP };
@@ -162,12 +199,32 @@ export function nearest(nodes, from, dir) {
 }
 
 function closestNode(el) {
-  return el && typeof el.closest === "function" ? el.closest("[data-wf-item]") : null;
+  return el && typeof el.closest === "function" ? el.closest(FOCUSABLE) : null;
 }
 
-// Binds the gestures and keys to one SVG. opts: { view, box: {w, h}, taps, fit, onTap(el), onClear(), onView(view) }.
-// Returns { zoom(f), fit(), actual(), view() } for the controls. Nothing here runs in node.
+function centreOf(el) {
+  return { x: Number(el.getAttribute("data-cx")), y: Number(el.getAttribute("data-cy")) };
+}
+
+function haloCentre(h) {
+  return { x: Number(h.getAttribute("x")) + Number(h.getAttribute("width")) / 2,
+    y: Number(h.getAttribute("y")) + Number(h.getAttribute("height")) / 2 };
+}
+
+// Binds the gestures and keys to one SVG. opts: { view, box: {w, h}, taps, fit, onTap(el), onClear(), onView(view),
+// raf, clock, reduce }. raf and clock default to the browser; reduce overrides reducedMotion() (the tests use it).
+// Returns the controls: zoom(f), fit(), actual(), view(), size(), centerOn(target, instant), walk(step, from),
+// subscribe(fn) (fn runs now and on every change; returns an unsubscribe), stop(). Nothing here runs in node.
 export function mountViewport(svg, vpG, opts) {
+  const clock = opts.clock || function () {
+    return Date.now();
+  };
+  const frame = opts.raf || function (fn) {
+    return globalThis.requestAnimationFrame(fn);
+  };
+  const motionOff = function () {
+    return opts.reduce !== undefined ? !!opts.reduce : reducedMotion();
+  };
   const size = function () {
     const r = svg.getBoundingClientRect();
     return { w: r.width || opts.box.w, h: r.height || opts.box.h };
@@ -177,24 +234,95 @@ export function mountViewport(svg, vpG, opts) {
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
   const gest = createGestures(opts.view, opts.taps || { last: null });
+  const subs = [];
   let downEl = null;
+  let glide = 0;
   const paint = function () {
     const v = gest.view;
     const at = "translate(" + v.x.toFixed(1) + " " + v.y.toFixed(1) + ") scale(" + v.k.toFixed(3) + ")";
     vpG.setAttribute("transform", at);
     if (opts.onView) opts.onView(v);
+    subs.forEach(function (fn) {
+      fn(v);
+    });
   };
-  const fit = function () {
-    gest.setView(fitView(opts.box, size()));
-    paint();
+  const stop = function () {
+    glide += 1;
+  };
+  const nodes = function () {
+    return Array.from(svg.querySelectorAll(FOCUSABLE));
+  };
+  const anchorOf = function (target) {
+    if (target && typeof target === "object") return target;
+    if (target === "now") {
+      const h = svg.querySelector(".wfg-halo");
+      return h ? haloCentre(h) : null;
+    }
+    const el = nodes().find(function (n) {
+      return n.getAttribute("data-wf-item") === target;
+    });
+    return el ? centreOf(el) : null;
+  };
+  // Eases the view to `to` over GLIDE_MS. A newer glide or any gesture cancels it. Instant under reduced motion.
+  const glideTo = function (to, instant) {
+    stop();
+    const token = glide;
+    const from = gest.view;
+    if (instant || motionOff()) {
+      gest.setView(to);
+      paint();
+      return;
+    }
+    const t0 = clock();
+    const step = function () {
+      if (token !== glide) return;
+      const p = Math.min(1, (clock() - t0) / GLIDE_MS);
+      gest.setView(tween(from, to, ease(p)));
+      paint();
+      if (p < 1) frame(step);
+    };
+    frame(step);
+  };
+  const centerOn = function (target, instant) {
+    const pt = anchorOf(target);
+    if (!pt) return false;
+    glideTo(centreView(gest.view.k, size(), pt), instant);
+    return true;
+  };
+  // Focuses a node and brings it on screen (a glide, only when it is outside the screen).
+  const reveal = function (el) {
+    el.focus({ preventScroll: true });
+    const c = centreOf(el);
+    const s = size();
+    const v = gest.view;
+    const x = v.k * c.x + v.x;
+    const y = v.k * c.y + v.y;
+    if (x < 0 || y < 0 || x > s.w || y > s.h) glideTo(centreView(v.k, s, c));
+  };
+  // Path order: the nodes are appended in path order, so the DOM order of [data-wf-item] is the path.
+  const walk = function (step, from) {
+    const list = nodes();
+    if (!list.length) return null;
+    const at = from ? list.indexOf(from) : -1;
+    const i = at >= 0 ? at + step : (step > 0 ? 0 : list.length - 1);
+    if (i < 0 || i >= list.length) return null;
+    reveal(list[i]);
+    return list[i];
   };
   const zoom = function (f) {
+    stop();
     const s = size();
     gest.zoomBy(f, s.w / 2, s.h / 2);
     paint();
   };
+  const fit = function () {
+    stop();
+    gest.setView(fitView(opts.box, size()));
+    paint();
+  };
   svg.addEventListener("pointerdown", function (e) {
     if (e.button > 0) return;
+    stop();
     const p = local(e);
     downEl = e.target;
     try {
@@ -225,17 +353,23 @@ export function mountViewport(svg, vpG, opts) {
   });
   svg.addEventListener("wheel", function (e) {
     e.preventDefault();
+    stop();
     const p = local(e);
     gest.wheel(e.deltaY, p.x, p.y);
     paint();
   }, { passive: false });
   svg.addEventListener("keydown", function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
     const plan = keyPlan(e.key, e.shiftKey);
     if (!plan) return;
     e.preventDefault();
+    stop();
     if (plan.op === "zoom") zoom(plan.f);
     else if (plan.op === "fit") fit();
     else if (plan.op === "clear") opts.onClear();
+    else if (plan.op === "now") centerOn("now");
+    else if (plan.op === "start") centerOn("start");
+    else if (plan.op === "walk") walk(plan.step, closestNode(e.target));
     else if (plan.op === "pan") {
       const v = gest.view;
       gest.setView({ k: v.k, x: v.x + plan.dx, y: v.y + plan.dy });
@@ -245,34 +379,41 @@ export function mountViewport(svg, vpG, opts) {
   function moveFocus(e, dir) {
     const cur = closestNode(e.target);
     if (!cur) return;
-    const nodes = Array.from(svg.querySelectorAll("[data-wf-item]")).map(function (el) {
-      return { key: el.getAttribute("data-wf-item"), cx: Number(el.getAttribute("data-cx")),
-        cy: Number(el.getAttribute("data-cy")), el: el };
+    const items = nodes().map(function (el) {
+      const c = centreOf(el);
+      return { key: el.getAttribute("data-wf-item"), cx: c.x, cy: c.y, el: el };
     });
-    const from = nodes.find(function (n) {
+    const from = items.find(function (n) {
       return n.el === cur;
     });
-    const next = from ? nearest(nodes, from, dir) : null;
-    if (!next) return;
-    next.el.focus({ preventScroll: true });
-    const s = size();
-    const v = gest.view;
-    const sx = v.k * from.cx + v.x;
-    const sy = v.k * from.cy + v.y;
-    const nx = v.k * next.cx + v.x;
-    const ny = v.k * next.cy + v.y;
-    if (nx < 0 || ny < 0 || nx > s.w || ny > s.h) {
-      gest.setView({ k: v.k, x: v.x + (sx - nx), y: v.y + (sy - ny) });
-      paint();
-    }
+    const next = from ? nearest(items, from, dir) : null;
+    if (next) reveal(next.el);
   }
   if (opts.fit) gest.setView(openView(opts.box, size()));
   paint();
-  return { zoom: zoom, fit: fit, actual: function () {
-    const s = size();
-    gest.setView(zoomAt(gest.view, 1, s.w / 2, s.h / 2));
-    paint();
-  }, view: function () {
-    return gest.view;
-  } };
+  return {
+    zoom: zoom,
+    fit: fit,
+    actual: function () {
+      stop();
+      const s = size();
+      gest.setView(zoomAt(gest.view, 1, s.w / 2, s.h / 2));
+      paint();
+    },
+    view: function () {
+      return gest.view;
+    },
+    size: size,
+    centerOn: centerOn,
+    walk: walk,
+    stop: stop,
+    subscribe: function (fn) {
+      subs.push(fn);
+      fn(gest.view);
+      return function () {
+        const i = subs.indexOf(fn);
+        if (i >= 0) subs.splice(i, 1);
+      };
+    },
+  };
 }
