@@ -199,10 +199,12 @@ export function actionsHtml(task) {
   const more = '<details class="wk-menu"><summary class="btn btn-small" aria-label="' +
     esc("More actions for " + task.id) + '">More</summary><div class="wk-menu-list">' +
     (task.state !== "todo" ? '<button type="button" class="btn btn-small" data-wk="status" data-task="' +
-      esc(task.id) + '" data-from="' + esc(task.state) + '" data-to="todo">Move to Todo</button>' : "") +
+      esc(task.id) + '" data-from="' + esc(task.state) + '" aria-label="' +
+      esc("Move task " + task.id + " to Todo") + '" data-to="todo">Move to Todo</button>' : "") +
     '<button type="button" class="btn btn-small" data-wk="run-start" data-task="' + esc(task.id) +
-    '">Queue task</button><button type="button" class="btn btn-small" data-wk="run-stop" data-task="' +
-    esc(task.id) + '">Stop task</button></div></details>';
+    '" aria-label="' + esc("Queue task " + task.id) + '">Queue task</button>' +
+    '<button type="button" class="btn btn-small" data-wk="run-stop" data-task="' + esc(task.id) +
+    '" aria-label="' + esc("Stop task " + task.id) + '">Stop task</button></div></details>';
   return quick + more;
 }
 
@@ -253,8 +255,10 @@ function tabsHtml(ctx) {
     const n = ctx.shown.filter(function (t) {
       return columnKey(t.state) === col.key;
     }).length;
+    const colId = "wk-col-" + col.key;
     return '<button type="button" class="wk-tab" aria-pressed="' + (ctx.col === col.key ? "true" : "false") +
-      '" data-wk="tab" data-col="' + col.key + '" data-focus="wk-tab-' + col.key + '">' + esc(col.label) +
+      '" data-wk="tab" data-col="' + col.key + '" aria-controls="' + esc(colId) +
+      '" data-focus="wk-tab-' + col.key + '">' + esc(col.label) +
       ' <span class="num">' + n + "</span></button>";
   }).join("");
   return '<div class="seg wk-tabs" role="group" aria-label="Column">' + buttons + "</div>";

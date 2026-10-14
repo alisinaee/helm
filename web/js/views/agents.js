@@ -50,7 +50,8 @@ function elapsedText(job, now) {
 export function agentRowHtml(job, pid, tree, blocked, now, depth) {
   const children = tree.kids.get(job.id) || [];
   const taskHtml = job.task
-    ? '<a href="' + esc(itemHash(pid, job.task)) + '">' + esc(job.task) + "</a>"
+    ? '<a href="' + esc(itemHash(pid, job.task)) + '" aria-label="' + esc("Task " + job.task) + '">' +
+      esc(job.task) + "</a>"
     : '<span class="mt-label">No task assigned</span>';
   const handed = children.length
     ? chipHtml("Delegated to " + children.map(function (c) {

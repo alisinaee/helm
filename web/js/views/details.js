@@ -127,7 +127,8 @@ function statusHtml(task, state, vm) {
   const off = disabledAttr(vm);
   const buttons = STATUSES.map(function (s) {
     return '<button type="button" class="btn" aria-pressed="' + (state === s[0]) + '" data-side="status" data-id="' +
-      esc(task.id) + '" data-status="' + esc(s[0]) + '" data-focus="st-' + esc(s[0]) + '"' + off + ">" +
+      esc(task.id) + '" data-status="' + esc(s[0]) + '" data-focus="st-' + esc(s[0]) + '" aria-label="' +
+      esc("Set status to " + s[1] + " for " + task.id) + '"' + off + ">" +
       esc(s[1]) + "</button>";
   }).join("");
   return sectionHtml("Status", '<div class="seg d-btns" role="group" aria-label="Status">' + buttons + "</div>");
@@ -186,8 +187,10 @@ function queueHtml(task, snap, vm, now) {
   const startOk = !queued && !running && pend === undefined;
   const stopOk = running && !queued && pend === undefined;
   const buttons = '<button type="button" class="btn" data-side="start" data-id="' + esc(task.id) +
-    '" data-focus="start"' + (startOk ? "" : " disabled") + off + ">Start</button>" +
-    '<button type="button" class="btn" data-side="stop" data-id="' + esc(task.id) + '" data-focus="stop"' +
+    '" aria-label="' + esc("Start task " + task.id) + '" data-focus="start"' + (startOk ? "" : " disabled") +
+    off + ">Start</button>" +
+    '<button type="button" class="btn" data-side="stop" data-id="' + esc(task.id) +
+    '" aria-label="' + esc("Stop task " + task.id) + '" data-focus="stop"' +
     (stopOk ? "" : " disabled") + off + ">Stop</button>";
   if (!waiting) {
     return sectionHtml("Run", '<p class="d-meta" role="status">' + esc(word) + "</p>" +
@@ -195,7 +198,7 @@ function queueHtml(task, snap, vm, now) {
   }
   const cmd = launchCommand(snap.project.path);
   const copy = '<button type="button" class="btn" data-side="copy-launch" data-cmd="' + esc(cmd) +
-    '" data-focus="copy-launch">Copy command</button>';
+    '" aria-label="Copy launch command" data-focus="copy-launch">Copy command</button>';
   return sectionHtml("Run", '<p class="d-meta" role="status">' + esc(word) + "</p>" +
     '<p class="d-meta"><code>' + esc(cmd) + "</code></p>" + '<div class="d-btns">' + buttons + copy + "</div>");
 }
@@ -208,9 +211,11 @@ function capHtml(task, snap, vm, now) {
     '<label for="' + esc(field) + '">Token cap (thousands) <input id="' + esc(field) +
     '" name="value" type="number" min="0" step="any" inputmode="decimal" value="' +
     esc(cap == null ? "" : cap) + '" data-focus="cap-input"' + off + "></label>" +
-    '<button type="submit" class="btn" data-focus="cap-save"' + off + ">Save cap</button>" +
+    '<button type="submit" class="btn" aria-label="' + esc("Save token cap for " + task.id) +
+    '" data-focus="cap-save"' + off + ">Save cap</button>" +
     (cap == null ? "" : '<button type="button" class="btn" data-side="cap-clear" data-id="' + esc(task.id) +
-      '" data-focus="cap-clear"' + off + ">Clear cap</button>") + "</form>");
+      '" aria-label="' + esc("Clear token cap for " + task.id) + '" data-focus="cap-clear"' + off +
+      ">Clear cap</button>") + "</form>");
 }
 
 function subsHtml(task, snap, vm, now) {
@@ -228,7 +233,8 @@ function subsHtml(task, snap, vm, now) {
   const add = '<form class="d-form" data-side-form="sub-add" data-id="' + esc(task.id) + '">' +
     '<label for="' + esc(field) + '">Add a subtask <input id="' + esc(field) +
     '" name="title" type="text" maxlength="200" data-focus="sub-add"' + off + "></label>" +
-    '<button type="submit" class="btn" data-focus="sub-add-btn"' + off + ">Add subtask</button></form>";
+    '<button type="submit" class="btn" aria-label="' + esc("Add subtask to " + task.id) +
+    '" data-focus="sub-add-btn"' + off + ">Add subtask</button></form>";
   return sectionHtml("Subtasks", listHtml(items, "No subtasks yet.") + add);
 }
 
@@ -244,7 +250,8 @@ function commentsHtml(task, snap, vm, now) {
   const add = '<form class="d-form" data-side-form="comment" data-id="' + esc(task.id) + '">' +
     '<label for="' + esc(field) + '">Add a comment <input id="' + esc(field) +
     '" name="text" type="text" maxlength="2000" data-focus="comment-text"' + off + "></label>" +
-    '<button type="submit" class="btn" data-focus="comment-btn"' + off + ">Add comment</button></form>";
+    '<button type="submit" class="btn" aria-label="' + esc("Add comment to " + task.id) +
+    '" data-focus="comment-btn"' + off + ">Add comment</button></form>";
   return sectionHtml("Comments", listHtml(items, "No comments yet.") + add);
 }
 
@@ -359,7 +366,8 @@ function issueView(vm, snap, issue, now) {
   const meta = (issue.kind || "issue") + " · " + (closed ? "closed" : issue.status || "open");
   const action = closed ? '<p class="d-meta" role="status">Closed</p>' :
     '<div class="d-btns"><button type="button" class="btn" data-side="close-issue" data-id="' + esc(issue.id) +
-    '" data-focus="close-issue"' + off + ">Close issue</button></div>";
+    '" aria-label="' + esc("Close issue " + issue.id) + '" data-focus="close-issue"' + off +
+    ">Close issue</button></div>";
   return '<div class="d-head"><p class="d-id">' + esc(issue.id) + '</p><h3 class="d-title">' + esc(issue.title) +
     '</h3><p class="d-meta">' + esc(meta) + "</p></div>" +
     sectionHtml("Action", action) +
@@ -373,14 +381,17 @@ function questionView(vm, question) {
   const off = disabledAttr(vm);
   const options = question.opts.map(function (opt, index) {
     return '<button type="button" class="btn" data-side="answer" data-id="' + esc(question.id) + '" data-value="' +
-      esc(opt) + '" data-focus="ans-' + index + '"' + off + ">" + esc(opt) + "</button>";
+      esc(opt) + '" aria-label="' + esc("Answer " + opt + " for " + question.id) +
+      '" data-focus="ans-' + index + '"' + off + ">" + esc(opt) + "</button>";
   }).join("");
   const field = "ans-new-" + question.id;
-  const answer = sectionHtml("Answer", (options ? '<div class="d-btns">' + options + "</div>" : "") +
+  const group = '<div class="d-btns" role="group" aria-label="' + esc("Answers for " + question.id) + '">';
+  const answer = sectionHtml("Answer", (options ? group + options + "</div>" : "") +
     '<form class="d-form" data-side-form="answer" data-id="' + esc(question.id) + '">' +
     '<label for="' + esc(field) + '">Other answer <input id="' + esc(field) +
     '" name="value" type="text" maxlength="500" data-focus="answer-text"' + off + "></label>" +
-    '<button type="submit" class="btn" data-focus="answer-btn"' + off + ">Send answer</button></form>");
+    '<button type="submit" class="btn" aria-label="' + esc("Send answer for " + question.id) +
+    '" data-focus="answer-btn"' + off + ">Send answer</button></form>");
   const meta = (question.task ? "For " + question.task + " · " : "") + "open" +
     (question.block ? " · blocks work" : "");
   return '<div class="d-head"><p class="d-id">' + esc(question.id) + '</p><h3 class="d-title">' + esc(question.text) +

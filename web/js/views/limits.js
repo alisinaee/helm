@@ -123,7 +123,7 @@ function editorHtml(row, scope) {
     '<p class="lim-preview" data-preview-for="' + esc(id) + '">' +
     esc(previewText(row.kind, row.window, value)) + "</p>" +
     '<button type="button" class="btn btn-small" data-action="lim-del" data-row="' + esc(id) +
-    '" data-focus="del-' + esc(id) + '">Delete</button></div>';
+    '" aria-label="' + esc("Delete limit " + id) + '" data-focus="del-' + esc(id) + '">Delete</button></div>';
 }
 
 function readOnlyHtml(row, scope) {
@@ -134,7 +134,8 @@ function readOnlyHtml(row, scope) {
   return '<p class="lim-readonly">Read only, ' + esc(from) + ".</p>" +
     (STORED_SRC.indexOf(row.src) >= 0 && row.scope === scope ?
       '<button type="button" class="btn btn-small" data-action="lim-del" data-row="' + esc(row.id) +
-      '" data-focus="del-' + esc(row.id) + '">Delete</button>' : "");
+      '" aria-label="' + esc("Delete limit " + row.id) + '" data-focus="del-' + esc(row.id) + '">Delete</button>' :
+      "");
 }
 
 // One limit row: a summary line (window, value, unit, state, pace) with the editor or the read-only note.
@@ -150,6 +151,7 @@ export function limitRowHtml(row, scope) {
     '<span class="chip chip-' + esc(STATE_TONE[state]) + '">' + esc(STATE_WORDS[state]) + "</span>" +
     '<span class="lim-id">' + esc(row.id) + "</span>" +
     '<button type="button" class="btn btn-small lim-edit-btn" data-action="lim-sheet" data-row="' + esc(row.id) +
+    '" aria-label="' + esc((sheetOpen ? "Done editing" : "Edit") + " limit " + row.id) +
     '" aria-expanded="' + (sheetOpen ? "true" : "false") + '" aria-controls="lim-' + esc(row.id) +
     '" data-focus="sheet-' + esc(row.id) + '">' +
     (sheetOpen ? "Done" : "Edit") + "</button></div>" + body + "</li>";
