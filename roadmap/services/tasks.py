@@ -52,6 +52,40 @@ def load_features(data_dir):
     return [dict(f) for f in _features_load(data_dir)["features"] if isinstance(f, dict)]
 
 
+def export_lines(data_dir, phase=None):
+    """Plan lines for plan export (WP59b): F lines first in features.json order, then each phase line with its
+    tasks, then tasks whose phase is gone. With phase, only that phase and its tasks; its F lines are the features
+    of that phase plus those its tasks link to, and the parents they need. An unknown phase is not_found (exit 3).
+    A project without features gives the same lines as before."""
+    doc = load(data_dir)
+    phases = [p for p in doc["phases"] if isinstance(p, dict) and isinstance(p.get("id"), str)]
+    if phase is not None and phase not in [p["id"] for p in phases]:
+        raise RoadmapError("not_found", "no phase " + phase, EXIT_NOT_FOUND, next="roadmap status")
+    selected = [p for p in phases if phase is None or p["id"] == phase]
+    selected_ids = [p["id"] for p in selected]
+    groups = []
+    for p in selected:
+        groups.append((planfmt.format_phase(p), [t for t in doc["tasks"]
+                                                  if isinstance(t, dict) and _phase_of(t) == p["id"]]))
+    if phase is None:
+        groups.append((None, [t for t in doc["tasks"]
+                              if isinstance(t, dict) and _phase_of(t) not in selected_ids]))
+    task_dicts = [t for _, group in groups for t in group]
+    features = load_features(data_dir)
+    if phase is not None:
+        wanted = {f.get("id") for f in features if f.get("phase") == phase}
+        for task in task_dicts:
+            wanted.update(task.get("feats") or [])
+        wanted.update(f.get("parent") for f in features if f.get("id") in wanted and f.get("parent"))
+        features = [f for f in features if f.get("id") in wanted]
+    lines = [planfmt.format_feature(f) for f in features]
+    for head_line, group in groups:
+        if head_line is not None:
+            lines.append(head_line)
+        lines.extend(planfmt.format_task(t) for t in group)
+    return lines
+
+
 def resolve(project_id=None):
     """Return (project, data_dir) for the registered project a command acts on (see jobs.resolve_project)."""
     project = jobs.resolve_project(project_id)
