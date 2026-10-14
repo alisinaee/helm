@@ -6,6 +6,7 @@
 import { bannerHtml, emptyHtml, esc, meterHtml } from "../dom.js";
 import { pendingValue, run } from "../cmd.js";
 import { fmtTokens } from "../format.js";
+import { copyButton, refSummary } from "../ref.js";
 import { rowFacts } from "./projects.js";
 
 const STATUSES = [["todo", "To do"], ["partial", "Partial"], ["done", "Done"], ["hold", "On hold"]];
@@ -330,7 +331,10 @@ export function featureLinkChange(el) {
 
 function taskView(vm, snap, task, now) {
   const state = pick(taskKey(vm.route.id, task.id, "status"), snap, now, task.state);
-  return '<div class="d-head"><p class="d-id">' + esc(task.id) + " · " + esc(task.phase) + '</p><h3 class="d-title">' +
+  const copy = copyButton("task", task.id, task.title, { project: vm.route.id,
+    sum: refSummary("task", task, snap) });
+  return '<div class="d-head"><p class="d-id">' + esc(task.id) + " · " + esc(task.phase) + (copy ? " " + copy : "") +
+    '</p><h3 class="d-title">' +
     esc(task.title) + "</h3>" +
     '<p class="d-meta">' + esc(planLine(task)) + "</p></div>" +
     statusHtml(task, state, vm) + featureHtml(vm, snap, task) + queueHtml(task, snap, vm, now) +
