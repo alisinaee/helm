@@ -8,6 +8,12 @@
 // above the tasks they block, the queue pill sits in column 0, and each task's job pills hang under it.
 // Cycles: a depth-first search finds the back edges. They are ignored for the rank and reported in `cycles`, and
 // their paths are still drawn.
+//
+// flowLayout(graph, opts) (R7.14 B) is the left-to-right map: Start, one frame per phase, End. It returns the boxes of
+// every visible node, the frames, a right-angled polyline (`routes`) for every edge including the sequence edges, the
+// parallel brackets, the Now flag and the path order. layout() returns it as `flow`; its other fields are unchanged.
+
+import { NODE_CAP } from "./model.js";
 
 export const NODE_W = 168;
 export const NODE_H = 44;
@@ -31,6 +37,29 @@ const HOUR = 60 * MIN;
 const DAY = 24 * HOUR;
 const BUCKET = { "2h": 15 * MIN, today: HOUR, week: 6 * HOUR, all: DAY };
 const MAX_COLS = 200;
+
+// Flow layout sizes (NODE_W, NODE_H, PILL_*, PILL_DY and MARGIN are shared with the layout above).
+const CARD_W = 200;
+const CARD_H = 56;
+const CELL_GAP = 24;
+const ROW_GAP = 28;
+const STACK_GAP = 12;
+const STRIP_GAP = 10;
+const STRIP_SEP = 14;
+const FRAME_GAP = 64;
+const FRAME_PAD = 12;
+const TITLE_H = 26;
+const CHANNEL = 14;
+const FLOW_TOP = 40;
+const FLOW_COLS = 4;
+const END_W = 132;
+const END_H = 44;
+const FLAG_W = 96;
+const FLAG_H = 20;
+const SLOT = 24;
+const CORNER = 12;
+const LOOP = 12;
+const WIDE = 100;
 
 function colX(c) {
   return X0 + c * COL_W;
@@ -298,5 +327,406 @@ export function layout(graph, mode, range, now) {
     cycles,
     ticks,
     nowX,
+    flow: flowLayout(g, {}),
+  };
+}
+
+function laneOf(n) {
+  return n.lane === null || n.lane === undefined ? "_" : String(n.lane);
+}
+
+function cy(b) {
+  return b.y + b.h / 2;
+}
+
+function right(b) {
+  return b.x + b.w;
+}
+
+function bottom(b) {
+  return b.y + b.h;
+}
+
+// Vertical joins sit on the right corner of a wide box, clear of the job pills that hang under a task.
+function anchor(b) {
+  return b.w >= WIDE ? b.x + b.w - CORNER : b.x + b.w / 2;
+}
+
+function taskHeight(pills) {
+  return pills > 0 ? PILL_DY + PILL_H : NODE_H;
+}
+
+function cellHeight(cell, pillsOf) {
+  let h = 0;
+  cell.forEach((t, j) => {
+    h += taskHeight((pillsOf.get(t.id) || []).length) + (j ? STACK_GAP : 0);
+  });
+  return h;
+}
+
+function withSlot(b) {
+  const out = { x: b.x, y: b.y, w: b.w, h: b.h };
+  if (b.w >= WIDE) {
+    out.slot = { x: b.x + b.w - SLOT - 4, y: b.y + Math.round((b.h - SLOT) / 2), w: SLOT, h: SLOT };
+  }
+  return out;
+}
+
+// Stable topological order of ids by the [before, after] pairs: the earliest ready id goes next. A cycle falls back to
+// file order for the ids it holds back.
+function stableOrder(ids, pairs) {
+  const known = new Set(ids);
+  const succ = new Map(ids.map((id) => [id, []]));
+  const indeg = new Map(ids.map((id) => [id, 0]));
+  pairs.forEach(([a, b]) => {
+    if (a === b || !known.has(a) || !known.has(b)) return;
+    succ.get(a).push(b);
+    indeg.set(b, indeg.get(b) + 1);
+  });
+  const done = new Set();
+  const out = [];
+  while (out.length < ids.length) {
+    let pick = ids.find((id) => !done.has(id) && indeg.get(id) === 0);
+    if (pick === undefined) pick = ids.find((id) => !done.has(id));
+    done.add(pick);
+    out.push(pick);
+    succ.get(pick).forEach((v) => indeg.set(v, indeg.get(v) - 1));
+  }
+  return out;
+}
+
+// One frame's inner layout, relative to the frame's top-left corner. The cells are the tasks in topological file order:
+// one task, or a parallel group whose members stack in one column. Cells fill rows of up to four; odd rows run right to
+// left (snake), so consecutive tasks are always neighbours. The strip above holds the issues and the queue.
+function laneGeometry(tasks, strip, ctx) {
+  const byTask = new Map(tasks.map((t) => [t.id, t]));
+  const ordered = stableOrder(tasks.map((t) => t.id), ctx.pairs).map((id) => byTask.get(id));
+  const cells = [];
+  const taken = new Set();
+  ordered.forEach((t) => {
+    const grp = ctx.groupOf.get(t.id);
+    if (!grp) {
+      cells.push([t]);
+      return;
+    }
+    if (taken.has(grp)) return;
+    taken.add(grp);
+    cells.push(ordered.filter((m) => ctx.groupOf.get(m.id) === grp));
+  });
+  const boxes = new Map();
+  const brackets = [];
+  const order = [];
+  const top = FRAME_PAD + TITLE_H + 8;
+  let cols = 0;
+  let bottomY = top;
+  if (strip.length) {
+    const rows = Math.ceil(strip.length / FLOW_COLS);
+    cols = Math.min(FLOW_COLS, strip.length);
+    strip.forEach((n, k) => {
+      const col = k % FLOW_COLS;
+      const row = Math.floor(k / FLOW_COLS);
+      boxes.set(n.id, { x: FRAME_PAD + col * (NODE_W + CELL_GAP), y: top + row * (NODE_H + STRIP_GAP),
+        w: NODE_W, h: NODE_H });
+    });
+    bottomY = top + rows * NODE_H + (rows - 1) * STRIP_GAP;
+  }
+  let y = strip.length ? bottomY + STRIP_SEP : top;
+  if (cells.length) {
+    const gc = Math.min(FLOW_COLS, cells.length);
+    cols = Math.max(cols, gc);
+    for (let r = 0; r * gc < cells.length; r += 1) {
+      const row = cells.slice(r * gc, r * gc + gc);
+      const rowH = Math.max(...row.map((cell) => cellHeight(cell, ctx.pillsOf)));
+      row.forEach((cell, k) => {
+        const col = r % 2 === 0 ? k : gc - 1 - k;
+        const x = FRAME_PAD + col * (NODE_W + CELL_GAP);
+        let cyy = y;
+        cell.forEach((t) => {
+          const pills = ctx.pillsOf.get(t.id) || [];
+          boxes.set(t.id, { x, y: cyy, w: NODE_W, h: NODE_H });
+          pills.forEach((p, q) => boxes.set(p.id, { x: x + q * PILL_STEP, y: cyy + PILL_DY, w: PILL_W, h: PILL_H }));
+          order.push(t.id);
+          cyy += taskHeight(pills.length) + STACK_GAP;
+        });
+        if (cell.length > 1) {
+          brackets.push({ x: x - 4, y: y - 4, w: NODE_W + 8, h: cellHeight(cell, ctx.pillsOf) + 8,
+            members: cell.map((t) => t.id) });
+        }
+      });
+      bottomY = y + rowH;
+      y = bottomY + ROW_GAP;
+    }
+  }
+  const width = 2 * FRAME_PAD + cols * NODE_W + Math.max(0, cols - 1) * CELL_GAP;
+  return {
+    w: Math.max(CARD_W, width),
+    h: bottomY + FRAME_PAD + CHANNEL,
+    boxes,
+    brackets,
+    order,
+    count: boxes.size,
+  };
+}
+
+function loopRoute(a) {
+  const r = right(a);
+  const m = cy(a);
+  return [[r, m - 8], [r + LOOP, m - 8], [r + LOOP, m + 8], [r, m + 8]];
+}
+
+// Two boxes in the same frame: straight when they share a row or a column, else one right-angled elbow.
+function insideRoute(a, b) {
+  if (a === b) return loopRoute(a);
+  if (Math.abs(cy(a) - cy(b)) < 1) {
+    return b.x > a.x ? [[right(a), cy(a)], [b.x, cy(b)]] : [[a.x, cy(a)], [right(b), cy(b)]];
+  }
+  if (Math.abs(anchor(a) - anchor(b)) < 1) {
+    return b.y > a.y ? [[anchor(a), bottom(a)], [anchor(b), b.y]] : [[anchor(a), a.y], [anchor(b), bottom(b)]];
+  }
+  if (b.x >= right(a)) {
+    const mx = right(a) + CELL_GAP / 2;
+    return [[right(a), cy(a)], [mx, cy(a)], [mx, cy(b)], [b.x, cy(b)]];
+  }
+  if (right(b) <= a.x) {
+    const mx = a.x - CELL_GAP / 2;
+    return [[a.x, cy(a)], [mx, cy(a)], [mx, cy(b)], [right(b), cy(b)]];
+  }
+  const down = b.y > a.y;
+  const my = down ? (bottom(a) + b.y) / 2 : (bottom(b) + a.y) / 2;
+  return [[anchor(a), down ? bottom(a) : a.y], [anchor(a), my], [anchor(b), my],
+    [anchor(b), down ? b.y : bottom(b)]];
+}
+
+// Two boxes in different frames: down from the source through the frame's bottom channel, across the gap between the
+// frames, then into the target from its near side. The channel lies under every row, so it crosses no node.
+function crossRoute(S, D, fs, fd) {
+  const a = S.box;
+  const b = D.box;
+  const chan = S.card ? bottom(fs) + 8 : bottom(fs) - 6;
+  const toRight = fd.x > fs.x;
+  const gx = Math.round(toRight ? (right(fs) + fd.x) / 2 : (right(fd) + fs.x) / 2);
+  const entry = toRight ? b.x : right(b);
+  const sx = anchor(a);
+  return [[sx, bottom(a)], [sx, chan], [gx, chan], [gx, cy(b)], [entry, cy(b)]];
+}
+
+function routeEdge(S, D, frameBox) {
+  if (S.kind === "start" && D.kind === "end") return [[right(S.box), cy(S.box)], [D.box.x, cy(D.box)]];
+  if (S.kind === "start") {
+    const fd = frameBox.get(D.lane);
+    if (!fd) return null;
+    const gx = Math.round((right(S.box) + fd.x) / 2);
+    return [[right(S.box), cy(S.box)], [gx, cy(S.box)], [gx, cy(D.box)], [D.box.x, cy(D.box)]];
+  }
+  if (S.kind === "end" || D.kind === "start") return null;
+  const fs = frameBox.get(S.lane);
+  const fd = D.kind === "end" ? D.box : frameBox.get(D.lane);
+  if (!fs || !fd) return null;
+  if (S.lane === D.lane) return insideRoute(S.box, D.box);
+  return crossRoute(S, D, fs, fd);
+}
+
+export function flowLayout(graph, opts) {
+  const g = graph && Array.isArray(graph.nodes) ? graph : { nodes: [], edges: [] };
+  const o = opts && typeof opts === "object" ? opts : {};
+  const nodes = g.nodes.filter((n) => n && typeof n.id === "string");
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const ends = (id) => id === "start" || id === "end" || byId.has(id);
+  const seenEdge = new Set();
+  const edges = (Array.isArray(g.edges) ? g.edges : []).concat(Array.isArray(g.sequence) ? g.sequence : [])
+    .filter((e) => {
+      if (!e || typeof e.id !== "string" || seenEdge.has(e.id) || !ends(e.from) || !ends(e.to)) return false;
+      seenEdge.add(e.id);
+      return true;
+    });
+
+  // Lanes in phase order; a lane some node names but the phase list lacks comes after.
+  const phaseOf = new Map();
+  const laneIds = [];
+  const laneSeen = new Set();
+  const addLane = (id) => {
+    if (laneSeen.has(id)) return;
+    laneSeen.add(id);
+    laneIds.push(id);
+  };
+  (Array.isArray(g.lanes) ? g.lanes : []).forEach((l) => {
+    if (l && l.id !== undefined && l.id !== null) addLane(String(l.id));
+  });
+  nodes.forEach((n) => {
+    if (n.type === "phase") {
+      phaseOf.set(laneOf(n), n);
+      addLane(laneOf(n));
+    }
+  });
+  nodes.forEach((n) => addLane(laneOf(n)));
+
+  const tasksOf = new Map();
+  const pillsOf = new Map();
+  const stripOf = new Map();
+  const push = (map, key, value) => {
+    const rows = map.get(key) || [];
+    rows.push(value);
+    map.set(key, rows);
+  };
+  nodes.forEach((n) => {
+    if (n.type === "task") push(tasksOf, laneOf(n), n);
+    else if (n.type === "job" && n.parent) push(pillsOf, n.parent, n);
+    else if (n.type === "issue" || n.type === "queue") push(stripOf, laneOf(n), n);
+  });
+  const groupOf = new Map();
+  (Array.isArray(g.parallel) ? g.parallel : []).forEach((grp) => {
+    if (!grp || !Array.isArray(grp.members)) return;
+    grp.members.forEach((m) => {
+      if (byId.has(m) && byId.get(m).type === "task" && !groupOf.has(m)) groupOf.set(m, grp);
+    });
+  });
+  const pairsOf = new Map();
+  edges.forEach((e) => {
+    if (e.type !== "dependency" || !byId.has(e.from) || !byId.has(e.to)) return;
+    const lane = laneOf(byId.get(e.from));
+    if (lane !== laneOf(byId.get(e.to))) return;
+    push(pairsOf, lane, [e.from, e.to]);
+  });
+
+  const geo = new Map();
+  laneIds.forEach((lane) => {
+    geo.set(lane, laneGeometry(tasksOf.get(lane) || [], stripOf.get(lane) || [],
+      { pairs: pairsOf.get(lane) || [], groupOf, pillsOf }));
+  });
+
+  // Which frames are cards. Done phases start collapsed; opts.open and opts.close override; expandAll (Show all) turns
+  // the defaults off; collapseAll folds every frame.
+  const open = new Set(Array.isArray(o.open) ? o.open.map(String) : []);
+  const shut = new Set(Array.isArray(o.close) ? o.close.map(String) : []);
+  const collapsed = new Set();
+  laneIds.forEach((lane) => {
+    const ph = phaseOf.get(lane);
+    let fold = false;
+    if (shut.has(lane)) fold = true;
+    else if (!open.has(lane) && o.expandAll !== true) {
+      fold = o.collapseAll === true || (ph !== undefined && ph.collapsed === true);
+    }
+    if (fold) collapsed.add(lane);
+  });
+  const cur = typeof g.current === "string" ? g.current : "start";
+  const curNode = byId.get(cur);
+  const curLane = curNode ? laneOf(curNode) : null;
+  const curIdx = cur === "start" ? -1 : cur === "end" ? laneIds.length : laneIds.indexOf(curLane);
+  const countNodes = () => {
+    let c = 2;
+    laneIds.forEach((lane) => {
+      c += collapsed.has(lane) ? 1 : geo.get(lane).count;
+    });
+    return c;
+  };
+  // The cap: done phases are already cards; then todo phases two or more past Now (furthest first); then every frame
+  // but Now's (summary). Show all (expandAll) skips it.
+  let capped = false;
+  if (o.expandAll !== true && countNodes() > NODE_CAP) {
+    for (let i = laneIds.length - 1; i >= 0 && countNodes() > NODE_CAP; i -= 1) {
+      const lane = laneIds[i];
+      const ph = phaseOf.get(lane);
+      const todo = !ph || ph.done < ph.total;
+      if (i >= curIdx + 2 && todo && !open.has(lane)) collapsed.add(lane);
+    }
+    for (let i = laneIds.length - 1; i >= 0 && countNodes() > NODE_CAP; i -= 1) {
+      if (i !== curIdx) collapsed.add(laneIds[i]);
+    }
+    capped = countNodes() > NODE_CAP;
+  }
+
+  // Place the frames left to right.
+  const start = { x: MARGIN, y: 0, w: END_W, h: END_H };
+  let x = MARGIN + END_W + FRAME_GAP;
+  const frameRec = new Map();
+  const frames = [];
+  laneIds.forEach((lane) => {
+    const isCard = collapsed.has(lane);
+    const gm = geo.get(lane);
+    const box = { x, y: FLOW_TOP, w: isCard ? CARD_W : gm.w, h: isCard ? CARD_H : gm.h };
+    const ph = phaseOf.get(lane);
+    frameRec.set(lane, { box, collapsed: isCard });
+    frames.push({
+      id: "phase:" + lane, lane, label: ph ? ph.label : lane, approved: ph ? ph.approved === true : false,
+      done: ph ? ph.done : 0, total: ph ? ph.total : 0, tokensK: ph ? ph.tokensK : 0, collapsed: isCard,
+      x: box.x, y: box.y, w: box.w, h: box.h,
+      title: { x: box.x + FRAME_PAD, y: box.y + FRAME_PAD, w: box.w - 2 * FRAME_PAD, h: TITLE_H },
+      slot: { x: box.x + box.w - FRAME_PAD - SLOT, y: box.y + FRAME_PAD + 1, w: SLOT, h: SLOT },
+    });
+    x += box.w + FRAME_GAP;
+  });
+  const mainBottom = frames.reduce((m, f) => Math.max(m, f.y + f.h), FLOW_TOP + END_H);
+  const endX = frames.length ? x - FRAME_GAP : x;
+  const pillY = Math.round(FLOW_TOP + (mainBottom - FLOW_TOP - END_H) / 2);
+  const endBox = { x: endX, y: pillY, w: END_W, h: END_H };
+  start.y = pillY;
+
+  const boxes = { start, end: endBox };
+  const parallel = [];
+  const path = ["start"];
+  const frameBox = new Map();
+  frames.forEach((f) => {
+    frameBox.set(f.lane, { x: f.x, y: f.y, w: f.w, h: f.h });
+  });
+  frames.forEach((f) => {
+    const fb = frameBox.get(f.lane);
+    if (f.collapsed) {
+      boxes[f.id] = withSlot(fb);
+      path.push(f.id);
+      return;
+    }
+    const gm = geo.get(f.lane);
+    gm.boxes.forEach((rb, id) => {
+      boxes[id] = withSlot({ x: fb.x + rb.x, y: fb.y + rb.y, w: rb.w, h: rb.h });
+    });
+    gm.brackets.forEach((br) => {
+      parallel.push({ lane: f.lane, x: fb.x + br.x, y: fb.y + br.y, w: br.w, h: br.h, members: br.members });
+    });
+    gm.order.forEach((id) => path.push(id));
+  });
+  path.push("end");
+
+  // Every node id resolves to the box that draws it: its own box, or its frame's card when the frame is folded.
+  const endpoint = (id) => {
+    if (id === "start") return { kind: "start", lane: null, box: start };
+    if (id === "end") return { kind: "end", lane: null, box: endBox };
+    const n = byId.get(id);
+    if (!n) return null;
+    const lane = laneOf(n);
+    const rec = frameRec.get(lane);
+    if (!rec) return null;
+    if (rec.collapsed) return { kind: "node", lane, box: rec.box, card: true };
+    const b = boxes[id];
+    return b ? { kind: "node", lane, box: b, card: false } : null;
+  };
+  const routes = {};
+  edges.forEach((e) => {
+    const S = endpoint(e.from);
+    const D = endpoint(e.to);
+    if (!S || !D) return;
+    const pts = routeEdge(S, D, frameBox);
+    if (pts) routes[e.id] = pts.map(([px, py]) => [Math.round(px), Math.round(py)]);
+  });
+
+  const nowEnd = endpoint(cur);
+  const now = {
+    node: cur,
+    box: nowEnd ? nowEnd.box : null,
+    flag: nowEnd ? { x: nowEnd.box.x, y: FLOW_TOP - FLAG_H - 4, w: FLAG_W, h: FLAG_H } : null,
+  };
+  const mainH = Math.max(mainBottom, endBox.y + END_H);
+  return {
+    width: endX + END_W + MARGIN,
+    height: mainH + MARGIN,
+    cap: NODE_CAP,
+    count: Object.keys(boxes).length,
+    capped,
+    collapsed: laneIds.filter((lane) => collapsed.has(lane)),
+    frames,
+    boxes,
+    routes,
+    parallel,
+    now,
+    path,
   };
 }
