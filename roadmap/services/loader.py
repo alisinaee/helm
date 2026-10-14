@@ -18,7 +18,7 @@ from roadmap.services import control, limits, rules
 from roadmap.store import config as config_store
 
 BASE_FILES = ("tasks.json", "jobs.json", "autonomy.json", "issues.json", "questions.json", "comments.json",
-              "budget.json", "queue.json", "activity.jsonl")
+              "budget.json", "queue.json", "activity.jsonl", "features.json")
 CONFIG_FILE = "roadmap.config.json"
 LSOF_TIMEOUT_S = 5
 

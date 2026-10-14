@@ -1,11 +1,11 @@
 """Top-level command status: the board summary of one project in at most 8 lines and 700 characters.
 
 Lines keep this order, and when space runs out the lowest ones go first: header, left, phase, run, ask, queue,
-issues, budget, you, next. The ask, queue, issues and budget lines come from the command layer
+issues, features, budget, you, next. The ask, queue, issues and budget lines come from the command layer
 (docs/AGENT-INTERFACE.md section 2; docs/PRODUCT-SPEC.md section 4).
 """
 
-from roadmap.services import commands, jobs, limits, tasks
+from roadmap.services import commands, features, jobs, limits, tasks
 
 MAX_LINES = 8
 MAX_CHARS = 700
@@ -27,7 +27,9 @@ def compose(base, extras):
     nxt = [line for line in rest if line.startswith("next:")]
     run = [line for line in rest if line.startswith("run:")]
     meters = [extras["limits"]] if extras.get("limits") else []
-    ordered = head + run + [extras["ask"], extras["queue"], extras["issues"], extras["budget"]] + meters + you + nxt
+    plan = [extras["features"]] if extras.get("features") else []
+    ordered = (head + run + [extras["ask"], extras["queue"], extras["issues"]] + plan + [extras["budget"]] + meters
+               + you + nxt)
     return _fit(ordered)
 
 
@@ -47,6 +49,7 @@ def _run(args):
     base = tasks.summary(data_dir, jobs.list_jobs(data_dir), name=project["id"])
     extras = commands.status_extras(data_dir)
     extras["limits"] = limits.status_line(limits.evaluate_rows(project))
+    extras["features"] = features.status_line(data_dir)
     lines = compose(base, extras)
     if not getattr(args, "json", False):
         for line in lines:

@@ -12,6 +12,7 @@ import re
 
 from roadmap.core import parsers, planfmt
 from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
+from roadmap.services import features as feature_store
 from roadmap.services import jobs
 from roadmap.store import atomic, backup, config, lock, schema
 
@@ -133,8 +134,7 @@ def apply(data_dir, records, dry_run=False, replace_phase=None, project_id=None)
             doc["updated"] = planfmt.today()
             schema.write_data("tasks", path, doc)
         if diff["features_added"] or diff["features_changed"]:
-            fdoc["updated"] = planfmt.today()
-            _features_write(data_dir, fdoc)
+            feature_store.apply_records(data_dir, records)  # the F lines, already validated above (WP52)
         diff.update(dry_run=False, wrote=True, backup=folder)
     return diff
 
