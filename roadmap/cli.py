@@ -38,6 +38,7 @@ COMMAND_MODULES = (
     "phone",
     "backup",
     "skills",
+    "watch",
     "version",
 )
 

@@ -15,7 +15,7 @@ import datetime
 import os
 
 from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
-from roadmap.services import activity, agentguard, budget, jobs, limits, queue, questions, records, tasks
+from roadmap.services import activity, agentguard, budget, jobs, limits, notify, queue, questions, records, tasks
 from roadmap.log import get_logger
 from roadmap.store import atomic, config, lock, paths, schema
 
@@ -280,11 +280,22 @@ def _mutate(project, change, now, timeout=None):
     """Under the state lock: apply change(manual) to the saved manual flags, evaluate, save. Returns the state.
     timeout bounds the lock wait (the hook passes its remaining budget); None keeps the default."""
     with lock.locked(paths.ensure_dir(paths.state_dir()), timeout=timeout):
-        manual = _manual_of(read_state(project["id"]) or {})
+        before = read_state(project["id"]) or {}
+        manual = _manual_of(before)
         change(manual)
         state = _evaluate(project, manual, now)
         _save(project["id"], state)
+    # a hook passes its own lock timeout and runs inside a 300 ms budget: it never shows a notification
+    if timeout is None and isinstance(state.get("block"), dict) and not isinstance(before.get("block"), dict):
+        _notify_limit(project, state)
     return state
+
+
+def _notify_limit(project, state):
+    """One notification the first time a limit blocks a project (services/notify.py). Never raises."""
+    reason = notify.summary(state["block"].get("reason"))
+    notify.notify("limit", "Work blocked", "Limit reached in " + project["id"] + ": " + reason
+                  + ". Run: roadmap status", project["id"])
 
 
 def recompute(project_id, now=None, timeout=None):

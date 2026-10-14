@@ -5,7 +5,7 @@ import datetime
 
 from roadmap.core.parsers import OPTS_MAX, Q_TEXT_MAX, QUESTION_STATUSES
 from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
-from roadmap.services import records
+from roadmap.services import notify, records
 from roadmap.store import jsonl, lock
 
 FILE = "questions.json"
@@ -41,6 +41,10 @@ def ask(data_dir, task, text, opts=(), default=None, block=False, timeout_s=None
                     "asked": records.now_iso(now), "answered": None}
         doc["questions"].append(question)
         records.save("questions", data_dir, FILE, doc)
+    if question["block"]:  # outside the lock; a blocking question is one the agent waits for
+        notify.notify_dir(data_dir, "question", "Question waiting", lambda project: question["id"] + " on "
+                          + (question["task"] or "-") + " needs you. Answer it in " + project
+                          + " or run: roadmap inbox")
     return dict(question)
 
 
