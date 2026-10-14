@@ -29,6 +29,7 @@ COMMAND_MODULES = (
     "research",
     "agent_guide",
     "status",
+    "ref",
     "hook",
     "hooks",
     "control",
