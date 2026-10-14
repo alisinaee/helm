@@ -133,6 +133,10 @@ def _change(args):
     status = STATUS_FOR[args.status_word]
     for tid in args.ids:
         tasks.get(data_dir, tid)  # unknown id: exit 3 with the exact next command
+    if args.status_word == "start":
+        refusal = tasks.start_refusal(data_dir, args.ids)  # WP62b: a phase with approved false cannot start
+        if refusal is not None:
+            raise refusal
     tokens = _tokens_arg(args.tokens)
     for tid in args.ids:
         payload = {"id": tid, "status": status}
