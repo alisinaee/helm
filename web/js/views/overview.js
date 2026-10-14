@@ -5,6 +5,7 @@
 
 import { esc, meterHtml } from "../dom.js";
 import { fmtCount, fmtTokens, MISSING } from "../format.js";
+import { copyButton, refSummary } from "../ref.js";
 import { homeView } from "./home.js";
 import { inboxHash, inboxPreviewHtml, itemHash, pageState, scopeSnapshots, watchCountdowns } from "./inbox.js";
 import { activityRowHtml } from "./activity.js";
@@ -117,21 +118,35 @@ function metersBody(snap) {
     '<p class="mt-line">' + esc(tokens) + "</p>" + list;
 }
 
-function cardHtml(id, title, summary, body) {
+// ref ({ project, count }) adds the section copy-reference button to the header. Cards without it get none.
+function cardHtml(id, title, summary, body, ref) {
+  const copy = ref ? copyButton("section", "overview." + id, title,
+    { project: ref.project, sum: refSummary("section", ref.count) }) : "";
   return '<section class="ov-card" aria-labelledby="ov-' + id + '-h"><h2 class="ov-h" id="ov-' + id + '-h">' +
-    esc(title) + (summary ? ' <span class="ov-sum">' + esc(summary) + "</span>" : "") + "</h2>" + body + "</section>";
+    esc(title) + (summary ? ' <span class="ov-sum">' + esc(summary) + "</span>" : "") + copy + "</h2>" + body +
+    "</section>";
+}
+
+// The copy-reference button of a task row (the row's own link stays the link).
+function taskCopy(snap, id) {
+  const task = snap.tasks.filter(function (t) {
+    return t.id === id;
+  })[0] || null;
+  return copyButton("task", id, task ? task.title : id, { project: snap.id, sum: refSummary("task", task, snap) });
 }
 
 function blockersHtml(snap) {
   const blockers = snap.issues.filter(function (i) {
     return i.kind === "blocker";
   });
+  const count = snap.blocked.length + blockers.length;
   if (!snap.blocked.length && !blockers.length) {
-    return cardHtml("blockers", "Open blockers", "", '<p class="placeholder">No open blockers.</p>');
+    return cardHtml("blockers", "Open blockers", "", '<p class="placeholder">No open blockers.</p>',
+      { project: snap.id, count: 0 });
   }
   const tasks = snap.blocked.map(function (id) {
     return '<li class="nz-row"><a href="' + esc(itemHash(snap.id, id)) + '">' + esc(id) +
-      "</a> is blocked</li>";
+      "</a> is blocked" + taskCopy(snap, id) + "</li>";
   });
   const issues = blockers.map(function (i) {
     return '<li class="nz-row">' + esc(i.id) + " " + esc(i.title) + (i.tasks.length
@@ -139,7 +154,7 @@ function blockersHtml(snap) {
   });
   return cardHtml("blockers", "Open blockers", fmtCount(snap.blocked.length) +
     (snap.blocked.length === 1 ? " task" : " tasks"),
-    '<ul class="nz-list">' + tasks.concat(issues).join("") + "</ul>");
+    '<ul class="nz-list">' + tasks.concat(issues).join("") + "</ul>", { project: snap.id, count: count });
 }
 
 function activityHtml(snap, now) {
@@ -149,7 +164,7 @@ function activityHtml(snap, now) {
       return activityRowHtml(line, snap.id, snap.title, now, false);
     }).join("") + "</ol>"
     : '<p class="placeholder">No activity yet.</p>';
-  return cardHtml("activity", "Activity", "", body);
+  return cardHtml("activity", "Activity", "", body, { project: snap.id, count: lines.length });
 }
 
 function projectOverview(vm) {
@@ -163,8 +178,11 @@ function projectOverview(vm) {
     '/roadmap">Open Roadmap</a></p>';
   const main = controlBanner(vm) + kpiView(vm) +
     cardHtml("inbox", "Inbox", "", inboxPreviewHtml(vm, PREVIEW_MAX) +
-      '<p class="ov-more"><a href="' + esc(inboxHash(vm)) + '">Open Inbox</a></p>') + runningSection(vm) + phases;
-  const side = cardHtml("meters", "Meters", "", metersBody(snap)) + blockersHtml(snap) + activityHtml(snap, now) +
+      '<p class="ov-more"><a href="' + esc(inboxHash(vm)) + '">Open Inbox</a></p>',
+    { project: snap.id, count: snap.needUser }) + runningSection(vm) + phases;
+  const meterCount = snap.meters ? snap.meters.length : 0;
+  const side = cardHtml("meters", "Meters", "", metersBody(snap), { project: snap.id, count: meterCount }) +
+    blockersHtml(snap) + activityHtml(snap, now) +
     nextSection(vm) + recentSection(vm) + extrasSection(vm) + legendSection(vm);
   return limitBanner(worstLimit(scopes), true) +
     '<div class="ov"><div class="ov-main">' + main + '</div><div class="ov-side">' + side + "</div></div>";
