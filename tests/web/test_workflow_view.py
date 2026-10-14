@@ -135,8 +135,10 @@ class WorkflowViewTests(unittest.TestCase):
         self.assertNotIn("data-action=", "".join(markup(self.out)))
 
     def test_detail_strip_and_table_use_the_shared_row_grid(self):
-        timeline = self.out["sections"]["timeline"]
-        self.assertIn('class="wf-detail row-grid wf-cols"', timeline)
+        # The strip shows in the Table; the Map has none (a tap opens the right panel's Details instead).
+        table = self.out["sections"]["table"]
+        self.assertIn('class="wf-detail row-grid wf-cols"', table)
+        self.assertNotIn('class="wf-detail', self.out["sections"]["map"])
         self.assertIn('class="rg-num num"', self.out["cases"]["running"]["table"])
 
     def test_the_map_is_the_default_view_and_views_are_links_in_the_url(self):

@@ -15,13 +15,13 @@
 
 import { NODE_CAP } from "./model.js";
 
-export const NODE_W = 168;
-export const NODE_H = 44;
+export const NODE_W = 200;
+export const NODE_H = 52;
 export const PILL_W = 36;
 export const PILL_H = 20;
 
 const PILL_STEP = 40;
-const PILL_DY = 50;
+const PILL_DY = 58;
 const SLOT_GAP = 10;
 const COL_GAP = 32;
 const COL_W = NODE_W + COL_GAP;
@@ -46,7 +46,7 @@ const ROW_GAP = 28;
 const STACK_GAP = 12;
 const STRIP_GAP = 10;
 const STRIP_SEP = 14;
-const FRAME_GAP = 64;
+const FRAME_GAP = 28;
 const FRAME_PAD = 12;
 const TITLE_H = 26;
 const CHANNEL = 14;

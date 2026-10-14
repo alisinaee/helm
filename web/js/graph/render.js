@@ -14,6 +14,9 @@ const MARKERS = ["sequence", "dependency", "handoff", "blocker", "lead"];
 const GLYPH = { done: "✓", doing: "●", todo: "○", blocked: "✕", defer: "–" };
 const FOLD_OPEN = "▾";
 const FOLD_SHUT = "▸";
+// Characters that fit one line of a task title (the box is 200 wide, less the 10 px inset and the 28 px copy slot).
+const TITLE_CHARS = 26;
+const CHAR_PX = 6.4;
 
 function el(tag, attrs, kids) {
   const node = document.createElementNS(NS, tag);
@@ -33,6 +36,25 @@ function txt(s) {
 function clip(s, max) {
   const t = String(s || "");
   return t.length > max ? t.slice(0, max - 1) + "…" : t;
+}
+
+// Two lines of a title, broken at spaces. The second line ends in an ellipsis when the rest does not fit.
+function titleLines(s, max) {
+  const words = String(s || "").split(/\s+/).filter(Boolean);
+  const first = [];
+  let k = 0;
+  while (k < words.length && (first.join(" ") + " " + words[k]).trim().length <= max) first.push(words[k++]);
+  if (!first.length && k < words.length) first.push(words[k++]);
+  return [clip(first.join(" "), max), clip(words.slice(k).join(" "), max)];
+}
+
+// "P4 · name" for a frame, ellipsized to the characters that fit in room pixels. The full text is in a <title>.
+function frameName(f) {
+  return f.label && f.label !== f.lane ? f.lane + " · " + f.label : f.lane;
+}
+
+function frameTitle(f, room) {
+  return clip(frameName(f), Math.max(6, Math.floor(room / CHAR_PX)));
 }
 
 function push(map, key, value) {
@@ -124,15 +146,17 @@ function taskNode(n, p, pid) {
   const st = statusOf(n);
   const x = p.x;
   const y = p.y;
+  const lines = titleLines(n.title || n.label, TITLE_CHARS);
   return el("g", { class: "wfg-n wfg-task wfg-s-" + st, tabindex: 0, role: "button", "aria-label": nodeLabel(n),
     "data-wf-item": n.id, "data-wf-task": n.task || "", "data-wf-pid": pid, "data-cx": x + p.w / 2,
     "data-cy": y + p.h / 2 }, [
     el("title", null, [txt(n.title || n.label || n.id)]),
     el("rect", Object.assign({ class: "wfg-box", rx: 6, fill: st === "blocked" ? "url(#wfg-hatch)" : null },
       boxAttrs(p))),
-    el("text", { class: "wfg-glyph", x: x + 10, y: y + 18 }, [txt(glyphOf(st))]),
-    el("text", { class: "wfg-id", x: x + 26, y: y + 18 }, [txt(n.task || "")]),
-    el("text", { class: "wfg-t", x: x + 10, y: y + 35 }, [txt(clip(n.title || n.label, 22))]),
+    el("text", { class: "wfg-glyph", x: x + 10, y: y + 17 }, [txt(glyphOf(st))]),
+    el("text", { class: "wfg-id", x: x + 26, y: y + 17 }, [txt(n.task || "")]),
+    el("text", { class: "wfg-t", x: x + 10, y: y + 31 }, [txt(lines[0])]),
+    lines[1] ? el("text", { class: "wfg-t", x: x + 10, y: y + 44 }, [txt(lines[1])]) : null,
     el("g", { class: "wfg-ref" }),
   ]);
 }
@@ -191,7 +215,7 @@ function cardNode(f, p, pid) {
     "data-cx": p.x + p.w / 2, "data-cy": p.y + p.h / 2 }, [
     el("rect", { class: "wfg-box", rx: 8, x: p.x, y: p.y, width: p.w, height: p.h }),
     el("text", { class: "wfg-glyph", x: p.x + 12, y: p.y + 24 }, [txt(glyphOf(st))]),
-    el("text", { class: "wfg-t", x: p.x + 28, y: p.y + 24 }, [txt(clip(f.lane, 8) + " " + clip(f.label, 14))]),
+    el("text", { class: "wfg-t", x: p.x + 28, y: p.y + 24 }, [txt(frameTitle(f, p.w - 28 - 24))]),
     el("text", { class: "wfg-num", x: p.x + 12, y: p.y + 45 }, [txt(numsOf(f))]),
     el("text", { class: "wfg-fold-glyph", x: p.x + p.w - 14, y: p.y + 31, "text-anchor": "middle" }, [txt(FOLD_SHUT)]),
   ]);
@@ -199,11 +223,12 @@ function cardNode(f, p, pid) {
 
 // The title tab of an open phase: id and name on the left, done/total and tokens K on the right.
 function frameBand(f) {
+  const room = f.title.w - 16 - numsOf(f).length * CHAR_PX - 12;
   return el("g", { class: "wfg-frame", role: "group", "aria-label": frameLabel(f) }, [
+    el("title", null, [txt(frameName(f))]),
     el("rect", { class: "wfg-band", x: f.x, y: f.y, width: f.w, height: f.h, rx: 8 }),
     el("rect", { class: "wfg-tab", x: f.title.x, y: f.title.y, width: f.title.w, height: f.title.h, rx: 4 }),
-    el("text", { class: "wfg-ph", x: f.title.x + 8, y: f.title.y + 17 },
-      [txt(clip(f.lane, 8) + " " + clip(f.label, 14))]),
+    el("text", { class: "wfg-ph", x: f.title.x + 8, y: f.title.y + 17 }, [txt(frameTitle(f, room))]),
     el("text", { class: "wfg-num", x: f.slot.x - 6, y: f.title.y + 17, "text-anchor": "end" }, [txt(numsOf(f))]),
   ]);
 }

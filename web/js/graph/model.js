@@ -174,7 +174,7 @@ export function buildGraph(snap, filters) {
   const wfEdges = isObj(wf.edges) ? wf.edges : {};
 
   const phases = uniqueBy(list(raw.phases).map((p) => ({
-    id: idOf(p.id), title: text(p.title), approved: p.approved === true,
+    id: idOf(p.id), title: text(p.name || p.title), approved: p.approved === true,
   })).filter((p) => p.id !== null));
   const tasks = uniqueBy(list(raw.tasks).map((t) => ({
     id: idOf(t.id), title: text(t.title), phase: idOf(t.phase), status: taskStatus(t), model: text(t.model),
