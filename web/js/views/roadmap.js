@@ -132,7 +132,8 @@ function barHtml(snap, phase, max) {
   const spentPct = est && spent != null ? Math.min(100, (spent / est) * 100) : 0;
   const text = (est == null ? "no estimate" : "est " + sizeText(est)) + " · spent " +
     (spent == null ? MISSING : fmtTokens(spent));
-  return '<li class="tl-row"><p class="tl-label"><span class="lane-id">' + esc(pid) + '</span><span class="lane-name">' +
+  return '<li class="tl-row"><p class="tl-label"><span class="lane-id">' + esc(pid) +
+    '</span><span class="lane-name">' +
     esc(phase.name) + '</span><span class="lane-state">' + esc(STATE_WORD[phase.state] || phase.state) + "</span></p>" +
     '<div class="tl-track" aria-hidden="true"><div class="tl-bar" data-pct="' + barPct + '">' +
     '<div class="tl-spent" data-pct="' + spentPct + '"></div></div></div>' +

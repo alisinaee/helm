@@ -1,7 +1,8 @@
 // Projects tab (WP29): "All projects" first, then one row per project. Rows sort needs-you first, then running, then
 // the rest, and by name inside each group. A row shows a status dot with its word, a progress meter and the badges:
-// open questions, open blockers and running jobs. Questions and blockers are known only for the project whose snapshot
-// is loaded, so other rows leave them out rather than show a guess. A project blocked by a limit shows a "Blocked" mark.
+// open questions, open blockers and running jobs. Questions and blockers are known only for the project whose
+// snapshot is loaded, so other rows leave them out rather than show a guess. A project blocked by a limit shows a
+// "Blocked" mark.
 
 import { bannerHtml, emptyHtml, esc, meterHtml, skeletonHtml } from "../dom.js";
 import { sectionById } from "../routes.js";

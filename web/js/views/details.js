@@ -175,7 +175,8 @@ function subsHtml(task, snap, vm, now) {
   const items = (task.subs || []).map(function (sub, index) {
     const addr = task.id + "/" + (index + 1);
     const done = pick(subKey(project, addr), snap, now, sub.d);
-    return '<li><label class="d-sub" data-done="' + (done === true) + '"><input type="checkbox" data-side="sub" data-addr="' +
+    return '<li><label class="d-sub" data-done="' +
+      (done === true) + '"><input type="checkbox" data-side="sub" data-addr="' +
       esc(addr) + '"' + (done ? " checked" : "") + ' data-focus="sub-' + esc(addr) + '"' + off + "><span>" +
       esc(sub.t) + "</span></label></li>";
   });
@@ -333,7 +334,8 @@ function questionView(vm, question) {
     '<label for="' + esc(field) + '">Other answer <input id="' + esc(field) +
     '" name="value" type="text" maxlength="500" data-focus="answer-text"' + off + "></label>" +
     '<button type="submit" class="btn" data-focus="answer-btn"' + off + ">Send answer</button></form>");
-  const meta = (question.task ? "For " + question.task + " · " : "") + "open" + (question.block ? " · blocks work" : "");
+  const meta = (question.task ? "For " + question.task + " · " : "") + "open" +
+    (question.block ? " · blocks work" : "");
   return '<div class="d-head"><p class="d-id">' + esc(question.id) + '</p><h3 class="d-title">' + esc(question.text) +
     '</h3><p class="d-meta">' + esc(meta) + "</p></div>" + answer;
 }

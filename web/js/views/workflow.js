@@ -8,7 +8,7 @@
 
 import { getJson } from "../api.js";
 import { run } from "../cmd.js";
-import { bannerHtml, chipHtml, emptyHtml, esc, skeletonHtml } from "../dom.js";
+import { bannerHtml, chipHtml, emptyHtml, esc, setHtml, skeletonHtml } from "../dom.js";
 import { MISSING, fmtDuration, fmtTokens } from "../format.js";
 import { buildHash, currentRoute, projectHash } from "../router.js";
 import { pageState } from "./inbox.js";
@@ -768,7 +768,8 @@ function detailHtml(model, key) {
       "Approve in Roadmap</a>";
     const start = it.cls === "todo" && it.approved
       ? '<button type="button" class="btn btn-small btn-primary" data-wf-op="task.start" data-wf-pid="' +
-        esc(it.pid) + '" data-wf-task="' + esc(it.task) + '" aria-label="Start task ' + esc(it.task) + '">Start</button>'
+        esc(it.pid) + '" data-wf-task="' + esc(it.task) + '" aria-label="Start task ' +
+        esc(it.task) + '">Start</button>'
       : approve || MISSING;
     return statusChip(it.state, it.cls === "todo" ? "queued" : it.cls === "doing" ? "doing" : it.cls === "done"
       ? "done" : "blocked") + '<span class="wf-id">' + esc(it.job || MISSING) + "</span>" +
@@ -856,7 +857,8 @@ export function sectionView(vm) {
   const head = '<div class="page-head"><h2 class="page-title">Workflow</h2><p class="page-note">Live. Each bar is a ' +
     "job from start to end, in lanes by role and model. Hover or focus a bar for its details, and press Enter to " +
     "open its task.</p></div>";
-  const controls = '<div class="wf-controls"><nav class="seg plan-views" aria-label="View">' + viewLinks(route, view, range) +
+  const controls = '<div class="wf-controls"><nav class="seg plan-views" aria-label="View">' +
+    viewLinks(route, view, range) +
     '</nav><nav class="seg plan-views" aria-label="Range">' + rangeLinks(route, view, range) + "</nav></div>";
   let body;
   if (model.empty && view !== "map") {
@@ -908,7 +910,7 @@ function select(e) {
   selectedKey = key;
   const strip = closestEl(el, ".wf");
   const detail = strip ? strip.querySelector(".wf-detail") : null;
-  if (detail) detail.innerHTML = detailHtml(lastModel, key);
+  if (detail) setHtml(detail, detailHtml(lastModel, key));
 }
 
 function onClick(e) {

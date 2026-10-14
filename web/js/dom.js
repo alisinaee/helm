@@ -53,6 +53,13 @@ export function patch(sectionId, html) {
   return true;
 }
 
+// Replace the contents of one element that has no id (patch() needs one). Sets meter widths like patch() does.
+export function setHtml(el, html) {
+  if (!el) return;
+  el.innerHTML = html;
+  applyMeters(el);
+}
+
 export function setHidden(sectionId, hidden) {
   const el = document.getElementById(sectionId);
   if (el) el.hidden = Boolean(hidden);
