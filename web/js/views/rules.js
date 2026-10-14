@@ -1,6 +1,6 @@
-// Rules (WP33): the project's rules in tabs by scope group, a delete on each rule, an add form (scope, kind, text with a
-// 160-character counter) and Sync to CLAUDE.md. Every change goes through run() in cmd.js (rules.add, rules.rm,
-// rules.sync). Rules belong to one project, so All projects shows a pointer to a project instead.
+// Rules (WP33): the project's rules in tabs by scope group, a delete on each rule, an add form (scope, kind, text
+// with a 160-character counter) and Sync to CLAUDE.md. Every change goes through run() in cmd.js (rules.add,
+// rules.rm, rules.sync). Rules belong to one project, so All projects shows a pointer to a project instead.
 
 import { bannerHtml, chipHtml, emptyHtml, esc } from "../dom.js";
 import { run } from "../cmd.js";
@@ -12,7 +12,8 @@ const TABS = [
   { id: "all", label: "All", test: function (s) { return s === "all"; } },
   { id: "lead", label: "Lead and worker", test: function (s) { return s === "lead" || s === "worker"; } },
   { id: "models", label: "Models", test: function (s) { return s === "haiku" || s === "sonnet" || s === "opus"; } },
-  { id: "phase", label: "Phase and task", test: function (s) { return s.indexOf("phase:") === 0 || s.indexOf("task:") === 0; } },
+  { id: "phase", label: "Phase and task",
+    test: function (s) { return s.indexOf("phase:") === 0 || s.indexOf("task:") === 0; } },
   { id: "claude", label: "Claude", test: function (s) { return s === "claude"; } },
 ];
 const SCOPE_OPTIONS = ["all", "lead", "worker", "haiku", "sonnet", "opus", "claude"];
@@ -43,7 +44,8 @@ function listHtml(rules, activeTab) {
   if (!shown.length) return emptyHtml("No rules in this group.", "");
   return '<ul class="rule-list">' + shown.map(function (r) {
     const value = r.kind === "budget" && r.value != null ? " (" + esc(r.value) + "k)" : "";
-    return '<li class="rule-row"><span class="rule-main">' + chipHtml(kindWord(r.kind), KIND_KIND[r.kind] || "neutral") +
+    return '<li class="rule-row"><span class="rule-main">' +
+      chipHtml(kindWord(r.kind), KIND_KIND[r.kind] || "neutral") +
       ' <span class="rule-text">' + esc(r.text) + value + "</span></span>" +
       '<span class="rule-scope">' + esc(r.scope) + "</span>" +
       '<button type="button" class="btn btn-small" data-action="rule-rm" data-id="' + esc(r.id) +
@@ -73,7 +75,8 @@ function addFormHtml() {
   const kinds = KIND_OPTIONS.map(function (k) {
     return '<option value="' + esc(k.value) + '">' + esc(k.text) + "</option>";
   }).join("");
-  return '<section class="ov-card rules-form" aria-labelledby="rules-add"><h3 id="rules-add" class="lim-h">Add a rule</h3>' +
+  return '<section class="ov-card rules-form" aria-labelledby="rules-add">' +
+    '<h3 id="rules-add" class="lim-h">Add a rule</h3>' +
     '<div class="lim-edit">' +
     '<label class="lim-field"><span class="lim-label">Scope</span><select class="lim-select" data-rule="scope" ' +
     'data-focus="rule-scope">' + scopes + "</select></label>" +
@@ -92,10 +95,12 @@ function addFormHtml() {
 }
 
 function syncHtml() {
-  return '<section class="ov-card" aria-labelledby="rules-sync"><h3 id="rules-sync" class="lim-h">Sync to CLAUDE.md</h3>' +
-    '<p class="page-note">Writes these rules into the project CLAUDE.md between the roadmap markers. A backup copy of ' +
-    "the file is kept first, and text outside the markers is not changed.</p>" +
-    '<button type="button" class="btn" data-action="rule-sync" data-focus="rule-sync">Sync to CLAUDE.md</button></section>';
+  return '<section class="ov-card" aria-labelledby="rules-sync">' +
+    '<h3 id="rules-sync" class="lim-h">Sync to CLAUDE.md</h3>' +
+    '<p class="page-note">Writes these rules into the project CLAUDE.md between the roadmap markers. ' +
+    "A backup copy of the file is kept first, and text outside the markers is not changed.</p>" +
+    '<button type="button" class="btn" data-action="rule-sync" data-focus="rule-sync">' +
+    "Sync to CLAUDE.md</button></section>";
 }
 
 export function sectionView(vm) {

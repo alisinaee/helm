@@ -170,7 +170,8 @@ function accuracyHtml() {
   return '<div class="acc"><p class="acc-line">Project percentages are estimates (≈). ' +
     '<span class="acc-more">Token counts are exact for reported jobs.</span></p>' +
     "<details><summary>How these limits are measured</summary><ol>" +
-    "<li>Usage outside these projects, such as chats or other machines, counts in global limits and makes project estimates high.</li>" +
+    "<li>Usage outside these projects, such as chats or other machines, " +
+    "counts in global limits and makes project estimates high.</li>" +
     "<li>Tokens are counted when a job ends, so a long running job shows up late.</li>" +
     "<li>When the reader is off, those hours are added at the next reading, but they land on that day.</li>" +
     "<li>Project % figures are estimates shown with ≈. Token figures are exact for reported jobs.</li>" +
@@ -204,13 +205,16 @@ export function sectionView(vm) {
     "The snapshot has no meters. Usage may still be loading.");
   const title = isProject ? "Tokens for " + vm.project.name : "Tokens for all projects";
   const head = '<div class="page-head"><h2 class="page-title">' + esc(title) + "</h2>" +
-    '<p class="page-note">' + esc(isProject ? "This project only. Its own limits and spend, plus All projects limits that apply to it."
+    '<p class="page-note">' + esc(isProject
+      ? "This project only. Its own limits and spend, plus All projects limits that apply to it."
       : "All projects. Global limits and every project's spend.") + "</p></div>";
   const meters = '<section class="ov-card" aria-label="Meters">' +
     metersHtml(rows, snap, isProject) + "</section>";
-  const spend = isProject ? '<section class="ov-card" aria-labelledby="tk-spend"><h3 id="tk-spend" class="lim-h">' +
-    "Spend</h3>" + spendHtml(snap) + "</section>" : '<section class="ov-card" aria-labelledby="tk-spend"><h3 id="tk-spend" class="lim-h">' +
-    "Spend</h3>" + projectTableHtml(vm) + "</section>";
+  const spend = isProject
+    ? '<section class="ov-card" aria-labelledby="tk-spend"><h3 id="tk-spend" class="lim-h">' +
+      "Spend</h3>" + spendHtml(snap) + "</section>"
+    : '<section class="ov-card" aria-labelledby="tk-spend"><h3 id="tk-spend" class="lim-h">' +
+      "Spend</h3>" + projectTableHtml(vm) + "</section>";
   const override = isProject ? overrideHtml(pid) : "";
   return head + notice + meters + '<section class="ov-card" aria-label="Limits">' + limitsHtml(scope, rows) +
     "</section>" + accountHtml(vm, rows) + spend + override +
