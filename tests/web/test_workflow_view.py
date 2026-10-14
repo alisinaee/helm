@@ -22,7 +22,7 @@ WEB = os.path.join(REPO, "web")
 RENDER = os.path.join(TESTS, "web", "render_workflow.mjs")
 FIXTURE = os.path.join(TESTS, "fixtures", "workflow_snapshot.json")
 MAP_CSS_MAX = 4.5 * 1024
-CSS_TOTAL_MAX = 64 * 1024
+CSS_TOTAL_MAX = 72 * 1024  # raised with the R7.12 copy column (see test_shell.py)
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=', re.IGNORECASE)
 OPEN_TAG = re.compile(r"<(g|rect|path|a|button)\b[^>]*data-wf-item=[^>]*>")
 BAR_KEY = re.compile(r'data-wf-item="j:')

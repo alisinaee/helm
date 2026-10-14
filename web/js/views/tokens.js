@@ -192,6 +192,8 @@ export function sectionView(vm) {
   const isProject = vm.route.name === "project";
   const snap = isProject ? vm.project.snapshot : (vm.snapshotList || [])[0] || null;
   const pid = isProject ? vm.route.id : (vm.projects[0] ? vm.projects[0].id : null);
+  // Copy refs name one project: the project view's own. All projects has none, so its section refs are omitted.
+  const refPid = isProject ? pid : null;
   let rows = [];
   if (isProject) {
     rows = snap.meters || [];
@@ -223,13 +225,13 @@ export function sectionView(vm) {
   const spend = isProject
     ? '<section class="ov-card" aria-labelledby="tk-spend"><div class="lim-bar">' +
       '<h3 id="tk-spend" class="lim-h">Spend</h3>' + copyButton("section", "tokens.spend", "Spend",
-        { project: pid, sum: refSummary("section", spendCount) }) + "</div>" + spendHtml(snap) + "</section>"
+        { project: refPid, sum: refSummary("section", spendCount) }) + "</div>" + spendHtml(snap) + "</section>"
     : '<section class="ov-card" aria-labelledby="tk-spend"><div class="lim-bar">' +
       '<h3 id="tk-spend" class="lim-h">Spend</h3>' + copyButton("section", "tokens.spend", "Spend",
-        { project: pid, sum: refSummary("section", spendCount) }) + "</div>" + projectTableHtml(vm) + "</section>";
+        { project: refPid, sum: refSummary("section", spendCount) }) + "</div>" + projectTableHtml(vm) + "</section>";
   const override = isProject ? overrideHtml(pid) : "";
   return head + notice + meters + '<section class="ov-card" aria-label="Limits">' + limitsHtml(scope, rows) +
-    "</section>" + accountHtml(vm, rows, pid) + spend + override +
+    "</section>" + accountHtml(vm, rows, refPid) + spend + override +
     '<section class="ov-card" aria-label="Accuracy">' + accuracyHtml() + "</section>";
 }
 

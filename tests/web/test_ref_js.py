@@ -20,7 +20,7 @@ APP_JS = os.path.join(WEB, "js", "app.js")
 ICONS = os.path.join(WEB, "icons.svg")
 CSS = os.path.join(WEB, "css", "components.css")
 REF_RE = re.compile(r"^rb:[a-z0-9-]+(/[a-z]+/[A-Za-z0-9._-]+)?$")
-CSS_BLOCK_MAX = 400
+CSS_BLOCK_MAX = 600  # R7.12 P9: the copy column, row-grid tracks and the touch rule
 
 NODE_SCRIPT = """
 import { pathToFileURL } from "node:url";
@@ -176,7 +176,7 @@ class RefStaticTests(unittest.TestCase):
         block = css[start:end + 1]
         self.assertLess(len(block.encode("utf-8")), CSS_BLOCK_MAX)
         self.assertIn(".ref-copy", block)
-        self.assertIn(".ref-col", block)
+        self.assertIn("var(--ref-col)", block)
 
 
 if __name__ == "__main__":

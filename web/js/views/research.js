@@ -74,7 +74,8 @@ function checklistHtml(steps) {
 function noteRowHtml(note, pid) {
   const isOpen = selected !== null && selected.pid === pid && selected.name === note.name;
   const lines = note.lines == null ? MISSING : fmtCount(note.lines) + " lines";
-  return '<li><button type="button" class="btn" aria-pressed="' + (isOpen ? "true" : "false") +
+  return '<li class="note-row row-grid"><button type="button" class="btn" aria-pressed="' +
+    (isOpen ? "true" : "false") +
     '" data-action="note-open" data-project="' + esc(pid) + '" data-name="' + esc(note.name) +
     '" data-focus="note-' + esc(pid) + "-" + esc(note.name) + '">' +
     '<span class="act-sum">' + esc(note.title || note.name) + "</span> " +
