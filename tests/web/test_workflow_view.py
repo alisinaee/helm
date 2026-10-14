@@ -81,21 +81,11 @@ class WorkflowViewTests(unittest.TestCase):
         self.assertIn("wf-b-blocked", timeline)
         self.assertIn('data-wf-item="b:beta:P2.2"', timeline)
         self.assertIn("wf-e-block", timeline)
-        self.assertIn("Blocked by issue I1", self.out["cases"]["blocked"]["map"])
 
     def test_handoff_case_draws_parent_to_child_arrows(self):
         timeline = self.out["cases"]["handoff"]["timeline"]
         self.assertIn('class="wf-edge wf-e-handoff"', timeline)
         self.assertIn('marker-end="url(#wf-arrow)"', timeline)
-        self.assertIn("wf-e-after", self.out["cases"]["handoff"]["map"])
-
-    def test_map_lays_phases_out_as_columns_and_stacks_on_a_phone(self):
-        wide = self.out["cases"]["running"]["map"]
-        stacked = self.out["cases"]["running"]["mapStacked"]
-        self.assertEqual(wide.count("wf-card wf-c-"), 6)
-        self.assertEqual(stacked.count("wf-card wf-c-"), 6)
-        self.assertIn('class="wf-ph', wide)
-        self.assertIn('class="wf-map" width="184"', stacked)
         self.assertIn('class="wf-map" width="', wide)
 
     def test_every_bar_and_card_is_a_labelled_focusable_button_with_a_title(self):

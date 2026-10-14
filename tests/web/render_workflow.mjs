@@ -33,8 +33,8 @@ for (const name of CASES) {
   const model = wf.layout(byId[fixture[name].project.id], "week", now);
   out.cases[name] = {
     timeline: wf.timelineSvg(model),
-    map: wf.mapSvg(model, { stacked: false }),
-    mapStacked: wf.mapSvg(model, { stacked: true }),
+    map: "",
+    mapStacked: "", // the Map view moved to web/js/graph/render.js (WP72); covered by test_workflow_diagram.py
     table: wf.tableHtml(model),
     jobs: model.jobCount,
     lanes: model.lanes.map((lane) => lane.label),
