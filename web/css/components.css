@@ -556,6 +556,7 @@
 .run-list {
   display: grid;
   gap: var(--sp-1);
+  padding: 0 var(--sp-4) var(--sp-2);
 }
 
 .run-row {
@@ -577,9 +578,10 @@
   flex: 1 1 160px;
   min-width: 0;
   overflow: hidden;
+  color: var(--text-2);
+  font-size: var(--fs-12);
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--text-2);
 }
 
 .run-time {
@@ -588,6 +590,11 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+.page-note { max-width: 90ch; }
+.act-tok { text-align: right; }
+.ag-tail { display: flex; align-items: center; gap: var(--sp-2); white-space: nowrap; }
+.spend-row { align-items: flex-end; }
 
 .placeholder {
   color: var(--text-2);
@@ -941,10 +948,6 @@
 
 /* ---------- Side column: running, needs, next, recent, extras, legend ---------- */
 
-.run-list {
-  padding: 0 var(--sp-4) var(--sp-2);
-}
-
 .run-item {
   display: grid;
   gap: 2px;
@@ -967,15 +970,6 @@
 .run-id {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-}
-
-.run-title {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--text-2);
-  font-size: var(--fs-12);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .fin-list,

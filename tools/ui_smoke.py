@@ -6,6 +6,7 @@ every section of alpha (the three Work views are separate routes), overview, inb
 and the global routes #/all/overview, #/all/inbox and #/all/tokens. Each route runs in headless Chrome at five sizes
 and themes; each run dumps the DOM and checks it: no data-render-error, a non-empty main region, the left nav and the
 right panel, no "Coming soon" in main, and a marker of the section (for example the board columns on Work > Board).
+Five routes (overview, work board, roadmap, tokens, agents of alpha) also run at 1920x1080 and 2560x1080 in dark.
 Alpha's routes also save a screenshot to build/ui-smoke/. The self-test page must report PASS once per run. The server
 is stopped in a finally block. Exit 1 on any failure.
 """
@@ -34,6 +35,9 @@ SECTIONS = ("overview", "inbox", "roadmap", "work", "issues", "agents", "tokens"
 WORK_VIEWS = ("board", "list", "tree")
 # (width, height, theme). Headless Chrome cannot go below about 500 px.
 COMBOS = ((1440, 900, "dark"), (1440, 900, "light"), (1024, 768, "dark"), (768, 1024, "dark"), (500, 900, "dark"))
+# Very wide screens (WP36): dark only, and only for the routes that WIDE_LABELS names (the rest would only repeat them).
+WIDE_COMBOS = ((1920, 1080, "dark"), (2560, 1080, "dark"))
+WIDE_LABELS = ("alpha overview", "alpha work/board", "alpha roadmap", "alpha tokens", "alpha agents")
 # Chrome's flag that forces prefers-color-scheme. "light" goes through blink-settings because
 # --force-prefers-color-scheme=light is ignored by this Chrome. scheme_probe checks that each one took effect.
 SCHEME_FLAGS = {
@@ -300,7 +304,10 @@ def run_checks(chrome, base, ids, work, failures, shots):
         for route in all_routes:
             # Alpha routes take screenshots at every size; the others only check the DOM, at the first combo.
             is_alpha = route[0].startswith("alpha")
-            for combo in (COMBOS if is_alpha else COMBOS[:1]):
+            combos = COMBOS if is_alpha else COMBOS[:1]
+            if route[0] in WIDE_LABELS:
+                combos = COMBOS + WIDE_COMBOS
+            for combo in combos:
                 jobs.append(pool.submit(run_one, chrome, base, route, combo, work))
         for combo in COMBOS:
             jobs.append(pool.submit(self_test_job, chrome, base, combo, work))

@@ -86,24 +86,11 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
-.app {
-  padding: 0 var(--sp-6);
-}
-
-.main {
-  padding: var(--sp-4) 0 var(--sp-8);
-  min-width: 0;
-}
-
 .main:focus {
   outline: none;
 }
 
 @media (max-width: 640px) {
-  .app {
-    padding: 0 var(--sp-4);
-  }
-
   button,
   select,
   a.btn {

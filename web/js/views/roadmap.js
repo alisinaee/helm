@@ -103,8 +103,8 @@ function laneHtml(vm, snap, phase) {
   const est = estimateK(snap, pid);
   const money = spendOf(snap, pid);
   const pct = phase.onlyDeferred || phase.progress == null ? null : phase.progress * 100;
-  const act = phase.approved
-    ? chipHtml("approved", "success")
+  const act = phase.state === "done" ? "" : phase.approved
+    ? chipHtml("Approved", "success")
     : '<button type="button" class="btn btn-primary btn-small" data-action="phase-approve" data-phase="' + id +
       '" aria-label="Approve ' + id + " " + esc(phase.name) + '">Approve</button>';
   const budget = money.limit != null ? "budget " + fmtTokens(money.limit) : "no budget";
