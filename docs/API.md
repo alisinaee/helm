@@ -213,7 +213,8 @@ The single write path for the GUI (WP21 registry, WP23 ops). Body: JSON, at most
 `project` is optional and defaults to the first registered project. The reply is `{ok, data, activity, undo}`: the
 activity id (for example `A812`) and whether `POST /api/v1/cmd {"op":"undo","args":{"activity":"A812"}}` can reverse it.
 
-Ops: `task.status` (args `id`, `status`, optional `note`, `tokensK`), `task.start`, `task.stop`, `task.cap` (`id`,
+Ops: `task.status` (args `id`, `status`, optional `note`, `tokensK`), `task.rename` (`id`, `title`: 1 to 120
+characters, no control characters; undoable), `task.start`, `task.stop`, `task.cap` (`id`,
 `value`), `subtask.toggle` (`addr`, `done`), `plan.move` (`id`, `before` or `after`), `phase.approve` (`phase`),
 `question.answer` (`id`, `value`), `comment.add` (`on`, `text`, `by`), `issue.new`, `issue.close` (`id`),
 `budget.set` (`scope`, `key`, `value`), `limit.set` (`pct` 1 to 100, or the WP27 row form `scope`, `window`, `kind`,
