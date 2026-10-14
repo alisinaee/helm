@@ -12,10 +12,12 @@ import hashlib
 import json
 import os
 import re
+import threading
 import time
 
+from roadmap import log as roadmap_log
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, RoadmapError
-from roadmap.services import control, jobs
+from roadmap.services import control, jobs, rules
 from roadmap.services import queue as queue_service
 from roadmap.store import atomic, lock, paths, schema
 
@@ -250,7 +252,7 @@ def _handle(raw, environ, cwd, now, clock, started):
         _log("skip: data folder missing for " + project["id"])
         return None
     if event == "SessionStart":
-        return _session_start(project, data_dir)
+        return _session_start(project, data_dir, clock, started)
     pattern, names = project_settings(data_dir)
     regex = task_regex(pattern)
     known = jobs.known_task_ids(data_dir)
@@ -265,7 +267,7 @@ def _handle(raw, environ, cwd, now, clock, started):
             raise
         # A busy lock: return silently, so the hook exits 0 within its time budget. The next event tries again.
     if event == "Stop":
-        return _stop_pickup(payload, project, data_dir, now)
+        return _stop_pickup(payload, project, data_dir, now, clock, started)
     return None
 
 
@@ -320,6 +322,7 @@ PRE_TIMEOUT_S = 0.3        # a PreToolUse that takes longer lets the tool call t
 DENY_LOG_S = 60            # a denial is logged at most once a minute per project
 PICKUP_PER_SESSION = 3
 INBOX_LINES = 3
+RULE_CHARS = 800      # the most text the rules and done lines add to a pickup or to the session context
 _SHELL_OPERATORS = (";", "&", "|", "`", "\n", "<", ">", "$(")
 
 
@@ -475,7 +478,7 @@ def _log_denial(pid, reason, now):
     _log("denied " + pid + ": " + reason)
 
 
-def _session_start(project, data_dir):
+def _session_start(project, data_dir, clock, started):
     """Up to INBOX_LINES lines for the agent's context: the stop line first, then queued and answered items."""
     lines = []
     try:
@@ -488,11 +491,12 @@ def _session_start(project, data_dir):
     lines += control.pending_lines(data_dir, limit=INBOX_LINES - len(lines))
     if not lines:
         return None
+    extra = _rule_lines(data_dir, _queued_task(data_dir), clock, started)
     return {"hookSpecificOutput": {"hookEventName": "SessionStart",
-                                   "additionalContext": "\n".join(lines[:INBOX_LINES])}}
+                                   "additionalContext": "\n".join(lines[:INBOX_LINES] + extra)}}
 
 
-def _stop_pickup(payload, project, data_dir, now):
+def _stop_pickup(payload, project, data_dir, now, clock=time.monotonic, started=None):
     """Stop hook: surface one queued start request as decision block, once per request and 3 times per session.
     The cap also counts per queued task set in the control state, so a new session id or a deleted pickup file does
     not reset it. Off with pickupOnStop false in the project config. Never while the project is stopped or blocked."""
@@ -547,8 +551,71 @@ def _stop_pickup(payload, project, data_dir, now):
     except (RoadmapError, ValueError, TypeError, OSError):
         return None
     _log("pickup " + str(entry.get("task")))
-    return {"decision": "block", "reason": "roadmap: queued request " + str(entry.get("task"))
-            + " is waiting; run roadmap inbox and start it."}
+    task = str(entry.get("task"))
+    reason = "roadmap: queued request " + task + " is waiting; run roadmap inbox and start it."
+    extra = _rule_lines(data_dir, task, clock, time.monotonic() if started is None else started)
+    if extra:
+        reason += "\n" + "\n".join(extra)
+    return {"decision": "block", "reason": reason}
+
+
+def _queued_task(data_dir):
+    """The task of the oldest queued start request, or None."""
+    try:
+        entries = queue_service.list_queue(data_dir)
+    except (RoadmapError, OSError, ValueError):
+        return None
+    return str(entries[0].get("task")) if entries else None
+
+
+def _rule_lines(data_dir, task, clock, started):
+    """The `rule:` lines (rules show for the lead, at most 12) and the `done:` lines (the task's definition of done)
+    for a task, with secrets redacted and at most RULE_CHARS characters in all. Fail-open: a missing task, an error
+    in the rules file, or a read that runs past the 300 ms budget gives no lines, and the pickup is still surfaced.
+    The read runs in a daemon thread, so a slow read cannot hold the hook past its budget."""
+    if not task:
+        return []
+    remaining = PRE_TIMEOUT_S - (clock() - started)
+    if remaining <= 0:
+        return []
+    box = {}
+
+    def read_rules():
+        try:
+            box["lines"] = _task_rule_lines(data_dir, task)
+        except Exception as exc:  # the hook fails open: the reason is logged by type only
+            box["error"] = type(exc).__name__
+
+    worker = threading.Thread(target=read_rules, daemon=True)
+    worker.start()
+    worker.join(remaining)
+    if worker.is_alive() or "lines" not in box:
+        _log("rules omitted for " + task + ": " + ("timeout" if worker.is_alive() else box.get("error", "error")))
+        return []
+    return _capped(box["lines"], RULE_CHARS)
+
+
+def _task_rule_lines(data_dir, task):
+    shown = rules.show(data_dir, task_id=task, role="lead")
+    lead = [line for line in shown if line.split(" ", 3)[2:3] != ["done"]]
+    _, all_rules, _ = rules.read(data_dir)
+    phase = rules._phase_of(data_dir, task)
+    done = [rules.format_rule(r) for r in all_rules
+            if r["kind"] == "done" and rules.applies(r, task, phase, None, "lead")]
+    return ["rule: " + line for line in lead] + ["done: " + line for line in done]
+
+
+def _capped(lines, limit):
+    """Redacted, one-line entries kept in order while they fit in limit characters (newlines included)."""
+    out = []
+    used = 0
+    for line in lines:
+        clean = _SECRET_RE.sub("[redacted]", roadmap_log.redact(_squash(line)).strip())
+        if used + len(clean) + 1 > limit:
+            break
+        out.append(clean)
+        used += len(clean) + 1
+    return out
 
 
 def _task_set_key(entries):
