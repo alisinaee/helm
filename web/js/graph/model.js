@@ -9,6 +9,12 @@
 //
 // filters: {status, agent, phase}, each an array or a comma list (empty or missing means no filter), and expand: true
 // to skip the collapse. Above NODE_CAP nodes, the done tasks of each completed phase collapse into one node.
+//
+// Also returned (kept out of `nodes` and `edges`, so layout and render are unchanged): start and end (the Start and
+// End pseudo-nodes, ids "start" and "end"); sequence (edges task to next task in a phase, and last task of a phase to
+// the first task of the next, from Start and to End; kept apart from the `after` dependency edges); current (the Now
+// point: "task:<id>", "start" or "end"); parallel (groups of two or more active tasks in one phase: doing or partial,
+// or with a running job). A phase node has `collapsed`: true when every live (not deferred) task of the phase is done.
 
 export const NODE_CAP = 300;
 export const PILL_MAX = 3;
@@ -63,8 +69,8 @@ export function filterSet(value) {
 export function taskStatus(task) {
   const s = text(task.state);
   if (s === "done") return "done";
-  if (s === "doing" || s === "active" || s === "running") return "doing";
-  if (s === "block" || s === "blocked") return "blocked";
+  if (s === "doing" || s === "partial" || s === "active" || s === "running") return "doing";
+  if (s === "block" || s === "blocked" || s === "hold") return "blocked";
   if (s === "deferred" || s === "defer") return "defer";
   return "todo";
 }
@@ -89,6 +95,22 @@ function timeOf(task, jobs) {
     if (j.start !== null) times.push(j.start);
   });
   return times.length ? Math.min(...times) : null;
+}
+
+// The current point (Now): the first doing task in chain order; else Start when nothing is done yet; else the first
+// task that is neither done nor deferred; else End.
+function currentOf(order) {
+  const doing = order.find((t) => t.status === "doing");
+  if (doing) return "task:" + doing.id;
+  if (!order.some((t) => t.status === "done")) return "start";
+  const next = order.find((t) => t.status !== "done" && t.status !== "defer");
+  return next ? "task:" + next.id : "end";
+}
+
+function pushRow(map, key, row) {
+  const rows = map.get(key) || [];
+  rows.push(row);
+  map.set(key, rows);
 }
 
 function addEdge(edges, seen, type, from, to) {
@@ -184,6 +206,19 @@ export function buildGraph(snap, filters) {
     totals.set(laneKey(t), cur);
   });
 
+  const liveDone = new Map();
+  tasks.forEach((t) => {
+    if (t.status === "defer") return;
+    const c = liveDone.get(laneKey(t)) || { open: 0, done: 0 };
+    if (t.status === "done") c.done += 1;
+    else c.open += 1;
+    liveDone.set(laneKey(t), c);
+  });
+  const laneRows = new Map();
+  tasks.forEach((t) => pushRow(laneRows, laneKey(t), t));
+  const order = [];
+  laneOrder.forEach((id) => (laneRows.get(id) || []).forEach((t) => order.push(t)));
+
   const jobsByTask = new Map();
   spans.forEach((j) => {
     if (!j.task || !taskById.has(j.task)) return;
@@ -213,8 +248,9 @@ export function buildGraph(snap, filters) {
   lanesOut.forEach((id) => {
     const info = laneInfo.get(id);
     const tot = totals.get(id) || { done: 0, total: 0, tokensK: 0 };
+    const live = liveDone.get(id);
     nodes.push({ id: "phase:" + id, type: "phase", lane: id, label: info.label, approved: info.approved,
-      done: tot.done, total: tot.total, tokensK: tot.tokensK });
+      done: tot.done, total: tot.total, tokensK: tot.tokensK, collapsed: !!live && live.open === 0 && live.done > 0 });
   });
 
   const afterCount = new Map();
@@ -278,16 +314,46 @@ export function buildGraph(snap, filters) {
       label: "Queue (" + queued.length + ")", count: queued.length, status: "todo" });
   }
 
+  // Sequence: Start to the first kept task, each kept task to the next in its phase, the last task of a phase to the
+  // first of the next phase, and the last task to End. Built with the other edges so the cap collapse re-points them.
+  const keptByLane = new Map();
+  keptTasks.forEach((t) => pushRow(keptByLane, laneKey(t), t));
+  const seqEdges = [];
+  const seqSeen = new Set();
+  let prev = "start";
+  let linked = false;
+  lanesOut.forEach((id) => (keptByLane.get(id) || []).forEach((t) => {
+    addEdge(seqEdges, seqSeen, "sequence", prev, "task:" + t.id);
+    prev = "task:" + t.id;
+    linked = true;
+  }));
+  if (linked) addEdge(seqEdges, seqSeen, "sequence", prev, "end");
+
+  // Parallel: in each phase, the active tasks (doing or partial, or owning a running job) when two or more are active.
+  const isActive = (t) => t.status !== "done" &&
+    (t.status === "doing" || (jobsByTask.get(t.id) || []).some((j) => j.status === "running"));
+  const parallel = [];
+  lanesOut.forEach((lane) => {
+    const members = (keptByLane.get(lane) || []).filter(isActive);
+    if (members.length > 1) {
+      parallel.push({ id: "par:" + members[0].id, lane, members: members.map((t) => "task:" + t.id) });
+    }
+  });
+
+  const firstTimes = tasks.map((t) => timeOf(t, jobsByTask.get(t.id) || [])).filter((x) => x !== null);
+  const projectTitle = isObj(raw.project) ? text(raw.project.title) : "";
+  const left = tasks.filter((t) => t.status !== "done" && t.status !== "defer").length;
+
   const stats = { before: nodes.length, after: nodes.length, collapsed: [], capped: false,
     tasks: keptTasks.length, unattachedJobs };
   let finalNodes = nodes;
-  let finalEdges = edges;
+  let finalEdges = edges.concat(seqEdges);
   if (!opt.expand && nodes.length > NODE_CAP) {
     const complete = new Set(lanesOut.filter((id) => {
       const t = totals.get(id);
       return t && t.total > 0 && t.done === t.total;
     }));
-    const res = collapseDone(nodes, edges, complete);
+    const res = collapseDone(nodes, finalEdges, complete);
     if (res) {
       finalNodes = res.nodes;
       finalEdges = res.edges;
@@ -298,8 +364,14 @@ export function buildGraph(snap, filters) {
   stats.capped = finalNodes.length > NODE_CAP;
   return {
     nodes: finalNodes,
-    edges: finalEdges,
+    edges: finalEdges.filter((e) => e.type !== "sequence"),
+    sequence: finalEdges.filter((e) => e.type === "sequence"),
     lanes: lanesOut.map((id) => ({ id, label: laneInfo.get(id).label, approved: laneInfo.get(id).approved })),
     stats,
+    start: { id: "start", type: "start", label: projectTitle || "Start",
+      date: firstTimes.length ? Math.min(...firstTimes) : null },
+    end: { id: "end", type: "end", label: left + " left", left },
+    current: currentOf(order),
+    parallel,
   };
 }
