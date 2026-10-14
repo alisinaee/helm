@@ -3,7 +3,7 @@
 roadmap-board is a live dashboard and job tracker for projects that you build with Claude Code.
 It reads each project's `docs/tasks.json`, shows the phases and the tasks left, and lists the jobs Claude is running now.
 It also shows your plan usage and your token limits, with rules that agents follow.
-The page is served on your Mac only, at `http://127.0.0.1:8765/`, and nothing leaves the machine except the usage check and the phone tunnel, which you start yourself.
+The page is served on your Mac only, at `http://127.0.0.1:8780/`, and nothing leaves the machine except the usage check and the phone tunnel, which you start yourself.
 You use it as a GUI, and AI agents use the same data through the `roadmap` command, where every command takes `--json`.
 It is Python 3.9 or newer with the standard library only: nothing to pip install, no build step.
 
@@ -15,7 +15,7 @@ You need a Mac, Python 3.9 or newer (`python3 --version`), and Git.
 git clone <this repo> ~/Works/roadmap-board
 cd ~/Works/roadmap-board
 make check                               # lint and unit tests; it must pass before you use it
-bin/roadmap service install              # the background agent that serves the page on 127.0.0.1:8765
+bin/roadmap service install              # the background agent that serves the page on 127.0.0.1:8780
 mkdir -p ~/.local/bin
 ln -s "$PWD/bin/roadmap" ~/.local/bin/roadmap
 ```
@@ -30,7 +30,7 @@ Keep the clone where it is: the launchd agent and the hooks in your projects poi
 1. Register your project. A project is any folder with a `docs/` folder inside it:
    `roadmap project init <project-path>` and `roadmap project add <project-path> --name "My App"`.
 2. Install the hooks, so Claude Code records jobs for you: `roadmap hooks install my-app`.
-3. Open the dashboard: `roadmap open`, or go to `http://127.0.0.1:8765/` yourself.
+3. Open the dashboard: `roadmap open`, or go to `http://127.0.0.1:8780/` yourself.
 
 The details, and a job recorded by hand, are in [Quick start with a project](#quick-start-with-a-project).
 
@@ -89,14 +89,14 @@ Then start the background service and open the page:
 roadmap service install
 ```
 
-Open `http://127.0.0.1:8765/` in a browser tab. The page refreshes itself every 2 seconds.
+Open `http://127.0.0.1:8780/` in a browser tab. The page refreshes itself every 2 seconds.
 
 ### New project
 
 For a new project, an agent follows the draft skill `docs/skill-draft/roadmap-plan-new/SKILL.md`. It reads
 `roadmap agent-guide`, asks a few questions, and writes up to 6 research notes in `docs/research/`. Then it imports
 the plan. Check the notes with `roadmap research check`, and the plan with `roadmap plan import` and `--dry-run`
-first. The skills are drafts: installing them into `~/.claude/skills` is a manual step, done by you.
+first. To install the packaged skills, run `roadmap skills install`, which copies them into `<project>/.claude/skills`.
 
 ## Plan usage
 
@@ -170,7 +170,7 @@ Every command accepts `--json` and then prints `{"ok": true, "data": ...}` or
 | `roadmap service start\|stop\|restart` | control the loaded agent |
 | `roadmap service status` | show whether the agent is loaded and answering |
 | `roadmap service logs [-f]` | show the last 100 lines of `server.log`; `-f` follows it |
-| `roadmap serve [--port N] [--no-usage-loop]` | run the server in this terminal (Ctrl+C stops it); the service runs the same thing |
+| `roadmap serve [--port N] [--no-usage-loop] [--no-phone]` | run the server in this terminal (Ctrl+C stops it); the service runs the same thing |
 | `roadmap project init <path>` | write the template data files into `<path>/docs`, keeping existing ones |
 | `roadmap project add <path> [--name N] [--data-dir D]` | register a project folder (the data folder must exist) |
 | `roadmap project list` | list registered projects |
@@ -181,7 +181,7 @@ Every command accepts `--json` and then prints `{"ok": true, "data": ...}` or
 | `roadmap job start "<title>" <model> [<task>] [--parent ID --role lead\|worker] [--project ID]` | record a running job, print its id |
 | `roadmap job done\|fail <id> ["<note>"] [--tokens K]` | finish a job; `--tokens` adds to the budget once per job id |
 | `roadmap job list [--project ID]` | list the jobs of a project |
-| `roadmap job prune [--project ID]` | remove finished jobs beyond the newest 30 (running jobs are kept) |
+| `roadmap job prune [--project ID]` | remove finished jobs beyond the newest 200 (running jobs are kept) |
 | `roadmap status [--project ID]` | brief board summary: at most 8 lines, including running jobs |
 | `roadmap task show <id>` | print one task as one plan line |
 | `roadmap task list [--phase P] [--status todo,partial] [--needs-you] [--limit N]` | list tasks as plan lines (default 20) |
@@ -201,7 +201,7 @@ Every command accepts `--json` and then prints `{"ok": true, "data": ...}` or
 | `roadmap subtask done <P2.4/2>` | tick a subtask; ticking a done one is a no-op |
 | `roadmap ask "<question>" [--task ID] [--opt A]... [--default A] [--block] [--timeout S]` | ask the user, print `Q3 open` |
 | `roadmap ask get <Q3>` | print one line: `Q3 open` or `Q3 answered no` |
-| `roadmap ask wait <Q3> [--timeout S]` | wait (checks every 5 s, at most 1800 s) and print one line; the only waiting command |
+| `roadmap ask wait <Q3> [--timeout S]` | wait (checks every 5 s, at most 1800 s) and print one line |
 | `roadmap ask list` | list open questions (at most 10 lines) |
 | `roadmap answer <Q3> <option\|text>` | answer an open question |
 | `roadmap comment <ID> "<text>"` | add a comment on a task or issue |
@@ -229,11 +229,14 @@ Every command accepts `--json` and then prints `{"ok": true, "data": ...}` or
 | `roadmap usage show` | print the stored plan usage and whether it is stale |
 | `roadmap usage sync` | read the plan usage now (keychain, then the Anthropic endpoint) |
 | `roadmap usage push` | store plan usage from JSON on stdin |
+| `roadmap feature add\|list\|show\|link\|unlink\|accept\|rm` | manage features (a feature groups tasks; only the person accepts one) |
+| `roadmap watch [--project ID] [--max SECONDS]` | block until a new Start is queued or a question is answered, then print one line (default 1800 s) |
+| `roadmap skills list\|install` | list the packaged skill templates, or copy them into `<project>/.claude/skills` |
+| `roadmap open [--port PORT]` | open the dashboard in the browser |
+| `roadmap phone start\|stop\|link\|status` | the read-only phone listener and its tunnel (see [Phone access](#phone-access)) |
 
 `--project ID` is optional. Without it, roadmap uses `$ROADMAP_PROJECT`, and then the registered project whose
 folder contains the current directory.
-
-Not built yet: `roadmap open` and the `roadmap phone` commands.
 
 ## Phone access
 
@@ -260,7 +263,7 @@ Run `roadmap doctor` first. Each row below is a message it can print, with the f
 | launchd plist | "does not lint: ..." (fail) | `roadmap service install` again, which writes the plist again |
 | Service loaded | "launchd does not have the job loaded" (warn) | `roadmap service start`, or `roadmap service install` if it is not installed |
 | Health endpoint | "the service is loaded but no answer" (fail) | `roadmap service restart`; if it still fails, `roadmap service logs` |
-| Port 8765 | "used by X (pid N), not by roadmap" (fail) | stop that process, or change `"port"` in the config and run `roadmap service restart` |
+| Port 8780 | "used by X (pid N), not by roadmap" (fail) | stop that process, or change `"port"` in the config and run `roadmap service restart` |
 | File and folder modes | "is 0644" and similar (fail) | run the `chmod` command the message prints |
 | Claude Code keychain item | "not found" (warn) | sign in to Claude Code on this Mac, then `roadmap usage sync` |
 | Claude Code keychain item | "access denied or the keychain is locked" (warn) | when the prompt appears, choose Always Allow, then `roadmap usage sync` |
