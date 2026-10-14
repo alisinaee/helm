@@ -37,6 +37,7 @@ COMMAND_MODULES = (
     "doctor",
     "phone",
     "backup",
+    "skills",
     "version",
 )
 
