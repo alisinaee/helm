@@ -1,0 +1,49 @@
+/* Workflow diagram (WP72). Tokens only; the SVG has no style attributes, so every colour is a class here. */
+.wfg-stage{position:relative}
+.wfg-host{min-height:240px}
+.wfg-svg{display:block;width:100%;height:min(64vh,560px);touch-action:none;overflow:hidden;cursor:grab;background:var(--surface-1);border:1px solid var(--line);border-radius:var(--r-card)}
+.wfg-ctl{position:absolute;top:var(--sp-2);right:var(--sp-2);display:flex;flex-wrap:wrap;gap:var(--sp-1);z-index:1}
+.wfg-bar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2) var(--sp-3);margin-bottom:var(--sp-2)}
+.wfg-count{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--text-2);font-size:var(--fs-12)}
+.wfg-chips-row{display:flex;flex-direction:column;gap:var(--sp-1);margin-bottom:var(--sp-2)}
+.wfg-chips{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-1)}
+.wfg-chips-lbl{width:4.5rem;color:var(--text-3);font-size:var(--fs-11)}
+.wfg-chip{padding:2px var(--sp-2);border:1px solid var(--line);border-radius:999px;color:var(--text-2);font-size:var(--fs-12);text-decoration:none}
+.wfg-chip[aria-current="true"]{border-color:var(--accent);color:var(--text-1);background:var(--surface-2)}
+.wfg-note{color:var(--text-2);font-size:var(--fs-12)}
+.wfg-bands rect{fill:var(--surface-2);stroke:var(--track)}
+.wfg-ph{fill:var(--text-1);font-size:var(--fs-12);font-weight:600}
+.wfg-num{fill:var(--text-2);font-size:var(--fs-11);font-variant-numeric:tabular-nums}
+.wfg-e{fill:none;stroke:var(--line);stroke-width:1.25px}
+.wfg-e-dependency{stroke:var(--unknown);stroke-dasharray:4 4}
+.wfg-e-handoff{stroke:var(--info)}
+.wfg-e-blocker{stroke:var(--danger);stroke-width:2.5px}
+.wfg-arrow{fill:var(--unknown)}
+.wfg-hatch-bg{fill:var(--surface-2)}
+.wfg-hatch-line{stroke:var(--danger);stroke-width:1px;opacity:.4}
+.wfg-box{fill:var(--surface-2);stroke:var(--line)}
+.wfg-n{cursor:pointer;outline:none}
+.wfg-n:focus-visible .wfg-box,.wfg-n:focus-visible rect{stroke:var(--focus);stroke-width:2px}
+.wfg-t,.wfg-id,.wfg-sub,.wfg-pt{font-size:var(--fs-11)}
+.wfg-t,.wfg-id,.wfg-pt{fill:var(--text-1)}
+.wfg-id{font-family:var(--font-mono)}
+.wfg-sub{fill:var(--text-3)}
+.wfg-dot{fill:var(--unknown)}
+.wfg-s-done .wfg-dot{fill:var(--success)}
+.wfg-s-doing .wfg-dot{fill:var(--accent)}
+.wfg-s-blocked .wfg-dot{fill:var(--danger)}
+.wfg-s-blocked .wfg-box{stroke:var(--danger)}
+.wfg-s-defer .wfg-dot{fill:var(--defer)}
+.wfg-pill rect{fill:var(--surface-2);stroke:var(--line)}
+.wfg-pill.wfg-m-opus rect{stroke:var(--m-opus)}
+.wfg-pill.wfg-m-sonnet rect{stroke:var(--m-sonnet)}
+.wfg-pill.wfg-m-haiku rect{stroke:var(--m-haiku)}
+.wfg-pill.wfg-m-agy rect{stroke:var(--m-agy)}
+.wfg-pill.wfg-run rect{animation:wfg-pulse 1.6s ease-in-out infinite}
+.wfg-issue .wfg-box{fill:var(--surface-2);stroke:var(--danger);stroke-width:1.5px}
+.wfg-queue rect{fill:var(--surface-2);stroke:var(--unknown);stroke-dasharray:3 3}
+.wfg-dim{opacity:.22}
+.wfg-hot .wfg-box,.wfg-hot rect{stroke:var(--focus);stroke-width:2px}
+@keyframes wfg-pulse{50%{opacity:.45}}
+@media (prefers-reduced-motion: reduce){.wfg-pill.wfg-run rect{animation:none}}
+@media (max-width:767px){.wfg-ctl{position:static;justify-content:flex-end;margin-bottom:var(--sp-2)}}

@@ -23,11 +23,6 @@ const VIEWS = [["timeline", "Timeline"], ["map", "Map"], ["table", "Table"]];
 const RANGE_STEP = { "2h": 1800000, today: 3 * HOUR, week: DAY, all: DAY };
 const SCOPE_MAX = 8;
 const FRESH_MS = 5000;
-const CARD_W = 184;
-const CARD_H = 56;
-const CARD_GAP = 10;
-const COL_GAP = 32;
-const HEAD_H = 26;
 const QUEUE_W = 112;
 const QUEUE_GAP = 8;
 const TICK_MAX = 200;
@@ -524,67 +519,207 @@ export function timelineSvg(model) {
     "</div></div></div>";
 }
 
-function cardHtml(card, lane, x, y) {
-  const title = "Task " + card.task + (card.title ? " " + card.title : "") + ", " + card.state +
-    (card.job ? ", job " + card.job + " running" : "");
-  return '<g class="wf-card wf-c-' + card.cls + '" tabindex="0" role="button" aria-label="' + esc(title) +
-    '" data-focus="' + esc(card.key) + '" data-wf-item="' + esc(card.key) + '" data-wf-task="' + esc(card.task) +
-    '" data-wf-pid="' + esc(card.pid) + '" data-lane="' + lane + '" data-x="' + y + '" data-y="' + (y + CARD_H / 2) +
-    '"><title>' + esc(title) + '</title><rect x="' + x + '" y="' + y + '" width="' + CARD_W + '" height="' + CARD_H +
-    '" rx="6"/><circle class="wf-dot" cx="' + (x + CARD_W - 12) + '" cy="' + (y + 14) + '" r="4"/><text class="wf-card-id" x="' +
-    (x + 10) + '" y="' + (y + 18) + '">' + esc(card.task) + '</text><text class="wf-card-t" x="' + (x + 10) +
-    '" y="' + (y + 34) + '">' + esc(clip(card.title, 24)) + '</text><text class="wf-card-s" x="' + (x + 10) +
-    '" y="' + (y + 49) + '">' + esc(card.state + (card.job ? " · " + card.job : "")) + "</text></g>";
+// The Map (WP72): the diagram of graph/model.js, laid out by graph/layout.js and drawn by graph/render.js. Those three
+// modules load on the first visit to ?v=map, so no other view requests them. mapSvg() returns the controls and an empty
+// host; mountMaps() puts the SVG in the host after the patch. Map filters live in the f param as st:, ag:, ph:, ord:
+// and all: tokens (the router keeps only f and g), with "|" between the values of one token.
+const MAP_STATUS = ["doing", "blocked", "todo", "done", "defer"];
+const MAP_AGENT = ["opus", "sonnet", "haiku", "agy"];
+const MAP_KEYS = /^(st|ag|ph|ord|all):/;
+const mapStates = new Map();
+let graphKit = null;
+let graphFailed = false;
+let loadingGraph = false;
+let pendingMap = null;
+let activeMap = null;
+
+function mapStateFor(pid) {
+  let st = mapStates.get(pid);
+  if (!st) {
+    st = { view: null, fitted: false, focus: null, taps: { last: null } };
+    mapStates.set(pid, st);
+  }
+  return st;
 }
 
-// The Map: phases as columns (one stacked block per phase on a phone), task cards in array order, after-edges as
-// dotted arrows and blocker issues as badges on the blocked card. Positions are computed, never a force layout.
-export function mapSvg(model, opts) {
-  const stacked = Boolean(opts && opts.stacked);
-  const pos = new Map();
-  const groups = [];
-  let cursor = 0;
-  let maxRows = 1;
-  model.phases.forEach(function (ph, c) {
-    const x = stacked ? 0 : c * (CARD_W + COL_GAP);
-    const top = stacked ? cursor : 0;
-    const label = clip(ph.label, 28) + (ph.approved ? "" : " · not approved");
-    let html = '<text class="wf-ph' + (ph.approved ? "" : " wf-ph-open") + '" x="' + x + '" y="' + (top + 16) + '">' +
-      esc(label) + "</text>";
-    ph.cards.forEach(function (card, r) {
-      const y = top + HEAD_H + r * (CARD_H + CARD_GAP);
-      pos.set(card.key, { x: x, y: y, lane: c });
-      html += cardHtml(card, c, x, y);
+// The graph modules are imported once. A synthetic hashchange then makes the app re-render the section.
+function loadGraph() {
+  if (graphKit || graphFailed || loadingGraph) return;
+  loadingGraph = true;
+  Promise.all([import("../graph/model.js"), import("../graph/layout.js"), import("../graph/render.js")]).then(
+    function (mods) {
+      graphKit = { model: mods[0], layout: mods[1], render: mods[2] };
+      loadingGraph = false;
+      if (typeof window !== "undefined") window.dispatchEvent(new Event("hashchange"));
+    },
+    function () {
+      graphFailed = true;
+      loadingGraph = false;
+      if (typeof window !== "undefined") window.dispatchEvent(new Event("hashchange"));
     });
-    maxRows = Math.max(maxRows, ph.cards.length);
-    groups.push(html);
-    cursor = top + HEAD_H + Math.max(1, ph.cards.length) * (CARD_H + CARD_GAP) + COL_GAP;
+}
+
+function mapOpts(route) {
+  const out = {};
+  const f = route.filters && route.filters.f ? String(route.filters.f) : "";
+  f.split(",").forEach(function (tok) {
+    const m = /^(st|ag|ph|ord|all):(.*)$/.exec(tok);
+    if (m) out[m[1]] = m[2];
   });
-  const W = stacked ? CARD_W : Math.max(1, model.phases.length) * (CARD_W + COL_GAP) - COL_GAP;
-  const H = stacked ? Math.max(cursor, CARD_H) : HEAD_H + maxRows * (CARD_H + CARD_GAP);
-  const paths = model.edges.after.map(function (e) {
-    const a = pos.get(e.from);
-    const b = pos.get(e.to);
-    if (!a || !b) return "";
-    const x1 = a.x + CARD_W;
-    const y1 = a.y + CARD_H / 2;
-    const x2 = b.x;
-    const y2 = b.y + CARD_H / 2;
-    return '<path class="wf-edge wf-e-after" d="M ' + x1 + " " + y1 + " C " + (x1 + 16) + " " + y1 + ", " +
-      (x2 - 16) + " " + y2 + ", " + x2 + " " + y2 + '" marker-end="url(#wf-arrow)"/>';
+  return out;
+}
+
+function mapList(value) {
+  return value ? String(value).split("|").filter(function (s) {
+    return s !== "";
+  }) : [];
+}
+
+// The hash of the Map with some map options changed (a value of "" removes the option).
+function mapHash(route, range, changes) {
+  const opts = Object.assign(mapOpts(route), changes);
+  const parts = ["range:" + range];
+  Object.keys(opts).forEach(function (k) {
+    if (opts[k]) parts.push(k + ":" + opts[k]);
+  });
+  const filters = Object.assign({}, route.filters || {}, { f: parts.join(",") });
+  return buildHash({ name: route.name, id: route.id, section: "workflow", view: "map", filters: filters });
+}
+
+function toggled(list, value) {
+  return list.indexOf(value) < 0 ? list.concat([value]) : list.filter(function (v) {
+    return v !== value;
+  });
+}
+
+function chipsHtml(route, range, label, key, values, selected) {
+  const chips = values.map(function (v) {
+    const on = selected.indexOf(v) >= 0;
+    const change = {};
+    change[key] = toggled(selected, v).join("|");
+    return '<a class="wfg-chip" href="' + esc(mapHash(route, range, change)) + '"' +
+      (on ? ' aria-current="true"' : "") + ">" + esc(v) + "</a>";
   }).join("");
-  const badges = model.edges.block.map(function (e) {
-    const p = pos.get(e.cardKey);
-    if (!p) return "";
-    const bx = p.x + CARD_W - 46;
-    const by = p.y - 9;
-    return '<g class="wf-badge" aria-label="Blocked by issue ' + esc(e.issue) + '"><title>Blocked by issue ' +
-      esc(e.issue) + '</title><rect x="' + bx + '" y="' + by + '" width="46" height="16" rx="3"/><text x="' +
-      (bx + 23) + '" y="' + (by + 12) + '" text-anchor="middle">' + esc(clip(e.issue, 7)) + "</text></g>";
-  }).join("");
-  return '<div class="wf-scroll"><svg class="wf-map" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " +
-    H + '" role="group" aria-label="Phases and tasks"><defs>' + DEFS + "</defs>" + paths + groups.join("") +
-    badges + "</svg></div>";
+  return '<div class="wfg-chips" role="group" aria-label="' + esc(label) + '"><span class="wfg-chips-lbl">' +
+    esc(label) + "</span>" + chips + "</div>";
+}
+
+function ctlHtml(label, op, text) {
+  return '<button type="button" class="btn btn-small" data-wf-map-op="' + op + '" aria-label="' + esc(label) + '">' +
+    esc(text) + "</button>";
+}
+
+function mapOp(op) {
+  if (!activeMap) return;
+  const api = activeMap.api;
+  if (op === "out") api.zoom(0.8);
+  else if (op === "in") api.zoom(1.25);
+  else if (op === "fit") api.fit();
+  else if (op === "100") api.actual();
+  else if (op === "focus-off") setFocus(activeMap.pid, null);
+}
+
+// Focus mode: the closure of the node is drawn at full strength, the rest dims. Classes only; no re-render.
+function syncFocus(pid, key, graph) {
+  if (!activeMap || activeMap.pid !== pid || !graphKit) return;
+  activeMap.focus = key;
+  if (graph) activeMap.graph = graph;
+  graphKit.render.applyFocus(activeMap.svg, graphKit.render.closureOf(activeMap.graph, key), key);
+}
+
+function setFocus(pid, key) {
+  mapStateFor(pid).focus = key;
+  syncFocus(pid, key, null);
+}
+
+function mapSvg(kit, ctx) {
+  const route = ctx.route;
+  const range = ctx.range;
+  const opts = mapOpts(route);
+  const all = kit.model.buildGraph(ctx.raw, {});
+  const filters = { status: mapList(opts.st), agent: mapList(opts.ag), phase: mapList(opts.ph),
+    expand: opts.all === "1" };
+  const graph = kit.model.buildGraph(ctx.raw, filters);
+  const countOf = function (g) {
+    return g.nodes.filter(function (n) {
+      return n.type !== "phase";
+    }).length;
+  };
+  const total = countOf(all);
+  pendingMap = null;
+  if (!total) {
+    return emptyHtml("No tasks or jobs yet.", "<span>Agents record work with <code class=\"code\">roadmap job start" +
+      '</code>.</span> <a href="' + esc(projectHash(ctx.pid, "agents")) + '">Open Agents</a>');
+  }
+  const shown = countOf(graph);
+  const order = opts.ord === "time" ? "time" : "dependency";
+  const lay = kit.layout.layout(graph, order, range, ctx.now);
+  const st = mapStateFor(ctx.pid);
+  const cur = function (on) {
+    return on ? ' aria-current="page"' : "";
+  };
+  const orderSeg = '<nav class="seg plan-views" aria-label="Order"><a href="' +
+    esc(mapHash(route, range, { ord: "" })) + '"' + cur(order === "dependency") + ">Dependency</a>" +
+    '<a href="' + esc(mapHash(route, range, { ord: "time" })) + '"' + cur(order === "time") + ">Time</a></nav>";
+  const phases = all.lanes.map(function (l) {
+    return l.id;
+  });
+  const chips = '<div class="wfg-bar">' + orderSeg + '<span class="wfg-count" aria-live="polite">' + shown + " of " +
+    total + " nodes</span></div>" + '<div class="wfg-chips-row">' +
+    chipsHtml(route, range, "Status", "st", MAP_STATUS, mapList(opts.st)) +
+    chipsHtml(route, range, "Agent", "ag", MAP_AGENT, mapList(opts.ag)) +
+    chipsHtml(route, range, "Phase", "ph", phases, mapList(opts.ph)) + "</div>";
+  const banner = graph.stats.collapsed.length && !filters.expand
+    ? '<p class="wfg-note">Done phases are collapsed to keep the diagram fast. <a href="' +
+      esc(mapHash(route, range, { all: "1" })) + '">Show all (slow)</a></p>' : "";
+  if (!shown) {
+    return chips + '<p class="wf-hint">No nodes match these filters. <a href="' + esc(mapHash(route, range, {
+      st: "", ag: "", ph: "" })) + '">Clear filters</a></p>';
+  }
+  const ctl = '<div class="wfg-ctl" role="toolbar" aria-label="Diagram controls">' + ctlHtml("Zoom out", "out", "−") +
+    ctlHtml("Zoom in", "in", "+") + ctlHtml("Fit to screen", "fit", "Fit") + ctlHtml("Actual size", "100", "100%") +
+    ctlHtml("Clear focus", "focus-off", "Focus off") + "</div>";
+  // Focus mode lasts while its node's Details is open: Escape goes back to Projects (panel.js), which drops it here.
+  st.focus = route.item ? st.focus : null;
+  if (activeMap && activeMap.focus !== st.focus) syncFocus(ctx.pid, st.focus, graph);
+  pendingMap = { graph: graph, lay: lay, pid: ctx.pid, focus: st.focus, view: st.view, taps: st.taps, fit: !st.fitted,
+    onTap: function (node) {
+      const key = node.getAttribute("data-wf-item");
+      setFocus(ctx.pid, key);
+      navigate(node);
+    },
+    onClear: function () {
+      setFocus(ctx.pid, null);
+    },
+    onView: function (v) {
+      mapStateFor(ctx.pid).view = v;
+    } };
+  return chips + banner + '<div class="wfg-stage">' + ctl + '<div class="wfg-host" data-wf-map-host></div></div>';
+}
+
+// Puts the pending diagram into the host the last patch rendered. Runs after every patch of <main>.
+function mountMaps() {
+  if (!pendingMap || !graphKit || typeof document === "undefined") return;
+  const host = document.querySelector("[data-wf-map-host]");
+  if (!host || host.firstChild) return;
+  const st = pendingMap;
+  pendingMap = null;
+  const store = mapStateFor(st.pid);
+  store.fitted = true;
+  const api = graphKit.render.mountMap(host, st);
+  activeMap = { pid: st.pid, api: api, graph: st.graph, svg: host.querySelector("svg"), focus: st.focus };
+}
+
+function mapBody(route, raw, range) {
+  if (route.name !== "project") {
+    return '<p class="wf-hint">Open a project to see its diagram. Timeline and Table show every project.</p>';
+  }
+  if (graphFailed) return bannerHtml("danger", "Could not load the diagram. Timeline and Table still work.", "");
+  if (!graphKit) {
+    loadGraph();
+    return '<div aria-busy="true">' + skeletonHtml(["w-60", "w-90"]) + "</div>";
+  }
+  return mapSvg(graphKit, { pid: route.id, raw: raw, route: route, range: range, now: nowMs() });
 }
 
 function statusChip(word, status) {
@@ -672,7 +807,7 @@ function rangeLinks(route, view, range) {
 }
 
 function legendHtml() {
-  return '<ul class="wf-legend" aria-label="Legend">' +
+  return '<ul class="wf-legend" id="wf-legend" aria-label="Legend">' +
     '<li><span class="wf-key wf-k-done" aria-hidden="true"></span>Done</li>' +
     '<li><span class="wf-key wf-k-doing" aria-hidden="true"></span>Running</li>' +
     '<li><span class="wf-key wf-k-blocked" aria-hidden="true"></span>Blocked or failed</li>' +
@@ -731,7 +866,7 @@ export function sectionView(vm) {
   } else if (view === "table") {
     body = model.jobCount ? tableHtml(model) : '<p class="wf-hint">No jobs in this range.</p>';
   } else if (view === "map") {
-    body = model.phases.length ? mapSvg(model, { stacked: phone() }) : '<p class="wf-hint">No tasks yet.</p>';
+    body = mapBody(route, raws[0], range);
   } else {
     body = (model.jobCount ? "" : '<p class="wf-hint">No jobs in this range.</p>') + timelineSvg(model);
   }
@@ -767,7 +902,7 @@ function closestEl(target, selector) {
 
 function select(e) {
   const el = closestEl(e.target, "[data-wf-item]");
-  if (!el || !lastModel) return;
+  if (!el || !lastModel || lastModel.view === "map") return;
   const key = el.getAttribute("data-wf-item");
   if (key === selectedKey) return;
   selectedKey = key;
@@ -777,6 +912,11 @@ function select(e) {
 }
 
 function onClick(e) {
+  const mop = closestEl(e.target, "[data-wf-map-op]");
+  if (mop) {
+    mapOp(mop.getAttribute("data-wf-map-op"));
+    return;
+  }
   const op = closestEl(e.target, "[data-wf-op]");
   if (op) {
     runOp(op);
@@ -828,6 +968,8 @@ function onKey(e) {
     navigate(el);
     return;
   }
+  // The Map's arrows, + - 0 and Escape are handled by graph/viewport.js on its SVG.
+  if (lastModel.view === "map") return;
   const next = neighbour(el, e.key, lastModel.view);
   if (next) {
     e.preventDefault();
@@ -853,6 +995,7 @@ export function bind(el) {
     new MutationObserver(function () {
       const scroller = el.querySelector(".wf-scroll");
       if (scroller && scrollLeft && scroller.scrollLeft !== scrollLeft) scroller.scrollLeft = scrollLeft;
+      mountMaps();
     }).observe(el, { childList: true });
   }
   if (typeof window !== "undefined") {
