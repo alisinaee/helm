@@ -251,7 +251,7 @@ def _handle(raw, environ, cwd, now, clock, started):
     if not os.path.isdir(data_dir):
         _log("skip: data folder missing for " + project["id"])
         return None
-    _touch_presence(project, now)
+    _touch_presence(project, now, clock, started)
     if event == "SessionStart":
         return _session_start(project, data_dir, clock, started)
     pattern, names = project_settings(data_dir)
@@ -320,6 +320,7 @@ PRE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit", "Bash", "Agent", "Tas
 # while the project is blocked, these roadmap commands are the only ones a Bash call may run
 ALLOWED_WHILE_BLOCKED = (("inbox",), ("status",), ("ask",), ("rules", "show"), ("watch",))
 PRE_TIMEOUT_S = 0.3        # a PreToolUse that takes longer lets the tool call through
+PRESENCE_MIN_BUDGET_S = 0.2  # the presence stamp is skipped when less of PRE_TIMEOUT_S is left
 DENY_LOG_S = 60            # a denial is logged at most once a minute per project
 PICKUP_PER_SESSION = 3
 INBOX_LINES = 3
@@ -366,7 +367,7 @@ def _pre_tool_use(payload, environ, cwd, now, clock, started):
     project = _project_quiet(payload, cwd)
     if project is None or _too_slow(clock, started):
         return None
-    _touch_presence(project, now)
+    _touch_presence(project, now, clock, started)
     pid = project["id"]
     if not os.path.exists(control.sentinel_path(pid)):
         return None
@@ -396,9 +397,12 @@ def _pre_tool_use(payload, environ, cwd, now, clock, started):
                                    "permissionDecisionReason": reason}}
 
 
-def _touch_presence(project, now):
-    """Stamp that a session is open for this project (R7.1). Throttled inside presence; never raises or logs."""
+def _touch_presence(project, now, clock, started):
+    """Stamp that a session is open for this project (R7.1). Skipped when under PRESENCE_MIN_BUDGET_S of the hook
+    budget is left; throttled inside presence; never raises or logs."""
     try:
+        if PRE_TIMEOUT_S - (clock() - started) < PRESENCE_MIN_BUDGET_S:
+            return
         presence.touch_hook(jobs.data_dir_of(project), now)
     except Exception:  # presence is advisory: a hook never fails because of it
         pass

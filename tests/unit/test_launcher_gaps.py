@@ -37,7 +37,7 @@ class LauncherGapTests(unittest.TestCase):
         return True
 
     def stamp_path(self):
-        return os.path.join(self.state, launcher.FILE)
+        return launcher.stamp_file_for(self.data_dir)
 
     def write_stamp(self, text):
         os.makedirs(self.state, exist_ok=True)
@@ -106,22 +106,24 @@ class LauncherGapTests(unittest.TestCase):
         self.assertEqual(launcher._script("/opt/app"),
                          'tell application "Terminal" to do script "cd /opt/app && claude"')
 
-    def test_a_non_dict_stamp_is_not_recent(self):
+    def test_a_non_dict_stamp_fails_closed(self):
+        # R3.4a: a damaged stamp is never a clean state; it counts as recent, so nothing launches
         self.write_stamp("[1000]")
-        self.assertFalse(launcher._recent(1000))
-        self.assertTrue(launcher.maybe_launch(self.data_dir, runner=self.runner, now=1000))
+        self.assertTrue(launcher._recent(self.data_dir, 1000))
+        self.assertFalse(launcher.maybe_launch(self.data_dir, runner=self.runner, now=1000))
+        self.assertEqual(self.calls, [])
 
-    def test_a_boolean_stamp_is_not_recent(self):
+    def test_a_boolean_stamp_fails_closed(self):
         self.write_stamp('{"at": true}')
-        # read as 1.0 the stamp would be recent at 101; a boolean must not count
-        self.assertTrue(launcher.maybe_launch(self.data_dir, runner=self.runner, now=101))
-        self.assertEqual(len(self.calls), 1)
+        self.assertFalse(launcher.maybe_launch(self.data_dir, runner=self.runner, now=101))
+        self.assertEqual(self.calls, [])
 
-    def test_a_non_numeric_stamp_is_not_recent(self):
+    def test_a_non_numeric_stamp_fails_closed(self):
         for text in ('{"at": "invalid"}', '{"at": null}'):
             with self.subTest(text=text):
                 self.write_stamp(text)
-                self.assertTrue(launcher.maybe_launch(self.data_dir, runner=self.runner, now=1000))
+                self.assertFalse(launcher.maybe_launch(self.data_dir, runner=self.runner, now=1000))
+        self.assertEqual(self.calls, [])
 
     def test_a_future_stamp_is_not_recent(self):
         self.write_stamp('{"at": 2000}')
@@ -137,19 +139,19 @@ class LauncherGapTests(unittest.TestCase):
         self.assertFalse(launcher.maybe_launch(self.data_dir, runner=self.runner, now=1000))
         self.assertEqual(len(self.calls), 1)
 
-    def test_an_unreadable_stamp_is_not_recent(self):
+    def test_an_unreadable_stamp_fails_closed(self):
         self.write_stamp('{"at": 1000}')
-        with mock.patch.object(launcher.atomic, "read_json", side_effect=OSError("io")):
-            self.assertFalse(launcher._recent(1001))
+        with mock.patch.object(launcher.presence, "read_plain", side_effect=OSError("io")):
+            self.assertTrue(launcher._recent(self.data_dir, 1001))
 
     def test_stamp_writes_the_launch_time(self):
-        launcher._stamp(1234.0)
+        self.assertTrue(launcher._stamp(self.data_dir, 1234.0))
         with open(self.stamp_path(), encoding="utf-8") as fh:
             self.assertEqual(json.load(fh), {"at": 1234.0})
 
-    def test_stamp_failure_does_not_raise(self):
+    def test_stamp_failure_returns_false_and_never_raises(self):
         with mock.patch.object(launcher.atomic, "write_json", side_effect=PermissionError("denied")):
-            self.assertIsNone(launcher._stamp(1.0))
+            self.assertFalse(launcher._stamp(self.data_dir, 1.0))
 
     def test_run_passes_argv_with_a_bounded_timeout(self):
         argv = ["osascript", "-e", "x"]

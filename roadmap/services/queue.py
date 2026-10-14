@@ -1,12 +1,10 @@
 """Start queue (queue.json): tasks waiting to be started, at most 50 entries, oldest first."""
 
-import os
-import shlex
 import threading
 
 from roadmap.errors import EXIT_USAGE, RoadmapError
 from roadmap.services import launcher, notify, presence, records
-from roadmap.store import config, lock
+from roadmap.store import lock
 
 FILE = "queue.json"
 CAP = 50
@@ -32,19 +30,6 @@ def enqueue(data_dir, task, by="", now=None):
     return dict(entry)
 
 
-def _project_path(data_dir):
-    """The folder of the registered project whose data folder is data_dir, or ''. Never raises."""
-    try:
-        wanted = os.path.abspath(str(data_dir))
-        for entry in config.list_projects():
-            path = str(entry.get("path") or "")
-            if path and os.path.abspath(os.path.join(path, str(entry.get("dataDir") or "docs"))) == wanted:
-                return path
-    except Exception:  # fail open: the text falls back to the project id
-        pass
-    return ""
-
-
 def _launch_quietly(data_dir):
     """Run the opt-in launch. It never raises, and it runs off the caller's thread so the Start is not delayed."""
     try:
@@ -64,11 +49,11 @@ def _notify_start(data_dir, task_id):
         idle = presence.state(data_dir) == presence.NONE
 
         def body(project):
+            # the project id only: the folder path stays in the GUI's Copy command, never in a notification
             if not idle:
                 return "Start " + task_id + " queued. Open a Claude session in " + project + " or run: roadmap watch"
-            path = _project_path(data_dir) or project
-            return ("Start " + task_id + " queued; no session open. Run: cd " + shlex.quote(path)
-                    + ' && claude "roadmap watch"')
+            return ("Start " + task_id + " queued; no session open. Open a Claude session for " + project
+                    + " or run: roadmap watch")
 
         notify.notify_dir(data_dir, "start", "Start queued", body)
         if idle:
