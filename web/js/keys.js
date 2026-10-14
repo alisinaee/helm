@@ -7,6 +7,7 @@ import { sectionHash, currentRoute, homeHash } from "./router.js";
 import { SECTIONS, SETTINGS } from "./routes.js";
 import { isSheetWidth, loadUi, panelIsOpen, updateUi } from "./state.js";
 import { triggerUndo } from "./views/toast.js";
+import { isPaletteKey } from "./views/palette.js";
 
 const CHORD_MS = 1000;
 const CHORD_KEYS = { h: "home", o: "overview", i: "inbox", r: "roadmap", w: "work", u: "issues", a: "agents",
@@ -17,6 +18,7 @@ let hooks = {
   rerender: function () {},
   openHelp: function () {},
   closeHelp: function () {},
+  openPalette: function () {},
   helpOpen: function () {
     return false;
   },
@@ -70,6 +72,12 @@ function goToSection(key) {
 }
 
 function onKeydown(event) {
+  // Cmd+K or Ctrl+K opens the command palette, also while its own search field has focus (it then closes).
+  if (isPaletteKey(event)) {
+    event.preventDefault();
+    hooks.openPalette();
+    return;
+  }
   // Alt+arrow bindings (WP32, roadmap cards) are the only Alt keys; they are not used while typing.
   if (event.altKey && !event.ctrlKey && !event.metaKey && !isTyping(event.target) && extra.has("Alt+" + event.key)) {
     event.preventDefault();
@@ -118,6 +126,7 @@ function onKeydown(event) {
 export function helpRows() {
   return [
     ["?", "Show this list"],
+    ["Ctrl+K or Cmd+K", "Open the command palette: find a task, issue or question, or type > for commands"],
     ["[", "Collapse or expand the navigation"],
     ["]", "Show or hide the side panel"],
     ["z", "Undo the last change"],

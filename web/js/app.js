@@ -14,6 +14,7 @@ import { initKeys, setKeyHooks } from "./keys.js";
 import { featureLinkChange } from "./views/details.js";
 import { bnavView, navView, toggleMore } from "./views/nav.js";
 import { pageAction } from "./views/inbox.js";
+import { openPalette } from "./views/palette.js";
 import { limitAction } from "./views/limits.js";
 import { ruleAction } from "./views/rules.js";
 import { settingsAction } from "./views/settings.js";
@@ -457,6 +458,10 @@ function boot() {
     closeHelp: closeHelp,
     helpOpen: function () {
       return helpDialog.open;
+    },
+    openPalette: function () {
+      const route = currentRoute();
+      openPalette(route.name === "project" ? store.snapshots[route.id] || null : null);
     },
   });
   configureCommands({
