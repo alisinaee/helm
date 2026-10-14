@@ -14,6 +14,7 @@ import re
 
 from roadmap.core import features as core
 from roadmap.core import planfmt
+from roadmap.core.parsers import error_entry
 from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import records
 from roadmap.store import lock, schema
@@ -39,6 +40,26 @@ def load_doc(data_dir):
 def save_doc(data_dir, doc):
     """Write the features document. The caller holds the directory lock."""
     records.save(KIND, data_dir, FILE, doc)
+
+
+def load(data_dir):
+    """(raw feature list, errors) from data_dir/features.json at the current schema. A missing file is empty.
+    A newer or corrupt file gives an errors entry and an empty list. Never raises."""
+    path = os.path.join(data_dir, FILE)
+    try:
+        data, error = schema.read_data("features", path)
+    except RoadmapError as exc:
+        return [], [error_entry(FILE, ValueError(exc.message))]
+    except Exception as exc:  # any unreadable file becomes an errors entry
+        return [], [error_entry(FILE, exc)]
+    if error is not None:
+        return [], [{"file": FILE, "error": error["message"]}]
+    if data is None:
+        return [], []
+    items = data.get("features")
+    if not isinstance(items, list):
+        return [], [error_entry(FILE, ValueError("features.json has no features array"))]
+    return items, []
 
 
 def _phase_ids(data_dir):
@@ -258,7 +279,7 @@ def derived(data_dir):
     """The derive() view of the project (rows, uncovered, orphans, counts, taskTotals, errors). Reads only."""
     from roadmap.services import issues, jobs
     records.require_dir(data_dir)
-    items, errors = core.load(data_dir)
+    items, errors = load(data_dir)
     view = core.derive(items, _tasks_for_view(data_dir), jobs.list_jobs(data_dir), issues.list_issues(data_dir))
     view["errors"] = errors + view["errors"]
     return view

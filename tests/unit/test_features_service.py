@@ -207,7 +207,8 @@ class ViewsAndStatus(FeatureCase):
         snap = build_snapshot({"tasks.json": text}, {"id": "splitnet"}, PINNED_NOW)
         view = snap["features"]
         self.assertEqual((view["rows"], view["uncovered"]), ([], []))
-        self.assertEqual(view["counts"], {"total": 0, "done": 0, "doing": 0, "todo": 0, "uncovered": 0})
+        self.assertEqual(view["counts"], {"total": 0, "done": 0, "doing": 0, "todo": 0, "uncovered": 0,
+                                                "hold": 0})
         # with no features every task is an orphan
         self.assertEqual(view["orphans"], [t["id"] for t in json.loads(text)["tasks"]])
 
