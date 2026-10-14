@@ -1007,7 +1007,8 @@ export function sectionView(vm) {
     body = (model.jobCount ? "" : '<p class="wf-hint">No jobs in this range.</p>') + timelineSvg(model);
   }
   return '<div class="wf-page">' + head + controls + '<div class="wf" data-wf-view="' + esc(view) + '">' + body +
-    '<div class="wf-detail row-grid wf-cols">' + detailHtml(model, selectedKey) + "</div>" +
+    // The Map has no strip: a tap opens the right panel's Details (navigate), so a strip would repeat it.
+    (view === "map" ? "" : '<div class="wf-detail row-grid wf-cols">' + detailHtml(model, selectedKey) + "</div>") +
     legendHtml(view, mapKinds, mapHasNow) +
     "</div></div>";
 }

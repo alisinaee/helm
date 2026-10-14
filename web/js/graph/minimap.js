@@ -9,6 +9,8 @@ const NS = "http://www.w3.org/2000/svg";
 export const MINI_W = 160;
 export const MINI_H = 90;
 export const NARROW_PX = 640;
+// Every frame, end pill and Now mark is at least this many screen pixels, however large the project is.
+export const MIN_PX = 4;
 
 function el(tag, attrs, kids) {
   const node = document.createElementNS(NS, tag);
@@ -46,22 +48,33 @@ export function chipsOf(flow) {
   });
 }
 
+// A layout rectangle grown about its centre to at least MIN_PX on screen at scale s (screen px per layout unit).
+export function visibleRect(r, s) {
+  const w = Math.max(r.w, MIN_PX / s);
+  const h = Math.max(r.h, MIN_PX / s);
+  return { x: r.x - (w - r.w) / 2, y: r.y - (h - r.h) / 2, w: w, h: h };
+}
+
 // Builds the overview into host and keeps its rectangle in step with the viewport. st: { flow, viewport }, where
 // viewport is the object mountViewport() returns. Returns { svg, stop() } (stop unsubscribes from the viewport).
 export function mountMinimap(host, st) {
   const flow = st.flow || {};
   const vp = st.viewport;
   const box = { w: Math.max(1, flow.width || 1), h: Math.max(1, flow.height || 1) };
+  const scale = Math.min(MINI_W / box.w, MINI_H / box.h) || 1;
+  const mark = function (cls, r) {
+    const v = visibleRect(r, scale);
+    return el("rect", { class: cls, x: v.x, y: v.y, width: v.w, height: v.h });
+  };
   const frames = (flow.frames || []).map(function (f) {
-    return el("rect", { class: "wfm-frame" + (f.collapsed ? " wfm-fold" : ""), x: f.x, y: f.y, width: f.w,
-      height: f.h });
+    return mark("wfm-frame" + (f.collapsed ? " wfm-fold" : ""), f);
   });
   const ends = ["start", "end"].map(function (id) {
     const b = (flow.boxes || {})[id];
-    return b ? el("rect", { class: "wfm-end", x: b.x, y: b.y, width: b.w, height: b.h }) : null;
+    return b ? mark("wfm-end", b) : null;
   });
   const now = flow.now ? flow.now.box : null;
-  const nowMark = now ? el("rect", { class: "wfm-now", x: now.x, y: now.y, width: now.w, height: now.h }) : null;
+  const nowMark = now ? mark("wfm-now", now) : null;
   const view = el("rect", { class: "wfm-view", x: 0, y: 0, width: box.w, height: box.h });
   const label = "Overview of the workflow, " + frames.length + " phases. Press N for Now or S for Start on the map.";
   const svg = el("svg", { class: "wfm", width: MINI_W, height: MINI_H, viewBox: "0 0 " + box.w + " " + box.h,
