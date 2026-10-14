@@ -30,7 +30,9 @@ class ReadRoutes(ServerCase):
     def test_snapshot(self):
         res = self.request("GET", "/api/v1/projects/%s/snapshot" % PROJECT_ID)
         self.assert_schema(res, "snapshot")
-        self.assertEqual(res.json()["project"], {"id": PROJECT_ID, "title": "split-net"})
+        project = res.json()["project"]
+        self.assertEqual({"id": project["id"], "title": project["title"]}, {"id": PROJECT_ID, "title": "split-net"})
+        self.assertIsInstance(project["path"], str)
 
     def test_usage_without_any_sync(self):
         res = self.request("GET", "/api/v1/usage")

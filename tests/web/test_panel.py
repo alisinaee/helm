@@ -184,6 +184,12 @@ class PanelSourceTests(unittest.TestCase):
         self.assertIn("export function copyLaunch(el)", text)
         self.assertNotIn("innerHTML", text)
 
+    def test_copy_launch_click_is_routed_to_details_copy_launch(self):
+        text = read(os.path.join(WEB, "js", "views", "panel.js"))
+        self.assertIn("copyLaunch,", text)
+        self.assertIn('kind === "copy-launch"', text)
+        self.assertIn("copyLaunch(el)", text)
+
     def test_snapshot_session_and_path_are_added_only_when_given(self):
         sys.path.insert(0, REPO)
         try:

@@ -14,7 +14,7 @@ from roadmap.core.extras import extra_file
 from roadmap.core.parsers import error_entry
 from roadmap.core.snapshot import build_snapshot
 from roadmap.errors import RoadmapError
-from roadmap.services import control, limits, rules
+from roadmap.services import control, limits, presence, rules
 from roadmap.store import config as config_store
 
 BASE_FILES = ("tasks.json", "jobs.json", "autonomy.json", "issues.json", "questions.json", "comments.json",
@@ -43,9 +43,28 @@ def load_snapshot(project_id, now=None):
     files = {name: _read_text(folder, name, errors) for name in names}
     moment = now if now is not None else datetime.now().astimezone()
     snap = build_snapshot(files, project_cfg, moment, control=_control_view(entry["id"]),
-                          meters=limits.meters(entry, moment), rules=_rules_view(folder))
+                          meters=limits.meters(entry, moment), rules=_rules_view(folder),
+                          session=_session_view(folder), folder=_project_path(entry))
     snap["errors"] = errors + snap["errors"]
     return snap
+
+
+def _session_view(folder):
+    """The presence state of the project's data folder: "watching", "open" or "none". Any error gives None, so the
+    snapshot omits the session key (fail-open). Never raises."""
+    try:
+        return presence.state(folder)
+    except Exception:
+        return None
+
+
+def _project_path(entry):
+    """The registered project root, the directory the Copy command cds into. Any error gives None (fail-open)."""
+    try:
+        path = entry.get("path")
+        return str(path) if path else None
+    except Exception:
+        return None
 
 
 def _rules_view(folder):
