@@ -55,7 +55,9 @@ class TitleEditSourceTest(unittest.TestCase):
 
     def test_title_span_is_focusable_and_addressable(self):
         src = read(TASKS)
-        self.assertIn('tabindex="0" data-tt-id="', src)
+        self.assertIn('tabindex="0" role="button" ', src)
+        self.assertIn('aria-label="Edit title for ', src)
+        self.assertIn('data-tt-id="', src)
 
 
 class TitleCheckTest(unittest.TestCase):

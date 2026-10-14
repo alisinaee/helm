@@ -256,3 +256,24 @@ class Stylesheet(unittest.TestCase):
     def test_focus_visible_style_exists(self):
         combined = "\n".join(css for _path, css in css_sources())
         self.assertIn(":focus-visible", combined)
+
+
+class ContextualNames(unittest.TestCase):
+    """Row actions and links name the row they act on, so a screen reader hears more than a bare 'Undo' or 'Save'."""
+
+    EXPECTED = {
+        os.path.join("views", "tasks.js"): ['role="button" ', 'aria-label="Edit title for '],
+        os.path.join("views", "toast.js"): ['aria-label="Undo ', 'aria-label="Dismiss notification: '],
+        os.path.join("views", "tokens.js"): ['aria-label="Save cap for ', 'aria-label="Apply override for '],
+        os.path.join("views", "tree.js"): ['aria-label="Task '],
+        os.path.join("views", "topbar.js"): ['aria-haspopup="dialog"'],
+    }
+
+    def test_row_actions_have_contextual_names(self):
+        problems = []
+        for rel, needles in self.EXPECTED.items():
+            src = read(os.path.join(JS_DIR, rel))
+            for needle in needles:
+                if needle not in src:
+                    problems.append("%s lacks %s" % (rel, needle))
+        self.assertEqual(problems, [])
