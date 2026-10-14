@@ -20,8 +20,11 @@ const STATUS_OPTIONS = [["", "All"], ["doing", "Doing"], ["todo", "Todo"], ["don
 const GRID = "pl-row row-grid";
 
 // The view state. It lives here, not in the URL, so a poll keeps the filters and the open features.
-const ui = { status: "", phase: "", unaccepted: false, open: {}, menu: null, adding: false, project: "" };
+const ui = { status: "", phase: "", unaccepted: false, open: {}, menu: null, adding: false, project: "",
+  filtersOpen: false, focus: "" };
 const bound = new WeakSet();
+const focusMark = { key: "" };                  // the ?f= feature already opened and scrolled to (route id and id)
+const FEAT_ID = /^F[1-9][0-9]?$/;
 
 function emptyFeatures() {
   return { rows: [], uncovered: [], orphans: [], counts: {} };
@@ -57,6 +60,28 @@ function orderedRows(rows, state) {
     }
   }
   return out;
+}
+
+// The tasks a feature covers, its own and its sub-features', in snapshot order. A task names its features in feats,
+// so the snapshot does not carry the id list.
+function memberIds(snap, row, rows) {
+  const group = {};
+  group[row.id] = true;
+  for (const r of rows) {
+    if (r.parent === row.id) group[r.id] = true;
+  }
+  return (snap.tasks || []).filter(function (t) {
+    return (t.feats || []).some(function (f) {
+      return group[f] === true;
+    });
+  }).map(function (t) {
+    return t.id;
+  });
+}
+
+function accText(row) {
+  if (row.acc) return row.acc;
+  return row.state === "done" ? "Done: acceptance is not in the snapshot" : "No acceptance line yet";
 }
 
 function numText(value) {
@@ -138,7 +163,7 @@ function menuHtml(feature, open) {
     '"' + rmDisabled + ' aria-label="Remove ' + fid + rmHelp + '">Remove</button></div>';
 }
 
-function featureHtml(snap, entry, tasks, blockedIds, state) {
+function featureHtml(snap, entry, tasks, blockedIds, state, rows) {
   const row = entry.row;
   const fid = esc(row.id);
   const open = Boolean(state.open[row.id]);
@@ -146,20 +171,21 @@ function featureHtml(snap, entry, tasks, blockedIds, state) {
   const menuOpen = state.menu === row.id;
   const tone = FEAT_TONE[row.state] || "neutral";
   const word = FEAT_WORD[row.state] || row.state;
-  const taskIds = row.tasks || [];
+  const taskIds = memberIds(snap, row, rows);
   const tasksHtml = '<ul class="pl-tasks" id="pl-tasks-' + fid + '" aria-label="Tasks of ' + fid + '"' +
     (open ? "" : " hidden") + ">" + taskIds.map(function (id) {
       return taskRowHtml(row, id, tasks, blockedIds);
     }).join("") + linkPickerHtml(snap, row) + "</ul>";
-  return '<li class="pl-feat' + (entry.depth ? " pl-sub" : "") + " is-" + esc(row.state) + '">' +
+  return '<li id="pl-feat-' + fid + '" class="pl-feat' + (entry.depth ? " pl-sub" : "") + " is-" + esc(row.state) +
+    (state.focus === row.id ? " is-focus" : "") + '">' +
     '<div class="' + GRID + '">' +
     '<button type="button" class="btn btn-small pl-caret" data-pl="toggle" data-id="' + fid +
     '" aria-expanded="' + open + '" aria-controls="pl-tasks-' + fid + '" data-focus="pl-toggle:' + fid +
     '" aria-label="' + (open ? "Hide" : "Show") + " tasks of " + fid + '">' + (open ? "▾" : "▸") + "</button>" +
     '<span class="rg-t pl-id">' + fid + "</span>" +
     '<span class="pl-main"><span class="rg-t pl-title" title="' + esc(row.title) + '">' + esc(row.title) +
-    '</span><span class="rg-t pl-acctext" title="' + esc(row.acc || "") + '">' +
-    esc(row.acc || "No acceptance line yet") + "</span></span>" +
+    '</span><span class="rg-t pl-acctext" title="' + esc(row.acc || "") + '">' + esc(accText(row)) +
+    "</span></span>" +
     '<span class="rg-t pl-opt">' + esc(row.phase || MISSING) + "</span>" +
     '<span class="rg-num pl-opt">' + numText(row.prio) + "</span>" +
     '<span class="pl-bar">' + meterHtml(pct, tone === "success" ? "success" : barTone(row)) + "</span>" +
@@ -213,18 +239,26 @@ function calloutHtml(snap, features, state) {
   return parts.length ? '<div class="pl-callouts" aria-label="Coverage">' + parts.join("") + "</div>" : "";
 }
 
+// On a phone the filters sit behind a toggle (the button shows how many are set); on a wide screen they always show.
 function filtersHtml(snap, state) {
   const status = STATUS_OPTIONS.map(function (o) {
     return '<option value="' + o[0] + '"' + (o[0] === state.status ? " selected" : "") + ">" + o[1] + "</option>";
   }).join("");
-  return '<div class="pl-filters" role="group" aria-label="Filter features">' +
+  const set = (state.status ? 1 : 0) + (state.phase ? 1 : 0) + (state.unaccepted ? 1 : 0);
+  const open = Boolean(state.filtersOpen);
+  return '<button type="button" class="btn btn-small pl-filter-toggle" data-pl="filters" aria-expanded="' + open +
+    '" aria-controls="pl-filters" data-focus="pl-filters-toggle">Filters' + (set ? " (" + set + ")" : "") +
+    "</button>" +
+    '<div class="pl-filters' + (open ? " is-open" : "") + '" id="pl-filters" role="group" ' +
+    'aria-label="Filter features">' +
     '<label class="pl-field">Status <select data-pl="filter-status" data-focus="pl-filter-status">' + status +
     "</select></label>" +
     '<label class="pl-field">Phase <select data-pl="filter-phase" data-focus="pl-filter-phase">' +
     '<option value="">All</option>' + phaseOptions(snap, state.phase) + "</select></label>" +
     '<label class="pl-field pl-check"><input type="checkbox" data-pl="filter-unaccepted" ' +
     'data-focus="pl-filter-unaccepted"' + (state.unaccepted ? " checked" : "") + "> Unaccepted only</label>" +
-    '<button type="button" class="btn btn-primary" data-pl="adding" data-focus="pl-adding">+ Feature</button></div>';
+    '<button type="button" class="btn btn-primary pl-add-inline" data-pl="adding" data-focus="pl-adding">+ Feature' +
+    "</button></div>";
 }
 
 function addFormHtml(snap, features) {
@@ -276,19 +310,58 @@ export function plannerHtml(snap, state) {
   const entries = orderedRows(rows, state);
   const list = entries.length
     ? '<ul class="pl-list" aria-label="Features">' + entries.map(function (entry) {
-      return featureHtml(snap, entry, tasks, blockedIds, state);
+      return featureHtml(snap, entry, tasks, blockedIds, state, rows);
     }).join("") + "</ul>"
     : emptyHtml("No features match these filters.");
-  return head + calloutHtml(snap, features, state) + add + filtersHtml(snap, state) + headHtml() + list;
+  // The floating + Feature button is for phones; the filter row carries its own on wide screens.
+  const fab = state.adding ? "" : '<button type="button" class="btn btn-primary pl-fab" data-pl="adding" ' +
+    'data-focus="pl-adding-fab">+ Feature</button>';
+  return head + calloutHtml(snap, features, state) + add + filtersHtml(snap, state) + headHtml() + list + fab;
+}
+
+// Names the projects so the person can open a project's Planner. Used for the All projects scope.
+function pickProjectHtml(vm) {
+  const projects = Array.isArray(vm.projects) ? vm.projects : [];
+  if (!projects.length) {
+    return emptyHtml("No projects yet.", '<a href="#/all/overview">Go to All projects</a>');
+  }
+  const items = projects.map(function (p) {
+    return '<li><a class="btn" href="#/p/' + esc(p.id) + '/planner">' + esc(p.name || p.id) + "</a></li>";
+  }).join("");
+  return '<div class="page-head"><p class="page-title">Planner</p><p class="page-note">Pick a project</p></div>' +
+    '<ul class="pl-pick-list" aria-label="Projects">' + items + "</ul>";
+}
+
+// A feature in the ?f= query (the Work drawer chip links there) is opened, the filters are cleared so it shows, and the
+// page scrolls to it once. The highlight stays while the query names it.
+function focusFrom(route) {
+  const f = route.filters && typeof route.filters.f === "string" ? route.filters.f : "";
+  return FEAT_ID.test(f) ? f : "";
+}
+
+function applyFocus(route, fid) {
+  const key = fid ? route.id + "#" + fid : "";
+  ui.focus = fid;
+  if (key === focusMark.key) return;
+  focusMark.key = key;
+  if (!fid) return;
+  ui.open[fid] = true;
+  ui.status = "";
+  ui.phase = "";
+  ui.unaccepted = false;
+  if (typeof document === "undefined" || typeof setTimeout !== "function") return;
+  setTimeout(function () {
+    const el = document.getElementById("pl-feat-" + fid);
+    if (el && typeof el.scrollIntoView === "function") el.scrollIntoView({ block: "center" });
+  }, 0);
 }
 
 export function sectionView(vm) {
-  if (vm.route.name !== "project") {
-    return emptyHtml("Planner belongs to one project.", '<a href="#/all/overview">Go to All projects</a>');
-  }
+  if (vm.route.name !== "project") return pickProjectHtml(vm);
   const state = pageState(vm);
   if (state) return state;
   ui.project = vm.route.id;
+  applyFocus(vm.route, focusFrom(vm.route));
   return plannerHtml(vm.project.snapshot, ui);
 }
 
@@ -333,6 +406,9 @@ function onClick(event) {
     rerender();
   } else if (action === "adding") {
     ui.adding = !ui.adding;
+    rerender();
+  } else if (action === "filters") {
+    ui.filtersOpen = !ui.filtersOpen;
     rerender();
   } else if (action === "hold") {
     run("feature.set", { id: id, hold: el.getAttribute("data-hold") === "1" },

@@ -102,7 +102,8 @@ def _features_view(text, tasks, jobs_list, issues_open, errors):
             errors.append(error_entry("features.json", exc))
     view = feature_rules.derive(raw, tasks, jobs_list, issues_open)
     errors.extend({"file": "features.json", "error": message} for message in view["errors"])
-    return {key: view[key] for key in ("rows", "uncovered", "orphans", "counts")}
+    return {"rows": feature_rules.snapshot_rows(view["rows"]), "uncovered": view["uncovered"],
+            "orphans": view["orphans"], "counts": view["counts"]}
 
 
 def _after_edges(tasks_text, known):
