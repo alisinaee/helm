@@ -199,6 +199,8 @@ def _parse_feats(text, lineno):
         if not FEAT_ID_RE.match(fid):
             return None, _problem(lineno, "feature id '" + fid + "' must look like F3 (allowed: F1 to F99, comma "
                                   "separated)")
+    if len(set(ids)) != len(ids):
+        return None, _problem(lineno, "f: lists a feature id twice (allowed: each feature id once)")
     if len(ids) > FEAT_MAX_PER_TASK:
         return None, _problem(lineno, "f: has " + str(len(ids)) + " features (allowed: up to "
                               + str(FEAT_MAX_PER_TASK) + " per task)")
