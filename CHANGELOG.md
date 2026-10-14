@@ -73,6 +73,18 @@ interactive GUI shell are all in place. The two security reviews (R1 and R2) are
 - **Release tooling** (WP37): `tools/install-skills.py` installs the three skill drafts with a backup and a dry run;
   `make release-check` runs the full gate; `docs/RELEASE.md` is the release and cutover checklist.
 
+### Limits and defaults
+
+- The roadmap service is a launchd agent, `com.roadmap-board.agent`, on `127.0.0.1:8780`, and `roadmap serve` defaults to port 8780.
+- The start queue holds at most 50 entries (`queue.json`). The activity log keeps the newest 500 operations, and each one can be undone.
+- A project holds at most 60 planner features, accepted only by the user. A task links at most 3 features.
+- A project holds at most 200 open issues and 50 open questions.
+- Session presence reads as `watching` under 60 s, `open` under 10 min, and `none` otherwise. Hook presence is written at most once per 30 s.
+- `launchOnStart` opens a Terminal session at most once per 10 min, and only when no session is open.
+- `roadmap service` actions: install, uninstall, start, stop, restart, status, logs.
+- `roadmap project` actions: add, list, show, init, remove, check, migrate, new.
+- `roadmap job` actions: start, done, fail, progress, list, prune.
+
 ### Changed
 
 - The server runs on `127.0.0.1` only, and its access log writes the path without the query string.

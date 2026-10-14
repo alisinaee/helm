@@ -2,6 +2,8 @@
 
 Read this first in a new chat (new Claude account is fine: everything is in this repo). Repo: https://github.com/alisinaee/roadmap-board (public) at ~/Works/roadmap-board. Sibling project: split-net (https://github.com/alisinaee/split-net, ~/Works/split_net, per-app VPN routing on macOS): its tools drive this project's job registration. The person's email is not needed.
 
+Pointers: head procedure in docs/HEAD-RUNBOOK.md; next work to 1.0.0 in docs/NEXT-WAVE.md.
+
 ## 0. State right now
 - ALL workers/jobs are STOPPED by the person ("stop the tasks"). Do not start any task, agent, agy or Cursor job until the person says so. First reply should be a short status and ask what to do.
 - Tests: `python3 -m unittest discover -s tests -t . -q` = 1601 OK (2-3 expected failures marked). `make check`, `make check-ui` (headless Chrome smoke, 100 page runs).
@@ -26,7 +28,7 @@ Features the person asked for (keep all): planner; progress manager; subtask/tas
 10. split-net project rules (memory, in ~/.claude/projects/-Users-ali-Works-split-net/memory/): never risk the person's VPN (Claude session depends on it: no flaps, no global TUN on the live machine), macOS only, use own core VPN for VPN tests, agent-first CLI, etc. They matter only if you touch split-net.
 
 ## 3. Decisions already made (do not reopen without asking)
-- Own design system (25 KB CSS, tokens, CSP: no inline script/style); NOT Tabler/Gentelella/other kits (payload and edit cost). CSS total cap now 64 KB (tests/web/test_shell.py CSS_TOTAL_MAX).
+- Own design system (about 64 KB CSS in web/css, tokens, CSP: no inline script/style); NOT Tabler/Gentelella/other kits (payload and edit cost). CSS total cap now 64 KB (tests/web/test_shell.py CSS_TOTAL_MAX).
 - Workflow diagram: our own SVG engine, nothing vendored; default order = Dependency; jobs as pills under tasks (docs/WORKFLOW-DIAGRAM-SPEC.md). Planner = own section; tasks may have up to 3 feature links (`feats`); ONLY the person accepts a feature (docs/PLANNER-SPEC.md).
 - Interaction model: Start in the GUI = queue request for an agent (no launcher at MVP); Stop/limits are ENFORCED by a fail-open PreToolUse hook + sentinel; phone listener read-only; agents cannot lift limits (agent guard; honest note: a malicious local process can forge headers: docs/SECURITY.md Known limits).
 - Port 8780 for the new service; keep 8765 for the old dashboard until the cutover (docs/RELEASE.md).
