@@ -117,7 +117,7 @@ class CspTests(unittest.TestCase):
     def test_no_external_hosts_or_imports(self):
         problems = []
         for path in web_text_files():
-            if EXTERNAL.search(read(path)):
+            if EXTERNAL.search(read(path).replace("http://www.w3.org/2000/svg", "")):  # the SVG namespace is an identifier, not a request
                 problems.append(rel(path))
         self.assertEqual(problems, [])
 
