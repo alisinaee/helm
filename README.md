@@ -1,26 +1,11 @@
 # roadmap-board
 
-roadmap-board is a live roadmap dashboard and job tracker for projects that you build with Claude Code.
-It reads each project's task file (`docs/tasks.json`), shows the phases and the tasks left, lists the jobs
-Claude is running right now, and shows your plan usage. The page is served on your Mac only, at
-`http://127.0.0.1:8765/`. The command is `roadmap`, and every command takes `--json`.
-
-It is plain Python 3.9 or newer with the standard library only. There is nothing to pip install and no
-build step.
-
-## Status
-
-| Part | State |
-|---|---|
-| `roadmap` CLI: `project`, `job`, `hooks`, `usage`, `backup`, `doctor`, `service`, `version` | works |
-| Local HTTP API `/api/v1` (read routes and the usage sync) | works, see [docs/API.md](docs/API.md) |
-| Background service under launchd (`roadmap service ...`) | works |
-| Web page: header, plan usage, KPI row, Home and project frame | works |
-| Web page: phases, task rows, running, needs you, next up, recent, extras, legend | in progress (WP8) |
-| `roadmap open` | not built yet, open `http://127.0.0.1:8765/` by hand |
-| Phone access (`roadmap phone ...`) | not built yet (WP13), see [Phone access](#phone-access) |
-
-Until the page sections land, the old single-file page is still served at `http://127.0.0.1:8765/legacy.html`.
+roadmap-board is a live dashboard and job tracker for projects that you build with Claude Code.
+It reads each project's `docs/tasks.json`, shows the phases and the tasks left, and lists the jobs Claude is running now.
+It also shows your plan usage and your token limits, with rules that agents follow.
+The page is served on your Mac only, at `http://127.0.0.1:8765/`, and nothing leaves the machine except the usage check and the phone tunnel, which you start yourself.
+You use it as a GUI, and AI agents use the same data through the `roadmap` command, where every command takes `--json`.
+It is Python 3.9 or newer with the standard library only: nothing to pip install, no build step.
 
 ## Install
 
@@ -29,24 +14,40 @@ You need a Mac, Python 3.9 or newer (`python3 --version`), and Git.
 ```sh
 git clone <this repo> ~/Works/roadmap-board
 cd ~/Works/roadmap-board
-make check                               # lint and tests; it must pass before you use it
+make check                               # lint and unit tests; it must pass before you use it
+bin/roadmap service install              # the background agent that serves the page on 127.0.0.1:8765
 mkdir -p ~/.local/bin
 ln -s "$PWD/bin/roadmap" ~/.local/bin/roadmap
 ```
 
 Put `~/.local/bin` on your `PATH` if it is not there yet (add `export PATH="$HOME/.local/bin:$PATH"` to
-`~/.zshrc`). Then check the install:
+`~/.zshrc`). Then check the install with `roadmap version` and `roadmap doctor`. `roadmap doctor` lists each check
+as `ok`, `warn` or `fail`, with the fix for each problem, and it is safe to run at any time.
+Keep the clone where it is: the launchd agent and the hooks in your projects point at this folder.
 
-```sh
-roadmap version
-roadmap doctor
-```
+## First run
 
-`roadmap doctor` lists every check it made with `ok`, `warn` or `fail` and the fix for each problem.
-It is safe to run at any time. See [Troubleshooting](#troubleshooting).
+1. Register your project. A project is any folder with a `docs/` folder inside it:
+   `roadmap project init <project-path>` and `roadmap project add <project-path> --name "My App"`.
+2. Install the hooks, so Claude Code records jobs for you: `roadmap hooks install my-app`.
+3. Open the dashboard: `roadmap open`, or go to `http://127.0.0.1:8765/` yourself.
 
-Keep the clone where it is. The launchd agent and the hooks in your projects point at this folder.
-If you move it, run `roadmap service install` and `roadmap hooks install <project>` again.
+The details, and a job recorded by hand, are in [Quick start with a project](#quick-start-with-a-project).
+
+## The dashboard
+
+The GUI has these sections, in the navigation rail: **Overview**, **Inbox**, **Roadmap**, **Work**, **Issues**,
+**Agents**, **Tokens**, **Rules**, **Research**, **Activity** and **Settings**.
+
+## Honest notes
+
+- **Usage.** The usage collector reads the Claude Code sign-in from the keychain, which needs a Claude Code CLI login
+  on this Mac for the account token. macOS asks once, and you should choose Always Allow. Without that login, enter
+  the numbers yourself with `roadmap usage push` (see [Plan usage](#plan-usage)).
+- **Phone access.** `roadmap phone start` needs one step from you first: the tunnel host key must be added to
+  `known_hosts` by hand (see [Phone access](#phone-access)).
+- **Hooks.** `roadmap hooks install` edits the project's `.claude/settings.local.json`, makes a backup first, and
+  changes nothing when run again.
 
 ## Quick start with a project
 
@@ -236,17 +237,13 @@ Not built yet: `roadmap open` and the `roadmap phone` commands.
 
 ## Phone access
 
-Not built yet. It is planned for WP13 and is described here so the design is on record; nothing below works today.
+`roadmap phone start` makes a new random token (file mode 0600), starts a read-only listener on `127.0.0.1:8766`,
+and opens an ssh tunnel to `localhost.run` for a public address. `roadmap phone link` prints the private link,
+`roadmap phone status` shows whether the tunnel runs, and `roadmap phone stop` closes it and deletes the token.
 
-- A second listener on `127.0.0.1:8766` that answers only GET requests and needs a token. Without a token it
-  answers 503.
-- `roadmap phone start` would make a new random token (file mode 0600) and open a tunnel with
-  `ssh -R 80:127.0.0.1:8766 nokey@localhost.run`. The tunnel gives a public address for the phone.
-- The phone gets a cookie that holds an HMAC of the token, not the token itself. The cookie is `HttpOnly`,
-  `Secure`, `SameSite=Strict`, and lasts 7 days.
-- `roadmap phone stop` would close the tunnel and delete the token. Ten failed attempts per minute are the limit.
-
-Until then, the dashboard is reachable only from this Mac.
+Before the first `phone start`, add the tunnel host key once, by hand: run `ssh-keyscan localhost.run`, check the
+key yourself, and append its lines to the `known_hosts` file in roadmap-board's state folder. roadmap never fetches
+the key itself, and `phone start` exits 6 until the key is there. See [docs/SECURITY.md](docs/SECURITY.md).
 
 ## Troubleshooting
 
@@ -352,3 +349,34 @@ To remove roadmap's own state, delete these folders by hand. Nothing else on you
 See [CONTRIBUTING.md](CONTRIBUTING.md) for `make check`, the layering rule, change fragments and the definition of
 done. The design is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The HTTP contract is in
 [docs/API.md](docs/API.md), and the threat model is in [docs/SECURITY.md](docs/SECURITY.md).
+
+## Interactive project manager (agents and GUI)
+
+An interactive management bridge combining a browser GUI for humans with a fast, cheap CLI for AI agents.
+Both interfaces share a unified command layer where every write executes as a validated, undoable operation.
+Agents receive compact text outputs without parsing JSON, minimizing token spend and latency.
+Enforces oversight through live budget meters, weekly usage limits, task rules, and tool-use guard hooks.
+
+| Command | Description |
+|---|---|
+| `roadmap ask [TEXT] [--task ID] [--opt A] [--default A] [--block] [--timeout S]` | Ask the user a question (`get`, `wait`, `list` for status) and optionally block or timeout. |
+| `roadmap answer Q3 value` | Answer an open question with an option value or free text. |
+| `roadmap inbox` | Show queued requests, recently answered questions, and open questions. |
+| `roadmap issue new\|list\|show\|close\|link` | Open, list, display, close, or link issues to tasks. |
+| `roadmap subtask add\|done` | Add a subtask to a task or mark an existing subtask done. |
+| `roadmap comment ID text` | Add a comment of up to 280 characters to a task or issue. |
+| `roadmap comments [--last N] ID` | Show the newest comments on a task or issue. |
+| `roadmap budget show` | Show token spend and limits across models and phases. |
+| `roadmap limit set\|rm\|show\|budget` | Set or remove limit rows, adjust weekly stop percentage, or configure token budgets. |
+| `roadmap rules show\|add\|rm\|sync\|check` | View scoped rules for a task/model/role, manage rules, sync to CLAUDE.md, or validate caps. |
+| `roadmap stop [--task ID]` | Stop the project or stop a specific task, blocking further agent tool calls. |
+| `roadmap resume` | Clear the project stop state and all stopped tasks. |
+| `roadmap override --hours N` | Temporarily allow work past a budget or weekly block for 1 to 4 hours. |
+
+### GUI capabilities
+
+- **Overview & Inbox:** One-click stop/resume, live budget and usage meters, active agents card, and single-click answers to agent questions.
+- **Roadmap & Work:** Phase lanes with progress bars and spend, task reordering, phase approvals, and Kanban board or tree task management.
+- **Task drawer:** Inspect status, manage subtasks and comments, view linked issues, and check applicable rules.
+- **Issues:** Open new issues, link them to tasks, and close resolved issues with one click.
+- **Tokens & Rules:** Adjust spend caps and weekly stop limits, trigger temporary overrides, and edit rules with one-click sync to `CLAUDE.md`.
