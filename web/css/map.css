@@ -11,7 +11,7 @@
 .wf-g{display:grid;grid-template-columns:3rem 5rem;align-items:center;padding:0 var(--sp-2)}
 .wf-gh{height:28px;border-bottom:0;color:var(--text-3)}
 .wf-gn,.wf-gt{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-.wf-plot,.wf-axis,.wf-map{display:block;font-size:var(--fs-11)}
+.wf-plot,.wf-axis{display:block;font-size:var(--fs-11)}
 .wf-lane{fill:var(--surface-1)}
 .wf-lane-alt{fill:var(--surface-0)}
 .wf-tickline{stroke:var(--track);stroke-width:1}
@@ -28,7 +28,7 @@
 .wf-pulse{fill:var(--on-accent);opacity:.6}
 @media (prefers-reduced-motion:no-preference){.wf-pulse{animation:wf-pulse 1.4s ease-in-out infinite}}
 @keyframes wf-pulse{50%{opacity:.15}}
-.wf-bar:focus-visible rect,.wf-card:focus-visible rect{stroke:var(--focus);stroke-width:2px}
+.wf-bar:focus-visible rect{stroke:var(--focus);stroke-width:2px}
 .wf-edge{fill:none;stroke:var(--text-2);stroke-width:1.5px}
 .wf-e-after{stroke-dasharray:2 3}
 .wf-e-block{stroke:var(--danger);stroke-dasharray:6 3}
@@ -38,21 +38,6 @@
 .wf-m-blocked path{fill:var(--danger)}
 .wf-hatch-bg{fill:var(--surface-2)}
 .wf-hatch-line{stroke:var(--danger);stroke-width:2px}
-.wf-ph{fill:var(--text-2);font-size:var(--fs-12)}
-.wf-card rect{fill:var(--surface-2);stroke:var(--line)}
-.wf-card text{fill:var(--text-1)}
-.wf-card .wf-card-s{fill:var(--text-3)}
-.wf-c-doing rect{stroke:var(--accent);stroke-width:2px}
-.wf-c-done rect{stroke:var(--success)}
-.wf-c-blocked rect{stroke:var(--danger);stroke-width:2px}
-.wf-c-defer rect{stroke:var(--defer)}
-.wf-dot{fill:var(--unknown)}
-.wf-c-doing .wf-dot{fill:var(--accent)}
-.wf-c-done .wf-dot{fill:var(--success)}
-.wf-c-blocked .wf-dot{fill:var(--danger)}
-.wf-c-defer .wf-dot{fill:var(--defer)}
-.wf-badge rect{fill:var(--surface-0);stroke:var(--danger)}
-.wf-badge text{fill:var(--danger)}
 .wf-sw{width:8px;height:8px;border-radius:50%;flex:none;background:var(--unknown)}
 .wf-sw-head{background:var(--m-opus)}
 .wf-sw-haiku{background:var(--m-haiku)}
