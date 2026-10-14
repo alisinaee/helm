@@ -24,6 +24,7 @@ COMMENTS_SHOWN = 3                                  # newest comments per target
 WORKFLOW_SPANS = 200                                # newest job spans in the workflow key
 WORKFLOW_DAYS = timedelta(days=7)                   # jobs that ended (or started) longer ago are dropped
 AFTER_MAX = 5                                       # most task ids in one after list
+SESSION_STATES = ("watching", "open", "none")       # presence.state() values (R7.1 T1)
 
 
 def _missing(name):
@@ -144,10 +145,12 @@ def _workflow_view(jobs, issues_open, tasks_text, task_ids, moment):
             "edges": {"after": _after_edges(tasks_text, task_ids), "block": block}}
 
 
-def build_snapshot(files, config, now, control=None, meters=None, rules=None):
+def build_snapshot(files, config, now, control=None, meters=None, rules=None, session=None, folder=None):
     """The snapshot dict. Same shape as the old server's build(), plus "project" and "schemaVersion".
     meters (WP27: limits, today, week) is added only when given, so a snapshot built without it is unchanged.
     rules (WP33b: the parsed docs/rules.txt list) is added only when given, for the same reason.
+    session (R7.1 T6: presence.state(), "watching"/"open"/"none") is added only when given; any other value reads as
+    "none". folder (the project folder) is added as project.path only when given, for the Copy command.
 
     server_time is now in ISO 8601 with whole seconds. Parse problems go into errors[]; nothing raises.
     """
@@ -331,4 +334,8 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None):
         out["meters"] = meters
     if rules is not None:
         out["rules"] = rules
+    if session is not None:
+        out["session"] = session if session in SESSION_STATES else "none"
+    if folder is not None:
+        out["project"]["path"] = str(folder)
     return out

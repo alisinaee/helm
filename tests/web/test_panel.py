@@ -177,6 +177,29 @@ class PanelSourceTests(unittest.TestCase):
         self.assertIn('aria-controls="side-body"', text)
         self.assertIn('id="side-body"', text)
 
+    def test_queued_waiting_wording_and_copy_command_are_in_details(self):
+        text = read(os.path.join(WEB, "js", "views", "details.js"))
+        self.assertIn("Queued, waiting for a session", text)
+        self.assertIn('data-side="copy-launch"', text)
+        self.assertIn("export function copyLaunch(el)", text)
+        self.assertNotIn("innerHTML", text)
+
+    def test_snapshot_session_and_path_are_added_only_when_given(self):
+        sys.path.insert(0, REPO)
+        try:
+            from datetime import datetime, timezone
+            from roadmap.core.snapshot import build_snapshot
+        finally:
+            sys.path.pop(0)
+        now = datetime(2026, 10, 14, 12, 0, 0, tzinfo=timezone.utc)
+        plain = build_snapshot({}, {}, now)
+        self.assertNotIn("session", plain)
+        self.assertNotIn("path", plain["project"])
+        wired = build_snapshot({}, {}, now, session="none", folder="/tmp/p")
+        self.assertEqual(wired["session"], "none")
+        self.assertEqual(wired["project"]["path"], "/tmp/p")
+        self.assertEqual(build_snapshot({}, {}, now, session="bogus")["session"], "none")
+
     def test_every_write_op_the_panel_sends_is_a_public_command(self):
         ops = set()
         for name in ("panel.js", "details.js", "projects.js"):

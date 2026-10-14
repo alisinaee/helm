@@ -132,6 +132,41 @@ function statusHtml(task, state, vm) {
   return sectionHtml("Status", '<div class="seg d-btns" role="group" aria-label="Status">' + buttons + "</div>");
 }
 
+// The queued wording follows presence (R7.1 T6): "none" means no session is listening, so the Copy command is offered.
+function queuedWord(session) {
+  if (session === "watching") return "Queued, a session is picking it up";
+  if (session === "open") return "Queued, picked up at the session's next stop";
+  if (session === "none") return "Queued, waiting for a session";
+  return "Queued to start";
+}
+
+// POSIX-style quoting for the shell line: a plain path stays bare, any other path is single-quoted.
+function shellQuote(text) {
+  if (/^[A-Za-z0-9_./-]+$/.test(text)) return text;
+  return "'" + text.replace(/'/g, "'\\''") + "'";
+}
+
+function launchCommand(path) {
+  return "cd " + shellQuote(path) + " && claude \"roadmap watch\"";
+}
+
+// Copy the launch command. Without clipboard access the command stays on screen to select by hand.
+export function copyLaunch(el) {
+  const cmd = el.getAttribute("data-cmd") || "";
+  const report = function (ok) {
+    el.textContent = ok ? "Copied" : "Copy failed, select the command above";
+  };
+  if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
+    report(false);
+    return;
+  }
+  navigator.clipboard.writeText(cmd).then(function () {
+    report(true);
+  }, function () {
+    report(false);
+  });
+}
+
 function queueHtml(task, snap, vm, now) {
   const project = vm.route.id;
   const pend = pick(taskKey(project, task.id, "queue"), snap, now, undefined);
@@ -141,9 +176,10 @@ function queueHtml(task, snap, vm, now) {
   const running = snap.running.some(function (j) {
     return j.task === task.id;
   });
+  const waiting = (pend === "start" || queued) && snap.session === "none" && Boolean(snap.project && snap.project.path);
   let word = "Not queued";
   if (pend === "stop") word = "Stop requested";
-  else if (pend === "start" || queued) word = "Queued to start";
+  else if (pend === "start" || queued) word = queuedWord(snap.session);
   else if (running) word = "Running";
   const off = disabledAttr(vm);
   const startOk = !queued && !running && pend === undefined;
@@ -152,8 +188,15 @@ function queueHtml(task, snap, vm, now) {
     '" data-focus="start"' + (startOk ? "" : " disabled") + off + ">Start</button>" +
     '<button type="button" class="btn" data-side="stop" data-id="' + esc(task.id) + '" data-focus="stop"' +
     (stopOk ? "" : " disabled") + off + ">Stop</button>";
+  if (!waiting) {
+    return sectionHtml("Run", '<p class="d-meta" role="status">' + esc(word) + "</p>" +
+      '<div class="d-btns">' + buttons + "</div>");
+  }
+  const cmd = launchCommand(snap.project.path);
+  const copy = '<button type="button" class="btn" data-side="copy-launch" data-cmd="' + esc(cmd) +
+    '" data-focus="copy-launch">Copy command</button>';
   return sectionHtml("Run", '<p class="d-meta" role="status">' + esc(word) + "</p>" +
-    '<div class="d-btns">' + buttons + "</div>");
+    '<p class="d-meta"><code>' + esc(cmd) + "</code></p>" + '<div class="d-btns">' + buttons + copy + "</div>");
 }
 
 function capHtml(task, snap, vm, now) {
