@@ -22,6 +22,7 @@ COMMAND_MODULES = (
     "subtask",
     "ask",
     "comment",
+    "feature",
     "inbox",
     "budget",
     "undo",

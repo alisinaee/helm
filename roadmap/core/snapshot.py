@@ -8,6 +8,7 @@ roadmap.config.json. now is the moment to measure running jobs and the recent wi
 import json
 from datetime import timedelta
 
+from roadmap.core import features as feature_rules
 from roadmap.core.extras import parse_extras
 from roadmap.core.parsers import (ISSUE_OPEN, error_entry, parse_activity, parse_autonomy, parse_budget,
                                   parse_comments, parse_issues, parse_jobs, parse_questions, parse_queue, parse_tasks,
@@ -84,6 +85,24 @@ def _span(job):
     return [job["id"], job.get("task"), job.get("model") or None, job.get("role"), job.get("parent"),
             int(start.timestamp()), int(end.timestamp()) if end else None, job["status"],
             _round_k(job.get("tokensK"))]
+
+
+def _features_view(text, tasks, jobs_list, issues_open, errors):
+    """The features key (WP52): rows, uncovered, orphans and counts from docs/features.json text. Absent text is an
+    empty derive. Bad JSON or a bad feature goes into errors; nothing raises."""
+    raw = []
+    if text is not None:
+        try:
+            doc = json.loads(text)
+            raw = doc.get("features") if isinstance(doc, dict) else None
+            if not isinstance(raw, list):
+                raw = []
+                errors.append(error_entry("features.json", ValueError("features.json has no features array")))
+        except ValueError as exc:
+            errors.append(error_entry("features.json", exc))
+    view = feature_rules.derive(raw, tasks, jobs_list, issues_open)
+    errors.extend({"file": "features.json", "error": message} for message in view["errors"])
+    return {key: view[key] for key in ("rows", "uncovered", "orphans", "counts")}
 
 
 def _after_edges(tasks_text, known):
@@ -298,6 +317,7 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None):
         "questions": questions_open,
         "comments": {target: rows[-COMMENTS_SHOWN:] for target, rows in by_target.items()},
         "budget": {} if budget_doc is None else _budget_view(budget_doc, tasks, phases),
+        "features": _features_view(files.get("features.json"), tasks, jobs, issues_open, errors),
         "blocked": blocked,
         "needsYou": needs_you,
         "agents": {"running": running_rows, "groups": groups,

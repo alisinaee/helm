@@ -18,7 +18,7 @@ FIXTURES = os.path.join(TESTS, "fixtures")
 SPLITNET = os.path.join(FIXTURES, "splitnet")
 GOLDEN = os.path.join(FIXTURES, "golden_snapshot.json")
 PINNED_NOW = datetime(2026, 10, 13, 12, 0, 0, tzinfo=timezone.utc)
-ADDITIVE_KEYS = ("server_time", "project", "schemaVersion", "workflow")
+ADDITIVE_KEYS = ("server_time", "project", "schemaVersion", "workflow", "features")
 WP20_KEYS = ("issues", "questions", "comments", "budget", "blocked", "needsYou", "agents", "control", "queue",
              "activity")
 

@@ -31,6 +31,7 @@ LAZY_DATA_FILES = (
     ("comments.json", "comments"),
     ("budget.json", "budget"),
     ("queue.json", "queue"),
+    ("features.json", "features"),
 )
 LOG_FILES = ("activity.jsonl", "issues-archive.jsonl", "questions-archive.jsonl", "comments-archive.jsonl")
 

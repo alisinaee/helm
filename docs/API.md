@@ -130,6 +130,11 @@ kind, value, text}` (`value` is the number for a budget rule, else null). At mos
 rule, or whose text is over 160 characters, is skipped. A missing or unreadable file gives `[]`. Without the key the
 snapshot is unchanged.
 
+Since WP52 the snapshot also has `features`: `{rows, uncovered, orphans, counts}` from `docs/features.json` and the
+tasks' `feats`. Each row is `{id, title, acc, prio, parent, phase, hold, accepted, tasks, done, total, estK, spentK,
+blocked, running, state}`, where `state` is `hold`, `uncovered`, `done`, `doing` or `todo` (first match). `uncovered`
+and `orphans` list feature ids and task ids. A project without `features.json` gets an empty derive.
+
 Since WP47 the snapshot also has `workflow`, always present (empty lists for a project with no jobs or tasks).
 `spans` holds the newest 200 jobs in start order, each as `[id, task, model, role, parent, startEpoch, endEpoch,
 status, tokensK]`: epochs are whole seconds, `endEpoch` is null while the job runs, `role` and `parent` are null
@@ -212,6 +217,12 @@ Ops: `task.status` (args `id`, `status`, optional `note`, `tokensK`), `task.star
 `value`, `action` and optional `id`), `limit.rm` (`id`: L3, AUTO or BUD), `control.stop` (`task`?), `control.resume`,
 `control.override` (`hours` 1 to 4), `rules.add` (`scope`, `kind`, `text`, `value`?), `rules.rm` (`id`),
 `rules.sync` (`dryRun`?), `undo` (`activity`).
+
+Feature ops (WP52): `feature.add` (`title`, `acc`?, `prio`?, `phase`?, `parent`?), `feature.set` (`id` and any of
+`title`, `acc`, `prio`, `phase`, `parent`, `hold`), `feature.link` (`task`, `feats` of 1 to 3 feature ids),
+`feature.unlink` (`task`, `feats`), `feature.accept` (`id`, `on`?, `confirm`?, `date`?), `feature.rm` (`id`, only when
+the feature has no tasks and no sub-features). `feature.accept` is for the person: an agent shell, or a phone call,
+gets `409 agent_refused` with `next: ask the person`.
 
 Errors, in the order checked: `403 forbidden` (CSRF, origin, or not allowed on this listener), `413` (body over
 4 KB), `415` (not JSON), `404 unknown_op`, `422 invalid_args` (`error.problems` lists the first problem), `429
