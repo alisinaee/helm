@@ -6,6 +6,14 @@ Each work package writes a fragment in `changes/WPn.md`; the fragments are merge
 
 ## [Unreleased]
 
+## [1.0.0] - Unreleased
+
+First full release of roadmap-board: a local dashboard and job tracker for projects built with Claude Code. It runs
+on your Mac only, from one Python 3.9+ standard-library package, with a `roadmap` command for people and for AI agents.
+The store, HTTP server and API v1, hooks, the agent control surface, the research workflow, usage limits, and the
+interactive GUI shell are all in place. The two security reviews (R1 and R2) are fixed.
+
+
 ### Added
 
 - **CLI skeleton** (WP1): the `roadmap` command with `--json` envelopes (`{"ok", "data" | "error"}`), fixed exit
@@ -53,6 +61,18 @@ Each work package writes a fragment in `changes/WPn.md`; the fragments are merge
 - **Interactive web shell** (WP28): modern app shell with navigation rail, command dispatcher with undo toasts,
   design tokens, keyboard shortcuts, and view routing.
 
+- **Interactive GUI shell, all sections** (WP29 to WP35): right panel, Overview with inbox and activity (WP30), Work
+  board, list and tree (WP31), Roadmap lanes with phase approval and an issues view (WP32), Tokens, Limits, Rules and
+  Settings (WP33), Agents, Research notes and question undo (WP34), and the final responsive and visual pass (WP35).
+  The sections are Overview, Inbox, Roadmap, Work, Issues, Agents, Tokens, Rules, Research, Activity and Settings.
+- **Agent and CLI control surface** (WP21, WP22, WP33b): `ask`, `answer`, `inbox`, `issue`, `subtask`, `comment`,
+  `budget`, `limit`, `rules`, `stop`, `resume`, `override`, `undo`, and `agent-guide` for AI agents.
+- **Usage ledger and limit rows** and the **research workflow** (WP27, WP17): `roadmap research new|list|check`.
+- **Demo fixtures** (fixtures/demo/alpha, beta and gamma), used by the tests and the UI smoke.
+- **UI smoke** (WP9, WP35b): `make check-ui` drives the shell in Google Chrome and skips when Chrome is not installed.
+- **Release tooling** (WP37): `tools/install-skills.py` installs the three skill drafts with a backup and a dry run;
+  `make release-check` runs the full gate; `docs/RELEASE.md` is the release and cutover checklist.
+
 ### Changed
 
 - The server runs on `127.0.0.1` only, and its access log writes the path without the query string.
@@ -83,10 +103,14 @@ Each work package writes a fragment in `changes/WPn.md`; the fragments are merge
 - `GET /data.json` is an alias of the first project's snapshot, and it sends `Deprecation: true`. It is removed in
   2.0. Use `GET /api/v1/projects/{id}/snapshot`.
 
-### Not built yet
+### Known gaps
 
-- `roadmap open` and the `roadmap phone` commands (WP13).
-- Phone listener and tunnel (WP13).
-- Full page sections: phases, tasks, running, needs you, next up, recent, extras and legend (WP8). Until then the old
-  page is served at `/legacy.html`.
-- Chrome smoke test `make check-ui` (WP9).
+- Phone access (`roadmap phone start|stop|link|status`) needs one step by you first: add the tunnel host key to the
+  `known_hosts` file in the state folder, as described in [docs/SECURITY.md](docs/SECURITY.md). Until then `phone start`
+  exits 6.
+- `roadmap usage sync` reads an endpoint that Anthropic does not document, and it can change. `roadmap usage push`
+  is the manual fallback.
+- The old single-file page is still served at `/legacy.html`, with its own CSP exception, until the cutover removes it
+  (see [docs/RELEASE.md](docs/RELEASE.md)).
+- `make check-ui` skips when Google Chrome is not installed in `/Applications`.
+
