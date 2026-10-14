@@ -73,7 +73,7 @@ class ParsePlanTests(unittest.TestCase):
     def test_every_error_names_the_line_and_the_allowed_values(self):
         cases = {
             "P M1 doing | X": "status 'doing' is not valid (allowed: todo|partial|done|hold|-)",
-            "T M1.1 todo 5 gpt/low | x": "model 'gpt' is not valid (allowed: haiku|sonnet|opus|-)",
+            "T M1.1 todo 5 gpt/low | x": "model 'gpt' is not valid (allowed: haiku|sonnet|opus|cursor|agy|head|-)",
             "T M1.1 todo 5 haiku/max | x": "thinking 'max' is not valid (allowed: low|medium|high|-)",
             "T M1.1 todo five haiku/low | x": "tokensK 'five' is not a whole number",
             "T M1 todo 5 haiku/low | x": "task id 'M1' must look like P1.2",
@@ -174,7 +174,7 @@ class ParseSetLineTests(unittest.TestCase):
             "P2.4 tokensK=-3": "tokensK '-3' is not a whole number",
             "P2.4 needsUser=yes": "needsUser 'yes' is not valid (allowed: true|false)",
             "P2.4 title=   ": "title is empty",
-            "P2.4 model=gpt": "model 'gpt' is not valid (allowed: haiku|sonnet|opus|-)",
+            "P2.4 model=gpt": "model 'gpt' is not valid (allowed: haiku|sonnet|opus|cursor|agy|head|-)",
             "P2.4! status=done": "'P2.4!' is not a task id",
         }
         for text, problem in cases.items():

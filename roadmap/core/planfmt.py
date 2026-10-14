@@ -10,7 +10,7 @@ import shlex
 
 PHASE_STATUSES = ("todo", "partial", "done", "hold")
 TASK_STATUSES = PHASE_STATUSES
-MODELS = ("haiku", "sonnet", "opus")
+MODELS = ("haiku", "sonnet", "opus", "cursor", "agy", "head")
 THINKING = ("low", "medium", "high")
 CHECKS = ("none", "sonnet", "opus")
 SET_KEYS = ("status", "tokensK", "model", "thinking", "needsUser", "check", "checkK", "note", "title", "after")

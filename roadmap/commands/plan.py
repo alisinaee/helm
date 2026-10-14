@@ -145,24 +145,7 @@ def _import(args):
 
 def _export(args):
     _, data_dir = tasks.resolve(args.project)
-    doc = tasks.load(data_dir)
-    lines = []
-    phase_ids = []
-    for phase in doc["phases"]:
-        if not isinstance(phase, dict) or not isinstance(phase.get("id"), str):
-            continue
-        if args.phase is not None and phase["id"] != args.phase:
-            continue
-        phase_ids.append(phase["id"])
-        lines.append(planfmt.format_phase(phase))
-        lines.extend(planfmt.format_task(t) for t in doc["tasks"]
-                     if isinstance(t, dict) and _phase_of(t) == phase["id"])
-    if args.phase is not None and not phase_ids:
-        raise RoadmapError("not_found", "no phase " + args.phase, EXIT_NOT_FOUND,
-                           next="roadmap status")
-    if args.phase is None:
-        lines.extend(planfmt.format_task(t) for t in doc["tasks"]
-                     if isinstance(t, dict) and _phase_of(t) not in phase_ids)
+    lines = tasks.export_lines(data_dir, phase=args.phase)
     if not getattr(args, "json", False):
         for line in lines:
             print(line)
