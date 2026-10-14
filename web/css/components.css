@@ -675,7 +675,14 @@
 }
 
 .phase {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--ref-col);
+  align-items: center;
   border-top: 1px solid var(--track);
+}
+
+.phase > .phase-body {
+  grid-column: 1 / -1;
 }
 
 .phase-row {
@@ -933,7 +940,7 @@
 
 .row-grid {
   display: grid;
-  grid-template-columns: var(--rg);
+  grid-template-columns: var(--rg) var(--ref-col);
   column-gap: var(--sp-2);
   align-items: center;
   min-width: 0;
@@ -972,12 +979,18 @@
   font-size: var(--fs-11);
 }
 
-/* Copy reference (R7.12) */
-.ref-col,.ref-copy{width:1.5rem;height:1.5rem}
-.ref-copy{display:grid;place-items:center;padding:0;background:none;border:0;border-radius:var(--r-card);color:var(--text-2);opacity:.4;cursor:pointer}
+/* Copy reference (R7.12): the last track of every row grid; the button sits there, or the track stays empty. */
+.ref-copy{grid-column:-1;justify-self:end;margin-left:auto;width:var(--ref-col);height:var(--ref-col);display:grid;place-items:center;padding:0;background:none;border:0;border-radius:var(--r-card);color:var(--text-2);opacity:.4;cursor:pointer}
 .ref-copy:hover,.ref-copy:focus-visible,.row-grid:hover .ref-copy{opacity:1}
-@media (hover:none){.ref-copy{opacity:1}}
+@media (pointer:coarse){.ref-copy{opacity:1}}
 .ref-text{width:100%;min-width:0}
+.ov-h:has(> .ref-copy) { display: flex; align-items: center; gap: var(--sp-2); }
+li:has(> .p-row) { display: grid; grid-template-columns: minmax(0, 1fr) var(--ref-col); align-items: center; }
+.rc-move { --rg: 4.5rem 4.5rem minmax(0, 1fr); margin: 0; }
+.lane-act { --rg: minmax(0, 1fr); }
+.lane-act > .btn { width: auto; }
+.lane-act > *, .tl-label > .lane-state { justify-self: end; }
+.tl-label { --rg: 3rem minmax(0, 1fr) auto; margin: 0; font-size: var(--fs-12); color: var(--text-2); }
 
 .rg-agent { --rg: 9rem minmax(0, 1fr) 4rem 4.5rem 4.5rem 4rem; font-size: var(--fs-13); }
 .rg-fin { --rg: 4.5rem minmax(0, 1fr) 4rem; }
@@ -1069,10 +1082,12 @@
 }
 
 .log-row {
-  display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
-  column-gap: var(--sp-2);
+  --rg: 48px minmax(0, 1fr);
   overflow-wrap: anywhere;
+}
+
+.note-row {
+  --rg: minmax(0, 1fr);
 }
 
 .log-date {

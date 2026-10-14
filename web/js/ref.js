@@ -70,6 +70,13 @@ export function refSummary(kind, item, snap) {
   if (kind === "research") {
     return "research " + quoted(item.title || item.text);
   }
+  if (kind === "rule") {
+    return "rule " + quoted(item.text) + " kind=" + (item.kind || "none") + " scope=" + (item.scope || "none");
+  }
+  if (kind === "project") {
+    return "project " + quoted(item.name || item.id) + " state=" + (item.state || "none") + " running=" +
+      (item.running || 0);
+  }
   if (kind === "section" || kind === "view") {
     const count = typeof item === "number" ? item : item.count;
     return kind + " count=" + (count == null ? 0 : count);

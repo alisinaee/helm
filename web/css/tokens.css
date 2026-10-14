@@ -3,6 +3,7 @@
    data-theme="light". The toggle can also force dark with data-theme="dark". */
 
 :root {
+  --ref-col: 1.5rem;
   color-scheme: dark;
 
   --surface-0: #0e1116;

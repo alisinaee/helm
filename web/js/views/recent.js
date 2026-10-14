@@ -12,7 +12,7 @@ export function recentSection(vm) {
   const summary = log.length ? dateOf(log[0].date) + " " + plainText(log[0].text) : "No log rows";
   const body = log.length
     ? '<ul class="log-list">' + log.map(function (row) {
-      return '<li class="log-row"><span class="log-date num">' + esc(dateOf(row.date)) + "</span>" +
+      return '<li class="log-row row-grid"><span class="log-date num rg-num">' + esc(dateOf(row.date)) + "</span>" +
         "<span>" + esc(plainText(row.text)) + "</span></li>";
     }).join("") + "</ul>"
     : '<p class="placeholder">No log rows.</p>';

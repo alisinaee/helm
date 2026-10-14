@@ -77,7 +77,7 @@ function cardHtml(project, snap, task, pos, count) {
     '<p class="rc-title">' + esc(task.title) + "</p>" +
     '<p class="rc-meta">' + (task.model ? modelChip(task.model) : "") +
     '<span class="num">' + esc(sizeText(task.tokensK)) + "</span>" + badges + "</p>" +
-    '<p class="rc-move"><button type="button" class="btn btn-small" data-action="plan-move" data-task="' + id +
+    '<p class="rc-move row-grid"><button type="button" class="btn btn-small" data-action="plan-move" data-task="' + id +
     '" data-dir="up" aria-label="Move ' + id + ' up"' + (pos === 0 ? " disabled" : "") + ">Up</button>" +
     '<button type="button" class="btn btn-small" data-action="plan-move" data-task="' + id +
     '" data-dir="down" aria-label="Move ' + id + ' down"' + (pos === count - 1 ? " disabled" : "") + ">Down</button>" +
@@ -119,7 +119,7 @@ function laneHtml(vm, snap, phase) {
     '" aria-controls="lane-' + id + '-body" data-action="toggle-item" data-item="lane:' + id +
     '" data-focus="item-lane:' + id + '"><span class="lane-caret" aria-hidden="true">' + (open ? "▾" : "▸") +
     '</span><span class="lane-id">' + id + '</span><span class="lane-name">' + esc(phase.name) + "</span></button>" +
-    '<div class="lane-act">' + act + phaseCopyHtml(vm.route.id, phase) + "</div>" + stats + "</div>" +
+    '<div class="lane-act row-grid">' + act + phaseCopyHtml(vm.route.id, phase) + "</div>" + stats + "</div>" +
     '<ol class="lane-cards" id="lane-' + id + '-body" data-lane="' + id + '" aria-label="Tasks in ' + id + '"' +
     (open ? "" : " hidden") + ">" + body + "</ol></li>";
 }
@@ -132,9 +132,10 @@ function barHtml(project, snap, phase, max) {
   const spentPct = est && spent != null ? Math.min(100, (spent / est) * 100) : 0;
   const text = (est == null ? "no estimate" : "est " + sizeText(est)) + " · spent " +
     (spent == null ? MISSING : fmtTokens(spent));
-  return '<li class="tl-row"><p class="tl-label"><span class="lane-id">' + esc(pid) +
-    '</span><span class="lane-name">' +
-    esc(phase.name) + '</span><span class="lane-state">' + esc(STATE_WORD[phase.state] || phase.state) + "</span>" +
+  return '<li class="tl-row"><p class="tl-label row-grid"><span class="lane-id">' + esc(pid) +
+    '</span><span class="lane-name rg-t">' +
+    esc(phase.name) + '</span><span class="lane-state rg-num">' +
+    esc(STATE_WORD[phase.state] || phase.state) + "</span>" +
     phaseCopyHtml(project, phase) + "</p>" +
     '<div class="tl-track" aria-hidden="true"><div class="tl-bar" data-pct="' + barPct + '">' +
     '<div class="tl-spent" data-pct="' + spentPct + '"></div></div></div>' +

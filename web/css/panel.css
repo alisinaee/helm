@@ -21,7 +21,7 @@
 .p-word{flex:none;font-size:var(--fs-11);color:var(--text-2);white-space:nowrap}
 .p-meter{display:block}
 .p-meter .meter{height:6px}
-.p-badges{--rg:3.5rem 3.5rem 3.5rem minmax(0,1fr);min-height:var(--h-small);font-size:var(--fs-12);color:var(--text-2);font-variant-numeric:tabular-nums}
+.p-badges{--rg:3.5rem 3.5rem 3.5rem minmax(0,1fr);grid-template-columns:var(--rg);min-height:var(--h-small);font-size:var(--fs-12);color:var(--text-2);font-variant-numeric:tabular-nums}
 .p-badge{display:inline-flex;align-items:center;gap:2px}
 .p-badge[data-kind="blocker"]{color:var(--danger)}
 .p-badge[data-kind="needs"]{color:var(--warning)}
