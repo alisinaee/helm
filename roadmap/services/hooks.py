@@ -317,7 +317,7 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
 
 PRE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit", "Bash", "Agent", "Task", "WebFetch", "WebSearch")
 # while the project is blocked, these roadmap commands are the only ones a Bash call may run
-ALLOWED_WHILE_BLOCKED = (("inbox",), ("status",), ("ask",), ("rules", "show"))
+ALLOWED_WHILE_BLOCKED = (("inbox",), ("status",), ("ask",), ("rules", "show"), ("watch",))
 PRE_TIMEOUT_S = 0.3        # a PreToolUse that takes longer lets the tool call through
 DENY_LOG_S = 60            # a denial is logged at most once a minute per project
 PICKUP_PER_SESSION = 3

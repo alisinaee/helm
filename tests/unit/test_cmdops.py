@@ -9,7 +9,7 @@ import unittest
 from unittest import mock
 
 from roadmap.errors import RoadmapError
-from roadmap.services import budget, commands, tasks
+from roadmap.services import agentguard, budget, commands, tasks
 from roadmap.store import config as config_store
 from tests.api.support import FIXTURE, PROJECT_ID
 
@@ -46,11 +46,18 @@ class OpsCase(unittest.TestCase):
 
 
 class SourceRules(OpsCase):
-    def test_gui_loosening_op_runs_even_inside_an_agent_shell(self):
+    def test_gui_loosening_op_runs_inside_an_agent_shell_when_the_browser_is_proven(self):
         os.environ["CLAUDECODE"] = "1"
-        reply = self.run_op("control.stop", {}, source="gui")
+        with agentguard.browser_proven(True):
+            reply = self.run_op("control.stop", {}, source="gui")
         self.assertTrue(reply["ok"])
-        self.assertEqual(os.environ.get("CLAUDECODE"), "1")  # restored after the gui call
+        self.assertEqual(os.environ.get("CLAUDECODE"), "1")  # the environment is never changed
+
+    def test_gui_loosening_op_is_refused_inside_an_agent_shell_without_a_browser_proof(self):
+        os.environ["CLAUDECODE"] = "1"
+        with self.assertRaises(RoadmapError) as ctx:
+            self.run_op("control.resume", {}, source="gui")
+        self.assertEqual(ctx.exception.code, "agent_refused")
 
     def test_cli_resume_is_refused_inside_an_agent_shell(self):
         with self.assertRaises(RoadmapError) as ctx:

@@ -3,47 +3,26 @@
 Each op checks its arguments, calls the existing service and returns (data, summary, inverse). The services write
 their own activity lines, so these ops are registered with logs=False and run() takes that line.
 
-Source rules (see commands.context): gui calls skip the agent guard, because the guard is about an agent's shell
-and the browser is a person. The guard reads CLAUDECODE from the process environment, so a gui call clears that
-variable for the duration of the service call (under a lock). cli, agent and phone calls keep the guard. Phone
-calls may not run any loosening op (resume, override, raising a limit, rules, approvals), whatever the allowlist.
+Source rules (see commands.context and services/agentguard.py): a gui call skips the agent guard only while the HTTP
+layer has proven the browser (thread-local, no change to the process environment). cli, agent and phone calls keep
+the guard. Phone calls may not run any loosening op (resume, override, raising a limit, rules, approvals), whatever
+the allowlist.
 """
 
-import contextlib
+import math
 import os
-import threading
 
 from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import commands, control, jobs, limits, rules
 from roadmap.services import budget as budget_service
 from roadmap.store import config as config_store
 from roadmap.store import schema
+from roadmap.services import featops  # noqa: F401  (WP52: registers the feature ops)
 
 LOOSENING = frozenset(["control.resume", "control.override", "budget.set", "task.cap", "limit.set", "limit.rm",
                        "phase.approve", "rules.add", "rules.rm", "rules.sync"])
-_ENV_LOCK = threading.Lock()
 SCOPE_WORDS = ("project", "phases", "models", "tasks")
 PERCENT_MAX = 100
-
-
-@contextlib.contextmanager
-def _caller_env():
-    """For gui calls, hide CLAUDECODE so the agent guard does not refuse a person's click in an agent's session."""
-    if commands.current_source() != "gui":
-        yield
-        return
-    with _ENV_LOCK:
-        saved = os.environ.pop(agentguard_env(), None)
-        try:
-            yield
-        finally:
-            if saved is not None:
-                os.environ[agentguard_env()] = saved
-
-
-def agentguard_env():
-    from roadmap.services import agentguard
-    return agentguard.ENV
 
 
 def _refuse_phone(op):
@@ -66,7 +45,7 @@ def _number_or_none(a, key):
     value = a.get(key)
     if value is None:
         return None
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
         raise commands._usage(key + " must be a number or null")
     return value
 
@@ -96,8 +75,7 @@ def _h_control_stop(data_dir, a, now):
     pid = _project_id(data_dir)
     before = control.read_state(pid) or {}
     was_stopped = before.get("stop") is True
-    with _caller_env():
-        state = control.stop(pid, task=a["task"], now=now, source=commands.current_source())
+    state = control.stop(pid, task=a["task"], now=now, source=commands.current_source())
     summary_text = a["task"] or "project"
     inverse = None
     if a["task"] is None and not was_stopped:
@@ -110,8 +88,7 @@ def _h_control_resume(data_dir, a, now):
     pid = _project_id(data_dir)
     before = control.read_state(pid) or {}
     was_stopped = before.get("stop") is True
-    with _caller_env():
-        state = control.resume(pid, now=now, source=commands.current_source())
+    state = control.resume(pid, now=now, source=commands.current_source())
     inverse = {"op": "control.stop", "args": {}} if was_stopped else None
     return {"stopped": state.get("stop") is True}, "resume", inverse
 
@@ -126,8 +103,7 @@ def _check_control_override(a):
 def _h_control_override(data_dir, a, now):
     _refuse_phone("control.override")
     pid = _project_id(data_dir)
-    with _caller_env():
-        control.override(pid, a["hours"], now=now, source=commands.current_source())
+    control.override(pid, a["hours"], now=now, source=commands.current_source())
     return {"hours": a["hours"]}, "override %gh" % a["hours"], None
 
 
@@ -173,15 +149,13 @@ def _h_limit_set(data_dir, a, now):
     pid = _project_id(data_dir)
     if "pct" in a:
         prior = _weekly_prior(data_dir)
-        with _caller_env():
-            control.set_weekly_limit(pid, a["pct"], now=now, source=commands.current_source())
+        control.set_weekly_limit(pid, a["pct"], now=now, source=commands.current_source())
         inverse = {"op": "limit.set", "args": {"pct": prior}} if prior is not None else None
         return {"pct": a["pct"]}, "weekly stop at %g%%" % a["pct"], inverse
     spec = a["row"]
-    with _caller_env():
-        result = control.set_limit_row(pid, spec["scope"], spec["window"], spec["kind"], spec["value"],
-                                       spec["action"], row_id=a["id"], now=now,
-                                       source=commands.current_source())
+    result = control.set_limit_row(pid, spec["scope"], spec["window"], spec["kind"], spec["value"],
+                                   spec["action"], row_id=a["id"], now=now,
+                                   source=commands.current_source())
     row, prior = result["row"], result["prior"]
     inverse = {"op": "limit.set", "args": _row_args(prior)} if prior else {"op": "limit.rm",
                                                                            "args": {"id": row["id"]}}
@@ -198,8 +172,7 @@ def _check_limit_rm(a):
 def _h_limit_rm(data_dir, a, now):
     _refuse_phone("limit.rm")
     pid = _project_id(data_dir)
-    with _caller_env():
-        removed = control.remove_limit_row(pid, a["id"], now=now, source=commands.current_source())
+    removed = control.remove_limit_row(pid, a["id"], now=now, source=commands.current_source())
     return _row_data(removed), limits.label(removed) + " removed", {"op": "limit.set", "args": _row_args(removed)}
 
 
@@ -223,8 +196,7 @@ def _budget_prior(data_dir, scope, key):
 def _set_budget(data_dir, scope, key, value, now, op):
     pid = _project_id(data_dir)
     prior = _budget_prior(data_dir, scope, key)
-    with _caller_env():
-        control.set_budget_limit(pid, scope, key, value, now=now, source=commands.current_source())
+    control.set_budget_limit(pid, scope, key, value, now=now, source=commands.current_source())
     inverse = {"op": "budget.set", "args": {"scope": scope, "key": key, "value": prior}}
     return {"scope": scope, "key": key, "value": value}, op, inverse
 
@@ -250,8 +222,7 @@ def _check_phase_approve(a):
 def _h_phase_approve(data_dir, a, now):
     _refuse_phone("phase.approve")
     pid = _project_id(data_dir)
-    with _caller_env():
-        result = control.approve_phase(pid, a["phase"], now=now, source=commands.current_source())
+    result = control.approve_phase(pid, a["phase"], now=now, source=commands.current_source())
     return result, "approve " + a["phase"], None
 
 
@@ -264,16 +235,16 @@ def _check_rules_add(a):
     if not isinstance(text, str) or not text.strip():
         raise commands._usage("text is required")
     value = a.get("value")
-    if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))):
+    if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))
+                              or not math.isfinite(value)):
         raise commands._usage("value must be a number or null")
     return {"scope": scope, "kind": kind, "text": text, "value": value}
 
 
 def _h_rules_add(data_dir, a, now):
     _refuse_phone("rules.add")
-    with _caller_env():
-        rule = rules.add(data_dir, a["scope"], a["kind"], a["text"], value=a["value"],
-                         source=commands.current_source())
+    rule = rules.add(data_dir, a["scope"], a["kind"], a["text"], value=a["value"],
+                     source=commands.current_source())
     return rule, "rule " + rule["id"] + " added", {"op": "rules.rm", "args": {"id": rule["id"]}}
 
 
@@ -283,8 +254,7 @@ def _check_rules_rm(a):
 
 def _h_rules_rm(data_dir, a, now):
     _refuse_phone("rules.rm")
-    with _caller_env():
-        gone = rules.remove(data_dir, a["id"], source=commands.current_source())
+    gone = rules.remove(data_dir, a["id"], source=commands.current_source())
     inverse = {"op": "rules.add", "args": {"scope": gone["scope"], "kind": gone["kind"], "text": gone["text"],
                                            "value": gone.get("value")}}
     return gone, "rule " + gone["id"] + " removed", inverse
@@ -301,8 +271,7 @@ def _h_rules_sync(data_dir, a, now):
     _refuse_phone("rules.sync")
     pid = _project_id(data_dir)
     project = config_store.get_project(pid)
-    with _caller_env():
-        counts = rules.sync(project, data_dir, dry_run=a["dryRun"], source=commands.current_source(), now=now)
+    counts = rules.sync(project, data_dir, dry_run=a["dryRun"], source=commands.current_source(), now=now)
     return dict(counts) if isinstance(counts, dict) else {"result": str(counts)}, "rules sync", None
 
 

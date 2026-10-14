@@ -6,6 +6,7 @@ Nothing here touches sockets or the filesystem. The server calls these functions
 
 import collections
 import hmac
+import json
 import re
 import secrets
 import threading
@@ -81,6 +82,26 @@ def write_request_allowed(headers, token, port):
     if origin is not None and origin.strip().lower() not in origins(port):
         return False
     return safe_equal(headers.get(CSRF_HEADER), token)
+
+
+def browser_proof(headers, port):
+    """True when the request carries what a browser sends for a same-origin page: an Origin of this server and
+    Sec-Fetch-Site same-origin. Only then is a write taken as a person's click (the agent guard then lets it through).
+    A local process can send these headers too; see docs/SECURITY.md, Known limits."""
+    origin = headers.get("Origin")
+    sec_fetch_site = headers.get("Sec-Fetch-Site")
+    if origin is None or sec_fetch_site is None:
+        return False
+    return origin.strip().lower() in origins(port) and sec_fetch_site.strip().lower() == "same-origin"
+
+
+def _no_constant(name):
+    raise ValueError("JSON constant " + name + " is not allowed")
+
+
+def strict_json_loads(text):
+    """json.loads that refuses NaN, Infinity and -Infinity (Python accepts them; JSON does not)."""
+    return json.loads(text, parse_constant=_no_constant)
 
 
 def cookie_value(token):

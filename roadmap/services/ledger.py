@@ -9,13 +9,16 @@ weekly window. A finished job (services/budget.py) adds its thousands of tokens 
 The file keeps 14 local days and the newest readings, and stays at 4 KB or less. A corrupt file is moved aside to
 ledger.json.corrupt and started again: the ledger is derived data. Python 3 standard library only.
 
-Derivation of the points (exact): a reading w adds w - lastW when w >= lastW, otherwise (the weekly window reset) w.
-lastW is the last reading before the local midnight, so the first reading of a day is compared with yesterday's.
-The first reading ever adds nothing, because nothing is known before it.
+Derivation of the points: a reading w adds w - lastW when w >= lastW. A drop of WEEKLY_RESET_DROP points or more is the
+weekly window reset and adds w. A smaller drop is a jittery reading (two writers, rounding): it adds nothing and keeps
+lastW. lastW is the last reading before the local midnight, so the first reading of a day is compared with yesterday's.
+The first reading ever adds nothing, because nothing is known before it. A weekly percent below 0 or above
+WEEKLY_MAX_PCT is refused; above 100 is a real over-allowance reading and is kept.
 """
 
 import datetime
 import json
+import math
 import os
 
 from roadmap.errors import RoadmapError
@@ -31,6 +34,9 @@ MAX_BYTES = 4096
 PACE_WINDOW_S = 7200           # the pace projection looks at the last two hours
 PACE_MIN_SPAN_S = 600          # and needs at least ten minutes of readings
 RECENT_MAX = 36
+OTHER = "_other"               # tokens of projects folded together to keep the file small (see _fit)
+WEEKLY_MAX_PCT = 1000.0         # a sane bound: above 100 is possible (over the allowance), a value this big is not
+WEEKLY_RESET_DROP = 10.0       # a fall of at least this many points is a weekly reset; less is a jitter
 
 log = get_logger("services.ledger")
 
@@ -51,7 +57,7 @@ def _empty():
 
 
 def _number(value):
-    return isinstance(value, (int, float)) and not isinstance(value, bool) and value == value
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
 
 
 def _valid(doc):
@@ -148,20 +154,41 @@ def _size(doc):
     return len(json.dumps(doc, separators=(",", ":"), sort_keys=True).encode("utf-8")) + 1
 
 
-def _fit(doc):
-    """Trim the readings, then the oldest days, until the file is within MAX_BYTES."""
+def _fit(doc, moment):
+    """Trim the readings, then the oldest days outside the current week, until the file is within MAX_BYTES. The days
+    of the week stay whole, so the week's tracked tokens and points are never lost. If the week still does not fit,
+    the tokens of its oldest day are folded into one "_other" entry (the total stays right, the per-project split
+    does not)."""
+    keep = set(_keys(moment, "week"))
     while _size(doc) > MAX_BYTES:
         if len(doc["recent"]) > 4:
             doc["recent"] = doc["recent"][len(doc["recent"]) // 2:]
-        elif doc["days"]:
-            del doc["days"][min(doc["days"])]
-        else:
+            continue
+        outside = [key for key in doc["days"] if key not in keep]
+        if outside:
+            del doc["days"][min(outside)]
+            continue
+        if not _fold_oldest_tokens(doc):
             break
     return doc
 
 
-def _save(where, doc):
-    atomic.write_text(where, json.dumps(_fit(doc), separators=(",", ":"), sort_keys=True) + "\n")
+def _fold_oldest_tokens(doc):
+    """Merge the per-project tokens of the oldest week day that still has named projects into its "_other" entry.
+    Returns False when there is nothing left to merge."""
+    for key in sorted(doc["days"]):
+        toks = doc["days"][key]["tok"]
+        named = [name for name in toks if name != OTHER]
+        if named:
+            toks[OTHER] = round(sum(toks[name] for name in named) + float(toks.get(OTHER, 0.0)), 1)
+            for name in named:
+                del toks[name]
+            return True
+    return False
+
+
+def _save(where, doc, moment):
+    atomic.write_text(where, json.dumps(_fit(doc, moment), separators=(",", ":"), sort_keys=True) + "\n")
 
 
 def record_reading(weeklyPct, fiveHourPct=None, now=None, file_path=None):
@@ -169,7 +196,7 @@ def record_reading(weeklyPct, fiveHourPct=None, now=None, file_path=None):
 
     fiveHourPct is accepted for the reading's full shape and is not used yet (the 5-hour window is LATER).
     """
-    if not _number(weeklyPct):
+    if not _number(weeklyPct) or not 0 <= float(weeklyPct) <= WEEKLY_MAX_PCT:
         return None
     moment = _local(now)
     today = _day_key(moment.date())
@@ -184,8 +211,10 @@ def record_reading(weeklyPct, fiveHourPct=None, now=None, file_path=None):
             added = 0.0
         elif w >= base:
             added = w - base
-        else:
+        elif base - w >= WEEKLY_RESET_DROP:
             added = w  # the weekly window reset
+        else:
+            added, w = 0.0, base  # a jittery reading: nothing added, lastW stays where it was
         row = days.get(today) or _new_day(moment)
         row["pts"] = round(float(row["pts"]) + added, 2)
         row["lastW"] = w
@@ -193,7 +222,7 @@ def record_reading(weeklyPct, fiveHourPct=None, now=None, file_path=None):
         days[today] = row
         doc["recent"] = doc["recent"] + [[int(moment.timestamp()), w, row["pts"]]]
         _prune(doc, moment)
-        _save(where, doc)
+        _save(where, doc, moment)
     return row["pts"]
 
 
@@ -211,7 +240,7 @@ def record_spend(project, K, now=None, file_path=None):
         row["tok"][project] = round(float(row["tok"].get(project, 0.0)) + amount, 1)
         doc["days"][today] = row
         _prune(doc, moment)
-        _save(where, doc)
+        _save(where, doc, moment)
     return row["tok"][project]
 
 
