@@ -13,7 +13,9 @@ export function activityRowHtml(line, pid, pname, now, showProject) {
   const when = relTime(line.atMs, now);
   const undo = line.undo
     ? '<button type="button" class="btn btn-small" data-action="undo-line" data-project="' + esc(pid) +
-      '" data-activity="' + esc(line.id) + '" data-focus="undo-' + esc(pid) + "-" + esc(line.id) + '">Undo</button>'
+      '" data-activity="' + esc(line.id) + '" aria-label="' +
+      esc("Undo " + (line.sum || line.op || "change")) + '" data-focus="undo-' + esc(pid) + "-" + esc(line.id) +
+      '">Undo</button>'
     : "";
   return '<li class="act-row row-grid"><span class="act-time num" title="' + esc(when.title) + '">' +
     esc(when.text || MISSING) + "</span>" +

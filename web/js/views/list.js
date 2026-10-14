@@ -141,8 +141,9 @@ function bulkHtml(pid, ids) {
     '<label class="wk-field">Set status <select id="wk-bulk-status" data-focus="wk-bulk-status">' + options +
     '</select></label><button type="button" class="btn btn-small" data-wk="bulk" data-op="status" ' +
     'data-focus="wk-bulk-apply">Apply status</button><button type="button" class="btn btn-small" ' +
-    'data-wk="bulk" data-op="start" data-focus="wk-bulk-start">Start</button><button type="button" ' +
-    'class="btn btn-small" data-wk="bulk" data-op="stop" data-focus="wk-bulk-stop">Stop</button>' +
+    'data-wk="bulk" data-op="start" aria-label="Start selected tasks" data-focus="wk-bulk-start">Start</button>' +
+    '<button type="button" class="btn btn-small" data-wk="bulk" data-op="stop" aria-label="Stop selected tasks" ' +
+    'data-focus="wk-bulk-stop">Stop</button>' +
     '<button type="button" class="btn btn-small" data-wk="bulk" data-op="clear" data-focus="wk-bulk-clear">' +
     "Clear selection</button></div>";
 }
@@ -152,8 +153,10 @@ function headHtml(ctx, allChecked, shownIds) {
   const cells = HEADS.map(function (h) {
     const on = sort.key === h[0];
     const aria = on ? (sort.dir === "desc" ? "descending" : "ascending") : "none";
+    const label = "Sort by " + h[1] + (on ? (sort.dir === "desc" ? " descending" : " ascending") : "");
     return '<th scope="col" class="wk-c-' + h[0] + '" aria-sort="' + aria + '"><button type="button" ' +
-      'class="wk-sort" data-wk="sort" data-key="' + h[0] + '" data-focus="wk-sort-' + h[0] + '">' + esc(h[1]) +
+      'class="wk-sort" data-wk="sort" data-key="' + h[0] + '" aria-label="' + esc(label) +
+      '" data-focus="wk-sort-' + h[0] + '">' + esc(h[1]) +
       (on ? (sort.dir === "desc" ? " ▾" : " ▴") : "") + "</button></th>";
   }).join("");
   const all = '<th scope="col" class="wk-c-sel"><input type="checkbox" data-wk="select-all" data-ids="' +

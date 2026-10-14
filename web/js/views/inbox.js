@@ -108,7 +108,8 @@ function optionHtml(pid, q, opt, index) {
   const key = index < KEY_MAX ? '<span class="qc-key" aria-hidden="true">' + (index + 1) + "</span> " : "";
   return '<button type="button" class="btn qc-opt' + (isDefault ? " btn-primary is-default" : "") +
     '" data-action="inbox-answer" data-project="' + esc(pid) + '" data-qid="' + esc(q.id) +
-    '" data-value="' + esc(opt) + '" data-focus="ans-' + esc(pid) + "-" + esc(q.id) + "-" + index + '">' +
+    '" data-value="' + esc(opt) + '" aria-label="' + esc("Choose " + opt + " for " + q.id) +
+    '" data-focus="ans-' + esc(pid) + "-" + esc(q.id) + "-" + index + '">' +
     key + esc(opt) + (isDefault ? ' <span class="qc-def">default</span>' : "") + "</button>";
 }
 
@@ -121,7 +122,8 @@ export function questionCardHtml(entry, now, showProject) {
     return '<article class="qc is-answered" data-pid="' + esc(pid) + '" data-qid="' + esc(q.id) + '">' +
       '<p class="qc-line">' + esc(q.id) + " answered: <strong>" + esc(answered) + "</strong></p></article>";
   }
-  const task = q.task ? ' <a class="qc-task" href="' + esc(itemHash(pid, q.task)) + '">' + esc(q.task) + "</a>" : "";
+  const task = q.task ? ' <a class="qc-task" href="' + esc(itemHash(pid, q.task)) + '" aria-label="' +
+    esc("View task " + q.task) + '">' + esc(q.task) + "</a>" : "";
   const blocks = q.block ? chipHtml("Blocks work", "warning") : "";
   const copy = copyButton("question", q.id, q.id + " " + q.text, { project: pid, sum: refSummary("question", q) });
   const options = q.opts.length
@@ -145,7 +147,8 @@ export function questionCardHtml(entry, now, showProject) {
 
 function needRowHtml(entry, showProject) {
   return '<li class="nz-row"><span class="nz-kind">Needs you</span> <a href="' +
-    esc(itemHash(entry.pid, entry.item.id)) + '">' + esc(entry.item.id) + "</a> " + esc(entry.item.title) +
+    esc(itemHash(entry.pid, entry.item.id)) + '" aria-label="' + esc("View task " + entry.item.id) + '">' +
+    esc(entry.item.id) + "</a> " + esc(entry.item.title) +
     (showProject ? " " + chipHtml(entry.pname, "neutral") : "") + "</li>";
 }
 
@@ -185,7 +188,8 @@ export function inboxPreviewHtml(vm, limit) {
   const c = collect(scopes);
   const rows = [];
   for (const e of c.questions) {
-    rows.push('<li class="nz-row"><span class="nz-kind">Question</span> <a href="' + esc(inboxHash(vm)) + '">' +
+    rows.push('<li class="nz-row"><span class="nz-kind">Question</span> <a href="' + esc(inboxHash(vm)) +
+      '" aria-label="' + esc("View question " + e.q.id) + '">' +
       esc(e.q.id) + "</a> " + esc(e.q.text) + (showProject ? " " + chipHtml(e.pname, "neutral") : "") + "</li>");
   }
   for (const e of c.needs) rows.push(needRowHtml(e, showProject));
