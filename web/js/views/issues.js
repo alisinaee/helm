@@ -6,6 +6,7 @@
 import { run } from "../cmd.js";
 import { chipHtml, emptyHtml, esc } from "../dom.js";
 import { fmtCount, MISSING } from "../format.js";
+import { copyButton, refSummary } from "../ref.js";
 import { itemHash, pageState } from "./inbox.js";
 
 const TITLE_MAX = 120;
@@ -76,6 +77,8 @@ function linksHtml(vm, issue) {
 function rowHtml(vm, issue) {
   const id = esc(issue.id);
   const detail = "#/p/" + encodeURIComponent(vm.route.id) + "/issues/i/" + encodeURIComponent(issue.id);
+  const copy = copyButton("issue", issue.id, issue.id + " " + issue.title,
+    { project: vm.route.id, sum: refSummary("issue", issue) });
   return '<li class="iss is-' + esc(issue.kind || "issue") + '" data-issue="' + id + '">' +
     '<p class="iss-top row-grid">' + chipHtml(issue.kind || "issue", KIND_TONE[issue.kind] || "neutral") +
     chipHtml("sev " + (issue.sev == null ? MISSING : issue.sev), "neutral") +
@@ -83,7 +86,7 @@ function rowHtml(vm, issue) {
     '<p class="iss-title"><a href="' + esc(detail) + '">' + id + " " + esc(issue.title) + "</a></p>" +
     linksHtml(vm, issue) +
     '<p class="iss-act"><button type="button" class="btn btn-small" data-action="issue-close" data-issue="' + id +
-    '" aria-label="Close ' + id + '">Close</button></p></li>';
+    '" aria-label="Close ' + id + '">Close</button>' + copy + "</p></li>";
 }
 
 export function sectionView(vm) {
@@ -104,8 +107,10 @@ export function sectionView(vm) {
     }).join("") + "</ul>"
     : emptyHtml(filter === "blockers" ? "No open blockers." : "No open issues.");
   const note = filter === "all" ? '<p class="page-note">Closed issues are not shown here yet.</p>' : "";
+  const openCopy = copyButton("section", "issues.open", "open issues",
+    { project: vm.route.id, sum: refSummary("section", { count: snap.issues.length }) });
   return '<div class="page-head"><p class="page-title">Issues</p><p class="page-note">' +
-    esc(fmtCount(snap.issues.length) + " open · " + fmtCount(blockers) + " blockers") + "</p></div>" +
+    esc(fmtCount(snap.issues.length) + " open · " + fmtCount(blockers) + " blockers") + "</p>" + openCopy + "</div>" +
     formHtml(snap) + filterNav(vm, snap, filter) + list + note;
 }
 

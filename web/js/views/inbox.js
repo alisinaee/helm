@@ -6,6 +6,7 @@
 
 import { bannerHtml, chipHtml, emptyHtml, esc, skeletonHtml } from "../dom.js";
 import { fmtDuration } from "../format.js";
+import { copyButton, refSummary } from "../ref.js";
 import { bindKey } from "../keys.js";
 import { pendingValue, run } from "../cmd.js";
 import { currentRoute, projectHash } from "../router.js";
@@ -122,6 +123,7 @@ export function questionCardHtml(entry, now, showProject) {
   }
   const task = q.task ? ' <a class="qc-task" href="' + esc(itemHash(pid, q.task)) + '">' + esc(q.task) + "</a>" : "";
   const blocks = q.block ? chipHtml("Blocks work", "warning") : "";
+  const copy = copyButton("question", q.id, q.id + " " + q.text, { project: pid, sum: refSummary("question", q) });
   const options = q.opts.length
     ? '<div class="qc-opts row-grid" role="group" aria-label="Answers for ' + esc(q.id) + '">' +
       q.opts.map(function (opt, i) {
@@ -137,7 +139,7 @@ export function questionCardHtml(entry, now, showProject) {
   }
   return '<article class="qc' + (q.block ? " is-blocking" : "") + '" data-pid="' + esc(pid) + '" data-qid="' +
     esc(q.id) + '"><header class="qc-head"><span class="qc-id">' + esc(q.id) + "</span>" +
-    (showProject ? " " + chipHtml(entry.pname, "neutral") : "") + task + " " + blocks + "</header>" +
+    (showProject ? " " + chipHtml(entry.pname, "neutral") : "") + task + " " + blocks + copy + "</header>" +
     '<h3 class="qc-text">' + esc(q.text) + "</h3>" + options + timer + "</article>";
 }
 
@@ -260,5 +262,8 @@ export function sectionView(vm) {
   const state = pageState(vm);
   if (state) return state;
   watchCountdowns();
-  return '<div class="page-head"><h2 class="page-title">Inbox</h2></div>' + inboxBody(vm);
+  const open = collect(scopeSnapshots(vm)).questions.length;
+  const sectionCopy = copyButton("section", "inbox.questions", "open questions",
+    { project: vm.route.id, sum: refSummary("section", { count: open }) });
+  return '<div class="page-head"><h2 class="page-title">Inbox</h2>' + sectionCopy + "</div>" + inboxBody(vm);
 }

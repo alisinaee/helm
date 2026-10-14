@@ -5,6 +5,7 @@
 import { getJson } from "../api.js";
 import { chipHtml, emptyHtml, esc } from "../dom.js";
 import { MISSING, fmtCount } from "../format.js";
+import { copyButton, refSummary } from "../ref.js";
 import { pageState } from "./inbox.js";
 import { projectHash } from "../router.js";
 
@@ -78,7 +79,9 @@ function noteRowHtml(note, pid) {
     '" data-focus="note-' + esc(pid) + "-" + esc(note.name) + '">' +
     '<span class="act-sum">' + esc(note.title || note.name) + "</span> " +
     '<span class="ov-sum">' + esc(note.name + " · " + (note.size == null ? MISSING : fmtCount(note.size)) +
-      " bytes · " + lines) + "</span></button></li>";
+      " bytes · " + lines) + "</span></button>" +
+    copyButton("research", note.name, note.title || note.name, { project: pid, sum: refSummary("research", note) }) +
+    "</li>";
 }
 
 function readerHtml(pid) {
@@ -95,6 +98,14 @@ function readerHtml(pid) {
   }
   return '<section class="ov-card" aria-label="Note text"><h3 class="ov-h">' + esc(selected.name) + "</h3>" + body +
     "</section>";
+}
+
+// The section copy button for the note list, once the list has loaded (its count is then known).
+function notesCopy(pid) {
+  const entry = lists.get(pid);
+  if (!entry || entry.state !== "ready") return "";
+  return copyButton("section", "research.list", "research notes",
+    { project: pid, sum: refSummary("section", { count: entry.notes.length }) });
 }
 
 function notesHtml(pid) {
@@ -126,7 +137,8 @@ export function sectionView(vm) {
   const snap = vm.project.snapshot;
   return '<div class="page-head"><h2 class="page-title">Research</h2><p class="page-note">Read only. Notes are ' +
     "written with roadmap research, at most 6 per project.</p></div>" + checklistHtml(onboardingSteps(snap)) +
-    '<section class="ov-card" aria-label="Research notes list"><h3 class="ov-h">Notes</h3>' + notesHtml(pid) +
+    '<section class="ov-card" aria-label="Research notes list"><h3 class="ov-h">Notes</h3>' + notesCopy(pid) +
+    notesHtml(pid) +
     '<p><button type="button" class="btn btn-small" data-action="note-refresh" data-project="' + esc(pid) +
     '" data-focus="note-refresh">Reload notes</button></p></section>' + readerHtml(pid);
 }
