@@ -29,12 +29,23 @@ def compose(base, extras):
     you = [line for line in rest if line.startswith("you:")]
     nxt = [line for line in rest if line.startswith("next:")]
     run = [line for line in rest if line.startswith("run:")]
+    if extras.get("running"):
+        run = [extras["running"]]
     gate = [extras["gate"]] if extras.get("gate") else []
     meters = [extras["limits"]] if extras.get("limits") else []
     plan = [extras["features"]] if extras.get("features") else []
     ordered = (head + run + gate + [extras["ask"], extras["queue"], extras["issues"]] + plan + [extras["budget"]]
                + meters + you + nxt)
     return _fit(ordered)
+
+
+def running_line(jobs_list):
+    """One line for more than two running jobs: 'running 4: j1,j2,j3,j4'. None for two or fewer (own lines stay)."""
+    ids = [str(job.get("id")) for job in jobs_list
+           if isinstance(job, dict) and job.get("status") == "running"]
+    if len(ids) <= 2:
+        return None
+    return "running %d: %s" % (len(ids), ",".join(ids))
 
 
 def _fit(lines):
@@ -72,6 +83,7 @@ def _run(args):
     extras["limits"] = limits.status_line(limits.evaluate_rows(project))
     extras["features"] = features.status_line(data_dir)
     extras["gate"] = gate_line(data_dir)
+    extras["running"] = running_line(jobs.list_jobs(data_dir))
     lines = compose(base, extras)
     if not getattr(args, "json", False):
         for line in lines:
