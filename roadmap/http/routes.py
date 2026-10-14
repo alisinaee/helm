@@ -94,7 +94,28 @@ def snapshot_etag(snap):
     return '"%s"' % hashlib.sha256(raw).hexdigest()[:32]
 
 
-def _snapshot_reply(req, snap, headers=()):
+def _phone_public(snap):
+    """The snapshot as the phone listener may show it: project.path dropped, and any absolute home path becomes ~."""
+    home = os.path.expanduser("~").rstrip("/")
+
+    def scrub(value):
+        if isinstance(value, dict):
+            return {k: scrub(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [scrub(v) for v in value]
+        if isinstance(value, str) and home and (value == home or value.startswith(home + "/")):
+            return "~" + value[len(home):]
+        return value
+
+    out = scrub(snap)
+    if isinstance(out.get("project"), dict):
+        out["project"].pop("path", None)
+    return out
+
+
+def _snapshot_reply(req, snap, headers=(), app=None):
+    if app is not None and app.cmd_source == "phone":
+        snap = _phone_public(snap)
     etag = snapshot_etag(snap)
     extra = [("ETag", etag)] + list(headers)
     if etag_matches(req.headers.get("If-None-Match"), etag):
@@ -159,7 +180,7 @@ def projects(app, req, match):
 
 
 def project_snapshot(app, req, match):
-    return _snapshot_reply(req, loader.load_snapshot(match.group("pid")))
+    return _snapshot_reply(req, loader.load_snapshot(match.group("pid")), app=app)
 
 
 def usage_get(app, req, match):
@@ -258,7 +279,7 @@ def legacy_data_json(app, req, match):
     first = entries[0]["id"]
     headers = [("Deprecation", "true"),
                ("Link", '</api/v1/projects/%s/snapshot>; rel="successor-version"' % first)]
-    return _snapshot_reply(req, loader.load_snapshot(first), headers)
+    return _snapshot_reply(req, loader.load_snapshot(first), headers, app=app)
 
 
 # ---------------------------------------------------------------- research notes (read only)
