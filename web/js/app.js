@@ -21,6 +21,7 @@ import { settingsAction } from "./views/settings.js";
 import { initPanel, panelView } from "./views/panel.js";
 import { topbarView } from "./views/topbar.js";
 import { dismissToast, setToastHold, setToastListener, toastsHtml, undoToast } from "./views/toast.js";
+import { copyRef } from "./ref.js";
 
 const FAST_MS = 2000;
 const SLOW_MS = 30000;
@@ -403,6 +404,11 @@ function onClick(event) {
     undoToast(el.getAttribute("data-toast"));
   } else if (action === "toast-close") {
     dismissToast(el.getAttribute("data-toast"));
+  } else if (action === "copy-ref") {
+    // Copy reference (ref.js refButtonHtml). The button is a SIBLING of any toggle button, never nested in one:
+    // closest() returns the copy button itself, so a row or section toggle does not fire too.
+    // No render: copying changes nothing on the page.
+    copyRef(el);
   } else if (action === "inbox-answer" || action === "undo-line" || action === "override") {
     pageAction(action, el);
   } else if (limitAction(action, el) || ruleAction(action, el) || settingsAction(action, el)) {
