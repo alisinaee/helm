@@ -215,9 +215,10 @@ def _row(f, ordered, tasks_by_id, spent, running, blocked_ids):
     }
 
 
-# The snapshot row (WP53b): the derived row without the task id list, and acc only while the feature is not done.
-SNAPSHOT_ROW_KEYS = ("id", "title", "prio", "parent", "phase", "hold", "accepted", "done", "total", "estK", "spentK",
-                     "blocked", "running", "state")
+# The snapshot row (WP53b, R7.10): the derived row without the task id list. hold is state "hold" and running is not
+# shown, so neither is carried. acc is carried only while the feature is not done.
+SNAPSHOT_ROW_KEYS = ("id", "title", "prio", "parent", "phase", "accepted", "done", "total", "estK", "spentK",
+                     "blocked", "state")
 
 
 def snapshot_rows(rows):

@@ -157,7 +157,8 @@ function menuHtml(feature, open) {
   return '<div class="pl-menu" id="pl-menu-' + fid + '" role="group" aria-label="Actions for ' + fid + '"' +
     (open ? "" : " hidden") + ">" +
     '<button type="button" class="btn btn-small" data-pl="hold" data-id="' + fid + '" data-hold="' +
-    (feature.hold ? "0" : "1") + '" data-focus="pl-hold:' + fid + '">' + (feature.hold ? "Resume" : "Hold") +
+    (feature.state === "hold" ? "0" : "1") + '" data-focus="pl-hold:' + fid + '">' +
+    (feature.state === "hold" ? "Resume" : "Hold") +
     "</button>" +
     '<button type="button" class="btn btn-small" data-pl="rm" data-id="' + fid + '" data-focus="pl-rm:' + fid +
     '"' + rmDisabled + ' aria-label="Remove ' + fid + rmHelp + '">Remove</button></div>';
