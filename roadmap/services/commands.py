@@ -93,6 +93,10 @@ def _h_task_status(data_dir, a, now):
     the budget once per task (budget.record_task_tokens); that spend is not reversed by undo. The task's at map gets
     the time of this change under its new status (newest only; the other statuses keep their old times)."""
     before = tasks.get(data_dir, a["id"])
+    if a["status"] == "partial":  # a start (the CLI "task start" also writes partial): same WP62b rule as the CLI
+        refusal = tasks.start_refusal(data_dir, [a["id"]])
+        if refusal is not None:
+            raise refusal
     prior = before.get("status") or "todo"
     parts = [a["id"], "status=" + a["status"]]
     if a["tokensK"] is not None:

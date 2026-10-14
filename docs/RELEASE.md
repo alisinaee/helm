@@ -51,8 +51,9 @@ Rollback: `roadmap hooks uninstall split-net`, then copy the backed-up file back
 
 ## 3. Free port 8765 from the old dashboard
 
-The old split-net server and roadmap's default port are both 8765. While the old server holds it, `roadmap doctor`
-reports a `fail` for the port, and the page cannot bind.
+The old split-net server holds port 8765. roadmap's default port is 8780, so this step only matters if the old server
+blocks 8765 and you choose to move roadmap onto 8765. While the old server holds it, `roadmap doctor` reports a `fail`
+for the port, and the page cannot bind.
 
 1. Find the process: `lsof -nP -iTCP:8765 -sTCP:LISTEN`. Write down its command line and pid.
 2. If a launchd job or another tool starts it, stop it there first, so it does not come back.
