@@ -16,6 +16,7 @@ import datetime
 import re
 import shlex
 import threading
+import unicodedata
 
 from roadmap.core import parsers, planfmt
 from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
@@ -119,6 +120,32 @@ def _h_task_status(data_dir, a, now):
         inverse = {"op": "task.status", "args": inverse_args}
     return ({"id": a["id"], "status": a["status"], "changed": prior != a["status"], "was": prior,
              "budgetFed": fed}, summary, inverse)
+
+
+def _check_task_rename(a):
+    title = _opt_text(a, "title").strip()
+    if not title:
+        raise _usage("title is empty (allowed: text)",
+                     "roadmap task list --phase " + _text(a.get("id")).split(".")[0])
+    if len(title) > parsers.TITLE_MAX:
+        raise _usage("title is " + str(len(title)) + " characters (allowed: up to " + str(parsers.TITLE_MAX) + ")")
+    if any(unicodedata.category(ch) == "Cc" for ch in title):
+        raise _usage("title has a control character (tabs and line breaks are not allowed)")
+    return {"id": _id(a, "id", "task id"), "title": title}
+
+
+def _h_task_rename(data_dir, a, now):
+    """Set the title of one task. Undo restores the prior title. Status, tokens and everything else stay as they are;
+    no agent guard applies (same as task.status)."""
+    before = tasks.get(data_dir, a["id"])
+    prior = before.get("title") or ""
+    if prior != a["title"]:
+        tasks.apply(data_dir, [{"kind": "set", "line": 1, "id": a["id"], "fields": {"title": a["title"]}}])
+    summary = a["id"] + " title=" + shlex.quote(a["title"])
+    inverse = None
+    if prior != a["title"]:
+        inverse = {"op": "task.rename", "args": {"id": a["id"], "title": prior}}
+    return ({"id": a["id"], "title": a["title"], "changed": prior != a["title"], "was": prior}, summary, inverse)
 
 
 def _task_model(task):
@@ -526,6 +553,7 @@ def _load_ops():
 
 OPS = {
     "task.status": _Op(_check_task_status, _h_task_status),
+    "task.rename": _Op(_check_task_rename, _h_task_rename),
     "task.start": _Op(_check_task_id, _h_task_start),
     "task.stop": _Op(_check_task_id, _h_task_stop),
     "subtask.toggle": _Op(_check_subtask_toggle, _h_subtask_toggle),
