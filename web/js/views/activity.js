@@ -41,12 +41,12 @@ export function sectionView(vm) {
   const showProject = vm.route.name !== "project";
   const now = Date.now();
   const lines = mergedLines(scopes, showProject ? ALL_MAX : 0);
-  const note = showProject ? "Newest first. Each project keeps its last 15 lines." : "Newest first, 50 at most.";
+  const note = showProject ? "Recent activity across projects." : "Recent project activity.";
   const body = lines.length
     ? '<ol class="act-list">' + lines.map(function (entry) {
       return activityRowHtml(entry.line, entry.pid, entry.pname, now, showProject);
     }).join("") + "</ol>"
     : emptyHtml("No activity yet.");
   return '<div class="page-head"><h2 class="page-title">Activity</h2><p class="page-note">' + esc(note) + "</p></div>" +
-    '<section class="ov-card" aria-label="Activity lines">' + body + "</section>";
+    '<section class="ov-card" aria-label="Activity log">' + body + "</section>";
 }

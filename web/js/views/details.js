@@ -87,7 +87,7 @@ function disabledAttr(vm) {
 
 function projectCard(vm) {
   if (vm.route.name !== "project" || !vm.project) {
-    return emptyHtml("Choose a project to see its details.",
+    return emptyHtml("Select a project to view details.",
       "<span>Open one from Projects, or go to <a href=\"#/all/overview\">All projects</a>.</span>");
   }
   if (vm.project.notFound) {
@@ -95,7 +95,7 @@ function projectCard(vm) {
   }
   const snap = vm.project.snapshot;
   if (!snap) {
-    return emptyHtml("Loading this project.", "<span>The card shows when its snapshot arrives.</span>");
+    return emptyHtml("Loading this project.", "<span>Details load once snapshot syncs.</span>");
   }
   const facts = rowFacts({ id: snap.id, name: snap.title, progress: snap.progress, needUser: snap.needUser,
     running: snap.runningCount, stale: false }, snap);
@@ -105,11 +105,11 @@ function projectCard(vm) {
   const rows = [
     ["Progress", pct + "% done (" + (snap.done == null ? "?" : snap.done) + " of " +
       (snap.total == null ? "?" : snap.total) + ")"],
-    ["Tasks left", snap.tasksLeft == null ? "?" : String(snap.tasksLeft)],
-    ["Tokens left", fmtTokens(snap.tokensLeftK)],
+    ["Remaining tasks", snap.tasksLeft == null ? "?" : String(snap.tasksLeft)],
+    ["Remaining tokens", fmtTokens(snap.tokensLeftK)],
     ["Needs you", String(snap.needUser == null ? 0 : snap.needUser)],
     ["Open questions", String(snap.questions.length)],
-    ["Open blockers", String(facts.blockers || 0)],
+    ["Blocking issues", String(facts.blockers || 0)],
     ["Running jobs", String(snap.runningCount == null ? 0 : snap.runningCount)],
     ["Control", control],
   ];
@@ -136,7 +136,7 @@ function statusHtml(task, state, vm) {
 function queuedWord(session) {
   if (session === "watching") return "Queued, a session is picking it up";
   if (session === "open") return "Queued, picked up at the session's next stop";
-  if (session === "none") return "Queued, waiting for a session";
+  if (session === "none") return "Queued: waiting for terminal session";
   return "Queued to start";
 }
 
@@ -154,7 +154,7 @@ function launchCommand(path) {
 export function copyLaunch(el) {
   const cmd = el.getAttribute("data-cmd") || "";
   const report = function (ok) {
-    el.textContent = ok ? "Copied" : "Copy failed, select the command above";
+    el.textContent = ok ? "Copied" : "Copy failed. Please copy manually.";
   };
   if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
     report(false);
@@ -204,7 +204,7 @@ function capHtml(task, snap, vm, now) {
   const off = disabledAttr(vm);
   const field = "cap-" + task.id;
   return sectionHtml("Cap", '<form class="d-form" data-side-form="cap" data-id="' + esc(task.id) + '">' +
-    '<label for="' + esc(field) + '">Cap in thousands of tokens <input id="' + esc(field) +
+    '<label for="' + esc(field) + '">Token cap (thousands) <input id="' + esc(field) +
     '" name="value" type="number" min="0" step="any" inputmode="decimal" value="' +
     esc(cap == null ? "" : cap) + '" data-focus="cap-input"' + off + "></label>" +
     '<button type="submit" class="btn" data-focus="cap-save"' + off + ">Save cap</button>" +
@@ -276,7 +276,7 @@ function rulesHtml(task, snap) {
     return r.scope === "all" || r.scope === "task:" + task.id || r.scope === "phase:" + task.phase;
   });
   if (!mine.length) return "";
-  return sectionHtml("Rules that apply", listHtml(mine.map(function (r) {
+  return sectionHtml("Applicable rules",listHtml(mine.map(function (r) {
     return "<li>" + esc(r.text) + "</li>";
   }), ""));
 }
@@ -313,7 +313,7 @@ function featureHtml(vm, snap, task) {
     return '<option value="' + esc(row.id) + '">' + esc(row.id + " " + row.title) + "</option>";
   }).join("");
   const field = "feat-link-" + task.id;
-  return sectionHtml("Feature", '<p class="d-meta">Not linked to a feature.</p>' +
+  return sectionHtml("Feature", '<p class="d-meta">No feature linked.</p>' +
     '<label for="' + esc(field) + '">Link to feature <select id="' + esc(field) +
     '" data-side="feat-link" data-id="' + esc(task.id) + '" data-focus="feat-link"' + off + ">" +
     '<option value="">Choose a feature</option>' + options + "</select></label>");
@@ -337,7 +337,7 @@ function taskView(vm, snap, task, now) {
     capHtml(task, snap, vm, now) +
     subsHtml(task, snap, vm, now) + commentsHtml(task, snap, vm, now) + linkedHtml(task, snap) +
     rulesHtml(task, snap) +
-    (task.dod ? sectionHtml("Definition of done", '<p>' + esc(task.dod) + "</p>") : "");
+    (task.dod ? sectionHtml("Completion criteria",'<p>' + esc(task.dod) + "</p>") : "");
 }
 
 function planLine(task) {
@@ -384,7 +384,7 @@ function questionView(vm, question) {
 }
 
 function notOpenView() {
-  return bannerHtml("warning", "This item is not open in this project.",
+  return bannerHtml("warning", "Item not found or closed.",
     "It may have been closed or answered. Go back to Projects.");
 }
 

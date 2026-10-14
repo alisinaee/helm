@@ -55,14 +55,13 @@ function formHtml(snap) {
     '<p class="iss-fld"><label class="iss-label" for="iss-title">Title</label>' +
     '<input class="iss-input" id="iss-title" name="title" type="text" maxlength="' + TITLE_MAX +
     '" autocomplete="off" aria-describedby="iss-title-help iss-title-err"></p>' +
-    '<p class="iss-help" id="iss-title-help">Say what is wrong in one line.</p>' +
+    '<p class="iss-help" id="iss-title-help">Brief one-line summary.</p>' +
     '<p class="iss-err" id="iss-title-err" role="alert"></p>' +
     '<p class="iss-fld"><label class="iss-label" for="iss-task">Task (optional)</label>' +
     '<select class="iss-input" id="iss-task" name="task"><option value="">No task</option>' +
     taskOptions(snap) + "</select></p>" +
     '<p class="iss-fld iss-check"><label><input name="blocker" type="checkbox"> ' +
-    "<span>This is a blocker: its task shows Blocked until the issue is closed. " +
-    "A blocker with no task blocks nothing.</span></label></p>" +
+    "<span>Blocks linked task until closed.</span></label></p>" +
     '<p><button type="submit" class="btn btn-primary" data-focus="issue-submit">Add issue</button></p></form>';
 }
 
