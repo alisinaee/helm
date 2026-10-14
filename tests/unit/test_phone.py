@@ -106,7 +106,7 @@ class OpenCommand(TunnelCase):
         self.assertEqual(result, {"url": "http://127.0.0.1:8765/", "opened": True})
 
     def test_open_uses_the_default_port_and_the_configured_one(self):
-        self.assertEqual(open_cmd.dashboard_url(), "http://127.0.0.1:8765/")
+        self.assertEqual(open_cmd.dashboard_url(), "http://127.0.0.1:8780/")
         cfg = config_store.load()
         cfg["port"] = 9001
         schema.write_data("config", paths.config_file(), cfg)
@@ -129,4 +129,4 @@ class OpenCommand(TunnelCase):
                 open_cmd.handle(Args())
         finally:
             open_cmd.RUNNER = original
-        self.assertEqual(out.getvalue(), "opened http://127.0.0.1:8765/\n")
+        self.assertEqual(out.getvalue(), "opened http://127.0.0.1:8780/\n")

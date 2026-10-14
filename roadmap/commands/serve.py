@@ -15,13 +15,15 @@ from roadmap.services import launchd, loader, usage
 from roadmap.store import config as config_store
 from roadmap.store import paths
 
-DEFAULT_PORT = 8765
+DEFAULT_PORT = 8780
+# The port the legacy split-net dashboard uses. A config still on it gets a `next: roadmap doctor` hint on conflict.
+LEGACY_PORT = 8765
 
 
 def register(sub, common):
     """Add serve and open to the root subparsers."""
     serve = sub.add_parser("serve", parents=[common], help="run the dashboard server on 127.0.0.1")
-    serve.add_argument("--port", type=int, default=None, help="listener port (default: config port, 8765)")
+    serve.add_argument("--port", type=int, default=None, help="listener port (default: config port, 8780)")
     serve.add_argument("--no-usage-loop", action="store_true", help="do not refresh plan usage in the background")
     serve.add_argument("--no-phone", action="store_true", help="do not start the read-only phone listener")
     serve.set_defaults(handler=run)
@@ -43,7 +45,8 @@ def run(args):
             raise
         owner = loader.port_owner(port)
         who = "another process" if owner is None else "%s, pid %s" % (owner["name"], owner["pid"])
-        raise RoadmapError("conflict", "port %d is busy (used by %s)" % (port, who), EXIT_CONFLICT)
+        next_step = "roadmap doctor" if port == LEGACY_PORT and cfg.get("port") == LEGACY_PORT else None
+        raise RoadmapError("conflict", "port %d is busy (used by %s)" % (port, who), EXIT_CONFLICT, next=next_step)
 
     _log_to_stderr()
     rlog.setup_file_logging(paths.logs_dir())
