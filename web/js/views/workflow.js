@@ -1,6 +1,6 @@
 // Workflow (WP48, W2): the job spans and task edges of each project's snapshot (the workflow key, WP47), drawn as
-// swimlanes (Timeline), phases as columns of task cards (Map) or one row per job (Table). layout() builds the model
-// and the three renderers return markup. Bars and cards carry data-focus (patch() restores focus with it) and
+// swimlanes (Timeline), a left-to-right flow of phase frames (Map) or one row per job (Table). layout() builds
+// the model and the renderers return markup. Bars and cards carry data-focus (patch() restores focus with it) and
 // data-lane / data-x, which the arrow keys use. Writes go through cmd.js. There are no inline handlers or styles:
 // geometry is SVG attributes and colour comes from classes on the tokens.
 //
@@ -25,6 +25,7 @@ const SCOPE_MAX = 8;
 const FRESH_MS = 5000;
 const QUEUE_W = 112;
 const QUEUE_GAP = 8;
+const OPEN_K = 0.75;
 const TICK_MAX = 200;
 const WORD = { running: "running", done: "done", failed: "failed" };
 const CHIP = { doing: "neutral", done: "success", blocked: "danger", queued: "neutral" };
@@ -386,12 +387,15 @@ function hashFor(route, view, range, item) {
     filters: filters });
 }
 
+// The view of the route. The Map is the default for a project at 768 px and wider; the phone default is the Table.
 function viewOf(route) {
   if (VIEWS.some(function (v) {
     return v[0] === route.view;
   })) return route.view;
-  return phone() ? "table" : "timeline";
+  if (phone()) return "table";
+  return route.name === "project" ? "map" : "timeline";
 }
+
 
 function rangeOf(route) {
   const f = route.filters && route.filters.f ? String(route.filters.f) : "";
@@ -519,19 +523,25 @@ export function timelineSvg(model) {
     "</div></div></div>";
 }
 
-// The Map (WP72): the diagram of graph/model.js, laid out by graph/layout.js and drawn by graph/render.js. Those three
-// modules load on the first visit to ?v=map, so no other view requests them. mapSvg() returns the controls and an empty
-// host; mountMaps() puts the SVG in the host after the patch. Map filters live in the f param as st:, ag:, ph:, ord:
-// and all: tokens (the router keeps only f and g), with "|" between the values of one token.
+// The Map (WP72). R7.14 E: the left-to-right flow of graph/model.js, laid out by flowLayout() in graph/layout.js
+// and drawn by graph/render.js. The minimap (graph/minimap.js) sits in the stage corner above 640 px; at 640 px and
+// below, the phase chips are the overview instead. The four graph modules load on the first visit to the Map, so no
+// other view requests them. mapSvg() returns the controls and an empty host; mountMaps() puts the SVG in the host
+// after the patch.
+// Map state rides in the f param as st:, ag:, ph:, all: and x: tokens (the router keeps only f and g), with "|" between
+// the values of one token. x: lists the phases the reader opened (+id) or closed (-id); a done phase starts closed.
 const MAP_STATUS = ["doing", "blocked", "todo", "done", "defer"];
 const MAP_AGENT = ["opus", "sonnet", "haiku", "agy"];
-const MAP_KEYS = /^(st|ag|ph|ord|all):/;
+const NARROW_Q = "(max-width: 640px)";
 const mapStates = new Map();
 let graphKit = null;
 let graphFailed = false;
 let loadingGraph = false;
 let pendingMap = null;
 let activeMap = null;
+let lastView = null;
+let mapKinds = null;
+let mapHasNow = false;
 
 function mapStateFor(pid) {
   let st = mapStates.get(pid);
@@ -546,24 +556,28 @@ function mapStateFor(pid) {
 function loadGraph() {
   if (graphKit || graphFailed || loadingGraph) return;
   loadingGraph = true;
-  Promise.all([import("../graph/model.js"), import("../graph/layout.js"), import("../graph/render.js")]).then(
-    function (mods) {
-      graphKit = { model: mods[0], layout: mods[1], render: mods[2] };
-      loadingGraph = false;
-      if (typeof window !== "undefined") window.dispatchEvent(new Event("hashchange"));
-    },
-    function () {
-      graphFailed = true;
-      loadingGraph = false;
-      if (typeof window !== "undefined") window.dispatchEvent(new Event("hashchange"));
-    });
+  Promise.all([import("../graph/model.js"), import("../graph/layout.js"), import("../graph/render.js"),
+    import("../graph/minimap.js")]).then(function (mods) {
+    graphKit = { model: mods[0], layout: mods[1], render: mods[2], minimap: mods[3] };
+    loadingGraph = false;
+    if (typeof window !== "undefined") window.dispatchEvent(new Event("hashchange"));
+  }, function () {
+    graphFailed = true;
+    loadingGraph = false;
+    if (typeof window !== "undefined") window.dispatchEvent(new Event("hashchange"));
+  });
+}
+
+function narrow() {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" &&
+    window.matchMedia(NARROW_Q).matches;
 }
 
 function mapOpts(route) {
   const out = {};
   const f = route.filters && route.filters.f ? String(route.filters.f) : "";
   f.split(",").forEach(function (tok) {
-    const m = /^(st|ag|ph|ord|all):(.*)$/.exec(tok);
+    const m = /^(st|ag|ph|all|x):(.*)$/.exec(tok);
     if (m) out[m[1]] = m[2];
   });
   return out;
@@ -573,6 +587,22 @@ function mapList(value) {
   return value ? String(value).split("|").filter(function (s) {
     return s !== "";
   }) : [];
+}
+
+// The phases the reader opened (+id) or closed (-id) through x:.
+function foldsOf(value) {
+  const out = { open: [], shut: [] };
+  mapList(value).forEach(function (tok) {
+    if (tok.charAt(0) === "+") out.open.push(tok.slice(1));
+    else if (tok.charAt(0) === "-") out.shut.push(tok.slice(1));
+  });
+  return out;
+}
+
+function countOf(graph) {
+  return graph.nodes.filter(function (n) {
+    return n.type !== "phase";
+  }).length;
 }
 
 // The hash of the Map with some map options changed (a value of "" removes the option).
@@ -604,9 +634,41 @@ function chipsHtml(route, range, label, key, values, selected) {
     esc(label) + "</span>" + chips + "</div>";
 }
 
-function ctlHtml(label, op, text) {
-  return '<button type="button" class="btn btn-small" data-wf-map-op="' + op + '" aria-label="' + esc(label) + '">' +
-    esc(text) + "</button>";
+function ctlHtml(label, op, text, pressed) {
+  const press = pressed === undefined ? "" : ' aria-pressed="' + (pressed ? "true" : "false") + '"';
+  return '<button type="button" class="btn btn-small" data-wf-map-op="' + op + '" aria-label="' + esc(label) +
+    '"' + press + ">" + esc(text) + "</button>";
+}
+
+function frameOf(id) {
+  const frames = activeMap && activeMap.flow ? activeMap.flow.frames || [] : [];
+  return frames.find(function (f) {
+    return f.id === id;
+  }) || null;
+}
+
+// Opens or closes one phase frame. The choice goes to x: in the hash, so a reload keeps it.
+function toggleFrame(id) {
+  const f = frameOf(id);
+  if (!f) return;
+  const route = currentRoute();
+  const keep = mapList(mapOpts(route).x).filter(function (tok) {
+    return tok.slice(1) !== f.lane;
+  });
+  keep.push((f.collapsed ? "+" : "-") + f.lane);
+  window.location.hash = mapHash(route, rangeOf(route), { x: keep.join("|") });
+}
+
+function toggleAll() {
+  const route = currentRoute();
+  const on = mapOpts(route).all === "1";
+  window.location.hash = mapHash(route, rangeOf(route), { all: on ? "" : "1" });
+}
+
+// The phase chips of the narrow layout centre the view on their frame. The view keeps its zoom.
+function centerFrame(id) {
+  const f = frameOf(id);
+  if (f && activeMap) activeMap.api.centerOn({ x: f.x + f.w / 2, y: f.y + f.h / 2 }, false);
 }
 
 function mapOp(op) {
@@ -615,7 +677,9 @@ function mapOp(op) {
   if (op === "out") api.zoom(0.8);
   else if (op === "in") api.zoom(1.25);
   else if (op === "fit") api.fit();
-  else if (op === "100") api.actual();
+  else if (op === "now") api.centerOn("now", false);
+  else if (op === "start") api.centerOn("start", false);
+  else if (op === "all") toggleAll();
   else if (op === "focus-off") setFocus(activeMap.pid, null);
 }
 
@@ -636,68 +700,96 @@ function mapSvg(kit, ctx) {
   const route = ctx.route;
   const range = ctx.range;
   const opts = mapOpts(route);
-  const all = kit.model.buildGraph(ctx.raw, {});
-  const filters = { status: mapList(opts.st), agent: mapList(opts.ag), phase: mapList(opts.ph),
-    expand: opts.all === "1" };
-  const graph = kit.model.buildGraph(ctx.raw, filters);
-  const countOf = function (g) {
-    return g.nodes.filter(function (n) {
-      return n.type !== "phase";
-    }).length;
-  };
-  const total = countOf(all);
+  const showAll = opts.all === "1";
+  const folds = foldsOf(opts.x);
+  const st = mapStateFor(ctx.pid);
   pendingMap = null;
+  const all = kit.model.buildGraph(ctx.raw, { expand: true });
+  const total = countOf(all);
   if (!total) {
     return emptyHtml("No tasks or jobs yet.", "<span>Agents record work with <code class=\"code\">roadmap job start" +
       '</code>.</span> <a href="' + esc(projectHash(ctx.pid, "agents")) + '">Open Agents</a>');
   }
-  const shown = countOf(graph);
-  const order = opts.ord === "time" ? "time" : "dependency";
-  const lay = kit.layout.layout(graph, order, range, ctx.now);
-  const st = mapStateFor(ctx.pid);
-  const cur = function (on) {
-    return on ? ' aria-current="page"' : "";
-  };
-  const orderSeg = '<nav class="seg plan-views" aria-label="Order"><a href="' +
-    esc(mapHash(route, range, { ord: "" })) + '"' + cur(order === "dependency") + ">Dependency</a>" +
-    '<a href="' + esc(mapHash(route, range, { ord: "time" })) + '"' + cur(order === "time") + ">Time</a></nav>";
+  const graph = kit.model.buildGraph(ctx.raw, { status: mapList(opts.st), agent: mapList(opts.ag),
+    phase: mapList(opts.ph), expand: true });
+  const matched = countOf(graph);
+  const flow = kit.layout.flowLayout(graph, { expandAll: showAll, open: folds.open, close: folds.shut });
+  const shown = graph.nodes.filter(function (n) {
+    return n.type !== "phase" && flow.boxes[n.id];
+  }).length;
+  // The legend lists the edge kinds this flow actually draws (a route exists and both ends are on screen).
+  mapKinds = new Set();
+  graph.edges.concat(graph.sequence || []).forEach(function (e) {
+    if (flow.routes && flow.routes[e.id]) mapKinds.add(e.type);
+  });
+  mapHasNow = !!(flow.now && flow.now.flag);
   const phases = all.lanes.map(function (l) {
     return l.id;
   });
-  const chips = '<div class="wfg-bar">' + orderSeg + '<span class="wfg-count" aria-live="polite">' + shown + " of " +
-    total + " items</span></div>" + '<div class="wfg-chips-row">' +
+  const filters = '<div class="wfg-chips-row">' +
     chipsHtml(route, range, "Status", "st", MAP_STATUS, mapList(opts.st)) +
     chipsHtml(route, range, "Agent", "ag", MAP_AGENT, mapList(opts.ag)) +
     chipsHtml(route, range, "Phase", "ph", phases, mapList(opts.ph)) + "</div>";
-  const banner = graph.stats.collapsed.length && !filters.expand
-    ? '<p class="wfg-note">Completed phases collapsed for faster rendering.<a href="' +
-      esc(mapHash(route, range, { all: "1" })) + '">Show all phases</a></p>' : "";
-  if (!shown) {
-    return chips + '<p class="wf-hint">No tasks match these filters.<a href="' + esc(mapHash(route, range, {
-      st: "", ag: "", ph: "" })) + '">Clear filters</a></p>';
+  const count = '<div class="wfg-bar"><span class="wfg-count" aria-live="polite">' + matched + " of " + total +
+    " items</span></div>";
+  if (!matched) {
+    return count + filters + '<p class="wf-hint">No tasks match these filters.<a href="' +
+      esc(mapHash(route, range, { st: "", ag: "", ph: "" })) + '">Clear filters</a></p>';
   }
-  const ctl = '<div class="wfg-ctl" role="toolbar" aria-label="Diagram controls">' + ctlHtml("Zoom out", "out", "−") +
-    ctlHtml("Zoom in", "in", "+") + ctlHtml("Fit to screen", "fit", "Fit") + ctlHtml("Actual size", "100", "100%") +
-    ctlHtml("Clear focus", "focus-off", "Reset focus") + "</div>";
+  // Folded phases hide their tasks: the note says how many are drawn, and Show all draws every phase (slow).
+  const note = matched > shown && !showAll
+    ? '<p class="wfg-note">Showing ' + shown + " of " + matched + " items" +
+      (flow.capped ? " (the view caps at " + flow.cap + ")" : "") + ". Expand phases to see the rest. " +
+      '<a href="' + esc(mapHash(route, range, { all: "1" })) + '">Show all (slow)</a></p>' : "";
+  const crumbs = narrow() ? '<nav class="wfg-chips" aria-label="Phases">' + (flow.frames || []).map(function (f) {
+    const nb = flow.now && flow.now.box;
+    const here = !!nb && nb.x >= f.x && nb.x < f.x + f.w;
+    return '<button type="button" class="wfg-chip" data-wf-frame="' + esc(f.id) + '"' +
+      (here ? ' aria-current="true"' : "") + ">" +
+      esc(f.label && f.label !== f.lane ? f.lane + " " + f.label : f.lane) + " " + f.done + "/" + f.total +
+      "</button>";
+  }).join("") + "</nav>" : "";
+  const ctl = '<div class="wfg-ctl" role="toolbar" aria-label="Diagram controls">' +
+    ctlHtml("Zoom out", "out", "−") + ctlHtml("Zoom in", "in", "+") + ctlHtml("Fit to screen", "fit", "Fit") +
+    ctlHtml("Centre on Now (N)", "now", "Now") + ctlHtml("Go to Start (S)", "start", "Start") +
+    ctlHtml("Show all phases", "all", "Show all", showAll) + ctlHtml("Clear focus", "focus-off", "Reset focus") +
+    "</div>";
   // Focus mode lasts while its node's Details is open: Escape goes back to Projects (panel.js), which drops it here.
   st.focus = route.item ? st.focus : null;
   if (activeMap && activeMap.focus !== st.focus) syncFocus(ctx.pid, st.focus, graph);
-  pendingMap = { graph: graph, lay: lay, pid: ctx.pid, focus: st.focus, view: st.view, taps: st.taps, fit: !st.fitted,
+  pendingMap = { graph: graph, flow: flow, lay: flow, pid: ctx.pid, focus: st.focus, view: st.view,
+    taps: st.taps,
     onTap: function (node) {
       const key = node.getAttribute("data-wf-item");
+      if (key.indexOf("phase:") === 0) {
+        toggleFrame(key);
+        return;
+      }
       setFocus(ctx.pid, key);
       navigate(node);
     },
     onClear: function () {
       setFocus(ctx.pid, null);
+      const fold = activeMap ? activeMap.fold : null;
+      if (activeMap) activeMap.fold = null;
+      if (fold) toggleFrame(fold);
     },
     onView: function (v) {
       mapStateFor(ctx.pid).view = v;
     } };
-  return chips + banner + '<div class="wfg-stage">' + ctl + '<div class="wfg-host" data-wf-map-host></div></div>';
+  return count + filters + note + crumbs + '<div class="wfg-stage">' + ctl +
+    '<div class="wfg-host" data-wf-map-host></div></div>';
 }
 
-// Puts the pending diagram into the host the last patch rendered. Runs after every patch of <main>.
+// Opens the map centred on Now, fitted to its height but never below OPEN_K (so the card titles stay readable). Later
+// renders keep the reader's own zoom and pan.
+function openAtNow(api, flow) {
+  const k = Math.min(1, Math.max(OPEN_K, (api.size().h - 32) / Math.max(1, flow.height)));
+  api.zoom(k / api.view().k);
+  api.centerOn("now", true);
+}
+
+// Puts the pending diagram into the host the last patch rendered, with the minimap beside it. Runs after every patch.
 function mountMaps() {
   if (!pendingMap || !graphKit || typeof document === "undefined") return;
   const host = document.querySelector("[data-wf-map-host]");
@@ -705,12 +797,27 @@ function mountMaps() {
   const st = pendingMap;
   pendingMap = null;
   const store = mapStateFor(st.pid);
+  const opening = !store.fitted;
   store.fitted = true;
-  const api = graphKit.render.mountMap(host, st);
-  activeMap = { pid: st.pid, api: api, graph: st.graph, svg: host.querySelector("svg"), focus: st.focus };
+  if (activeMap && activeMap.mini) activeMap.mini.stop();
+  const view = opening ? undefined : st.view;
+  const api = graphKit.render.mountMap(host, Object.assign({}, st, { fit: false, view: view }));
+  activeMap = { pid: st.pid, api: api, graph: st.graph, flow: st.flow, svg: host.querySelector("svg"),
+    focus: st.focus, fold: null, mini: null };
+  if (opening) openAtNow(api, st.flow);
+  host.addEventListener("pointerdown", function (e) {
+    const fold = closestEl(e.target, "[data-wf-fold]");
+    if (activeMap) activeMap.fold = fold ? fold.getAttribute("data-wf-fold") : null;
+  });
+  host.addEventListener("pointerup", function () {
+    if (activeMap) activeMap.fold = null;
+  });
+  if (!narrow()) activeMap.mini = graphKit.minimap.mountMinimap(host.parentNode, { flow: st.flow, viewport: api });
 }
 
 function mapBody(route, raw, range) {
+  mapKinds = null;
+  mapHasNow = false;
   if (route.name !== "project") {
     return '<p class="wf-hint">Select a project to view diagram.</p>';
   }
@@ -807,16 +914,39 @@ function rangeLinks(route, view, range) {
   }).join("");
 }
 
-function legendHtml() {
-  return '<ul class="wf-legend" id="wf-legend" aria-label="Legend">' +
-    '<li><span class="wf-key wf-k-done" aria-hidden="true"></span>Done</li>' +
-    '<li><span class="wf-key wf-k-doing" aria-hidden="true"></span>Running</li>' +
-    '<li><span class="wf-key wf-k-blocked" aria-hidden="true"></span>Blocked or failed</li>' +
-    '<li><span class="wf-key wf-k-queued" aria-hidden="true"></span>Queued</li>' +
-    '<li><span class="wf-edge-key wf-e-handoff" aria-hidden="true"></span>Handoff</li>' +
-    '<li><span class="wf-edge-key wf-e-after" aria-hidden="true"></span>Depends on</li>' +
-    '<li><span class="wf-edge-key wf-e-block" aria-hidden="true"></span>Blocker</li>' +
-    "</ul>";
+function mapKey(cls) {
+  return '<svg class="wf-edge-svg" width="22" height="8" viewBox="0 0 22 8" aria-hidden="true" focusable="false">' +
+    '<path class="' + cls + '" d="M1 4H21"/></svg>';
+}
+
+function keyItem(key, text) {
+  return "<li>" + key + esc(text) + "</li>";
+}
+
+// The legend names only what is drawn. The Map shows the edge kinds it drew (kinds) and the Now flag when it has one;
+// the Timeline draws handoff and blocker bars; the Table draws only the status words, so it gets the status keys.
+function legendHtml(view, kinds, hasNow) {
+  const dot = function (cls) {
+    return '<span class="wf-key ' + cls + '" aria-hidden="true"></span>';
+  };
+  const states = [keyItem(dot("wf-k-done"), "Done"), keyItem(dot("wf-k-doing"), "Running"),
+    keyItem(dot("wf-k-blocked"), "Blocked or failed"),
+    keyItem(dot("wf-k-queued"), view === "map" ? "Todo" : "Queued")];
+  let extra = [];
+  if (view === "map") {
+    const names = [["sequence", "Sequence", "wfg-e"], ["dependency", "Dependency", "wfg-e wfg-e-dependency"],
+      ["handoff", "Handoff", "wfg-e wfg-e-handoff"], ["blocker", "Blocker", "wfg-e wfg-e-blocker"]];
+    extra = names.filter(function (n) {
+      return kinds && kinds.has(n[0]);
+    }).map(function (n) {
+      return keyItem(mapKey(n[2]), n[1]);
+    });
+    if (hasNow) extra.push(keyItem(dot("wf-k-doing"), "You are here (Now)"));
+  } else if (view === "timeline") {
+    extra = [keyItem('<span class="wf-edge-key wf-e-handoff" aria-hidden="true"></span>', "Handoff"),
+      keyItem('<span class="wf-edge-key wf-e-block" aria-hidden="true"></span>', "Blocker")];
+  }
+  return '<ul class="wf-legend" id="wf-legend" aria-label="Legend">' + states.concat(extra).join("") + "</ul>";
 }
 
 export function sectionView(vm) {
@@ -847,6 +977,9 @@ export function sectionView(vm) {
   }
   const range = rangeOf(route);
   const view = viewOf(route);
+  // Entering the Map from another view opens it again at Now; re-renders of the Map keep the reader's view.
+  if (view === "map" && lastView !== "map" && route.name === "project") mapStateFor(route.id).fitted = false;
+  lastView = view;
   const raws = entries.map(function (e) {
     return e.raw;
   });
@@ -854,9 +987,10 @@ export function sectionView(vm) {
   model.view = view;
   model.route = route;
   lastModel = model;
-  const head = '<div class="page-head"><h2 class="page-title">Workflow</h2><p class="page-note">Live. Each bar is a ' +
-    "job from start to end, in lanes by role and model. Hover or focus a bar for its details, and press Enter to " +
-    "open its task.</p></div>";
+  const head = '<div class="page-head"><h2 class="page-title">Workflow</h2><p class="page-note">Live. ' +
+    (view === "map" ? "Tasks flow left to right from Start to Now, one frame per phase. Select a task to see its " +
+      "details." : "Each bar is a job from start to end, in lanes by role and model. Hover or focus a bar for its " +
+      "details, and press Enter to open its task.") + "</p></div>";
   const controls = '<div class="wf-controls"><nav class="seg plan-views" aria-label="View">' +
     viewLinks(route, view, range) +
     '</nav><nav class="seg plan-views" aria-label="Range">' + rangeLinks(route, view, range) + "</nav></div>";
@@ -873,7 +1007,8 @@ export function sectionView(vm) {
     body = (model.jobCount ? "" : '<p class="wf-hint">No jobs in this range.</p>') + timelineSvg(model);
   }
   return '<div class="wf-page">' + head + controls + '<div class="wf" data-wf-view="' + esc(view) + '">' + body +
-    '<div class="wf-detail row-grid wf-cols">' + detailHtml(model, selectedKey) + "</div>" + legendHtml() +
+    '<div class="wf-detail row-grid wf-cols">' + detailHtml(model, selectedKey) + "</div>" +
+    legendHtml(view, mapKinds, mapHasNow) +
     "</div></div>";
 }
 
@@ -917,6 +1052,11 @@ function onClick(e) {
   const mop = closestEl(e.target, "[data-wf-map-op]");
   if (mop) {
     mapOp(mop.getAttribute("data-wf-map-op"));
+    return;
+  }
+  const crumb = closestEl(e.target, "[data-wf-frame]");
+  if (crumb) {
+    centerFrame(crumb.getAttribute("data-wf-frame"));
     return;
   }
   const op = closestEl(e.target, "[data-wf-op]");
@@ -963,11 +1103,27 @@ function neighbour(el, key, view) {
 }
 
 function onKey(e) {
+  // N and S centre the Map on Now and Start from anywhere in the view, except the diagram (its viewport handles them).
+  const typing = e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName || "");
+  if (activeMap && lastModel && lastModel.view === "map" && !typing && !closestEl(e.target, ".wfg-host") &&
+    /^[nNsS]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault();
+    mapOp(e.key === "n" || e.key === "N" ? "now" : "start");
+    return;
+  }
+  const fold = closestEl(e.target, "[data-wf-fold]");
+  if (fold && (e.key === "Enter" || e.key === " ")) {
+    e.preventDefault();
+    toggleFrame(fold.getAttribute("data-wf-fold"));
+    return;
+  }
   const el = closestEl(e.target, "[data-wf-item]");
   if (!el || !lastModel) return;
   if (e.key === "Enter" || e.key === " ") {
     e.preventDefault();
-    navigate(el);
+    const key = el.getAttribute("data-wf-item") || "";
+    if (key.indexOf("phase:") === 0) toggleFrame(key);
+    else navigate(el);
     return;
   }
   // The Map's arrows, + - 0 and Escape are handled by graph/viewport.js on its SVG.
@@ -999,6 +1155,15 @@ export function bind(el) {
       if (scroller && scrollLeft && scroller.scrollLeft !== scrollLeft) scroller.scrollLeft = scrollLeft;
       mountMaps();
     }).observe(el, { childList: true });
+  }
+  // Crossing the 640 px line swaps the minimap for the phase chips, so the Map renders again.
+  if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
+    const mq = window.matchMedia(NARROW_Q);
+    if (mq && typeof mq.addEventListener === "function") {
+      mq.addEventListener("change", function () {
+        window.dispatchEvent(new Event("hashchange"));
+      });
+    }
   }
   if (typeof window !== "undefined") {
     window.addEventListener("hashchange", function () {
