@@ -16,7 +16,7 @@ def default_config():
     """The config a fresh install starts from. Nothing is written until the first change."""
     return {
         "schemaVersion": 1,
-        "port": 8765,
+        "port": 8780,
         "phonePort": 8766,
         "usage": {"intervalS": 120, "mirrorToProjects": True},
         "projects": [],

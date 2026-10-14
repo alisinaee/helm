@@ -14,7 +14,7 @@ model, read [SECURITY.md](SECURITY.md).
                                             │
                          store/     (paths, atomic writes, locks, config, schema, backups)
                                             │
-   browser ──► 127.0.0.1:8765 ──► http/ (routes, security, static) ──► services/loader ──► core/ (pure)
+   browser ──► 127.0.0.1:8780 ──► http/ (routes, security, static) ──► services/loader ──► core/ (pure)
                                                                          │
                                                        project folder: docs/*.json, docs/*.md
 ```
@@ -102,7 +102,7 @@ Every directory roadmap creates is mode 0700. Every file it creates is mode 0600
 | Project data | `<project>/docs/` | `tasks.json`, `jobs.json`, `autonomy.json`, `roadmap.config.json`, and any extra Markdown files the config names |
 | Project hooks | `<project>/.claude/settings.local.json` | the three roadmap hook entries, merged with the project's own entries |
 
-The global config is `schemaVersion` 1 with `port` (8765), `phonePort` (8766), `usage` (`intervalS` 120,
+The global config is `schemaVersion` 1 with `port` (8780), `phonePort` (8766), `usage` (`intervalS` 120,
 `mirrorToProjects` true) and `projects` (`id`, `name`, `path`, `dataDir`, `addedAt`). Project settings do not live
 there. They live in the project's own `docs/roadmap.config.json`, so they travel with its repo:
 

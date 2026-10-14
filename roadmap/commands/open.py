@@ -7,10 +7,10 @@ the stub `open` is still registered by commands/serve.py.
 
 import subprocess
 
-from roadmap.errors import EXIT_EXTERNAL, RoadmapError
+from roadmap.errors import EXIT_EXTERNAL, EXIT_USAGE, RoadmapError
 from roadmap.store import config as config_store
 
-DEFAULT_PORT = 8765
+DEFAULT_PORT = 8780
 OPEN_TOOL = "open"
 TIMEOUT_S = 15
 
@@ -47,12 +47,17 @@ def open_dashboard(port=None, runner=None):
 def register(sub, common):
     """Add the open command."""
     opener = sub.add_parser("open", parents=[common], help="open the dashboard in the browser")
+    opener.add_argument("--port", type=int, default=None,
+                        help="open this port for this call only (default: config port, 8780)")
     opener.set_defaults(handler=handle)
 
 
 def handle(args):
-    """Open the dashboard and print its address."""
-    result = open_dashboard()
+    """Open the dashboard and print its address. --port overrides the configured port for this call only."""
+    port = getattr(args, "port", None)
+    if port is not None and (isinstance(port, bool) or not 1 <= port <= 65535):
+        raise RoadmapError("invalid_input", "port must be a whole number from 1 to 65535", EXIT_USAGE)
+    result = open_dashboard(port=port)
     if not getattr(args, "json", False):
         print("opened " + result["url"])
     return result

@@ -12,7 +12,7 @@ from tests.unit.test_store_support import HomeCase, mode_of
 class ConfigTests(HomeCase):
     def test_missing_config_gives_defaults_and_writes_nothing(self):
         cfg = config.load()
-        self.assertEqual(cfg["port"], 8765)
+        self.assertEqual(cfg["port"], 8780)
         self.assertEqual(cfg["phonePort"], 8766)
         self.assertEqual(cfg["usage"], {"intervalS": 120, "mirrorToProjects": True})
         self.assertEqual(cfg["projects"], [])

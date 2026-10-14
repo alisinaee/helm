@@ -22,7 +22,11 @@ OK, WARN, FAIL = "ok", "warn", "fail"
 MIN_PYTHON = (3, 9)
 KEYCHAIN_SERVICE = usage.KEYCHAIN_SERVICE
 KEYCHAIN_NOT_FOUND = usage.KEYCHAIN_ITEM_NOT_FOUND
-DEFAULT_PORT = 8765
+DEFAULT_PORT = 8780
+# The legacy split-net dashboard port. Read at call time, so tests can point the check at a free port.
+LEGACY_PORT = 8765
+LEGACY_FIX = ("The old split-net dashboard may still run on 8765; roadmap-board uses 8780 (set in the global config). "
+              "Stop the old one only after the cutover checklist (docs/RELEASE.md).")
 HEALTH_TIMEOUT_S = 1.0
 HEALTH_PATH = "/api/v1/health"
 LAUNCHD_LOG_LIMIT = 5 * 1024 * 1024
@@ -140,6 +144,19 @@ def check_port(port, state, runner):
         return _row("port", "Port %d" % port, OK, "used by the roadmap service (pid %s)" % owner["pid"])
     return _row("port", "Port %d" % port, FAIL, "used by %s (pid %s), not by roadmap" % (owner["name"], owner["pid"]),
                 "Stop that process, or change \"port\" in " + paths.config_file() + " and run roadmap service restart.")
+
+
+def check_legacy_port(state, runner, port=None):
+    """Warn when something other than the roadmap service listens on the legacy split-net port (8765). Nothing
+    listening, or only the roadmap service, is ok. Read-only: it uses the lsof helper in services/launchd."""
+    port = LEGACY_PORT if port is None else port
+    owner = launchd.listener_on(port, runner=runner)
+    if owner is None:
+        return _row("port_legacy", "Port %d" % port, OK, "free")
+    if state["loaded"] and state["pid"] is not None and owner["pid"] == state["pid"]:
+        return _row("port_legacy", "Port %d" % port, OK, "used by the roadmap service (pid %s)" % owner["pid"])
+    return _row("port_legacy", "Port %d" % port, WARN, "used by %s (pid %s), not by roadmap"
+                % (owner["name"], owner["pid"]), LEGACY_FIX)
 
 
 def _mode_problems():
@@ -277,7 +294,7 @@ def run(runner=None, probe=None, port=None):
     state = launchd.status(run_with)
     rows = [check_python(), check_repo(), check_shim(), check_config(), check_plist(run_with),
             check_service(state), check_health(port, state, probe), check_port(port, state, run_with),
-            check_modes(), check_keychain(run_with), check_usage()]
+            check_legacy_port(state, run_with), check_modes(), check_keychain(run_with), check_usage()]
     rows.extend(check_projects())
     rows.append(check_logs())
     summary = {OK: 0, WARN: 0, FAIL: 0}

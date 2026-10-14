@@ -1,7 +1,8 @@
 # roadmap-board HTTP API (v1)
 
 The server listens on `127.0.0.1` only. It is started by `roadmap serve` (or by the launchd service, which runs the
-same command). The default port is 8765; `roadmap serve --port N` picks another one.
+same command). The default port is 8780; `roadmap serve --port N` picks another one, and `roadmap open --port N`
+opens that port for one call.
 
 - Every `/api/v1/*` reply is JSON, UTF-8.
 - The contract is this file plus the schemas in `tests/api/schemas/*.json`. The tests start a real server and check
@@ -180,7 +181,7 @@ The request needs all of the write rules below, and the body may be empty or a J
 
 ```http
 POST /api/v1/usage/sync HTTP/1.1
-Host: 127.0.0.1:8765
+Host: 127.0.0.1:8780
 Content-Type: application/json
 Sec-Fetch-Site: same-origin
 X-Roadmap-CSRF: <the token from the page's <meta name="csrf">>
