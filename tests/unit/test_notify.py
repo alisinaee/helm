@@ -5,7 +5,7 @@ runs the real osascript: each one injects a runner, or the test runner guard is 
 import os
 from unittest import mock
 
-from roadmap.services import control, notify, questions, queue
+from roadmap.services import control, notify, presence, questions, queue
 from roadmap.store import atomic, config, paths
 from tests.unit.test_store_support import HomeCase
 
@@ -104,9 +104,9 @@ class NotifyHookTests(HomeCase):
 
     def setUp(self):
         super().setUp()
-        project = self.make_project("demo")
-        config.add_project("Demo", project)
-        self.data = os.path.join(project, "docs")
+        self.project = self.make_project("demo")
+        config.add_project("Demo", self.project)
+        self.data = os.path.join(self.project, "docs")
         os.makedirs(self.data)
         for patcher in (mock.patch.object(notify, "_under_tests", return_value=False),
                         mock.patch.object(notify, "_macos", return_value=True),
@@ -121,7 +121,34 @@ class NotifyHookTests(HomeCase):
         args = self.fake.call_args[0]
         self.assertEqual(args[0], "start")
         self.assertEqual(args[3], "demo")
-        self.assertEqual(args[2], "Start P2.4 queued. Open a Claude session in demo or run: roadmap watch")
+        self.assertEqual(args[2], 'Start P2.4 queued; no session open. Run: cd ' + self.project
+                         + ' && claude "roadmap watch"')
+
+    def test_with_a_session_open_the_text_says_so_and_nothing_is_launched(self):
+        presence.touch_hook(self.data)
+        with mock.patch.object(queue, "_spawn") as spawn:
+            queue.enqueue(self.data, "P2.4", by="lead")
+        self.assertEqual(self.fake.call_args[0][2], "Start P2.4 queued. Open a Claude session in demo or run: "
+                         "roadmap watch")
+        spawn.assert_not_called()
+
+    def test_with_no_session_the_launch_is_requested_once_and_a_failure_does_not_break_enqueue(self):
+        with mock.patch.object(queue, "_spawn", side_effect=lambda target, arg: target(arg)), \
+                mock.patch.object(queue.launcher, "maybe_launch", return_value=False) as launch:
+            entry = queue.enqueue(self.data, "P2.4", by="lead")
+            self.assertEqual(entry["task"], "P2.4")
+            launch.assert_called_once_with(self.data)
+        with mock.patch.object(queue, "_spawn", side_effect=lambda target, arg: target(arg)), \
+                mock.patch.object(queue.launcher, "maybe_launch", side_effect=RuntimeError("boom")):
+            self.assertEqual(queue.enqueue(self.data, "P2.5")["task"], "P2.5")
+        self.assertEqual([e["task"] for e in queue.list_queue(self.data)], ["P2.4", "P2.5"])
+
+    def test_a_broken_notification_still_queues_the_task(self):
+        self.fake.side_effect = RuntimeError("osascript broke")
+        with mock.patch.object(queue, "_spawn") as spawn:
+            self.assertEqual(queue.enqueue(self.data, "P2.6")["task"], "P2.6")
+        self.assertEqual([e["task"] for e in queue.list_queue(self.data)], ["P2.6"])
+        spawn.assert_called_once()
 
     def test_a_blocking_question_notifies_and_a_plain_one_does_not(self):
         questions.ask(self.data, "P2.4", "deploy now?", opts=["yes", "no"], default="no")

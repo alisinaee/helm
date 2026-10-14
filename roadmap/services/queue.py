@@ -1,8 +1,12 @@
 """Start queue (queue.json): tasks waiting to be started, at most 50 entries, oldest first."""
 
+import os
+import shlex
+import threading
+
 from roadmap.errors import EXIT_USAGE, RoadmapError
-from roadmap.services import notify, records
-from roadmap.store import lock
+from roadmap.services import launcher, notify, presence, records
+from roadmap.store import config, lock
 
 FILE = "queue.json"
 CAP = 50
@@ -24,9 +28,53 @@ def enqueue(data_dir, task, by="", now=None):
         doc["entries"].append(entry)
         records.save("queue", data_dir, FILE, doc)
     # outside the lock: the notification never holds up the queue (it never raises either)
-    notify.notify_dir(data_dir, "start", "Start queued", lambda project: "Start " + task_id + " queued. Open a Claude "
-                      "session in " + project + " or run: roadmap watch")
+    _notify_start(data_dir, task_id)
     return dict(entry)
+
+
+def _project_path(data_dir):
+    """The folder of the registered project whose data folder is data_dir, or ''. Never raises."""
+    try:
+        wanted = os.path.abspath(str(data_dir))
+        for entry in config.list_projects():
+            path = str(entry.get("path") or "")
+            if path and os.path.abspath(os.path.join(path, str(entry.get("dataDir") or "docs"))) == wanted:
+                return path
+    except Exception:  # fail open: the text falls back to the project id
+        pass
+    return ""
+
+
+def _launch_quietly(data_dir):
+    """Run the opt-in launch. It never raises, and it runs off the caller's thread so the Start is not delayed."""
+    try:
+        launcher.maybe_launch(data_dir)
+    except Exception:
+        pass
+
+
+def _spawn(target, arg):
+    """Start target(arg) on a daemon thread. Tests replace this with a synchronous fake."""
+    threading.Thread(target=target, args=(arg,), daemon=True).start()
+
+
+def _notify_start(data_dir, task_id):
+    """Show the Start notification, and when no session is open and the project opted in, launch one. Never raises."""
+    try:
+        idle = presence.state(data_dir) == presence.NONE
+
+        def body(project):
+            if not idle:
+                return "Start " + task_id + " queued. Open a Claude session in " + project + " or run: roadmap watch"
+            path = _project_path(data_dir) or project
+            return ("Start " + task_id + " queued; no session open. Run: cd " + shlex.quote(path)
+                    + ' && claude "roadmap watch"')
+
+        notify.notify_dir(data_dir, "start", "Start queued", body)
+        if idle:
+            _spawn(_launch_quietly, data_dir)
+    except Exception:  # fail open: the queue entry is already saved
+        pass
 
 
 def dequeue(data_dir, task):
