@@ -23,6 +23,7 @@ RENDER = os.path.join(TESTS, "web", "render_panel.mjs")
 SNAPSHOT = os.path.join(TESTS, "fixtures", "golden_snapshot.json")
 COMMANDS = os.path.join(REPO, "roadmap", "services", "commands.py")
 CMDOPS = os.path.join(REPO, "roadmap", "services", "cmdops.py")
+FEATOPS = os.path.join(REPO, "roadmap", "services", "featops.py")
 PANEL_CSS_MAX = int(4.5 * 1024)
 
 INLINE = re.compile(r"""\sstyle\s*=|\son[a-z]{3,}\s*=""", re.IGNORECASE)
@@ -181,7 +182,7 @@ class PanelSourceTests(unittest.TestCase):
             ops.update(RUN_OP.findall(read(os.path.join(WEB, "js", "views", name))))
         ops.update(re.findall(r'queueTask\(el, "([a-z]+\.[a-z]+)"\)', read(os.path.join(WEB, "js", "views",
                                                                                          "panel.js"))))
-        registered = set(REGISTERED.findall(read(COMMANDS))) | set(REGISTERED_HERE.findall(read(CMDOPS)))
+        registered = set(REGISTERED.findall(read(COMMANDS))) | set(REGISTERED_HERE.findall(read(CMDOPS))) | set(REGISTERED_HERE.findall(read(FEATOPS)))
         self.assertTrue(ops, "the panel sends no ops")
         self.assertEqual(sorted(ops - registered), [], "ops missing from services/commands.py")
 
