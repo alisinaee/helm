@@ -64,6 +64,8 @@ positional arguments:
     remove    unregister a project (files are kept)
     check     check that a project's files parse
     migrate   upgrade a project's data files (backs up first)
+    new       start a project: init, plan with phase P1 not approved, optional
+              research note 1
 
 options:
   -h, --help  show this help message and exit
@@ -80,6 +82,7 @@ positional arguments:
     start     start a job
     done      mark a job done
     fail      mark a job failed
+    progress  record the live tokens of a running job (optional)
     list      list jobs
     prune     remove finished jobs beyond the newest 30
 
@@ -571,10 +574,10 @@ options:
 | `AFTER_MAX` | `roadmap/core/planfmt.py:17` | `5` |
 | `AFTER_MAX` | `roadmap/core/snapshot.py:26` | `5` |
 | `ANSWERED_KEEP` | `roadmap/services/questions.py:14` | `50` |
-| `ANSWER_MAX` | `roadmap/commands/watch.py:19` | `60` |
+| `ANSWER_MAX` | `roadmap/commands/watch.py:20` | `60` |
 | `BUDGET_MAX` | `roadmap/services/rules.py:23` | `100000` |
 | `BY_MAX` | `roadmap/services/comments.py:15` | `40` |
-| `CAP` | `roadmap/services/queue.py:8` | `50` |
+| `CAP` | `roadmap/services/queue.py:12` | `50` |
 | `CLOSED_KEEP` | `roadmap/services/issues.py:12` | `100` |
 | `COMMENT_MAX` | `roadmap/core/parsers.py:24` | `280` |
 | `DAYS_KEEP` | `roadmap/services/ledger.py:30` | `14` |
@@ -615,8 +618,8 @@ options:
 | `TITLE_MAX` | `roadmap/core/parsers.py:20` | `120` |
 | `TITLE_MAX` | `roadmap/services/featops.py:19` | `80` |
 | `TITLE_MAX` | `roadmap/services/jobs.py:21` | `200` |
-| `TOKENS_K_MAX` | `roadmap/services/commands.py:32` | `10000000` |
-| `UNDO_KEEP` | `roadmap/services/commands.py:27` | `500` |
+| `TOKENS_K_MAX` | `roadmap/services/commands.py:33` | `10000000` |
+| `UNDO_KEEP` | `roadmap/services/commands.py:28` | `500` |
 | `VIEW_MAX` | `roadmap/commands/plan.py:77` | `15` |
 | `_KEEP` | `roadmap/core/planfmt.py:28` | `object()` |
 
@@ -638,7 +641,7 @@ options:
 - `roadmap/commands/feature.py`: Command group feature (WP52): the planner's features. add, list, show, link, unlink, accept and rm.
 - `roadmap/commands/hook.py`: Top-level command hook: the stdin entry that Claude Code hooks call.
 - `roadmap/commands/hooks.py`: Command group hooks: install and inspect the Claude Code hooks of a project.
-- `roadmap/commands/inbox.py`: Command inbox: what needs the user or the next agent, in at most 6 lines (queued requests, answers, open questions).
+- `roadmap/commands/inbox.py`: Command inbox: what needs the user or the next agent, in at most 6 lines
 - `roadmap/commands/issue.py`: Command group issue: open, list, show, close and link issues (issues.json). Writes go through the command layer.
 - `roadmap/commands/job.py`: Command group job: record Claude jobs and their tokens in the project's jobs.json.
 - `roadmap/commands/limits.py`: Command groups limit and phase: the limit rows that stop agents (services/limits.py, services/control.py).
@@ -652,7 +655,7 @@ options:
 - `roadmap/commands/service.py`: Command group service: the launchd lifecycle of the background server (WP11).
 - `roadmap/commands/skills.py`: Command group skills: list the Haiku-sized skill templates and install them into <project>/.claude/skills.
 - `roadmap/commands/status.py`: Top-level command status: the board summary of one project in at most 8 lines and 700 characters.
-- `roadmap/commands/subtask.py`: Command group subtask: add a subtask to a task, and tick or untick one (P2.4/2). Writes go through the command layer.
+- `roadmap/commands/subtask.py`: Command group subtask: add a subtask to a task, and tick or untick one (P2.4/2).
 - `roadmap/commands/task.py`: Command group task: read and change tasks in the project's tasks.json (show, list, done, start, hold, set).
 - `roadmap/commands/undo.py`: Command undo: put back a change that reports undo, by its activity id (undo A812).
 - `roadmap/commands/usage.py`: Command group usage: the global plan-usage store.
@@ -690,10 +693,12 @@ options:
 - `roadmap/services/issues.py`: Issues (issues.json): open, close and list. At most 200 open (open or doing); closed or wontfix issues beyond the
 - `roadmap/services/jobs.py`: Job registry in each project's data folder (jobs.json): start, finish, list and prune.
 - `roadmap/services/launchd.py`: The launchd user agent that runs `roadmap serve`: render and write the plist, the lifecycle through launchctl,
+- `roadmap/services/launcher.py`: Opt-in launcher (R7.1 T4): opens Terminal with `claude` in the project folder when nobody is listening.
 - `roadmap/services/ledger.py`: Usage ledger (WP27): the global ledger.json of measured account points and of each project's tracked tokens.
 - `roadmap/services/limits.py`: Limit rows (WP27): the rules that stop agents when a window of usage is used up. Specified in docs/UI-SPEC.md 2b.
 - `roadmap/services/loader.py`: Load a registered project's data files into a snapshot, and name the process that holds a TCP port.
 - `roadmap/services/notify.py`: Desktop wake-up notifications (GAP-ANALYSIS 2.1): one macOS notification through osascript when a Start is queued,
+- `roadmap/services/presence.py`: Session presence (R7.1 T1): tells the board whether a Claude session is listening for a project.
 - `roadmap/services/projects.py`: Project maintenance (WP10): init templates, add, list, show, remove, check, migrate and backup.
 - `roadmap/services/questions.py`: Questions (questions.json): ask, answer, expire on timeout, list. At most 50 open. Answered or defaulted questions
 - `roadmap/services/queue.py`: Start queue (queue.json): tasks waiting to be started, at most 50 entries, oldest first.
@@ -730,7 +735,7 @@ options:
 - `web/js/views/needsyou.js`: Needs you: the open tasks whose needsUser flag is set (the same count as the summary's need_user), as task rows.
 - `web/js/views/next.js`: Next up: the queued items from the roadmap, as plain text (the markdown bold and code marks are removed).
 - `web/js/views/overview.js`: Overview (WP30).
-- `web/js/views/palette.js`: Command palette (Cmd+K / Ctrl+K): search snapshot tasks, issues, questions and run commands.
+- `web/js/views/palette.js`: Command palette (WP61b).
 - `web/js/views/panel.js`: Right panel (WP29): one <aside> with two tabs, Projects and Details.
 - `web/js/views/phases.js`: Phases: the main column of the project view.
 - `web/js/views/planner.js`: Planner (WP53).
@@ -780,36 +785,36 @@ options:
 
 ## 7. Last 30 commit subjects (newest first)
 
-- WP71: workflow graph model and layout
-- docs: workflow diagram spec (Opus WP70)
-- WP48: workflow view
-- WP52: features service, ops, CLI, snapshot
-- docs: task breakdown and agy playbook (Opus WP57)
-- WP53: planner view
-- R3 fixes: review findings and known bugs
-- WP51: plan format F and L records
-- WP50: planner core
-- WP36b: row alignment rule 0
-- docs: planner spec (Opus WP49)
-- WP47: workflow data
-- WP40: notifications and roadmap watch
-- WP42: haiku-sized skills and skills install
-- WP43: default port 8780 and doctor port warning
-- docs: workflow map spec (Opus WP46)
-- WP38: end-to-end integration tests
-- WP41: rules and definition of done in pickups
-- WP37: release 1.0 prep
-- WP36: wide screens and cosmetic fixes
-- docs: gap analysis and next improvements (Opus WP39)
-- UI: remove the 1280 px width cap, the app uses the full window width
-- WP35b: ui smoke for the new shell, visual fixes
-- WP35: final responsive and visual pass
-- WP34: agents, research, notes route, question undo
-- agy output verified: fixtures, changelog, architecture, test gaps
-- WP33b: snapshot action and rules fields
-- WP31: work board, list, tree
-- WP32: roadmap lanes and issues
-- WP33: tokens, limits, rules, settings
+- R7.5 A: aligned rows in tokens and phases
+- R6.34b: focusable diagram canvas
+- docs: R6.34 workflow diagram verification
+- R7.1 T5: queue notification names the command and may launch
+- docs: head runbook (commands to run the head loop)
+- R7.1 T6: snapshot session + queued-waiting UI
+- R7.1 T4: launcher service
+- R7.1 T3: hooks stamp presence
+- R7.1 T2: watch stamps presence
+- R7.1 T1: presence service
+- docs: relative links in agy-a4-aria
+- docs: use ~ instead of absolute home paths
+- docs: full-cycle agent token cost
+- lint_js: wrap long lines, no innerHTML in workflow
+- lint_py: wrap long lines
+- GUI Start refuses unapproved phase; RELEASE.md port 8780
+- docs: full handover (vision, rules, decisions, state, open items) + CLAUDE.md for new chats
+- tests: remove stray assertion
+- tests: Map view moved to graph/render.js (old mapSvg tests removed), SVG namespace is not an external host
+- WP61b: command palette hook-up
+- WP53b: planner fixes and smaller snapshot rows
+- WP72: workflow diagram renderer and viewport
+- WP65a: hooks and control gap tests
+- WP65b: commands and notify gap tests
+- WP62b: phase approval gate and research status line
+- docs: agy audit results (gaps, rows, palette, strings, docs)
+- board data: tasks with feats, jobs, limit (regenerated by sync-rb-board)
+- WP56: seed features for roadmap-board
+- WP62: project new --research, job progress
+- test_panel: featops ops count as registered
 
 ## 8. UI rules (docs/UI-CHECKLIST.md, numbered rules)
 

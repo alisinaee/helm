@@ -10,7 +10,9 @@ import { buildHash, currentRoute } from "../router.js";
 import { updateUi } from "../state.js";
 import { showToast } from "./toast.js";
 import { projectsView } from "./projects.js";
-import { dropComment, detailsView, issueKey, queueComment, settleComment, subKey, taskKey } from "./details.js";
+import {
+  copyLaunch, dropComment, detailsView, issueKey, queueComment, settleComment, subKey, taskKey,
+} from "./details.js";
 
 let rerender = function () {};
 let lastItem = null;
@@ -192,6 +194,7 @@ function onClick(event) {
   else if (kind === "cap-clear") setCap(el.getAttribute("data-id"), "");
   else if (kind === "answer") answerQuestion(el.getAttribute("data-id"), el.getAttribute("data-value"));
   else if (kind === "close-issue") closeIssue(el);
+  else if (kind === "copy-launch") copyLaunch(el);
 }
 
 function onChange(event) {
