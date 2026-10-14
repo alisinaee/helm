@@ -226,8 +226,8 @@ Dry run of the skill: a Haiku session given only `roadmap-plan-new` and the prom
 No extra package is needed. The UI decision needs no work now.
 
 ### Critical Files for Implementation
-- /Users/ali/Works/roadmap-board/roadmap/cli.py
-- /Users/ali/Works/roadmap-board/roadmap/errors.py
-- /Users/ali/Works/roadmap-board/roadmap/commands/job.py (pattern to copy)
-- /Users/ali/Works/roadmap-board/roadmap/store/schema.py and /Users/ali/Works/roadmap-board/roadmap/store/lock.py
-- /Users/ali/Works/roadmap-board/docs/skill-draft/SKILL.md
+- ~/Works/roadmap-board/roadmap/cli.py
+- ~/Works/roadmap-board/roadmap/errors.py
+- ~/Works/roadmap-board/roadmap/commands/job.py (pattern to copy)
+- ~/Works/roadmap-board/roadmap/store/schema.py and ~/Works/roadmap-board/roadmap/store/lock.py
+- ~/Works/roadmap-board/docs/skill-draft/SKILL.md

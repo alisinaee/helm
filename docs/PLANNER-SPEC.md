@@ -164,8 +164,8 @@ Order: B1 ∥ B2, then B3 ∥ V1, then B4, then V2, then S1. Have Sonnet check B
 3. **Who marks a feature as accepted?** I recommend only the person, from the GUI or as a human at the CLI. Agents can make a feature "done" but never "accepted", and Planner highlights done-but-unaccepted features as the person's review queue.
 
 ### Critical files for implementation
-- /Users/ali/Works/roadmap-board/roadmap/core/planfmt.py
-- /Users/ali/Works/roadmap-board/roadmap/services/cmdops.py (`_register`, line 311)
-- /Users/ali/Works/roadmap-board/roadmap/core/snapshot.py
-- /Users/ali/Works/roadmap-board/web/js/routes.js
-- /Users/ali/Works/roadmap-board/docs/tasks.json
+- ~/Works/roadmap-board/roadmap/core/planfmt.py
+- ~/Works/roadmap-board/roadmap/services/cmdops.py (`_register`, line 311)
+- ~/Works/roadmap-board/roadmap/core/snapshot.py
+- ~/Works/roadmap-board/web/js/routes.js
+- ~/Works/roadmap-board/docs/tasks.json

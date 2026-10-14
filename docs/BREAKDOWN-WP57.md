@@ -312,8 +312,8 @@ Two things to check before importing:
 - **Sizes:** the agy rows show `1` in the token column as a placeholder, because agy costs no Anthropic tokens. If `plan import` rejects them, run `--dry-run` first to see.
 
 ### Critical Files for Implementation
-- /Users/ali/Works/split_net/tools/agy-queue.py
-- /Users/ali/Works/roadmap-board/roadmap/core/planfmt.py
-- /Users/ali/Works/roadmap-board/docs/PLANNER-SPEC.md
-- /Users/ali/Works/roadmap-board/docs/WORKFLOW-SPEC.md
-- /Users/ali/Works/roadmap-board/docs/RELEASE.md
+- ~/Works/split_net/tools/agy-queue.py
+- ~/Works/roadmap-board/roadmap/core/planfmt.py
+- ~/Works/roadmap-board/docs/PLANNER-SPEC.md
+- ~/Works/roadmap-board/docs/WORKFLOW-SPEC.md
+- ~/Works/roadmap-board/docs/RELEASE.md

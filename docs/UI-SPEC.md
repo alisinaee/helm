@@ -257,8 +257,8 @@ At most 2 packages run at once, with disjoint files. Every package's acceptance 
 (Default with no decision needed: the agents timeline moves to LATER to fund the limits work.)
 
 ### Critical Files for Implementation
-- /Users/ali/Works/roadmap-board/roadmap/services/control.py
-- /Users/ali/Works/roadmap-board/roadmap/services/usage.py
-- /Users/ali/Works/roadmap-board/roadmap/services/budget.py
-- /Users/ali/Works/roadmap-board/roadmap/commands/limits.py
-- /Users/ali/Works/roadmap-board/web/js/app.js
+- ~/Works/roadmap-board/roadmap/services/control.py
+- ~/Works/roadmap-board/roadmap/services/usage.py
+- ~/Works/roadmap-board/roadmap/services/budget.py
+- ~/Works/roadmap-board/roadmap/commands/limits.py
+- ~/Works/roadmap-board/web/js/app.js
