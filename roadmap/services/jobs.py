@@ -197,9 +197,27 @@ def finish_job(data_dir, job_id, status, note=None, tokens_k=None, reason=None):
         if clean_reason:
             job["reason"] = clean_reason
         _write_doc(data_dir, doc)
+        if status == "failed" and job.get("task"):
+            _reset_partial(data_dir, doc, job["task"])
     if clean_reason and _UNAVAILABLE_RE.search(clean_reason):
         _block_engine(data_dir, str(job.get("model") or ""), clean_reason)
     return dict(job)
+
+
+def _reset_partial(data_dir, doc, task_id):
+    """R7.78: when the last running job on a task has failed, a partial task goes back to todo. A task with another
+    running job is left alone, and a done task is left alone (the commit fold marks it done)."""
+    if any(isinstance(j, dict) and j.get("status") == "running" and j.get("task") == task_id for j in doc["jobs"]):
+        return
+    path = os.path.join(data_dir, TASKS_FILE)
+    data, error = schema.read_data("tasks", path)
+    if error is not None or data is None or not isinstance(data.get("tasks"), list):
+        return
+    for task in data["tasks"]:
+        if isinstance(task, dict) and task.get("id") == task_id and task.get("status") == "partial":
+            task["status"] = "todo"
+            schema.write_data("tasks", path, data)
+            return
 
 
 def first_error_line(text):
@@ -312,6 +330,47 @@ def prune_jobs(data_dir):
             doc["jobs"] = kept
             _write_doc(data_dir, doc)
     return removed, len(kept)
+
+
+def finished_page(data_dir, offset, limit):
+    """(rows, total): one page of the finished jobs, newest first by end time, counted from offset. Read only."""
+    _require_data_dir(data_dir)
+    finished = [dict(j) for j in _read_doc(data_dir)["jobs"] if isinstance(j, dict) and j.get("status") != "running"]
+    finished.sort(key=_finish_key, reverse=True)
+    return finished[offset:offset + limit], len(finished)
+
+
+def remove_jobs(data_dir, ids):
+    """Remove finished jobs by id (the person's history cleanup). Nothing is removed unless every id is in the file:
+    an unknown id is not_found, a running one is a conflict. Returns the removed records."""
+    _require_data_dir(data_dir)
+    with lock.locked(data_dir):
+        doc = _read_doc(data_dir)
+        by_id = {j.get("id"): j for j in doc["jobs"] if isinstance(j, dict)}
+        for wanted in ids:
+            job = by_id.get(wanted)
+            if job is None:
+                raise RoadmapError("not_found", "no job with id '" + wanted + "'", EXIT_NOT_FOUND)
+            if job.get("status") == "running":
+                raise RoadmapError("conflict", wanted + " is running; only finished jobs can be removed", EXIT_CONFLICT)
+        gone = set(ids)
+        removed = [dict(j) for j in doc["jobs"] if isinstance(j, dict) and j.get("id") in gone]
+        doc["jobs"] = [j for j in doc["jobs"] if not (isinstance(j, dict) and j.get("id") in gone)]
+        _write_doc(data_dir, doc)
+    return removed
+
+
+def restore_jobs(data_dir, records):
+    """Put removed job records back (the undo of remove_jobs). A record whose id is already in the file is skipped."""
+    _require_data_dir(data_dir)
+    with lock.locked(data_dir):
+        doc = _read_doc(data_dir)
+        present = {j.get("id") for j in doc["jobs"] if isinstance(j, dict)}
+        back = [dict(r) for r in records if isinstance(r, dict) and r.get("id") not in present]
+        if back:
+            doc["jobs"] = doc["jobs"] + back
+            _write_doc(data_dir, doc)
+    return len(back)
 
 
 # ---------------------------------------------------------------- helpers
