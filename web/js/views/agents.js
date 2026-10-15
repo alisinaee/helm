@@ -132,7 +132,8 @@ function projectBlock(entry, now, showName) {
   const tree = agentTree(snap);
   const blocked = snap.blocked || [];
   const heading = showName ? '<h3 class="grp-h">' + esc(entry.name) + "</h3>" : "";
-  const head = '<li class="row-grid rg-agent rg-head" aria-hidden="true"><span>Model</span><span class="ag-effort">Effort</span>' +
+  const head = '<li class="row-grid rg-agent rg-head" aria-hidden="true">' +
+    '<span>Model</span><span class="ag-effort">Effort</span>' +
     '<span>Job</span><span>Task</span><span class="rg-num">Elapsed</span><span class="rg-num">Tokens</span>' +
     "<span></span><span></span>" +
     "</li>";
