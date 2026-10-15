@@ -77,6 +77,7 @@ class PlanFormatTests(unittest.TestCase):
 
     def test_guide_names_backlog(self):
         self.assertTrue(any("backlog" in line for line in guide.lines()))
+        self.assertTrue(any("status: todo, partial, done, hold, backlog or -" in line for line in guide.lines()))
         self.assertLessEqual(len(guide.lines()), guide.GUIDE_MAX_LINES)
 
 
@@ -107,13 +108,12 @@ class BacklogCliTests(unittest.TestCase):
     def test_add_without_phase_creates_reserved_phase_and_numbers_tasks(self):
         code, out, _ = run(["backlog", "add", "Faster export", "--project", PROJECT_ID])
         self.assertEqual(code, 0)
-        self.assertIn("T BL.1 added (backlog)", out)
-        self.assertIn("next: roadmap task promote BL.1", out)
+        self.assertIn("ok BL.1 backlog in BL. next: roadmap task promote BL.1", out)
         doc = tasks.load(self.data_dir)
         self.assertEqual([p["id"] for p in doc["phases"]][-1], "BL")
         self.assertEqual(self.status_of("BL.1"), "backlog")
         code, out, _ = run(["backlog", "add", "Second idea", "--project", PROJECT_ID])
-        self.assertIn("T BL.2 added", out)
+        self.assertIn("ok BL.2 backlog in BL", out)
 
     def test_add_to_given_phase_and_the_list_filter(self):
         phase = tasks.load(self.data_dir)["phases"][0]["id"]
@@ -151,7 +151,8 @@ class BacklogCliTests(unittest.TestCase):
         with mock.patch.dict(os.environ, {"CLAUDECODE": "1"}):
             code, _, err = run(["task", "promote", "BL.1", "--project", PROJECT_ID])
             self.assertEqual(code, EXIT_CONFLICT)
-            self.assertIn('roadmap ask', err)
+            self.assertIn("promote is person-only", err)
+            self.assertIn('roadmap task note BL.1 "propose promote"', err)
             code, _, _ = run(["task", "backlog", "P1.1", "--project", PROJECT_ID])
             self.assertEqual(code, EXIT_CONFLICT)
             code, out, _ = run(["backlog", "add", "Agent idea", "--project", PROJECT_ID])
