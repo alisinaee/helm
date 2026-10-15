@@ -344,5 +344,45 @@ class VerifiedGapTests(unittest.TestCase):
         self.assertIsNone(head.parse_link(123))
 
 
+class SuggestBindsTests(unittest.TestCase):
+    TASKS = [{"id": "R7.31", "title": "Head section design"},
+             {"id": "R7.40", "title": "Export button in the map view"},
+             {"id": "R2.1", "title": "Login page"}]
+    ISSUES = [{"id": "I4", "title": "Export button fails"}]
+
+    def test_id_mentioned_in_text_scores_one(self):
+        self.assertEqual(head.suggest_binds("ship R7.31 today", self.TASKS, []), ["task:R7.31"])
+
+    def test_issue_id_mentioned_in_text(self):
+        self.assertEqual(head.suggest_binds("see I4 again", self.TASKS, self.ISSUES), ["issue:I4"])
+
+    def test_unknown_id_is_ignored(self):
+        self.assertEqual(head.suggest_binds("do R9.9 now", self.TASKS, []), [])
+
+    def test_title_overlap_gives_the_best_match_first(self):
+        refs = head.suggest_binds("Fix the export button", self.TASKS, self.ISSUES)
+        self.assertEqual(refs, ["issue:I4", "task:R7.40"])
+
+    def test_at_most_two_refs(self):
+        tasks = [{"id": "T%d" % i, "title": "export map button"} for i in range(1, 5)]
+        self.assertEqual(len(head.suggest_binds("export map button", tasks, [])), head.BIND_MAX)
+
+    def test_below_minimum_gives_nothing(self):
+        self.assertEqual(head.suggest_binds("unrelated words here", self.TASKS, self.ISSUES), [])
+
+    def test_empty_text_or_no_rows_gives_nothing(self):
+        self.assertEqual(head.suggest_binds("", self.TASKS, self.ISSUES), [])
+        self.assertEqual(head.suggest_binds("export button", [], []), [])
+        self.assertEqual(head.suggest_binds(None, None, None), [])
+
+    def test_bad_rows_are_skipped(self):
+        rows = [None, {"title": "no id"}, {"id": 5, "title": "export"}, {"id": "R7.40", "title": "export button"}]
+        self.assertEqual(head.suggest_binds("export button", rows, None), ["task:R7.40"])
+
+    def test_same_input_same_output(self):
+        first = head.suggest_binds("Fix the export button", self.TASKS, self.ISSUES)
+        self.assertEqual(first, head.suggest_binds("Fix the export button", self.TASKS, self.ISSUES))
+
+
 if __name__ == "__main__":
     unittest.main()
