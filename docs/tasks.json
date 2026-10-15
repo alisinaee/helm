@@ -1695,25 +1695,31 @@
       "id": "R7.44",
       "phase": "R7",
       "title": "Head: show every ledger item (paged API + lazy load in head.js), no missing rows (H105)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 60,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:28:36+03:30"
+      }
     },
     {
       "id": "R7.45",
       "phase": "R7",
       "title": "Sections not syncing: root cause across server+client, permanent fix plan (H105)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 30,
       "thinking": "high",
       "model": "cursor",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:31:40+03:30"
+      }
     },
     {
       "id": "R7.46",
@@ -1750,6 +1756,57 @@
       "tokensK": 0,
       "thinking": "high",
       "model": "cursor",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.49",
+      "phase": "R7",
+      "title": "Head pager: styles for hd-pager/hd-more; refresh paged rows when the snapshot changes",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:31:23+03:30"
+      }
+    },
+    {
+      "id": "R7.50",
+      "phase": "R7",
+      "title": "Sync root fix server: one revision per project, cached build, usage on snapshot (cursor-sync-root.md)",
+      "status": "todo",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.51",
+      "phase": "R7",
+      "title": "Sync root fix client: 304 keeps state, one body for all sections, usage from snapshot",
+      "status": "todo",
+      "tokensK": 50,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.52",
+      "phase": "R7",
+      "title": "Sync root fix: dom patch keeps focus but paints; head full cache keyed by rev",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0
