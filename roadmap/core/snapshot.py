@@ -258,7 +258,7 @@ def head_row(entry, moment, accepted=False, suggest=None, linked=None, prog=None
     if prog:
         row["prog"] = prog
     if entry.get("dup"):
-        row["dup"] = entry["dup"]["id"]
+        row["dup"] = {"id": entry["dup"]["id"], "score": entry["dup"].get("score")}
     if suggest:
         row["suggest"] = list(suggest)
     return row

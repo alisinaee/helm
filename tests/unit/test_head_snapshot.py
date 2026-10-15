@@ -127,7 +127,7 @@ class HeadRowShape(unittest.TestCase):
         self.assertEqual(row["links"], links[:HEAD_LINKS_MAX])
         self.assertEqual(row["more"], 5 - HEAD_LINKS_MAX)
         self.assertEqual(len(row["sum"]), HEAD_SUM_MAX)
-        self.assertEqual(row["dup"], "H2")
+        self.assertEqual(row["dup"], {"id": "H2", "score": 0.7})
         self.assertIs(row["carried"], True)
 
     def test_link_state_maps_tasks_and_jobs(self):
