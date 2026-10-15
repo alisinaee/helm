@@ -4,6 +4,10 @@ A job's tokens are recorded once per job id (idempotent; the last 500 job ids ar
 `task done --tokens` path records spend only when the task has no spend yet, so one piece of work is counted once.
 """
 
+import datetime
+import json
+import os
+
 from roadmap.errors import EXIT_USAGE, RoadmapError
 from roadmap.log import get_logger
 from roadmap.services import records
@@ -14,6 +18,70 @@ FILE = "budget.json"
 JOBS_KEEP = 500
 SCOPES = ("project", "phases", "models", "tasks")
 UNATTRIBUTED = "-"
+AUTONOMY_FILE = "autonomy.json"
+MAX_USAGE_AGE_MIN = 90
+
+
+def guard(data_dir, now=None):
+    """Check the usage limits in docs/autonomy.json (the only source; no keychain, no usage sync). Returns (stop, warn).
+    stop is one line such as "stop: weekly 86% >= 85%" when weekly or 5-hour usage is at or past its stop percent,
+    else None. warn is a note when the usage reading is older than maxUsageAgeMin (default 90) or the file cannot be
+    read, else None. A missing autonomy.json gives (None, None)."""
+    path = os.path.join(data_dir, AUTONOMY_FILE)
+    if not os.path.exists(path):
+        return None, None
+    try:
+        with open(path, encoding="utf-8") as fh:
+            doc = json.load(fh)
+    except (OSError, ValueError):
+        return None, "autonomy.json unreadable: limits not checked"
+    if not isinstance(doc, dict):
+        return None, "autonomy.json is not an object: limits not checked"
+    limit = doc.get("limit") if isinstance(doc.get("limit"), dict) else {}
+    usage = doc.get("usage") if isinstance(doc.get("usage"), dict) else {}
+    stop = _stop_reason(limit, usage)
+    return stop, None if stop else _stale_warning(doc, usage, now)
+
+
+def _is_number(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _stop_reason(limit, usage):
+    """The first stop reached (weekly, then 5-hour), as the refusal line, or None."""
+    checks = (("weekly", usage.get("weeklyPercent"), limit.get("stopAtPercent")),
+              ("5-hour", usage.get("fiveHourPercent"), limit.get("fiveHourStopAtPercent")))
+    for name, reading, stop_at in checks:
+        if _is_number(reading) and _is_number(stop_at) and reading >= stop_at:
+            return "stop: %s %g%% >= %g%%" % (name, reading, stop_at)
+    return None
+
+
+def _stale_warning(doc, usage, now):
+    """A note when the usage reading is older than maxUsageAgeMin, or has no readable time. None when fresh."""
+    max_age = doc.get("maxUsageAgeMin", MAX_USAGE_AGE_MIN)
+    if not _is_number(max_age):
+        max_age = MAX_USAGE_AGE_MIN
+    stamp = _parse_time(usage.get("updated"))
+    if stamp is None:
+        return "usage has no readable time: run usage push"
+    current = now or datetime.datetime.now(datetime.timezone.utc)
+    age_min = (current - stamp).total_seconds() / 60
+    if age_min <= max_age:
+        return None
+    age = "%d min" % age_min if age_min < 180 else "%dh" % (age_min // 60)
+    return "usage " + age + " old: run usage push"
+
+
+def _parse_time(text):
+    """An ISO 8601 time as an aware datetime (no offset means UTC), or None when it is not a time."""
+    if not isinstance(text, str):
+        return None
+    try:
+        stamp = datetime.datetime.fromisoformat(text.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return stamp.replace(tzinfo=datetime.timezone.utc) if stamp.tzinfo is None else stamp
 
 
 def get(data_dir):
