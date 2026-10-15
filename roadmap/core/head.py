@@ -16,6 +16,8 @@ LINK_KINDS = ("task", "sub", "issue", "feature", "question", "backlog", "review"
 MAX_LINKS = 6
 MANUAL_STATUSES = ("merged", "declined", "needs-you", "done", "open")
 ACTIVE_LINK_STATES = ("doing", "partial", "running")
+BLOCKED_LINK_STATES = ("hold", "blocked")
+FAILED_LINK_STATES = ("failed",)
 CLOSED_STATUSES = ("done", "declined", "merged")
 DUP_MIN = 0.6
 DUP_WINDOW_DAYS = 30
@@ -177,6 +179,10 @@ def _status(entry, link_state):
         return "done", False
     if manual is None and links and all(s == "done" for s in states):
         return "done", True
+    if any(s in FAILED_LINK_STATES for s in states):
+        return "failed", False
+    if any(s in BLOCKED_LINK_STATES for s in states):
+        return "blocked", False
     if any(s in ACTIVE_LINK_STATES for s in states):
         return "doing", False
     if links:
@@ -191,8 +197,9 @@ def fold(records, link_state=None, now=None, amber_min=30, stale_min=120):
 
     link_state maps a link ref ('task:R7.31', 'job:j599') to 'done', 'doing', 'partial', 'running' or 'open'.
     Status rules, first match wins: merged/declined/needs-you when set by hand; done when set by hand, or
-    (auto) when every link is done and the entry has links; doing when a linked task is doing or partial or a
-    job runs; bound when it has a link; understood when the head triaged it; new otherwise.
+    (auto) when every link is done and the entry has links; failed when a link is failed (a failed job); blocked
+    when a link is on hold or blocked; doing when a linked task is doing or partial or a job runs; bound when it has
+    a link; understood when the head triaged it; new otherwise.
     age_min, amber and stale apply to new and understood entries only. carried: open, and from a session that
     started before the current head's claim.
     """
