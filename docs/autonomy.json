@@ -3,18 +3,17 @@
   "maxUsageAgeMin": 90,
   "limit": {
     "kind": "weekly",
-    "stopAtPercent": 85,
     "setBy": "the person",
     "setOn": "2026-10-14",
     "note": "2026-10-15: the person set weekly stop 85% (H111) and 5-hour stop 80% (H99).",
     "fiveHourStopAtPercent": 80
   },
   "usage": {
-    "weeklyPercent": 82,
-    "fiveHourPercent": 34,
-    "weeklyResetsAt": "2026-10-16T08:00:00Z",
-    "fiveHourResetsAt": "2026-10-14T09:50:00Z",
-    "updated": "2026-10-14T08:57:58+03:30",
+    "weeklyPercent": 86,
+    "fiveHourPercent": 12,
+    "weeklyResetsAt": "2026-10-19T06:00:00Z",
+    "fiveHourResetsAt": "2026-10-15T21:40:00Z",
+    "updated": "2026-10-15T20:18:21+03:30",
     "source": "manual push"
   }
 }
