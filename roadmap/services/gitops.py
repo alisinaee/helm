@@ -193,9 +193,27 @@ def _owners(data_dir):
     return owners
 
 
+_PATH_BAD = set("*?[]{}")
+
+
+def _commit_path(root, path):
+    """One explicit repo-relative file: no glob character, no pathspec magic (leading ':'), no '--', no '..', no
+    absolute path, and it resolves to a real file inside the repo (or a tracked file, so a deletion can be committed)."""
+    text = str(path or "")
+    if text.startswith(":") or text == "--" or _PATH_BAD & set(text):
+        raise RoadmapError("usage", "path '" + text[:200] + "' must be an explicit file, not a glob or pathspec",
+                           EXIT_USAGE)
+    norm = git.valid_rel_path(root, text)
+    if not os.path.isfile(os.path.join(root, norm)):
+        rc, out, _ = git._git(root, ["--literal-pathspecs", "ls-files", "--", norm], git.READ_TIMEOUT_S)
+        if rc != 0 or not out.strip():
+            raise RoadmapError("usage", "path '" + text[:200] + "' is not a file in the repo", EXIT_USAGE)
+    return norm
+
+
 def _h_commit(data_dir, a, now):
     root = _root(data_dir)
-    paths = sorted(set(git.valid_rel_path(root, p) for p in a["paths"]))
+    paths = sorted(set(_commit_path(root, p) for p in a["paths"]))
     _writable(root, "commit")
     owners = _owners(data_dir)
     for path in paths:

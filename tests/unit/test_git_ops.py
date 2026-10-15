@@ -322,16 +322,27 @@ class ArgvGuardGaps(GitOpsCase):
             self.run_op("git.commit", {"paths": ["link.txt"], "message": "x"})
         self.assertEqual(ctx.exception.exit, EXIT_USAGE)
 
-    @unittest.expectedFailure
     def test_glob_pathspec_cannot_sweep_another_jobs_file(self):
         self.write("a.txt", "a\n")
         self.write_jobs([{"id": "j1", "status": "running", "files": ["a.txt"]}])
         with self.assertRaises(RoadmapError):
             self.run_op("git.commit", {"paths": ["*"], "message": "x"})
 
-    @unittest.expectedFailure
     def test_magic_pathspec_is_refused(self):
         self.write("a.txt", "a\n")
         with self.assertRaises(RoadmapError) as ctx:
             self.run_op("git.commit", {"paths": [":/"], "message": "x"})
+        self.assertEqual(ctx.exception.exit, EXIT_USAGE)
+
+    def test_magic_prefix_variants_are_refused(self):
+        self.write("a.txt", "a\n")
+        for bad in [":(top)a.txt", ":!a.txt", ":(glob)*.txt", "a.t?t", "{a,b}.txt"]:
+            with self.assertRaises(RoadmapError) as ctx:
+                self.run_op("git.commit", {"paths": [bad], "message": "x"})
+            self.assertEqual(ctx.exception.exit, EXIT_USAGE)
+
+    def test_absolute_path_is_refused(self):
+        self.write("a.txt", "a\n")
+        with self.assertRaises(RoadmapError) as ctx:
+            self.run_op("git.commit", {"paths": [os.path.join(self.folder, "a.txt")], "message": "x"})
         self.assertEqual(ctx.exception.exit, EXIT_USAGE)
