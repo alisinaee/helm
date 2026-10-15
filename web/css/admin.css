@@ -6,9 +6,11 @@
   display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
 .lim-edit, .tk-override { align-items: flex-end; }
 .lim-block, .lim-list, .spend-list, .rule-list { display: grid; gap: var(--sp-2); padding: 0; margin: 0; list-style: none; }
-.lim-row, .rule-row { display: grid; gap: var(--sp-2); padding: var(--sp-2) 0; border-bottom: 1px solid var(--track); }
+.lim-row { display: grid; }
+.lim-row, .rule-row { gap: var(--sp-2); padding: var(--sp-2) 0; border-bottom: 1px solid var(--track); }
 .rule-row { --rg: minmax(0, 1fr) 6rem 4.5rem 5.5rem; align-items: center; }
 .lim-title, .rule-text, .spend-name { flex: 1 1 12rem; min-width: 0; }
+.rule-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lim-id, .rule-scope, .lim-note, .lim-readonly, .lim-label, .pace, .met-legend, .acc-line, .rule-count {
   margin: 0; font-size: var(--fs-12); color: var(--text-3); }
 .lim-field { display: grid; gap: var(--sp-1); min-width: 0; }
@@ -17,6 +19,7 @@
   background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-control); }
 .rule-input { width: 100%; box-sizing: border-box; padding: var(--sp-2); min-height: 0; }
 .lim-num { width: 7rem; font-variant-numeric: tabular-nums; }
+.rule-err { margin: 0; font-size: var(--fs-12); color: var(--danger); }
 .lim-range { width: min(16rem, 60vw); accent-color: var(--accent); }
 .lim-value, .rules-form, .lim-stepper { display: grid; gap: var(--sp-2); }
 .lim-preview { margin: 0; font-size: var(--fs-12); color: var(--text-2); }
@@ -46,4 +49,5 @@
     border-radius: var(--r-card) var(--r-card) 0 0; box-shadow: var(--shadow-2); }
   .lim-select, .lim-num, .lim-text, .rule-input, .step { min-height: 44px; font-size: var(--fs-15); }
   .lim-range { width: 100%; }
+  .rule-text { white-space: normal; }
 }
