@@ -1,6 +1,7 @@
 // DOM writes and markup helpers. This is the only module that assigns HTML strings to the page (lint_js enforces it).
-// patch() replaces one section only when its markup changed, keeps the focused control, and sets meter widths
-// through the CSSOM because the CSP forbids style attributes.
+// patch() replaces one section only when its markup changed, keeps the focused control and the scroll positions of
+// the section and its scrolled descendants, and sets meter widths through the CSSOM because the CSP forbids style
+// attributes.
 
 const lastHtml = new Map();
 
@@ -29,21 +30,84 @@ export function applyMeters(root) {
   }
 }
 
-// Replace one section's contents. Returns true when the DOM changed. The section is always written (a poll never
-// skips it); a focused control inside it keeps its id (or data-focus key), its value and its selection. When the new
-// markup has no matching control, the section is written and focus is not restored.
+// Replace one section's contents. Returns true when the DOM changed. Markup equal to the last write (or to the current
+// innerHTML) is not written at all. Otherwise the section is written; a focused control inside it keeps its id (or
+// data-focus key), its value and its selection, and the scroll position of the section and of each scrolled
+// descendant is kept. When the new markup has no matching control or element, focus or scroll is not restored there.
 export function patch(sectionId, html) {
   const el = document.getElementById(sectionId);
   if (!el) return false;
-  if (lastHtml.get(sectionId) === html) return false;
+  if (lastHtml.get(sectionId) === html || el.innerHTML === html) {
+    lastHtml.set(sectionId, html);
+    return false;
+  }
   const active = document.activeElement;
   const inside = Boolean(active) && el.contains(active);
   const keep = inside ? focusState(active) : null;
+  const scrolled = collectScroll(el);
   el.innerHTML = html;
   lastHtml.set(sectionId, html);
   applyMeters(el);
   if (keep) restoreFocus(el, keep);
+  restoreScroll(el, scrolled);
   return true;
+}
+
+// A stable key for one child element among its siblings: its id, else its data-key, else its tag and class list with
+// its index among the siblings that share that tag and class. `seen` counts those siblings for one parent.
+function scrollKey(node, seen) {
+  const id = node.getAttribute("id");
+  if (id) return "#" + id;
+  const dataKey = node.getAttribute("data-key");
+  if (dataKey) return "[data-key=" + dataKey + "]";
+  const sig = node.tagName + "." + (node.getAttribute("class") || "");
+  const index = seen.get(sig) || 0;
+  seen.set(sig, index + 1);
+  return sig + "@" + index;
+}
+
+// The scroll position of el and of every scrolled descendant, each with its path of keys from el.
+function collectScroll(root) {
+  const out = [];
+  function walk(node, path) {
+    if (node.scrollTop > 0 || node.scrollLeft > 0) {
+      out.push({ path: path, top: node.scrollTop || 0, left: node.scrollLeft || 0 });
+    }
+    const seen = new Map();
+    for (const child of Array.from(node.children || [])) {
+      walk(child, path.concat([scrollKey(child, seen)]));
+    }
+  }
+  walk(root, []);
+  return out;
+}
+
+// Find the element at a key path from root; null when a step has no match.
+function findByPath(root, path) {
+  let node = root;
+  for (const step of path) {
+    const seen = new Map();
+    let found = null;
+    for (const child of Array.from(node.children || [])) {
+      if (scrollKey(child, seen) === step) {
+        found = child;
+        break;
+      }
+    }
+    if (!found) return null;
+    node = found;
+  }
+  return node;
+}
+
+// Put the remembered scroll positions back on the matching new elements.
+function restoreScroll(root, records) {
+  for (const rec of records) {
+    const node = findByPath(root, rec.path);
+    if (!node) continue;
+    node.scrollTop = rec.top;
+    node.scrollLeft = rec.left;
+  }
 }
 
 const FIELD_TAGS = ["INPUT", "SELECT", "TEXTAREA"];
