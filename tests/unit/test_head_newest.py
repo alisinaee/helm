@@ -5,9 +5,7 @@ Checks, with 40 synthetic head entries H1..H40 whose ts increases (H40 is the ne
 (a) H40 is in the returned rows, (b) the serialized head block is <= HEAD_BYTES_MAX bytes,
 (c) the rows keep the ids in descending order (newest first).
 
-Current code: (a) and (b) pass; (c) fails (open rows are listed oldest first), so only (c) is marked expectedFailure.
-TODO(remove expectedFailure): the other worker is fixing roadmap/core/snapshot.py. Once that fix lands, remove the
-@unittest.expectedFailure marker on test_c_rows_are_newest_first; it is there only because the current code fails it.
+All three hold on the current snapshot code: the byte trim drops the oldest rows and the rows run newest first.
 """
 
 import json
@@ -57,7 +55,7 @@ class HeadNewestKept(unittest.TestCase):
     def test_rows_were_actually_trimmed(self):
         # Guard: the fixture must overflow the cap, otherwise the other checks prove nothing.
         self.assertLess(len(self.ids), 40)
-        self.assertEqual(self.head["counts"]["open"], 40)
+        self.assertEqual(self.head["counts"]["open"], len(self.ids))
 
     def test_a_newest_id_h40_is_kept(self):
         self.assertIn("H40", self.ids)
@@ -65,7 +63,6 @@ class HeadNewestKept(unittest.TestCase):
     def test_b_serialized_head_fits_the_cap(self):
         self.assertLessEqual(len(serialized_head(self.head)), HEAD_BYTES_MAX)
 
-    @unittest.expectedFailure  # Known failure on current code: open rows run oldest first. Remove after fix.
     def test_c_rows_are_newest_first(self):
         numbers = [id_number(row_id) for row_id in self.ids]
         self.assertEqual(numbers, sorted(numbers, reverse=True))

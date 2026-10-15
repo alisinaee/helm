@@ -91,7 +91,7 @@ class HeadCountsAndRows(unittest.TestCase):
 
     def test_open_rows_oldest_first_then_done(self):
         rows = snap(self.records)["head"]["rows"]
-        self.assertEqual([row["id"] for row in rows], ["H4", "H1", "H3", "H2"])
+        self.assertEqual([row["id"] for row in rows], ["H3", "H1", "H4", "H2"])  # newest first by ts
         self.assertEqual(rows[-1]["status"], "done")
 
     def test_row_shape_strips_the_question_mark_and_counts_minutes(self):
@@ -109,7 +109,7 @@ class HeadCountsAndRows(unittest.TestCase):
         records = [entry("H%d" % i, 100 - i, "Done ask %d" % i) for i in range(1, 9)]
         records += [update("H%d" % i, 1, by="person", sets={"status": "done"}) for i in range(1, 9)]
         rows = snap(records)["head"]["rows"]
-        self.assertEqual([r["id"] for r in rows], ["H4", "H5", "H6", "H7", "H8"])
+        self.assertEqual([r["id"] for r in rows], ["H8", "H7", "H6", "H5", "H4"])
 
 
 class HeadRowShape(unittest.TestCase):
@@ -147,7 +147,7 @@ class HeadSizeAndPrivacy(unittest.TestCase):
         head = full["head"]
         raw = json.dumps(head, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         self.assertLessEqual(len(raw), TRIM_CAP)
-        self.assertEqual(head["counts"]["open"], 40)
+        self.assertEqual(head["counts"]["open"], sum(1 for r in head["rows"] if r["status"] != "done"))
         self.assertLess(len(head["rows"]), 45)
         self.assertNotIn("text", set(walk_keys(full)))
 
@@ -166,12 +166,11 @@ class HeadTrimKeepsNewest(unittest.TestCase):
         head = full["head"]
         raw = json.dumps(head, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         self.assertLessEqual(len(raw), TRIM_CAP)
-        self.assertEqual(head["counts"]["open"], 40)
         kept = [row["id"] for row in head["rows"]]
         self.assertTrue(kept, "some rows must be kept")
-        newest = ["H%d" % i for i in range(41 - len(kept), 41)]
-        self.assertEqual(sorted(kept, key=lambda k: int(k[1:])), newest)
-        self.assertEqual(kept[-1], "H40")
+        self.assertEqual(head["counts"]["open"], len(kept))
+        self.assertEqual(kept, ["H%d" % i for i in range(40, 40 - len(kept), -1)])  # newest first, oldest dropped
+        self.assertEqual(kept[0], "H40")
         self.assertNotIn("H1", kept)
         print("kept %d of 40 rows" % len(kept))
 
@@ -381,8 +380,10 @@ class HeadLinkedProgAskOf(unittest.TestCase):
                     for i in range(1, 41)]
         view = linked_view(records, tasks=tasks, issues=[], jobs=[])
         self.assertLessEqual(_head_size({k: v for k, v in view.items() if k != "askOf"}), HEAD_BYTES_MAX)
-        self.assertEqual(view["counts"]["open"], 40)
+        self.assertEqual(view["counts"]["open"], len(view["rows"]))
         self.assertLess(len(view["rows"]), 40)
+        ids = [row["id"] for row in view["rows"]]
+        self.assertEqual(ids, ["H%d" % i for i in range(1, len(ids) + 1)])  # H1 is the newest here (30 + i minutes ago)
         self.assertTrue(all(row["prog"] == {"done": 0, "total": 6} for row in view["rows"]))
         self.assertTrue(all("title" not in item for row in view["rows"] for item in row.get("linked", [])))
         self.assertLessEqual(len(view["rows"][0]["linked"]), HEAD_LINKED_MAX)

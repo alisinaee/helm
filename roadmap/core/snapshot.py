@@ -27,7 +27,7 @@ WORKFLOW_SPANS = 200                                # newest job spans in the wo
 WORKFLOW_DAYS = timedelta(days=7)                   # jobs that ended (or started) longer ago are dropped
 AFTER_MAX = 5                                       # most task ids in one after list
 SESSION_STATES = ("watching", "open", "none")       # presence.state() values (R7.1 T1)
-HEAD_OPEN_MAX = 40                                  # HEAD-SPEC section 5: open asks in the head key, oldest first
+HEAD_OPEN_MAX = 40                                  # HEAD-SPEC section 5: open asks in the head key, newest first
 HEAD_DONE_MAX = 5                                   # newest done asks in the head key
 HEAD_SUM_MAX = 60                                   # summary characters per head row
 HEAD_LINKS_MAX = 3                                  # link refs per head row (links); the rest is a count
@@ -35,7 +35,7 @@ HEAD_LINKED_MAX = 6                                 # resolved links per head ro
 HEAD_TITLE_MAX = 60                                 # title characters per resolved link
 HEAD_JOB_STATES = ("running", "queued")             # the only jobs a resolved link lists
 HEAD_PREV_MAX = 3                                   # earlier sessions in the head key
-HEAD_BYTES_MAX = 8192                               # the head key as compact JSON; link titles, then rows, are dropped to fit
+HEAD_BYTES_MAX = 8192                               # the head key as compact JSON; link titles are dropped once to fit
 
 
 def _missing(name):
@@ -285,17 +285,25 @@ def _head_size(view):
     return len(json.dumps(view, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
 
 
+def _newest_key(entry):
+    """Sort key matching the head screen (head.js sortRows): the ts as time, then the numeric id part."""
+    when = head_rules.parse_ts(entry.get("ts"))
+    num = int("".join(ch for ch in str(entry.get("id") or "") if ch.isdigit()) or 0)
+    return (when.timestamp() if when is not None else 0, num)
+
+
 def _newest(entries):
-    """Entries newest first (by ts, then id), so a cut keeps the recent ones."""
-    return sorted(entries, key=lambda e: (str(e.get("ts") or ""), str(e.get("id") or "")), reverse=True)
+    """Entries newest first (by ts, then numeric id), so a cut keeps the recent ones."""
+    return sorted(entries, key=_newest_key, reverse=True)
 
 
 def _head_view(records, link_state, moment, tasks=(), issues=(), jobs=(), issues_all=None):
-    """The head key: now, prev, counts and rows (open oldest first, then the newest done). Open unbound rows get
-    suggest from the open tasks (state todo or partial) and the open issues. Each row carries linked (resolved links,
-    from tasks, issues_all and jobs) and prog. To fit HEAD_BYTES_MAX the link titles are dropped first, then rows,
-    done ones first; prog and the counts stay. The result also has askOf (task id -> ask ids, from refs.ask_backlinks);
-    the caller takes it out of the head key."""
+    """The head key: now, prev, counts and rows (newest first, open and done together, as the head screen sorts them).
+    Open unbound rows get suggest from the open tasks (state todo or partial) and the open issues. Each row carries
+    linked (resolved links, from tasks, issues_all and jobs) and prog. Rows are the newest HEAD_OPEN_MAX open and
+    HEAD_DONE_MAX done. To fit HEAD_BYTES_MAX the link titles are dropped first, then the oldest rows. Counts match the
+    rows placed. The result also has askOf (task id -> ask ids, from refs.ask_backlinks); the caller takes it out of
+    the head key."""
     entries = head_rules.fold(records, link_state=link_state, now=moment)
     accepted = _accepted_ids(records)
     open_rows = [e for e in entries if e["status"] not in head_rules.CLOSED_STATUSES]
@@ -321,28 +329,33 @@ def _head_view(records, link_state, moment, tasks=(), issues=(), jobs=(), issues
                         linked=_resolve_links(e, index, live_jobs) or None, prog=_progress(e, index))
 
     current, prev = _head_sessions(records)
-    view = {
-        "now": current, "prev": prev,
-        "counts": {"open": len(open_rows),
-                   "unhandled": sum(1 for e in open_rows if e["status"] in ("new", "understood")),
-                   "doing": sum(1 for e in open_rows if e["status"] == "doing"),
-                   "needs": sum(1 for e in open_rows if e["status"] == "needs-you"),
-                   "doneUnacc": len(done_rows)},
-        "rows": ([row(e) for e in _newest(open_rows)[:HEAD_OPEN_MAX][::-1]]
-                 + [row(e) for e in _newest(done_rows)[:HEAD_DONE_MAX][::-1]]),
-    }
-    rows = view["rows"]
-    titles_dropped = False
-    while rows and _head_size(view) > HEAD_BYTES_MAX:
-        if not titles_dropped:
-            for r in rows:
-                for item in r.get("linked") or []:
-                    item.pop("title", None)
-            titles_dropped = True
-            continue
-        # Drop the oldest done row first; open rows go only when no done row is left, and always the oldest.
-        done_at = next((i for i, r in enumerate(rows) if r["status"] == "done"), 0)
-        rows.pop(done_at)
+    # (is_open, entry, row) for the newest open and newest done rows, newest first across both (the screen order).
+    items = [(True, e, row(e)) for e in _newest(open_rows)[:HEAD_OPEN_MAX]]
+    items += [(False, e, row(e)) for e in _newest(done_rows)[:HEAD_DONE_MAX]]
+    items.sort(key=lambda it: _newest_key(it[1]), reverse=True)
+
+    def build(pairs):
+        opened = [r for is_open, _, r in pairs if is_open]
+        return {
+            "now": current, "prev": prev,
+            "counts": {"open": len(opened),
+                       "unhandled": sum(1 for r in opened if r["status"] in ("new", "understood")),
+                       "doing": sum(1 for r in opened if r["status"] == "doing"),
+                       "needs": sum(1 for r in opened if r["status"] == "needs-you"),
+                       "doneUnacc": len(pairs) - len(opened)},
+            "rows": [r for _, _, r in pairs],
+        }
+
+    view = build(items)
+    if view["rows"] and _head_size(view) > HEAD_BYTES_MAX:
+        for _, _, r in items:
+            for item in r.get("linked") or []:
+                item.pop("title", None)
+        view = build(items)
+    # Still too big: drop the oldest row (the last one in newest-first order) until it fits. Counts follow the rows.
+    while view["rows"] and _head_size(view) > HEAD_BYTES_MAX:
+        items = items[:-1]
+        view = build(items)
     view["askOf"] = ref_rules.ask_backlinks(entries)
     return view
 
