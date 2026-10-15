@@ -9,6 +9,9 @@ import {
   deferredRowHtml, jobChipHtml, phaseCopyHtml, STATE_GLYPH, STATE_WORD, taskCopyHtml, taskRowHtml,
 } from "./tasks.js";
 
+// A phase with more live tasks than LONG_PHASE shows only the first SHOW_FIRST until the person asks for the rest.
+const LONG_PHASE = 12;
+const SHOW_FIRST = 8;
 const TONE = { done: "success", partial: "accent", todo: "accent", hold: "warning" };
 
 // The effective open state of a phase: an explicit choice wins. Minimal view (the default too) never opens a phase
@@ -93,9 +96,17 @@ function phaseBodyHtml(vm, phase, tasks, jobById) {
     html += '<div class="job-chips phase-floats">' + placed.floats.map(jobChipHtml).join("") + "</div>";
   }
   if (live.length) {
-    html += live.map(function (t) {
+    const saved = vm.prefsOpen["more:" + phase.id];
+    const all = live.length <= LONG_PHASE || (typeof saved === "boolean" ? saved : vm.mode === "expanded");
+    html += (all ? live : live.slice(0, SHOW_FIRST)).map(function (t) {
       return taskRowHtml(t, placed.byTask[t.id] || [], taskCopyHtml(project, snap, t));
     }).join("");
+    if (live.length > LONG_PHASE) {
+      html += '<button type="button" class="defer-toggle" aria-expanded="' + all +
+        '" data-action="toggle-item" data-item="more:' + esc(phase.id) + '" data-focus="item-more:' +
+        esc(phase.id) + '">' + (all ? "▾ show first " + SHOW_FIRST :
+          "▸ show " + fmtCount(live.length - SHOW_FIRST) + " more") + "</button>";
+    }
   } else if (!placed.floats.length) {
     html += '<p class="phase-empty">No tasks in this phase.</p>';
   }

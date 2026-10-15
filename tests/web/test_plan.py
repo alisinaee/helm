@@ -164,11 +164,10 @@ class PlanRenderTests(unittest.TestCase):
         html = self.out["timelineSynth"]
         self.assertIn("no estimate", html)
 
-    def test_lane_stats_show_the_budget_and_the_spend(self):
+    def test_lane_stats_show_counts_not_money(self):
         html = self.out["lanesSynth"]
-        self.assertIn("budget 100k", html)
-        self.assertIn("spent 30k", html)
-        self.assertIn("no budget", html)
+        self.assertIn(" open</span>", html)
+        self.assertNotIn("budget 100k", html)  # estimates and spend live in the Timeline only (R7.110)
 
     def test_phase_name_is_escaped(self):
         html = self.out["lanesSynth"]
