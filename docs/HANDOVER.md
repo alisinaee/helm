@@ -38,6 +38,17 @@ START HERE in a new chat (any account, same Mac): `cd ~/Works/roadmap-board` and
 - Argon: gemini-4-argon via OpenCode returned "Insufficient account funds" (paid, no credit). Browser route: Claude extension is installed in Arc and listed as connected, but tab creation timed out; not yet tested.
 - First message for the new chat: `/head`
 
+### Checkpoint 7 (2026-10-15, Claude usage limit reached)
+- Pushed since checkpoint 6: f0138ee (Work Doing = live jobs), 5be4e34 (Agents history), d900903 (ARCHITECTURE.html),
+  6144de0 (usage auto + band), 3cb53d1 (Head in-place rows, wheel fixed). Suite 3491 OK.
+- TOP PRIORITY R7.82 (H140): Opus v3 plan (docs/HEAD-V3-PLAN.md) was STOPPED at the usage limit; restart it (brief in
+  the R7.82 task + H140). Cursor grok v3 analysis is queued (docs/reviews/cursor-v3-analysis.md); then Cursor reviews
+  the Opus plan and Opus finalizes.
+- Needs the person: weekly stop: a GUI change set a global 95% row; agents cannot set limits
+  (`roadmap limit set --scope project --window week --pct 85`).
+- Next free: R7.81 (needs-you asks in Inbox), R7.71 A5, R7.72 A6, R7.73 B/C, R7.76, R7.59 Cursor UI review (requeue).
+- First message for the new chat: `/head`
+
 ### Checkpoint 6 (Opus head, 2026-10-15 ~16:35, STOPPED: 5h usage 85% > 80% stop; resets 18:10 local)
 - Last pushed: ad04454 (workflow map + timeline), 8b903e1 (A3 close guard), 9355ccc (Head default All, 133/133),
   2769561 (A4 runners), 19b60a0 (W4.a snapshot), daa315e (A2 events), 5839797 (Head states/colors/questions).
