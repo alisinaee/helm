@@ -1,4 +1,5 @@
 // Keyboard map (WP28). Keys are ignored while a text field or select has focus, and while Ctrl, Meta or Alt is down.
+// Single-character keys are ignored when Settings turns "Single-key shortcuts" off (singleKeysOn).
 // Shell keys: "?" help, "[" collapse the nav, "]" show or hide the panel, "z" undo the newest undoable toast,
 // "Esc" closes the help dialog or the panel sheet, "g" then a letter goes to a section (g h is All projects), and
 // "m" marks a bug here (localhost only, R8.21). The top bar Mark and palette buttons are clicks, handled in initKeys.
@@ -10,6 +11,29 @@ import { isSheetWidth, loadUi, panelIsOpen, updateUi } from "./state.js";
 import { triggerUndo } from "./views/toast.js";
 import { isPaletteKey } from "./views/palette.js";
 import { markAllowed, markBug } from "./views/topbar.js";
+
+// Single-key shortcuts (WCAG 2.1.4) can be turned off in Settings > Keyboard shortcuts. The choice lives under its
+// own localStorage key (like the log switch); the default is on. Blocked storage keeps the choice until reload.
+const SINGLE_KEY_SWITCH = "rb.keys.single";
+let singleKeysMemo = null;
+
+export function singleKeysOn() {
+  if (singleKeysMemo !== null) return singleKeysMemo;
+  try {
+    return window.localStorage.getItem(SINGLE_KEY_SWITCH) !== "0";
+  } catch (err) {
+    return true;
+  }
+}
+
+export function setSingleKeys(on) {
+  singleKeysMemo = Boolean(on);
+  try {
+    window.localStorage.setItem(SINGLE_KEY_SWITCH, singleKeysMemo ? "1" : "0");
+  } catch (err) {
+    // Blocked or full storage: the choice lasts until reload.
+  }
+}
 
 const CHORD_MS = 1000;
 const CHORD_KEYS = { h: "home", o: "overview", i: "inbox", r: "roadmap", w: "work", u: "issues", a: "agents",
@@ -59,6 +83,13 @@ export function closePanel() {
   hooks.rerender();
 }
 
+// Escape closes the panel sheet; focus goes back to the panel toggle (the render replaces the button, so it is found
+// again by its data-focus name).
+function focusPanelToggle() {
+  const btn = document.querySelector('[data-focus="panel-toggle"]');
+  if (btn && typeof btn.focus === "function") btn.focus();
+}
+
 function goToSection(key) {
   const name = CHORD_KEYS[key];
   const route = currentRoute();
@@ -95,7 +126,13 @@ function onKeydown(event) {
       hooks.closeHelp();
     } else if (isSheetWidth() && panelIsOpen(loadUi())) {
       closePanel();
+      focusPanelToggle();
     }
+    chordAt = 0;
+    return;
+  }
+  // A single character key (letters, ?, [, ], per-item keys) does nothing while the Settings switch is off.
+  if (key.length === 1 && !singleKeysOn()) {
     chordAt = 0;
     return;
   }

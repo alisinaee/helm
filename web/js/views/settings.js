@@ -4,7 +4,7 @@
 
 import { esc } from "../dom.js";
 import { csrfToken, getJson } from "../api.js";
-import { helpRows } from "../keys.js";
+import { helpRows, setSingleKeys, singleKeysOn } from "../keys.js";
 import { setEnabled, status as logStatusNow } from "../log.js";
 import { loadUi, saveTheme, updateUi } from "../state.js";
 import { showToast } from "./toast.js";
@@ -25,6 +25,10 @@ const LOG_SWITCH = [
   { id: "on", label: "On" },
   { id: "off", label: "Off" },
 ];
+const SINGLE_KEYS_SWITCH = [
+  { id: "on", label: "On" },
+  { id: "off", label: "Off" },
+];
 const LOG_STATUS_URL = "/api/v1/log/status";
 const LOG_REPORT_URL = "/api/v1/log/report?n=30";
 const LOG_STATUS_MS = 5000;
@@ -34,16 +38,45 @@ let serverLog = null;
 let serverLogFailed = false;
 let serverLogAt = 0;
 
-// Choice buttons: aria-pressed for the state, and a tick for the chosen one (not colour alone). The blank
-// icon keeps the other labels in the same place.
+// Choice buttons form a radio group: role radiogroup, role radio with aria-checked, and a tick for the chosen one
+// (not colour alone). Only the chosen radio takes the Tab stop; the arrow keys move between them (radioArrowKey).
+// The blank icon keeps the other labels in the same place.
 function choiceHtml(name, options, current, action) {
-  return '<div class="rule-tabs" role="group" aria-label="' + esc(name) + '">' + options.map(function (o) {
+  return '<div class="rule-tabs" role="radiogroup" aria-label="' + esc(name) + '">' + options.map(function (o) {
     const on = o.id === current;
-    return '<button type="button" class="btn btn-small" aria-pressed="' + (on ? "true" : "false") +
-      '" data-action="' + esc(action) + '" data-value="' + esc(o.id) + '" data-focus="' + esc(action) + "-" +
-      esc(o.id) + '"><svg class="ico" aria-hidden="true" focusable="false"><use href="/icons.svg#' +
-      (on ? "i-check" : "i-blank") + '"></use></svg>' + esc(o.label) + "</button>";
+    return '<button type="button" class="btn btn-small" role="radio" aria-checked="' + (on ? "true" : "false") +
+      '" tabindex="' + (on ? "0" : "-1") + '" data-action="' + esc(action) + '" data-value="' + esc(o.id) +
+      '" data-focus="' + esc(action) + "-" + esc(o.id) + '"><svg class="ico" aria-hidden="true" focusable="false">' +
+      '<use href="/icons.svg#' + (on ? "i-check" : "i-blank") + '"></use></svg>' + esc(o.label) + "</button>";
   }).join("") + "</div>";
+}
+
+// Arrow keys between the radios of one radiogroup: focus moves and the radio it lands on is chosen (WAI-ARIA radio
+// group). The click goes through app.js like a mouse click, so the choice is saved and the page re-renders.
+function radioArrowKey(event) {
+  const key = event.key;
+  if (key !== "ArrowLeft" && key !== "ArrowRight" && key !== "ArrowUp" && key !== "ArrowDown") return;
+  const el = event.target;
+  if (!el || !el.getAttribute || el.getAttribute("role") !== "radio") return;
+  const group = el.closest ? el.closest('[role="radiogroup"]') : null;
+  if (!group) return;
+  const radios = Array.prototype.slice.call(group.querySelectorAll('[role="radio"]'));
+  const step = key === "ArrowLeft" || key === "ArrowUp" ? -1 : 1;
+  const next = radios[(radios.indexOf(el) + step + radios.length) % radios.length];
+  event.preventDefault();
+  next.focus();
+  next.click();
+}
+
+if (typeof document !== "undefined") document.addEventListener("keydown", radioArrowKey);
+
+// The single-key switch (keys.js reads it on every key). Off turns off the letters, ? and [ ] keys.
+function singleKeysHtml() {
+  const on = singleKeysOn() ? "on" : "off";
+  return '<p class="lim-label">Single-key shortcuts</p>' +
+    choiceHtml("Single-key shortcuts", SINGLE_KEYS_SWITCH, on, "set-single-keys") +
+    '<p class="page-note">Keys such as ? [ ] and the letters for items. Turn them off if they get in the way. ' +
+    "Ctrl+K and Esc still work.</p>";
 }
 
 // The shortcut list from keys.js, the same rows as the ? help: one line per shortcut, so it wraps on a phone.
@@ -132,7 +165,7 @@ export function sectionView() {
     '<p class="page-note">Read only on a phone: it can see every project and answer questions. It cannot change ' +
     "limits, overrides, rules, caps or approvals.</p></section>" +
     '<section class="ov-card" aria-labelledby="set-keys"><h3 id="set-keys" class="lim-h">Keyboard shortcuts</h3>' +
-    '<p class="page-note">Press ? anywhere to see this list.</p>' + keysHtml() +
+    '<p class="page-note">Press ? anywhere to see this list.</p>' + singleKeysHtml() + keysHtml() +
     '<button type="button" class="btn" data-action="help-open" data-focus="help-open">Show in a dialog</button>' +
     "</section>" +
     logging +
@@ -212,6 +245,10 @@ export function settingsAction(action, el) {
   }
   if (action === "set-log") {
     setEnabled(el.getAttribute("data-value") === "on");
+    return true;
+  }
+  if (action === "set-single-keys") {
+    setSingleKeys(el.getAttribute("data-value") === "on");
     return true;
   }
   if (action === "log-report") {
