@@ -136,8 +136,8 @@ function changesHtml(pid, entry) {
   if (!s.detached && !s.in_progress) {
     parts.push('<form class="git-form" data-git="commit" novalidate>' +
       '<label for="git-msg">Commit message</label><textarea id="git-msg" name="message" rows="2" maxlength="4000">' +
-      "</textarea><label for=\"git-task\">Task (optional)</label>" +
-      '<input id="git-task" name="task" type="text" maxlength="20" autocomplete="off">' +
+      "</textarea><label>Task (optional) " +
+      '<input id="git-task" name="task" type="text" maxlength="20" autocomplete="off"></label>' +
       '<button type="submit" class="btn btn-primary" data-focus="git-commit">Commit selected</button></form>');
   }
   parts.push('<div class="git-form"><button type="button" class="btn" data-git="push" data-focus="git-push">' +
