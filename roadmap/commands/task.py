@@ -184,6 +184,9 @@ def _backlog_move(args):
     """task backlog|promote <id>: demote a task to backlog or promote it to todo. Both are the person's (the agent
     guard refuses an agent shell); a promote of a task that is not in backlog is a no-op error, not a silent write."""
     project_id, data_dir = _data(args)
+    if args.backlog_word == "promote" and agentguard.is_agent():
+        raise RoadmapError("agent_refused", "promote is person-only", EXIT_CONFLICT,
+                           next='roadmap task note %s "propose promote"' % args.id)
     agentguard.refuse_if_agent("task." + args.backlog_word)
     task = tasks.get(data_dir, args.id)
     if args.backlog_word == "promote" and task.get("status") != "backlog":

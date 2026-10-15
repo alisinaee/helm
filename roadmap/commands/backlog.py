@@ -73,6 +73,5 @@ def _add(args):
     task_cmd.apply_records(data_dir, project["id"], records, "roadmap status")
     if getattr(args, "json", False):
         return {"id": tid, "phase": phase, "status": "backlog", "title": title}
-    print("T %s added (backlog)" % tid)
-    print("next: roadmap task promote %s" % tid)
+    print("ok %s backlog in %s. next: roadmap task promote %s" % (tid, phase, tid))
     return None
