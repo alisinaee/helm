@@ -308,3 +308,66 @@ def brief(data_dir, link_state=None, now=None):
     if len(lines) > BRIEF_MAX_LINES:
         lines = lines[:BRIEF_MAX_LINES - 1] + ["  more: roadmap head list"]
     return lines
+
+
+# ------------------------------------------------------------------ autopilot gate (HEAD-SPEC section 11, H12)
+
+GATE_LIMIT = 5
+GATE_WINDOW_S = 600          # at most one gate block per this many seconds
+GATE_5H_STOP = 90            # usage stops (percent): the gate stays silent at or above these
+GATE_WEEK_STOP = 95
+GATE_PAUSE_FILE = "head-pause"   # a file in the data dir: its presence pauses the gate
+GATE_STAMP_FILE = "head-gate.json"
+GATE_OPEN = ("new", "understood", "bound", "doing")
+_IDLE_TOOLS = (("cursor", "cursor idle: run the review audit"), ("agy", "agy idle: run an audit"))
+
+
+def _at_stop(usage):
+    """True when a usage reading is at or over a stop. A missing reading is not a stop."""
+    if not isinstance(usage, dict):
+        return False
+    for key, stop in (("fiveHourPercent", GATE_5H_STOP), ("weeklyPercent", GATE_WEEK_STOP)):
+        value = usage.get(key)
+        if isinstance(value, (int, float)) and not isinstance(value, bool) and value >= stop:
+            return True
+    return False
+
+
+def _age_min(ts, now):
+    when = head.parse_ts(ts)
+    return max(0.0, (now - when).total_seconds() / 60.0) if when is not None else 0.0
+
+
+def gate(rows, *, queue=(), running=(), dirty=None, unpushed=None, usage=None, paused=False, now=None,
+         limit=GATE_LIMIT):
+    """The autopilot continue items (HEAD-SPEC section 11), at most `limit` short lines, most urgent first: open
+    asks oldest first, then queued tasks, then idle cursor and agy (only when there is other work), then
+    uncommitted files and unpushed commits. Empty when paused, at a usage stop or when nothing waits.
+
+    Pure: the caller supplies the folded head rows, the queued task ids, the running job records, the uncommitted
+    file count and the unpushed commit count (None when unknown) and a usage dict. No file or process is read here."""
+    if paused or _at_stop(usage):
+        return []
+    now = now or datetime.now(timezone.utc)
+    asks = []
+    for r in sorted(rows or [], key=lambda x: str(x.get("ts") or "")):
+        if r.get("status") not in GATE_OPEN or _kind(r) in ("decision", "rule"):
+            continue
+        label = "unanswered" if r["status"] in ("new", "understood") else r["status"]
+        asks.append("%s %s %s: %s" % (r["id"], label, _age_text(_age_min(r.get("ts"), now)), r.get("sum", "")[:50]))
+    tasks = ["task %s queued, not started" % str(task) for task in queue or ()]
+    tools = []
+    names = [str(j.get("title", "")) + " " + str(j.get("model", "")) for j in running or () if isinstance(j, dict)]
+    text = " ".join(names).lower()
+    for word, line in _IDLE_TOOLS:
+        if word not in text:
+            tools.append(line)
+    work = []
+    if isinstance(dirty, int) and dirty > 0:
+        work.append("%d uncommitted files" % dirty)
+    if isinstance(unpushed, int) and unpushed > 0:
+        work.append("%d unpushed commits" % unpushed)
+    items = asks + tasks + work
+    if items:
+        items += tools  # idle resources are only worth a line when there is work to review or start
+    return items[:limit]
