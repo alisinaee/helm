@@ -161,7 +161,7 @@ class HeadCliCase(unittest.TestCase):
 
     def test_review_lists_done_then_refuses_person_actions(self):
         self.log("a done ask")
-        _run(["head", "set", "H1", "status=done"])
+        _run(["head", "set", "H1", "status=done", "note=answer: closed in the test with a long enough reason"])
         code, out, _ = _run(["head", "review"])
         self.assertEqual(code, 0)
         self.assertTrue(out.startswith("H1 "))
@@ -331,7 +331,7 @@ class HeadCliGaps(HeadCliCase):
 
     def test_review_reopen_writes_the_decision(self):
         self.log("a done ask")
-        _run(["head", "set", "H1", "status=done"])
+        _run(["head", "set", "H1", "status=done", "note=answer: closed in the test with a long enough reason"])
         args = argparse.Namespace(project=PROJECT_ID, id="H1", decision="reopen", json=False)
         out = io.StringIO()
         with mock.patch.object(head_cmd, "_write", return_value={"data": {}}) as write, \

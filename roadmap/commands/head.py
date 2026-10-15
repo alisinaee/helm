@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 
 from roadmap.core import head as core
 from roadmap.core.snapshot import head_link_state
-from roadmap.services import commands, control, headimport, hooks, jobs, loader, tasks
+from roadmap.services import agentguard, commands, control, headimport, hooks, jobs, loader, tasks
 from roadmap.services import head as store
 from roadmap.services import queue as queue_service
 from roadmap.store import paths, schema
@@ -27,7 +27,7 @@ DONE_CHECKLIST = (            # HEAD-SPEC section 11 item 3: the worker-completi
     "3. commit your own files by path, then push",
     "4. launch the next wave on disjoint files",
     "5. run the cursor or agy audit on this change",
-    "6. tick the asks it answers: roadmap head set H<n> status=done",
+    "6. tick the asks it answers: roadmap head set H<n> status=done note=\"<commit sha | job id | answer: ...>\"",
     "next: roadmap head brief --gate",
 )
 SHOW_MAX = 20                 # the show output in lines, header and text included
@@ -87,7 +87,8 @@ def register(sub, common):
     show.add_argument("id", metavar="H15")
     show.set_defaults(handler=_show)
 
-    setter = add("set", "change fields: head set H15 status=declined note=\"..\"")
+    setter = add("set", "change fields: head set H15 status=declined note=\"..\" (a done close needs a commit sha, "
+                        "job id or answer: note)")
     setter.add_argument("id", metavar="H15")
     setter.add_argument("words", nargs="+", metavar="KEY=VALUE", help="status, kind, sum or note")
     setter.set_defaults(handler=_set)
@@ -293,7 +294,20 @@ def _log(args):
     return _emit_write(args, reply, text, nxt)
 
 
+def _guard_head_write(args, eid, status=None, note=None, adds=(), removes=(), now=None):
+    """The head's own writes (not the person's) are checked before they are written: a close needs a real ref and at
+    most 3 a minute, and a bind may not leave an entry on umbrella tasks alone (services/head check_close and
+    check_umbrella_binds)."""
+    if agentguard.person_context(commands.current_source()):
+        return
+    _, data_dir = tasks.resolve(args.project)
+    store.check_umbrella_binds(data_dir, eid, adds=adds, removes=removes, now=now)
+    if status == "done":
+        store.check_close(data_dir, eid, note or "", now=now)
+
+
 def _triage_one(args):
+    _guard_head_write(args, args.id, status=args.status, adds=args.refs or [])
     reply = _write(args, "head.triage", {"id": args.id, "kind": args.kind, "sum": args.sum, "refs": args.refs,
                                          "status": args.status})
     project, data_dir = tasks.resolve(args.project)
@@ -312,11 +326,13 @@ def _set(args):
         if not sep or key not in SET_FIELDS:
             raise commands._usage("set takes key=value pairs (allowed: " + ", ".join(SET_FIELDS) + ")", NEXT)
         payload[key] = value
+    _guard_head_write(args, payload["id"], status=payload["status"], note=payload["note"])
     reply = _write(args, "head.set", payload)
     return _emit_write(args, reply, "%s set %s" % (args.id, ", ".join(reply["data"]["changed"])), NEXT)
 
 
 def _bind(args):
+    _guard_head_write(args, args.id, adds=args.refs or [])
     reply = _write(args, "head.bind", {"id": args.id, "refs": args.refs})
     bound = ", ".join(reply["data"]["bound"]) or "nothing new"
     return _emit_write(args, reply, "%s bound %s" % (args.id, bound), NEXT)
