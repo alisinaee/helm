@@ -1,39 +1,38 @@
-/* plan.css (WP32): Roadmap lanes and timeline, Issues and its form. Token-only; no colour literals. */
-.lanes, .lane-cards, .tl, .iss-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); min-width: 0; }
-.lane, .iss-form { display: grid; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); background: var(--surface-1); border-radius: var(--r-card); min-width: 0; }
-.iss-filters { margin-top: var(--sp-3); }
+.lanes, .lane-cards, .tl, .iss-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); min-width: 0 }
+.lane, .iss-form { display: grid; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); background: var(--surface-1); border-radius: var(--r-card); min-width: 0 }
+.iss-filters { margin-top: var(--sp-3) }
 .lane-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-1) var(--sp-2); min-width: 0; }
 .lane-act { --rg: 6.5rem; }
 .rc-move { display: grid; }
 .rc-move > .btn { width: 100%; margin: 0; }
-.lane-toggle { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); min-height: var(--h-row); padding: 0; border: 0; background: none; color: var(--text-1); font: inherit; text-align: left; cursor: pointer; }
+.lane-toggle { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); min-height: var(--h-row); padding: 0; border: 0; background: none; color: var(--text-1); font: inherit; text-align: left; cursor: pointer }
 .lane-caret { width: 24px; text-align: center; color: var(--text-3); }
-.lane-id { font-family: var(--font-mono); font-weight: 600; }
-.lane-name { font-weight: 600; overflow-wrap: anywhere; }
+.lane-id { font-family: var(--font-mono); font-weight: 600 }
+.lane-name { font-weight: 600; overflow-wrap: anywhere }
 .lane-stats, .tl-text, .rc-top, .rc-meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); align-items: center; margin: 0; font-size: var(--fs-12); color: var(--text-2); grid-column: 1 / -1; }
-.lane-meter { flex: 1 1 8rem; min-width: 6rem; }
-.lane-empty { color: var(--text-3); font-size: var(--fs-12); }
-.lane-cards { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
-.rc { flex: 1 1 15rem; min-width: 12rem; display: grid; gap: var(--sp-1); padding: var(--sp-2) var(--sp-3); background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-control); }
-.rc.is-blocked { border-color: var(--danger); }
-.rc-title { margin: 0; color: var(--text-1); font-size: var(--fs-13); overflow-wrap: anywhere; }
-.tl-row { display: grid; gap: var(--sp-1); }
-.tl-track { height: 0.75rem; background: var(--surface-2); border-radius: var(--r-control); overflow: hidden; }
-.tl-bar { height: 100%; max-width: 100%; background: var(--track); border-radius: var(--r-control); }
-.tl-spent { height: 100%; max-width: 100%; background: var(--accent); }
-.plan-views a, .iss-filters a { display: inline-flex; align-items: center; min-height: var(--h-control); padding: 0 var(--sp-3); border: 1px solid var(--line); border-radius: var(--r-control); color: var(--text-1); text-decoration: none; }
-.plan-views a[aria-current="page"], .iss-filters a[aria-current="true"] { background: var(--sel); border-color: var(--accent); font-weight: 600; }
-.iss-fld { display: grid; gap: var(--sp-1); margin: 0; min-width: 0; }
-.iss-label, .iss-help, .iss-err, .iss-links, .iss-status { margin: 0; font-size: var(--fs-12); color: var(--text-2); }
-.iss-help { color: var(--text-3); }
-.iss-err { color: var(--danger); }
-.iss-input { width: 100%; min-width: 0; min-height: var(--h-control); padding: 0 var(--sp-2); font: inherit; color: var(--text-1); background: var(--surface-0); border: 1px solid var(--line); border-radius: var(--r-control); }
-.iss-check { display: flex; gap: var(--sp-2); align-items: flex-start; }
-.iss { display: grid; gap: var(--sp-1); padding: var(--sp-2) var(--sp-3); background: var(--surface-1); border-left: 3px solid var(--line); border-radius: var(--r-control); min-width: 0; }
-.iss-title { margin: 0; font-size: var(--fs-13); overflow-wrap: anywhere; }
-.iss-title a { color: var(--text-1); }
+.lane-meter { flex: 1 1 8rem; min-width: 6rem }
+.lane-empty { color: var(--text-3); font-size: var(--fs-12) }
+.lane-cards { display: flex; flex-wrap: wrap; gap: var(--sp-2) }
+.rc { flex: 1 1 15rem; min-width: 12rem; display: grid; gap: var(--sp-1); padding: var(--sp-2) var(--sp-3); background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-control) }
+.rc.is-blocked { border-color: var(--danger) }
+.rc-title { margin: 0; color: var(--text-1); font-size: var(--fs-13); overflow-wrap: anywhere }
+.tl-row { display: grid; gap: var(--sp-1) }
+.tl-track { height: 0.75rem; background: var(--surface-2); border-radius: var(--r-control); overflow: hidden }
+.tl-bar { height: 100%; max-width: 100%; background: var(--track); border-radius: var(--r-control) }
+.tl-spent { height: 100%; max-width: 100%; background: var(--accent) }
+.plan-views a, .iss-filters a { display: inline-flex; align-items: center; min-height: var(--h-control); padding: 0 var(--sp-3); border: 1px solid var(--line); border-radius: var(--r-control); color: var(--text-1); text-decoration: none }
+.plan-views a[aria-current="page"], .iss-filters a[aria-current="true"] { background: var(--sel); border-color: var(--accent); font-weight: 600 }
+.iss-fld { display: grid; gap: var(--sp-1); margin: 0; min-width: 0 }
+.iss-label, .iss-help, .iss-err, .iss-links, .iss-status { margin: 0; font-size: var(--fs-12); color: var(--text-2) }
+.iss-help { color: var(--text-3) }
+.iss-err { color: var(--danger) }
+.iss-input { width: 100%; min-width: 0; min-height: var(--h-control); padding: 0 var(--sp-2); font: inherit; color: var(--text-1); background: var(--surface-0); border: 1px solid var(--line); border-radius: var(--r-control) }
+.iss-check { display: flex; gap: var(--sp-2); align-items: flex-start }
+.iss { display: grid; gap: var(--sp-1); padding: var(--sp-2) var(--sp-3); background: var(--surface-1); border-left: 3px solid var(--line); border-radius: var(--r-control); min-width: 0 }
+.iss-title { margin: 0; font-size: var(--fs-13); overflow-wrap: anywhere }
+.iss-title a { color: var(--text-1) }
 .iss-act { margin: 0; }
 @media (max-width: 599px) {
-  .rc { flex-basis: 100%; }
-  .rc-move .btn-small, .lane-toggle, .plan-views a, .iss-filters a, .iss-input { min-height: 2.75rem; }
+.rc { flex-basis: 100% }
+.rc-move .btn-small, .lane-toggle, .plan-views a, .iss-filters a, .iss-input { min-height: 2.75rem }
 }
