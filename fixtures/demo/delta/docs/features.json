@@ -1,0 +1,114 @@
+{
+  "features": [
+    {
+      "id": "F1",
+      "title": "Research and technical spike",
+      "acc": "Technical spike and baseline benchmarking documented",
+      "prio": 1,
+      "parent": null,
+      "phase": "P0",
+      "hold": false,
+      "accepted": "2026-10-14",
+      "ask": false
+    },
+    {
+      "id": "F2",
+      "title": "Requirements and user stories",
+      "acc": "Every requirement has testable acceptance criteria",
+      "prio": 1,
+      "parent": null,
+      "phase": "P1",
+      "hold": false,
+      "accepted": null,
+      "ask": false
+    },
+    {
+      "id": "F3",
+      "title": "User workflow stories",
+      "acc": "Workflows mapped to user interaction scenarios",
+      "prio": 2,
+      "parent": "F2",
+      "phase": "P1",
+      "hold": false,
+      "accepted": null,
+      "ask": false
+    },
+    {
+      "id": "F4",
+      "title": "Offline synchronization story",
+      "acc": "Offline edits merge gracefully on reconnect",
+      "prio": 1,
+      "parent": "F3",
+      "phase": "P1",
+      "hold": false,
+      "accepted": null,
+      "ask": true
+    },
+    {
+      "id": "F5",
+      "title": "Core execution engine",
+      "acc": "State machine and concurrency guarantees verified",
+      "prio": 1,
+      "parent": null,
+      "phase": "P2",
+      "hold": false,
+      "accepted": null,
+      "ask": false
+    },
+    {
+      "id": "F6",
+      "title": "Storage layer",
+      "acc": "Storage abstraction supporting durable transactions",
+      "prio": 1,
+      "parent": "F5",
+      "phase": "P2",
+      "hold": false,
+      "accepted": null,
+      "ask": false
+    },
+    {
+      "id": "F7",
+      "title": "Schema migrations and durability",
+      "acc": "Zero-downtime schema migrations with rollback support",
+      "prio": 2,
+      "parent": "F6",
+      "phase": "P2",
+      "hold": false,
+      "accepted": null,
+      "ask": false
+    },
+    {
+      "id": "F8",
+      "title": "Sync protocol engine",
+      "acc": "Deterministic conflict resolution across peers",
+      "prio": 2,
+      "parent": "F5",
+      "phase": "P2",
+      "hold": false,
+      "accepted": null,
+      "ask": false
+    },
+    {
+      "id": "F9",
+      "title": "User interface",
+      "acc": "Responsive web interface complying with accessibility rules",
+      "prio": 2,
+      "parent": null,
+      "phase": "P3",
+      "hold": false,
+      "accepted": null,
+      "ask": false
+    },
+    {
+      "id": "F10",
+      "title": "Dashboard components",
+      "acc": "Interactive plan tree view and status cards",
+      "prio": 2,
+      "parent": "F9",
+      "phase": "P3",
+      "hold": false,
+      "accepted": null,
+      "ask": false
+    }
+  ]
+}

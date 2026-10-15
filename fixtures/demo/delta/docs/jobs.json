@@ -1,0 +1,66 @@
+{
+  "jobs": [
+    {
+      "id": "j1",
+      "title": "Literature review and threat modeling",
+      "model": "haiku",
+      "task": "P0.1",
+      "status": "done",
+      "started": "2026-10-14T09:00:00+03:30",
+      "ended": "2026-10-14T09:22:15+03:30",
+      "tokensK": 18.2,
+      "note": "Survey completed"
+    },
+    {
+      "id": "j2",
+      "title": "Technology spike and benchmarking",
+      "model": "haiku",
+      "task": "P0.2",
+      "status": "done",
+      "started": "2026-10-14T09:30:00+03:30",
+      "ended": "2026-10-14T10:05:40+03:30",
+      "tokensK": 22.5,
+      "note": "Benchmarking passed"
+    },
+    {
+      "id": "j3",
+      "title": "Core requirements breakdown and spec drafting",
+      "model": "sonnet",
+      "task": "P1.1",
+      "status": "done",
+      "started": "2026-10-14T10:15:00+03:30",
+      "ended": "2026-10-14T10:50:00+03:30",
+      "tokensK": 34.0,
+      "note": "Specs approved"
+    },
+    {
+      "id": "j4",
+      "title": "Core engine state machine implementation",
+      "model": "opus",
+      "task": "P2.1",
+      "status": "done",
+      "started": "2026-10-14T11:00:00+03:30",
+      "ended": "2026-10-14T11:55:00+03:30",
+      "tokensK": 48.0,
+      "note": "State machine tested"
+    },
+    {
+      "id": "j5",
+      "title": "Offline synchronization protocol specification",
+      "model": "sonnet",
+      "task": "P1.3",
+      "status": "running",
+      "started": "2026-10-15T08:00:00+03:30",
+      "ended": null
+    },
+    {
+      "id": "j6",
+      "title": "Transaction log and durability layer",
+      "model": "opus",
+      "task": "P2.4",
+      "status": "running",
+      "started": "2026-10-15T08:15:00+03:30",
+      "ended": null
+    }
+  ]
+}

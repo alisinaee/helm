@@ -1,0 +1,339 @@
+{
+  "updated": "2026-10-15",
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "done"
+    },
+    {
+      "id": "P1",
+      "name": "Requirements",
+      "status": "done"
+    },
+    {
+      "id": "P2",
+      "name": "Core engine",
+      "status": "partial"
+    },
+    {
+      "id": "P3",
+      "name": "Interface",
+      "status": "todo"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "P0.1",
+      "phase": "P0",
+      "title": "Literature review and threat modeling",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "Documented baseline architecture constraints",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F1"
+      ]
+    },
+    {
+      "id": "P0.2",
+      "phase": "P0",
+      "title": "Technology spike and benchmarking",
+      "status": "done",
+      "tokensK": 25,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "Benchmarking passed performance criteria",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F1"
+      ]
+    },
+    {
+      "id": "P1.1",
+      "phase": "P1",
+      "title": "Core requirements breakdown and spec drafting",
+      "status": "done",
+      "tokensK": 35,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "note": "Functional requirements finalized",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2",
+        "F3"
+      ]
+    },
+    {
+      "id": "P1.2",
+      "phase": "P1",
+      "title": "User acceptance criteria definition",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "Acceptance criteria signed off",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F3"
+      ]
+    },
+    {
+      "id": "P1.3",
+      "phase": "P1",
+      "title": "Offline synchronization protocol specification",
+      "status": "partial",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "note": "Conflict resolution semantics drafted",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F4"
+      ]
+    },
+    {
+      "id": "P1.4",
+      "phase": "P1",
+      "title": "Data migration requirements and schema review",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F4"
+      ]
+    },
+    {
+      "id": "P2.1",
+      "phase": "P2",
+      "title": "Core engine state machine implementation",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "high",
+      "model": "opus",
+      "needsUser": false,
+      "note": "State transitions verified",
+      "check": "sonnet",
+      "checkK": 10,
+      "feats": [
+        "F5",
+        "F6"
+      ]
+    },
+    {
+      "id": "P2.2",
+      "phase": "P2",
+      "title": "Storage abstraction interface",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "Key-value and relational adapters in place",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "P2.3",
+      "phase": "P2",
+      "title": "Database schema migration runner",
+      "status": "done",
+      "tokensK": 45,
+      "thinking": "high",
+      "model": "sonnet",
+      "needsUser": false,
+      "note": "Forward and rollback migrations functional",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F7"
+      ]
+    },
+    {
+      "id": "P2.4",
+      "phase": "P2",
+      "title": "Transaction log and durability layer",
+      "status": "partial",
+      "tokensK": 55,
+      "thinking": "high",
+      "model": "opus",
+      "needsUser": false,
+      "note": "Write-ahead log flushing operational",
+      "check": "sonnet",
+      "checkK": 10,
+      "feats": [
+        "F7"
+      ]
+    },
+    {
+      "id": "P2.5",
+      "phase": "P2",
+      "title": "Sync engine conflict detection logic",
+      "status": "partial",
+      "tokensK": 60,
+      "thinking": "high",
+      "model": "sonnet",
+      "needsUser": false,
+      "note": "Three-way merge handler under test",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F8"
+      ]
+    },
+    {
+      "id": "P2.6",
+      "phase": "P2",
+      "title": "Vector clock causality tracking",
+      "status": "todo",
+      "tokensK": 35,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F8"
+      ]
+    },
+    {
+      "id": "P2.7",
+      "phase": "P2",
+      "title": "Legacy storage format backwards compatibility",
+      "status": "hold",
+      "tokensK": 25,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "Awaiting legacy schema export sample",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "P2.8",
+      "phase": "P2",
+      "title": "Concurrency stress tests and benchmarks",
+      "status": "todo",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F5"
+      ]
+    },
+    {
+      "id": "P3.1",
+      "phase": "P3",
+      "title": "Dashboard layout and navigation shell",
+      "status": "partial",
+      "tokensK": 45,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "note": "Responsive grid shell operational",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F9",
+        "F10"
+      ]
+    },
+    {
+      "id": "P3.2",
+      "phase": "P3",
+      "title": "Plan tree hierarchy rendering component",
+      "status": "todo",
+      "tokensK": 50,
+      "thinking": "high",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F10"
+      ]
+    },
+    {
+      "id": "P3.3",
+      "phase": "P3",
+      "title": "Interactive inspection panel and detail view",
+      "status": "todo",
+      "tokensK": 35,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F10"
+      ]
+    },
+    {
+      "id": "P3.4",
+      "phase": "P3",
+      "title": "Export dashboard report to PDF format",
+      "status": "hold",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "Parked pending headless renderer decision",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F9"
+      ]
+    },
+    {
+      "id": "P3.5",
+      "phase": "P3",
+      "title": "Telemetry reporter for client-side exceptions",
+      "status": "todo",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": []
+    },
+    {
+      "id": "P3.6",
+      "phase": "P3",
+      "title": "Standalone debug CLI diagnostic utility",
+      "status": "todo",
+      "tokensK": 25,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": []
+    }
+  ]
+}
