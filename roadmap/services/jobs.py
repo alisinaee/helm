@@ -21,6 +21,11 @@ JOBS_FILE = "jobs.json"
 TASKS_FILE = "tasks.json"
 COMMIT_REF = "commit:"
 TITLE_MAX = 200
+REASON_MAX = 80
+ENGINES_FILE = "engines.json"
+ENGINE_BLOCK_HOURS = 6
+# Failure reasons that mean the engine (the job's model, for example cursor or opencode) cannot run right now.
+_UNAVAILABLE_RE = re.compile(r"Insufficient account funds|\b403\b|Cannot connect", re.IGNORECASE)
 _ID_RE = re.compile(r"^j(\d+)$")
 _EPOCH = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
 
@@ -161,15 +166,18 @@ def _mark_partial(data_dir, task_id):
             return
 
 
-def finish_job(data_dir, job_id, status, note=None, tokens_k=None):
+def finish_job(data_dir, job_id, status, note=None, tokens_k=None, reason=None):
     """Mark a running job done or failed, with an optional note and thousands of tokens used.
     Finishing a job that is not running is a conflict (exit 4); an unknown id is not_found (exit 3).
     tokens_k is the final total of the job. Progress already counted (progressK) is not counted again: the budget
-    takes tokens_k minus progressK (see budget_remainder). A total below the counted progress is a usage error."""
+    takes tokens_k minus progressK (see budget_remainder). A total below the counted progress is a usage error.
+    reason (failed jobs only) is the first line of the error, kept to REASON_MAX characters. A known reason
+    (see _UNAVAILABLE_RE) also marks the job's engine unavailable for ENGINE_BLOCK_HOURS."""
     _require_data_dir(data_dir)
     if status not in ("done", "failed"):
         raise RoadmapError("usage", "status must be done or failed", EXIT_USAGE)
     wanted = str(job_id or "").strip()
+    clean_reason = first_error_line(reason) if status == "failed" else ""
     with lock.locked(data_dir):
         doc = _read_doc(data_dir)
         job = _find(doc["jobs"], wanted)
@@ -186,8 +194,74 @@ def finish_job(data_dir, job_id, status, note=None, tokens_k=None):
             job["tokensK"] = round(float(tokens_k), 1)
         if note and str(note).strip():
             job["note"] = str(note).strip()
+        if clean_reason:
+            job["reason"] = clean_reason
         _write_doc(data_dir, doc)
+    if clean_reason and _UNAVAILABLE_RE.search(clean_reason):
+        _block_engine(data_dir, str(job.get("model") or ""), clean_reason)
     return dict(job)
+
+
+def first_error_line(text):
+    """The first non-blank line of text, stripped and cut to REASON_MAX characters ('' when there is none)."""
+    for line in str(text or "").splitlines():
+        if line.strip():
+            return line.strip()[:REASON_MAX]
+    return ""
+
+
+def unavailable_engines(data_dir, now=None):
+    """Engines whose block has not ended: {engine: {"until": iso, "reason": text}}. A missing or unreadable state file
+    gives {} (it is advisory state, never a reason to stop a command)."""
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    try:
+        raw = atomic.read_json(os.path.join(data_dir, ENGINES_FILE), default=None)
+    except RoadmapError:
+        return {}
+    engines = raw.get("engines") if isinstance(raw, dict) else None
+    if not isinstance(engines, dict):
+        return {}
+    blocked = {}
+    for name, entry in engines.items():
+        until = _parse_ts(entry.get("until")) if isinstance(entry, dict) else None
+        if until is not None and until > now:
+            blocked[name] = dict(entry)
+    return blocked
+
+
+def engines_line(data_dir, now=None):
+    """One line for job list naming the blocked engines, or '' when every engine is available."""
+    blocked = unavailable_engines(data_dir, now)
+    if not blocked:
+        return ""
+    parts = []
+    for name in sorted(blocked):
+        entry = blocked[name]
+        parts.append("%s until %s (%s)" % (name, _parse_ts(entry["until"]).strftime("%H:%M"),
+                                           entry.get("reason") or "failed"))
+    return "engines unavailable: " + "; ".join(parts)
+
+
+def _block_engine(data_dir, engine, reason, now=None):
+    """Record engine as unavailable for ENGINE_BLOCK_HOURS, dropping blocks that already ended."""
+    if not engine:
+        return
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    path = os.path.join(data_dir, ENGINES_FILE)
+    with lock.locked(data_dir):
+        try:
+            raw = atomic.read_json(path, default=None)
+        except RoadmapError:
+            raw = None  # a corrupt state file is rebuilt, it is advisory only
+        old = raw.get("engines") if isinstance(raw, dict) else None
+        kept = {}
+        for name, entry in (old if isinstance(old, dict) else {}).items():
+            until = _parse_ts(entry.get("until")) if isinstance(entry, dict) else None
+            if until is not None and until > now:
+                kept[name] = entry
+        until = now + datetime.timedelta(hours=ENGINE_BLOCK_HOURS)
+        kept[engine] = {"until": until.isoformat(timespec="seconds"), "reason": reason}
+        atomic.write_json(path, {"engines": kept})
 
 
 def progress_job(data_dir, job_id, tokens_k):

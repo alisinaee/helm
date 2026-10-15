@@ -40,6 +40,9 @@ def register(sub, common):
         parser.add_argument("id", help="job id")
         parser.add_argument("note", nargs="?", help="short summary")
         parser.add_argument("--tokens", metavar="K", help="tokens used, in thousands")
+        if name == "fail":
+            parser.add_argument("--reason", metavar="TEXT", default=None,
+                                help="first error line, kept to 80 characters")
         parser.set_defaults(handler=_finish, status=DONE_WORDS[name])
 
     progress = actions.add_parser("progress", parents=[common, project],
@@ -80,7 +83,8 @@ def _finish(args):
     tokens = jobs.tokens_from_arg(args.tokens)
     project = jobs.resolve_project(args.project)
     data_dir = jobs.data_dir_of(project)
-    job = jobs.finish_job(data_dir, args.id, args.status, args.note, tokens)
+    job = jobs.finish_job(data_dir, args.id, args.status, args.note, tokens,
+                          reason=getattr(args, "reason", None))
     if tokens is not None:
         # progress already counted in the budget (job progress) is not counted again
         remainder = jobs.budget_remainder(job, tokens)
@@ -124,7 +128,8 @@ def _progress(args):
 
 
 def _list(args):
-    rows = jobs.list_jobs(_data_dir(args))
+    data_dir = _data_dir(args)
+    rows = jobs.list_jobs(data_dir)
     if not getattr(args, "json", False):
         if not rows:
             print("no jobs")
@@ -133,6 +138,9 @@ def _list(args):
             note = "  -- " + job["note"] if job.get("note") else ""
             print("%-6s %-8s %-7s%s %s%s" % (job.get("id", "?"), job.get("status", "?"), job.get("model", "?"),
                                             task, job.get("title", ""), note))
+        blocked = jobs.engines_line(data_dir)
+        if blocked:
+            print(blocked)
         return None
     return {"jobs": rows}
 
