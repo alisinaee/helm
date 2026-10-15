@@ -61,6 +61,7 @@ def register(sub, common):
     exporter.set_defaults(handler=_export)
 
     template = actions.add_parser("template", parents=[common], help="print the plan grammar and an example")
+    template.add_argument("--tree", action="store_true", help="print the 3-level plan tree example instead")
     template.set_defaults(handler=_template)
 
     view = actions.add_parser("view", parents=[common, project],
@@ -153,11 +154,27 @@ def _export(args):
     return {"lines": lines}
 
 
+TREE = """# Plan tree: phase > sub plan > item (3 levels). Import this with roadmap plan import <file>.
+P R0 todo | Research
+P R1 todo | Requirements
+P R2 todo | Core engine
+F F1 - 1 R0 - | Research # brief, landscape, risks
+F F4 - 1 R1 - | Requirements # every ask has acceptance
+F F5 - 1 R1 F4 ask | Offline sync # offline edits merge on reconnect
+F F6 - 2 R1 F4 ask | Export to PDF # one click, A4
+F F7 - 1 R2 - | Core engine
+F F8 - 1 R2 F7 | Storage layer
+F F9 - 1 R2 F8 | Schema and migrations
+T R2.1 todo 40 sonnet/medium f:F9 | Schema and migrations
+T R2.2 todo 30 haiku/low f:F8,F5 | Sync queue"""
+
+
 def _template(args):
+    text = TREE if getattr(args, "tree", False) else TEMPLATE
     if not getattr(args, "json", False):
-        print(TEMPLATE)
+        print(text)
         return None
-    return {"text": TEMPLATE}
+    return {"text": text}
 
 
 def _read(source):
