@@ -29,8 +29,8 @@ CSS_DIR = os.path.join(WEB, "css")
 SHELL_TEST = os.path.join(TESTS, "web", "test_shell.py")
 RENDER = os.path.join(TESTS, "web", "render_head.mjs")
 FIXTURE = os.path.join(REPO, "fixtures", "demo", "alpha", "docs", "head.jsonl")
-HEAD_CSS_MAX = 3072  # raised from 1400 on 2026-10-15 (head.css is 2890 bytes: toggle, footer, Added column, badge)
-TRACKS = "18px 56px 76px minmax(0,1fr) 150px 96px 44px 96px 32px 32px"
+HEAD_CSS_MAX = 4096  # raised 2026-10-15 for spec 13 (opened blocks, meta line, phone cards)
+TRACKS = "20px 60px minmax(0,1fr) 32px"
 ROW_ID = re.compile(r'<div class="row-grid hd-row" data-id="(H\d+)"')
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=|<script', re.IGNORECASE)
 OPS = re.compile(r'run\(\s*"([a-z.]+)"')
@@ -64,7 +64,8 @@ def view_model():
         "counts": {},
         "rows": rows,
         "full": {"id": "H1", "text": "<img src=x onerror=alert(1)> tell opus: very important feature",
-                 "history": ["09:12 hook new", "09:13 head triage"]},
+                 "history": ["09:12 hook new", "09:13 head triage"],
+                 "reply": "Queued for Opus and bound to R7.31.", "assets": ["shot.png", "notes/spec.md"]},
     }}
 
 
@@ -94,7 +95,7 @@ class HeadSource(unittest.TestCase):
 
     def test_rows_and_header_share_the_grid_class(self):
         self.assertIn('class="row-grid hd-row"', self.src)
-        self.assertIn('class="row-grid hd-row hd-head rg-head"', self.src)
+        self.assertNotIn("hd-head", self.src)
 
     def test_review_and_confirm_actions_exist(self):
         self.assertIn('data-action="head-accept"', self.src)
@@ -109,7 +110,8 @@ class HeadSource(unittest.TestCase):
         self.assertNotRegex(self.src, r"set:\s*\{\s*status")
 
     def test_header_sits_outside_the_list_and_the_list_holds_only_items(self):
-        self.assertIn('<div class="hd-list">\' + headerHtml()', self.src)
+        self.assertIn('<div class="hd-list">', self.src)
+        self.assertNotIn("headerHtml", self.src)
         self.assertIn('<ul class="hd-items"', self.src)
         self.assertNotIn("hd-menu", self.src)
 
@@ -145,23 +147,22 @@ class HeadCss(unittest.TestCase):
     def test_ten_fixed_tracks_on_the_shared_grid_and_summary_takes_the_rest(self):
         css = read(CSS)
         self.assertIn(".hd-row.row-grid{position:relative;align-items:center;grid-template-columns:" + TRACKS + "}", css)
-        self.assertEqual(len(TRACKS.split(" ")), 10)
-        self.assertEqual(TRACKS.split(" ")[3], "minmax(0,1fr)")
+        self.assertEqual(len(TRACKS.split(" ")), 4)
+        self.assertEqual(TRACKS.split(" ")[2], "minmax(0,1fr)")
+        self.assertRegex(css, r"\.hd-meta\{grid-column:2 / -1")
 
     def test_summary_wraps_to_two_lines_in_every_row(self):
         css = read(CSS)
-        self.assertRegex(css, r"\.hd-row \.hd-sum\{[^}]*-webkit-line-clamp:2")
+        self.assertRegex(css, r"\.hd-row \.hd-sum\{[^}]*-webkit-line-clamp:3")
         self.assertNotIn("is-open .hd-sum", css)
 
     def test_numbers_right_aligned_and_actions_in_fixed_tracks(self):
         css = read(CSS)
         self.assertRegex(css, r"\.hd-age,\.hd-when\{text-align:right;font-variant-numeric:tabular-nums\}")
-        self.assertIn(".hd-acc{width:32px", css)
 
     def test_phone_turns_rows_into_cards_and_hides_the_header(self):
         css = read(CSS)
         self.assertIn("@media (max-width:599px)", css)
-        self.assertRegex(css, r"\.hd-head,\.hd-when\{display:none\}")
         self.assertRegex(css, r"@media \(max-width:599px\)\{[\s\S]*flex-wrap:wrap")
 
     def test_no_raw_colour_outside_tokens(self):
@@ -203,11 +204,11 @@ class HeadRender(unittest.TestCase):
             raise AssertionError("render failed: " + proc.stderr[-800:])
         cls.out = json.loads(proc.stdout)
 
-    def test_each_row_has_ten_cells_and_the_header_too(self):
+    def test_each_row_has_eight_cells_and_no_header(self):
         html = self.out["screen"]
         rows = html.count('<li class="hd-item')
         self.assertEqual(rows, 7)
-        self.assertEqual(html.count('class="hd-c'), 10 * (rows + 1))
+        self.assertEqual(html.count('class="hd-c'), 8 * rows)
 
     def test_no_session_column_and_no_dash_in_empty_cells(self):
         html = self.out["screen"]
@@ -233,9 +234,9 @@ class HeadRender(unittest.TestCase):
         self.assertEqual(self.out["hashOld"], "#head?f=all&sort=old")
         self.assertEqual(self.out["hashNew"], "#head?f=all")
 
-    def test_header_is_outside_the_list(self):
+    def test_no_header_row_and_no_row_outside_the_list(self):
         html = self.out["screen"]
-        self.assertLess(html.index('class="row-grid hd-row hd-head'), html.index('<ul class="hd-items"'))
+        self.assertNotIn("hd-head", html)
         self.assertNotIn('<li class="row-grid', html)
 
     def test_added_column_shows_local_time_with_the_iso_title(self):
@@ -249,7 +250,7 @@ class HeadRender(unittest.TestCase):
 
     def test_open_row_footer_holds_status_all_chips_and_actions(self):
         html = self.out["open"]
-        self.assertIn('<div class="hd-foot"><div class="hd-foot-info">', html)
+        self.assertIn('<div class="hd-foot"><div class="hd-acts">', html)
         self.assertIn('data-action="head-set" data-id="H1" data-status="needs-you"', html)
         self.assertIn('data-action="head-set" data-id="H1" data-status="declined"', html)
         self.assertIn("Bind...", html)
@@ -306,6 +307,18 @@ class HeadRender(unittest.TestCase):
         self.assertEqual(self.out["done"].count('<li class="hd-item'), 2)
         self.assertEqual(self.out["open"].count('<li class="hd-item'), 5)
         self.assertEqual(self.out["unhandled"].count('<li class="hd-item'), 1)
+
+    def test_opened_row_has_four_labelled_blocks_in_order(self):
+        html = self.out["open"]
+        order = [html.index(label) for label in ("You wrote", "Head replied", "State", "Bound to")]
+        self.assertEqual(order, sorted(order))
+        self.assertIn('<pre class="hd-reply">Queued for Opus and bound to R7.31.</pre>', html)
+        self.assertIn('<ul class="hd-assets" data-role="assets">', html)
+        self.assertIn('<li class="hd-asset">shot.png</li>', html)
+        self.assertIn('<span class="hd-reason">', html)
+
+    def test_reply_placeholder_when_none_was_captured(self):
+        self.assertIn("No reply captured yet", self.out["noReply"])
 
     def test_open_row_expands_and_the_others_stay_hidden(self):
         html = self.out["open"]
