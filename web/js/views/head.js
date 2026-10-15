@@ -1,15 +1,19 @@
 // Head screen (R7.31 H8, docs/HEAD-SPEC.md sections 5 and 10). One row per logged message on the shared row grid
-// (UI rule 0): the header uses the same tracks, numbers sit right-aligned, the copy and menu buttons stay at the
-// right edge. It renders the snapshot the server folds (head: {now, prev, counts, rows}) and sends nothing by itself.
-// Filters and the open row live in the page hash (#head?f=open&id=H12), so each view is a deep link.
-// Every value goes through esc(); the commands are head.accept, head.set, head.bind, head.split, head.merge (the row
-// menu and suggestion buttons, and the forms they open) and the copy button.
+// (UI rule 0): the header sits above the list on the same tracks, numbers are right-aligned, and the copy button
+// stays at the right edge. A row is toggled by a stretched button that covers the whole row (keyboard: Enter/Space,
+// aria-expanded); the buttons and links in the row sit above it. An open row shows the verbatim text (fetched once
+// per row from the read route with full=H.., cached), the history, and a footer with the status, the bound-to chips
+// and the actions. The screen renders the snapshot the server folds (head: {now, prev, counts, rows}).
+// Filters and the deep-linked open row live in the page hash (#head?f=open&id=H12).
+// Every value goes through esc() or textContent; the commands are head.accept, head.set, head.bind, head.split,
+// head.merge and the copy button.
 
 import { esc } from "../dom.js";
 import { emptyHtml as pageEmpty } from "../dom.js";
 import { MISSING, fmtPercent } from "../format.js";
 import { copyButton } from "../ref.js";
 import { run } from "../cmd.js";
+import { getJson } from "../api.js";
 import { buildHash } from "../router.js";
 import { showToast } from "./toast.js";
 import { pageState } from "./inbox.js";
@@ -24,6 +28,17 @@ const STATUS_TONE = { new: "neutral", understood: "neutral", bound: "neutral", d
 const CLOSED = ["done", "declined", "merged"];
 const UNHANDLED = ["new", "understood"];
 const BOUND_MAX = 2;
+const FULL_CONCURRENCY = 3;
+const FULL_ID = /^H\d{1,4}$/;
+
+// Client state: the verbatim texts fetched so far (key "project\nid"), the requests in flight, the open row ids, and
+// the hash row already opened once (so a re-render does not reopen a row the person closed).
+const fullCache = new Map();
+const inflight = new Map();
+const openSet = new Set();
+const queue = [];
+let active = 0;
+let seededId = "";
 
 function rowsOf(vm) {
   const head = vm && vm.head ? vm.head : {};
@@ -141,6 +156,20 @@ function barHtml(vm, opts) {
     '<nav class="hd-filters" aria-label="Filter">' + filterHtml(opts) + "</nav></div>";
 }
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// The local date and time of an entry's ts: "15 Oct 14:32" (full: "15 Oct 2026 14:32"), or MISSING without a ts.
+export function whenText(iso, full) {
+  const ms = Date.parse(String(iso || ""));
+  if (!isFinite(ms)) return MISSING;
+  const d = new Date(ms);
+  const pad = function (n) {
+    return (n < 10 ? "0" : "") + n;
+  };
+  return d.getDate() + " " + MONTHS[d.getMonth()] + (full ? " " + d.getFullYear() : "") + " " +
+    pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+
 function ageText(minutes) {
   if (typeof minutes !== "number" || !isFinite(minutes)) return MISSING;
   if (minutes < 60) return Math.max(0, Math.round(minutes)) + "m";
@@ -164,9 +193,11 @@ function refHref(ref, pid) {
   return pid ? buildHash({ name: "project", id: pid, section: section, item: id }) : "#/all/" + section;
 }
 
-function boundHtml(links, pid) {
+// The bound-to chips: at most max of them (the row shows two, the footer all), then +n for the rest.
+function boundHtml(links, pid, max) {
   const list = Array.isArray(links) ? links : [];
-  const chips = list.slice(0, BOUND_MAX).map(function (ref) {
+  const limit = max == null ? BOUND_MAX : max;
+  const chips = list.slice(0, limit).map(function (ref) {
     const label = String(ref).split(":").pop();
     const href = refHref(ref, pid);
     if (href) {
@@ -174,7 +205,7 @@ function boundHtml(links, pid) {
     }
     return '<span class="chip chip-neutral" title="' + esc(ref) + '">' + esc(label) + "</span>";
   });
-  if (list.length > BOUND_MAX) chips.push('<span class="chip chip-neutral">+' + (list.length - BOUND_MAX) + "</span>");
+  if (list.length > limit) chips.push('<span class="chip chip-neutral">+' + (list.length - limit) + "</span>");
   return chips.join("");
 }
 
@@ -187,84 +218,112 @@ function statusHtml(row) {
     "</span>";
 }
 
+// The verbatim text of one row: the seeded vm.head.full when it is this row, else the fetched cache, else null.
+function fullOf(vm, pid, id) {
+  const seeded = vm && vm.head && vm.head.full && vm.head.full.id === id ? vm.head.full : null;
+  if (seeded) {
+    return { text: typeof seeded.text === "string" ? seeded.text : null,
+      history: Array.isArray(seeded.history) ? seeded.history : [] };
+  }
+  return fullCache.get((pid || "") + "\n" + id) || null;
+}
+
+// What the text box says: the text, or why there is none (loading, or the phone listener gets no text).
+function textNote(full) {
+  if (!full) return "Loading the text…";
+  if (full.text == null) return "The full text is only on this computer.";
+  return full.text;
+}
+
 function rowHtml(vm, row, opts) {
   const id = String(row.id);
-  const open = opts.id === id;
+  const eid = esc(id);
+  const open = (opts.open || []).indexOf(id) >= 0;
   const pid = opts.project || null;
   const acc = row.acc === true;
   const carried = row.carried ? ' <span class="hd-carried" title="Carried over">↺</span>' : "";
   const accCell = opts.readOnly ? '<span class="hd-c hd-acc-cell">' + (acc ? "✓" : MISSING) + "</span>" :
     '<span class="hd-c hd-acc-cell"><button type="button" class="hd-acc" role="checkbox" aria-checked="' +
     (acc ? "true" : "false") + '" aria-label="' + esc("Accepted, " + id) + '" data-action="head-accept" data-id="' +
-    esc(id) + '">' + (acc ? "☑" : "☐") + "</button></span>";
-  const more = opts.readOnly ? "" : '<details class="hd-c hd-more"><summary aria-label="' + esc("More for " + id) +
-    '">⋯</summary><div class="hd-menu">' +
-    '<button type="button" class="btn" data-action="head-set" data-id="' + esc(id) +
-    '" data-status="needs-you">Needs you</button>' +
-    '<button type="button" class="btn" data-action="head-set" data-id="' + esc(id) +
-    '" data-status="declined">Decline</button>' +
-    '<button type="button" class="btn" data-action="head-form" data-form="bind" data-id="' + esc(id) +
-    '">Bind...</button>' +
-    '<button type="button" class="btn" data-action="head-form" data-form="split" data-id="' + esc(id) +
-    '">Split...</button>' +
-    '<button type="button" class="btn" data-action="head-form" data-form="merge" data-id="' + esc(id) +
-    '">Merge...</button></div></details>';
-  const row1 = '<div class="row-grid hd-row" data-id="' + esc(id) + '">' +
-    '<button type="button" class="hd-c hd-chev" aria-expanded="' + (open ? "true" : "false") +
-    '" aria-controls="hd-p-' + esc(id) + '" data-action="head-toggle" data-id="' + esc(id) + '" aria-label="' +
-    esc((open ? "Hide " : "Show ") + id) + '">' + (open ? "▾" : "▸") + "</button>" +
-    '<span class="hd-c hd-id">' + esc(id) + "</span>" +
+    eid + '">' + (acc ? "☑" : "☐") + "</button></span>";
+  const row1 = '<div class="row-grid hd-row" data-id="' + eid + '">' +
+    '<button type="button" class="hd-hit" data-action="head-toggle" data-id="' + eid + '" aria-expanded="' +
+    (open ? "true" : "false") + '" aria-controls="hd-p-' + eid + '" aria-label="' +
+    esc((open ? "Hide " : "Show ") + id) + '"></button>' +
+    '<span class="hd-c hd-chev" aria-hidden="true">▸</span>' +
+    '<span class="hd-c hd-id">' + eid + "</span>" +
     '<span class="hd-c hd-kind">' + esc(row.kind || "") + "</span>" +
     '<span class="hd-c hd-sum rg-t" title="' + esc(row.sum || "") + '">' + esc(row.sum || "") + "</span>" +
-    '<span class="hd-c hd-bound">' + boundHtml(row.links, opts.project) +
+    '<span class="hd-c hd-bound">' + boundHtml(row.links, pid, BOUND_MAX) +
       (row.more ? ' <span class="chip chip-neutral">+' + esc(row.more) + "</span>" : "") + "</span>" +
     '<span class="hd-c hd-status">' + statusHtml(row) + "</span>" +
     '<span class="hd-c hd-age rg-num' + (row.stale ? " hd-stale" : row.amber ? " hd-amber" : "") + '"' +
     (row.stale ? ' title="Stale"' : "") + ">" + esc(ageText(row.age)) + "</span>" +
+    '<span class="hd-c hd-when rg-num" title="' + esc(row.ts || "") + '">' + esc(whenText(row.ts)) + "</span>" +
     '<span class="hd-c hd-s">' + esc(row.acct || row.sid || MISSING) + carried + "</span>" +
     accCell +
-    '<span class="hd-c hd-copy">' + copyButton("ask", id, id, { project: pid,
-      sum: row.sum || "" }) + "</span>" + more + "</div>";
-  return '<li class="hd-item">' + row1 + panelHtml(vm, row, opts, open) + "</li>";
+    '<span class="hd-c hd-copy">' + copyButton("ask", id, id, { project: pid, sum: row.sum || "" }) + "</span>" +
+    "</div>";
+  return '<li class="hd-item' + (open ? " is-open" : "") + '">' + row1 + panelHtml(vm, row, opts, open) + "</li>";
 }
 
-// The expanded part: the verbatim text (fetched by the route, passed as vm.head.full), one history line,
-// and the person's decisions for a done row. Hidden until the row opens.
+// The expanded part: the verbatim text, the history, and the footer (status, all bound-to chips, the actions).
+// Hidden until the row opens; the text is filled by loadText when the row opens and is cached after that.
 function panelHtml(vm, row, opts, open) {
   const id = String(row.id);
-  const full = vm && vm.head && vm.head.full && vm.head.full.id === id ? vm.head.full : null;
-  const text = full && full.text ? full.text : "";
-  const hist = full && Array.isArray(full.history) ? full.history.join(" · ") : "";
-  const actions = [];
+  const eid = esc(id);
+  const pid = opts.project || null;
+  const full = fullOf(vm, pid, id);
+  const hist = full && full.history.length ? full.history.join(" · ") : "";
+  const pre = '<pre class="hd-text" data-state="' + (full ? "ready" : "loading") + '">' +
+    esc(textNote(full)) + "</pre>";
+  const acts = [];
   if (!opts.readOnly && row.status === "done" && !row.acc) {
-    actions.push('<button type="button" class="btn" data-action="head-accept" data-id="' + esc(id) +
+    acts.push('<button type="button" class="btn" data-action="head-accept" data-id="' + eid +
       '">Confirm done</button>');
   }
   if (!opts.readOnly && row.status === "done") {
-    actions.push('<button type="button" class="btn" data-action="head-reopen" data-id="' + esc(id) +
+    acts.push('<button type="button" class="btn" data-action="head-reopen" data-id="' + eid +
       '">Reopen</button>');
+  }
+  if (!opts.readOnly && row.status !== "needs-you") {
+    acts.push('<button type="button" class="btn" data-action="head-set" data-id="' + eid +
+      '" data-status="needs-you">Needs you</button>');
+  }
+  if (!opts.readOnly && row.status !== "declined") {
+    acts.push('<button type="button" class="btn" data-action="head-set" data-id="' + eid +
+      '" data-status="declined">Decline</button>');
   }
   // Suggestions from the snapshot: a duplicate (row.dup = {id, score}) and up to two bind refs (row.suggest).
   if (!opts.readOnly && row.dup && row.dup.id) {
-    actions.push('<button type="button" class="btn" data-action="head-merge" data-id="' + esc(id) +
+    acts.push('<button type="button" class="btn" data-action="head-merge" data-id="' + eid +
       '" data-into="' + esc(row.dup.id) + '">Merge into ' + esc(row.dup.id) + " (dup " + esc(row.dup.score) +
       ")</button>");
   }
   if (!opts.readOnly && Array.isArray(row.suggest)) {
     row.suggest.slice(0, 2).forEach(function (ref) {
-      actions.push('<button type="button" class="btn" data-action="head-bind-sug" data-id="' + esc(id) +
+      acts.push('<button type="button" class="btn" data-action="head-bind-sug" data-id="' + eid +
         '" data-ref="' + esc(ref) + '">Bind ' + esc(ref) + "</button>");
     });
   }
-  const textHtml = text ? '<pre class="hd-text">' + esc(text) + "</pre>" +
-    '<button type="button" class="btn hd-showall" data-action="head-text">Show all</button>' : "";
+  if (!opts.readOnly) {
+    for (const name of ["bind", "split", "merge"]) {
+      acts.push('<button type="button" class="btn" data-action="head-form" data-form="' + name + '" data-id="' +
+        eid + '">' + esc(name[0].toUpperCase() + name.slice(1)) + "...</button>");
+    }
+  }
+  const links = boundHtml(row.links, pid, Infinity);
+  const foot = '<div class="hd-foot"><div class="hd-foot-info">' + statusHtml(row) +
+    '<span class="hd-links">' + (links || '<span class="hd-none">' + MISSING + "</span>") + "</span></div>" +
+    (acts.length ? '<div class="hd-acts">' + acts.join("") + "</div>" : "") + "</div>";
   const forms = opts.readOnly ? "" : formsHtml(id);
-  return '<div class="hd-panel" id="hd-p-' + esc(id) + '"' + (open ? "" : " hidden") + ">" + textHtml +
-    (hist ? '<p class="hd-hist">' + esc(hist) + "</p>" : "") +
-    (actions.length ? '<div class="hd-acts">' + actions.join("") + "</div>" : "") + forms + "</div>";
+  const added = '<p class="hd-added" title="' + esc(row.ts || "") + '">Added ' +
+    esc(whenText(row.ts, true)) + "</p>";
+  return '<div class="hd-panel" id="hd-p-' + eid + '"' + (open ? "" : " hidden") + ">" + pre + added +
+    '<p class="hd-hist">' + esc(hist) + "</p>" + foot + forms + "</div>";
 }
 
-// The Bind, Split and Merge forms. Hidden until the row menu opens one; the submit listener sends them.
+// The Bind, Split and Merge forms. Hidden until the footer opens one; the submit listener sends them.
 function formsHtml(id) {
   const eid = esc(id);
   return '<form class="hd-form" data-op="head.bind" data-id="' + eid + '" data-form="bind" hidden>' +
@@ -279,12 +338,14 @@ function formsHtml(id) {
     '<button type="submit" class="btn">Merge</button></form>';
 }
 
+// The column names. It sits above the list, outside the <ul>, on the same tracks as the rows.
 function headerHtml() {
   return '<div class="row-grid hd-row hd-head rg-head" aria-hidden="true">' +
     '<span class="hd-c"></span><span class="hd-c">ID</span><span class="hd-c">Kind</span>' +
     '<span class="hd-c">Summary</span><span class="hd-c">Bound to</span><span class="hd-c">Status</span>' +
-    '<span class="hd-c hd-age">Age</span><span class="hd-c">S</span><span class="hd-c">Acc</span>' +
-    '<span class="hd-c">Ref</span><span class="hd-c"></span></div>';
+    '<span class="hd-c hd-age">Age</span><span class="hd-c hd-when">Added</span><span class="hd-c">S</span>' +
+    '<span class="hd-c">Acc</span>' +
+    '<span class="hd-c">Ref</span></div>';
 }
 
 function emptyHtml(vm, opts) {
@@ -297,41 +358,129 @@ function emptyHtml(vm, opts) {
     esc(hashOf({ f: "all" })) + '">Show all</a></div>';
 }
 
-// The whole screen for one view model. opts: {f, q, kind, sid, id (open row), project, readOnly}.
+// The whole screen for one view model. opts: {f, q, kind, sid, open (ids of the open rows), project, readOnly}.
 export function headHtml(vm, opts) {
   const o = opts || {};
   const head = vm && vm.head ? vm.head : {};
-  const rows = rowsOf(vm).filter(function (row) {
+  const all = rowsOf(vm);
+  const rows = all.filter(function (row) {
     return passes(row, o);
   });
-  const counts = countsOf(head, rowsOf(vm));
-  const body = rows.length ? '<ul class="hd-list" aria-label="Logged messages">' +
-    headerHtml() + rows.map(function (row) {
+  const counts = countsOf(head, all);
+  const open = o.open || [];
+  const allOpen = rows.length > 0 && rows.every(function (row) {
+    return open.indexOf(String(row.id)) >= 0;
+  });
+  const top = '<div class="hd-top"><h2 id="hd-h" class="hd-title">Head</h2>' +
+    (rows.length ? '<button type="button" class="btn hd-all" data-action="head-expand-all">' +
+      (allOpen ? "Collapse all" : "Expand all") + "</button>" : "") + "</div>";
+  const body = rows.length ? '<div class="hd-list">' + headerHtml() +
+    '<ul class="hd-items" aria-label="Logged messages">' + rows.map(function (row) {
       return rowHtml(vm, row, o);
-    }).join("") + "</ul>" : emptyHtml(vm, o);
+    }).join("") + "</ul></div>" : emptyHtml(vm, o);
   return '<section class="hd-screen" data-project="' + esc(o.project || "") + '" aria-labelledby="hd-h">' +
-    '<h2 id="hd-h" class="hd-title">Head</h2>' + nowHtml(head) + alertsHtml(counts) + barHtml(vm, o) + body +
-    "</section>";
+    top + nowHtml(head) + alertsHtml(counts) + barHtml(vm, o) + body + "</section>";
 }
 
-function projectOf(btn) {
-  const screen = btn.closest ? btn.closest(".hd-screen") : null;
+function projectOf(el) {
+  const screen = el.closest ? el.closest(".hd-screen") : null;
   return screen && screen.getAttribute("data-project") ? screen.getAttribute("data-project") : null;
 }
 
-function setField(bar, key, value) {
-  const f = bar.getAttribute("data-f") || "open";
-  const state = { f: f, q: "", kind: "", sid: "" };
-  for (const el of bar.querySelectorAll("[data-field]")) {
-    state[el.getAttribute("data-field")] = el.value || "";
+function idOf(item) {
+  const row = item.querySelector(".hd-row");
+  return row ? row.getAttribute("data-id") || "" : "";
+}
+
+// Fetch the verbatim text of one row once: GET .../head?full=Hn (the server gives text only on the same-origin page).
+function fetchFull(pid, id) {
+  const key = pid + "\n" + id;
+  if (fullCache.has(key)) return Promise.resolve(fullCache.get(key));
+  if (!inflight.has(key)) {
+    const url = "/api/v1/projects/" + encodeURIComponent(pid) + "/head?f=all&n=200&full=" + encodeURIComponent(id);
+    const req = getJson(url).then(function (res) {
+      const f = res && res.data && res.data.full ? res.data.full : {};
+      const entry = { text: typeof f.text === "string" ? f.text : null,
+        history: Array.isArray(f.history) ? f.history : [] };
+      fullCache.set(key, entry);
+      return entry;
+    }).finally(function () {
+      inflight.delete(key);
+    });
+    inflight.set(key, req);
   }
-  state[key] = value;
-  return hashOf(state);
+  return inflight.get(key);
+}
+
+// Fill one open row's text box and history from the cache (fetching when needed). Errors show in the box.
+function loadText(item) {
+  const id = idOf(item);
+  const screen = item.closest ? item.closest(".hd-screen") : null;
+  const pid = projectOf(item) || "";
+  const pre = item.querySelector(".hd-text");
+  const hist = item.querySelector(".hd-hist");
+  if (!id || !pre || !screen) return Promise.resolve();
+  const show = function (entry) {
+    pre.textContent = textNote(entry);
+    pre.setAttribute("data-state", entry.text == null ? "none" : "ready");
+    if (hist) hist.textContent = (entry.history || []).join(" · ");
+  };
+  if (!FULL_ID.test(id) || !pid) {
+    pre.textContent = "The full text is only on this computer.";
+    return Promise.resolve();
+  }
+  return fetchFull(pid, id).then(show, function () {
+    pre.textContent = "Could not load the text. Close the row and open it again.";
+    pre.setAttribute("data-state", "error");
+  });
+}
+
+// Loads run a few at a time, so expanding many rows does not send a burst of requests.
+function pump() {
+  while (active < FULL_CONCURRENCY && queue.length) {
+    const item = queue.shift();
+    active += 1;
+    loadText(item).then(done, done);
+  }
+  function done() {
+    active -= 1;
+    pump();
+  }
+}
+
+function enqueue(item) {
+  queue.push(item);
+  pump();
+}
+
+// Open or close one row in place (no re-render): the panel, the aria-expanded state and the open set.
+function setOpen(item, on) {
+  const id = idOf(item);
+  const hit = item.querySelector(".hd-hit");
+  const panel = item.querySelector(".hd-panel");
+  if (!id || !hit || !panel) return;
+  panel.hidden = !on;
+  item.classList.toggle("is-open", on);
+  hit.setAttribute("aria-expanded", on ? "true" : "false");
+  hit.setAttribute("aria-label", (on ? "Hide " : "Show ") + id);
+  if (on) {
+    openSet.add(id);
+    enqueue(item);
+  } else {
+    openSet.delete(id);
+  }
+}
+
+function loadOpenRows() {
+  if (typeof document === "undefined") return;
+  for (const item of document.querySelectorAll("#main .hd-item.is-open")) {
+    enqueue(item);
+  }
 }
 
 let listening = false;
 
-// Wires the row buttons, the open-row toggle and the search and select fields. Call once after the screen renders.
+// Wires the row toggles, the buttons, the forms and the search and select fields. Call once after the screen renders.
 export function attachHeadListeners() {
   if (listening || typeof document === "undefined") return;
   const main = document.getElementById("main");
@@ -354,20 +503,26 @@ export function attachHeadListeners() {
     const id = btn.getAttribute("data-id");
     const project = projectOf(btn);
     if (action === "head-toggle") {
-      const panel = document.getElementById("hd-p-" + id);
-      if (!panel) return;
-      panel.hidden = !panel.hidden;
-      btn.setAttribute("aria-expanded", panel.hidden ? "false" : "true");
-    } else if (action === "head-text") {
-      const pre = btn.parentNode.querySelector(".hd-text");
-      if (pre) pre.classList.toggle("hd-text-open");
+      const item = btn.closest(".hd-item");
+      if (item) setOpen(item, !item.classList.contains("is-open"));
+    } else if (action === "head-expand-all") {
+      const root = btn.closest(".hd-screen");
+      const items = root ? Array.from(root.querySelectorAll(".hd-item")) : [];
+      const allOpen = items.length > 0 && items.every(function (item) {
+        return item.classList.contains("is-open");
+      });
+      if (allOpen) openSet.clear();
+      items.forEach(function (item) {
+        setOpen(item, !allOpen);
+      });
+      btn.textContent = allOpen ? "Expand all" : "Collapse all";
     } else if (action === "head-accept") {
       run("head.accept", { id: id }, { project: project, label: "Accepted " + id });
     } else if (action === "head-reopen") {
-      run("head.set", { id: id, set: { status: "open" } }, { project: project, label: "Reopened " + id });
+      run("head.set", { id: id, status: "open" }, { project: project, label: "Reopened " + id });
     } else if (action === "head-set") {
       const status = btn.getAttribute("data-status");
-      run("head.set", { id: id, set: { status: status } }, { project: project, label: id + " " + status });
+      run("head.set", { id: id, status: status }, { project: project, label: id + " " + status });
     } else if (action === "head-log") {
       showToast({ text: "Type in the chat. Every message is logged here." });
     } else if (action === "head-merge") {
@@ -377,22 +532,18 @@ export function attachHeadListeners() {
       const ref = btn.getAttribute("data-ref");
       run("head.bind", { id: id, refs: [ref] }, { project: project, label: "Bound " + id + " to " + ref });
     } else if (action === "head-form") {
-      // Opens the row and shows one form (a second click on the same menu item hides it).
+      // Opens the row and shows one form (a second click on the same action hides it).
       const name = btn.getAttribute("data-form");
       const panel = document.getElementById("hd-p-" + id);
       if (!panel) return;
-      if (panel.hidden) {
-        const chev = document.querySelector('[data-action="head-toggle"][data-id="' + id + '"]');
-        if (chev) chev.click();
-      }
+      const item = panel.closest(".hd-item");
+      if (panel.hidden && item) setOpen(item, true);
       for (const form of panel.querySelectorAll(".hd-form")) {
         const show = form.getAttribute("data-form") === name && form.hidden;
         form.hidden = !show;
         const input = show ? form.querySelector("input") : null;
         if (input) input.focus();
       }
-      const menu = btn.closest ? btn.closest("details") : null;
-      if (menu) menu.open = false;
     }
   });
   main.addEventListener("submit", function (event) {
@@ -426,6 +577,16 @@ export function attachHeadListeners() {
   });
 }
 
+function setField(bar, key, value) {
+  const f = bar.getAttribute("data-f") || "open";
+  const state = { f: f, q: "", kind: "", sid: "" };
+  for (const el of bar.querySelectorAll("[data-field]")) {
+    state[el.getAttribute("data-field")] = el.value || "";
+  }
+  state[key] = value;
+  return hashOf(state);
+}
+
 // The Head hash is project-scoped in the app ("#/p/<id>/head?..."); hashOf() gives the bare "#head?..." form.
 function scopedHash(hash, project) {
   return project ? hash.replace(/^#head/, "#/p/" + project + "/head") : hash;
@@ -455,6 +616,11 @@ export function sectionView(vm) {
   const text = params.get("q") || "";
   const sid = params.get("sid") || "";
   const id = params.get("id") || "";
+  // A deep-linked row (#head?id=H12) opens once; after that the person's own open and close decide.
+  if (ITEM_ID.test(id) && id !== seededId) {
+    openSet.add(id);
+    seededId = id;
+  }
   const opts = {
     f: pick(params.get("f"), FILTERS.map(function (pair) {
       return pair[0];
@@ -462,9 +628,11 @@ export function sectionView(vm) {
     q: text.length <= 200 ? text : "",
     kind: pick(params.get("kind"), KINDS, 20),
     sid: sid.length <= 60 ? sid : "",
-    id: ITEM_ID.test(id) ? id : "",
+    open: Array.from(openSet),
     project: vm.route.id,
     readOnly: false,
   };
-  return headHtml({ head: vm.project.snapshot.head || null }, opts);
+  const html = headHtml({ head: vm.project.snapshot.head || null }, opts);
+  if (typeof setTimeout === "function") setTimeout(loadOpenRows, 0);
+  return html;
 }
