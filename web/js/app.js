@@ -22,6 +22,7 @@ import { initPanel, panelView } from "./views/panel.js";
 import { topbarView } from "./views/topbar.js";
 import { dismissToast, setToastHold, setToastListener, toastsHtml, undoToast } from "./views/toast.js";
 import { copyRef } from "./ref.js";
+import { installLog, logAction, noteRender, noteRoute } from "./log.js";
 
 const FAST_MS = 2000;
 const SLOW_MS = 30000;
@@ -168,6 +169,7 @@ function applyLayout(ui) {
 }
 
 function render() {
+  const started = Date.now();
   const route = currentRoute();
   if (route.redirect) {
     window.location.replace(route.redirect);
@@ -218,6 +220,7 @@ function render() {
   } else {
     root.removeAttribute("data-render-error");
   }
+  noteRender(route.name === "project" ? route.section || "project" : "home", started);
 }
 
 function announce(ok) {
@@ -363,6 +366,7 @@ function onClick(event) {
   if (!el) return;
   const route = currentRoute();
   const action = el.getAttribute("data-action");
+  logAction(action, el, null);
   if (action === "toggle-section") {
     toggleSection(route, el.getAttribute("data-section"));
   } else if (action === "toggle-item") {
@@ -457,6 +461,7 @@ function onPointerOut(event) {
 }
 
 function boot() {
+  installLog();
   applyTheme(loadTheme());
   setKeyHooks({
     rerender: render,
@@ -500,6 +505,7 @@ function boot() {
   });
   helpDialog.addEventListener("close", render);
   onRouteChange(function () {
+    noteRoute();
     render();
     schedule(0);
   });

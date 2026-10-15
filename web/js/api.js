@@ -2,6 +2,8 @@
 // Every failure becomes an ApiError with a status, a code and a plain message. Writes send the CSRF token from the
 // page's <meta name="csrf"> (the server adds the real value; the literal placeholder is ignored).
 
+import { noteRequest } from "./log.js";
+
 const etagCache = new Map();
 const PLACEHOLDER = "__CSRF__";
 
@@ -46,11 +48,14 @@ export async function getJson(url) {
   const headers = { Accept: "application/json" };
   if (cached) headers["If-None-Match"] = cached.etag;
   let response;
+  const started = Date.now();
   try {
     response = await fetch(url, { headers: headers, credentials: "same-origin" });
   } catch (err) {
+    noteRequest("GET", url, 0, started);
     throw new ApiError(0, "network", "Could not reach the server. Retrying.");
   }
+  noteRequest("GET", url, response.status, started);
   if (response.status === 304 && cached) {
     return { status: 304, data: cached.data, etag: cached.etag };
   }
@@ -67,6 +72,7 @@ export async function postJson(url, body) {
   const token = csrfToken();
   if (!token) throw new ApiError(0, "no_token", "This page has no security token. Reload the page.");
   let response;
+  const started = Date.now();
   try {
     response = await fetch(url, {
       method: "POST",
@@ -79,8 +85,10 @@ export async function postJson(url, body) {
       credentials: "same-origin",
     });
   } catch (err) {
+    noteRequest("POST", url, 0, started);
     throw new ApiError(0, "network", "Could not reach the server. Retrying.");
   }
+  noteRequest("POST", url, response.status, started);
   if (!response.ok) throw await failure(response);
   const data = await readJson(response);
   return { status: response.status, data: data };
