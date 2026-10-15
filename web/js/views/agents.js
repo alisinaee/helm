@@ -10,7 +10,26 @@ import { itemHash, pageState, scopeSnapshots } from "./inbox.js";
 
 const FINISHED_MAX = 10;
 const STATUS_WORDS = { done: "Done", failed: "Failed" };
+const EFFORTS = ["low", "medium", "high", "xhigh", "max"];
+const ENGINES = { haiku: "Haiku 5.5", sonnet: "Sonnet 5.5", opus: "Opus 5.5", agy: "agy · Gemini 3.8 Flash",
+  cursor: "cursor · Auto" };
 let ticking = false;
+
+// The exact engine of a job's model string: a bare word maps to its engine name; a more specific cursor name
+// (grok-4.7-xhigh, auto) maps to its model. Unknown strings are shown as they are; no model is a dash.
+export function engineLabel(model) {
+  const text = String(model || "").trim().toLowerCase();
+  if (!text) return "—";
+  if (/grok-4\.7/.test(text)) return "cursor · Grok 4.7";
+  if (text === "auto") return "cursor · Auto";
+  return ENGINES[text] || String(model).trim();
+}
+
+// The thinking effort of a job, or a dash when the job did not record one.
+export function effortLabel(effort) {
+  const text = String(effort || "").trim().toLowerCase();
+  return EFFORTS.indexOf(text) !== -1 ? text : "—";
+}
 
 // The worker tree of one snapshot's running jobs: the roots (jobs whose parent is not running) and the children map.
 export function agentTree(snap) {
@@ -55,7 +74,7 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     : '<span class="mt-label">No task assigned</span>';
   const handed = children.length
     ? chipHtml("Delegated to " + children.map(function (c) {
-      return c.role || c.model || "worker";
+      return c.role || engineLabel(c.model);
     }).join(", "), "neutral")
     : "";
   const badge = job.task && blocked.indexOf(job.task) !== -1 ? chipHtml("blocked", "danger") : "";
@@ -65,8 +84,9 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     (job.task ? "" : " disabled") + ' aria-label="Stop ' + esc(label) + '">Stop</button>';
   const tokens = job.tokensK == null ? "not yet" : fmtTokens(job.tokensK);
   const row = '<li class="ag-row" data-depth="' + depth + '"><div class="row-grid rg-agent">' +
-    '<span class="rg-chips">' + chipHtml(job.model || "model", "neutral") +
+    '<span class="rg-chips">' + chipHtml(engineLabel(job.model), "neutral") +
     (job.role ? chipHtml(job.role, "neutral") : "") + badge + "</span>" +
+    '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort)) + "</span>" +
     '<span class="rg-main"><span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
     (handed ? " " + handed : "") + "</span>" +
     '<span class="rg-chips">' + taskHtml + "</span>" +
@@ -89,12 +109,21 @@ function finishedHtml(job, pid) {
   const tokens = job.tokensK == null ? "unknown" : fmtTokens(job.tokensK);
   const task = job.task ? '<a href="' + esc(itemHash(pid, job.task)) + '">' + esc(job.task) + "</a>" : "";
   return '<li class="ag-row"><div class="row-grid rg-agent">' +
-    '<span class="rg-chips">' + chipHtml(job.model || "model", "neutral") + chipHtml(word, kind) + "</span>" +
+    '<span class="rg-chips">' + chipHtml(engineLabel(job.model), "neutral") + chipHtml(word, kind) + "</span>" +
+    '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort)) + "</span>" +
     '<span class="rg-main"><span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span></span>" +
     '<span class="rg-chips">' + task + "</span>" +
     '<span class="rg-num num">' + esc(fmtDuration(job.elapsedS)) + "</span>" +
     '<span class="rg-num num">' + esc(tokens) + "</span><span></span>" +
     copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) }) + "</div></li>";
+}
+
+// The Effort column is hidden when no running or finished job of the project recorded an effort.
+function listClass(snap) {
+  const known = (snap.running || []).concat(snap.jobs || []).some(function (j) {
+    return effortLabel(j.effort) !== "\u2014";
+  });
+  return known ? "ag-list" : "ag-list ag-noeffort";
 }
 
 // One block per project in view: its live tree and its finished jobs.
@@ -103,17 +132,18 @@ function projectBlock(entry, now, showName) {
   const tree = agentTree(snap);
   const blocked = snap.blocked || [];
   const heading = showName ? '<h3 class="grp-h">' + esc(entry.name) + "</h3>" : "";
-  const head = '<li class="row-grid rg-agent rg-head" aria-hidden="true"><span>Model</span><span>Job</span>' +
-    '<span>Task</span><span class="rg-num">Elapsed</span><span class="rg-num">Tokens</span><span></span><span></span>' +
+  const head = '<li class="row-grid rg-agent rg-head" aria-hidden="true"><span>Model</span><span class="ag-effort">Effort</span>' +
+    '<span>Job</span><span>Task</span><span class="rg-num">Elapsed</span><span class="rg-num">Tokens</span>' +
+    "<span></span><span></span>" +
     "</li>";
   const live = tree.roots.length
-    ? '<ul class="ag-list" aria-label="Running agents">' + head + tree.roots.map(function (job) {
+    ? '<ul class="' + listClass(snap) + '" aria-label="Running agents">' + head + tree.roots.map(function (job) {
       return agentRowHtml(job, entry.id, tree, blocked, now, 0);
     }).join("") + "</ul>"
     : emptyHtml("No agents running.");
   const done = finishedJobs(snap);
   const past = done.length
-    ? '<ol class="ag-list" aria-label="Last finished jobs">' + done.map(function (job) {
+    ? '<ol class="' + listClass(snap) + '" aria-label="Last finished jobs">' + done.map(function (job) {
       return finishedHtml(job, entry.id);
     }).join("") + "</ol>"
     : '<p class="ov-sum">No finished jobs yet.</p>';

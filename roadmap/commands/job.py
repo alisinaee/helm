@@ -27,6 +27,8 @@ def register(sub, common):
     start.add_argument("task", nargs="?", help="task id from the project's tasks.json")
     start.add_argument("--parent", metavar="ID", default=None, help="job id of the lead this job works for")
     start.add_argument("--role", metavar="ROLE", default=None, help="lead or worker (needs --parent)")
+    start.add_argument("--effort", metavar="LEVEL", default=None,
+                       help="thinking effort: low, medium, high, xhigh or max (default: not recorded)")
     start.set_defaults(handler=_start)
 
     for name, text in (("done", "mark a job done"), ("fail", "mark a job failed")):
@@ -56,7 +58,8 @@ def _data_dir(args):
 
 
 def _start(args):
-    job = jobs.start_job(_data_dir(args), args.title, args.model, args.task, parent=args.parent, role=args.role)
+    job = jobs.start_job(_data_dir(args), args.title, args.model, args.task, parent=args.parent, role=args.role,
+                          effort=args.effort)
     if not getattr(args, "json", False):
         print(job["id"])
         return None

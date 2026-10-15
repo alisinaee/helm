@@ -184,6 +184,8 @@ function normalizeJob(j, fetchedAt) {
     // WP34: the lead job a worker was started under, and the worker's role (both null for a plain job).
     parent: j.parent || null,
     role: j.role || null,
+    // The thinking effort the job was started with (low, medium, high, xhigh or max); null when not recorded.
+    effort: j.effort || null,
     fetchedAt: fetchedAt,
   };
 }
