@@ -236,5 +236,144 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(ctx.exception.exit, EXIT_EXTERNAL)
 
 
+class GapTests(unittest.TestCase):
+    """Verified gaps from docs/reviews/agy-git-testgaps.md (23 cases)."""
+
+    def setUp(self):
+        self.root = os.path.realpath(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.root, True)
+        self.home = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.home, True)
+        self.env = mock.patch.dict(os.environ, {"ROADMAP_HOME": self.home})
+        self.env.start()
+        self.addCleanup(self.env.stop)
+
+    def _commits(self, count):
+        _sh(self.root, "init", "-q", "-b", "main")
+        for i in range(count):
+            with open(os.path.join(self.root, "a.txt"), "w") as fh:
+                fh.write("%d\n" % i)
+            _sh(self.root, "add", "a.txt")
+            _sh(self.root, "commit", "-q", "-m", "C%d" % i)
+
+    def test_git_path_returns_cached_binary_without_which(self):
+        with mock.patch.object(git, "_GIT", "/cached/git"), mock.patch.object(git.shutil, "which") as which:
+            self.assertEqual(git.git_path(), "/cached/git")
+        which.assert_not_called()
+
+    def test_redact_none_is_empty(self):
+        self.assertEqual(git.redact(None), "")
+
+    def test_redact_http_credentials(self):
+        self.assertEqual(git.redact("http://user:pass@host/repo"), "http://***@host/repo")
+
+    def test_valid_ref_rejects_trailing_period(self):
+        with self.assertRaises(RoadmapError) as ctx:
+            git.valid_ref("feat.")
+        self.assertEqual(ctx.exception.exit, EXIT_USAGE)
+
+    def test_valid_sha_none_is_usage_error(self):
+        with self.assertRaises(RoadmapError) as ctx:
+            git.valid_sha(None)
+        self.assertEqual(ctx.exception.exit, EXIT_USAGE)
+
+    def test_valid_sha_accepts_mixed_case(self):
+        self.assertEqual(git.valid_sha("1a2B3c4D"), "1a2B3c4D")
+
+    def test_valid_rel_path_none_is_usage_error(self):
+        with self.assertRaises(RoadmapError) as ctx:
+            git.valid_rel_path(self.root, None)
+        self.assertEqual(ctx.exception.exit, EXIT_USAGE)
+
+    def test_env_drops_work_tree_and_index_file(self):
+        with mock.patch.dict(os.environ, {"GIT_WORK_TREE": "/x", "GIT_INDEX_FILE": "/y"}):
+            env = git._env(optional_locks=True)
+        self.assertNotIn("GIT_WORK_TREE", env)
+        self.assertNotIn("GIT_INDEX_FILE", env)
+
+    def test_run_failure_with_empty_stderr_has_fallback_message(self):
+        fake = subprocess.CompletedProcess(["git"], 1, b"", b"")
+        with mock.patch.object(git.subprocess, "run", return_value=fake):
+            with self.assertRaises(RoadmapError) as ctx:
+                git.run(self.root, ["status"])
+        self.assertEqual((ctx.exception.code, ctx.exception.message, ctx.exception.exit),
+                         ("git_failed", "git failed", EXIT_EXTERNAL))
+
+    def test_repo_root_refuses_empty_or_none_path(self):
+        for bad in ["", None]:
+            with self.assertRaises(RoadmapError, msg=repr(bad)) as ctx:
+                git.repo_root(bad)
+            self.assertEqual((ctx.exception.code, ctx.exception.message), ("usage", "project path must be absolute"))
+
+    def test_repo_root_refuses_symlinked_project_path(self):
+        parent = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, parent, True)
+        link = os.path.join(parent, "link")
+        os.symlink(self.root, link)
+        with self.assertRaises(RoadmapError) as ctx:
+            git.repo_root(link)
+        self.assertEqual((ctx.exception.code, ctx.exception.exit), ("git_path", EXIT_USAGE))
+
+    def test_in_progress_reports_rebase_directories(self):
+        self._commits(1)
+        for name in ("rebase-merge", "rebase-apply"):
+            path = os.path.join(self.root, ".git", name)
+            os.mkdir(path)
+            self.assertEqual(git.in_progress(self.root), "rebase", name)
+            os.rmdir(path)
+        self.assertIsNone(git.in_progress(self.root))
+
+    def test_check_index_free_returns_none_without_lock(self):
+        self._commits(1)
+        self.assertIsNone(git.check_index_free(self.root))
+
+    def _log_count_arg(self, limit):
+        original = git._git
+        with mock.patch.object(git, "_git", side_effect=original) as spy:
+            rows = git.read_log(self.root, limit=limit)
+        argv = [c.args[1] for c in spy.call_args_list if c.args[1][0] == "log"][0]
+        return len(rows), argv[argv.index("-n") + 1]
+
+    def test_read_log_clamps_low_limit_to_one(self):
+        self._commits(3)
+        self.assertEqual(self._log_count_arg(0), (1, "1"))
+        self.assertEqual(self._log_count_arg(-5), (1, "1"))
+
+    def test_read_log_clamps_high_limit_to_log_max(self):
+        self._commits(3)
+        rows, count = self._log_count_arg(500)
+        self.assertEqual((rows, count), (3, str(git.LOG_MAX)))
+
+    def test_parse_branches_non_numeric_time_is_none(self):
+        rows = git.parse_branches("feat\x1f\x1f\x1f\x1fnot-a-date\n")
+        self.assertEqual(len(rows), 1)
+        self.assertIsNone(rows[0]["time"])
+
+    def test_parse_status_duplicate_conflict_listed_once(self):
+        line = "u UU N... 100644 100644 100644 100644 h1 h2 h3 clash.py\0"
+        st = git.parse_status(line + line)
+        self.assertEqual(st["conflicts"], ["clash.py"])
+
+    def test_parse_log_skips_short_records(self):
+        text = "\x1ebad\x1fonly\x1ftwo\n\x1eaaa111\x1fAli\x1f1700000000\x1fOk\x1fOk\n"
+        rows = git.parse_log(text)
+        self.assertEqual([r["sha"] for r in rows], ["aaa111"])
+
+    def test_secret_name_in_subdirectory_is_secret(self):
+        self.assertTrue(git.is_secret_path("sub/dir/.env"))
+
+    def test_nul_after_first_8000_bytes_is_not_binary(self):
+        data = b"a" * 8000 + b"\0"
+        self.assertFalse(git.is_binary(data))
+        self.assertIsNone(git.diff_skip_reason("notes.txt", len(data), data))
+
+    def test_secret_name_takes_precedence_over_size(self):
+        self.assertEqual(git.diff_skip_reason(".env", 2 * 1024 * 1024), "hidden (secret pattern)")
+
+    def test_cap_text_drops_split_multibyte_character(self):
+        # "é" is two bytes (c3 a9); a 2-byte cut leaves a broken sequence that must be dropped.
+        self.assertEqual(git.cap_text("aé", max_bytes=2, max_lines=10), ("a", True))
+
+
 if __name__ == "__main__":
     unittest.main()
