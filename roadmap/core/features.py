@@ -5,7 +5,10 @@ roadmap.services.features.load), the parsed tasks (parse_tasks), the parsed jobs
 It never raises. A feature that fails a rule is left out of rows and named in errors. validate(features) returns the
 same error strings.
 
-Rules (spec section 2): ids F1..F99, at most 60 features, title <= 80, acc <= 160, prio 1..3, one parent level only.
+Rules (spec section 2): ids F1..F99, at most 60 features, title <= 80, acc <= 160, prio 1..3, a parent chain of at most
+2 parents (3 levels: phase, sub plan, item), no cycles. ask is an optional bool ("the person asked for this").
+A parent covers the tasks of all its descendants; gaps counts its direct children that have no tasks.
+Outline labels (P0, P0.0, P0.0.1) are derived from file order by outline_labels and never stored.
 A task lists up to 3 features in feats; it counts once in taskTotals and in each of its features' figures.
 """
 
@@ -18,6 +21,7 @@ from roadmap.core.planfmt import PHASE_ID_RE
 FEATURES_FILE = "features.json"
 DATE_RE = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
 MAX_FEATURES = 60
+MAX_ANCESTORS = 2
 TITLE_MAX = 80
 ACC_MAX = 160
 PRIO_DEFAULT = 2
@@ -37,10 +41,8 @@ def derive(features, tasks, jobs, issues=None):
                  if isinstance(tasks, list) else [])
     job_list = [j for j in jobs if isinstance(j, dict)] if isinstance(jobs, list) else []
     kept_ids = {f["id"] for f in kept}
-    children = {f["id"]: [] for f in kept}
-    for f in kept:
-        if f["parent"] is not None:
-            children[f["parent"]].append(f["id"])
+    by_id = {f["id"]: f for f in kept}
+    children = _children(kept)
 
     own = {f["id"]: set() for f in kept}          # feature id -> task ids linked directly
     orphans = []
@@ -64,14 +66,22 @@ def derive(features, tasks, jobs, issues=None):
     blocked_ids = _blocked_tasks(issues)
     tasks_by_id = {t["id"]: t for t in task_list}
 
+    rolled = {}                                   # feature id -> task ids of it and all its descendants
+    for f in kept:
+        member_ids = set(own[f["id"]])
+        for fid in _descendants(f["id"], children):
+            member_ids |= own[fid]
+        rolled[f["id"]] = [t["id"] for t in task_list if t["id"] in member_ids]
+
+    labels = outline_labels(kept)
     rows = []
     for f in kept:
-        group = [f["id"]] + children[f["id"]]
-        member_ids = set()
-        for fid in group:
-            member_ids |= own[fid]
-        ordered = [t["id"] for t in task_list if t["id"] in member_ids]
-        rows.append(_row(f, ordered, tasks_by_id, spent, running, blocked_ids))
+        fid = f["id"]
+        row = _row(f, rolled[fid], tasks_by_id, spent, running, blocked_ids)
+        row["label"] = labels.get(fid)
+        row["ask"] = f["ask"]
+        row["gaps"] = sum(1 for c in children[fid] if not by_id[c]["hold"] and not rolled[c])
+        rows.append(row)
 
     uncovered = [r["id"] for r in rows if r["state"] == "uncovered"]
     # total is the features that are not on hold, so done + doing + todo + uncovered == total; hold is its own count.
@@ -88,6 +98,24 @@ def derive(features, tasks, jobs, issues=None):
         "taskTotals": _task_totals(task_list, spent),
         "errors": errors,
     }
+
+
+def outline_labels(feature_list):
+    """Outline label per feature id, derived from file order: P<i> for the i-th top-level item (0-based), then .<j>
+    for each level below (P0.0, P0.0.1). Features that are not in feature_list get no label. Never raises."""
+    kept = [f for f in feature_list if isinstance(f, dict) and isinstance(f.get("id"), str)]
+    children = _children(kept)
+    labels = {}
+    roots = [f["id"] for f in kept if f.get("parent") is None]
+
+    def visit(fid, label):
+        labels[fid] = label
+        for index, child in enumerate(children.get(fid, [])):
+            visit(child, label + "." + str(index))
+
+    for index, fid in enumerate(roots):
+        visit(fid, "P" + str(index))
+    return labels
 
 
 # ---------------------------------------------------------------- checks
@@ -120,11 +148,31 @@ def _check(raw_list):
             errors.append(f["id"] + ": a feature cannot be its own parent")
         elif parent not in by_id:
             errors.append(f["id"] + ": parent " + parent + " is not a valid feature")
-        elif by_id[parent]["parent"] is not None:
-            errors.append(f["id"] + ": parent " + parent + " has a parent (one level only)")
         else:
-            kept.append(f)
+            problem = _chain_problem(f["id"], by_id)
+            if problem:
+                errors.append(f["id"] + ": " + problem)
+            else:
+                kept.append(f)
     return kept, errors
+
+
+def _chain_problem(fid, by_id):
+    """Why a feature's parent chain is refused, or None. Walks up through the candidates only."""
+    seen = {fid}
+    depth = 0
+    cur = by_id[fid]["parent"]
+    while cur is not None:
+        if cur not in by_id:
+            return "parent " + cur + " is not a valid feature"
+        if cur in seen:
+            return "its parent chain loops back on itself (a cycle)"
+        seen.add(cur)
+        depth += 1
+        if depth > MAX_ANCESTORS:
+            return "is a 4th level; a plan has at most 3 levels (phase, sub plan, item)"
+        cur = by_id[cur]["parent"]
+    return None
 
 
 def _field_errors(raw, index):
@@ -160,6 +208,9 @@ def _field_errors(raw, index):
     accepted = raw.get("accepted")
     if accepted not in (None, "") and not _is_date(accepted):
         errs.append(label + ": accepted must look like 2026-10-14")
+    ask = raw.get("ask")
+    if ask is not None and not isinstance(ask, bool):
+        errs.append(label + ": ask must be true or false")
     if errs:
         return None, errs
     return {
@@ -171,6 +222,7 @@ def _field_errors(raw, index):
         "phase": phase or None,
         "hold": raw.get("hold") is True,
         "accepted": accepted or None,
+        "ask": ask is True,
     }, []
 
 
@@ -183,6 +235,28 @@ def _is_date(value):
     except ValueError:
         return False
     return True
+
+
+# ---------------------------------------------------------------- tree helpers
+
+def _children(kept):
+    """feature id -> ids of its direct children, in file order. kept is ancestor-closed (see _chain_problem)."""
+    out = {f["id"]: [] for f in kept}
+    for f in kept:
+        if f.get("parent") in out:
+            out[f["parent"]].append(f["id"])
+    return out
+
+
+def _descendants(fid, children):
+    """Every feature id below fid, at any depth. The tree is acyclic, so this ends."""
+    out = []
+    stack = list(children.get(fid, []))
+    while stack:
+        cur = stack.pop()
+        out.append(cur)
+        stack.extend(children.get(cur, []))
+    return out
 
 
 # ---------------------------------------------------------------- derived figures
@@ -215,19 +289,24 @@ def _row(f, ordered, tasks_by_id, spent, running, blocked_ids):
     }
 
 
-# The snapshot row (WP53b, R7.10): the derived row without the task id list. hold is state "hold" and running is not
-# shown, so neither is carried. acc is carried only while the feature is not done.
-SNAPSHOT_ROW_KEYS = ("id", "title", "prio", "parent", "phase", "accepted", "done", "total", "estK", "spentK",
-                     "blocked", "state")
+# The snapshot row (WP53b, R7.10, slimmed in R7.13 H1): the derived row without the task id list, the estimate, the
+# spend and the priority (feature show keeps them). hold is state "hold" and running is not shown, so neither is
+# carried. label is derived from order. ask is carried only when set, gaps only when above 0, and acc only until the
+# person accepts the feature.
+SNAPSHOT_ROW_KEYS = ("id", "title", "parent", "phase", "label", "accepted", "done", "total", "blocked", "state")
 
 
 def snapshot_rows(rows):
-    """The rows the snapshot carries: SNAPSHOT_ROW_KEYS, plus acc for a feature that is not done. The Planner reads a
+    """The rows the snapshot carries: SNAPSHOT_ROW_KEYS, plus ask, gaps and acc when they apply. The Planner reads a
     feature's tasks from each task's feats in the snapshot, so the id list is left out. Never raises."""
     out = []
     for row in rows if isinstance(rows, list) else []:
         slim = {key: row[key] for key in SNAPSHOT_ROW_KEYS if key in row}
-        if row.get("state") != "done" and row.get("acc"):
+        if row.get("ask") is True:
+            slim["ask"] = True
+        if isinstance(row.get("gaps"), int) and not isinstance(row.get("gaps"), bool) and row["gaps"] > 0:
+            slim["gaps"] = row["gaps"]
+        if row.get("acc") and not row.get("accepted"):
             slim["acc"] = row["acc"]
         out.append(slim)
     return out
