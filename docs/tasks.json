@@ -1510,6 +1510,171 @@
       "feats": [
         "F13"
       ]
+    },
+    {
+      "id": "R7.32",
+      "phase": "R7",
+      "title": "P1 list-cut fix review (head ledger rows, newest first)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:10:15+03:30"
+      }
+    },
+    {
+      "id": "R7.33",
+      "phase": "R7",
+      "title": "P2 verify sync findings in cursor-sync-grok",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "opencode",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.34",
+      "phase": "R7",
+      "title": "P3 bind head asks to real tasks (headops, planfmt)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "opencode",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:10:15+03:30"
+      }
+    },
+    {
+      "id": "R7.35",
+      "phase": "R7",
+      "title": "P4 secrets redaction finish and verify",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "opencode",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:10:15+03:30"
+      }
+    },
+    {
+      "id": "R7.36",
+      "phase": "R7",
+      "title": "P5 ledger hygiene: triage H51 H59 H67, close H36 H49",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.37",
+      "phase": "R7",
+      "title": "P6 head GUI audit (alignment, 375px, reply blocks)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "low",
+      "model": "agy",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:16:17+03:30"
+      }
+    },
+    {
+      "id": "R7.38",
+      "phase": "R7",
+      "title": "Agents list shows opencode model and effort (H54)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "opencode",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:10:15+03:30"
+      }
+    },
+    {
+      "id": "R7.39",
+      "phase": "R7",
+      "title": "Agents effort and model audit at max effort (H53)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "opencode",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:10:15+03:30"
+      }
+    },
+    {
+      "id": "R7.40",
+      "phase": "R7",
+      "title": "Fix sync findings from Cursor P2 review (ETag, usage poll, dom patch)",
+      "status": "todo",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.41",
+      "phase": "R7",
+      "title": "Agents: fix effort and model mismatches from docs/reviews/head-agents-effort-audit.md (H84)",
+      "status": "todo",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.42",
+      "phase": "R7",
+      "title": "CSS total back under the cap (test_ref_polish)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:15:49+03:30"
+      }
+    },
+    {
+      "id": "R7.43",
+      "phase": "R7",
+      "title": "Head view: card numbers in fixed columns; no horizontal scroll at 375px (agy P6)",
+      "status": "todo",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
     }
   ],
   "schemaVersion": 1

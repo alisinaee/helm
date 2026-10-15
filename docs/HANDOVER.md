@@ -38,6 +38,20 @@ START HERE in a new chat (any account, same Mac): `cd ~/Works/roadmap-board` and
 - Argon: gemini-4-argon via OpenCode returned "Insufficient account funds" (paid, no credit). Browser route: Claude extension is installed in Arc and listed as connected, but tab creation timed out; not yet tested.
 - First message for the new chat: `/head`
 
+### Checkpoint 5 (Opus head, 2026-10-15, context near limit)
+- Pushed this session: 2b83d5b secrets (R7.35), 929c826 head list trim/order (R7.32), 8c456ee no umbrella-only
+  binds (R7.34), 5e88be1 Agents opencode chip (R7.38), 2e48e57 head counts (R7.32). CSS cap test fixed by moving a
+  stray audit file out of web/css (now docs/reviews/head-css-audit.md).
+- New tasks R7.32-R7.43 (one per package, see `bin/roadmap task list`). Reviews: docs/reviews/cursor-head-p1.md,
+  cursor-head-p2.md (13 real sync findings), head-agents-effort-audit.md, p6-gui.md.
+- Running at save (Haiku): j792 R7.40 server sync (routes.py, loader.py, parsers.py), j793 R7.40 client sync
+  (app.js, cmd.js, tests/web/test_sync_refresh.py), j794 R7.41 Agents model/effort (agents.js, components.css,
+  hooks.py, test_agents, test_hooks), R7.43 head layout (head.css, head.js, test_head_layout). Verify each diff
+  (hooks.py: head reads it), run the suite, commit by path, push.
+- Open asks: H52 and H81 need the person (unclear text); H58 needs OpenCode credit; H73 Chrome access untested;
+  H84 waits on R7.41. Rules from this chat are in HEAD-RUNBOOK "Usage limits".
+- First message for the new chat: `/head`
+
 ### Checkpoint 4 (/head save, 2026-10-15)
 - Last commit: 2f5f594 (Cursor jobs record the real engine model; cursor-job wrapper closes its job). Pushed.
 - Running: 0. All stale running jobs (24) were closed as failed. Runners fixed: agy queue, OpenCode runner and tools/cursor-job.sh close their job on crash or kill.
