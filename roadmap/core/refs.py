@@ -11,7 +11,7 @@ import re
 
 REF_RE = re.compile(r"rb:[a-z0-9-]+(/[a-z]+/[A-Za-z0-9._-]+)?")
 PROJECT = "project"
-KINDS = ("phase", "task", "sub", "feature", "issue", "question", "job", "research", "section", "view")
+KINDS = ("phase", "task", "sub", "feature", "issue", "question", "job", "research", "section", "view", "ask")
 LINE_MAX = 10
 SUB_SEP = ".s"
 
@@ -27,6 +27,7 @@ NEXT = {
     "research": "roadmap research list",
     "section": "roadmap status",
     "view": "roadmap status",
+    "ask": "roadmap head list",
     PROJECT: "roadmap project show {id}",
 }
 
@@ -158,6 +159,15 @@ def _research_rows(item):
     return [[_pair("title", item.get("title"))], [_pair("file", item.get("file"))]]
 
 
+def _ask_rows(item):
+    rows = [[_pair("title", item.get("sum"))],
+            [_pair("status", item.get("status")), _pair("kind", item.get("kind")),
+             _pair("age", None if item.get("age") is None else "%dm" % item["age"])]]
+    if item.get("links"):
+        rows.append([_pair("bound", " ".join(item["links"]))])
+    return rows
+
+
 def _project_rows(snap, project):
     overall = snap.get("overall") or {}
     phases = overall.get("phases") or {}
@@ -196,6 +206,8 @@ def build(snap, project, kind, ident, item=None):
         rows = _question_rows(item)
     elif kind == "research" and item:
         rows = _research_rows(item)
+    elif kind == "ask" and item:
+        rows = _ask_rows(item)
     elif kind == "section" and "." in ident:
         rows = _view_rows(ident)
     elif kind == "view":

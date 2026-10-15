@@ -9,6 +9,7 @@ import json
 from datetime import timedelta
 
 from roadmap.core import features as feature_rules
+from roadmap.core import head as head_rules
 from roadmap.core.extras import parse_extras
 from roadmap.core.parsers import (ISSUE_OPEN, error_entry, parse_activity, parse_autonomy, parse_budget,
                                   parse_comments, parse_issues, parse_jobs, parse_questions, parse_queue, parse_tasks,
@@ -25,6 +26,12 @@ WORKFLOW_SPANS = 200                                # newest job spans in the wo
 WORKFLOW_DAYS = timedelta(days=7)                   # jobs that ended (or started) longer ago are dropped
 AFTER_MAX = 5                                       # most task ids in one after list
 SESSION_STATES = ("watching", "open", "none")       # presence.state() values (R7.1 T1)
+HEAD_OPEN_MAX = 40                                  # HEAD-SPEC section 5: open asks in the head key, oldest first
+HEAD_DONE_MAX = 5                                   # newest done asks in the head key
+HEAD_SUM_MAX = 60                                   # summary characters per head row
+HEAD_LINKS_MAX = 3                                  # links per head row; the rest is a count
+HEAD_PREV_MAX = 3                                   # earlier sessions in the head key
+HEAD_BYTES_MAX = 3072                               # the head key as compact JSON; rows are dropped to fit
 
 
 def _missing(name):
@@ -155,12 +162,87 @@ def _workflow_view(jobs, issues_open, tasks_text, task_ids, moment):
             "edges": {"after": _after_edges(tasks_text, task_ids), "block": block}}
 
 
-def build_snapshot(files, config, now, control=None, meters=None, rules=None, session=None, folder=None):
+def head_link_state(tasks, jobs):
+    """The link states the head fold reads: task:<id> from the task state, job:<id> as running, done or open."""
+    state = {"task:" + t["id"]: t["state"] for t in tasks if t.get("id")}
+    for job in jobs:
+        if job.get("id"):
+            state["job:" + job["id"]] = job["status"] if job.get("status") in ("running", "done") else "open"
+    return state
+
+
+def head_row(entry, moment):
+    """One head row (HEAD-SPEC section 5), also used by the API: the summary cut, age in whole minutes, and the
+    flags left out when empty (stale and carried only when true, links only when some, more and dup only when set)."""
+    ts = head_rules.parse_ts(entry.get("ts"))
+    row = {"id": entry["id"], "kind": str(entry.get("kind") or "").rstrip("?"),
+           "sum": (entry.get("sum") or "")[:HEAD_SUM_MAX], "status": entry["status"],
+           "age": None if ts is None else max(0, int((moment - ts).total_seconds() // 60))}
+    if entry.get("stale"):
+        row["stale"] = True
+    if entry.get("carried"):
+        row["carried"] = True
+    links = entry.get("links") or []
+    if links:
+        row["links"] = links[:HEAD_LINKS_MAX]
+        if len(links) > HEAD_LINKS_MAX:
+            row["more"] = len(links) - HEAD_LINKS_MAX
+    if entry.get("dup"):
+        row["dup"] = entry["dup"]["id"]
+    return row
+
+
+def _head_sessions(records):
+    """now (the latest claim or start: model, acct, since, sid, usage) and prev (up to HEAD_PREV_MAX earlier ones,
+    newest first, each with until = the next start). Verbatim text never appears here."""
+    starts = [r for r in records if r.get("t") == "s" and r.get("ev") in ("claim", "start")]
+    usage = next((r["usage"] for r in reversed(records) if r.get("t") == "s" and isinstance(r.get("usage"), dict)),
+                 None)
+    usage = None if usage is None else {k: usage[k] for k in ("h5", "wk") if k in usage}
+    last = starts[-1] if starts else {}
+    current = {"model": last.get("model"), "acct": last.get("acct"), "since": last.get("ts"),
+               "sid": last.get("sid"), "usage": usage}
+    prev = []
+    for i in range(len(starts) - 2, -1, -1):
+        if len(prev) == HEAD_PREV_MAX:
+            break
+        prev.append({"model": starts[i].get("model"), "acct": starts[i].get("acct"), "since": starts[i].get("ts"),
+                     "until": starts[i + 1].get("ts")})
+    return current, prev
+
+
+def _head_view(records, link_state, moment):
+    """The head key: now, prev, counts and rows (open oldest first, then the newest done). Rows are dropped, done ones
+    first, until the key fits HEAD_BYTES_MAX; the counts stay exact."""
+    entries = head_rules.fold(records, link_state=link_state, now=moment)
+    open_rows = [e for e in entries if e["status"] not in head_rules.CLOSED_STATUSES]
+    done_rows = [e for e in entries if e["status"] == "done"]
+    current, prev = _head_sessions(records)
+    view = {
+        "now": current, "prev": prev,
+        "counts": {"open": len(open_rows),
+                   "unhandled": sum(1 for e in open_rows if e["status"] in ("new", "understood")),
+                   "doing": sum(1 for e in open_rows if e["status"] == "doing"),
+                   "needs": sum(1 for e in open_rows if e["status"] == "needs-you"),
+                   "doneUnacc": len(done_rows)},
+        "rows": ([head_row(e, moment) for e in sorted(open_rows, key=lambda e: str(e.get("ts") or ""))[:HEAD_OPEN_MAX]]
+                 + [head_row(e, moment) for e in done_rows[-HEAD_DONE_MAX:]]),
+    }
+    rows = view["rows"]
+    while rows and len(json.dumps(view, ensure_ascii=False, separators=(",", ":")).encode("utf-8")) > HEAD_BYTES_MAX:
+        done_at = next((i for i, row in enumerate(rows) if row["status"] == "done"), len(rows) - 1)
+        rows.pop(done_at)
+    return view
+
+
+def build_snapshot(files, config, now, control=None, meters=None, rules=None, session=None, folder=None,
+                   head_records=None):
     """The snapshot dict. Same shape as the old server's build(), plus "project" and "schemaVersion".
     meters (WP27: limits, today, week) is added only when given, so a snapshot built without it is unchanged.
     rules (WP33b: the parsed docs/rules.txt list) is added only when given, for the same reason.
     session (R7.1 T6: presence.state(), "watching"/"open"/"none") is added only when given; any other value reads as
     "none". folder (the project folder) is added as project.path only when given, for the Copy command.
+    head_records (HEAD-SPEC section 5: the raw head.jsonl records) adds the head key only when given.
 
     server_time is now in ISO 8601 with whole seconds. Parse problems go into errors[]; nothing raises.
     """
@@ -348,4 +430,6 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
         out["session"] = session if session in SESSION_STATES else "none"
     if folder is not None:
         out["project"]["path"] = str(folder)
+    if head_records is not None:
+        out["head"] = _head_view(head_records, head_link_state(tasks, jobs), moment)
     return out
