@@ -66,7 +66,7 @@ function stateOf(status) {
 }
 
 function passes(row, opts) {
-  const f = opts.f || "open";
+  const f = opts.f || "all";
   const st = row.status;
   if (f === "open" && CLOSED.indexOf(st) >= 0) return false;
   if (f !== "open" && f !== "all" && stateOf(st)[0] !== f) return false;
@@ -143,7 +143,7 @@ function alertsHtml(counts) {
 }
 
 function filterHtml(opts) {
-  const active = opts.f || "open";
+  const active = opts.f || "all";
   const links = FILTERS.map(function (pair) {
     const cur = pair[0] === active ? ' aria-current="page"' : "";
     return '<a class="hd-filter" href="' + esc(hashOf({ f: pair[0], kind: opts.kind, sid: opts.sid, q: opts.q,
@@ -179,7 +179,7 @@ function barHtml(vm, opts) {
     const label = String(row.acct || row.sid || "");
     if (label && accts.indexOf(label) < 0) accts.push(label);
   }
-  return '<div class="hd-bar" data-f="' + esc(opts.f || "open") + '" data-view="' +
+  return '<div class="hd-bar" data-f="' + esc(opts.f || "all") + '" data-view="' +
     (opts.view === "cards" ? "cards" : "list") + '">' +
     '<label class="hd-search"><span class="hd-lbl">Search</span><input type="search" data-field="q" value="' +
     esc(opts.q || "") + '" placeholder="/ search" aria-label="Search the log"></label>' +
@@ -199,7 +199,7 @@ function viewHtml(opts) {
   const current = opts.view === "cards" ? "cards" : "list";
   const links = [["list", "List"], ["cards", "Cards"]].map(function (pair) {
     const cur = pair[0] === current ? ' aria-current="page"' : "";
-    return '<a class="hd-filter hd-view" href="' + esc(hashOf({ f: opts.f || "open", kind: opts.kind, sid: opts.sid,
+    return '<a class="hd-filter hd-view" href="' + esc(hashOf({ f: opts.f || "all", kind: opts.kind, sid: opts.sid,
       q: opts.q, sort: opts.sort, view: pair[0] })) + '"' + cur + ">" + esc(pair[1]) + "</a>";
   });
   return '<nav class="hd-views" aria-label="View">' + links.join("") + "</nav>";
@@ -949,7 +949,7 @@ export function attachHeadListeners() {
 }
 
 function setField(bar, key, value) {
-  const f = bar.getAttribute("data-f") || "open";
+  const f = bar.getAttribute("data-f") || "all";
   const state = { f: f, q: "", kind: "", sid: "", sort: "", view: bar.getAttribute("data-view") || "list" };
   for (const el of bar.querySelectorAll("[data-field]")) {
     state[el.getAttribute("data-field")] = el.value || "";
@@ -997,7 +997,7 @@ export function sectionView(vm) {
   const opts = {
     f: pick(f, FILTERS.map(function (pair) {
       return pair[0];
-    }), 20) || "open",
+    }), 20) || "all",
     q: text.length <= 200 ? text : "",
     kind: pick(params.get("kind"), KINDS, 20),
     sid: sid.length <= 60 ? sid : "",
