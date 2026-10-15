@@ -5,6 +5,7 @@ file never raises: it becomes an entry in the snapshot's errors[]. port_owner() 
 is allowed only in services/; it runs lsof, read-only.
 """
 
+import contextlib
 import hashlib
 import json
 import os
@@ -12,13 +13,17 @@ import subprocess
 import threading
 from datetime import datetime
 
+from roadmap.core import head as head_format
 from roadmap.core.extras import extra_file
 from roadmap.core.parsers import error_entry
 from roadmap.core.snapshot import build_snapshot
 from roadmap.errors import RoadmapError
 from roadmap.services import control, head as head_store, limits, presence, rules, usage
 from roadmap.store import config as config_store
+from roadmap.store import db as store_db
+from roadmap.store import events as store_events
 from roadmap.store import paths
+from roadmap.store.migrate import JOB_CORE, PHASE_CORE, TASK_CORE
 
 BASE_FILES = ("tasks.json", "jobs.json", "autonomy.json", "issues.json", "questions.json", "comments.json",
               "budget.json", "queue.json", "activity.jsonl", "features.json")
@@ -58,6 +63,9 @@ def revision(data_dir, project_id=None):
     head-text.jsonl, the head spool, head-gate.json, the head-pause flag and undo.jsonl), the project's presence
     file and control file when they apply, and the usage file. A missing file stamps as None, so creating or deleting
     one changes the revision. Only stat calls and one small config read; nothing is parsed or built."""
+    dbp = _store_path(data_dir)
+    if dbp is not None:
+        return _store_rev(dbp)
     stamps = []
     if data_dir is not None:
         names = list(BASE_FILES) + [CONFIG_FILE]
@@ -92,6 +100,10 @@ def load_snapshot(project_id, now=None):
     Raises not_found (exit 3) only for an unknown id."""
     entry = config_store.get_project(project_id)
     folder = project_folder(entry)
+    dbp = _store_path(folder)
+    if dbp is not None:  # SQLite switch on: no cache (control, presence and usage are not in the store's rev)
+        store = _read_store(dbp)
+        return dict(_build(entry, folder, store["rev"], now, store))
     rev = revision(folder, project_id)
     if now is None:
         with _CACHE_LOCK:
@@ -106,8 +118,9 @@ def load_snapshot(project_id, now=None):
     return dict(snap)
 
 
-def _build(entry, folder, rev, now):
-    """One snapshot build for a project entry at revision rev. Missing or unreadable files add errors[], not raises."""
+def _build(entry, folder, rev, now, store=None):
+    """One snapshot build for a project entry at revision rev. Missing or unreadable files add errors[], not raises.
+    store (the SQLite read of _read_store) replaces tasks.json, jobs.json and the head records when given."""
     errors = []
     project_cfg = _read_project_config(folder, errors)
     project_cfg.setdefault("id", entry["id"])
@@ -117,13 +130,70 @@ def _build(entry, folder, rev, now):
         if name not in names:
             names.append(name)
     files = {name: _read_text(folder, name, errors) for name in names}
+    if store is not None:
+        files.update(store["files"])
     moment = now if now is not None else datetime.now().astimezone()
     snap = build_snapshot(files, project_cfg, moment, control=_control_view(entry["id"]),
                           meters=limits.meters(entry, moment), rules=_rules_view(folder),
                           session=_session_view(folder), folder=_project_path(entry),
-                          head_records=_head_records(folder), rev=rev, usage=usage.show(now=moment))
+                          head_records=store["head"] if store is not None else _head_records(folder),
+                          rev=rev, usage=usage.show(now=moment))
     snap["errors"] = errors + snap["errors"]
     return snap
+
+
+def _store_path(folder):
+    """The project's SQLite store (head.db beside the data) when the backend switch is on, else None."""
+    return head_store.sqlite_db(folder) if folder is not None else None
+
+
+@contextlib.contextmanager
+def _read_txn(conn):
+    """One read transaction: every SELECT inside sees the same committed state."""
+    conn.execute("BEGIN")
+    try:
+        yield conn
+    finally:
+        conn.execute("COMMIT")
+
+
+def _store_rev(dbp):
+    """The store's integer revision: the highest events rev (0 when none)."""
+    conn = store_db.connect(dbp)
+    try:
+        with _read_txn(conn):
+            return store_events.current_rev(conn)
+    finally:
+        conn.close()
+
+
+def _store_rows(conn, sql, core):
+    """Rows as dicts: the data column's record with the core columns set over it (NULL core values are left out)."""
+    out = []
+    for row in conn.execute(sql):
+        rec = json.loads(row["data"])
+        rec.update({key: row[key] for key in core if row[key] is not None})
+        out.append(rec)
+    return out
+
+
+def _read_store(dbp):
+    """The store's rev, the tasks.json and jobs.json texts and the head records, read in ONE read transaction.
+    The rows are shaped back into the JSON documents that roadmap.core.snapshot parses."""
+    conn = store_db.connect(dbp)
+    try:
+        with _read_txn(conn):
+            rev = store_events.current_rev(conn)
+            phases = _store_rows(conn, "SELECT id, name, status, data FROM phases ORDER BY position", PHASE_CORE)
+            tasks = _store_rows(conn, "SELECT id, phase, title, status, data FROM tasks ORDER BY rowid", TASK_CORE)
+            jobs = _store_rows(conn, "SELECT id, task, title, model, status, started, ended, data FROM jobs"
+                               " ORDER BY rowid", JOB_CORE)
+            asks = [json.loads(row["data"]) for row in conn.execute("SELECT data FROM asks ORDER BY seq")]
+    finally:
+        conn.close()
+    head = [o for o in asks if o.get("v") == head_format.VERSION and o.get("t") in head_format.RECORD_TYPES]
+    files = {"tasks.json": json.dumps({"phases": phases, "tasks": tasks}), "jobs.json": json.dumps({"jobs": jobs})}
+    return {"rev": rev, "files": files, "head": head}
 
 
 def _head_records(folder):
