@@ -1,6 +1,7 @@
 """Command group issue: open, list, show, close and link issues (issues.json). Writes go through the command layer."""
 
 import argparse
+import sys
 
 from roadmap.errors import EXIT_USAGE, RoadmapError
 from roadmap.services import commands, issues
@@ -65,6 +66,7 @@ def _new(args):
     issue = reply["data"]
     if not getattr(args, "json", False):
         print(issue["id"] + " " + issue["status"])
+        print("next: roadmap issue link %s <task>" % issue["id"], file=sys.stderr)
         return None
     return commands.json_data(reply)
 

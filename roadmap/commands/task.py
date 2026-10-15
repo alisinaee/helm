@@ -59,7 +59,18 @@ def register(sub, common):
         parser.add_argument("id", help="task id, for example P2.4")
         parser.set_defaults(handler=_backlog_move, backlog_word=name)
 
-    bulk = actions.add_parser("set", parents=[common, project],
+    add = actions.add_parser("add", parents=[common, project], help="add a todo task (quick add)")
+    add.add_argument("title", help="what to do, one line")
+    add.add_argument("--phase", metavar="P", default=None, help="phase id (default: the first phase not done)")
+    add.set_defaults(handler=_add)
+
+    move = actions.add_parser("move", parents=[common, project], help="reorder a task within its phase")
+    move.add_argument("id", help="task id, for example P2.4")
+    move.add_argument("--before", metavar="ID", default=None, help="task id to put it before")
+    move.add_argument("--after", metavar="ID", default=None, help="task id to put it after")
+    move.set_defaults(handler=_move)
+
+    bulk =actions.add_parser("set", parents=[common, project],
                               help="bulk patch from stdin, one 'ID key=value ...' line per task")
     bulk.add_argument("source", nargs="?", default=None,
                       help="a file, or - for stdin (default -); with --after, the task id, for example P2.4")
@@ -202,6 +213,34 @@ def _backlog_move(args):
         print("ok %s -> backlog. next: roadmap task promote %s" % (args.id, args.id))
     else:
         print("ok %s -> todo. next: roadmap task start %s" % (args.id, args.id))
+    return None
+
+
+def _add(args):
+    """task add <title> [--phase P]: one todo task through the registry op task.add (logged, undoable)."""
+    project_id, _ = _data(args)
+    reply = commands.write(project_id, "task.add", {"title": args.title, "phase": args.phase or ""},
+                           "roadmap task list")
+    if getattr(args, "json", False):
+        return commands.json_data(reply)
+    print("ok %s todo in %s. next: roadmap task start %s" % (reply["data"]["id"], reply["data"]["phase"],
+                                                            reply["data"]["id"]))
+    return None
+
+
+def _move(args):
+    """task move <id> --before|--after <id>: reorder inside one phase (registry op task.move, never across phases)."""
+    project_id, _ = _data(args)
+    payload = {"id": args.id, "before": args.before or "", "after": args.after or ""}
+    reply = commands.write(project_id, "task.move", payload, "roadmap task show " + args.id)
+    data = reply["data"]
+    if getattr(args, "json", False):
+        return commands.json_data(reply)
+    phase = args.id.split(".")[0]
+    if not data["moved"]:
+        print("ok %s already in place in %s" % (args.id, phase))
+    else:
+        print("ok %s %s %s in %s" % (args.id, data["where"], data["ref"], phase))
     return None
 
 

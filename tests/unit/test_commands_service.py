@@ -17,10 +17,10 @@ class RegistryTests(CmdCase):
             "feature.unlink",
             "git.branch", "git.commit", "git.push", "git.revert", "git.switch",
             "head.accept", "head.bind", "head.convert", "head.forget", "head.log", "head.merge", "head.review", "head.set", "head.split", "head.triage", "head.unbind",
-            "issue.close",
+            "issue.close", "issue.status",
             "issue.link", "issue.new", "limit.rm", "limit.set", "phase.approve", "plan.move", "question.answer",
             "question.ask",
-            "rules.add", "rules.rm", "rules.sync", "subtask.add", "subtask.toggle", "task.backlog", "task.cap",
+            "rules.add", "rules.rm", "rules.sync", "subtask.add", "subtask.toggle", "task.add", "task.backlog", "task.cap", "task.move",
             "task.promote", "task.rename", "task.start", "task.status", "task.stop", "undo", "usage.set"]))
 
     def test_unknown_op_is_a_usage_error_with_next(self):
