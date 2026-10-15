@@ -257,6 +257,7 @@ def _handle(raw, environ, cwd, now, clock, started):
         return None
     _touch_presence(project, now, clock, started)
     if event == "SessionStart":
+        _head_claim(project, data_dir, payload, now, clock, started)
         return _session_start(project, data_dir, clock, started, now)
     pattern, names = project_settings(data_dir)
     regex = task_regex(pattern)
@@ -528,6 +529,48 @@ HEAD_SESSION_ASKS = 3
 _BARE_SLASH_RE = re.compile(r"/[A-Za-z0-9_:.-]+")
 
 
+_MODEL_ID_RE = re.compile(r"^claude-(opus|sonnet|haiku)-(\d+)-(\d+)(?:-\d{8})?$")
+
+
+def model_name(value):
+    """A short model name from a hook payload 'model': a string, or an object with display_name or id. 'claude-sonnet-5-5'
+    becomes 'Sonnet 5.5'. None when there is no name."""
+    if isinstance(value, dict):
+        value = value.get("display_name") or value.get("id")
+    if not isinstance(value, str) or not value.strip():
+        return None
+    text = value.strip()
+    match = _MODEL_ID_RE.match(text)
+    if match:
+        return "%s %s.%s" % (match.group(1).capitalize(), match.group(2), match.group(3))
+    return text[:40]
+
+
+def _head_claim(project, data_dir, payload, now, clock, started):
+    """Record a 'claim' session record (which model works as head) when the project captures, the payload names a model,
+    and the model or the session differs from the last claim of this project. Fail-open: it never raises and never
+    blocks; a busy lock or a problem goes to the log."""
+    try:
+        model = model_name(payload.get("model"))
+        if model is None or not _head_on(data_dir):
+            return
+        session_id = payload.get("session_id")
+        key = head_svc.session_key(session_id)
+        path = os.path.join(paths.state_dir(), "head-claim-%s.json" % project["id"])
+        last = atomic.read_json(path, None) if os.path.exists(path) else None
+        if isinstance(last, dict) and last.get("sid") == key and last.get("model") == model:
+            return
+        moment = datetime.datetime.fromtimestamp(now, datetime.timezone.utc)
+        budget = max(0.0, (PRE_TIMEOUT_S - (clock() - started)) * 0.5)
+        head_svc.session(data_dir, "claim", session_id=session_id, model=model, now=moment, timeout=budget)
+        paths.ensure_dir(paths.state_dir())
+        atomic.write_json(path, {"sid": key, "model": model})
+    except RoadmapError as exc:
+        _log("head.claim skipped: " + exc.code)
+    except Exception as exc:
+        _log("head.claim error " + type(exc).__name__)
+
+
 def _head_config(data_dir):
     """The project's roadmap.config.json as a dict, or {} when it is missing or unreadable."""
     data, error = schema.read_data("roadmap_config", os.path.join(data_dir, "roadmap.config.json"))
@@ -545,7 +588,10 @@ def _user_prompt(payload, environ, cwd, now, clock, started):
     if project is None:
         return None
     data_dir = jobs.data_dir_of(project)
-    if not os.path.isdir(data_dir) or not _head_on(data_dir):
+    if not os.path.isdir(data_dir):
+        return None
+    _head_claim(project, data_dir, payload, now, clock, started)
+    if not _head_on(data_dir):
         return None
     text = payload.get("prompt")
     if not isinstance(text, str):

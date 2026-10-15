@@ -188,6 +188,72 @@ class SessionStartTests(HeadHookCase):
         self.assertIsNone(self.start())
 
 
+class ModelClaimTests(HeadHookCase):
+    def run_event(self, event, model=None, session="sess-1", clock=None):
+        payload = {"hook_event_name": event, "cwd": self.project, "session_id": session}
+        if model is not None:
+            payload["model"] = model
+        if event == "UserPromptSubmit":
+            payload["prompt"] = "please fix the broken export button on the board"
+        return hooks.run_hook(json.dumps(payload), now=MOMENT.timestamp(), clock=clock)
+
+    def claims(self):
+        return [r for r in self.entries() if r.get("t") == "s" and r.get("ev") == "claim"]
+
+    def test_model_name_shortens_ids_and_reads_objects(self):
+        self.assertEqual(hooks.model_name("claude-sonnet-5-5"), "Sonnet 5.5")
+        self.assertEqual(hooks.model_name("claude-haiku-5-5-20251001"), "Haiku 5.5")
+        self.assertEqual(hooks.model_name({"id": "claude-opus-5-5", "display_name": "Opus 5.5"}), "Opus 5.5")
+        self.assertEqual(hooks.model_name({"id": "claude-opus-5-5"}), "Opus 5.5")
+        self.assertEqual(hooks.model_name("Sonnet 5.5"), "Sonnet 5.5")
+        self.assertIsNone(hooks.model_name(None))
+        self.assertIsNone(hooks.model_name("   "))
+        self.assertIsNone(hooks.model_name(42))
+
+    def test_session_start_records_a_claim_from_a_string_model(self):
+        self.run_event("SessionStart", model="claude-sonnet-5-5")
+        claims = self.claims()
+        self.assertEqual(len(claims), 1)
+        self.assertEqual(claims[0]["model"], "Sonnet 5.5")
+        self.assertIsNotNone(claims[0].get("sid"))
+        self.assertNotIn("sess-1", json.dumps(claims[0]))
+
+    def test_session_start_records_a_claim_from_an_object_model(self):
+        self.run_event("SessionStart", model={"id": "claude-haiku-5-5", "display_name": "Haiku 5.5"})
+        self.assertEqual([c["model"] for c in self.claims()], ["Haiku 5.5"])
+
+    def test_same_model_and_session_do_not_spam_claims(self):
+        for _ in range(3):
+            self.run_event("SessionStart", model="claude-sonnet-5-5")
+            self.run_event("UserPromptSubmit", model="claude-sonnet-5-5")
+        self.assertEqual(len(self.claims()), 1)
+
+    def test_a_model_change_or_a_new_session_claims_again(self):
+        self.run_event("SessionStart", model="claude-sonnet-5-5")
+        self.run_event("UserPromptSubmit", model="claude-opus-5-5")
+        self.run_event("UserPromptSubmit", model="claude-opus-5-5", session="sess-2")
+        self.assertEqual([c["model"] for c in self.claims()], ["Sonnet 5.5", "Opus 5.5", "Opus 5.5"])
+
+    def test_no_model_means_no_claim(self):
+        self.run_event("SessionStart")
+        self.run_event("UserPromptSubmit")
+        self.assertEqual(self.claims(), [])
+
+    def test_nothing_is_claimed_when_capture_is_off(self):
+        self.set_config(headCapture=False)
+        self.run_event("SessionStart", model="claude-sonnet-5-5")
+        self.assertFalse(os.path.exists(self.head_file))
+
+    def test_a_busy_lock_does_not_break_the_session_start_reply(self):
+        def busy(directory, timeout=None):
+            raise RoadmapError("locked", "busy", 4)
+
+        with mock.patch.object(lock, "locked", side_effect=busy):
+            reply = self.run_event("SessionStart", model="claude-sonnet-5-5")
+        self.assertIsNone(reply)  # no inbox or head lines in an empty project: the hook still returns cleanly
+        self.assertIn("head.claim skipped", self.log_text())
+
+
 class InstallTableTests(unittest.TestCase):
     def test_user_prompt_submit_is_in_the_event_table_without_a_matcher(self):
         rows = {event: (matcher, suffix) for event, matcher, suffix in hooks_install.EVENTS}
