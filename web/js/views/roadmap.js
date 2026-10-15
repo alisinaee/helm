@@ -1,6 +1,8 @@
-// Roadmap (WP32). Project scope only. Lanes (the default): one lane per phase with its progress, the estimated and
-// the spent tokens, the budget and an Approve button; tasks are compact cards with a status glyph, model, size and a
-// Blocked badge when an open blocker names them. Timeline: one bar per phase in plan order, its width proportional
+// Roadmap (WP32, R7.110). Project scope only. Lanes (the default): one lane per phase with its state, progress bar,
+// done/total, open and doing counts and an Approve button; a long lane shows its first tasks and a "Show N more"
+// toggle. Tasks are compact cards with a status glyph, model, size, a doing chip (a job is running) and a Blocked
+// badge when an open blocker names them. Estimates, spend and budget live in the Timeline only.
+// Timeline: one bar per phase in plan order, its width proportional
 // to the estimated tokens and the spent part filled; there are no calendar dates.
 // Reordering always ends in plan.move, which moves a task only within its own phase. The paths are native drag, the
 // Up and Down buttons, and Alt+ArrowUp / Alt+ArrowDown on a focused card. The order shown matches `roadmap plan view`,
@@ -40,6 +42,18 @@ function openIds(snap, pid) {
   });
 }
 
+// Ids of the tasks that have a running job right now (the live Doing rule).
+function doingIds(snap) {
+  const ids = {};
+  (snap.jobs || []).forEach(function (j) {
+    if (j.status === "running" && j.task) ids[j.task] = true;
+  });
+  return ids;
+}
+
+const SHOW_FIRST = 8;
+const LONG_LANE = 12;
+
 function sizeText(k) {
   return typeof k === "number" && Number.isFinite(k) ? "~" + fmtTokens(k) : MISSING;
 }
@@ -62,14 +76,16 @@ function spendOf(snap, pid) {
   return row ? { spent: row.spent, limit: row.limit } : { spent: null, limit: null };
 }
 
-function cardHtml(project, snap, task, pos, count) {
+function cardHtml(project, snap, task, pos, count, doing) {
   const word = STATE_WORD[task.state] || task.state;
   const glyph = STATE_GLYPH[task.state] || "○";
   const blocked = snap.blocked.indexOf(task.id) >= 0;
   const id = esc(task.id);
-  const badges = (blocked ? chipHtml("blocked", "danger") : "") +
+  const badges = (doing[task.id] ? chipHtml("▶ doing", "success") : "") +
+    (blocked ? chipHtml("blocked", "danger") : "") +
     (task.needsUser && task.state !== "done" ? chipHtml("needs you", "warning") : "");
-  return '<li class="rc is-' + esc(task.state) + (blocked ? " is-blocked" : "") + '" draggable="true" tabindex="0"' +
+  return '<li class="rc is-' + esc(task.state) + (doing[task.id] ? " is-run" : "") +
+    (blocked ? " is-blocked" : "") + '" draggable="true" tabindex="0"' +
     ' data-task="' + id + '" data-focus="task:' + id + '" aria-label="' +
     esc(task.id + " " + task.title + ", " + word + (blocked ? ", blocked" : "")) + '">' +
     '<p class="rc-top"><span class="rc-glyph" aria-hidden="true">' + esc(glyph) + '</span>' +
@@ -90,31 +106,36 @@ function laneOpen(vm, phase) {
   return typeof saved === "boolean" ? saved : phase.state !== "done";
 }
 
-function laneHtml(vm, snap, phase) {
+function laneHtml(vm, snap, phase, doing) {
   const pid = phase.id;
   const id = esc(pid);
   const open = laneOpen(vm, phase);
   const tasks = snap.tasks.filter(function (t) {
     return phaseOf(t) === pid && t.state !== "done";
   });
-  const cards = tasks.map(function (t, i) {
-    return cardHtml(vm.route.id, snap, t, i, tasks.length);
+  const all = vm.prefsOpen["more:" + pid] === true || tasks.length <= LONG_LANE;
+  const shown = all ? tasks : tasks.slice(0, SHOW_FIRST);
+  const cards = shown.map(function (t, i) {
+    return cardHtml(vm.route.id, snap, t, i, tasks.length, doing);
   }).join("");
-  const est = estimateK(snap, pid);
-  const money = spendOf(snap, pid);
+  const more = tasks.length > LONG_LANE ? '<li class="lane-empty"><button type="button" class="btn btn-small"' +
+    ' data-action="toggle-item" data-item="more:' + id + '" aria-expanded="' + all + '">' +
+    (all ? "Show first " + SHOW_FIRST : "Show " + fmtCount(tasks.length - SHOW_FIRST) + " more") +
+    "</button></li>" : "";
+  const nowDoing = tasks.filter(function (t) {
+    return doing[t.id];
+  }).length;
   const pct = phase.onlyDeferred || phase.progress == null ? null : phase.progress * 100;
   const act = phase.state === "done" ? "" : phase.approved
     ? chipHtml("Approved", "success")
     : '<button type="button" class="btn btn-primary btn-small" data-action="phase-approve" data-phase="' + id +
       '" aria-label="Approve ' + id + " " + esc(phase.name) + '">Approve</button>';
-  const budget = money.limit != null ? "budget " + fmtTokens(money.limit) : "no budget";
   const stats = '<div class="lane-stats"><span class="lane-state">' + esc(STATE_WORD[phase.state] || phase.state) +
     "</span>" + '<span class="num">' + esc(fmtCount(phase.done) + "/" + fmtCount(phase.total)) + " done</span>" +
     '<div class="lane-meter">' + meterHtml(pct, phase.state === "done" ? "success" : "accent") + "</div>" +
-    '<span class="num">est ' + esc(est == null ? "unknown" : sizeText(est)) + "</span>" +
-    '<span class="num">spent ' + esc(money.spent == null ? "unknown" : fmtTokens(money.spent)) + "</span>" +
-    '<span class="num">' + esc(budget) + "</span></div>";
-  const body = cards || '<li class="lane-empty">No open tasks in this phase.</li>';
+    '<span class="num">' + esc(fmtCount(tasks.length)) + " open</span>" +
+    (nowDoing ? chipHtml("▶ " + fmtCount(nowDoing) + " doing", "success") : "") + "</div>";
+  const body = (cards + more) || '<li class="lane-empty">No open tasks in this phase.</li>';
   return '<li class="lane"><div class="lane-head"><button type="button" class="lane-toggle" aria-expanded="' + open +
     '" aria-controls="lane-' + id + '-body" data-action="toggle-item" data-item="lane:' + id +
     '" data-focus="item-lane:' + id + '"><span class="lane-caret" aria-hidden="true">' + (open ? "▾" : "▸") +
@@ -158,6 +179,8 @@ function pageHead(vm, snap) {
   const timeline = vm.route.view === "timeline";
   return '<div class="page-head"><p class="page-title">Roadmap</p><p class="page-note">' +
     esc(fmtCount(snap.done || 0) + " of " + fmtCount(snap.total || 0) + " items done · " + left) + "</p></div>" +
+    '<p class="page-note">● done  ◐ in progress  ○ to do  ⏸ on hold  ▶ doing = a job is running. ' +
+    "Done tasks are not listed.</p>" +
     '<nav class="seg plan-views" aria-label="Roadmap view">' +
     '<a href="#/p/' + id + '/roadmap"' + (timeline ? "" : ' aria-current="page"') + ">Lanes</a>" +
     '<a href="#/p/' + id + '/roadmap/timeline"' + (timeline ? ' aria-current="page"' : "") + ">Timeline</a></nav>";
@@ -174,7 +197,7 @@ export function sectionView(vm) {
   if (!snap.phases.length) return emptyHtml(NO_PLAN);
   const body = vm.route.view === "timeline" ? timelineHtml(vm.route.id, snap)
     : '<ol class="lanes">' + snap.phases.map(function (p) {
-      return laneHtml(vm, snap, p);
+      return laneHtml(vm, snap, p, doingIds(snap));
     }).join("") + "</ol>";
   return pageHead(vm, snap) + body;
 }
