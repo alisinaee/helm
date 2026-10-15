@@ -31,11 +31,13 @@ def register(sub, common):
     """Add the ask and answer commands."""
     project = _project_option()
     parser = sub.add_parser("ask", parents=[common, project],
-                            help="ask the user a question: ask \"<q>\" [--opt A]... [--block]; also get, wait, list")
+                            help="ask the user a question: ask \"<q>\" [--option A]... [--block]; also get, wait, list")
     parser.add_argument("words", nargs="*", metavar="TEXT",
                         help="the question, or one of: get Q3 | wait Q3 | list")
     parser.add_argument("--task", metavar="ID", default="", help="the task the question is about")
-    parser.add_argument("--opt", action="append", default=[], metavar="A", help="an answer option (repeatable)")
+    parser.add_argument("--option", "--opt", dest="opt", action="append", default=[], metavar="A",
+                        help="an answer option: \"Label\" or \"Label: description\"; add \" (recommended)\" to the "
+                             "label to mark it. 2 to 6 options, or none; free text is always allowed (repeatable)")
     parser.add_argument("--default", metavar="A", default=None, help="the answer taken on timeout")
     parser.add_argument("--block", action="store_true", help="the task waits for the answer")
     parser.add_argument("--timeout", metavar="S", default=None, help="seconds until the default is taken")
@@ -103,7 +105,8 @@ def _ask(args, text):
                                next="roadmap ask \"<question>\" --timeout 300")
     payload = {"text": text, "task": args.task or "", "opts": args.opt, "default": args.default,
                "block": args.block, "timeout": timeout}
-    reply = commands.write(args.project, "question.ask", payload, 'roadmap ask "<question>" --opt yes --opt no')
+    reply = commands.write(args.project, "question.ask", payload,
+                           'roadmap ask "<question>" --option "Yes: ship it" --option "No: wait"')
     question = reply["data"]
     if not getattr(args, "json", False):
         print(line_of(question))
