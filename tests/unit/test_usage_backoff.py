@@ -32,9 +32,9 @@ def at(seconds):
     return T0 + datetime.timedelta(seconds=seconds)
 
 
-def no_item_keychain():
-    return mock.Mock(side_effect=uc.UsageError("keychain item not found, sign in to Claude Code first",
-                                               uc.CODE_NO_ITEM))
+def denied_keychain():
+    """A real keychain failure (access denied). A missing claude.ai login is unavailable instead (R7.100)."""
+    return mock.Mock(side_effect=uc.UsageError("keychain access denied or failed (exit 36)", uc.CODE_DENIED))
 
 
 class KeychainBackoffTests(UsageCase):
@@ -42,18 +42,18 @@ class KeychainBackoffTests(UsageCase):
         return self.config_with([])
 
     def test_keychain_failure_records_code_text_and_retry_time(self):
-        keychain = no_item_keychain()
+        keychain = denied_keychain()
         with mock.patch.object(uc, "read_keychain_token", keychain):
             with self.assertRaises(uc.UsageError):
                 uc.sync_once(self.cfg(), now=at(0))
         stored = uc._load_store()
-        self.assertEqual(stored["syncError"], uc.CODE_NO_ITEM)
-        self.assertIn("not found", stored["lastError"])
+        self.assertEqual(stored["syncError"], uc.CODE_DENIED)
+        self.assertIn("denied", stored["lastError"])
         self.assertEqual(stored["keychainRetryAfter"], (at(0) + datetime.timedelta(hours=6)).isoformat(
             timespec="seconds"))
 
     def test_background_loop_skips_the_keychain_during_backoff(self):
-        keychain = no_item_keychain()
+        keychain = denied_keychain()
         with mock.patch.object(uc, "read_keychain_token", keychain):
             with self.assertRaises(uc.UsageError):
                 uc.sync_once(self.cfg(), now=at(0))
@@ -62,7 +62,7 @@ class KeychainBackoffTests(UsageCase):
         self.assertEqual(keychain.call_count, 1)
 
     def test_background_retries_the_keychain_after_six_hours(self):
-        keychain = no_item_keychain()
+        keychain = denied_keychain()
         with mock.patch.object(uc, "read_keychain_token", keychain):
             with self.assertRaises(uc.UsageError):
                 uc.sync_once(self.cfg(), now=at(0))
@@ -71,17 +71,17 @@ class KeychainBackoffTests(UsageCase):
         self.assertEqual(keychain.call_count, 2)
 
     def test_manual_sync_within_a_minute_is_refused_without_a_keychain_read(self):
-        keychain = no_item_keychain()
+        keychain = denied_keychain()
         with mock.patch.object(uc, "read_keychain_token", keychain):
             with self.assertRaises(uc.UsageError):
                 uc.sync_once(self.cfg(), now=at(0))
             with self.assertRaisesRegex(uc.UsageError, "try again in a minute") as cm:
                 uc.sync_once(self.cfg(), now=at(30))
-        self.assertEqual(cm.exception.code, uc.CODE_NO_ITEM)
+        self.assertEqual(cm.exception.code, uc.CODE_DENIED)
         self.assertEqual(keychain.call_count, 1)
 
     def test_manual_sync_after_a_minute_may_retry(self):
-        keychain = no_item_keychain()
+        keychain = denied_keychain()
         with mock.patch.object(uc, "read_keychain_token", keychain):
             with self.assertRaises(uc.UsageError):
                 uc.sync_once(self.cfg(), now=at(0))
@@ -90,14 +90,17 @@ class KeychainBackoffTests(UsageCase):
         self.assertEqual(keychain.call_count, 2)
 
     def test_each_keychain_code_backs_off(self):
-        for code in (uc.CODE_NO_TOKEN, uc.CODE_DENIED, uc.CODE_NO_ITEM):
+        for code in (uc.CODE_NO_TOKEN, uc.CODE_DENIED, uc.CODE_DENIED):
             with self.subTest(code=code):
                 if os.path.exists(paths.usage_file()):
                     os.remove(paths.usage_file())
                 keychain = mock.Mock(side_effect=uc.UsageError("x", code))
                 with mock.patch.object(uc, "read_keychain_token", keychain):
-                    with self.assertRaises(uc.UsageError):
-                        uc.sync_once(self.cfg(), now=at(0))
+                    if code in uc.UNAVAILABLE_CODES:  # no claude.ai login: unavailable, not an error (R7.100)
+                        self.assertEqual(uc.sync_once(self.cfg(), now=at(0))["status"], uc.STATUS_UNAVAILABLE)
+                    else:
+                        with self.assertRaises(uc.UsageError):
+                            uc.sync_once(self.cfg(), now=at(0))
                     self.assertIsNone(uc.sync_once(self.cfg(), background=True, now=at(600)))
                 self.assertEqual(keychain.call_count, 1)
                 self.assertEqual(uc._load_store()["syncError"], code)
@@ -117,7 +120,7 @@ class KeychainBackoffTests(UsageCase):
         self.assertNotIn("keychainRetryAfter", stored)
 
     def test_success_clears_the_code_and_the_backoff(self):
-        with mock.patch.object(uc, "read_keychain_token", no_item_keychain()):
+        with mock.patch.object(uc, "read_keychain_token", denied_keychain()):
             with self.assertRaises(uc.UsageError):
                 uc.sync_once(self.cfg(), now=at(0))
         result = uc.sync_once(self.cfg(), background=True, now=at(6 * 3600 + 5))
@@ -129,27 +132,27 @@ class KeychainBackoffTests(UsageCase):
 
     def test_failure_keeps_the_last_good_values(self):
         uc.sync_once(self.cfg())
-        with mock.patch.object(uc, "read_keychain_token", no_item_keychain()):
+        with mock.patch.object(uc, "read_keychain_token", denied_keychain()):
             with self.assertRaises(uc.UsageError):
                 uc.sync_once(self.cfg(), now=at(7200))
         view = uc.show(self.cfg())
         self.assertEqual(view["weeklyPercent"], 62.4)
         self.assertEqual(view["fiveHourPercent"], 17)
-        self.assertEqual(view["syncError"], uc.CODE_NO_ITEM)
+        self.assertEqual(view["syncError"], uc.CODE_DENIED)
 
     def test_view_exposes_only_the_code_and_the_text(self):
-        with mock.patch.object(uc, "read_keychain_token", no_item_keychain()):
+        with mock.patch.object(uc, "read_keychain_token", denied_keychain()):
             with self.assertRaises(uc.UsageError):
                 uc.sync_once(self.cfg(), now=at(0))
         view = uc.show(self.cfg())
-        self.assertEqual(view["syncError"], uc.CODE_NO_ITEM)
-        self.assertIn("not found", view["lastError"])
+        self.assertEqual(view["syncError"], uc.CODE_DENIED)
+        self.assertIn("denied", view["lastError"])
         self.assertNotIn("keychainRetryAfter", view)
         self.assertNotIn("manualAttemptAt", view)
         self.assertNotIn(FAKE_TOKEN, json.dumps(view))
 
     def test_loop_reads_the_keychain_once_across_many_cycles(self):
-        keychain = no_item_keychain()
+        keychain = denied_keychain()
         waits = iter([False] * 5 + [True])
         with mock.patch.object(uc, "read_keychain_token", keychain):
             uc.run_loop(threading.Event(), config=self.cfg(), wait=lambda seconds: next(waits))
@@ -197,10 +200,10 @@ class UsageSetTests(CmdCase):
         self.assertEqual(stored["fiveHourPercent"], 12)
 
     def test_clears_an_earlier_sync_error(self):
-        with mock.patch.object(uc, "read_keychain_token", no_item_keychain()):
+        with mock.patch.object(uc, "read_keychain_token", denied_keychain()):
             with self.assertRaises(uc.UsageError):
                 uc.sync_once(config=self.config_with(), now=at(0))
-        self.assertEqual(self.stored()["syncError"], uc.CODE_NO_ITEM)
+        self.assertEqual(self.stored()["syncError"], uc.CODE_DENIED)
         self.set_usage({"weekly": 40})
         self.assertIsNone(self.stored()["syncError"])
         self.assertIsNone(self.stored()["lastError"])
