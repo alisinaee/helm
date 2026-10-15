@@ -255,7 +255,7 @@ function orphansHtml(snap, features, tree, state) {
     const t = tasks[id];
     return '<li class="hd-link"><span class="chip chip-neutral">' + esc(id) + '</span><span class="hd-lbl">' +
       esc(t ? t.title : "") + '</span><button type="button" class="btn btn-small" data-pl="assign-open" data-task="' +
-      esc(id) + '" aria-haspopup="true" aria-expanded="' + isPick(state, "assign", id) + '" data-focus="pl-assign:' +
+      esc(id) + '" aria-haspopup="true" data-focus="pl-assign:' +
       esc(id) + '" aria-label="Assign ' + esc(id) + ' to a plan item">Assign</button></li>';
   }).join("");
   const pick = state.pick && state.pick.kind === "assign" ? assignPop(snap, tree, state.pick.task) : "";
