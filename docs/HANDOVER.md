@@ -38,6 +38,16 @@ START HERE in a new chat (any account, same Mac): `cd ~/Works/roadmap-board` and
 - Argon: gemini-4-argon via OpenCode returned "Insufficient account funds" (paid, no credit). Browser route: Claude extension is installed in Arc and listed as connected, but tab creation timed out; not yet tested.
 - First message for the new chat: `/head`
 
+### Checkpoint 9 (2026-10-15 night): weekly 95% (stop 98%, person said continue past the 5h 80% stop, H161)
+- Pushed tonight: Work model (WORK-MODEL.md; M1 9f3deca, M2 32aa1e9, M3 367557a, M4 ad285dc), supervisor + leases
+  (a59d9f9, review fixes 7cd98b1), store unified (4028be5), rules pipeline (c8a155d + 14 proposals RP1-RP14 waiting
+  for the person), Planner Head-style (9ed0287), Inbox redesign (7a06bda), Roadmap sync + lanes (fab0fe7),
+  usage Sync = Request update (90ae7df), Issues -> Work (d00b7ef). Global L1 95% row removed by the person.
+- Next: R7.112 workflow "You are here" = running jobs + full-screen map tab with side panel; then
+  docs/SYSTEM-DESIGN-SECTION.md packages B0-B4, A1-A8; Work model M5-M10.
+- Person to do: accept/reject 14 rule proposals (Inbox); accept 10 finished features (Planner).
+- First message for the new chat: `/head`
+
 ### Checkpoint 8 (2026-10-15 evening): weekly Claude usage 86% >= 85% stop; Claude work paused until Mon 19 Oct reset
 - v3 plan pushed: docs/HEAD-V3-PLAN.md (cc9afbb), based on docs/reviews/cursor-v3-analysis.md. Cursor is reviewing it
   (docs/reviews/cursor-v3-plan-review.md) and running the full UI review (docs/reviews/cursor-ui-full.md).
