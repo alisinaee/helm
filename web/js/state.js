@@ -414,6 +414,7 @@ export function normalizeUsage(raw, fetchedAt) {
     updated: raw.updated || null,
     source: raw.source || null,
     lastError: raw.lastError || null,
+    syncError: raw.syncError || null,
     ageS: num(raw.ageS),
     fetchedAt: fetchedAt,
   };
