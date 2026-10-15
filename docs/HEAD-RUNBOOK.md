@@ -44,7 +44,7 @@ Weekly stop 85% (H111; docs/autonomy.json). Usage is not automatic: push it by h
   holds only mcpOAuth (no claudeAiOauth) because the person signs in through the desktop app. The head reads the
   live numbers with the `get_usage` tool every turn and pipes them into `roadmap usage push`
   ({"rateLimits":[{"kind":"five_hour"|"seven_day","percentUsed":N,"resetsAt":ISO}]}).
-- Weekly stop 85% (H111, 2026-10-15; was 95%). 5-hour stop 80% (H99, 2026-10-15, replaces 90%).
+- Weekly stop 95% (H143, 2026-10-15 evening; was 85%). 5-hour stop 80% (H99, 2026-10-15, replaces 90%).
 - Models (H99, H101): head runs on Opus. Haiku 5.5 for edits; Opus or Sonnet 5.5 low/medium only for critical review,
   hard issues and planning advice; Cursor (auto or grok-4.7) and agy without limit. Run as many parallel subagents as
   files allow, watch them, never idle.
