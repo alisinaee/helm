@@ -24,16 +24,19 @@ async function readJson(response) {
   }
 }
 
-async function failure(response) {
-  const body = await readJson(response);
+function failure(status, body) {
   const error = body && body.error;
   if (error && typeof error.message === "string") {
-    return new ApiError(response.status, String(error.code || "http"), error.message);
+    return new ApiError(status, String(error.code || "http"), error.message);
   }
-  return new ApiError(response.status, "http", "The server answered with status " + response.status + ".");
+  return new ApiError(status, "http", "The server answered with status " + status + ".");
 }
 
+// The CSRF value re-read after a refused write (R7.61). Used only when the server refuses a write with 403 for CSRF.
+let freshToken = "";
+
 export function csrfToken() {
+  if (freshToken) return freshToken;
   const metas = document.querySelectorAll('meta[name="csrf"]');
   for (const meta of metas) {
     const value = meta.getAttribute("content") || "";
@@ -60,7 +63,7 @@ export async function getJson(url) {
   if (response.status === 304 && cached) {
     return { status: 304, data: cached.data, etag: cached.etag, changed: false };
   }
-  if (!response.ok) throw await failure(response);
+  if (!response.ok) throw failure(response.status, await readJson(response));
   const data = await readJson(response);
   if (data === null) throw new ApiError(response.status, "bad_body", "The server sent an unreadable reply.");
   const etag = response.headers.get("ETag");
@@ -68,14 +71,10 @@ export async function getJson(url) {
   return { status: response.status, data: data, etag: etag, changed: true };
 }
 
-// POST a JSON body with the CSRF header. Resolves to {status, data}.
-export async function postJson(url, body) {
-  const token = csrfToken();
-  if (!token) throw new ApiError(0, "no_token", "This page has no security token. Reload the page.");
-  let response;
+async function sendPost(url, body, token) {
   const started = Date.now();
   try {
-    response = await fetch(url, {
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -85,12 +84,49 @@ export async function postJson(url, body) {
       body: JSON.stringify(body || {}),
       credentials: "same-origin",
     });
+    noteRequest("POST", url, response.status, started);
+    return response;
   } catch (err) {
     noteRequest("POST", url, 0, started);
     throw new ApiError(0, "network", "Could not reach the server. Retrying.");
   }
-  noteRequest("POST", url, response.status, started);
-  if (!response.ok) throw await failure(response);
-  const data = await readJson(response);
-  return { status: response.status, data: data };
+}
+
+// After a server restart a tab holds the old CSRF value. The served page (GET /, same origin) carries the current one.
+// Resolves to true when a different value was read into freshToken. Never throws.
+async function rereadToken(sent) {
+  try {
+    const res = await fetch("/", { credentials: "same-origin", cache: "no-store" });
+    if (!res.ok) return false;
+    const html = await res.text();
+    const found = /<meta name="csrf" content="([^"]+)"/g;
+    let match = found.exec(html);
+    while (match && match[1] === PLACEHOLDER) match = found.exec(html);
+    if (!match || match[1] === sent) return false;
+    freshToken = match[1];
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+// POST a JSON body with the CSRF header. Resolves to {status, data}. A 403 that names the CSRF token is retried once
+// with the value re-read from the page; any other failure, or a second refusal, is thrown as an ApiError.
+export async function postJson(url, body) {
+  const token = csrfToken();
+  if (!token) throw new ApiError(0, "no_token", "This page has no security token. Reload the page.");
+  let response = await sendPost(url, body, token);
+  if (response.ok) {
+    return { status: response.status, data: await readJson(response) };
+  }
+  let refusal = await readJson(response);
+  const named = refusal && refusal.error && String(refusal.error.message || "");
+  if (response.status === 403 && /CSRF/i.test(named || "") && (await rereadToken(token))) {
+    response = await sendPost(url, body, freshToken);
+    if (response.ok) {
+      return { status: response.status, data: await readJson(response) };
+    }
+    refusal = await readJson(response);
+  }
+  throw failure(response.status, refusal);
 }
