@@ -42,6 +42,7 @@ COMMAND_MODULES = (
     "skills",
     "watch",
     "version",
+    "logs",
 )
 
 
