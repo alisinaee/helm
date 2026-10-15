@@ -514,7 +514,8 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
                  + [{"kind": "question", "id": q["id"], "text": q["text"]} for q in questions_open if q["block"]])
     running_ids = {j["id"] for j in running_jobs}
     running_rows = [{"id": j["id"], "title": j["title"], "model": j["model"], "task": j["task"],
-                     "role": j.get("role"), "parent": j.get("parent"), "effort": j.get("effort"), "elapsed_s": j["elapsed_s"],
+                     "role": j.get("role"), "parent": j.get("parent"), "effort": j.get("effort"),
+                     "engine_model": j.get("engine_model"), "elapsed_s": j["elapsed_s"],
                      "tokensK": j["tokensK"]} for j in running_jobs]
     groups = {}
     for j in running_jobs:

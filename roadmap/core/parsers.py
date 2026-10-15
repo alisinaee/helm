@@ -10,7 +10,7 @@ from datetime import datetime
 
 STATES = ("done", "partial", "todo", "hold")          # phase states
 TASK_STATES = STATES + ("backlog",)       # a task may be backlog (idea, not committed); a phase never is
-MODELS = ("haiku", "sonnet", "opus", "cursor", "agy")
+MODELS = ("haiku", "sonnet", "opus", "cursor", "agy", "opencode")
 JOB_STATUSES = ("running", "done", "failed")
 SUBS_MAX = 12                  # subtasks per task
 SUB_TITLE_MAX = 80
@@ -194,6 +194,9 @@ def parse_jobs(text, now, name="jobs.json"):
             job["role"] = j["role"] if isinstance(j["role"], str) and j["role"] else None
         if "effort" in j:
             job["effort"] = j["effort"] if isinstance(j["effort"], str) and j["effort"] else None
+        if "engine_model" in j:
+            em = j["engine_model"]
+            job["engine_model"] = em if isinstance(em, str) and em else None
         jobs.append(job)
     return jobs, []
 
