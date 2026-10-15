@@ -303,6 +303,10 @@ export function normalizeSnapshot(raw, fetchedAt) {
       return { id: String(i.id || ""), title: String(i.title || ""), kind: String(i.kind || ""),
         closed: typeof i.closed === "string" ? i.closed : null };
     }),
+    // R7.103: open rule proposals {id, text, sources} for the Inbox; the Head's rule chips read ruleState on rows.
+    rulesProposals: list(raw.rulesProposals).map(function (p) {
+      return { id: String(p.id || ""), text: String(p.text || ""), sources: list(p.sources).map(String) };
+    }),
     // WP32: spend and limit per phase (thousands of tokens) from budget.json; empty when the project has none.
     budget: normalizeBudget(raw.budget),
     // WP29 keys: comments by target (newest last), the queue, and project rules when the snapshot has them.
