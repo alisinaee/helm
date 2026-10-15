@@ -102,9 +102,9 @@ function phaseBodyHtml(vm, phase, tasks, jobById) {
       return taskRowHtml(t, placed.byTask[t.id] || [], taskCopyHtml(project, snap, t));
     }).join("");
     if (live.length > LONG_PHASE) {
-      html += '<button type="button" class="defer-toggle" aria-expanded="' + all +
-        '" data-action="toggle-item" data-item="more:' + esc(phase.id) + '" data-focus="item-more:' +
-        esc(phase.id) + '">' + (all ? "▾ show first " + SHOW_FIRST :
+      html += '<button type="button" class="defer-toggle" aria-expanded="' + all + '" aria-controls="phase-' +
+        esc(phase.id) + '-body" data-action="toggle-item" data-item="more:' + esc(phase.id) +
+        '" data-focus="item-more:' + esc(phase.id) + '">' + (all ? "▾ show first " + SHOW_FIRST :
           "▸ show " + fmtCount(live.length - SHOW_FIRST) + " more") + "</button>";
     }
   } else if (!placed.floats.length) {

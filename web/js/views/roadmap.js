@@ -119,7 +119,8 @@ function laneHtml(vm, snap, phase, doing) {
     return cardHtml(vm.route.id, snap, t, i, tasks.length, doing);
   }).join("");
   const more = tasks.length > LONG_LANE ? '<li class="lane-empty"><button type="button" class="btn btn-small"' +
-    ' data-action="toggle-item" data-item="more:' + id + '" aria-expanded="' + all + '">' +
+    ' data-action="toggle-item" data-item="more:' + id + '" aria-controls="lane-' + id + '-body" aria-expanded="' +
+    all + '">' +
     (all ? "Show first " + SHOW_FIRST : "Show " + fmtCount(tasks.length - SHOW_FIRST) + " more") +
     "</button></li>" : "";
   const nowDoing = tasks.filter(function (t) {
