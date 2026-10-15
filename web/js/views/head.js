@@ -471,7 +471,6 @@ function listRowHtml(vm, row, opts) {
   const eid = esc(id);
   const open = (opts.open || []).indexOf(id) >= 0;
   const pid = opts.project || null;
-  const carried = row.carried ? ' <span class="hd-carried" title="Carried over">↺</span>' : "";
   const shown = summaryText(row.sum, fullOf(vm, pid, id));
   const cell = function (cls, html, attrs) {
     return '<td class="' + cls + '"' + (attrs || "") + ">" + html + "</td>";
@@ -482,12 +481,13 @@ function listRowHtml(vm, row, opts) {
   const tr = '<tr class="hd-row" data-id="' + eid + '">' +
     cell("hd-n", '<button type="button" class="hd-hit" data-action="head-toggle" data-id="' + eid +
       '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="hd-p-' + eid + '" aria-label="' +
-      esc((open ? "Hide " : "Show ") + id) + '">' + eid + carried + "</button>") +
+      esc((open ? "Hide " : "Show ") + id) + '">' + eid + "</button>") +
     cell("hd-kind", '<span class="chip chip-neutral">' + esc(row.kind || "") + "</span>") +
     cell("hd-sumc", '<span class="hd-sum" data-sum="' + esc(row.sum || "") + '" title="' + esc(shown) + '">' +
       esc(shown) + "</span>") +
     cell("hd-stc", statusHtml(row)) +
-    cell("hd-bnd", boundHtml(row.links, pid, BOUND_MAX)) +
+    cell("hd-bnd", row.links && row.links.length ? boundHtml(row.links, pid, BOUND_MAX) :
+      '<span class="hd-none" title="Not bound yet">—</span>') +
     age + when +
     cell("hd-acc", row.acc ? '<span aria-label="Accepted" title="Accepted">✓</span>' : "") +
     cell("hd-cp", copyButton("ask", id, id, { project: pid, sum: row.sum || "" })) + "</tr>";
@@ -499,7 +499,7 @@ function listHtml(vm, rows, opts) {
   const head = LIST_COLS.map(function (col) {
     return '<th scope="col" class="' + col[1] + '">' + esc(col[0]) + "</th>";
   }).join("");
-  return '<div class="hd-list hd-tbl-wrap"><table class="hd-tbl" aria-label="Logged messages"><thead><tr>' +
+  return '<div class="hd-list"><table class="hd-tbl" aria-label="Logged messages"><thead><tr>' +
     head + "</tr></thead>" + rows.map(function (row) {
       return listRowHtml(vm, row, opts);
     }).join("") + "</table></div>";
