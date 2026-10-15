@@ -1,7 +1,7 @@
 /* Workflow diagram (WP72, R7.14 C). Tokens only; the SVG has no style attributes, so every colour is a class here. */
 .wfg-stage{position:relative}
 .wfg-host{min-height:240px;user-select:none;-webkit-user-select:none}
-.wfg-svg{display:block;width:100%;height:min(64vh,560px);touch-action:none;overflow:hidden;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;background:var(--surface-1);border:1px solid var(--line);border-radius:var(--r-card)}
+.wfg-svg{display:block;width:100%;height:max(360px,calc(100vh - 190px));touch-action:none;overflow:hidden;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;background:var(--surface-1);border:1px solid var(--line);border-radius:var(--r-card)}
 .wfg-ctl{position:absolute;top:var(--sp-2);right:var(--sp-2);display:flex;flex-wrap:wrap;gap:var(--sp-1);z-index:1}
 .wfg-bar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2) var(--sp-3);margin-bottom:var(--sp-2)}
 .wfg-count{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--text-2);font-size:var(--fs-12)}
