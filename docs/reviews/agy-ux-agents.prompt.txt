@@ -1,0 +1,1 @@
+Read-only. In ~/Works/roadmap-board audit the agents section (web/js/views/agents.js and its CSS) against docs/UI-CHECKLIST.md: accessibility (labels, focus, contrast), touch targets 44px, empty/loading/error states, consistency with other sections. One finding per line with file:line and the fix. Max 20 lines. Change no files.

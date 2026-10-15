@@ -1,0 +1,52 @@
+{
+  "afa03a203681092ea": {
+    "task": "R7.93",
+    "title": "haiku: R7.93 v3 W2 commands in one txn",
+    "model": "haiku"
+  },
+  "a5ce5a822df2d3f5b": {
+    "task": "R7.94",
+    "title": "haiku: R7.94 v3 W4 snapshot from db",
+    "model": "haiku"
+  },
+  "a710ccfd1d75c30a4": {
+    "task": "R7.95",
+    "title": "haiku: R7.95 job list running first",
+    "model": "haiku"
+  },
+  "a8f15d35f21c85e63": {
+    "task": "R7.97",
+    "title": "haiku: R7.97 issues into Work board",
+    "model": "haiku"
+  },
+  "ad86717aaee5f67c0": {
+    "task": "R7.96",
+    "title": "haiku: R7.96 one db file for store",
+    "model": "haiku"
+  },
+  "acf4df08c097ae01b": {
+    "task": "R7.98",
+    "title": "haiku: R7.98 make the full suite green",
+    "model": "haiku"
+  },
+  "a7caa3544b87855bc": {
+    "task": "R7.99",
+    "title": "haiku: R7.99 v3 supervisor and leases",
+    "model": "haiku"
+  },
+  "a48a63baf7c30ebed": {
+    "task": "R7.100",
+    "title": "haiku: R7.100 usage sync button truth",
+    "model": "haiku"
+  },
+  "a6ea12285a9f49929": {
+    "task": "R7.99",
+    "title": "opus: R7.99 Opus review of supervisor",
+    "model": "opus"
+  },
+  "a0c2fee86751369c9": {
+    "task": "R7.101",
+    "title": "opus: R7.101 Opus work vs agent task model",
+    "model": "opus"
+  }
+}
