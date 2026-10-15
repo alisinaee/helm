@@ -16,13 +16,14 @@ head.accept marks the entry done with the note "accepted": the head record has n
 
 import os
 import re
+from datetime import datetime, timezone
 
 from roadmap.core import head, planfmt
 from roadmap.core.parsers import ISSUE_KINDS, TITLE_MAX
 from roadmap.errors import EXIT_CONFLICT, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
-from roadmap.services import agentguard, commands, issues, tasks
+from roadmap.services import agentguard, commands, issues, notify, tasks
 from roadmap.services import head as store
-from roadmap.store import jsonl, lock
+from roadmap.store import config, jsonl, lock
 
 NEXT_LIST = "roadmap head list"
 ID_RE = re.compile(r"^H[1-9][0-9]{0,3}$")
@@ -437,7 +438,81 @@ def _h_restore(data_dir, a, now):
 
 # ---------------------------------------------------------------- registration
 
+# ---------------------------------------------------------------- notices (services/notify, the existing osascript path)
+
+STALE_MIN_DEFAULT = 120         # config head.staleMin (HEAD-SPEC section 3): the done-not-accepted wait before a notice
+NEEDS_YOU_KIND = "head-needs-you"
+REVIEW_KIND = "head-review"
+
+
+def _stale_min():
+    """head.staleMin from the global config, 120 when it is missing or not a positive whole number."""
+    try:
+        value = (config.load().get("head") or {}).get("staleMin")
+    except Exception:  # an unreadable config means the default, never an error in the op
+        return STALE_MIN_DEFAULT
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        return STALE_MIN_DEFAULT
+    return value
+
+
+def _statuses(data_dir, now):
+    return {row["id"]: row["status"] for row in store.rows(data_dir, now=now)}
+
+
+def _awaiting_review(data_dir, now, stale_min):
+    """Ids whose latest status change is a done set by the head (by=head), made more than stale_min minutes ago.
+    The person's confirm, accept or reopen is a later record, so it clears the id."""
+    objs, _ = jsonl.read_objects(os.path.join(data_dir, store.FILE))
+    moment = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    last = {}
+    for rec in objs:
+        sets = rec.get("set") if isinstance(rec.get("set"), dict) else {}
+        if rec.get("t") == "u" and sets.get("status") in head.MANUAL_STATUSES:
+            last[rec.get("id")] = (sets["status"], rec.get("by"), head.parse_ts(rec.get("ts")))
+    out = []
+    for eid, (status, by, ts) in last.items():
+        if status == "done" and by == "head" and ts is not None and \
+                (moment - ts).total_seconds() / 60.0 > stale_min:
+            out.append(eid)
+    return sorted(out)
+
+
+def _raise_notices(data_dir, before, now):
+    """After a write: one notice when an entry became needs-you, and one when a head-done entry waits for the
+    person's Review past head.staleMin. notify_dir rate-limits each kind to one notification a minute."""
+    after = _statuses(data_dir, now)
+    new_needs = sorted(eid for eid, status in after.items() if status == "needs-you" and before.get(eid) != "needs-you")
+    if new_needs:
+        text = ", ".join(new_needs[:3]) + " needs you"
+        notify.notify_dir(data_dir, NEEDS_YOU_KIND, "Head needs you",
+                          lambda project: text + " in " + project + ". Run: roadmap head list")
+    waiting = _awaiting_review(data_dir, now, _stale_min())
+    if waiting:
+        text = str(len(waiting)) + " done, not accepted"
+        notify.notify_dir(data_dir, REVIEW_KIND, "Head review waiting",
+                          lambda project: text + " in " + project + ". Review them: roadmap head list")
+
+
+def _noticed(handler):
+    """Wrap a public head op: run it, then raise notices. A failed notice never fails the op, which is already saved."""
+    def run_op(data_dir, a, now):
+        try:
+            before = _statuses(data_dir, now)
+        except Exception:
+            before = {}
+        result = handler(data_dir, a, now)
+        try:
+            _raise_notices(data_dir, before, now)
+        except Exception:
+            pass
+        return result
+    return run_op
+
+
 def _register(name, check, handler, public=True):
+    if public:
+        handler = _noticed(handler)
     commands.OPS[name] = commands._Op(check, handler, public=public)
 
 
