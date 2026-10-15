@@ -15,6 +15,7 @@ from datetime import datetime, timedelta, timezone
 
 from roadmap.core import head, secrets
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
+from roadmap.services import jobs
 from roadmap.store import atomic, jsonl, lock
 
 FILE = "head.jsonl"
@@ -339,6 +340,31 @@ def update(data_dir, eid, *, by, sets=None, links=(), note=None, now=None, timeo
             raise RoadmapError("not_found", "no head entry " + eid, EXIT_NOT_FOUND)
         jsonl.append_line(_path(data_dir, FILE), rec)
     return rec
+
+
+def fold_asks(data_dir, now=None):
+    """Close each open ask whose bound tasks are all done (by: auto). The note lists the real commit shas of those
+    tasks, e.g. 'auto: R7.44 c1a2b3c, R7.45 d4e5f6a'. An ask with an unfinished task stays open. The person
+    still reviews the closed ask. Returns the ids closed."""
+    tasks = {str(t.get("id")): t for t in jobs.task_records(data_dir)}
+    states = {"task:" + tid: str(t.get("status")) for tid, t in tasks.items()}
+    closed = []
+    for row in head.fold(_records(data_dir), states, now=now):
+        if row.get("manual") is not None or _kind(row) != "ask":
+            continue
+        ids = [ref[len("task:"):] for ref in row["links"] if ref.startswith("task:")]
+        if not ids or any(states.get("task:" + tid) != "done" for tid in ids):
+            continue
+        note = "auto: " + ", ".join(_task_shas(tasks.get(tid), tid) for tid in ids)
+        update(data_dir, row["id"], by="auto", sets={"status": "done"}, note=note, now=now)
+        closed.append(row["id"])
+    return closed
+
+
+def _task_shas(task, task_id):
+    """The task id and its commit shas, e.g. 'R7.44 c1a2b3c' (one entry per commit), or the id alone."""
+    shas = [r[len("commit:"):][:7] for r in (task or {}).get("refs") or [] if str(r).startswith("commit:")]
+    return ", ".join(task_id + " " + sha for sha in shas) if shas else task_id
 
 
 def session(data_dir, ev, *, session_id=None, acct=None, model=None, usage=None, now=None, timeout=None):
