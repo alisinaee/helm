@@ -98,7 +98,7 @@ class TokensRefTests(unittest.TestCase):
         text = read(VIEWS, "tokens.js")
         self.assertIn("const refPid = isProject ? pid : null;", text)
         self.assertNotIn('{ project: pid, sum: refSummary("section", spendCount) }', text)
-        self.assertIn("accountHtml(vm, rows, refPid)", text)
+        self.assertIn('{ project: refPid, sum: refSummary("section", snaps.length) }', text)
 
 
 class RefSummaryTests(unittest.TestCase):
