@@ -32,3 +32,9 @@ do not push; commit with the Co-Authored-By line; report in 5-6 lines.
 
 ## Limits
 Weekly stop 95% (docs/autonomy.json in split_net). Usage is not automatic: push it by hand (HANDOVER section 0, 6).
+
+## UX routine (after every wave; the person asked for it)
+1. `make check-ui` (own headless Chrome) for fresh screenshots in build/ui-smoke; look at 1440 and 375, dark and light, for every section.
+2. Run the ui-ux-pro-max UX queries (`python3 ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<topic>" --domain ux -n 5`, no -I) for what changed.
+3. Opus (medium) or Cursor with the screenshots writes findings; agy only for text-only view audits (aria, strings, rows) verified by Haiku.
+4. File each finding as a task (`plan import` T lines, phase R8 'UX'), link to a feature, then run them as Haiku packages. See docs/UX-AUDIT.md.
