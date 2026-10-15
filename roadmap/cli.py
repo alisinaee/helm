@@ -45,6 +45,7 @@ COMMAND_MODULES = (
     "watch",
     "version",
     "logs",
+    "git",
 )
 
 

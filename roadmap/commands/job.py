@@ -2,7 +2,8 @@
 
 import argparse
 
-from roadmap.services import budget, control, jobs
+from roadmap.errors import RoadmapError
+from roadmap.services import budget, control, git, jobs
 
 DONE_WORDS = {"done": "done", "fail": "failed"}
 
@@ -78,10 +79,24 @@ def _finish(args):
         remainder = jobs.budget_remainder(job, tokens)
         budget.record_job_spend(data_dir, job["id"], job.get("task"), job.get("model"), remainder)
         control.after_write(project["id"])  # the spend can reach a limit row (WP27)
+    commits = _linked_commits(project, job["id"]) if job["status"] == "done" else []
+    job["commits"] = commits
     if not getattr(args, "json", False):
         print(job["id"] + " " + job["status"])
+        if commits:
+            print("commits: " + " ".join(sha[:7] for sha in commits))
         return None
     return job
+
+
+def _linked_commits(project, job_id):
+    """Commit ids whose Job: trailer names job_id (newest first). Not a git repo or no commits gives []. Nothing is
+    stored: the link is read from git each time."""
+    try:
+        rows = git.read_log(project["path"], limit=git.LOG_MAX)
+    except RoadmapError:
+        return []
+    return [row["sha"] for row in rows if row.get("job") == job_id]
 
 
 def _progress(args):
