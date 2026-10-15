@@ -13,6 +13,7 @@ from unittest import mock
 
 from roadmap.errors import RoadmapError
 from roadmap.services import agentguard, commands, hooks, tasks
+from roadmap.services import headops
 from roadmap.services import head as store
 from roadmap.store import config as config_store
 from tests.api.support import FIXTURE, PROJECT_ID
@@ -118,6 +119,27 @@ class HeadOpsCase(unittest.TestCase):
         self.op("head.unbind", {"id": eid, "refs": ["task:P1.1"]})
         self.op("head.bind", {"id": eid, "refs": ["task:P2.1"]})
         self.assertIn("task:P2.1", self.row(eid)["links"])
+
+    def test_open_ask_cannot_be_bound_only_to_the_umbrella_task(self):
+        eid = self.log("keep the head section on top")
+        with self.assertRaises(RoadmapError) as ctx:
+            self.op("head.triage", {"id": eid, "kind": "feature", "sum": "Head section", "refs": ["task:R7.31"]})
+        self.assertEqual(ctx.exception.code, "usage")
+        with self.assertRaises(RoadmapError):
+            self.op("head.bind", {"id": eid, "refs": ["task:R7.31"]})
+        self.assertEqual(self.row(eid)["links"], [])
+        self.op("head.bind", {"id": eid, "refs": ["task:R7.31", "task:P1.1"]})
+        with self.assertRaises(RoadmapError):
+            self.op("head.unbind", {"id": eid, "refs": ["task:P1.1"]})
+        self.assertIn("task:P1.1", self.row(eid)["links"])
+        self.assertEqual(headops.umbrella_only_asks(self.data_dir), [])
+
+    def test_umbrella_only_is_allowed_once_the_ask_is_closed(self):
+        eid = self.log("close the head section ask")
+        self.op("head.set", {"id": eid, "status": "done"})
+        self.op("head.bind", {"id": eid, "refs": ["task:R7.31"]})
+        self.assertEqual(self.row(eid)["links"], ["task:R7.31"])
+        self.assertEqual(headops.umbrella_only_asks(self.data_dir), [])
 
     def test_bad_link_ref_is_a_usage_error(self):
         eid = self.log()
@@ -229,7 +251,7 @@ class HeadOpsCase(unittest.TestCase):
         self.assertEqual(agent.exception.code, "agent_refused")
         self.assertIn("private", store.text_of(self.data_dir, eid))
         self.person_op("head.forget", {"id": eid})
-        self.assertEqual(store.text_of(self.data_dir, eid), "")
+        self.assertIsNone(store.text_of(self.data_dir, eid))
         self.assertEqual(self.row(eid)["sum"], "keep this secret thing private")
 
     def test_restore_is_internal_and_not_callable(self):

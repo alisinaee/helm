@@ -128,6 +128,45 @@ def _person_only(op):
                            EXIT_CONFLICT, next="ask the person")
 
 
+def _person_closed(data_dir, eid):
+    """True when the person's own last status mark on eid is done (a confirmed or accepted entry). Only the person
+    may then change its status."""
+    last = None
+    for rec in store._records(data_dir):
+        if rec.get("t") == "u" and rec.get("id") == eid and isinstance(rec.get("set"), dict) \
+                and "status" in rec["set"]:
+            last = rec
+    return bool(last) and last.get("by") == "person" and last["set"]["status"] == "done"
+
+
+def _guard_status(data_dir, eid, status):
+    """Refuse an agent's status change that would reopen (open) or override a person's done mark. Other statuses
+    on an entry the person has not closed stay with the head."""
+    if status is None:
+        return
+    if status == "open" or _person_closed(data_dir, eid):
+        _person_only("head status=" + status + " on " + eid)
+
+
+def _umbrella_only(links):
+    """True when links is not empty and every ref is an umbrella task (task:R7.31, HEAD-SPEC section 12)."""
+    return bool(links) and all(ref.startswith("task:") and planfmt.is_umbrella_task(ref[len("task:"):])
+                               for ref in links)
+
+
+def _check_real_bind(status, links, eid):
+    """HEAD-SPEC section 12: an open ask must not be bound only to an umbrella task. Closed asks may keep them."""
+    if status not in head.CLOSED_STATUSES and _umbrella_only(links):
+        raise commands._usage(eid + " is open and would be bound only to the umbrella task R7.31; bind a real task "
+                              "(head convert " + eid + " creates one)", "roadmap head convert " + eid)
+
+
+def umbrella_only_asks(data_dir, now=None):
+    """Ids of open asks bound only to umbrella tasks: the gate's list of asks that still need a real task."""
+    return [row["id"] for row in store.rows(data_dir, now=now)
+            if row["status"] not in head.CLOSED_STATUSES and _umbrella_only(row["links"])]
+
+
 def _prior(row, keys):
     """The current values of the fields an op is about to change, as set fields. status reads as 'open' when no
     manual status is set (update() accepts it), and a guessed kind loses its '?' mark."""
@@ -161,11 +200,13 @@ def _undo(steps):
 
 def _link_update(data_dir, eid, add=(), remove=(), now=None):
     """Add and remove refs on one entry in one update record. Returns (added, removed): only the refs it changed."""
-    have = _row(data_dir, eid)["links"]
+    row = _row(data_dir, eid)
+    have = row["links"]
     added = [ref for ref in add if ref not in have]
     removed = [ref for ref in remove if ref in have]
     if len(have) - len(removed) + len(added) > head.MAX_LINKS:
         raise commands._usage(eid + " would hold more than " + str(head.MAX_LINKS) + " links", NEXT_LIST)
+    _check_real_bind(row["status"], [ref for ref in have if ref not in removed] + added, eid)
     links = ["+" + ref for ref in added] + ["-" + ref for ref in removed]
     if links:
         store.update(data_dir, eid, by=_by(), links=links, now=now)
@@ -236,12 +277,15 @@ def _check_triage(a):
 
 def _h_triage(data_dir, a, now):
     row = _row(data_dir, a["id"])
+    _guard_status(data_dir, a["id"], a["status"])
     sets = {"kind": a["kind"], "sum": a["sum"]}
     if a["status"]:
         sets["status"] = a["status"]
     added = [ref for ref in a["refs"] if ref not in row["links"]]
     if len(row["links"]) + len(added) > head.MAX_LINKS:
         raise commands._usage(a["id"] + " would hold more than " + str(head.MAX_LINKS) + " links", NEXT_LIST)
+    if added:
+        _check_real_bind(a["status"] or row["status"], row["links"] + added, a["id"])
     prior = _prior(row, sets)
     # by head: the update with kind and sum marks the entry triaged (store/core rule)
     store.update(data_dir, a["id"], by="head", sets=sets, links=["+" + ref for ref in added], now=now)
@@ -260,6 +304,7 @@ def _check_set(a):
 
 def _h_set(data_dir, a, now):
     row = _row(data_dir, a["id"])
+    _guard_status(data_dir, a["id"], a["status"])
     sets = {key: a[key] for key in ("status", "kind", "sum") if a[key] is not None}
     store.update(data_dir, a["id"], by=_by(), sets=sets or None, note=a["note"], now=now)
     inverse = _undo([_step(a["id"], _prior(row, sets))]) if sets else None
@@ -309,6 +354,7 @@ def _h_split(data_dir, a, now):
     for summary in a["sums"]:
         got = store.capture(data_dir, text, src=_src(), kind=kind, sum_text=summary, from_id=a["id"], now=now)
         new.append(got["id"])
+    _guard_status(data_dir, a["id"], "merged")
     prior = _prior(row, ["status"])
     store.update(data_dir, a["id"], by=_by(), sets={"status": "merged"}, now=now)
     steps = [_step(eid, {"status": "declined"}) for eid in new if eid]
@@ -328,6 +374,7 @@ def _check_merge(a):
 def _h_merge(data_dir, a, now):
     row = _row(data_dir, a["id"])
     _row(data_dir, a["into"])
+    _guard_status(data_dir, a["id"], "merged")
     prior = _prior(row, ["status"])
     prior["into"] = row["into"]
     store.update(data_dir, a["id"], by=_by(), sets={"status": "merged", "into": a["into"]}, now=now)
@@ -353,6 +400,7 @@ def _h_convert(data_dir, a, now):
     row = _row(data_dir, a["id"])
     prior = _prior(row, ["status"])
     if a["target"] == "rule":
+        _guard_status(data_dir, a["id"], "needs-you")
         store.update(data_dir, a["id"], by=_by(), sets={"status": "needs-you"}, note=RULE_NOTE, now=now)
         return {"id": a["id"], "status": "needs-you"}, a["id"] + " needs you: " + RULE_NOTE, \
             _undo([_step(a["id"], prior)])
@@ -403,7 +451,7 @@ def _h_forget(data_dir, a, now):
     _person_only("head forget")
     _row(data_dir, a["id"])
     with lock.locked(data_dir):
-        jsonl.append_line(os.path.join(data_dir, store.TEXT_FILE), {"id": a["id"], "text": ""})
+        store.forget_text(data_dir, a["id"])
     store.update(data_dir, a["id"], by="person", note=FORGET_NOTE, now=now)
     return {"id": a["id"], "forgotten": True}, a["id"] + " verbatim forgotten", None
 

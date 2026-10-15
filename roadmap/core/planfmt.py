@@ -10,7 +10,7 @@ import shlex
 
 PHASE_STATUSES = ("todo", "partial", "done", "hold")
 TASK_STATUSES = PHASE_STATUSES + ("backlog",)   # a phase is never backlog (PHASE_STATUSES has no backlog)
-MODELS = ("haiku", "sonnet", "opus", "cursor", "agy", "head")
+MODELS = ("haiku", "sonnet", "opus", "cursor", "agy", "opencode", "head")
 THINKING = ("low", "medium", "high")
 CHECKS = ("none", "sonnet", "opus")
 SET_KEYS = ("status", "tokensK", "model", "thinking", "needsUser", "check", "checkK", "note", "title", "after")
@@ -21,6 +21,7 @@ FEAT_TITLE_MAX = 80
 FEAT_ACC_MAX = 160
 FEAT_LEVELS = 3                        # levels of the plan tree: phase > sub plan > item (parent chain <= 2)
 PRIOS = ("1", "2", "3")
+UMBRELLA_TASKS = ("R7.31",)            # umbrella tasks: an open head ask may not be bound only to these (HEAD-SPEC 12)
 PLAN_ALLOWED = ("P <id> <status> | <name>  or  T <id> <status> <tokensK> <model>/<thinking> "
                 "[!] [c:<check>/<checkK>] [a:<ids>] [f:<feats>] | <title> [# <note>]  or  "
                 "F <id> <-|hold> <1|2|3> <phase|-> <parent|-> [ask] | <title> [# <acceptance>]  or  "
@@ -43,6 +44,11 @@ def _problem(lineno, text):
 
 def _enum(values, dash=True):
     return "|".join(list(values) + (["-"] if dash else []))
+
+
+def is_umbrella_task(task_id):
+    """True for an umbrella task id such as R7.31 (UMBRELLA_TASKS). Pure, no I/O."""
+    return task_id in UMBRELLA_TASKS
 
 
 def extract_block(md):
