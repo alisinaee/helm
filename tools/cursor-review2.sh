@@ -6,7 +6,7 @@ V="$HOME/.local/share/cursor-agent/versions/2026.08.04-aaa8809/cursor-agent"
 cd /Users/ali/Works/roadmap-board
 while pgrep -f "cursor-agent.*-p" >/dev/null; do sleep 5; done
 raw=$(mktemp)
-"$V" -p --trust --mode plan --model auto --output-format stream-json "Do NOT create any plan, report or markdown file and do not use any report or plan tool: your FINAL CHAT MESSAGE must itself contain the full findings list. $2" </dev/null > "$raw" 2>&1
+"$V" -p --trust --mode plan --model "${CURSOR_MODEL:-auto}" --output-format stream-json "Do NOT create any plan, report or markdown file and do not use any report or plan tool: your FINAL CHAT MESSAGE must itself contain the full findings list. $2" </dev/null > "$raw" 2>&1
 python3 - "$raw" "$1" <<'P'
 import json,sys
 txt=''
