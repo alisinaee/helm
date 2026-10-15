@@ -15,7 +15,7 @@ console.log(JSON.stringify({
   screen: head.headHtml(vm, Object.assign({ f: "all" }, base)),
   unhandled: head.headHtml(vm, Object.assign({ f: "unhandled" }, base)),
   done: head.headHtml(vm, Object.assign({ f: "done" }, base)),
-  open: head.headHtml(vm, Object.assign({ f: "open", id: "H1" }, base)),
+  open: head.headHtml(vm, Object.assign({ f: "open", open: ["H1"] }, base)),
   readOnly: head.headHtml(vm, Object.assign({ f: "all", readOnly: true }, base)),
   empty: head.headHtml(empty, Object.assign({ f: "open" }, base)),
   noMatch: head.headHtml(vm, Object.assign({ f: "open", q: "zzz-none" }, base)),
