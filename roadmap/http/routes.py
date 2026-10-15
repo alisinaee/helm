@@ -15,12 +15,14 @@ from datetime import datetime
 from urllib.parse import parse_qsl
 
 from roadmap import __version__
-from roadmap.core.snapshot import SNAPSHOT_SCHEMA_VERSION
+from roadmap.core import head as head_rules
+from roadmap.core.snapshot import SNAPSHOT_SCHEMA_VERSION, head_link_state, head_row
 from roadmap.errors import (EXIT_CONFLICT, EXIT_ERROR, EXIT_EXTERNAL, EXIT_INVALID_DATA, EXIT_NOT_FOUND,
                             EXIT_USAGE, RoadmapError)
 from roadmap import log as rlog
 from roadmap.http import security
 from roadmap.services import agentguard, commands, control, loader, usage
+from roadmap.services import head as head_service
 from roadmap.services import tasks as task_service
 from roadmap.store import config as config_store
 from roadmap.store import schema
@@ -501,6 +503,75 @@ def notes(app, req, match):
     return Reply(200, _read_note(folder, name), ctype="text/plain; charset=utf-8")
 
 
+# ---------------------------------------------------------------- head (HEAD-SPEC section 5, read only)
+
+HEAD_F = ("open", "all")
+HEAD_N_DEFAULT, HEAD_N_MAX = 100, 200
+HEAD_QUERY_KEYS = ("f", "n", "full")
+HEAD_HISTORY_MAX = 20
+
+
+def _head_query(query):
+    """(f, n, full) of GET .../head?f=open|all&n=100&full=H12. An unknown or repeated key, or a bad value, gives 400."""
+    pairs = parse_qsl(query or "", keep_blank_values=True)
+    keys = [key for key, _ in pairs]
+    if len(keys) != len(set(keys)) or any(key not in HEAD_QUERY_KEYS for key in keys):
+        raise RoadmapError("invalid_input", "the query takes f (open|all), n (1..200) and full (an H id), once each",
+                           EXIT_USAGE)
+    opts = dict(pairs)
+    f = opts.get("f", "open")
+    if f not in HEAD_F:
+        raise RoadmapError("invalid_input", "f must be open or all", EXIT_USAGE)
+    n_text = opts.get("n", str(HEAD_N_DEFAULT))
+    if not re.fullmatch(r"\d{1,4}", n_text) or not 1 <= int(n_text) <= HEAD_N_MAX:
+        raise RoadmapError("invalid_input", "n must be a whole number from 1 to 200", EXIT_USAGE)
+    full = opts.get("full")
+    if full is not None and not re.fullmatch(r"H\d{1,4}", full):
+        raise RoadmapError("invalid_input", "full must be a head id such as H12", EXIT_USAGE)
+    return f, int(n_text), full
+
+
+def _head_history(records, eid):
+    """The last lines of one entry's history: when it was logged, and each update (set, link, note). Text is not here."""
+    out = []
+    for rec in records:
+        if rec.get("id") != eid:
+            continue
+        if rec.get("t") == "e":
+            out.append({"ts": rec.get("ts"), "by": rec.get("src")})
+        elif rec.get("t") == "u":
+            line = {"ts": rec.get("ts"), "by": rec.get("by")}
+            line.update({key: rec[key] for key in ("set", "link", "note") if rec.get(key)})
+            out.append(line)
+    return out[-HEAD_HISTORY_MAX:]
+
+
+def project_head(app, req, match):
+    """GET /api/v1/projects/{pid}/head: the rows (f=open drops done and declined; the newest n) with their counts.
+    full=H12 adds the verbatim text and the history, on the same-origin page only (403 otherwise). The phone listener
+    never gets text or history: its body is the rows, with full reduced to the id."""
+    project = _cmd_project(match.group("pid"))
+    f, n, full = _head_query(req.query)
+    _, data_dir = task_service.resolve(project)
+    snap = loader.load_snapshot(project)
+    moment = datetime.now().astimezone()
+    entries = head_service.rows(data_dir, link_state=head_link_state(snap["tasks"], snap["jobs"]), now=moment)
+    shown = [e for e in entries if f == "all" or e["status"] not in head_rules.CLOSED_STATUSES]
+    body = {"f": f, "n": n, "total": len(shown), "rows": [head_row(e, moment) for e in shown[-n:]]}
+    if full is not None:
+        if not any(e["id"] == full for e in entries):
+            raise RoadmapError("not_found", "no head entry " + full, EXIT_NOT_FOUND)
+        body["full"] = {"id": full}
+        if app.cmd_source != "phone":
+            if not security.browser_proof(req.headers, app.port):
+                raise RoadmapError("forbidden", "the full text is for this server's own page only", EXIT_ERROR)
+            body["full"]["text"] = head_service.text_of(data_dir, full)
+            body["full"]["history"] = _head_history(head_service._records(data_dir), full)
+    if app.cmd_source == "phone":
+        body = _phone_public(body)
+    return json_reply(200, body)
+
+
 # ---------------------------------------------------------------- table
 
 _PID = r"[a-z0-9][a-z0-9-]{0,39}"
@@ -510,6 +581,7 @@ ROUTES = (
     (re.compile(r"/api/v1/projects"), ("GET",), projects),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/snapshot"), ("GET",), project_snapshot),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/notes(?:/(?P<name>[^/]*))?"), ("GET",), notes),
+    (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/head"), ("GET",), project_head),
     (re.compile(r"/api/v1/usage"), ("GET",), usage_get),
     (re.compile(r"/api/v1/usage/sync"), ("POST",), usage_sync),
     (re.compile(r"/api/v1/cmd"), ("POST",), cmd),
