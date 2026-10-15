@@ -82,4 +82,45 @@ out.topbar = bar({ name: "project", id: "splitnet" }, okMeters.limits, { weeklyP
 out.topbarAll = bar({ name: "home", id: null }, okMeters.limits, { weeklyPercent: 63 });
 out.topbarOff = bar({ name: "home", id: null }, [], { weeklyPercent: 12 });
 out.topbarUnknown = bar({ name: "home", id: null }, null, null);
+// Truth cases (R7.63): a stale reading (30.6 h old) and the weekly stop from autonomy.json (AUTO, 85%),
+// and a fresh reading with the same stop.
+const autoMeters = {
+  limits: [
+    { id: "AUTO", scope: "project", window: "week", kind: "acct", used: null, limit: 85, state: "unknown",
+      est: false, paceAt: null, src: "autonomy", action: "block" },
+  ],
+  today: { pts: null, tokK: null, estPts: null },
+  week: { pct: null, tokK: 300, estPts: null },
+};
+const freshAuto = Object.assign({}, autoMeters, {
+  limits: [Object.assign({}, autoMeters.limits[0], { used: 63, state: "ok" })],
+  week: { pct: 63, tokK: 300, estPts: null },
+});
+function truthVm(meters, usage) {
+  const snap = state.normalizeSnapshot(snapshot("splitnet", "split-net", meters), now);
+  snap.usage = state.normalizeUsage(usage, now);
+  const s = state.createStore();
+  s.projects = store.projects;
+  s.snapshots = { splitnet: snap, alpha: store.snapshots.alpha };
+  const vm = state.buildViewModel(s, { name: "project", id: "splitnet" }, prefs, now);
+  vm.snapshotList = [snap];
+  vm.meterRows = snap.meters;
+  vm.control = null;
+  vm.conn = { ok: true };
+  vm.ui = { panelOpen: true };
+  vm.theme = "auto";
+  return vm;
+}
+const staleVm = truthVm(autoMeters, { weeklyPercent: null, fiveHourPercent: null, weeklyResetsAt: null,
+  fiveHourResetsAt: null, updated: "2026-10-10T12:00:00Z", source: "endpoint", ageS: 110209 });
+out.staleTop = topbar.topbarView(staleVm);
+out.staleTokens = tokens.sectionView(staleVm);
+const freshVm = truthVm(freshAuto, { weeklyPercent: 63, fiveHourPercent: 26, weeklyResetsAt: null,
+  fiveHourResetsAt: null, updated: "2026-10-13T11:59:00Z", source: "endpoint", ageS: 60 });
+out.freshTop = topbar.topbarView(freshVm);
+const midVm = truthVm(freshAuto, { weeklyPercent: 63, fiveHourPercent: 26, weeklyResetsAt: null,
+  fiveHourResetsAt: null, updated: "2026-10-13T11:30:00Z", source: "endpoint", ageS: 1800 });
+out.midTop = topbar.topbarView(midVm);
+out.freshTokens = tokens.sectionView(freshVm);
+
 console.log(JSON.stringify(out));

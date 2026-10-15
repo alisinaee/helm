@@ -8,7 +8,7 @@ import { bannerHtml, esc } from "../dom.js";
 import { MISSING, fmtPercent, fmtResets, fmtTokens } from "../format.js";
 import { copyButton, refSummary } from "../ref.js";
 import { pageState } from "./inbox.js";
-import { shareRowsHtml, weeklyStopHtml } from "./limits.js";
+import { oldText, shareRowsHtml, weekKnown, weeklyStopHtml } from "./limits.js";
 import { usageView } from "./usage.js";
 
 const LIMIT_SENTENCE = "At the limit, agents stop starting new jobs. Override for 1 hour lets them run again.";
@@ -56,6 +56,21 @@ function sectionCard(id, title, copy, body) {
     '" class="lim-h">' + esc(title) + "</h3>" + copy + "</div>" + body + "</section>";
 }
 
+// The usage band gets the same truth as the top bar: a stale reading shows no percent (unknown), with its age.
+function bandVm(vm) {
+  const u = vm.usage;
+  if (!u || !u.loaded || u.stale !== true) return vm;
+  return Object.assign({}, vm, { usage: Object.assign({}, u, { weeklyPercent: null, fiveHourPercent: null }) });
+}
+
+// Under the band when the weekly share is unknown: the age, and where to enter a new reading (the form is in the band).
+function unknownNoteHtml(vm) {
+  if (weekKnown(vm.usage)) return "";
+  const age = oldText(vm.usage);
+  const text = age ? "Usage is " + age + ", so the weekly share is unknown." : "No usage reading yet.";
+  return '<p class="page-note">' + esc(text + " Enter usage below.") + "</p>";
+}
+
 export function sectionView(vm) {
   const state = pageState(vm);
   if (state) return state;
@@ -74,7 +89,8 @@ export function sectionView(vm) {
   const head = '<div class="page-head"><h2 class="page-title">' + esc(title) + "</h2>" +
     '<p class="page-note">' + esc(isProject ? "This project's limit and spend."
       : "Account-wide weekly stop and every project's spend.") + "</p></div>";
-  const usage = '<section class="ov-card" aria-label="Usage now">' + usageView(vm) + "</section>";
+  const usage = '<section class="ov-card" aria-label="Usage now">' + usageView(bandVm(vm)) + unknownNoteHtml(vm) +
+    "</section>";
   // The weekly stop and the share rows bring their own heading and copy button (limits.js).
   const stop = '<section class="ov-card" aria-label="Weekly stop">' + weeklyStopHtml(vm) + "</section>";
   const share = '<section class="ov-card" aria-label="Share per project">' + shareRowsHtml(vm) + "</section>";

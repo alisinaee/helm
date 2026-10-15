@@ -20,8 +20,8 @@ import time
 
 from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.log import get_logger
-from roadmap.services import budget, jobs, ledger, records
-from roadmap.store import atomic, config as config_store, lock, paths, schema
+from roadmap.services import budget, jobs, ledger, records, usage
+from roadmap.store import config as config_store, lock, schema
 
 SCOPES = ("global", "project")
 WINDOWS = ("day", "week", "total")
@@ -29,9 +29,8 @@ KINDS = ("pct", "tok", "acct")
 ACTIONS = ("block", "warn")
 WARN_PCT = 80.0
 BLOCK_PCT = 100.0
-USAGE_STALE_S = 1800
-USAGE_CLOCK_SKEW_S = 60     # a reading this much in the future is a clock problem, not a fresh reading
 LOG_EVERY_S = 60
+USAGE_CLOCK_SKEW_S = 60     # a reading this much in the future is a clock problem, not a fresh reading
 AUTO_ID = "AUTO"
 BUDGET_ID = "BUD"
 STORED_ID = re.compile(r"^L[0-9]+$")
@@ -181,30 +180,17 @@ def _autonomy_row(data_dir):
 
 
 def _usage_state(moment):
-    """(weekly percent or None, fresh). Fresh means the stored reading is at most USAGE_STALE_S old."""
+    """(weekly percent or None, fresh) from the usage view (usage.show): the same reading, the same reset rule and the
+    same staleness rule as the top bar. A stale reading or a passed weekly reset is unknown (None, not fresh)."""
     try:
-        data = atomic.read_json(paths.usage_file(), default=None)
+        shown = usage.show(now=moment)
     except RoadmapError:
         return None, False
-    if not isinstance(data, dict):
-        return None, False
-    weekly = data.get("weeklyPercent")
+    weekly = shown.get("weeklyPercent")
     if not _num(weekly):
         return None, False
-    age = _age(data.get("updated"), moment)
-    return float(weekly), age is not None and -USAGE_CLOCK_SKEW_S <= age <= USAGE_STALE_S
-
-
-def _age(text, moment):
-    if not isinstance(text, str):
-        return None
-    try:
-        stamp = datetime.datetime.fromisoformat(text)
-    except ValueError:
-        return None
-    if stamp.tzinfo is None:
-        stamp = stamp.astimezone()
-    return (moment - stamp).total_seconds()
+    ahead = _num(shown.get("ageS")) and shown["ageS"] < -USAGE_CLOCK_SKEW_S  # a reading from the future: a clock fault
+    return float(weekly), not shown.get("stale") and not ahead
 
 
 # ------------------------------------------------------------------ evaluation

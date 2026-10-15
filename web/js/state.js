@@ -20,8 +20,10 @@ export const VIEW_SECTIONS = {
 
 export const VIEW_DEFAULT_MODE = { home: "expanded", project: "minimal" };
 export const THEME_ORDER = ["auto", "dark", "light"];
-export const STALE_AFTER_S = 240;
-export const OLD_AFTER_S = 3600;
+// One freshness rule (R7.63): a usage reading older than 90 minutes (maxUsageAgeMin) is stale. The server sends
+// maxAgeS; these constants are only the fallback. Very old is twice stale.
+export const STALE_AFTER_S = 90 * 60;
+export const OLD_AFTER_S = 2 * STALE_AFTER_S;
 const PREFS_PREFIX = "roadmap-board.prefs.";
 
 export function createStore() {
@@ -422,6 +424,7 @@ export function normalizeUsage(raw, fetchedAt) {
     lastError: raw.lastError || null,
     syncError: raw.syncError || null,
     ageS: num(raw.ageS),
+    maxAgeS: num(raw.maxAgeS),
     fetchedAt: fetchedAt,
   };
 }
@@ -465,10 +468,11 @@ function usageView(u, sync, now) {
   if (!u) return base;
   const elapsed = (now - u.fetchedAt) / 1000;
   const ageNow = u.ageS == null ? null : u.ageS + elapsed;
+  const maxAge = u.maxAgeS > 0 ? u.maxAgeS : STALE_AFTER_S;
   return Object.assign(base, u, {
     ageNow: ageNow,
-    stale: ageNow == null || ageNow > STALE_AFTER_S,
-    veryOld: ageNow == null || ageNow > OLD_AFTER_S,
+    stale: ageNow == null || ageNow > maxAge,
+    veryOld: ageNow == null || ageNow > 2 * maxAge,
   });
 }
 

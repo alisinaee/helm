@@ -38,12 +38,35 @@ function stateKey(row) {
   return STATE_WORDS[row.state] ? row.state : "unknown";
 }
 
-// The global weekly stop row (a config row: scope global, kind pct, window week), or null when the stop is off.
+// The weekly stop row of one snapshot's meter rows: the global percent on the week, else the weekly stop of
+// autonomy.json (an acct row). Null when the stop is off. The top bar uses the same rule (weeklyStopRow).
+export function weeklyStopRow(rows) {
+  if (!Array.isArray(rows)) return null;
+  const global = rows.find(function (r) {
+    return r.scope === "global" && r.kind === "pct" && r.window === "week";
+  });
+  return global || rows.find(function (r) {
+    return r.kind === "acct";
+  }) || null;
+}
+
+// The weekly share is known only from a fresh reading whose weekly reset has not passed (the server sets the
+// percent to null then); a stale reading reads unknown here, the same as the limit row on the Tokens screen.
+export function weekKnown(usage) {
+  return Boolean(usage) && typeof usage.weeklyPercent === "number" && usage.stale !== true;
+}
+
+// The age of a stale reading in words: "31 h old", "12 min old". Empty when the age is not known.
+export function oldText(usage) {
+  if (!usage || typeof usage.ageNow !== "number") return "";
+  const s = Math.max(0, usage.ageNow);
+  if (s < 3600) return Math.max(1, Math.floor(s / 60)) + " min old";
+  return Math.round(s / 3600) + " h old";
+}
+
 function weeklyRow(vm) {
   for (const snap of snapsOf(vm)) {
-    const hit = metersOf(snap).find(function (r) {
-      return r.scope === "global" && r.kind === "pct" && r.window === "week";
-    });
+    const hit = weeklyStopRow(metersOf(snap));
     if (hit) return hit;
   }
   return null;

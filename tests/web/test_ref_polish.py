@@ -96,7 +96,9 @@ class TokensRefTests(unittest.TestCase):
 
     def test_all_projects_refs_do_not_use_the_first_project(self):
         text = read(VIEWS, "tokens.js")
-        self.assertIn("const refPid = isProject ? pid : null;", text)
+        # The reference project is the route's project only when the route is a project (never the first one).
+        self.assertRegex(text, r"const refPid = pid;")
+        self.assertRegex(text, r"const pid = isProject \? vm\.route\.id : null;")
         self.assertNotIn('{ project: pid, sum: refSummary("section", spendCount) }', text)
         self.assertIn('{ project: refPid, sum: refSummary("section", snaps.length) }', text)
 
