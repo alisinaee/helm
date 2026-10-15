@@ -129,11 +129,11 @@ class DbTests(unittest.TestCase):
             "c.execute('COMMIT')\n"
             "c.close()\n"
         ) % (REPO, self.path)
+        mine = db.connect(self.path, busy_timeout_ms=50)  # before the child can hold the write lock
         child = subprocess.Popen([sys.executable, "-c", child_code], stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE, text=True)
         try:
             self.assertEqual(child.stdout.readline().strip(), "locked")
-            mine = db.connect(self.path, busy_timeout_ms=50)
             try:
                 def write_once():
                     with db.txn(mine):

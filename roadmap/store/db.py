@@ -2,16 +2,18 @@
 
 open_project(data_dir) is the single entry point. Tables: meta, phases, tasks, jobs, asks (head entries),
 events (append-only; rev is the integer generation). Schema version lives in PRAGMA user_version.
+v4: work_items (human Work items); tasks gains work_id (agent tasks), and agent_tasks is a view over tasks.
 """
 
 import contextlib
 import hashlib
 import json
 import os
+import re
 import sqlite3
 import time
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 BUSY_TIMEOUT_MS = 5000
 DB_FILE = "roadmap.db"  # the one store file per project, in the data dir (docs/roadmap.db, gitignored)
 
@@ -52,9 +54,28 @@ MIGRATIONS = {
         " acquired REAL NOT NULL, expires REAL NOT NULL)",
         "CREATE INDEX IF NOT EXISTS leases_job ON leases(job_id)",
     ],
+    4: [
+        "CREATE TABLE IF NOT EXISTS work_items ("
+        " id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('task', 'issue')),"
+        " title TEXT NOT NULL, outcome TEXT NOT NULL DEFAULT '',"
+        " status TEXT NOT NULL CHECK (status IN ('Backlog', 'Todo', 'Doing', 'Review', 'Done', 'Won''t do')),"
+        " prio INTEGER NOT NULL DEFAULT 2 CHECK (prio BETWEEN 0 AND 3),"
+        " owner TEXT NOT NULL DEFAULT 'you', phase TEXT,"
+        " created TEXT NOT NULL, updated TEXT NOT NULL, accepted_at TEXT,"
+        " reopened INTEGER NOT NULL DEFAULT 0, data TEXT NOT NULL DEFAULT '{}')",
+        "CREATE INDEX IF NOT EXISTS work_items_status ON work_items(status)",
+        # Agent tasks keep their R7.x ids in the tasks table. work_id is required by the code path
+        # (work_db / tasks_db refuse a row without it); NULL is allowed in SQL until the JSON import is mapped.
+        "ALTER TABLE tasks ADD COLUMN work_id TEXT REFERENCES work_items(id)",
+        "CREATE INDEX IF NOT EXISTS tasks_work ON tasks(work_id)",
+        "CREATE VIEW IF NOT EXISTS agent_tasks AS"
+        " SELECT id, phase, title, status, data, work_id FROM tasks",
+    ],
 }
 
-TABLES = ("meta", "phases", "tasks", "jobs", "asks", "events")
+TABLES = ("meta", "phases", "tasks", "jobs", "asks", "events", "work_items")
+
+_ADD_COLUMN = re.compile(r"ALTER TABLE (\w+) ADD COLUMN (\w+)")
 
 
 def is_locked_error(exc):
@@ -122,8 +143,16 @@ def ensure_schema(conn):
             raise RuntimeError("database schema %d is newer than this code (%d)" % (current, SCHEMA_VERSION))
         for version in range(current + 1, SCHEMA_VERSION + 1):
             for stmt in MIGRATIONS[version]:
-                conn.execute(stmt)
+                _apply(conn, stmt)
             conn.execute("PRAGMA user_version = %d" % version)
+
+
+def _apply(conn, stmt):
+    """Run one migration statement. ADD COLUMN is skipped when the column already exists, so a re-run is a no-op."""
+    m = _ADD_COLUMN.match(stmt)
+    if m and any(row[1] == m.group(2) for row in conn.execute("PRAGMA table_info(%s)" % m.group(1))):
+        return
+    conn.execute(stmt)
 
 
 def table_checksums(conn):
