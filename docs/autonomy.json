@@ -9,11 +9,11 @@
     "fiveHourStopAtPercent": 80
   },
   "usage": {
-    "weeklyPercent": 89,
-    "fiveHourPercent": 36,
+    "weeklyPercent": 92,
+    "fiveHourPercent": 60,
     "weeklyResetsAt": "2026-10-19T06:00:00Z",
     "fiveHourResetsAt": "2026-10-15T21:40:00Z",
-    "updated": "2026-10-15T21:08:40+03:30",
+    "updated": "2026-10-15T22:00:31+03:30",
     "source": "manual push"
   }
 }
