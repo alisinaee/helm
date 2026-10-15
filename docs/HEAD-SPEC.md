@@ -233,3 +233,9 @@ Head now  Opus 5.5 · acct B · since 09:02 (3h) · 5h 41% · week 63%      prev
 3. Who confirms done? I recommend the head confirms done and only you accept, as with features.
 4. If head.css cannot fit in 1.2 KB, should we raise the CSS cap from 72 KB to 74 KB? I recommend reclaiming first;
    raise the cap only if needed.
+
+## 10. Decisions taken (the person, 2026-10-15) - these override sections above
+- Full ask text is NOT local-only: it ships with the project, in its own committed file/section (docs/head-text.jsonl is committed, not git-ignored; H3 must not add it to .gitignore). Redaction still runs before write (repo is public); keep secrets out.
+- Capture every typed message automatically (headCapture on).
+- The head may mark an ask done; the GUI gets a Review button so the person can confirm or reopen. Only the person accepts.
+- CSS cap: raise if needed, as little as possible (head.css first, tidy others).
