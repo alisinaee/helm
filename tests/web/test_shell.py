@@ -182,9 +182,11 @@ class ShellRenderTests(unittest.TestCase):
     def test_meters_show_unknown_without_rows_and_values_with_rows(self):
         self.assertIn("unknown", self.out["topbarStopped"])
         meters = self.out["topbarMeters"]
-        self.assertIn("62/60%", meters)
-        self.assertIn("4.1/10%", meters)
-        self.assertIn("is-unknown", self.out["topbarStopped"])
+        # The top bar is one weekly line: the stop from the meter rows; no reading in the fixture means unknown.
+        self.assertIn("stop 60%", meters)
+        self.assertIn("Week unknown", meters)
+        self.assertNotIn("62/60%", meters)
+        self.assertIn("Week unknown · stop unknown", self.out["topbarStopped"])
 
 
 if __name__ == "__main__":

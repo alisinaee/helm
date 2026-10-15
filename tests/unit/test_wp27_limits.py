@@ -203,7 +203,7 @@ class LimitMatrixTests(ControlCase):
         self.assertEqual(self.rows()[row]["state"], "block")
 
     def test_stale_usage_makes_pct_and_acct_unknown_but_tok_still_enforces(self):
-        self.reading(105, minutes_before_now=45)  # older than 30 minutes
+        self.reading(105, minutes_before_now=120)  # older than 90 minutes
         pct = self.set_row("global", "day", "pct", 10)
         tok = self.set_row("project", "day", "tok", 20)
         ledger.record_spend("demo", 25, now=at(13, 30))
@@ -214,7 +214,7 @@ class LimitMatrixTests(ControlCase):
         self.assertEqual(limits.evaluate(self.project, now=self.now)["state"], "block")
 
     def test_stale_usage_alone_is_unknown_and_never_blocks(self):
-        self.reading(105, minutes_before_now=45)
+        self.reading(105, minutes_before_now=120)
         self.assertEqual(self.rows()["AUTO"]["state"], "unknown")
         self.assertEqual(limits.evaluate(self.project, now=self.now)["state"], "unknown")
         self.assertIsNone(control.recompute("demo", now=self.now)["block"])
@@ -319,7 +319,7 @@ class FanOutAndHookTests(ControlCase):
         self.reading(45, minutes_before_now=1)
         control.set_limit_row("demo", "global", "day", "pct", 2, now=self.now)
         self.assertIsNotNone(self.gate(self.now))
-        self.reading(45, minutes_before_now=60)  # the reading is an hour old now
+        self.reading(45, minutes_before_now=120)  # the reading is two hours old now
         control.recompute_all(self.now)
         self.assertFalse(os.path.exists(os.path.join(self.state_dir, "block-demo")))
         self.assertIsNone(self.gate(self.now))

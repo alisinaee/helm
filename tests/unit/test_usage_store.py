@@ -22,6 +22,12 @@ from tests.unit.test_store_support import HomeCase, mode_of
 from tests.unit.test_usage_collector import FAKE_TOKEN, GOOD_REPLY
 
 
+def fresh_reply():
+    """GOOD_REPLY with the 5-hour reset three hours ahead of now (a passed reset has no current percent)."""
+    later = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=3)).isoformat(timespec="seconds")
+    return dict(GOOD_REPLY, five_hour=dict(GOOD_REPLY["five_hour"], resets_at=later))
+
+
 def read_text(path):
     with open(path, encoding="utf-8") as fh:
         return fh.read()
@@ -59,7 +65,7 @@ class UsageCase(HomeCase):
 
     def _fake_fetch(self, token):
         self.fetches.append(token)
-        return GOOD_REPLY
+        return fresh_reply()
 
     def config_with(self, projects=(), mirror=True, interval=120):
         cfg = config_store.default_config()
@@ -118,7 +124,7 @@ class StoreTests(UsageCase):
         uc.sync_once(self.config_with())
         self.assertIsNone(uc.show(self.config_with())["lastError"])
 
-    def test_stale_flag_from_age_against_twice_the_interval(self):
+    def test_stale_flag_from_age_against_the_ninety_minute_limit(self):
         now = datetime.datetime.now(datetime.timezone.utc)
 
         def stamp(seconds_ago):
@@ -128,10 +134,10 @@ class StoreTests(UsageCase):
         fresh = uc.show(self.config_with(interval=120), now=now)
         self.assertIs(fresh["stale"], False)
         self.assertEqual(fresh["ageS"], 100)
+        self.assertEqual(fresh["maxAgeS"], 90 * 60)
 
-        uc._update_store({"updated": stamp(300)})
+        uc._update_store({"updated": stamp(91 * 60)})
         self.assertIs(uc.show(self.config_with(interval=120), now=now)["stale"], True)
-        self.assertIs(uc.show(self.config_with(interval=600), now=now)["stale"], False)
 
     def test_newer_store_file_is_refused_and_untouched(self):
         os.makedirs(paths.state_dir(), exist_ok=True)

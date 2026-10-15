@@ -18,7 +18,7 @@ from roadmap.errors import EXIT_INVALID_DATA, EXIT_USAGE, RoadmapError
 from roadmap.log import get_logger
 from roadmap.services import ledger
 from roadmap.store import config as config_store
-from roadmap.store import lock, paths, schema
+from roadmap.store import atomic, lock, paths, schema
 
 KEYCHAIN_SERVICE = "Claude Code-credentials"
 KEYCHAIN_TIMEOUT_S = 10
@@ -35,7 +35,8 @@ DEFAULT_INTERVAL_S = 120
 MIN_INTERVAL_S = 30
 BACKOFF_S = 600
 BACKOFF_AFTER_FAILS = 3
-STALE_FACTOR = 2
+MAX_USAGE_AGE_MIN = 90            # one freshness rule everywhere: a reading older than this is stale
+MAX_USAGE_AGE_KEY = "maxUsageAgeMin"  # docs/autonomy.json key that overrides it (minutes)
 KEYCHAIN_BACKOFF_S = 6 * 3600     # after a keychain failure the background loop skips the keychain this long
 MANUAL_KEYCHAIN_GAP_S = 60        # a manual sync may retry a failed keychain read at most this often
 MIRROR_FIELDS = ("weeklyPercent", "fiveHourPercent", "weeklyResetsAt", "fiveHourResetsAt", "updated", "source")
@@ -216,6 +217,22 @@ def _usage_setting(cfg, key, default):
     return block[key]
 
 
+def max_age_s(cfg):
+    """The freshness limit of a usage reading, in seconds. The first registered project whose docs/autonomy.json sets
+    maxUsageAgeMin (a positive number of minutes) wins; otherwise MAX_USAGE_AGE_MIN (90 minutes)."""
+    for project in (cfg.get("projects") or []) if isinstance(cfg, dict) else []:
+        path = os.path.join(project.get("path", ""), project.get("dataDir", config_store.DEFAULT_DATA_DIR),
+                            "autonomy.json")
+        try:
+            data = atomic.read_json(path, default=None) if os.path.isfile(path) else None
+        except Exception:  # an unreadable project file never changes the limit; the next project or the default wins
+            continue
+        value = data.get(MAX_USAGE_AGE_KEY) if isinstance(data, dict) else None
+        if isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0:
+            return int(value * 60)
+    return MAX_USAGE_AGE_MIN * 60
+
+
 def _interval(cfg):
     value = _usage_setting(cfg, "intervalS", DEFAULT_INTERVAL_S)
     if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -271,14 +288,30 @@ def _age_s(updated, now):
     return None if moment is None else (now - moment).total_seconds()
 
 
-def view(record, interval_s=DEFAULT_INTERVAL_S, now=None):
-    """The public usage view. stale is true when the last good reading is older than 2x the interval
-    (or there has never been one). now is an aware datetime and defaults to the current time."""
+REASON_RESET_PASSED = "reset passed"
+
+
+def _passed(text, now):
+    """True when a resets-at time is at or before now: the window it names has already reset."""
+    moment = _moment(text)
+    return moment is not None and moment <= now
+
+
+def view(record, max_age=MAX_USAGE_AGE_MIN * 60, now=None):
+    """The public usage view. stale is true when the last good reading is older than max_age seconds
+    (or there has never been one). A window whose resets-at time has passed has no current percent: it reads
+    null with the reason "reset passed" (the stored number is old). now is an aware datetime and defaults to now."""
     now = now or datetime.now(timezone.utc)
     out = {key: record.get(key) for key in VIEW_FIELDS}
     age = _age_s(record.get("updated"), now)
     out["ageS"] = None if age is None else int(age)
-    out["stale"] = age is None or age > STALE_FACTOR * interval_s
+    out["stale"] = age is None or age > max_age
+    out["maxAgeS"] = max_age
+    for prefix, reset_key in (("fiveHour", "fiveHourResetsAt"), ("weekly", "weeklyResetsAt")):
+        passed = _passed(record.get(reset_key), now)
+        out[prefix + "Reason"] = REASON_RESET_PASSED if passed else None
+        if passed:
+            out[prefix + "Percent"] = None
     return out
 
 
@@ -330,7 +363,7 @@ def _record_ledger(changes, stored):
 
 
 def _result(stored, cfg, mirrors):
-    return {"usage": view(stored, _interval(cfg)), "mirrors": mirrors}
+    return {"usage": view(stored, max_age_s(cfg)), "mirrors": mirrors}
 
 
 def _in_future(text, now):
@@ -377,7 +410,7 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
 def show(config=None, now=None):
     """The stored usage with stale and ageS computed now."""
     cfg = _config(config)
-    return view(_load_store(), _interval(cfg), now)
+    return view(_load_store(), max_age_s(cfg), now)
 
 
 def stored_record():

@@ -7,8 +7,10 @@ import { esc } from "../dom.js";
 import { fmtPercent } from "../format.js";
 import { mark, status as logStatus } from "../log.js";
 import { SECTIONS, SETTINGS, sectionById } from "../routes.js";
+import { sectionHash } from "../router.js";
 import { panelIsOpen } from "../state.js";
 import { showToast } from "./toast.js";
+import { oldText, weekKnown, weeklyStopRow } from "./limits.js";
 
 const THEME_LABEL = { auto: "Auto", dark: "Dark", light: "Light" };
 const MARK_LABEL = "I am seeing a bug here";
@@ -82,25 +84,31 @@ function controlHtml(vm) {
     esc(c.id) + '" data-focus="control"' + offline + ">Stop</button>";
 }
 
-// The weekly stop: the global pct row on the week. Null rows mean meters are unknown; no row means the stop is off.
+// The weekly stop from the meter rows (the same row the Tokens screen edits): "stop 95%", "stop off", or unknown
+// when the snapshot has no meters at all.
 function stopText(rows) {
   if (rows === null) return "stop unknown";
-  const row = rows.find(function (r) {
-    return r.scope === "global" && r.kind === "pct" && r.window === "week";
-  });
+  const row = weeklyStopRow(rows);
   return row ? "stop " + fmtPercent(row.limit) : "stop off";
 }
 
 // "Week 63% · stop 95%": the weekly share (snap.usage) and the weekly stop. Pure, so the render test can check it.
+// A stale or missing reading reads "Week unknown", and the age is added: "Week unknown · stop 85% · 31 h old".
 export function meterText(usage, rows) {
-  const known = usage && typeof usage.weeklyPercent === "number";
-  const week = known ? "Week " + fmtPercent(usage.weeklyPercent) : "Week unknown";
-  return week + " · " + stopText(rows);
+  const week = weekKnown(usage) ? "Week " + fmtPercent(usage.weeklyPercent) : "Week unknown";
+  const age = usage && usage.stale === true ? oldText(usage) : "";
+  return week + " · " + stopText(rows) + (age ? " · " + age : "");
+}
+
+// The one action when the weekly share is unknown: open the Tokens screen, where the usage entry form is.
+function enterHtml(vm) {
+  return '<a class="btn top-enter" href="' + esc(sectionHash(vm.route, "tokens")) + '" data-focus="enter-usage">' +
+    "Enter usage</a>";
 }
 
 function metersHtml(vm) {
   return '<span class="top-meters" title="Weekly usage and the weekly stop">' +
-    esc(meterText(vm.usage, vm.meterRows)) + "</span>";
+    esc(meterText(vm.usage, vm.meterRows)) + "</span>" + (weekKnown(vm.usage) ? "" : enterHtml(vm));
 }
 
 function connHtml(conn) {

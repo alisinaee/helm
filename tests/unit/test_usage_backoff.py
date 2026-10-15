@@ -16,6 +16,13 @@ from roadmap.services import commands, usage as uc
 from roadmap.store import paths
 from tests.unit.test_cmd_support import CmdCase
 from tests.unit.test_usage_collector import FAKE_TOKEN, GOOD_REPLY
+
+
+def fresh_reply():
+    """GOOD_REPLY with the 5-hour reset three hours ahead of now (a passed reset has no current percent)."""
+    later = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=3)
+    later = later.isoformat(timespec="seconds")
+    return dict(GOOD_REPLY, five_hour=dict(GOOD_REPLY["five_hour"], resets_at=later))
 from tests.unit.test_usage_store import UsageCase
 
 T0 = datetime.datetime(2026, 10, 15, 9, 0, 0, tzinfo=datetime.timezone.utc)
@@ -156,7 +163,7 @@ class UsageSetTests(CmdCase):
     def setUp(self):
         super().setUp()
         self.keychain = mock.Mock(return_value=FAKE_TOKEN)
-        self.fetch = mock.Mock(return_value=GOOD_REPLY)
+        self.fetch = mock.Mock(return_value=fresh_reply())
         for patcher in (mock.patch.object(uc, "read_keychain_token", self.keychain),
                         mock.patch.object(uc, "http_fetch", self.fetch)):
             patcher.start()
