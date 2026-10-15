@@ -21,7 +21,8 @@ QUESTION_STATUSES = ("open", "answered", "defaulted")
 TITLE_MAX = 120
 NOTE_MAX = 300
 Q_TEXT_MAX = 200
-OPTS_MAX = 5
+OPTS_MAX = 6
+OPT_TEXT_MAX = 260
 COMMENT_MAX = 280
 ACTIVITY_SUM_MAX = 60
 FEAT_ID_RE = re.compile(r"^F[1-9][0-9]?$")   # planner feature ids F1..F99
@@ -288,7 +289,7 @@ def _norm_question(d):
         "id": _need(d.get("id"), "id"),
         "task": str(d.get("task") or ""),
         "text": _text(d.get("text"), Q_TEXT_MAX) or "",
-        "opts": [_text(o, 60) for o in opts[:OPTS_MAX] if _text(o, 60)],
+        "opts": [_text(o, OPT_TEXT_MAX) for o in opts[:OPTS_MAX] if _text(o, OPT_TEXT_MAX)],
         "def": _text(d.get("def"), 60),
         "block": d.get("block") is True,
         "timeoutS": timeout,

@@ -1,7 +1,9 @@
-// Inbox (WP30): the open questions as cards, one button per option (the default is highlighted), a countdown when the
-// question has a timeout, and the task it belongs to. Needs-you tasks sit below. Across projects the cards are grouped
-// by project. An answer goes through cmd.js run() (op question.answer); the card collapses until the next snapshot.
-// Keys: "a", then 1 to 4, answers the focused question (or the first open one) on the Inbox and Overview pages.
+// Inbox (WP30): the open questions as cards: a vertical list of option buttons (label and description, the
+// recommended one first, the default highlighted), an "Other…" text box, a countdown when the question has a timeout,
+// and the task it belongs to. Needs-you tasks sit below. Across projects the cards are grouped by project. An answer
+// goes through cmd.js run() (op question.answer); the card collapses until the next snapshot.
+// Keys: 1 to 6 answer the focused question's option in that position (or the first open card) on the Inbox and
+// Overview pages.
 // The helpers pageState, collect and inboxPreviewHtml are shared with overview.js and activity.js.
 
 import { bannerHtml, chipHtml, emptyHtml, esc, skeletonHtml } from "../dom.js";
@@ -11,11 +13,20 @@ import { bindKey } from "../keys.js";
 import { pendingValue, run } from "../cmd.js";
 import { currentRoute, projectHash } from "../router.js";
 
-const ARM_MS = 2000;
-const KEY_MAX = 4;
+const KEY_MAX = 6;
+const REC_SUFFIX = " (recommended)";
 const TIME_UP = "Time expired; applying default choice.";
-let armedUntil = 0;
 let counting = false;
+
+// A stored option is "Label", "Label: description" or "Label (recommended): description" (services/questions.py).
+export function optionParts(stored) {
+  const text = String(stored || "");
+  const cut = text.indexOf(": ");
+  let label = (cut < 0 ? text : text.slice(0, cut)).trim();
+  const recommended = label.endsWith(REC_SUFFIX);
+  if (recommended) label = label.slice(0, -REC_SUFFIX.length).trim();
+  return { label: label, desc: cut < 0 ? "" : text.slice(cut + 2).trim(), recommended: recommended };
+}
 
 export function questionKey(pid, qid) {
   return "question:" + pid + ":" + qid;
@@ -125,14 +136,38 @@ export function watchCountdowns() {
   }
 }
 
-function optionHtml(pid, q, opt, index) {
-  const isDefault = opt === q.def;
+// One option button: its key (1 to 6), label, description, and badges. The recommended option is listed first.
+function optionHtml(pid, q, part, index) {
+  const isDefault = part.label === q.def;
   const key = index < KEY_MAX ? '<span class="qc-key" aria-hidden="true">' + (index + 1) + "</span> " : "";
+  const desc = part.desc ? ' <span class="qc-foot">' + esc(part.desc) + "</span>" : "";
+  const rec = part.recommended ? ' <span class="qc-def">recommended</span>' : "";
+  const dflt = isDefault ? ' <span class="qc-def">default</span>' : "";
   return '<button type="button" class="btn qc-opt' + (isDefault ? " btn-primary is-default" : "") +
     '" data-action="inbox-answer" data-project="' + esc(pid) + '" data-qid="' + esc(q.id) +
-    '" data-value="' + esc(opt) + '" aria-label="' + esc("Choose " + opt + " for " + q.id) +
+    '" data-value="' + esc(part.label) + '" aria-label="' + esc("Choose " + part.label + " for " + q.id) +
     '" data-focus="ans-' + esc(pid) + "-" + esc(q.id) + "-" + index + '">' +
-    key + esc(opt) + (isDefault ? ' <span class="qc-def">default</span>' : "") + "</button>";
+    key + esc(part.label) + rec + dflt + desc + "</button>";
+}
+
+// The options as a vertical list (one button per row), then the free-text box that every question has.
+function answerHtml(pid, q) {
+  const parts = q.opts.map(optionParts);
+  const order = parts.map(function (p, i) {
+    return i;
+  }).sort(function (a, b) {
+    return (parts[b].recommended ? 1 : 0) - (parts[a].recommended ? 1 : 0) || a - b;
+  });
+  const buttons = order.map(function (i, n) {
+    return optionHtml(pid, q, parts[i], n);
+  }).join("");
+  const list = buttons
+    ? '<div class="nz-list" role="group" aria-label="' + esc("Answers for " + q.id) + '">' + buttons + "</div>"
+    : "";
+  return list + '<form class="nz-row" data-form="inbox-question-answer" data-project="' + esc(pid) +
+    '" data-qid="' + esc(q.id) + '" aria-label="' + esc("Other answer for " + q.id) + '">' +
+    '<label><span class="qc-id">Other…</span> <input name="value" required placeholder="Type an answer"></label> ' +
+    '<button type="submit" class="btn">Send</button></form>';
 }
 
 // One question card. A card answered in this page shows one line until the next snapshot drops it.
@@ -148,12 +183,7 @@ export function questionCardHtml(entry, now, showProject) {
     esc("View task " + q.task) + '">' + esc(q.task) + "</a>" : "";
   const blocks = q.block ? chipHtml("Blocks work", "warning") : "";
   const copy = copyButton("question", q.id, q.id + " " + q.text, { project: pid, sum: refSummary("question", q) });
-  const options = q.opts.length
-    ? '<div class="qc-opts row-grid" role="group" aria-label="Answers for ' + esc(q.id) + '">' +
-      q.opts.map(function (opt, i) {
-        return optionHtml(pid, q, opt, i);
-      }).join("") + "</div>"
-    : '<p class="qc-foot">No options. Answer in terminal.</p>';
+  const options = answerHtml(pid, Object.assign({}, q, { opts: Array.isArray(q.opts) ? q.opts : [] }));
   let timer = "";
   if (q.askedMs != null && q.timeoutS != null) {
     const deadline = q.askedMs + q.timeoutS * 1000;
@@ -274,6 +304,10 @@ function focusedCard() {
 // status and note writes), with no status change, so the head still decides what the ask becomes.
 function onAskSubmit(event) {
   const form = event.target;
+  if (form && form.getAttribute && form.getAttribute("data-form") === "inbox-question-answer") {
+    onQuestionTextSubmit(event, form);
+    return;
+  }
   if (!form || !form.getAttribute || form.getAttribute("data-form") !== "inbox-head-ask") return;
   event.preventDefault();
   const pid = form.getAttribute("data-project");
@@ -291,21 +325,33 @@ function onAskSubmit(event) {
 
 if (typeof document !== "undefined") document.addEventListener("submit", onAskSubmit);
 
+// The "Other…" box of a question card: free text goes through the same question.answer op as an option button.
+function onQuestionTextSubmit(event, form) {
+  event.preventDefault();
+  const pid = form.getAttribute("data-project");
+  const qid = form.getAttribute("data-qid");
+  const field = form.elements.namedItem("value");
+  const value = field ? String(field.value || "").trim() : "";
+  if (!value) return;
+  sendAnswer(pid, qid, value);
+}
+
 function onAnswerPage() {
   const section = currentRoute().section;
   return section === "inbox" || section === "overview";
 }
 
-function answerButton(el) {
-  const pid = el.getAttribute("data-project");
-  const qid = el.getAttribute("data-qid");
-  const value = el.getAttribute("data-value");
+function sendAnswer(pid, qid, value) {
   run("question.answer", { id: qid, value: value }, {
     project: pid,
     key: questionKey(pid, qid),
     value: value,
     label: qid + " answered: " + value,
   });
+}
+
+function answerButton(el) {
+  sendAnswer(el.getAttribute("data-project"), el.getAttribute("data-qid"), el.getAttribute("data-value"));
 }
 
 // Click entry point for the page's buttons (app.js sends these data-action values here): an answer, an Undo on an
@@ -325,25 +371,17 @@ export function pageAction(action, el) {
   }
 }
 
-function onArm() {
-  if (onAnswerPage()) armedUntil = Date.now() + ARM_MS;
-}
-
+// The keys 1 to 6 answer the focused card's option in that position (the list order, recommended first).
 function onDigit(index) {
   return function () {
-    if (Date.now() > armedUntil || !onAnswerPage()) return;
-    armedUntil = 0;
+    if (!onAnswerPage()) return;
     const card = focusedCard();
     const button = card ? card.querySelectorAll(".qc-opt")[index] : null;
     if (button) answerButton(button);
   };
 }
 
-bindKey("a", onArm);
-bindKey("1", onDigit(0));
-bindKey("2", onDigit(1));
-bindKey("3", onDigit(2));
-bindKey("4", onDigit(3));
+for (let n = 1; n <= KEY_MAX; n++) bindKey(String(n), onDigit(n - 1));
 
 export function sectionView(vm) {
   const state = pageState(vm);

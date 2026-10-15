@@ -21,12 +21,10 @@ class AskRoundTripTests(CmdCase):
         self.assertEqual(body["data"]["question"]["task"], "P1.1")
         self.assertTrue(body["data"]["question"]["block"])
 
-    def test_answer_outside_the_options_is_refused_with_next(self):
+    def test_free_text_outside_the_options_is_accepted(self):
         self.cli(["ask", "ok?", "--opt", "yes", "--opt", "no"])
-        code, _, err = self.cli(["answer", "Q1", "maybe"])
-        self.assertEqual(code, 2)
-        self.assertIn("answer must be one of yes|no", err)
-        self.assertIn("next:", err)
+        code, out, err = self.cli(["answer", "Q1", "maybe"])
+        self.assertEqual((code, out.strip()), (0, "Q1 answered maybe"), err)
 
     def test_answering_twice_is_a_conflict_with_next(self):
         self.cli(["ask", "ok?", "--opt", "yes", "--opt", "no"])

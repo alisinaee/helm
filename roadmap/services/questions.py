@@ -3,7 +3,7 @@ beyond the newest 50 move to questions-archive.jsonl. Writes run under the direc
 
 import datetime
 
-from roadmap.core.parsers import OPTS_MAX, Q_TEXT_MAX, QUESTION_STATUSES
+from roadmap.core.parsers import Q_TEXT_MAX, QUESTION_STATUSES
 from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import notify, records
 from roadmap.store import jsonl, lock
@@ -13,20 +13,63 @@ ARCHIVE = "questions-archive.jsonl"
 OPEN_CAP = 50
 ANSWERED_KEEP = 50
 OPT_MAX = 60
+OPT_TEXT_MAX = 260
+OPTS_MIN = 2
+OPTS_LIMIT = 6
+REC_SUFFIX = " (recommended)"
+
+
+def parse_option(text):
+    """'Label: description' (optionally 'Label (recommended): description') -> (label, description, recommended).
+    The label is at most OPT_MAX characters; the description is optional."""
+    raw = " ".join(str(text or "").split())
+    head, _, desc = raw.partition(": ")
+    label = head.strip()
+    recommended = label.endswith(REC_SUFFIX)
+    if recommended:
+        label = label[:-len(REC_SUFFIX)].rstrip()
+    if not label:
+        raise RoadmapError("usage", "an option needs a label before the colon", EXIT_USAGE)
+    if len(label) > OPT_MAX:
+        raise RoadmapError("usage", "option label is " + str(len(label)) + " characters; the limit is " + str(OPT_MAX),
+                           EXIT_USAGE)
+    return label, desc.strip(), recommended
+
+
+def option_label(stored):
+    """The label of a stored option string, without validation (the answer value and the default are labels)."""
+    label = " ".join(str(stored or "").split()).partition(": ")[0].strip()
+    return label[:-len(REC_SUFFIX)].rstrip() if label.endswith(REC_SUFFIX) else label
+
+
+def _canonical_options(opts):
+    """Validate the options (none, or 2 to 6) and return them as stored strings, recommended first marked."""
+    items = [records.text_field(o, "option", OPT_TEXT_MAX) for o in (opts or ())]
+    if not items:
+        return []
+    if len(items) < OPTS_MIN or len(items) > OPTS_LIMIT:
+        raise RoadmapError("usage", "a question has " + str(OPTS_MIN) + " to " + str(OPTS_LIMIT)
+                           + " options, or none", EXIT_USAGE)
+    parsed = [parse_option(o) for o in items]
+    if len({p[0] for p in parsed}) != len(parsed):
+        raise RoadmapError("usage", "option labels must be different", EXIT_USAGE)
+    if sum(1 for p in parsed if p[2]) > 1:
+        raise RoadmapError("usage", "only one option can be recommended", EXIT_USAGE)
+    return [p[0] + (REC_SUFFIX if p[2] else "") + (": " + p[1] if p[1] else "") for p in parsed]
 
 
 def ask(data_dir, task, text, opts=(), default=None, block=False, timeout_s=None, now=None):
-    """Record a question for the user and return it. The default must be one of opts when opts are given."""
+    """Record a question for the user and return it. Options are 2 to 6 'Label: description' strings (or none); every
+    question also takes a free-text answer. The default must be one of the option labels when options are given."""
     records.require_dir(data_dir)
     clean_text = records.text_field(text, "question text", Q_TEXT_MAX)
-    options = [records.text_field(o, "option", OPT_MAX) for o in (opts or ())]
-    if len(options) > OPTS_MAX:
-        raise RoadmapError("usage", "a question has at most " + str(OPTS_MAX) + " options", EXIT_USAGE)
+    options = _canonical_options(opts)
+    labels = [option_label(o) for o in options]
     clean_default = None
     if default is not None and str(default).strip():
         clean_default = records.text_field(default, "default", OPT_MAX)
-        if options and clean_default not in options:
-            raise RoadmapError("usage", "the default must be one of the options (allowed: " + "|".join(options) + ")",
+        if options and clean_default not in labels:
+            raise RoadmapError("usage", "the default must be one of the options (allowed: " + "|".join(labels) + ")",
                                EXIT_USAGE)
     if timeout_s is not None and (isinstance(timeout_s, bool) or not isinstance(timeout_s, int) or timeout_s < 0):
         raise RoadmapError("usage", "timeout must be a whole number of seconds, 0 or more", EXIT_USAGE)
@@ -49,7 +92,8 @@ def ask(data_dir, task, text, opts=(), default=None, block=False, timeout_s=None
 
 
 def answer(data_dir, question_id, value, now=None):
-    """Answer an open question. With options, the value must be one of them. Returns the question."""
+    """Answer an open question. A value equal to an option label is stored as that label; any other text is a
+    free-text answer, which every question accepts. Returns the question."""
     records.require_dir(data_dir)
     with lock.locked(data_dir):
         doc = records.load("questions", data_dir, FILE, "questions")
@@ -57,8 +101,6 @@ def answer(data_dir, question_id, value, now=None):
         if question.get("status") != "open":
             raise records.conflict(question_id + " is already " + str(question.get("status")) + "; not changed")
         clean = records.text_field(value, "answer", Q_TEXT_MAX)
-        if question.get("opts") and clean not in question["opts"]:
-            raise RoadmapError("usage", "answer must be one of " + "|".join(question["opts"]), EXIT_USAGE)
         question.update(status="answered", answer=clean, answered=records.now_iso(now))
         moved = _archive_answered(data_dir, doc)
         records.save("questions", data_dir, FILE, doc)
