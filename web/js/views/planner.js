@@ -1,38 +1,51 @@
-// Planner v2 (R7.13 H5): the plan tree. Every row, the header included, sits in one fixed 12-column grid (see
-// planner.css): toggle, outline label, F id, title with its acceptance line, phase, bar, done/total, gaps, state, Acc,
-// the ⋯ menu and the copy button. Indent lives inside the title cell only, so the columns never move.
-// Items come from the snapshot features rows (id, parent, label, ask, gaps, acc, done, total, state, accepted); the
-// tasks of an item come from each task's feats. Only the person accepts. The pickers (Assign, Link tasks) are small
-// in-flow popovers of buttons, never a native select. Writes go through cmd.js run(): feature.add, set, move, link,
-// unlink, accept, rm. bind(el) attaches the listeners once; sectionView(vm) draws the markup.
+// Planner (R7.109): the plan on the Head screen's layout and classes (.hd-* in head.css). A filter bar (All, Doing,
+// Todo, Done, Waiting for your OK, Uncovered), a count line, and one table row per plan item on the Head table grid:
+// ID (the stretched toggle), title with its indent and outline label, phase, state chip, done/total, the Accept button
+// in a fixed column (done and not yet accepted), and the copy button. An open item shows its linked tasks as compact
+// rows with status chips, then its actions (link, add sub plan, rename, acceptance, asked, move, hold, remove). Each
+// item is one tbody keyed by its id: it is replaced only when its markup changes (dom.js parseOne and swapNode), so a
+// refresh keeps the scroll and the focus. Data: snap.features (rows, orphans) and snap.tasks. Writes go through cmd.js
+// run(): feature.add, set, move, link, unlink, accept, rm. bind(el) attaches the listeners once.
 
 import { run } from "../cmd.js";
-import { chipHtml, emptyHtml, esc, meterHtml } from "../dom.js";
+import { chipHtml, emptyHtml, esc, parseOne, swapNode } from "../dom.js";
 import { copyButton, refSummary } from "../ref.js";
 import { projectHash } from "../router.js";
 import { pageState } from "./inbox.js";
-import { modelChip, STATE_WORD } from "./tasks.js";
+import { STATE_WORD } from "./tasks.js";
 
-const STATUS = [["", "All"], ["doing", "Doing"], ["todo", "Todo"], ["done", "Done"], ["hold", "Hold"],
-  ["uncovered", "Uncovered"]];
-const TONE = { done: "success", doing: "accent", todo: "neutral", hold: "defer", uncovered: "warning" };
-const GRID = "pl-row row-grid";
+const FILTERS = [["", "All"], ["doing", "Doing"], ["todo", "Todo"], ["done", "Done"],
+  ["waiting", "Waiting for your OK"], ["uncovered", "Uncovered"]];
+const TONE = { done: "success", doing: "sonnet", todo: "neutral", hold: "defer", uncovered: "warning" };
+const LABEL = { done: "Done", doing: "Doing", todo: "Todo", hold: "Hold", uncovered: "Uncovered" };
 const MAX_DEPTH = 2;
 const MAX_FEATS = 3;
 const PICK_CAP = 60;
 const FEAT_ID = /^F[1-9][0-9]?$/;
+const HEAD_CELLS = [["ID", "hd-n"], ["Title", "hd-sumc"], ["Phase", "hd-kind"], ["State", "hd-stc"],
+  ["Done", "hd-age"], ["Accept", "hd-acc"], ["", "hd-cp"]];
+const LIST_OPEN = '<div class="hd-list"><table class="hd-tbl" aria-label="Plan"><thead><tr>' +
+  HEAD_CELLS.map(function (c) {
+    return '<th scope="col" class="' + c[1] + '">' + c[0] + "</th>";
+  }).join("") + "</tr></thead>";
+const LIST_CLOSE = "</table></div>";
+const ASK = '<svg class="pl-ask" role="img" aria-label="you asked" viewBox="0 0 8 8"><title>you asked</title>' +
+  '<circle cx="4" cy="4" r="3"/></svg>';
 
-// The view state lives here, not in the URL, so a poll keeps the filters and the open items.
-const ui = { status: "", unaccepted: false, open: {}, menu: null, edit: null, pick: null, project: "", focus: "",
-  panels: { wait: true, orph: true, unc: false } };
+// The view state lives here, not in the URL, so a refresh keeps the filter and the open items.
+const ui = { status: "", open: {}, edit: null, pick: null, project: "", focus: "" };
 const bound = new WeakSet();
 const focusMark = { key: "" };
+let latest = null;
+let painted = null;
+let pendingFocus = "";
+let pendingScroll = "";
 
 function featuresOf(snap) {
   return snap.features || { rows: [], uncovered: [], orphans: [], counts: {} };
 }
 
-// Rows into a tree in file order: kids by parent id, top-level rows, the preorder list with depths.
+// Rows into a tree in file order: kids by parent id, top-level rows, and a preorder list with depths.
 function buildTree(rows) {
   const byId = {};
   for (const r of rows) byId[r.id] = r;
@@ -42,15 +55,7 @@ function buildTree(rows) {
     if (r.parent && byId[r.parent]) (kids[r.parent] = kids[r.parent] || []).push(r);
     else top.push(r);
   }
-  const order = [];
-  const walk = function (list, depth) {
-    for (const r of list) {
-      order.push({ row: r, depth: depth });
-      if (depth < MAX_DEPTH) walk(kids[r.id] || [], depth + 1);
-    }
-  };
-  walk(top, 0);
-  return { byId: byId, kids: kids, top: top, order: order };
+  return { byId: byId, kids: kids, top: top };
 }
 
 function directTasks(snap) {
@@ -64,8 +69,9 @@ function directTasks(snap) {
 const labelOf = (row) => row.label || row.id;
 
 function matches(row, state) {
-  if (state.status && row.state !== state.status) return false;
-  return !(state.unaccepted && row.accepted);
+  if (!state.status) return true;
+  if (state.status === "waiting") return row.state === "done" && !row.accepted;
+  return row.state === state.status;
 }
 
 function shown(row, tree, state) {
@@ -73,14 +79,37 @@ function shown(row, tree, state) {
   return (tree.kids[row.id] || []).some((k) => shown(k, tree, state));
 }
 
-function filtering(state) {
-  return Boolean(state.status || state.unaccepted);
+function isOpen(row, depth, state) {
+  if (state.status) return true;
+  const v = state.open[row.id];
+  return v === undefined ? depth === 0 : Boolean(v);
 }
 
-function isOpen(row, depth, state) {
-  if (filtering(state)) return true;
-  const v = state.open[row.id];
-  return v === undefined ? depth === 0 : v;
+// The rows to show, in order: an item's children follow it only while it is open (a filter opens them all).
+function flatten(tree, state) {
+  const out = [];
+  const walk = function (list, depth) {
+    list.forEach(function (row, i) {
+      if (!shown(row, tree, state)) return;
+      out.push({ row: row, depth: depth, pos: { i: i, n: list.length } });
+      if (depth < MAX_DEPTH && isOpen(row, depth, state)) walk(tree.kids[row.id] || [], depth + 1);
+    });
+  };
+  walk(tree.top, 0);
+  return out;
+}
+
+// Every item in preorder (the picker lists them in plan order).
+function preorder(tree) {
+  const out = [];
+  const walk = function (list) {
+    for (const r of list) {
+      out.push(r);
+      walk(tree.kids[r.id] || []);
+    }
+  };
+  walk(tree.top);
+  return out;
 }
 
 function workHash(row, project) {
@@ -88,43 +117,42 @@ function workHash(row, project) {
 }
 
 function stateChip(row) {
-  if (row.gaps > 0 && row.state !== "done") return chipHtml("gap", "warning");
-  return chipHtml(row.state, TONE[row.state] === "accent" ? "neutral" : TONE[row.state] || "neutral");
+  if (row.gaps > 0 && row.state !== "done") return chipHtml("Gap", "warning");
+  return chipHtml(LABEL[row.state] || row.state, TONE[row.state] || "neutral");
 }
 
-const ASK = '<svg class="pl-ask" role="img" aria-label="you asked" viewBox="0 0 8 8"><title>you asked</title>' +
-  '<circle cx="4" cy="4" r="3"/></svg>';
+function taskTone(st) {
+  if (st === "done" || st === "doing") return "success";
+  return st === "blocked" || st === "hold" ? "warning" : "neutral";
+}
 
-function taskRowHtml(feat, task, depth, ctx) {
-  const blocked = ctx.blocked;
+function taskLi(feat, task, ctx) {
   const tid = esc(task.id);
-  return '<li class="pl-task ' + GRID + '"><span></span><span class="rg-t pl-id2">' + tid + "</span>" +
-    '<span class="pl-main lvl' + Math.min(depth, MAX_DEPTH) + '"><a class="rg-t" href="' +
-    esc(projectHash(ctx.state.project, "work") + "/i/" + encodeURIComponent(task.id)) + '" title="' +
-    esc(task.title) + '">' + esc(task.title) + "</a></span>" +
-    '<span class="rg-t">' + esc(task.phase || "") + '</span><span class="pl-md">' +
-    (task.model ? modelChip(task.model) : "") + "</span>" +
-    '<span class="rg-num">' + (blocked.indexOf(task.id) >= 0 ? "blocked" : "") + "</span><span></span>" +
-    "<span>" + chipHtml(STATE_WORD[task.state] || task.state, task.state === "done" ? "success" : "neutral") +
-      "</span>" +
-    '<button type="button" class="btn btn-small pl-unl" data-pl="unlink" data-task="' + tid + '" data-id="' +
+  const href = projectHash(ctx.state.project, "work") + "/i/" + encodeURIComponent(task.id);
+  const blocked = (ctx.blocked || []).indexOf(task.id) >= 0 ? chipHtml("blocked", "warning") : "";
+  return '<li class="hd-link"><a class="chip chip-neutral" href="' + esc(href) + '">' + tid + "</a>" +
+    chipHtml(STATE_WORD[task.state] || task.state, taskTone(task.state)) + blocked +
+    '<span class="hd-lbl" title="' + esc(task.title) + '">' + esc(task.title) + "</span>" +
+    '<button type="button" class="btn btn-small" data-pl="unlink" data-task="' + tid + '" data-id="' +
     esc(feat.id) + '" aria-label="Unlink ' + tid + " from " + esc(feat.id) + '">Unlink</button></li>';
 }
 
 function popHtml(label, items, empty) {
   const list = items.length ? items.map(function (it, i) {
     return '<button type="button" class="btn btn-small" data-pl="pick" data-val="' + esc(it.val) + '"' +
-      (it.off ? " disabled" : "") + (i === 0 ? ' data-focus="pl-pop-first"' : "") + ">" + esc(it.text) + "</button>";
-  }).join("") : '<p class="pl-note">' + esc(empty) + "</p>";
-  return '<div class="pl-pop" id="pl-pop" role="group" aria-label="' + esc(label) + '">' + list +
-    '<button type="button" class="btn btn-small" data-pl="pick-close" data-focus="pl-pop-close">Close</button></div>';
+      (it.off ? " disabled" : "") + (i === 0 ? ' data-focus="pl-pop-first"' : "") + "><span>" + esc(it.text) +
+      "</span></button>";
+  }).join("") : '<p class="hd-none">' + esc(empty) + "</p>";
+  return '<div class="hd-blk" id="pl-pop" role="group" aria-label="' + esc(label) + '"><div class="hd-acts">' +
+    list + '<button type="button" class="btn btn-small" data-pl="pick-close" data-focus="pl-pop-close">Close</button>' +
+    "</div></div>";
 }
 
 function assignPop(snap, tree, taskId) {
   const t = (snap.tasks || []).find((x) => x.id === taskId);
   const full = t && (t.feats || []).length >= MAX_FEATS;
-  const items = tree.order.map((e) => ({ val: e.row.id, off: Boolean(full),
-    text: " ".repeat(e.depth * 2) + labelOf(e.row) + " " + e.row.id + " " + e.row.title }));
+  const items = preorder(tree).map((r) => ({ val: r.id, off: Boolean(full),
+    text: labelOf(r) + " " + r.id + " " + r.title }));
   return popHtml("Assign " + taskId + " to a plan item (max 3)", items, "No plan items yet.");
 }
 
@@ -141,124 +169,75 @@ function editHtml(edit, row) {
   const acc = edit.kind === "acc";
   const label = add ? "New plan item title" : acc ? "Acceptance for " + row.id : "Rename " + row.id;
   const value = add ? "" : acc ? row.acc || "" : row.title;
-  return '<form class="pl-edit" data-pl-form="edit"><label class="sr-only" for="pl-edit-in">' + esc(label) +
+  return '<form class="hd-form" data-pl-form="edit"><label class="sr-only" for="pl-edit-in">' + esc(label) +
     '</label><input id="pl-edit-in" name="text" type="text" autocomplete="off" required maxlength="' +
-      (acc ? 160 : 80) +
-    '" value="' + esc(value) + '" placeholder="' + esc(label) + '" data-focus="pl-edit">' +
-    (add ? '<label class="pl-ck"><input type="checkbox" name="ask"> you asked</label>' : "") +
+    (acc ? 160 : 80) + '" value="' + esc(value) + '" placeholder="' + esc(label) + '" data-focus="pl-edit">' +
+    (add ? '<label class="hd-lbl"><input type="checkbox" name="ask"> you asked</label>' : "") +
     '<button type="submit" class="btn btn-small btn-primary">Save</button>' +
-    '<button type="button" class="btn btn-small" data-pl="edit-cancel">Cancel</button>' +
+    '<button type="button" class="btn btn-small" data-pl="edit-cancel" data-focus="pl-edit-cancel">Cancel</button>' +
     '<span class="pl-err" role="alert"></span></form>';
 }
 
-function menuHtml(row, depth, pos, hasKids) {
-  const id = esc(row.id);
-  const b = (act, text, extra, dis) => '<button type="button" class="btn btn-small" data-pl="' + act + '" data-id="' +
-    id +
-    '"' + (extra || "") + (dis ? " disabled" : "") + ">" + text + "</button>";
-  const rmOff = row.total > 0 || hasKids;
-  return '<div class="pl-menu" id="pl-menu-' + id + '" role="group" aria-label="Actions for ' + id + '">' +
-    b("add", "Add sub plan", "", depth >= MAX_DEPTH) + b("rename", "Rename") + b("acc-edit", "Edit acceptance") +
-    b("ask", row.ask ? "Not asked" : "Mark asked") + b("link-open", "Link tasks") +
-    b("move", "Move up", ' data-dir="up"', pos.i === 0) +
-      b("move", "Move down", ' data-dir="down"', pos.i >= pos.n - 1) +
-    b("hold", row.state === "hold" ? "Resume" : "Hold") +
-    b("rm", "Remove", rmOff ? ' aria-label="Remove ' + id + ' (needs no tasks and no children)"' : "", rmOff) +
-      "</div>";
+function tasksHtml(ctx, row, own) {
+  const list = own.length ? own.map((t) => taskLi(row, t, ctx)).join("")
+    : '<li class="hd-none">No tasks yet. Use Link tasks, or ask your agent.</li>';
+  return '<div class="hd-blk"><p class="hd-lbl">Linked tasks</p><ul class="hd-links" aria-label="Tasks of ' +
+    esc(row.id) + '">' + list + "</ul></div>";
 }
 
-function itemHtml(ctx, row, depth, pos) {
+function actionsHtml(row, depth, pos, hasKids) {
+  const id = esc(row.id);
+  const b = (act, text, extra, dis) => '<button type="button" class="btn btn-small" data-pl="' + act +
+    '" data-id="' + id + '"' + (extra || "") + (dis ? " disabled" : "") + ">" + text + "</button>";
+  const rmOff = row.total > 0 || hasKids;
+  return '<div class="hd-blk"><div class="hd-acts" aria-label="Actions for ' + id + '">' +
+    b("link-open", "Link tasks") +
+    b("add", "Add sub plan", "", depth >= MAX_DEPTH) + b("rename", "Rename") + b("acc-edit", "Edit acceptance") +
+    b("ask", row.ask ? "Not asked" : "Mark asked", ' data-val="' + (row.ask ? "off" : "on") + '"') +
+    b("move", "Move up", ' data-dir="up"', pos.i === 0) +
+    b("move", "Move down", ' data-dir="down"', pos.i >= pos.n - 1) +
+    b("hold", row.state === "hold" ? "Resume" : "Hold", ' data-val="' + (row.state === "hold" ? "off" : "on") + '"') +
+    (row.accepted ? b("unaccept", "Unaccept") : "") +
+    b("rm", "Remove", rmOff ? ' aria-label="Remove ' + id + ' (needs no tasks and no children)"' : "", rmOff) +
+    "</div></div>";
+}
+
+// One plan item: a tbody with its row and its detail (the linked tasks, an open form or picker, the actions).
+function featHtml(ctx, row, depth, pos) {
   const { state, tree } = ctx;
   const id = esc(row.id);
-  const kids = (tree.kids[row.id] || []).filter((k) => shown(k, tree, state));
-  const own = ctx.direct[row.id] || [];
   const open = isOpen(row, depth, state);
-  const menu = state.menu === row.id;
-  const edit = state.edit && state.edit.id === row.id ? state.edit : null;
-  const pct = row.total ? (row.done / row.total) * 100 : 0;
+  const kids = tree.kids[row.id] || [];
+  const own = ctx.direct[row.id] || [];
   const link = esc(workHash(row, state.project));
+  const edit = state.edit && state.edit.id === row.id ? state.edit : null;
+  const pick = state.pick && state.pick.kind === "link" && state.pick.id === row.id ? linkPop(ctx.snap, row) : "";
   const copy = copyButton("feature", row.id, labelOf(row) + " " + row.title,
     { project: state.project, sum: refSummary("feature", row, ctx.snap) });
-  const accLine = row.acc ? '<span class="rg-t pl-ax" title="' + esc(row.acc) + '">' + esc(row.acc) + "</span>" : "";
-  const head = '<div class="' + GRID + '"><span><button type="button" class="btn btn-small pl-tg" data-pl="toggle" ' +
-    'data-id="' + id + '" aria-expanded="' + open + '" aria-controls="pl-sub-' + id + '" data-focus="pl-tg:' + id +
-    '" aria-label="' + (open ? "Hide" : "Show") + " " + (kids.length ? "sub plans" : "tasks") + " of " + id + '">' +
-    (open ? "▾" : "▸") + "</button></span>" +
-    '<span class="rg-t pl-lb">' + esc(labelOf(row)) + '</span><span class="rg-t pl-id">' + id + "</span>" +
-    '<span class="pl-main lvl' + depth + '"><span class="pl-l1">' + (row.ask ? ASK : "") + '<a class="rg-t" href="' +
-    link + '" title="' + esc(row.title) + '">' + esc(row.title) + "</a></span>" + accLine + "</span>" +
-    '<span class="rg-t pl-ph">' + esc(row.phase || "") + "</span>" +
-    '<span class="pl-bar">' +
-      meterHtml(pct, row.state === "done" ? "success" : row.blocked > 0 ? "warning" : "accent") +
-    '</span><a class="rg-num pl-ct" href="' + link + '" aria-label="' + esc(row.done + " of " + row.total +
-    " tasks done, open " + row.id + " in Work") + '">' + esc(row.done + "/" + row.total) + "</a>" +
-    '<span class="rg-num pl-gp">' + (row.gaps > 0 ? esc(row.gaps) : "") + "</span><span>" + stateChip(row) + "</span>" +
-    '<span class="pl-ok"><input type="checkbox" data-pl="accept" data-id="' + id + '" data-state="' + esc(row.state) +
-    '" data-focus="pl-ok:' + id + '" aria-label="Accepted: ' + id + " " + esc(row.title) + '"' +
-    (row.accepted ? " checked" : "") + "></span>" +
-    '<span><button type="button" class="btn btn-small pl-more" data-pl="menu" data-id="' + id + '" aria-expanded="' +
-    menu + '"' + (menu ? ' aria-controls="pl-menu-' + id + '"' : "") + ' data-focus="pl-more:' + id +
-    '" aria-label="More actions for ' + id + '">⋯</button></span>' + copy + "</div>";
-  const extra = (menu ? menuHtml(row, depth, pos, kids.length > 0) : "") +
-    (edit && edit.kind !== "add" ? editHtml(edit, row) : "") +
-    (state.pick && state.pick.kind === "link" && state.pick.id === row.id ? linkPop(ctx.snap, row) : "");
-  const sub = [];
-  if (edit && edit.kind === "add") sub.push('<li class="pl-extra">' + editHtml(edit, row) + "</li>");
-  kids.forEach((k, i) => sub.push(itemHtml(ctx, k, depth + 1, { i: i, n: kids.length })));
-  for (const t of own) sub.push(taskRowHtml(row, t, depth + 1, ctx));
-  if (!kids.length && !own.length) {
-    sub.push('<li class="pl-empty">No tasks yet. Use ⋯ then Link tasks, or ask your agent.</li>');
-  }
-  return '<li id="pl-feat-' + id + '" class="pl-item is-' + esc(row.state) +
-    (state.focus === row.id ? " is-focus" : "") +
-    '">' + head + (extra ? '<div class="pl-extras">' + extra + "</div>" : "") +
-    '<ul class="pl-sub" id="pl-sub-' + id + '" aria-label="Inside ' + id + '"' + (open ? "" : " hidden") + ">" +
-    sub.join("") + "</ul></li>";
-}
-
-function headHtml() {
-  const cols = ["", "Plan", "ID", "Title", "Phase", "Progress", "Tasks", "Gaps", "State", "Acc", "", ""];
-  return '<div class="' + GRID + ' pl-head rg-head" aria-hidden="true">' +
-    cols.map((c) => "<span" + (c === "Tasks" || c === "Gaps" ? ' class="rg-num"' : "") + ">" + c + "</span>").join("") +
-    "</div>";
-}
-
-function liHtml(first, title, btn, pop) {
-  return '<li class="pl-li"><span class="rg-t">' + esc(first) + '</span><span class="rg-t" title="' + esc(title) +
-    '">' + esc(title) + "</span>" + btn + (pop || "") + "</li>";
-}
-
-function panelsHtml(snap, features, tree, state, waiting) {
-  const tasks = {};
-  for (const t of snap.tasks || []) tasks[t.id] = t;
-  const orphans = features.orphans || [];
-  const uncovered = (features.uncovered || []).filter((id) => tree.byId[id]);
-  const kinds = [["wait", waiting.length, "waiting for your OK", false], ["orph", orphans.length, "orphan tasks", true],
-    ["unc", uncovered.length, "uncovered", true]];
-  const chips = kinds.filter((c) => c[1] > 0).map(function (c) {
-    const key = c[0];
-    return '<button type="button" class="btn btn-small pl-sig' + (c[3] ? " is-warn" : "") + '" data-pl="panel" ' +
-      'data-val="' + key + '" aria-expanded="' + state.panels[key] + '" aria-controls="pl-panel-' + key +
-      '" data-focus="pl-sig:' + key + '">' + (c[3] ? "! " : "") + c[1] + " " + c[2] + "</button>";
-  });
-  if (!chips.length) return "";
-  const panel = (key, title, lis) => lis.length ? '<ul class="pl-panel" id="pl-panel-' + key + '" aria-label="' +
-    title +
-    '"' + (state.panels[key] ? "" : " hidden") + ">" + lis.join("") + "</ul>" : "";
-  const accept = (r) => liHtml(labelOf(r) + " " + r.id, r.title, '<button type="button" class="btn btn-small" ' +
-    'data-pl="accept-btn" data-id="' + esc(r.id) + '" aria-label="Accept ' + esc(r.id) + '">Accept</button>');
-  const assign = (id) => liHtml(id, tasks[id] ? tasks[id].title : "", '<button type="button" class="btn btn-small" ' +
-    'data-pl="assign-open" data-task="' + esc(id) + '" aria-haspopup="true" aria-expanded="' +
-      isPick(state, "assign", id) +
-    '"' + (isPick(state, "assign", id) ? ' aria-controls="pl-pop"' : "") + ' data-focus="pl-assign:' + esc(id) +
-    '" aria-label="Assign ' + esc(id) + ' to a plan item">Assign</button>',
-  isPick(state, "assign", id) ? assignPop(snap, tree, id) : "");
-  const unc = (id) => liHtml(labelOf(tree.byId[id]) + " " +
-    id, tree.byId[id].title, '<button type="button" class="btn btn-small" ' +
-    'data-pl="link-open" data-id="' + esc(id) + '">Link tasks</button>');
-  return '<div class="pl-sigs">' + chips.join("") + "</div>" +
-    panel("wait", "Waiting for your OK", waiting.map(accept)) +
-    panel("orph", "Orphan tasks", orphans.map(assign)) + panel("unc", "Uncovered plan items", uncovered.map(unc));
+  const acc = row.acc ? '<div class="hd-lbl" title="' + esc(row.acc) + '">' + esc(row.acc) + "</div>" : "";
+  const accept = row.state === "done" && !row.accepted
+    ? '<button type="button" class="btn btn-small" data-pl="accept-btn" data-id="' + id + '" aria-label="Accept ' +
+      id + '" data-focus="pl-ok:' + id + '">Accept</button>'
+    : row.accepted ? '<span aria-label="Accepted" title="Accepted">✓</span>' : "";
+  const title = '<div class="hd-sum lvl' + Math.min(depth, MAX_DEPTH) + '">' + (row.ask ? ASK : "") +
+    '<span class="hd-lbl">' + esc(labelOf(row)) + "</span> " + '<a href="' + link + '" title="' +
+    esc(row.title) + '">' + esc(row.title) + "</a></div>" + acc;
+  const head = '<tr class="hd-row" data-id="' + id + '"><td class="hd-n">' +
+    '<button type="button" class="hd-hit" data-pl="toggle" data-id="' + id + '" aria-expanded="' + open +
+    '" aria-controls="pl-sub-' + id + '" data-focus="pl-tg:' + id + '" aria-label="' + (open ? "Hide " : "Show ") +
+    id + '">' + id + "</button></td>" +
+    '<td class="hd-sumc">' + title + "</td>" +
+    '<td class="hd-kind">' + esc(row.phase || "") + "</td>" +
+    '<td class="hd-stc">' + stateChip(row) + "</td>" +
+    '<td class="hd-age rg-num" title="' + esc((row.done || 0) + " of " + (row.total || 0) + " tasks done") + '">' +
+    esc((row.done || 0) + "/" + (row.total || 0)) + "</td>" +
+    '<td class="hd-acc">' + accept + "</td>" +
+    '<td class="hd-cp">' + copy + "</td></tr>";
+  const detail = '<tr class="hd-detail" id="pl-sub-' + id + '"><td colspan="7"><div class="hd-panel">' +
+    tasksHtml(ctx, row, own) + (edit ? editHtml(edit, row) : "") + pick +
+    actionsHtml(row, depth, pos, kids.length > 0) + "</div></td></tr>";
+  return '<tbody class="hd-item' + (open ? " is-open" : "") + (state.focus === row.id ? " is-focus" : "") +
+    '" id="pl-feat-' + id + '" data-id="' + id + '">' + head + detail + "</tbody>";
 }
 
 function isPick(state, kind, id) {
@@ -266,41 +245,74 @@ function isPick(state, kind, id) {
   return Boolean(p && p.kind === kind && (kind === "assign" ? p.task === id : p.id === id));
 }
 
-function toolbarHtml(state) {
-  const chips = STATUS.map((s) => '<button type="button" class="btn btn-small pl-flt" data-pl="status" data-val="' +
-    s[0] +
-    '" aria-pressed="' + (state.status === s[0]) + '" data-focus="pl-st:' + s[0] + '">' + s[1] + "</button>").join("");
-  return '<div class="pl-bar-t"><div class="pl-chips" role="group" aria-label="Filter by status">' + chips + "</div>" +
-    '<label class="pl-ck"><input type="checkbox" data-pl="unaccepted" data-focus="pl-un"' +
-    (state.unaccepted ? " checked" : "") + "> Unaccepted only</label>" +
-    '<button type="button" class="btn btn-primary pl-add" data-pl="add" data-id="" data-focus="pl-add">' +
-    "+ Plan phase</button></div>";
+// The orphan tasks (no plan item): one row each with an Assign button; the picker opens under the list.
+function orphansHtml(snap, features, tree, state) {
+  const orphans = features.orphans || [];
+  if (!orphans.length) return "";
+  const tasks = {};
+  for (const t of snap.tasks || []) tasks[t.id] = t;
+  const items = orphans.map(function (id) {
+    const t = tasks[id];
+    return '<li class="hd-link"><span class="chip chip-neutral">' + esc(id) + '</span><span class="hd-lbl">' +
+      esc(t ? t.title : "") + '</span><button type="button" class="btn btn-small" data-pl="assign-open" data-task="' +
+      esc(id) + '" aria-haspopup="true" aria-expanded="' + isPick(state, "assign", id) + '" data-focus="pl-assign:' +
+      esc(id) + '" aria-label="Assign ' + esc(id) + ' to a plan item">Assign</button></li>';
+  }).join("");
+  const pick = state.pick && state.pick.kind === "assign" ? assignPop(snap, tree, state.pick.task) : "";
+  return '<div class="hd-blk"><p class="hd-lbl">Orphan tasks (not in any plan item)</p><ul class="hd-links" ' +
+    'aria-label="Orphan tasks">' + items + "</ul>" + pick + "</div>";
 }
 
-// The Planner markup for a snapshot. state: status, unaccepted, open (id to true or false), menu, edit, pick, panels.
-export function plannerHtml(snap, st) {
-  const state = Object.assign({ status: "", unaccepted: false, open: {}, menu: null, edit: null, pick: null,
-    project: ui.project, focus: "", panels: ui.panels }, st);
+function filterHtml(state, shownCount, total) {
+  const chips = FILTERS.map(function (f) {
+    return '<button type="button" class="btn btn-small hd-filter" data-pl="status" data-val="' + f[0] +
+      '" aria-pressed="' + (state.status === f[0]) + '" data-focus="pl-st:' + f[0] + '"><span>' + esc(f[1]) +
+      "</span></button>";
+  }).join("");
+  return '<nav class="hd-filters" aria-label="Filter">' + chips + "</nav>" +
+    '<p class="hd-count">' + esc("Showing " + shownCount + " of " + total) + "</p>";
+}
+
+function topHtml() {
+  return '<div class="hd-top"><h2 id="pl-h" class="hd-title">Plan</h2>' +
+    '<button type="button" class="btn btn-primary" data-pl="add" data-id="" data-focus="pl-add">' +
+    "<span>+ Plan phase</span></button></div>";
+}
+
+// The screen pieces in order. A piece with an empty html is absent; the list piece carries its tbody items.
+function piecesOf(snap, state) {
   const features = featuresOf(snap);
   const rows = features.rows || [];
   const tree = buildTree(rows);
-  const waiting = rows.filter((r) => r.state === "done" && !r.accepted);
-  const head = '<div class="page-head"><p class="page-title">Plan</p><p class="page-note">' +
-    esc(rows.length + " items · " + (features.orphans || []).length + " orphan tasks · " + waiting.length +
-    " waiting for your OK") + "</p></div>";
+  const ctx = { snap: snap, tree: tree, state: state, direct: directTasks(snap), blocked: snap.blocked || [] };
+  const pieces = [{ name: "top", html: topHtml() }];
   const addTop = state.edit && state.edit.kind === "add" && !state.edit.id ? editHtml(state.edit, {}) : "";
   if (!rows.length) {
-    return head + addTop + emptyHtml("No plan yet. Ask your agent to create the roadmap.",
-      '<button type="button" class="btn btn-primary" data-pl="add" data-id="" data-focus="pl-add">' +
-      "+ Plan phase</button>") +
-      panelsHtml(snap, features, tree, state, waiting);
+    pieces.push({ name: "add", html: addTop });
+    pieces.push({ name: "list", html: emptyHtml("No plan yet. Ask your agent to create the roadmap.") });
+    pieces.push({ name: "orph", html: orphansHtml(snap, features, tree, state) });
+    return pieces;
   }
-  const ctx = { snap: snap, tree: tree, state: state, direct: directTasks(snap), blocked: snap.blocked || [] };
-  const vis = tree.top.filter((r) => shown(r, tree, state));
-  const list = vis.length ? '<ul class="pl-list" aria-label="Plan">' +
-    vis.map((r, i) => itemHtml(ctx, r, 0, { i: i, n: vis.length })).join("") + "</ul>"
-    : emptyHtml("No plan items match these filters.");
-  return head + toolbarHtml(state) + addTop + panelsHtml(snap, features, tree, state, waiting) + headHtml() + list;
+  const flat = flatten(tree, state);
+  pieces.push({ name: "bar", html: filterHtml(state, flat.length, rows.length) });
+  pieces.push({ name: "add", html: addTop });
+  if (flat.length) {
+    pieces.push({ name: "list", html: LIST_OPEN, close: LIST_CLOSE, items: flat.map(function (e) {
+      return { id: e.row.id, html: featHtml(ctx, e.row, e.depth, e.pos) };
+    }) });
+  } else {
+    pieces.push({ name: "list", html: emptyHtml("No plan items match these filters.") });
+  }
+  pieces.push({ name: "orph", html: orphansHtml(snap, features, tree, state) });
+  return pieces;
+}
+
+// The Planner markup for a snapshot, as one string (no DOM). st: status, open, edit, pick, focus, project.
+export function plannerHtml(snap, st) {
+  const state = Object.assign({ status: "", open: {}, edit: null, pick: null, project: ui.project, focus: "" }, st);
+  return piecesOf(snap, state).map(function (p) {
+    return p.items ? p.html + p.items.map((e) => e.html).join("") + p.close : p.html;
+  }).join("");
 }
 
 function pickProjectHtml(vm) {
@@ -328,25 +340,97 @@ function applyFocus(route, snap) {
     r = r.parent ? byId[r.parent] : null;
   }
   ui.status = "";
-  ui.unaccepted = false;
-  if (typeof document === "undefined" || typeof setTimeout !== "function") return;
-  setTimeout(function () {
-    const el = document.getElementById("pl-feat-" + fid);
-    if (el && typeof el.scrollIntoView === "function") el.scrollIntoView({ block: "center" });
-  }, 0);
+  pendingScroll = fid;
 }
 
+// The section: an empty, stable screen element (its markup never changes, so app.js leaves it alone). The rows are
+// painted into it after the render (flush), in place, so a refresh keeps the scroll and the focus.
 export function sectionView(vm) {
   if (vm.route.name !== "project") return pickProjectHtml(vm);
   const state = pageState(vm);
   if (state) return state;
   ui.project = vm.route.id;
   applyFocus(vm.route, vm.project.snapshot);
-  return plannerHtml(vm.project.snapshot, ui);
+  latest = { snap: vm.project.snapshot, state: ui };
+  if (typeof setTimeout === "function") setTimeout(flush, 0);
+  return '<section class="hd-screen" data-section="planner" data-project="' + esc(vm.route.id) +
+    '" aria-labelledby="pl-h"></section>';
 }
 
-function rerender() {
-  if (typeof document !== "undefined") document.dispatchEvent(new Event("rb:render"));
+function firstBody(table) {
+  return Array.from(table.children).find((c) => c.tagName === "TBODY") || null;
+}
+
+function bodyAfter(node) {
+  let n = node.nextElementSibling;
+  while (n && n.tagName !== "TBODY") n = n.nextElementSibling;
+  return n;
+}
+
+// Bring the tbody items of the table in line with the piece: remove gone items, replace changed ones, keep the order.
+function reconcileItems(table, piece, keys) {
+  const want = new Set(piece.items.map((e) => e.id));
+  const have = new Map();
+  for (const el of Array.from(table.children)) {
+    if (el.tagName !== "TBODY") continue;
+    const id = el.getAttribute("data-id") || "";
+    if (want.has(id)) have.set(id, el);
+    else {
+      table.removeChild(el);
+      keys.delete(id);
+    }
+  }
+  let cursor = firstBody(table);
+  for (const entry of piece.items) {
+    let el = have.get(entry.id) || null;
+    if (!el || keys.get(entry.id) !== entry.html) {
+      const fresh = parseOne(entry.html);
+      if (el) {
+        if (cursor === el) cursor = fresh;
+        swapNode(el, fresh);
+      }
+      el = fresh;
+      keys.set(entry.id, entry.html);
+    }
+    if (el === cursor) cursor = bodyAfter(cursor);
+    else table.insertBefore(el, cursor);
+  }
+}
+
+// Put the pieces into the screen element. A piece is replaced only when its markup changed.
+function paint(screen, pieces) {
+  if (!painted || painted.screen !== screen) {
+    screen.textContent = "";
+    painted = { screen: screen, els: new Map() };
+  }
+  const seen = new Set();
+  const order = [];
+  for (const piece of pieces) {
+    if (!piece.html) continue;
+    seen.add(piece.name);
+    let rec = painted.els.get(piece.name);
+    if (!rec) {
+      rec = { el: parseOne(piece.html), html: piece.html, keys: new Map() };
+      painted.els.set(piece.name, rec);
+    } else if (rec.html !== piece.html) {
+      rec.el = swapNode(rec.el, parseOne(piece.html));
+      rec.html = piece.html;
+      rec.keys = new Map();
+    }
+    if (piece.items) reconcileItems(rec.el, piece, rec.keys);
+    order.push(rec.el);
+  }
+  for (const name of Array.from(painted.els.keys())) {
+    if (seen.has(name)) continue;
+    const rec = painted.els.get(name);
+    if (rec.el.parentNode === screen) screen.removeChild(rec.el);
+    painted.els.delete(name);
+  }
+  let cursor = screen.firstElementChild;
+  for (const el of order) {
+    if (el === cursor) cursor = cursor.nextElementSibling;
+    else screen.insertBefore(el, cursor);
+  }
 }
 
 function focusKey(key) {
@@ -359,24 +443,33 @@ function focusKey(key) {
   }
 }
 
-// A checkbox keeps its focus until it is left, and patch() does not redraw under a focused control. So the control
-// is blurred before the redraw and the focus goes back to the same data-focus key afterwards.
-function redraw(key, target) {
-  if (target && typeof target.blur === "function") target.blur();
-  rerender();
+// Runs after the render has put the screen element in main: paints the pieces, then the pending focus and scroll.
+function flush() {
+  if (typeof document === "undefined" || !latest) return;
+  const main = document.getElementById("main");
+  const screen = main ? main.firstElementChild : null;
+  if (!screen || screen.getAttribute("data-section") !== "planner") return;
+  paint(screen, piecesOf(latest.snap, latest.state));
+  const key = pendingFocus;
+  pendingFocus = "";
   focusKey(key);
+  if (pendingScroll) {
+    const el = document.getElementById("pl-feat-" + pendingScroll);
+    pendingScroll = "";
+    if (el && typeof el.scrollIntoView === "function") el.scrollIntoView({ block: "center" });
+  }
 }
 
-function confirmAccept() {
-  return typeof window !== "undefined" && typeof window.confirm === "function"
-    ? window.confirm("This item is not done yet. Accept it anyway?") : false;
+// Redraws through the app render. The focus goes back to the control named by key once the rows are painted.
+function redraw(key) {
+  pendingFocus = key || "";
+  if (typeof document !== "undefined") document.dispatchEvent(new Event("rb:render"));
 }
 
 function startEdit(kind, id) {
   ui.edit = { kind: kind, id: id };
-  ui.menu = null;
   ui.pick = null;
-  if (kind === "add" && id) ui.open[id] = true;
+  if (id) ui.open[id] = true;
   redraw("pl-edit");
 }
 
@@ -389,28 +482,20 @@ function onPick(val) {
     redraw("pl-assign:" + pick.task);
   } else {
     run("feature.link", { task: val, feats: [pick.id] }, { label: "Linked " + val + " to " + pick.id });
-    redraw("pl-more:" + pick.id);
+    redraw("pl-tg:" + pick.id);
   }
 }
 
+function setOpen(id, on) {
+  ui.open[id] = on;
+  redraw("pl-tg:" + id);
+}
+
 const ACTIONS = {
-  toggle: (el, id) => {
-    ui.open[id] = el.getAttribute("aria-expanded") !== "true";
-    redraw("pl-tg:" + id);
-  },
-  menu: (el, id) => {
-    ui.menu = ui.menu === id ? null : id;
-    ui.pick = null;
-    redraw("pl-more:" + id);
-  },
+  toggle: (el, id) => setOpen(id, el.getAttribute("aria-expanded") !== "true"),
   status: (el) => {
-    ui.status = el.getAttribute("data-val");
+    ui.status = el.getAttribute("data-val") || "";
     redraw("pl-st:" + ui.status);
-  },
-  panel: (el) => {
-    const k = el.getAttribute("data-val");
-    ui.panels[k] = !ui.panels[k];
-    redraw("pl-sig:" + k);
   },
   add: (el, id) => startEdit("add", id),
   rename: (el, id) => startEdit("rename", id),
@@ -418,35 +503,14 @@ const ACTIONS = {
   "edit-cancel": () => {
     const id = ui.edit ? ui.edit.id : "";
     ui.edit = null;
-    redraw(id ? "pl-more:" + id : "pl-add");
-  },
-  ask: (el, id) => {
-    ui.menu = null;
-    const on = el.textContent === "Mark asked";
-    run("feature.set", { id: id, ask: on }, { label: (on ? "Marked asked " : "Cleared asked ") + id });
-    redraw("pl-more:" + id);
-  },
-  hold: (el, id) => {
-    const on = el.textContent === "Hold";
-    ui.menu = null;
-    run("feature.set", { id: id, hold: on }, { label: (on ? "Held " : "Resumed ") + id });
-    redraw("pl-more:" + id);
-  },
-  move: (el, id) => {
-    run("feature.move", { id: id, dir: el.getAttribute("data-dir") }, { label: "Moved " + id });
-    redraw("pl-more:" + id);
-  },
-  rm: (el, id) => {
-    ui.menu = null;
-    run("feature.rm", { id: id }, { label: "Removed " + id });
+    redraw(id ? "pl-tg:" + id : "pl-add");
   },
   "link-open": (el, id) => {
-    ui.menu = null;
     ui.pick = { kind: "link", id: id };
     redraw("pl-pop-first");
   },
   "assign-open": (el) => {
-    const task = el.getAttribute("data-task");
+    const task = el.getAttribute("data-task") || "";
     ui.pick = isPick(ui, "assign", task) ? null : { kind: "assign", task: task };
     redraw(ui.pick ? "pl-pop-first" : "pl-assign:" + task);
   },
@@ -454,35 +518,48 @@ const ACTIONS = {
   "pick-close": () => {
     const p = ui.pick;
     ui.pick = null;
-    redraw(p && p.kind === "assign" ? "pl-assign:" + p.task : p ? "pl-more:" + p.id : "");
+    redraw(p && p.kind === "assign" ? "pl-assign:" + p.task : p ? "pl-tg:" + p.id : "");
   },
   unlink: (el) => run("feature.unlink", { task: el.getAttribute("data-task"), feats: [el.getAttribute("data-id")] },
     { label: "Unlinked " + el.getAttribute("data-task") }),
   "accept-btn": (el, id) => run("feature.accept", { id: id, on: true }, { label: "Accepted " + id }),
+  unaccept: (el, id) => run("feature.accept", { id: id, on: false }, { label: "Unaccepted " + id }),
+  ask: (el, id) => {
+    const on = el.getAttribute("data-val") === "on";
+    run("feature.set", { id: id, ask: on }, { label: (on ? "Marked asked " : "Cleared asked ") + id });
+    redraw("pl-tg:" + id);
+  },
+  hold: (el, id) => {
+    const on = el.getAttribute("data-val") === "on";
+    run("feature.set", { id: id, hold: on }, { label: (on ? "Held " : "Resumed ") + id });
+    redraw("pl-tg:" + id);
+  },
+  move: (el, id) => {
+    run("feature.move", { id: id, dir: el.getAttribute("data-dir") }, { label: "Moved " + id });
+    redraw("pl-tg:" + id);
+  },
+  rm: (el, id) => {
+    run("feature.rm", { id: id }, { label: "Removed " + id });
+  },
 };
 
 function onClick(event) {
-  const el = event.target && event.target.closest ? event.target.closest("[data-pl]") : null;
-  if (!el || el.tagName !== "BUTTON" || el.disabled) return;
-  const act = ACTIONS[el.getAttribute("data-pl")];
-  if (act) act(el, el.getAttribute("data-id") || "");
-}
-
-function onChange(event) {
-  const el = event.target;
-  if (!el || !el.getAttribute) return;
-  const action = el.getAttribute("data-pl");
-  if (action === "unaccepted") {
-    ui.unaccepted = el.checked;
-    redraw("pl-un", el);
-  } else if (action === "accept") {
-    const id = el.getAttribute("data-id");
-    const on = el.checked;
-    if (on && el.getAttribute("data-state") !== "done" && !confirmAccept()) {
-      el.checked = false;
-      return;
+  const t = event.target;
+  if (!t || !t.closest) return;
+  const el = t.closest("[data-pl]");
+  if (el) {
+    if (el.tagName === "BUTTON" && !el.disabled) {
+      const act = ACTIONS[el.getAttribute("data-pl")];
+      if (act) act(el, el.getAttribute("data-id") || "");
     }
-    run("feature.accept", { id: id, on: on }, { label: (on ? "Accepted " : "Unaccepted ") + id });
+    return;
+  }
+  // A click on an item row (not on a button, link or field) opens or closes it, like its ID button.
+  const tr = t.closest("tr.hd-row");
+  if (tr && !t.closest("a, button, input, select, textarea, label, form")) {
+    const id = tr.getAttribute("data-id") || "";
+    const body = tr.parentNode;
+    setOpen(id, !(body && body.classList.contains("is-open")));
   }
 }
 
@@ -508,19 +585,18 @@ function onSubmit(event) {
   } else {
     run("feature.set", { id: edit.id, acc: text }, { label: "Acceptance set for " + edit.id });
   }
-  redraw(edit.id ? "pl-more:" + edit.id : "pl-add");
+  redraw(edit.id ? "pl-tg:" + edit.id : "pl-add");
 }
 
-// Esc closes the open form, picker or menu and returns focus to its button; arrows move inside a picker.
+// Esc closes the open form or picker and returns focus to its button; arrows move inside a picker.
 function onKeydown(event) {
   const t = event.target;
   if (event.key === "Escape") {
     if (ui.edit) ACTIONS["edit-cancel"]();
     else if (ui.pick) ACTIONS["pick-close"]();
-    else if (ui.menu) ACTIONS.menu(null, ui.menu);
     return;
   }
-  const pop = t && t.closest ? t.closest(".pl-pop") : null;
+  const pop = t && t.closest ? t.closest("#pl-pop") : null;
   if (!pop || (event.key !== "ArrowDown" && event.key !== "ArrowUp")) return;
   const btns = Array.from(pop.querySelectorAll("button:not([disabled])"));
   const at = btns.indexOf(t);
@@ -534,7 +610,6 @@ export function bind(el) {
   if (!el || bound.has(el)) return;
   bound.add(el);
   el.addEventListener("click", onClick);
-  el.addEventListener("change", onChange);
   el.addEventListener("submit", onSubmit);
   el.addEventListener("keydown", onKeydown);
 }
