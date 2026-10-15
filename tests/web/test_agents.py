@@ -126,12 +126,15 @@ class AgentsResearchTests(unittest.TestCase):
         self.assertNotIn(">cursor<", html)
         self.assertNotIn(">agy<", html)
 
-    def test_effort_column_shows_the_level_or_a_dash(self):
+    def test_effort_column_shows_the_level_or_the_engine_default(self):
         html = self.out["agentsProject"]
         self.assertEqual(html.count('<span class="rg-chips ag-effort">'), 14)  # 4 running and 10 finished rows
-        self.assertIn('<span class="rg-chips ag-effort">high</span>', html)
-        self.assertIn('<span class="rg-chips ag-effort">medium</span>', html)
-        self.assertIn('<span class="rg-chips ag-effort">\u2014</span>', html)
+        self.assertIn('<span class="rg-chips ag-effort">high</span>', html)      # opus, recorded
+        self.assertIn('<span class="rg-chips ag-effort">medium</span>', html)    # grok, recorded
+        self.assertIn('<span class="rg-chips ag-effort">low</span>', html)       # agy, recorded
+        self.assertEqual(html.count('<span class="rg-chips ag-effort">default</span>'), 10)  # haiku, not recorded
+        self.assertEqual(html.count('<span class="rg-chips ag-effort">not set</span>'), 1)   # cursor, not recorded
+        self.assertNotIn('ag-effort">\u2014', html)
         self.assertIn('<span class="ag-effort">Effort</span>', html)
 
     def test_each_row_has_a_stop_button_and_a_task_less_job_has_it_disabled(self):
@@ -147,12 +150,13 @@ class AgentsResearchTests(unittest.TestCase):
         self.assertEqual(html.count('<li class="ag-row"><div class="row-grid rg-agent">'), 10)
         self.assertIn("Failed", html)
 
-    def test_effort_column_hides_when_no_job_recorded_one(self):
-        self.assertIn('class="ag-list" aria-label="Running agents"', self.out["agentsProject"])
-        self.assertNotIn("ag-noeffort", self.out["agentsProject"])
-        css = read_text(os.path.join(WEB, "css", "components.css"))
-        self.assertIn(".ag-noeffort .ag-effort { display: none; }", css)
-        self.assertIn("-webkit-line-clamp: 2;", css)
+    def test_effort_column_is_always_visible(self):
+        html = self.out["agentsProject"]
+        self.assertIn('class="ag-list" aria-label="Running agents"', html)
+        self.assertIn('class="ag-list" aria-label="Last finished jobs"', html)
+        self.assertNotIn("ag-noeffort", html)
+        self.assertIn('<span class="ag-effort">Effort</span>', html)
+        self.assertIn("-webkit-line-clamp: 2;", read_text(os.path.join(WEB, "css", "components.css")))
 
     def test_rows_use_the_shared_fixed_tracks(self):
         html = self.out["agentsProject"]

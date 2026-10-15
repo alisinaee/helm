@@ -25,10 +25,12 @@ export function engineLabel(model) {
   return ENGINES[text] || String(model).trim();
 }
 
-// The thinking effort of a job, or a dash when the job did not record one.
-export function effortLabel(effort) {
+// The thinking effort of a job: the recorded level when there is one; otherwise the engine default ("default" for
+// Haiku, Sonnet, Opus and agy) or "not set" (cursor models and anything unknown). Never blank.
+export function effortLabel(effort, model) {
   const text = String(effort || "").trim().toLowerCase();
-  return EFFORTS.indexOf(text) !== -1 ? text : "—";
+  if (EFFORTS.indexOf(text) !== -1) return text;
+  return /^(haiku|sonnet|opus|agy)\b/.test(String(model || "").trim().toLowerCase()) ? "default" : "not set";
 }
 
 // The worker tree of one snapshot's running jobs: the roots (jobs whose parent is not running) and the children map.
@@ -86,7 +88,7 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
   const row = '<li class="ag-row" data-depth="' + depth + '"><div class="row-grid rg-agent">' +
     '<span class="rg-chips">' + chipHtml(engineLabel(job.model), "neutral") +
     (job.role ? chipHtml(job.role, "neutral") : "") + badge + "</span>" +
-    '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort)) + "</span>" +
+    '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort, job.model)) + "</span>" +
     '<span class="rg-main"><span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
     (handed ? " " + handed : "") + "</span>" +
     '<span class="rg-chips">' + taskHtml + "</span>" +
@@ -110,20 +112,12 @@ function finishedHtml(job, pid) {
   const task = job.task ? '<a href="' + esc(itemHash(pid, job.task)) + '">' + esc(job.task) + "</a>" : "";
   return '<li class="ag-row"><div class="row-grid rg-agent">' +
     '<span class="rg-chips">' + chipHtml(engineLabel(job.model), "neutral") + chipHtml(word, kind) + "</span>" +
-    '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort)) + "</span>" +
+    '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort, job.model)) + "</span>" +
     '<span class="rg-main"><span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span></span>" +
     '<span class="rg-chips">' + task + "</span>" +
     '<span class="rg-num num">' + esc(fmtDuration(job.elapsedS)) + "</span>" +
     '<span class="rg-num num">' + esc(tokens) + "</span><span></span>" +
     copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) }) + "</div></li>";
-}
-
-// The Effort column is hidden when no running or finished job of the project recorded an effort.
-function listClass(snap) {
-  const known = (snap.running || []).concat(snap.jobs || []).some(function (j) {
-    return effortLabel(j.effort) !== "\u2014";
-  });
-  return known ? "ag-list" : "ag-list ag-noeffort";
 }
 
 // One block per project in view: its live tree and its finished jobs.
@@ -138,13 +132,13 @@ function projectBlock(entry, now, showName) {
     "<span></span><span></span>" +
     "</li>";
   const live = tree.roots.length
-    ? '<ul class="' + listClass(snap) + '" aria-label="Running agents">' + head + tree.roots.map(function (job) {
+    ? '<ul class="ag-list" aria-label="Running agents">' + head + tree.roots.map(function (job) {
       return agentRowHtml(job, entry.id, tree, blocked, now, 0);
     }).join("") + "</ul>"
     : emptyHtml("No agents running.");
   const done = finishedJobs(snap);
   const past = done.length
-    ? '<ol class="' + listClass(snap) + '" aria-label="Last finished jobs">' + done.map(function (job) {
+    ? '<ol class="ag-list" aria-label="Last finished jobs">' + done.map(function (job) {
       return finishedHtml(job, entry.id);
     }).join("") + "</ol>"
     : '<p class="ov-sum">No finished jobs yet.</p>';
