@@ -47,7 +47,7 @@ const plain = inbox.inboxBody({ route: { name: "project", id: "alpha", section: 
   snapshotList: [snap("alpha", "Alpha", rowsA)], project: {}, meterRows: [] });
 console.log(JSON.stringify({
   asks: c.asks.map(function (e) { return e.pid + ":" + e.row.id; }),
-  hasSection: html.indexOf('aria-labelledby="inbox-asks-h"') >= 0,
+  hasSection: html.indexOf('data-key="a:alpha:H3"') >= 0 && html.indexOf('data-key="a:beta:H9"') >= 0,
   openLinkA: html.indexOf('href="#/p/alpha/head?id=H3"') >= 0,
   openLinkB: html.indexOf('href="#/p/beta/head?id=H9"') >= 0,
   doneAbsent: html.indexOf("H4") < 0,
@@ -111,7 +111,7 @@ class InboxHeadAskSource(unittest.TestCase):
         self.assertIn('row.status === "needs-you"', self.src)
 
     def test_badge_count_includes_asks(self):
-        self.assertIn("found.questions.length + found.asks.length", self.src)
+        self.assertIn("inboxItems(scopeSnapshots(vm), Date.now()).length", self.src)
 
     def test_no_inline_styles_or_handlers(self):
         self.assertIsNone(INLINE.search(self.src))

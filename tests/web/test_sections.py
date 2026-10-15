@@ -109,7 +109,7 @@ class SectionRenderTests(unittest.TestCase):
             self.assertEqual(missing, [], name)
 
     def test_empty_states_use_the_spec_words(self):
-        self.assertIn("Inbox empty. No actions pending.", self.out["inboxGolden"])
+        self.assertIn("Nothing needs you.", self.out["inboxGolden"])
         self.assertIn("No open blockers.", self.out["overviewGolden"])
         self.assertIn("No activity yet.", self.out["activityGolden"])
 
@@ -141,14 +141,14 @@ class SectionRenderTests(unittest.TestCase):
     def test_question_without_options_has_no_answer_buttons(self):
         html = self.out["inboxProject"]
         self.assertIn("Keep the old file?", html)
-        start = html.index('data-qid="Q2"')
-        card = html[start:html.index("</article>", start)]
+        start = html.rindex("<li", 0, html.index('data-qid="Q2"'))
+        card = html[start:html.index("</li>", start)]
         self.assertNotIn("qc-opt", card)
         self.assertIn('data-form="inbox-question-answer"', card)
 
     def test_global_inbox_is_grouped_by_project(self):
         html = self.out["inboxAll"]
-        self.assertIn('<h3 class="grp-h"><a href="#/p/splitnet/inbox">split-net</a></h3>', html)
+        self.assertIn('<span class="qc-foot">split-net</span>', html)
 
     def test_needs_you_tasks_are_listed_below_the_questions(self):
         html = self.out["inboxProject"]
@@ -233,7 +233,8 @@ class SectionStaticTests(unittest.TestCase):
 
     def test_answer_keys_are_bound_once_on_import(self):
         text = read(os.path.join(WEB, "js", "views", "inbox.js"))
-        self.assertEqual(text.count("bindKey("), 1)
+        self.assertEqual(text.count("bindKey("), 3)
+        self.assertIn('bindKey("j", moveFocus(1));', text)
         self.assertIn("bindKey(String(n), onDigit(n - 1))", text)
 
 
