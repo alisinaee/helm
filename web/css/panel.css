@@ -1,5 +1,3 @@
-/* Right panel (WP29): the two tabs, the Projects rows and the Details pieces. Tokens only; budget 4.5 KB. */
-
 .side-tab{flex:1 1 0;min-height:var(--h-control);padding:0 var(--sp-2);border:0;border-radius:var(--r-control);background:none;color:var(--text-2);font-weight:600;cursor:pointer}
 .side-tab:hover{background:var(--surface-2);color:var(--text-1)}
 .side-tab[aria-selected="true"]{background:var(--sel);color:var(--text-1)}
@@ -7,7 +5,6 @@
 .side-tab:focus-visible,.side-close:focus-visible,.p-row:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .side-body{display:grid;gap:var(--sp-3);align-content:start}
 .side-body > *{min-width:0}
-
 .p-list{display:grid;gap:var(--sp-1)}
 .p-row{display:grid;gap:var(--sp-1);padding:var(--sp-2);border-radius:var(--r-control);color:var(--text-1);text-decoration:none;min-height:var(--h-row)}
 .p-row:hover{background:var(--surface-2)}
@@ -27,7 +24,6 @@
 .p-badge[data-kind="blocker"]{color:var(--danger)}
 .p-badge[data-kind="needs"]{color:var(--warning)}
 .p-chip{padding:0 var(--sp-1);border:1px solid var(--danger);border-radius:var(--r-control);color:var(--danger);font-size:var(--fs-11);font-weight:600}
-
 .d-back{display:flex}
 .d-head{display:grid;gap:var(--sp-1)}
 .d-id{font-family:var(--font-mono);font-size:var(--fs-11);color:var(--text-2)}
@@ -49,11 +45,9 @@
 .d-dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--sp-1) var(--sp-3)}
 .d-dl dt{color:var(--text-2)}
 .d-dl dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
-
 @media (max-width:640px){
 .side-tab,.side-close,.p-row,.d-btns .btn,.d-form .btn,.d-back .btn-small,.d-sub{min-height:44px}
 }
-/* The sheet and the overlay sit above the scrim (same layer otherwise, and the scrim comes later in the page). */
 @media (max-width:1199px){
 .side{z-index:calc(var(--z-over) + 1)}
 }

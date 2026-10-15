@@ -1,4 +1,3 @@
-/* Work section (WP31): board, list, tree, filters, bulk bar. Tokens only. */
 .wk{display:grid;gap:var(--sp-3);min-width:0}
 .wk-top,.wk-filters,.wk-groupbar,.wk-bulk,.wk-chips,.wk-card-top,.wk-acts,.wk-field{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
 .wk-views button,.wk-tab,.wk-chip,.wk-sort,.wk-phase-btn,.wk-menu summary{font:inherit;color:var(--text-2);background:var(--surface-1);border:1px solid var(--line);border-radius:var(--r-control);min-height:var(--h-control);padding:0 var(--sp-2);cursor:pointer}
