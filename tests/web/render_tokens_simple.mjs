@@ -47,16 +47,16 @@ store.projects = [
 ];
 store.snapshots.splitnet = state.normalizeSnapshot(snapshot("splitnet", "split-net", okMeters), now);
 store.snapshots.alpha = state.normalizeSnapshot(snapshot("alpha", "alpha", blockedMeters), now);
-store.usage = state.normalizeUsage({ weeklyPercent: 63, fiveHourPercent: 26, weeklyResetsAt: "2026-10-16T12:00:00Z",
-  source: "fixture", ageS: 60 }, now);
+store.snapshots.splitnet.usage = state.normalizeUsage({ weeklyPercent: 63, fiveHourPercent: 26,
+  weeklyResetsAt: "2026-10-16T12:00:00Z", source: "fixture", ageS: 60 }, now);
 const prefs = { mode: null, open: {} };
 
 function vmOf(route, usage) {
   const s = usage ? state.createStore() : store;
   if (usage) {
     s.projects = store.projects;
-    s.snapshots = store.snapshots;
-    s.usage = state.normalizeUsage(usage, now);
+    const withUsage = Object.assign({}, store.snapshots.splitnet, { usage: state.normalizeUsage(usage, now) });
+    s.snapshots = Object.assign({}, store.snapshots, { splitnet: withUsage });
   }
   const vm = state.buildViewModel(s, route, prefs, now);
   if (route.name === "home") vm.snapshotList = [s.snapshots.splitnet, s.snapshots.alpha];
@@ -72,6 +72,5 @@ out.noToken = tokens.sectionView(vmOf({ name: "project", id: "splitnet" },
 
 const empty = state.createStore();
 empty.projects = [];
-empty.usage = store.usage;
 out.empty = tokens.sectionView(state.buildViewModel(empty, { name: "home", id: null }, prefs, now));
 console.log(JSON.stringify(out));

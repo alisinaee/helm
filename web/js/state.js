@@ -30,10 +30,7 @@ export function createStore() {
     projectsError: null,
     snapshots: {},
     snapshotErrors: {},
-    usage: null,
-    usageError: null,
-    usageFetchedAt: 0,
-    sync: { state: "idle", message: "" },
+    sync:{ state: "idle", message: "" },
     conn: { ok: null, lastOkAt: null, error: null },
   };
 }
@@ -234,6 +231,9 @@ export function normalizeSnapshot(raw, fetchedAt) {
     id: project.id || null,
     title: project.title || project.id || "Project",
     fetchedAt: fetchedAt,
+    // rev: the snapshot generation (string). usage: the account usage reading built with this body, or null.
+    rev: typeof raw.rev === "string" ? raw.rev : null,
+    usage: raw.usage && typeof raw.usage === "object" ? normalizeUsage(raw.usage, fetchedAt) : null,
     tasksLeft: num(summary.tasks_left),
     tasksTotal: num(summary.tasks_total),
     needUser: num(summary.need_user),
@@ -446,10 +446,22 @@ export function sectionOpenState(view, prefs) {
   return open;
 }
 
-function usageView(store, now) {
-  const u = store.usage;
-  const sync = store.sync;
-  const base = { loaded: Boolean(u), error: store.usageError, sync: sync };
+// The usage reading for the view: the open project's snapshot, else the first project's snapshot that has one.
+function usageSource(store, route) {
+  if (route.name === "project") {
+    const snap = store.snapshots[route.id];
+    return snap && snap.usage ? snap.usage : null;
+  }
+  for (const p of store.projects || []) {
+    const snap = store.snapshots[p.id];
+    if (snap && snap.usage) return snap.usage;
+  }
+  return null;
+}
+
+// The usage band's view. error stays null: a missing reading shows as not loaded (the band draws a skeleton).
+function usageView(u, sync, now) {
+  const base = { loaded: Boolean(u), error: null, sync: sync };
   if (!u) return base;
   const elapsed = (now - u.fetchedAt) / 1000;
   const ageNow = u.ageS == null ? null : u.ageS + elapsed;
@@ -472,7 +484,7 @@ export function buildViewModel(store, route, prefs, now) {
     open: open,
     prefsOpen: prefs.open,
     conn: store.conn,
-    usage: usageView(store, now),
+    usage: usageView(usageSource(store, route), store.sync, now),
     projects: null,
     projectsError: store.projectsError,
     project: null,

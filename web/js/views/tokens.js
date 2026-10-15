@@ -1,7 +1,8 @@
 // Tokens (R7.28 B): one plain page, the same for All projects and a project. Order: usage now (usage.js, with the
 // manual form and the honest no-token banner), the weekly stop and the share per project (both from limits.js), one
 // sentence about the limit with the one-click 1-hour override, and read-only spend per project. Numbers come from the
-// snapshot; the page does no limit maths of its own.
+// snapshot; the page does no limit maths of its own. Usage comes from the snapshot's usage reading (snap.usage), so
+// the usage band, the weekly reset and the top bar agree with the meters on this page.
 
 import { bannerHtml, esc } from "../dom.js";
 import { MISSING, fmtPercent, fmtResets, fmtTokens } from "../format.js";
@@ -65,8 +66,9 @@ export function sectionView(vm) {
   const measured = snaps.some(function (s) {
     return Array.isArray(s.meters);
   });
-  const notice = measured ? "" : bannerHtml("warning", "Limits are not measured yet.",
-    "Usage data still loading; limits unavailable.");
+  const notice = (measured ? "" : bannerHtml("warning", "Limits are not measured yet.",
+    "Usage data still loading; limits unavailable.")) + (vm.usage && vm.usage.loaded ? "" :
+    bannerHtml("warning", "No usage reading in the snapshot yet.", "The usage band fills at the next poll."));
   const title = isProject ? "Tokens for " + vm.project.name : "Tokens for all projects";
   const head = '<div class="page-head"><h2 class="page-title">' + esc(title) + "</h2>" +
     '<p class="page-note">' + esc(isProject ? "This project's limit and spend."

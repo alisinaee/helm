@@ -42,7 +42,8 @@ export function csrfToken() {
   return "";
 }
 
-// GET a JSON resource. Resolves to {status, data, etag}. A 304 resolves with the body kept from the last 200.
+// GET a JSON resource. Resolves to {status, data, etag, changed}. A 304 resolves with the body kept from the last 200
+// and changed:false, so the caller keeps what it stored (no re-normalize, no new fetch time).
 export async function getJson(url) {
   const cached = etagCache.get(url);
   const headers = { Accept: "application/json" };
@@ -57,14 +58,14 @@ export async function getJson(url) {
   }
   noteRequest("GET", url, response.status, started);
   if (response.status === 304 && cached) {
-    return { status: 304, data: cached.data, etag: cached.etag };
+    return { status: 304, data: cached.data, etag: cached.etag, changed: false };
   }
   if (!response.ok) throw await failure(response);
   const data = await readJson(response);
   if (data === null) throw new ApiError(response.status, "bad_body", "The server sent an unreadable reply.");
   const etag = response.headers.get("ETag");
   if (etag) etagCache.set(url, { etag: etag, data: data });
-  return { status: response.status, data: data, etag: etag };
+  return { status: response.status, data: data, etag: etag, changed: true };
 }
 
 // POST a JSON body with the CSRF header. Resolves to {status, data}.
