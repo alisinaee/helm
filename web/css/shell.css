@@ -37,7 +37,7 @@
 .mini .meter{width:56px;height:6px}
 .mini-v{font-variant-numeric:tabular-nums}
 .mini.is-unknown .mini-v,.mini.is-unknown .mini-l{color:var(--unknown)}
-.main{grid-area:main;min-width:0;min-height:0;padding:var(--sp-4) var(--sp-6) var(--sp-8);overflow-x:hidden;overflow-y:auto}
+.main{grid-area:main;min-width:0;min-height:0;padding:var(--sp-4) var(--sp-6) var(--sp-8);overflow:hidden auto;overscroll-behavior:contain}
 .side{grid-area:side;display:flex;flex-direction:column;width:var(--w-side);min-width:0;overflow:hidden;background:var(--surface-1);border-left:1px solid var(--track)}
 .app[data-panel="closed"] .side{width:0;visibility:hidden;border-left:0}
 .side-tabs{display:flex;gap:var(--sp-1);padding:var(--sp-2);border-bottom:1px solid var(--track)}
