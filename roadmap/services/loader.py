@@ -14,7 +14,7 @@ from roadmap.core.extras import extra_file
 from roadmap.core.parsers import error_entry
 from roadmap.core.snapshot import build_snapshot
 from roadmap.errors import RoadmapError
-from roadmap.services import control, limits, presence, rules
+from roadmap.services import control, head as head_store, limits, presence, rules
 from roadmap.store import config as config_store
 
 BASE_FILES = ("tasks.json", "jobs.json", "autonomy.json", "issues.json", "questions.json", "comments.json",
@@ -49,9 +49,21 @@ def load_snapshot(project_id, now=None):
     moment = now if now is not None else datetime.now().astimezone()
     snap = build_snapshot(files, project_cfg, moment, control=_control_view(entry["id"]),
                           meters=limits.meters(entry, moment), rules=_rules_view(folder),
-                          session=_session_view(folder), folder=_project_path(entry))
+                          session=_session_view(folder), folder=_project_path(entry),
+                          head_records=_head_records(folder))
     snap["errors"] = errors + snap["errors"]
     return snap
+
+
+def _head_records(folder):
+    """The raw head.jsonl records of the project folder (HEAD-SPEC section 5), or None when there is no folder or
+    the file cannot be read, so the snapshot omits the head key (fail-open). Never raises."""
+    if folder is None:
+        return None
+    try:
+        return head_store._records(folder)
+    except Exception:
+        return None
 
 
 def _session_view(folder):

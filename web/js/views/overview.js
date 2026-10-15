@@ -167,6 +167,14 @@ function activityHtml(snap, now) {
   return cardHtml("activity", "Activity", "", body, { project: snap.id, count: lines.length });
 }
 
+// One line with the open asks the head has not handled yet; links to the Head screen. Empty when there are none.
+function headChip(snap) {
+  const n = (snap.head && snap.head.counts && snap.head.counts.unhandled) || 0;
+  if (!(n > 0)) return "";
+  return '<p class="ov-chip"><a href="#/p/' + esc(snap.id) + '/head?f=unhandled">' + esc(n) +
+    (n === 1 ? " ask" : " asks") + " unhandled</a></p>";
+}
+
 function projectOverview(vm) {
   const snap = vm.project.snapshot;
   const scopes = scopeSnapshots(vm);
@@ -176,7 +184,7 @@ function projectOverview(vm) {
   // Legend. Each one is a section-header from the section modules, so it folds like the rest.
   const phases = phasesSection(vm) + '<p class="ov-more"><a href="#/p/' + esc(vm.route.id) +
     '/roadmap">Open Roadmap</a></p>';
-  const main = controlBanner(vm) + kpiView(vm) +
+  const main = controlBanner(vm) + headChip(snap) + kpiView(vm) +
     cardHtml("inbox", "Inbox", "", inboxPreviewHtml(vm, PREVIEW_MAX) +
       '<p class="ov-more"><a href="' + esc(inboxHash(vm)) + '">Open Inbox</a></p>',
     { project: snap.id, count: snap.needUser }) + runningSection(vm) + phases;
