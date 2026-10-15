@@ -222,5 +222,74 @@ class HeadCliCase(unittest.TestCase):
         self.assertTrue(line.startswith("head: 1 open"))
 
 
+class HeadAutopilotCli(unittest.TestCase):
+    """HEAD-SPEC section 11: head brief --gate, head brief --done, head pause and head resume."""
+
+    def setUp(self):
+        HeadCliCase.setUp(self)
+        self.log = lambda text, kind="ask", extra=(): HeadCliCase.log(self, text, kind, extra)
+        patcher = mock.patch.object(head_cmd.hooks, "_git_counts", return_value=(2, None))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _gate_out(self):
+        code, out, _ = _run(["head", "brief", "--gate"])
+        self.assertEqual(code, 0)
+        return out.strip().split("\n")
+
+    def test_gate_nothing_pending(self):
+        patcher = mock.patch.object(head_cmd.hooks, "_git_counts", return_value=(0, 0))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.assertEqual(self._gate_out(), ["ok nothing pending"])
+
+    def test_gate_lists_asks_then_work_as_continue_lines(self):
+        self.log("first open ask")
+        self.log("second open ask")
+        lines = self._gate_out()
+        self.assertLessEqual(len(lines), head_cmd.GATE_LINES)
+        self.assertTrue(lines[0].startswith("continue: H1 unanswered "))
+        self.assertTrue(lines[1].startswith("continue: H2 unanswered "))
+        self.assertIn("continue: 2 uncommitted files", lines)
+        self.assertTrue(all(line.startswith("continue: ") for line in lines))
+
+    def test_gate_caps_at_five_lines(self):
+        for n in range(7):
+            self.log("ask number %d" % n)
+        self.assertEqual(len(self._gate_out()), head_cmd.GATE_LINES)
+
+    def test_pause_silences_and_resume_restores(self):
+        self.log("an open ask")
+        code, out, _ = _run(["head", "pause"])
+        self.assertEqual(code, 0)
+        self.assertIn("ok head paused", out)
+        self.assertTrue(os.path.exists(os.path.join(self.data_dir, store.GATE_PAUSE_FILE)))
+        self.assertEqual(self._gate_out(), ["ok nothing pending"])
+        code, out, _ = _run(["head", "resume"])
+        self.assertIn("ok head resumed. next: roadmap head brief --gate", out)
+        self.assertFalse(os.path.exists(os.path.join(self.data_dir, store.GATE_PAUSE_FILE)))
+        self.assertTrue(self._gate_out()[0].startswith("continue: H1 "))
+
+    def test_resume_when_not_paused_says_so(self):
+        code, out, _ = _run(["head", "resume"])
+        self.assertEqual(code, 0)
+        self.assertIn("ok head was not paused", out)
+
+    def test_gate_config_switch_off_is_silent(self):
+        self.log("an open ask")
+        with open(os.path.join(self.data_dir, "roadmap.config.json"), "w", encoding="utf-8") as fh:
+            fh.write('{"head": {"gate": false}}')
+        self.assertEqual(self._gate_out(), ["ok nothing pending"])
+
+    def test_done_checklist_has_the_section_11_steps(self):
+        code, out, _ = _run(["head", "brief", "--done"])
+        self.assertEqual(code, 0)
+        lines = out.strip().split("\n")
+        self.assertLessEqual(len(lines), 15)
+        for word in ("verify the diff", "--tokens", "commit", "push", "next wave", "cursor or agy audit", "head set"):
+            self.assertTrue(any(word in line for line in lines), word)
+        self.assertEqual(lines[-1], "next: roadmap head brief --gate")
+
+
 if __name__ == "__main__":
     unittest.main()
