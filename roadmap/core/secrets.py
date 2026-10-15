@@ -22,10 +22,16 @@ _VENDOR = tuple(re.compile(p) for p in (
     r"\bAKIA[0-9A-Z]{16}\b",                     # AWS access key ids
     r"\bAIza[0-9A-Za-z_-]{35}",                  # Google API keys
     r"\beyJ[\w-]{8,}\.[\w-]{8,}\.?[\w-]*",       # JWTs
+    r"\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{10,}",  # Stripe secret and restricted keys
+    r"\bglpat-[A-Za-z0-9_-]{20,}",               # GitLab personal access tokens
 ))
+# A short id such as H2, R7.31, P1.2 or j104 is a task or job id, never a secret, even after a credential-looking name.
+_TASK_VALUE = re.compile(r"[A-Za-z]\d{1,4}(?:\.\d{1,4})*")
 _BEARER = re.compile(r"(?i)\b(Bearer)\s+[A-Za-z0-9._~+/=-]+")
-_KEYED = re.compile(r"(?i)\b(password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|key)"
-                    r"(\"?\s*[=:]\s*\"?)[^\s\"',;&]+")
+# A name ending in a credential word (AWS_SECRET_ACCESS_KEY, db_password, api-key) followed by = or :. The value is
+# a quoted string to its closing quote (so a value with spaces is masked whole) or a run up to a space or ;,&,quote.
+_KEYED = re.compile(r"(?i)\b((?:[A-Za-z0-9]+[_-])*(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|key))"
+                    r"(\"?\s*[=:]\s*)(\"[^\"\n]*\"?|'[^'\n]*'?|[^\s\"',;&]+)")
 _PHONE_KEY = re.compile(r"(?<![\w.-])k=[^\s&#]+")  # the ?k= query key of the phone link
 _URL_CREDS = re.compile(r"(?i)\b([a-z][a-z0-9+.-]*://)[^/\s@]+@")
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}")
@@ -43,6 +49,17 @@ def _opaque(match):
     return SECRET
 
 
+def _keyed_mask(match):
+    """Keep the name and the separator, mask the value; a quoted value keeps its quotes. Task ids pass."""
+    value = match.group(3)
+    if _TASK_VALUE.fullmatch(value.strip("\"'")):
+        return match.group(0)
+    if value[:1] in ("\"", "'"):
+        quote = value[0]
+        return match.group(1) + match.group(2) + quote + SECRET + quote
+    return match.group(1) + match.group(2) + SECRET
+
+
 def scrub(text):
     """Return text with secrets, credentials, e-mail addresses, card-like numbers and home paths masked."""
     out = "" if text is None else str(text)
@@ -50,7 +67,7 @@ def scrub(text):
     for pattern in _VENDOR:
         out = pattern.sub(SECRET, out)
     out = _BEARER.sub(r"\1 " + SECRET, out)
-    out = _KEYED.sub(lambda m: m.group(1) + m.group(2) + SECRET, out)
+    out = _KEYED.sub(_keyed_mask, out)
     out = _PHONE_KEY.sub("k=" + SECRET, out)
     out = _URL_CREDS.sub(lambda m: m.group(1) + SECRET + "@", out)
     out = _EMAIL.sub(EMAIL, out)

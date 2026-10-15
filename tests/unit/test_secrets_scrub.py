@@ -33,6 +33,17 @@ MASKED = (
     ("ok sk-abcdefghijklmnopqrstu and ali@x.io", "ok [secret] and [email]"),
     ("key sk-abcdefghijklmnopqrstu", "key [secret]"),
     ("ab12cd34ef56gh78ij90kl12mn34op56 ok", "[secret] ok"),
+    ("AWS_SECRET_ACCESS_KEY=abcd1234EFGH end", "AWS_SECRET_ACCESS_KEY=[secret] end"),
+    ('db-password="correct horse battery" x', 'db-password="[secret]" x'),
+    ("password='pa ss' y", "password='[secret]' y"),
+    ('"token": "abc 123"', '"token": "[secret]"'),
+    ("password=hunter2,next", "password=[secret],next"),
+    ("Key: hunter2x", "Key: [secret]"),
+    ("api-key=zz9top", "api-key=[secret]"),
+    ("sk_live_abcdefghij1234 charged", "[secret] charged"),
+    ("rk_test_abcdefghij9876", "[secret]"),
+    ("glpat-abcdefghijklmnopqrst9", "[secret]"),
+    ("token=abc123 owner=R7.31", "token=[secret] owner=R7.31"),
     ("", ""),
     (None, ""),
 )
@@ -59,6 +70,14 @@ UNCHANGED = (
     "1760000000",
     "8000 chars, 100 summary, 160 note",
     "rb:roadmap-board/task/P1.2",
+    "key: H2",
+    "Key: P1.2 next",
+    "password=",
+    "AWS_REGION=eu-west-1",
+    "turnkey: ok",
+    "token count: 40",
+    "Stripe skill sk_docs",
+    "ids: H2 and j104, shas e4d66ae1f0c2b3a4d5e6f708192a3b4c5d6e7f80",
 )
 
 
