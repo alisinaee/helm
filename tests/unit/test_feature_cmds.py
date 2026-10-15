@@ -111,9 +111,11 @@ class Errors(FeatureCli):
     def test_parent_depth_is_reported_as_usage(self):
         self.add("Top")
         self.cli(["feature", "add", "Child", "--parent", "F1"])
-        code, _, err = self.cli(["feature", "add", "Grandchild", "--parent", "F2"])
+        self.assertEqual(self.cli(["feature", "add", "Grandchild", "--parent", "F2"])[0], 0)
+        code, _, err = self.cli(["feature", "add", "Fourth", "--parent", "F3"])
         self.assertEqual(code, 2)
-        self.assertIn("one level only", err)
+        self.assertIn("4th level", err)
+        self.assertIn("next: ", err)
 
 
 class Accept(FeatureCli):
