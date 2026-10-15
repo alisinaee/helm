@@ -25,6 +25,7 @@ globalThis.fetch = async (url) => {
 };
 
 const wf = await load("views/workflow.js");
+const tbl = await load("views/wf_table.js");
 const pause = () => new Promise((resolve) => setTimeout(resolve, 40));
 const now = fixture.now;
 const out = { cases: {}, sections: {}, served };
@@ -35,7 +36,7 @@ for (const name of CASES) {
     timeline: wf.timelineSvg(model),
     map: "",
     mapStacked: "", // the Map view moved to web/js/graph/render.js (WP72); covered by test_workflow_diagram.py
-    table: wf.tableHtml(model),
+    table: tbl.tableHtml(model),
     jobs: model.jobCount,
     lanes: model.lanes.map((lane) => lane.label),
     empty: model.empty,
