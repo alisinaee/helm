@@ -77,6 +77,7 @@ class App:
         self.cmd_limiter = security.RateLimiter()
         self.log_requests = security.RateLimiter(security.LOG_REQ_PER_S, security.LOG_REQ_WINDOW_S)
         self.log_events = security.EventBudget()
+        self.guard_lines = security.EventBudget(limit=security.LOG_GUARD_LINES_PER_MIN)
 
     def csrf_token(self):
         """The CSRF value the write guard compares against and the pages carry."""

@@ -251,3 +251,17 @@ class PhoneRefusesLog(ServerCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GuardLineBudgetTests(ServerCase):
+    """core.guard lines share a per-minute budget, so a flood of refused writes cannot fill the debug log."""
+
+    def test_refused_writes_past_the_guard_budget_write_no_more_guard_lines(self):
+        self.httpd.app.guard_lines = security.EventBudget(limit=2, window_s=60.0)
+        cross = self.write_headers(**{"Sec-Fetch-Site": "cross-site"})
+        for _ in range(5):
+            res = self.request("POST", "/api/v1/log", headers=cross, body=batch([ui_error()]))
+            self.assertEqual(res.status, 403)
+        rows = [e for e in rlog.read_events(src="core", ev="core.guard") if e["route"] == "/api/v1/log"]
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rlog.read_events(src="ui"), [])

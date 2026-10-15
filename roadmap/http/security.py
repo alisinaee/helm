@@ -219,6 +219,7 @@ LOG_REQ_PER_S = 20
 LOG_REQ_WINDOW_S = 1.0
 LOG_EVENTS_PER_MIN = 200
 LOG_EVENTS_WINDOW_S = 60.0
+LOG_GUARD_LINES_PER_MIN = 20  # core.guard lines for refused writes: a flood of refusals must not fill the log
 
 
 class EventBudget:

@@ -233,3 +233,12 @@ class HookEmitterTests(LogsCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SessionLastFilterTests(LogsCase):
+    def test_session_last_follows_the_level_filter(self):
+        self.write("WARN", "ui.error", msg="old warning", sid="old00001")
+        self.write("INFO", "ui.action", msg="newest info", sid="new00002")
+        _, out, _ = run(["logs", "--session", "last", "--level", "WARN"])
+        self.assertIn("old warning", out)
+        self.assertNotIn("newest info", out)

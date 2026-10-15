@@ -147,8 +147,11 @@ def _now_iso():
     return datetime.now().astimezone().isoformat(timespec="seconds")
 
 
-def _guard_refused(reason, path):
-    """Record one guard refusal (core.guard): the reason code and the path only. Never a header value or a body."""
+def _guard_refused(app, reason, path):
+    """Record one guard refusal (core.guard): the reason code and the path only. Never a header value or a body.
+    The lines share a per-minute budget, so a flood of refused requests cannot push the real WARN and ERROR lines out."""
+    if not app.guard_lines.take(1):
+        return
     rlog.debug_event("core", "WARN", "core.guard", msg=reason, route=path, data={"reason": reason})
 
 
@@ -156,12 +159,12 @@ def _write_guard(app, req):
     """CSRF, Sec-Fetch-Site or Origin, then Content-Type, then body size. Raises before anything is done."""
     reason = security.write_refusal(req.headers, app.csrf_token(), app.port)
     if reason is not None:
-        _guard_refused(reason, req.path)
+        _guard_refused(app, reason, req.path)
         raise RoadmapError("forbidden", "this write needs the page's own CSRF token from the same origin",
                            EXIT_ERROR)
     ctype = (req.headers.get("Content-Type") or "").split(";")[0].strip().lower()
     if ctype != JSON_MEDIA:
-        _guard_refused("ctype", req.path)
+        _guard_refused(app, "ctype", req.path)
         raise RoadmapError("unsupported_media_type", "write requests must send Content-Type: application/json",
                            EXIT_USAGE)
 
@@ -285,7 +288,7 @@ def log_post(app, req, match):
         body = req.read_body(security.LOG_BODY_BYTES)
     except RoadmapError as exc:
         if exc.code == "too_large":
-            _guard_refused("body_cap", req.path)
+            _guard_refused(app, "body_cap", req.path)
         raise
     try:
         parsed = security.strict_json_loads(body.decode("utf-8"))
@@ -299,7 +302,7 @@ def log_post(app, req, match):
     if len(events) > security.LOG_BATCH_MAX:
         raise RoadmapError("invalid_input", "at most %d events per batch" % security.LOG_BATCH_MAX, EXIT_USAGE)
     if not app.log_events.take(len(events)):
-        _guard_refused("rate", req.path)
+        _guard_refused(app, "rate", req.path)
         return error_reply(429, "rate_limited", "the debug log takes at most %d events a minute"
                            % security.LOG_EVENTS_PER_MIN, headers=[("Retry-After", "60")])
     for event in events:
