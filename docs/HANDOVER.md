@@ -38,6 +38,17 @@ START HERE in a new chat (any account, same Mac): `cd ~/Works/roadmap-board` and
 - Argon: gemini-4-argon via OpenCode returned "Insufficient account funds" (paid, no credit). Browser route: Claude extension is installed in Arc and listed as connected, but tab creation timed out; not yet tested.
 - First message for the new chat: `/head`
 
+### Checkpoint 4 (/head save, 2026-10-15)
+- Last commit: 2f5f594 (Cursor jobs record the real engine model; cursor-job wrapper closes its job). Pushed.
+- Running: 0. All stale running jobs (24) were closed as failed. Runners fixed: agy queue, OpenCode runner and tools/cursor-job.sh close their job on crash or kill.
+- Cursor sync report written (docs/reviews/cursor-sync-grok.md): partial, 3 numbered findings, not yet checked against the code. Its rerun job (j764) recorded as failed although the report exists: cause not yet found.
+- Head list cut: root cause diagnosed (docs/reviews/cursor-head-lazyload-fix.md): byte trim in snapshot.py drops newest rows; the Cursor fix job (H79) edits snapshot.py and head.js. Result NOT reviewed yet.
+- WIP uncommitted (about 75 files): review outputs (docs/reviews/agy-*, oc-*, cursor-*) and earlier in-progress edits. Commit by path only after verification.
+- Open asks (stop hook blocks on them): H35, H36, H47, H48, H49 (bound, unverified). Decide: verify, or close as delivered-pending-verification.
+- Argon: gemini-4-argon via OpenCode needs paid credit. Browser route: Claude Chrome extension connects (Browser 1 works); the Gemini app accepted the prompt once and was still planning when the test stopped. Not finished.
+- Standing rules from this chat: Haiku, agy (high is max) and Cursor only for work; Sonnet and Opus off; save-token mode; Head is the focus; agents list must show real model and effort.
+- First message for the new chat: `/head`
+
 ## 1. What the product is (the person's vision, in their words/themes)
 A project manager that is the BRIDGE between AI agents and a human GUI: "something like Jira but so small and light, just for AI agents using"; very user friendly AND AI-agent friendly; "next generation project management AI GUI, over the fly". Python stdlib only, runs as a local service, works for ANY project (split-net is only the first), separate project in ~/Works.
 Features the person asked for (keep all): planner; progress manager; subtask/task/phase manager; tasks manager; issues section; overall section; project token-usage manager; agent and subagent rules; Claude rules for the project (CLAUDE.md sync); agents can ASK the user questions (inbox, one-click answers); comments on tasks; roadmap visual; agents workflow visual = a REAL interactive diagram map (nodes/edges, done/doing/todo/blocked, handoffs, dependencies, blockers, touch+mouse, pan/zoom) plus timeline; interactive: start a task from the GUI (queue), stop, set limits, answer questions, approve phases; global (all projects) AND per-project daily/weekly usage limits ("just use below 10% of daily or weekly"); sidebar LEFT for sections, panel RIGHT for projects/general; modern Jira/Trello feel; full-width UI (no max-width cap); dark+light; phone/touch; very token-optimized for agents (cheap commands, tiny outputs, Haiku-sized skills); research-first onboarding for NEW projects (agent researches the project's needs, then fills the plan); a Planner section: features -> tasks bound to each feature (traceability, uncovered features, orphan tasks, person accepts features); notifications; ⌘K palette; daily usage limit widget; all numbers and actions ALIGNED.
