@@ -23,7 +23,6 @@ ALLOWED = {
     ("settings.js", 50): "option label from a fixed list",
     ("workflow.js", 716): "control text passed by fixed callers",
     ("details.js", 394): "the user's own answer option, full text, aria-label names the question",
-    ("planner.js", 117): "plan item text in a picker menu, shown in full",
 }
 
 # A button whose visible text is built from a variable: >" + esc(x) + "</button> or >' + esc(x) + '</button>.
