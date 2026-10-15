@@ -4266,18 +4266,432 @@
       "title": "haiku: R7.54 fix verified 375px view findings",
       "model": "haiku",
       "task": "R7.54",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-15T15:18:36+03:30",
-      "ended": null
+      "ended": "2026-10-15T15:25:28+03:30"
     },
     {
       "id": "j812",
       "title": "haiku: R7.53 fix Cursor commit-review bugs",
       "model": "haiku",
       "task": "R7.53",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-15T15:18:36+03:30",
+      "ended": "2026-10-15T15:32:14+03:30"
+    },
+    {
+      "id": "j813",
+      "title": "agy: security of head paging and ETag routes",
+      "model": "agy",
+      "task": "R7.55",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T15:19:34+03:30",
+      "ended": "2026-10-15T15:28:47+03:30"
+    },
+    {
+      "id": "j814",
+      "title": "agy: docs/API.md vs routes",
+      "model": "agy",
+      "task": "R7.55",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T15:19:36+03:30",
+      "ended": "2026-10-15T15:21:25+03:30"
+    },
+    {
+      "id": "j815",
+      "title": "agy: README vs CLI",
+      "model": "agy",
+      "task": "R7.55",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T15:19:38+03:30",
+      "ended": "2026-10-15T15:23:58+03:30"
+    },
+    {
+      "id": "j816",
+      "title": "cursor: R3.6 web code review",
+      "model": "cursor",
+      "task": "R3.6",
+      "effort": "high",
+      "engine_model": "grok-4.7-xhigh",
+      "status": "done",
+      "started": "2026-10-15T15:27:19+03:30",
+      "ended": "2026-10-15T15:41:53+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j817",
+      "title": "agy: UX audit (ui-ux checklist): overview",
+      "model": "agy",
+      "task": "R7.26",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T15:27:19+03:30",
+      "ended": "2026-10-15T15:38:56+03:30"
+    },
+    {
+      "id": "j818",
+      "title": "agy: UX audit (ui-ux checklist): work",
+      "model": "agy",
+      "task": "R7.26",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T15:27:21+03:30",
+      "ended": "2026-10-15T15:28:04+03:30"
+    },
+    {
+      "id": "j819",
+      "title": "agy: UX audit (ui-ux checklist): head",
+      "model": "agy",
+      "task": "R7.26",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T15:27:23+03:30",
+      "ended": "2026-10-15T15:28:09+03:30"
+    },
+    {
+      "id": "j820",
+      "title": "sonnet: R7.21 wave plan to 1.0.0",
+      "model": "sonnet",
+      "task": "R7.21",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-15T15:27:24+03:30",
+      "ended": "2026-10-15T15:28:26+03:30"
+    },
+    {
+      "id": "j821",
+      "title": "agy: UX audit (ui-ux checklist): agents",
+      "model": "agy",
+      "task": "R7.26",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T15:27:25+03:30",
+      "ended": "2026-10-15T15:37:12+03:30"
+    },
+    {
+      "id": "j822",
+      "title": "agy: UX audit (ui-ux checklist): tokens",
+      "model": "agy",
+      "task": "R7.26",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T15:27:27+03:30",
+      "ended": "2026-10-15T15:28:26+03:30"
+    },
+    {
+      "id": "j823",
+      "title": "haiku: R7.56 deferred 375px view fixes",
+      "model": "haiku",
+      "task": "R7.56",
+      "status": "done",
+      "started": "2026-10-15T15:27:27+03:30",
+      "ended": "2026-10-15T15:39:12+03:30"
+    },
+    {
+      "id": "j824",
+      "title": "agy: UX audit (ui-ux checklist): workflow",
+      "model": "agy",
+      "task": "R7.26",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T15:27:29+03:30",
+      "ended": "2026-10-15T15:35:44+03:30"
+    },
+    {
+      "id": "j825",
+      "title": "agy: UX audit (ui-ux checklist): roadmap",
+      "model": "agy",
+      "task": "R7.26",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T15:27:31+03:30",
+      "ended": "2026-10-15T15:36:14+03:30"
+    },
+    {
+      "id": "j826",
+      "title": "agy: UX audit (ui-ux checklist): settings",
+      "model": "agy",
+      "task": "R7.26",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T15:27:33+03:30",
+      "ended": "2026-10-15T15:34:29+03:30"
+    },
+    {
+      "id": "j827",
+      "title": "haiku: R7.57 repaint keeps scroll position",
+      "model": "haiku",
+      "task": "R7.57",
+      "status": "done",
+      "started": "2026-10-15T15:28:55+03:30",
+      "ended": "2026-10-15T15:29:53+03:30"
+    },
+    {
+      "id": "j828",
+      "title": "haiku: R7.58 UI log CSRF rejection",
+      "model": "haiku",
+      "task": "R7.58",
+      "status": "done",
+      "started": "2026-10-15T15:28:58+03:30",
+      "ended": "2026-10-15T15:31:51+03:30"
+    },
+    {
+      "id": "j829",
+      "title": "agy: W1.h verify R6.18 R6.19 R6.22",
+      "model": "agy",
+      "task": "R6.19",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T15:29:33+03:30",
+      "ended": "2026-10-15T15:38:13+03:30"
+    },
+    {
+      "id": "j830",
+      "title": "haiku: R7.22 W1.a backlog core",
+      "model": "haiku",
+      "task": "R7.22",
+      "status": "done",
+      "started": "2026-10-15T15:29:35+03:30",
+      "ended": "2026-10-15T15:31:17+03:30"
+    },
+    {
+      "id": "j831",
+      "title": "haiku: R7.29 W1.b roadmap git command",
+      "model": "haiku",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T15:29:39+03:30",
+      "ended": "2026-10-15T15:33:15+03:30"
+    },
+    {
+      "id": "j832",
+      "title": "haiku: R7.28 W1.d tokens simple screen",
+      "model": "haiku",
+      "task": "R7.28",
+      "status": "done",
+      "started": "2026-10-15T15:29:42+03:30",
+      "ended": "2026-10-15T15:31:54+03:30"
+    },
+    {
+      "id": "j833",
+      "title": "haiku: R7.22 W2.a backlog ops",
+      "model": "haiku",
+      "task": "R7.22",
+      "status": "done",
+      "started": "2026-10-15T15:31:33+03:30",
+      "ended": "2026-10-15T15:35:11+03:30"
+    },
+    {
+      "id": "j834",
+      "title": "haiku: R7.61 api.js CSRF retry",
+      "model": "haiku",
+      "task": "R7.61",
+      "status": "done",
+      "started": "2026-10-15T15:32:16+03:30",
+      "ended": "2026-10-15T15:33:31+03:30"
+    },
+    {
+      "id": "j835",
+      "title": "agy: why the workflow map is stale or wrong",
+      "model": "agy",
+      "task": "R7.62",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T15:32:51+03:30",
+      "ended": "2026-10-15T15:41:41+03:30"
+    },
+    {
+      "id": "j836",
+      "title": "haiku: R7.29 W1.c Git GUI",
+      "model": "haiku",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T15:33:46+03:30",
+      "ended": "2026-10-15T15:39:35+03:30"
+    },
+    {
+      "id": "j837",
+      "title": "haiku: R7.22 W2.b backlog snapshot",
+      "model": "haiku",
+      "task": "R7.22",
+      "status": "done",
+      "started": "2026-10-15T15:33:48+03:30",
+      "ended": "2026-10-15T15:37:40+03:30"
+    },
+    {
+      "id": "j838",
+      "title": "haiku: R7.63 tokens and top bar usage truth",
+      "model": "haiku",
+      "task": "R7.63",
+      "status": "done",
+      "started": "2026-10-15T15:35:04+03:30",
+      "ended": "2026-10-15T15:44:35+03:30"
+    },
+    {
+      "id": "j839",
+      "title": "opus: R7.64 head agent v2 design",
+      "model": "opus",
+      "task": "R7.64",
+      "effort": "medium",
+      "status": "done",
+      "started": "2026-10-15T15:38:24+03:30",
+      "ended": "2026-10-15T15:41:38+03:30"
+    },
+    {
+      "id": "j840",
+      "title": "haiku: R7.65 button label wrap pattern",
+      "model": "haiku",
+      "task": "R7.65",
+      "status": "done",
+      "started": "2026-10-15T15:41:45+03:30",
+      "ended": "2026-10-15T15:47:55+03:30"
+    },
+    {
+      "id": "j841",
+      "title": "cursor: R3.7 logging review",
+      "model": "cursor",
+      "task": "R3.7",
+      "effort": "high",
+      "engine_model": "grok-4.7-xhigh",
+      "status": "running",
+      "started": "2026-10-15T15:41:53+03:30",
       "ended": null
+    },
+    {
+      "id": "j842",
+      "title": "haiku: R7.67 head v2 A1 budget guard",
+      "model": "haiku",
+      "task": "R7.67",
+      "status": "done",
+      "started": "2026-10-15T15:42:29+03:30",
+      "ended": "2026-10-15T15:45:26+03:30"
+    },
+    {
+      "id": "j843",
+      "title": "haiku: R7.68 head v2 A2 event status",
+      "model": "haiku",
+      "task": "R7.68",
+      "status": "done",
+      "started": "2026-10-15T15:42:33+03:30",
+      "ended": "2026-10-15T15:52:28+03:30"
+    },
+    {
+      "id": "j844",
+      "title": "haiku: R7.66 head states colors questions",
+      "model": "haiku",
+      "task": "R7.66",
+      "status": "done",
+      "started": "2026-10-15T15:42:41+03:30",
+      "ended": "2026-10-15T15:52:17+03:30"
+    },
+    {
+      "id": "j845",
+      "title": "haiku: R7.62 workflow map fixes",
+      "model": "haiku",
+      "task": "R7.62",
+      "status": "done",
+      "started": "2026-10-15T15:43:18+03:30",
+      "ended": "2026-10-15T15:58:36+03:30"
+    },
+    {
+      "id": "j846",
+      "title": "haiku: R7.25 W3.b Work v2 and issue ops",
+      "model": "haiku",
+      "task": "R7.25",
+      "status": "done",
+      "started": "2026-10-15T15:43:53+03:30",
+      "ended": "2026-10-15T15:49:32+03:30"
+    },
+    {
+      "id": "j847",
+      "title": "haiku: R7.75 git GUI test failures",
+      "model": "haiku",
+      "task": "R7.75",
+      "status": "done",
+      "started": "2026-10-15T15:48:07+03:30",
+      "ended": "2026-10-15T15:50:22+03:30"
+    },
+    {
+      "id": "j848",
+      "title": "haiku: R7.69 head v2 A3 ask-close guard",
+      "model": "haiku",
+      "task": "R7.69",
+      "status": "done",
+      "started": "2026-10-15T15:53:38+03:30",
+      "ended": "2026-10-15T16:00:39+03:30"
+    },
+    {
+      "id": "j849",
+      "title": "haiku: R7.70 head v2 A4 runners task id",
+      "model": "haiku",
+      "task": "R7.70",
+      "status": "done",
+      "started": "2026-10-15T15:53:42+03:30",
+      "ended": "2026-10-15T15:56:55+03:30"
+    },
+    {
+      "id": "j850",
+      "title": "haiku: R7.25 W4.a work v2 snapshot fields",
+      "model": "haiku",
+      "task": "R7.25",
+      "status": "done",
+      "started": "2026-10-15T15:53:46+03:30",
+      "ended": "2026-10-15T15:57:09+03:30"
+    },
+    {
+      "id": "j851",
+      "title": "haiku: R7.60 Agents full history with remove",
+      "model": "haiku",
+      "task": "R7.60",
+      "status": "failed",
+      "started": "2026-10-15T15:54:09+03:30",
+      "ended": "2026-10-15T16:07:02+03:30",
+      "reason": "stopped: 5h usage 85% past the 80% stop"
+    },
+    {
+      "id": "j852",
+      "title": "opus: R7.77 usage band permanent fix",
+      "model": "opus",
+      "task": "R7.77",
+      "effort": "medium",
+      "status": "failed",
+      "started": "2026-10-15T15:56:37+03:30",
+      "ended": "2026-10-15T16:07:02+03:30",
+      "reason": "stopped: 5h usage 85% past the 80% stop"
+    },
+    {
+      "id": "j853",
+      "title": "haiku: R7.78 Work Doing equals live jobs",
+      "model": "haiku",
+      "task": "R7.78",
+      "status": "failed",
+      "started": "2026-10-15T16:03:27+03:30",
+      "ended": "2026-10-15T16:07:02+03:30",
+      "reason": "stopped: 5h usage 85% past the 80% stop"
+    },
+    {
+      "id": "j854",
+      "title": "opus: R7.79 architecture diagram page",
+      "model": "opus",
+      "task": "R7.79",
+      "effort": "medium",
+      "status": "failed",
+      "started": "2026-10-15T16:03:36+03:30",
+      "ended": "2026-10-15T16:07:02+03:30",
+      "reason": "stopped: 5h usage 85% past the 80% stop"
+    },
+    {
+      "id": "j855",
+      "title": "haiku: R7.80 head list in-place updates",
+      "model": "haiku",
+      "task": "R7.80",
+      "status": "failed",
+      "started": "2026-10-15T16:04:41+03:30",
+      "ended": "2026-10-15T16:07:03+03:30",
+      "reason": "stopped: 5h usage 85% past the 80% stop"
     }
   ]
 }

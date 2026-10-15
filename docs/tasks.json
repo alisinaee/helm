@@ -1971,7 +1971,7 @@
       "id": "R7.62",
       "phase": "R7",
       "title": "Workflow map out of sync / wrong: find why and fix (H121)",
-      "status": "partial",
+      "status": "done",
       "tokensK": 30,
       "thinking": "low",
       "model": "haiku",
@@ -1979,8 +1979,12 @@
       "check": "none",
       "checkK": 0,
       "at": {
-        "partial": "2026-10-15T15:45:28+03:30"
-      }
+        "partial": "2026-10-15T15:45:28+03:30",
+        "done": "2026-10-15T16:02:57+03:30"
+      },
+      "refs": [
+        "commit:ad044549b996e11d055df7c646fd20a3b7731a08"
+      ]
     },
     {
       "id": "R7.63",
@@ -2056,7 +2060,7 @@
       "id": "R7.68",
       "phase": "R7",
       "title": "Head v2 A2: event-driven status (job start doing, commit refs, asks auto-close)",
-      "status": "partial",
+      "status": "done",
       "tokensK": 40,
       "thinking": "low",
       "model": "haiku",
@@ -2064,32 +2068,45 @@
       "check": "none",
       "checkK": 0,
       "at": {
-        "partial": "2026-10-15T15:45:28+03:30"
-      }
+        "partial": "2026-10-15T15:45:28+03:30",
+        "done": "2026-10-15T15:53:12+03:30"
+      },
+      "refs": [
+        "commit:daa315ed10b4385b9bbf98ad55d1f6c02ad30d7e"
+      ]
     },
     {
       "id": "R7.69",
       "phase": "R7",
       "title": "Head v2 A3: ask-close guard (real ref, rate limit, no umbrella)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 15,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T16:02:57+03:30"
+      }
     },
     {
       "id": "R7.70",
       "phase": "R7",
       "title": "Head v2 A4: runners take task id; fail reasons; engine unavailable",
-      "status": "todo",
+      "status": "done",
       "tokensK": 20,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:57:32+03:30"
+      },
+      "refs": [
+        "commit:27695618e1bec63779852eddf3ba00246207b725"
+      ]
     },
     {
       "id": "R7.71",
@@ -2131,7 +2148,7 @@
       "id": "R7.66",
       "phase": "R7",
       "title": "Head section: clear states (queue, doing, done, failed, needs you, blocked), kind colors, agent questions with answer UI (H127)",
-      "status": "partial",
+      "status": "done",
       "tokensK": 40,
       "thinking": "low",
       "model": "haiku",
@@ -2139,20 +2156,27 @@
       "check": "none",
       "checkK": 0,
       "at": {
-        "partial": "2026-10-15T15:45:28+03:30"
+        "partial": "2026-10-15T15:45:28+03:30",
+        "done": "2026-10-15T15:53:12+03:30"
       }
     },
     {
       "id": "R7.74",
       "phase": "R7",
       "title": "Workflow timeline: drag/pan + zoom, readable bars, engine lanes (cursor, opencode), now label, tokens column (H129)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 40,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T16:02:57+03:30"
+      },
+      "refs": [
+        "commit:ad044549b996e11d055df7c646fd20a3b7731a08"
+      ]
     },
     {
       "id": "R7.75",
@@ -2178,6 +2202,66 @@
       "title": "usage sync: clear error when the keychain has no claude.ai login (desktop app); point to usage push",
       "status": "todo",
       "tokensK": 10,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.77",
+      "phase": "R7",
+      "title": "Usage band: automatic live usage source (no manual entry), one stop value everywhere (top bar says 95, limit is 85) (H132)",
+      "status": "todo",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.78",
+      "phase": "R7",
+      "title": "Work Doing = tasks with a live job; job end moves task back (done candidate or todo) automatically (H134)",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.79",
+      "phase": "R7",
+      "title": "Architecture diagram (UI + core service, data flow) as a page + list of core issues to fix (H135)",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.80",
+      "phase": "R7",
+      "title": "Head list: update rows in place (keyed), no full list replace, render < 50 ms; wheel never stalls (H136)",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.81",
+      "phase": "R7",
+      "title": "Head asks that need the person appear in the Inbox (needs-you asks as inbox items with answer actions) (H138)",
+      "status": "todo",
+      "tokensK": 20,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,

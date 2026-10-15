@@ -273,3 +273,88 @@
 {"v":1,"t":"u","id":"H107","ts":"2026-10-15T11:49:18Z","by":"head","set":{"status":"done"},"note":"audit b742b79; not-handled asks bound or needs-you"}
 {"v":1,"t":"u","id":"H108","ts":"2026-10-15T11:49:18Z","by":"head","set":{"status":"done"},"note":"head continued alone: R7.44-R7.52 pushed, R7.53/R7.54 running"}
 {"v":1,"t":"u","id":"H109","ts":"2026-10-15T11:49:28Z","by":"head","set":{"status":"done"},"note":"agy wave j799-j805 + Cursor j807 done (7b78168); fixes R7.53 R7.54 running"}
+{"v":1,"t":"e","ts":"2026-10-15T11:49:40Z","src":"hook","sid":"7ae29675","acct":null,"kind":"question?","sum":"im back , what is pend on me ?","len":30,"h":"sha1:5547acb404dc","id":"H110"}
+{"v":1,"t":"u","id":"H110","ts":"2026-10-15T11:49:47Z","by":"head","set":{"kind":"question","sum":"what is pending on the person: listed in chat"},"link":["+task:R7.36"]}
+{"v":1,"t":"u","id":"H110","ts":"2026-10-15T11:49:47Z","by":"head","set":{"status":"done"},"note":"answered: needs-you list (H52 H58 H69-H76 H80 H81 H88, R3.2)"}
+{"v":1,"t":"e","ts":"2026-10-15T11:51:07Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"weekly limit is 85","len":18,"h":"sha1:bd27bc32f479","id":"H111"}
+{"v":1,"t":"u","id":"H111","ts":"2026-10-15T11:51:14Z","by":"head","set":{"kind":"rule","sum":"weekly stop now 85%"},"link":["+task:R7.36"]}
+{"v":1,"t":"e","ts":"2026-10-15T11:51:28Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"leave tha argon , no need for now","len":37,"h":"sha1:4ba27180bce8","id":"H112"}
+{"v":1,"t":"u","id":"H69","ts":"2026-10-15T11:51:32Z","by":"head","set":{"status":"declined"},"note":"Argon dropped by the person (H112)"}
+{"v":1,"t":"u","id":"H73","ts":"2026-10-15T11:51:32Z","by":"head","set":{"status":"declined"},"note":"Argon dropped by the person (H112)"}
+{"v":1,"t":"u","id":"H74","ts":"2026-10-15T11:51:32Z","by":"head","set":{"status":"declined"},"note":"Argon dropped by the person (H112)"}
+{"v":1,"t":"u","id":"H75","ts":"2026-10-15T11:51:32Z","by":"head","set":{"status":"declined"},"note":"Argon dropped by the person (H112)"}
+{"v":1,"t":"u","id":"H76","ts":"2026-10-15T11:51:33Z","by":"head","set":{"status":"declined"},"note":"Argon dropped by the person (H112)"}
+{"v":1,"t":"u","id":"H80","ts":"2026-10-15T11:51:33Z","by":"head","set":{"status":"declined"},"note":"Argon dropped by the person (H112)"}
+{"v":1,"t":"u","id":"H112","ts":"2026-10-15T11:51:33Z","by":"head","set":{"kind":"decision","sum":"drop Argon for now"},"link":["+task:R7.36"]}
+{"v":1,"t":"u","id":"H112","ts":"2026-10-15T11:51:33Z","by":"head","set":{"status":"done"},"note":"Argon asks H69 H73-H76 H80 declined"}
+{"v":1,"t":"e","ts":"2026-10-15T11:53:23Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"currently we are not working on split net project we focus on the project managent project…","len":163,"h":"sha1:ea53196ec941","id":"H113"}
+{"v":1,"t":"u","id":"H113","ts":"2026-10-15T11:53:27Z","by":"head","set":{"kind":"rule","sum":"focus roadmap-board only; split-net paused"},"link":["+task:R7.36"]}
+{"v":1,"t":"u","id":"H113","ts":"2026-10-15T11:53:27Z","by":"head","set":{"status":"done"},"note":"status given; split-net paused"}
+{"v":1,"t":"e","ts":"2026-10-15T11:54:08Z","src":"hook","sid":"7ae29675","acct":null,"kind":"question?","sum":"did you figure out about core and panel sync feature ?","len":73,"h":"sha1:8d972ee1643f","id":"H114"}
+{"v":1,"t":"u","id":"H114","ts":"2026-10-15T11:54:14Z","by":"head","set":{"kind":"question","sum":"core/panel sync: root cause found and fixed (99bd8f3 0f230f6 7cf12c3); live UI check pending"},"link":["+task:R7.50"]}
+{"v":1,"t":"e","ts":"2026-10-15T11:55:01Z","src":"hook","sid":"7ae29675","acct":null,"kind":"review?","sum":"did u review the head items and why some items missing ?","len":56,"h":"sha1:166765f6f8d5","id":"H115"}
+{"v":1,"t":"u","id":"H115","ts":"2026-10-15T11:55:08Z","by":"head","set":{"kind":"review","sum":"why head items missing: window cut + capture gaps"},"link":["+task:R7.44"]}
+{"v":1,"t":"e","ts":"2026-10-15T11:55:56Z","src":"hook","sid":"7ae29675","acct":null,"kind":"review?","sum":"bring all the head items back !","len":50,"h":"sha1:e8c8ab4c5f25","id":"H116"}
+{"v":1,"t":"e","ts":"2026-10-15T11:56:58Z","src":"hook","sid":"7ae29675","acct":null,"kind":"review?","sum":"the current running task why are so few ?","len":190,"h":"sha1:452ef687c6c8","id":"H117"}
+{"v":1,"t":"u","id":"H117","ts":"2026-10-15T11:57:19Z","by":"head","set":{"kind":"review","sum":"few jobs running: re-plan whole project, run max parallel"},"link":["+task:R7.21"]}
+{"v":1,"t":"e","ts":"2026-10-15T11:57:58Z","src":"hook","sid":"7ae29675","acct":null,"kind":"review?","sum":"i see scroll issue o the head items , check the logs and fix the issue","len":70,"h":"sha1:81dcaf6f7db0","id":"H118"}
+{"v":1,"t":"u","id":"H118","ts":"2026-10-15T11:58:49Z","by":"head","link":["+task:R7.57"]}
+{"v":1,"t":"e","ts":"2026-10-15T11:59:20Z","src":"hook","sid":"7ae29675","acct":null,"kind":"review?","sum":"u need to run the cursor task high eff for check full ui , reposnive all things list the issue as…","len":137,"h":"sha1:663a1888e180","id":"H119"}
+{"v":1,"t":"u","id":"H119","ts":"2026-10-15T11:59:33Z","by":"head","link":["+task:R7.59"]}
+{"v":1,"t":"u","id":"H114","ts":"2026-10-15T11:59:55Z","by":"head","set":{"status":"done"},"note":"answered: root cause fixed 99bd8f3 0f230f6 7cf12c3; live check = H81"}
+{"v":1,"t":"u","id":"H115","ts":"2026-10-15T11:59:55Z","by":"head","set":{"status":"done"},"note":"answered: window cut fixed f8e4ab5; default filter Open; slash-only msgs skipped by design"}
+{"v":1,"t":"u","id":"H116","ts":"2026-10-15T11:59:55Z","by":"head","set":{"kind":"review","sum":"show all head items: All filter link given; 118 of 118 verified in browser"},"link":["+task:R7.44"]}
+{"v":1,"t":"u","id":"H116","ts":"2026-10-15T11:59:56Z","by":"head","set":{"status":"done"},"note":"verified: #/p/roadmap-board/head?f=all shows 118 of 118"}
+{"v":1,"t":"u","id":"H118","ts":"2026-10-15T12:00:20Z","by":"head","set":{"status":"done"},"note":"fixed 545e8e3: refresh kept resetting .hd-list scrollTop; UI log csrf in R7.58"}
+{"v":1,"t":"e","ts":"2026-10-15T12:00:39Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"Agents it need to keep all the hisroty , user can select and remove history","len":80,"h":"sha1:300460d85652","id":"H120"}
+{"v":1,"t":"u","id":"H120","ts":"2026-10-15T12:00:46Z","by":"head","set":{"kind":"ask","sum":"Agents keeps all history; person selects and removes rows"},"link":["+task:R7.60"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:02:17Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"i think the workflow map is not ok and sync","len":43,"h":"sha1:6f0ce6c4c5d1","id":"H121"}
+{"v":1,"t":"u","id":"H121","ts":"2026-10-15T12:02:50Z","by":"head","set":{"kind":"bug","sum":"workflow map wrong and not in sync"},"link":["+task:R7.62"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:02:59Z","src":"hook","sid":"7ae29675","acct":null,"kind":"review?","sum":"the work flow map no need for time duration filter like today , its genral map review this section…","len":118,"h":"sha1:521a8fe0203a","id":"H122"}
+{"v":1,"t":"u","id":"H122","ts":"2026-10-15T12:03:02Z","by":"head","set":{"kind":"ask","sum":"workflow map: remove time-range filter (Today etc.); general map; review and fix all issues"},"link":["+task:R7.62"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:04:12Z","src":"hook","sid":"7ae29675","acct":null,"kind":"review?","sum":"check the token section , why not working and sync to show correct data ?","len":152,"h":"sha1:d1b87918c3a0","id":"H123"}
+{"v":1,"t":"u","id":"H123","ts":"2026-10-15T12:04:47Z","by":"head","set":{"kind":"bug","sum":"Tokens section and top bar usage/limits wrong and not in sync"},"link":["+task:R7.28"]}
+{"v":1,"t":"u","id":"H123","ts":"2026-10-15T12:04:57Z","by":"head","link":["+task:R7.63"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:08:04Z","src":"hook","sid":"7ae29675","acct":null,"kind":"review?","sum":"ask opus : about the /head feature we have , and the head section we have in the panel -- the head…","len":678,"h":"sha1:8f278b6757b2","id":"H124"}
+{"v":1,"t":"u","id":"H124","ts":"2026-10-15T12:08:12Z","by":"head","set":{"kind":"review","sum":"Opus design: head agent v2, any model can be head, token-lean"},"link":["+task:R7.64"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:08:56Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"in the browser pane , close the old ones and open the latest and main one","len":83,"h":"sha1:56f02b04d1ff","id":"H125"}
+{"v":1,"t":"u","id":"H125","ts":"2026-10-15T12:09:26Z","by":"head","set":{"kind":"ask","sum":"browser pane: close old tabs, keep main dashboard"},"link":["+task:R7.36"]}
+{"v":1,"t":"u","id":"H125","ts":"2026-10-15T12:09:26Z","by":"head","set":{"status":"done"},"note":"closed tab-1 and file:// tab-2; main tab reloaded on roadmap-board overview"}
+{"v":1,"t":"e","ts":"2026-10-15T12:09:55Z","src":"hook","sid":"7ae29675","acct":null,"kind":"review?","sum":"ui issue , find similar ui issue and run sub task for check them all and fix them all pattenrt issue","len":100,"h":"sha1:b6890f62ed94","id":"H126"}
+{"v":1,"t":"u","id":"H126","ts":"2026-10-15T12:11:38Z","by":"head","set":{"kind":"bug","sum":"UI pattern: long button labels wrap/overflow (Activity Undo); fix everywhere"},"link":["+task:R7.65"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:12:13Z","src":"hook","sid":"7ae29675","acct":null,"kind":"bug?","sum":"the head state need to show the things that is done and full fill , i dont see this , see new and…","len":415,"h":"sha1:8f374584e2b3","id":"H127"}
+{"v":1,"t":"u","id":"H127","ts":"2026-10-15T12:12:26Z","by":"head","set":{"kind":"bug","sum":"Head states (queue/doing/done/failed/needs-you/blocked), kind colors, agent question+answer UI"},"link":["+task:R7.66"]}
+{"v":1,"t":"u","id":"H124","ts":"2026-10-15T12:12:26Z","by":"head","link":["+task:R7.67","+task:R7.68","+task:R7.73"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:13:23Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"i told in before to remove the issues section and i did told about how this should be handle","len":92,"h":"sha1:d88cdf2126a1","id":"H128"}
+{"v":1,"t":"u","id":"H128","ts":"2026-10-15T12:13:46Z","by":"head","set":{"kind":"ask","sum":"remove Issues section; issues live in Work (WORK-UNIFIED-SPEC, decided 2026-10-14)"},"link":["+task:R7.25"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:14:01Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"the time line feature is not good and ok, a lot of ui issue , cant drag and ...","len":79,"h":"sha1:52cee1991340","id":"H129"}
+{"v":1,"t":"u","id":"H129","ts":"2026-10-15T12:14:08Z","by":"head","set":{"kind":"bug","sum":"timeline: many UI issues, cannot drag"},"link":["+task:R7.74"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:15:18Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"still the work section is not sync and update , find and fix rout cuase issue","len":77,"h":"sha1:20622aa6e084","id":"H130"}
+{"v":1,"t":"u","id":"H130","ts":"2026-10-15T12:15:27Z","by":"head","set":{"kind":"bug","sum":"Work board stale: task status not updated by job events (root cause); fix A2 R7.68"},"link":["+task:R7.68"]}
+{"v":1,"t":"u","id":"H126","ts":"2026-10-15T12:18:07Z","by":"head","set":{"status":"done"},"note":"fixed 3ea1f57: only activity.js had the pattern; guard test added"}
+{"v":1,"t":"e","ts":"2026-10-15T12:20:22Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"why it cant show current usage ?","len":39,"h":"sha1:8937a05836e1","id":"H131"}
+{"v":1,"t":"u","id":"H131","ts":"2026-10-15T12:20:30Z","by":"head","set":{"kind":"question","sum":"why no current usage"},"link":["+task:R7.63"]}
+{"v":1,"t":"u","id":"H131","ts":"2026-10-15T12:22:11Z","by":"head","set":{"status":"done"},"note":"cause: keychain has no claude.ai login (desktop app); head now pushes live usage from get_usage each turn: 5h 67%, week 80%"}
+{"v":1,"t":"u","id":"H127","ts":"2026-10-15T12:23:12Z","by":"head","set":{"status":"done"},"note":"5839797: states, kind colors, agent questions"}
+{"v":1,"t":"u","id":"H130","ts":"2026-10-15T12:23:12Z","by":"head","set":{"status":"done"},"note":"root cause: task status not event-driven; fixed daa315e (job start -> doing, commit refs)"}
+{"v":1,"t":"u","id":"H117","ts":"2026-10-15T12:23:58Z","by":"head","set":{"status":"done"},"note":"replanned: docs/WAVE-PLAN.md (b?); waves running in parallel; commits e107bdd..daa315e"}
+{"v":1,"t":"e","ts":"2026-10-15T12:25:37Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"rb:roadmap-board/section/usage.band section count=2 still have issue here , as opus to fix this…","len":112,"h":"sha1:4526448dd264","id":"H132"}
+{"v":1,"t":"u","id":"H132","ts":"2026-10-15T12:26:25Z","by":"head","set":{"kind":"bug","sum":"usage band still wrong: needs automatic live source; top bar stop 95 vs 85"},"link":["+task:R7.77"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:28:11Z","src":"hook","sid":"7ae29675","acct":null,"kind":"rule?","sum":"still why the fuck i dont see the all items for the head and some of the missing , bring them all…","len":110,"h":"sha1:8db20b771fdd","id":"H133"}
+{"v":1,"t":"u","id":"H133","ts":"2026-10-15T12:28:18Z","by":"head","set":{"kind":"bug","sum":"Head screen still missing items; show everything"},"link":["+task:R7.44"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:31:42Z","src":"hook","sid":"7ae29675","acct":null,"kind":"question?","sum":"still the work section not sync with project i see some of doing items that currently not in the…","len":191,"h":"sha1:6d48421d1c45","id":"H134"}
+{"v":1,"t":"u","id":"H122","ts":"2026-10-15T12:32:57Z","by":"auto","set":{"status":"done"},"note":"auto: R7.62 ad04454"}
+{"v":1,"t":"e","ts":"2026-10-15T12:32:57Z","src":"hook","sid":"7ae29675","acct":null,"kind":"bug?","sum":"in new pane create the viesul diagram about how the project managet roadmap work in general , ui…","len":251,"h":"sha1:c130e0e5abe7","id":"H135"}
+{"v":1,"t":"u","id":"H134","ts":"2026-10-15T12:33:21Z","by":"head","set":{"kind":"bug","sum":"Work Doing shows tasks with no live job; must sync automatically"},"link":["+task:R7.78"]}
+{"v":1,"t":"u","id":"H135","ts":"2026-10-15T12:33:21Z","by":"head","set":{"kind":"ask","sum":"Opus: visual diagram of how roadmap works (UI + core), find core issues"},"link":["+task:R7.79"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:33:47Z","src":"hook","sid":"7ae29675","acct":null,"kind":"review?","sum":"in the head section , some times i see the scroll mouse did not work , check the logs and fix the…","len":102,"h":"sha1:662a098aa480","id":"H136"}
+{"v":1,"t":"u","id":"H136","ts":"2026-10-15T12:34:10Z","by":"head","set":{"kind":"bug","sum":"Head: mouse wheel scroll sometimes stops"},"link":["+task:R7.57"]}
+{"v":1,"t":"u","id":"H136","ts":"2026-10-15T12:34:36Z","by":"head","link":["+task:R7.80"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:34:41Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"what is the lates and most update and main dashaboard address ?","len":205,"h":"sha1:bef499d9ffc4","id":"H137"}
+{"v":1,"t":"u","id":"H137","ts":"2026-10-15T12:35:22Z","by":"head","set":{"kind":"question","sum":"which dashboard URL is main; close extra tabs"},"link":["+task:R7.36"]}
+{"v":1,"t":"u","id":"H137","ts":"2026-10-15T12:35:22Z","by":"head","set":{"status":"done"},"note":"answer: main URL is http://127.0.0.1:8780/ (no ?v); closed extra tab-3, kept one tab"}
+{"v":1,"t":"u","id":"H121","ts":"2026-10-15T12:36:05Z","by":"head","set":{"status":"done"},"note":"fixed in ad04454 (map re-mounts on data change)"}
+{"v":1,"t":"u","id":"H122","ts":"2026-10-15T12:36:05Z","by":"head","set":{"status":"done"},"note":"fixed in ad04454 (map has no time filter)"}
+{"v":1,"t":"u","id":"H123","ts":"2026-10-15T12:36:06Z","by":"head","link":["+task:R7.77"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:36:34Z","src":"hook","sid":"7ae29675","acct":null,"kind":"bug?","sum":"bug , when in head section we will have some need to ask , so there are shoud appear in the inbox…","len":222,"h":"sha1:87219b61d6c0","id":"H138"}
+{"v":1,"t":"u","id":"H138","ts":"2026-10-15T12:37:02Z","by":"head","set":{"kind":"bug","sum":"needs-you Head asks must show in the Inbox"},"link":["+task:R7.81"]}
