@@ -44,7 +44,7 @@ class SnapshotDbCase(ControlCase):
         with open(os.path.join(self.docs, "head.jsonl"), "w", encoding="utf-8") as fh:
             for rec in HEAD:
                 fh.write(json.dumps(rec) + "\n")
-        self.dbp = os.path.join(self.docs, "head.db")
+        self.dbp = db.db_path(self.docs)
         migrate.migrate_project(self.dbp, self.docs)
 
     def json_snap(self):

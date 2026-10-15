@@ -885,7 +885,7 @@ def _run_db(db_path, op, args, source, data_dir, entry, now):
     are mirrored from the db and restored from a snapshot if the op fails. A key already in the db returns the first
     reply and applies nothing (checked inside the write lock)."""
     key, has_rid = _idem_key(op, args)
-    conn = store_db.connect(db_path)
+    conn = store_db.open_project(data_dir)
     try:
         with store_db.txn(conn):
             tasks_db.ensure(conn)

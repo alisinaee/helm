@@ -23,7 +23,7 @@ class HeadDbCase(unittest.TestCase):
         self.tmp = tempfile.mkdtemp(prefix="head-db-test-")
         self.data_dir = os.path.join(self.tmp, "docs")
         os.makedirs(self.data_dir)
-        self.db_path = os.path.join(self.data_dir, "head.db")
+        self.db_path = db.db_path(self.data_dir)
         self.env = mock.patch.dict(os.environ, {"ROADMAP_HOME": os.path.join(self.tmp, "home")})
         self.env.start()
 

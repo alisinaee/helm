@@ -1,4 +1,5 @@
-"""Job registry in the SQLite store (roadmap/store/db.py), used when the backend switch in services/jobs.py says sqlite.
+"""Job registry in the SQLite store (roadmap/store/db.py, docs/roadmap.db), used when the switch in
+services/jobs.py says sqlite.
 
 start, finish, list and claim. Every write is one IMMEDIATE transaction: the jobs row and its event (events.append)
 commit together or not at all. The full job record lives in the data column, shaped like a jobs.json entry.
@@ -7,26 +8,24 @@ Files of an edit job are required; only review and audit jobs may claim with no 
 """
 
 import json
-import os
 import re
 
 from roadmap.errors import EXIT_CONFLICT, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import jobs
 from roadmap.store import db, events
 
-DB_FILE = "roadmap.sqlite"
 KINDS = ("edit", "review", "audit")
 READ_ONLY_KINDS = ("review", "audit")
 _ID_RE = re.compile(r"^j(\d+)$")
 
 
 def db_path(data_dir):
-    return os.path.join(data_dir, DB_FILE)
+    return db.db_path(data_dir)
 
 
 def _open(data_dir):
     jobs._require_data_dir(data_dir)
-    return db.connect(db_path(data_dir))
+    return db.open_project(data_dir)
 
 
 def _load(conn, job_id):
