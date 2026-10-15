@@ -52,7 +52,18 @@ export function agentTree(snap) {
   const roots = running.filter(function (j) {
     return !(j.parent && ids.has(j.parent));
   });
+  // Newest first: the latest started job sits at the top, workers too.
+  const byStartDesc = function (a, b) {
+    return startMs(b) - startMs(a);
+  };
+  roots.sort(byStartDesc);
   return { roots: roots, kids: kids };
+}
+
+function startMs(job) {
+  if (typeof job.startedMs === "number") return job.startedMs;
+  const t = Date.parse(job.started || "");
+  return isNaN(t) ? 0 : t;
 }
 
 // The last FINISHED_MAX jobs that have ended, newest first.
@@ -60,7 +71,8 @@ export function finishedJobs(snap) {
   return (snap.jobs || []).filter(function (j) {
     return j.status !== "running";
   }).sort(function (a, b) {
-    return (b.endedMs || 0) - (a.endedMs || 0);
+    return (typeof b.endedMs === "number" ? b.endedMs : Date.parse(b.ended || "") || 0) -
+      (typeof a.endedMs === "number" ? a.endedMs : Date.parse(a.ended || "") || 0);
   }).slice(0, FINISHED_MAX);
 }
 
