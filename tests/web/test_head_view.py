@@ -25,6 +25,7 @@ from roadmap.core.head import fold  # noqa: E402
 WEB = os.path.join(REPO, "web")
 SOURCE = os.path.join(WEB, "js", "views", "head.js")
 CSS = os.path.join(WEB, "css", "head.css")
+JS = SOURCE
 CSS_DIR = os.path.join(WEB, "css")
 SHELL_TEST = os.path.join(TESTS, "web", "test_shell.py")
 RENDER = os.path.join(TESTS, "web", "render_head.mjs")
@@ -184,10 +185,30 @@ class HeadCss(unittest.TestCase):
     def test_list_header_is_sticky_and_the_phone_keeps_summary_and_state_visible(self):
         css = read(CSS)
         self.assertRegex(css, r"\.hd-tbl th\{position:sticky;top:0")
-        self.assertIn(".hd-tbl-wrap{max-height:70vh;overflow:auto", css)
+        self.assertIn(".hd-list{flex:1 1 auto;min-height:0;min-width:0;overflow:auto}", css)
         self.assertRegex(css, r"@media \(max-width:599px\)\{[\s\S]*\.hd-kind\{display:none\}")
         self.assertRegex(css, r"\.hd-sumc\{left:72px[^}]*\}\.hd-stc\{left:222px\}")
         self.assertIn("font-variant-numeric:tabular-nums", css)
+
+    def test_list_fills_the_height_and_the_page_has_no_bottom_band(self):
+        css = read(CSS)
+        self.assertRegex(css, r"\.hd-screen\{display:flex;flex-direction:column;[^}]*height:100%")
+        self.assertRegex(css, r"\.hd-list\{flex:1 1 auto;min-height:0;")
+        self.assertRegex(css, r"\.main:has\(>\.hd-screen\)\{padding-bottom:0\}")
+        self.assertNotRegex(css, r"\.hd-tbl-wrap\{[^}]*border")
+
+    def test_list_rows_are_tight_with_hairline_separators_and_no_outer_box(self):
+        css = read(CSS)
+        self.assertRegex(css, r"\.hd-tbl th,\.hd-tbl td\{padding:8px 10px;border-bottom:1px solid var\(--line\)")
+        self.assertRegex(css, r"\.hd-n\{width:1%;")
+        self.assertRegex(css, r"\.hd-age\{width:56px;min-width:56px;text-align:right;white-space:nowrap")
+        self.assertRegex(css, r"\.hd-when\{width:112px;min-width:112px;[^}]*white-space:nowrap")
+        self.assertRegex(css, r"\.hd-sumc\{width:100%")
+
+    def test_bound_column_shows_a_dash_and_the_list_drops_the_carried_icon(self):
+        js = read(SOURCE)
+        self.assertIn('<span class="hd-none" title="Not bound yet">—</span>', js)
+        self.assertNotIn('hd-carried', js.split("function listRowHtml")[1].split("function listHtml")[0])
 
     def test_no_raw_colour_outside_tokens(self):
         self.assertNotRegex(read(CSS), r"#[0-9a-fA-F]{3,6}\b|rgb\(")

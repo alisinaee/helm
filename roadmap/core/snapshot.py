@@ -282,6 +282,11 @@ def _head_size(view):
     return len(json.dumps(view, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
 
 
+def _newest(entries):
+    """Entries newest first (by ts, then id), so a cut keeps the recent ones."""
+    return sorted(entries, key=lambda e: (str(e.get("ts") or ""), str(e.get("id") or "")), reverse=True)
+
+
 def _head_view(records, link_state, moment, tasks=(), issues=(), jobs=(), issues_all=None):
     """The head key: now, prev, counts and rows (open oldest first, then the newest done). Open unbound rows get
     suggest from the open tasks (state todo or partial) and the open issues. Each row carries linked (resolved links,
@@ -320,8 +325,8 @@ def _head_view(records, link_state, moment, tasks=(), issues=(), jobs=(), issues
                    "doing": sum(1 for e in open_rows if e["status"] == "doing"),
                    "needs": sum(1 for e in open_rows if e["status"] == "needs-you"),
                    "doneUnacc": len(done_rows)},
-        "rows": ([row(e) for e in sorted(open_rows, key=lambda e: str(e.get("ts") or ""))[:HEAD_OPEN_MAX]]
-                 + [row(e) for e in done_rows[-HEAD_DONE_MAX:]]),
+        "rows": ([row(e) for e in _newest(open_rows)[:HEAD_OPEN_MAX][::-1]]
+                 + [row(e) for e in _newest(done_rows)[:HEAD_DONE_MAX][::-1]]),
     }
     rows = view["rows"]
     titles_dropped = False
@@ -332,7 +337,8 @@ def _head_view(records, link_state, moment, tasks=(), issues=(), jobs=(), issues
                     item.pop("title", None)
             titles_dropped = True
             continue
-        done_at = next((i for i, r in enumerate(rows) if r["status"] == "done"), len(rows) - 1)
+        # Drop the oldest done row first; open rows go only when no done row is left, and always the oldest.
+        done_at = next((i for i, r in enumerate(rows) if r["status"] == "done"), 0)
         rows.pop(done_at)
     view["askOf"] = ref_rules.ask_backlinks(entries)
     return view

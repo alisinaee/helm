@@ -152,6 +152,32 @@ class HeadSizeAndPrivacy(unittest.TestCase):
         self.assertNotIn("verbatim", json.dumps(full))
 
 
+class HeadTrimKeepsNewest(unittest.TestCase):
+    def test_forty_open_rows_keep_the_newest_and_respect_the_cap(self):
+        records = [entry("H%d" % i, 40 - i, "Ask number %d about the export" % i) for i in range(1, 41)]
+        full = snap(records)
+        head = full["head"]
+        raw = json.dumps(head, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        self.assertLessEqual(len(raw), HEAD_BYTES_MAX)
+        self.assertEqual(head["counts"]["open"], 40)
+        kept = [row["id"] for row in head["rows"]]
+        self.assertTrue(kept, "some rows must be kept")
+        newest = ["H%d" % i for i in range(41 - len(kept), 41)]
+        self.assertEqual(sorted(kept, key=lambda k: int(k[1:])), newest)
+        self.assertEqual(kept[-1], "H40")
+        self.assertNotIn("H1", kept)
+        print("kept %d of 40 rows" % len(kept))
+
+    def test_open_rows_outrank_done_rows_when_trimmed(self):
+        records = [entry("H%d" % i, 200 - i, "Done ask %d" % i) for i in range(1, 6)]
+        records += [update("H%d" % i, 1, by="person", sets={"status": "done"}) for i in range(1, 6)]
+        records += [entry("H%d" % i, 40 - i, "Ask number %d about the export" % i) for i in range(10, 50)]
+        head = snap(records)["head"]
+        raw = json.dumps(head, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        self.assertLessEqual(len(raw), HEAD_BYTES_MAX)
+        self.assertTrue(all(row["status"] != "done" for row in head["rows"]))
+
+
 class HeadAcceptAndAutoFlags(unittest.TestCase):
     def test_acc_only_when_the_person_last_set_done(self):
         records = [entry("H1", 30, "Done by the head"), update("H1", 20, sets={"status": "done"}),
@@ -265,6 +291,7 @@ class HeadSuggest(unittest.TestCase):
         tasks = [{"id": "R%d.%d" % (i, i), "title": "export map button %d" % i, "state": "todo"} for i in range(1, 60)]
         records = [entry("H%d" % i, 30 + i, "export map button long summary text %d" % i) for i in range(1, 41)]
         head_view = self.view(records, tasks=tasks, issues=[])
+        head_view.pop("askOf", None)  # the caller takes askOf out of the head key
         raw = json.dumps(head_view, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         self.assertLessEqual(len(raw), HEAD_BYTES_MAX)
         self.assertEqual(head_view["counts"]["open"], 40)
