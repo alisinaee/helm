@@ -1,354 +1,333 @@
-// Planner (WP53). Project scope only. Each feature is one row in the shared .row-grid tracks: caret, id, title with its
-// acceptance line, phase, priority, a progress bar, done/total tasks, estimated and spent K, blocked count, a state
-// chip, the person's Acc box and a ⋯ menu. A feature opens to its tasks (Unlink per task, a picker to link another).
-// Callouts above the list name the uncovered features (no tasks) and the orphan tasks (in no feature).
-// Only the person accepts: the Acc box asks first when the feature is not done.
-// Writes go through cmd.js run(): feature.add, feature.set, feature.link, feature.unlink, feature.accept, feature.rm.
-// bind(el) attaches the listeners once to the section element, which stays in place across renders. The router calls
-// it; sectionView(vm) draws the markup through dom.js.
+// Planner v2 (R7.13 H5): the plan tree. Every row, the header included, sits in one fixed 12-column grid (see
+// planner.css): toggle, outline label, F id, title with its acceptance line, phase, bar, done/total, gaps, state, Acc,
+// the ⋯ menu and the copy button. Indent lives inside the title cell only, so the columns never move.
+// Items come from the snapshot features rows (id, parent, label, ask, gaps, acc, done, total, state, accepted); the
+// tasks of an item come from each task's feats. Only the person accepts. The pickers (Assign, Link tasks) are small
+// in-flow popovers of buttons, never a native select. Writes go through cmd.js run(): feature.add, set, move, link,
+// unlink, accept, rm. bind(el) attaches the listeners once; sectionView(vm) draws the markup.
 
 import { run } from "../cmd.js";
 import { chipHtml, emptyHtml, esc, meterHtml } from "../dom.js";
-import { fmtCount, MISSING } from "../format.js";
-import { itemHash, pageState } from "./inbox.js";
+import { copyButton, refSummary } from "../ref.js";
+import { projectHash } from "../router.js";
+import { pageState } from "./inbox.js";
 import { modelChip, STATE_WORD } from "./tasks.js";
 
-const FEAT_WORD = { done: "done", doing: "doing", todo: "todo", hold: "hold", uncovered: "uncovered" };
-const FEAT_TONE = { done: "success", doing: "neutral", todo: "neutral", hold: "defer", uncovered: "warning" };
-const STATUS_OPTIONS = [["", "All"], ["doing", "Doing"], ["todo", "Todo"], ["done", "Done"], ["hold", "Hold"],
+const STATUS = [["", "All"], ["doing", "Doing"], ["todo", "Todo"], ["done", "Done"], ["hold", "Hold"],
   ["uncovered", "Uncovered"]];
+const TONE = { done: "success", doing: "accent", todo: "neutral", hold: "defer", uncovered: "warning" };
 const GRID = "pl-row row-grid";
-
-// The view state. It lives here, not in the URL, so a poll keeps the filters and the open features.
-const ui = { status: "", phase: "", unaccepted: false, open: {}, menu: null, adding: false, project: "",
-  filtersOpen: false, focus: "" };
-const bound = new WeakSet();
-const focusMark = { key: "" };                  // the ?f= feature already opened and scrolled to (route id and id)
+const MAX_DEPTH = 2;
+const MAX_FEATS = 3;
+const PICK_CAP = 60;
 const FEAT_ID = /^F[1-9][0-9]?$/;
 
-function emptyFeatures() {
-  return { rows: [], uncovered: [], orphans: [], counts: {} };
+// The view state lives here, not in the URL, so a poll keeps the filters and the open items.
+const ui = { status: "", unaccepted: false, open: {}, menu: null, edit: null, pick: null, project: "", focus: "",
+  panels: { wait: true, orph: true, unc: false } };
+const bound = new WeakSet();
+const focusMark = { key: "" };
+
+function featuresOf(snap) {
+  return snap.features || { rows: [], uncovered: [], orphans: [], counts: {} };
 }
 
-function taskMap(snap) {
-  const map = {};
-  for (const t of snap.tasks || []) map[t.id] = t;
-  return map;
-}
-
-function visible(row, state) {
-  if (state.status && row.state !== state.status) return false;
-  if (state.phase && row.phase !== state.phase) return false;
-  if (state.unaccepted && row.accepted) return false;
-  return true;
-}
-
-// Top-level features in snapshot order, each followed by its sub-features (one level). A sub-feature whose parent is
-// filtered out, or missing, is shown at the top.
-function orderedRows(rows, state) {
-  const shown = rows.filter(function (r) {
-    return visible(r, state);
-  });
-  const shownIds = {};
-  for (const r of shown) shownIds[r.id] = true;
-  const out = [];
-  for (const row of shown) {
-    if (row.parent && shownIds[row.parent]) continue;
-    out.push({ row: row, depth: 0 });
-    for (const child of shown) {
-      if (child.parent === row.id) out.push({ row: child, depth: 1 });
-    }
-  }
-  return out;
-}
-
-// The tasks a feature covers, its own and its sub-features', in snapshot order. A task names its features in feats,
-// so the snapshot does not carry the id list.
-function memberIds(snap, row, rows) {
-  const group = {};
-  group[row.id] = true;
+// Rows into a tree in file order: kids by parent id, top-level rows, the preorder list with depths.
+function buildTree(rows) {
+  const byId = {};
+  for (const r of rows) byId[r.id] = r;
+  const kids = {};
+  const top = [];
   for (const r of rows) {
-    if (r.parent === row.id) group[r.id] = true;
+    if (r.parent && byId[r.parent]) (kids[r.parent] = kids[r.parent] || []).push(r);
+    else top.push(r);
   }
-  return (snap.tasks || []).filter(function (t) {
-    return (t.feats || []).some(function (f) {
-      return group[f] === true;
-    });
-  }).map(function (t) {
-    return t.id;
-  });
+  const order = [];
+  const walk = function (list, depth) {
+    for (const r of list) {
+      order.push({ row: r, depth: depth });
+      if (depth < MAX_DEPTH) walk(kids[r.id] || [], depth + 1);
+    }
+  };
+  walk(top, 0);
+  return { byId: byId, kids: kids, top: top, order: order };
 }
 
-function accText(row) {
-  if (row.acc) return row.acc;
-  return row.state === "done" ? "Done: acceptance is not in the snapshot" : "No acceptance line yet";
-}
-
-function numText(value) {
-  return typeof value === "number" && Number.isFinite(value) ? fmtCount(value) : MISSING;
-}
-
-function barTone(row) {
-  if (row.state === "done") return "success";
-  return row.blocked > 0 ? "warning" : "neutral";
-}
-
-function featOptions(features, selected) {
-  return (features.rows || []).map(function (f) {
-    return '<option value="' + esc(f.id) + '"' + (f.id === selected ? " selected" : "") + ">" +
-      esc(f.id + " " + f.title) + "</option>";
-  }).join("");
-}
-
-function phaseOptions(snap, selected) {
-  return (snap.phases || []).map(function (p) {
-    return '<option value="' + esc(p.id) + '"' + (p.id === selected ? " selected" : "") + ">" +
-      esc(p.id + " " + (p.name || "")) + "</option>";
-  }).join("");
-}
-
-function taskLinkHtml(id) {
-  return '<a href="' + esc(itemHash(ui.project, id)) + '" aria-label="Open ' + esc(id) + ' in Work">→ Work</a>';
-}
-
-// One task under an open feature, in the same tracks as the feature row.
-function taskRowHtml(feature, taskId, tasks, blockedIds) {
-  const t = tasks[taskId];
-  const id = esc(taskId);
-  if (!t) {
-    return '<li class="pl-task ' + GRID + '"><span></span><span class="rg-t">' + id +
-      '</span><span class="rg-t pl-title">Not in the plan</span></li>';
+function directTasks(snap) {
+  const by = {};
+  for (const t of snap.tasks || []) {
+    for (const f of t.feats || []) (by[f] = by[f] || []).push(t);
   }
-  const blocked = blockedIds.indexOf(taskId) >= 0;
-  return '<li class="pl-task ' + GRID + '"><span></span><span class="rg-t">' + id + "</span>" +
-    '<span class="pl-title"><span class="rg-t" title="' + esc(t.title) + '">' + esc(t.title) + "</span> " +
-    taskLinkHtml(taskId) + "</span>" +
-    '<span class="pl-opt">' + (t.model ? modelChip(t.model) : "") + "</span>" +
-    '<span class="pl-opt"></span>' +
-    '<span>' + chipHtml(STATE_WORD[t.state] || t.state, t.state === "done" ? "success" : "neutral") + "</span>" +
-    '<span></span>' +
-    '<span class="rg-num">' + numText(t.tokensK) + "</span>" +
-    '<span class="pl-opt"></span>' +
-    '<span class="rg-num">' + (blocked ? "1" : "0") + "</span>" +
-    '<button type="button" class="btn btn-small pl-unlink" data-pl="unlink" data-task="' + id + '" data-feat="' +
-    esc(feature.id) + '" aria-label="Unlink ' + id + " from " + esc(feature.id) + '">Unlink</button></li>';
+  return by;
 }
 
-function linkPickerHtml(snap, feature) {
-  const linked = {};
-  for (const id of feature.tasks || []) linked[id] = true;
-  const options = (snap.tasks || []).filter(function (t) {
-    return !linked[t.id];
-  }).map(function (t) {
-    return '<option value="' + esc(t.id) + '">' + esc(t.id + " " + t.title) + "</option>";
-  }).join("");
-  const fid = esc(feature.id);
-  return '<li class="pl-task pl-pick ' + GRID + '"><span></span><label class="pl-pick-label">' +
-    '<span class="sr-only">Link a task to ' + fid + "</span>" +
-    '<select class="pl-select" data-pl="link" data-feat="' + fid +
-    '" data-focus="pl-link:' + fid + '"><option value="">Link a task…</option>' + options +
-    "</select></label></li>";
+const labelOf = (row) => row.label || row.id;
+
+function matches(row, state) {
+  if (state.status && row.state !== state.status) return false;
+  return !(state.unaccepted && row.accepted);
 }
 
-function menuHtml(feature, open) {
-  const fid = esc(feature.id);
-  const rmDisabled = feature.total > 0 ? " disabled" : "";
-  const rmHelp = feature.total > 0 ? " (unlink its tasks first)" : "";
-  return '<div class="pl-menu" id="pl-menu-' + fid + '" role="group" aria-label="Actions for ' + fid + '"' +
-    (open ? "" : " hidden") + ">" +
-    '<button type="button" class="btn btn-small" data-pl="hold" data-id="' + fid + '" data-hold="' +
-    (feature.state === "hold" ? "0" : "1") + '" data-focus="pl-hold:' + fid + '">' +
-    (feature.state === "hold" ? "Resume" : "Hold") +
-    "</button>" +
-    '<button type="button" class="btn btn-small" data-pl="rm" data-id="' + fid + '" data-focus="pl-rm:' + fid +
-    '"' + rmDisabled + ' aria-label="Remove ' + fid + rmHelp + '">Remove</button></div>';
+function shown(row, tree, state) {
+  if (matches(row, state)) return true;
+  return (tree.kids[row.id] || []).some((k) => shown(k, tree, state));
 }
 
-function featureHtml(snap, entry, tasks, blockedIds, state, rows) {
-  const row = entry.row;
-  const fid = esc(row.id);
-  const open = Boolean(state.open[row.id]);
+function filtering(state) {
+  return Boolean(state.status || state.unaccepted);
+}
+
+function isOpen(row, depth, state) {
+  if (filtering(state)) return true;
+  const v = state.open[row.id];
+  return v === undefined ? depth === 0 : v;
+}
+
+function workHash(row, project) {
+  return projectHash(project, "work") + "?f=" + encodeURIComponent("feat:" + row.id);
+}
+
+function stateChip(row) {
+  if (row.gaps > 0 && row.state !== "done") return chipHtml("gap", "warning");
+  return chipHtml(row.state, TONE[row.state] === "accent" ? "neutral" : TONE[row.state] || "neutral");
+}
+
+const ASK = '<svg class="pl-ask" role="img" aria-label="you asked" viewBox="0 0 8 8"><title>you asked</title>' +
+  '<circle cx="4" cy="4" r="3"/></svg>';
+
+function taskRowHtml(feat, task, depth, ctx) {
+  const blocked = ctx.blocked;
+  const tid = esc(task.id);
+  return '<li class="pl-task ' + GRID + '"><span></span><span class="rg-t pl-id2">' + tid + "</span>" +
+    '<span class="pl-main lvl' + Math.min(depth, MAX_DEPTH) + '"><a class="rg-t" href="' +
+    esc(projectHash(ctx.state.project, "work") + "/i/" + encodeURIComponent(task.id)) + '" title="' +
+    esc(task.title) + '">' + esc(task.title) + "</a></span>" +
+    '<span class="rg-t">' + esc(task.phase || "") + '</span><span class="pl-md">' +
+    (task.model ? modelChip(task.model) : "") + "</span>" +
+    '<span class="rg-num">' + (blocked.indexOf(task.id) >= 0 ? "blocked" : "") + "</span><span></span>" +
+    "<span>" + chipHtml(STATE_WORD[task.state] || task.state, task.state === "done" ? "success" : "neutral") +
+      "</span>" +
+    '<button type="button" class="btn btn-small pl-unl" data-pl="unlink" data-task="' + tid + '" data-id="' +
+    esc(feat.id) + '" aria-label="Unlink ' + tid + " from " + esc(feat.id) + '">Unlink</button></li>';
+}
+
+function popHtml(label, items, empty) {
+  const list = items.length ? items.map(function (it, i) {
+    return '<button type="button" class="btn btn-small" data-pl="pick" data-val="' + esc(it.val) + '"' +
+      (it.off ? " disabled" : "") + (i === 0 ? ' data-focus="pl-pop-first"' : "") + ">" + esc(it.text) + "</button>";
+  }).join("") : '<p class="pl-note">' + esc(empty) + "</p>";
+  return '<div class="pl-pop" id="pl-pop" role="group" aria-label="' + esc(label) + '">' + list +
+    '<button type="button" class="btn btn-small" data-pl="pick-close" data-focus="pl-pop-close">Close</button></div>';
+}
+
+function assignPop(snap, tree, taskId) {
+  const t = (snap.tasks || []).find((x) => x.id === taskId);
+  const full = t && (t.feats || []).length >= MAX_FEATS;
+  const items = tree.order.map((e) => ({ val: e.row.id, off: Boolean(full),
+    text: " ".repeat(e.depth * 2) + labelOf(e.row) + " " + e.row.id + " " + e.row.title }));
+  return popHtml("Assign " + taskId + " to a plan item (max 3)", items, "No plan items yet.");
+}
+
+function linkPop(snap, feat) {
+  const open = (snap.tasks || []).filter((t) => (t.feats || []).indexOf(feat.id) < 0 &&
+    (t.feats || []).length < MAX_FEATS);
+  open.sort((a, b) => (a.feats || []).length - (b.feats || []).length);
+  const items = open.slice(0, PICK_CAP).map((t) => ({ val: t.id, text: t.id + " " + t.title }));
+  return popHtml("Link a task to " + feat.id, items, "Every task is linked or full.");
+}
+
+function editHtml(edit, row) {
+  const add = edit.kind === "add";
+  const acc = edit.kind === "acc";
+  const label = add ? "New plan item title" : acc ? "Acceptance for " + row.id : "Rename " + row.id;
+  const value = add ? "" : acc ? row.acc || "" : row.title;
+  return '<form class="pl-edit" data-pl-form="edit"><label class="sr-only" for="pl-edit-in">' + esc(label) +
+    '</label><input id="pl-edit-in" name="text" type="text" autocomplete="off" required maxlength="' +
+      (acc ? 160 : 80) +
+    '" value="' + esc(value) + '" placeholder="' + esc(label) + '" data-focus="pl-edit">' +
+    (add ? '<label class="pl-ck"><input type="checkbox" name="ask"> you asked</label>' : "") +
+    '<button type="submit" class="btn btn-small btn-primary">Save</button>' +
+    '<button type="button" class="btn btn-small" data-pl="edit-cancel">Cancel</button>' +
+    '<span class="pl-err" role="alert"></span></form>';
+}
+
+function menuHtml(row, depth, pos, hasKids) {
+  const id = esc(row.id);
+  const b = (act, text, extra, dis) => '<button type="button" class="btn btn-small" data-pl="' + act + '" data-id="' +
+    id +
+    '"' + (extra || "") + (dis ? " disabled" : "") + ">" + text + "</button>";
+  const rmOff = row.total > 0 || hasKids;
+  return '<div class="pl-menu" id="pl-menu-' + id + '" role="group" aria-label="Actions for ' + id + '">' +
+    b("add", "Add sub plan", "", depth >= MAX_DEPTH) + b("rename", "Rename") + b("acc-edit", "Edit acceptance") +
+    b("ask", row.ask ? "Not asked" : "Mark asked") + b("link-open", "Link tasks") +
+    b("move", "Move up", ' data-dir="up"', pos.i === 0) +
+      b("move", "Move down", ' data-dir="down"', pos.i >= pos.n - 1) +
+    b("hold", row.state === "hold" ? "Resume" : "Hold") +
+    b("rm", "Remove", rmOff ? ' aria-label="Remove ' + id + ' (needs no tasks and no children)"' : "", rmOff) +
+      "</div>";
+}
+
+function itemHtml(ctx, row, depth, pos) {
+  const { state, tree } = ctx;
+  const id = esc(row.id);
+  const kids = (tree.kids[row.id] || []).filter((k) => shown(k, tree, state));
+  const own = ctx.direct[row.id] || [];
+  const open = isOpen(row, depth, state);
+  const menu = state.menu === row.id;
+  const edit = state.edit && state.edit.id === row.id ? state.edit : null;
   const pct = row.total ? (row.done / row.total) * 100 : 0;
-  const menuOpen = state.menu === row.id;
-  const tone = FEAT_TONE[row.state] || "neutral";
-  const word = FEAT_WORD[row.state] || row.state;
-  const taskIds = memberIds(snap, row, rows);
-  const tasksHtml = '<ul class="pl-tasks" id="pl-tasks-' + fid + '" aria-label="Tasks of ' + fid + '"' +
-    (open ? "" : " hidden") + ">" + taskIds.map(function (id) {
-      return taskRowHtml(row, id, tasks, blockedIds);
-    }).join("") + linkPickerHtml(snap, row) + "</ul>";
-  return '<li id="pl-feat-' + fid + '" class="pl-feat' + (entry.depth ? " pl-sub" : "") + " is-" + esc(row.state) +
-    (state.focus === row.id ? " is-focus" : "") + '">' +
-    '<div class="' + GRID + '">' +
-    '<button type="button" class="btn btn-small pl-caret" data-pl="toggle" data-id="' + fid +
-    '" aria-expanded="' + open + '" aria-controls="pl-tasks-' + fid + '" data-focus="pl-toggle:' + fid +
-    '" aria-label="' + (open ? "Hide" : "Show") + " tasks of " + fid + '">' + (open ? "▾" : "▸") + "</button>" +
-    '<span class="rg-t pl-id">' + fid + "</span>" +
-    '<span class="pl-main"><span class="rg-t pl-title" title="' + esc(row.title) + '">' + esc(row.title) +
-    '</span><span class="rg-t pl-acctext" title="' + esc(row.acc || "") + '">' + esc(accText(row)) +
-    "</span></span>" +
-    '<span class="rg-t pl-opt">' + esc(row.phase || MISSING) + "</span>" +
-    '<span class="rg-num pl-opt">' + numText(row.prio) + "</span>" +
-    '<span class="pl-bar">' + meterHtml(pct, tone === "success" ? "success" : barTone(row)) + "</span>" +
-    '<span class="rg-num">' + esc(row.done + "/" + row.total) + "</span>" +
-    '<span class="rg-num">' + numText(row.estK) + "</span>" +
-    '<span class="rg-num pl-opt">' + numText(row.spentK) + "</span>" +
-    '<span class="rg-num pl-opt">' + numText(row.blocked) + "</span>" +
-    '<span class="pl-state">' + chipHtml(word, tone) + "</span>" +
-    '<span class="pl-acc"><input type="checkbox" data-pl="accept" data-id="' + fid + '" data-state="' +
-    esc(row.state) + '" data-focus="pl-acc:' + fid + '" aria-label="Accepted: ' + fid + " " + esc(row.title) + '"' +
+  const link = esc(workHash(row, state.project));
+  const copy = copyButton("feature", row.id, labelOf(row) + " " + row.title,
+    { project: state.project, sum: refSummary("feature", row, ctx.snap) });
+  const accLine = row.acc ? '<span class="rg-t pl-ax" title="' + esc(row.acc) + '">' + esc(row.acc) + "</span>" : "";
+  const head = '<div class="' + GRID + '"><span><button type="button" class="btn btn-small pl-tg" data-pl="toggle" ' +
+    'data-id="' + id + '" aria-expanded="' + open + '" aria-controls="pl-sub-' + id + '" data-focus="pl-tg:' + id +
+    '" aria-label="' + (open ? "Hide" : "Show") + " " + (kids.length ? "sub plans" : "tasks") + " of " + id + '">' +
+    (open ? "▾" : "▸") + "</button></span>" +
+    '<span class="rg-t pl-lb">' + esc(labelOf(row)) + '</span><span class="rg-t pl-id">' + id + "</span>" +
+    '<span class="pl-main lvl' + depth + '"><span class="pl-l1">' + (row.ask ? ASK : "") + '<a class="rg-t" href="' +
+    link + '" title="' + esc(row.title) + '">' + esc(row.title) + "</a></span>" + accLine + "</span>" +
+    '<span class="rg-t pl-ph">' + esc(row.phase || "") + "</span>" +
+    '<span class="pl-bar">' +
+      meterHtml(pct, row.state === "done" ? "success" : row.blocked > 0 ? "warning" : "accent") +
+    '</span><a class="rg-num pl-ct" href="' + link + '" aria-label="' + esc(row.done + " of " + row.total +
+    " tasks done, open " + row.id + " in Work") + '">' + esc(row.done + "/" + row.total) + "</a>" +
+    '<span class="rg-num pl-gp">' + (row.gaps > 0 ? esc(row.gaps) : "") + "</span><span>" + stateChip(row) + "</span>" +
+    '<span class="pl-ok"><input type="checkbox" data-pl="accept" data-id="' + id + '" data-state="' + esc(row.state) +
+    '" data-focus="pl-ok:' + id + '" aria-label="Accepted: ' + id + " " + esc(row.title) + '"' +
     (row.accepted ? " checked" : "") + "></span>" +
-    '<button type="button" class="btn btn-small pl-more" data-pl="menu" data-id="' + fid +
-    '" aria-expanded="' + menuOpen + '" aria-controls="pl-menu-' + fid + '" data-focus="pl-menu:' + fid +
-    '" aria-label="More actions for ' + fid + '">⋯</button>' + "</div>" +
-    menuHtml(row, menuOpen) + tasksHtml + "</li>";
-}
-
-function calloutHtml(snap, features, state) {
-  const parts = [];
-  const uncovered = features.uncovered || [];
-  if (uncovered.length) {
-    const byId = {};
-    for (const r of features.rows || []) byId[r.id] = r;
-    const items = uncovered.map(function (id) {
-      const r = byId[id];
-      const fid = esc(id);
-      return "<li>" + '<span class="rg-t">' + fid + " " + esc(r ? r.title : "") + "</span> " +
-        '<button type="button" class="btn btn-small" data-pl="toggle" data-id="' + fid + '" data-focus="pl-toggle:' +
-        fid + '">Link tasks</button></li>';
-    }).join("");
-    parts.push('<details class="pl-callout is-warning" open><summary>! ' + uncovered.length +
-      " uncovered " + (uncovered.length === 1 ? "feature" : "features") + "</summary>" +
-      '<ul class="pl-callout-list">' + items + "</ul></details>");
+    '<span><button type="button" class="btn btn-small pl-more" data-pl="menu" data-id="' + id + '" aria-expanded="' +
+    menu + '"' + (menu ? ' aria-controls="pl-menu-' + id + '"' : "") + ' data-focus="pl-more:' + id +
+    '" aria-label="More actions for ' + id + '">⋯</button></span>' + copy + "</div>";
+  const extra = (menu ? menuHtml(row, depth, pos, kids.length > 0) : "") +
+    (edit && edit.kind !== "add" ? editHtml(edit, row) : "") +
+    (state.pick && state.pick.kind === "link" && state.pick.id === row.id ? linkPop(ctx.snap, row) : "");
+  const sub = [];
+  if (edit && edit.kind === "add") sub.push('<li class="pl-extra">' + editHtml(edit, row) + "</li>");
+  kids.forEach((k, i) => sub.push(itemHtml(ctx, k, depth + 1, { i: i, n: kids.length })));
+  for (const t of own) sub.push(taskRowHtml(row, t, depth + 1, ctx));
+  if (!kids.length && !own.length) {
+    sub.push('<li class="pl-empty">No tasks yet. Use ⋯ then Link tasks, or ask your agent.</li>');
   }
-  const orphans = features.orphans || [];
-  if (orphans.length) {
-    const tasks = taskMap(snap);
-    const items = orphans.map(function (id) {
-      const t = tasks[id];
-      const tid = esc(id);
-      return "<li>" + '<span class="rg-t">' + tid + " " + esc(t ? t.title : "") + "</span> " +
-        '<label class="pl-pick-label"><span class="sr-only">Assign ' + tid + " to a feature</span>" +
-        '<select class="pl-select" data-pl="assign" data-task="' + tid +
-        '" data-focus="pl-assign:' + tid + '"><option value="">Assign…</option>' +
-        featOptions(features, "") + "</select></label></li>";
-    }).join("");
-    parts.push('<details class="pl-callout is-warning" open><summary>! ' + orphans.length + " orphan " +
-      (orphans.length === 1 ? "task" : "tasks") + "</summary>" +
-      '<ul class="pl-callout-list">' + items + "</ul></details>");
-  }
-  return parts.length ? '<div class="pl-callouts" aria-label="Coverage">' + parts.join("") + "</div>" : "";
-}
-
-// On a phone the filters sit behind a toggle (the button shows how many are set); on a wide screen they always show.
-function filtersHtml(snap, state) {
-  const status = STATUS_OPTIONS.map(function (o) {
-    return '<option value="' + o[0] + '"' + (o[0] === state.status ? " selected" : "") + ">" + o[1] + "</option>";
-  }).join("");
-  const set = (state.status ? 1 : 0) + (state.phase ? 1 : 0) + (state.unaccepted ? 1 : 0);
-  const open = Boolean(state.filtersOpen);
-  return '<button type="button" class="btn btn-small pl-filter-toggle" data-pl="filters" aria-expanded="' + open +
-    '" aria-controls="pl-filters" data-focus="pl-filters-toggle">Filters' + (set ? " (" + set + ")" : "") +
-    "</button>" +
-    '<div class="pl-filters' + (open ? " is-open" : "") + '" id="pl-filters" role="group" ' +
-    'aria-label="Filter features">' +
-    '<label class="pl-field">Status <select data-pl="filter-status" data-focus="pl-filter-status">' + status +
-    "</select></label>" +
-    '<label class="pl-field">Phase <select data-pl="filter-phase" data-focus="pl-filter-phase">' +
-    '<option value="">All</option>' + phaseOptions(snap, state.phase) + "</select></label>" +
-    '<label class="pl-field pl-check"><input type="checkbox" data-pl="filter-unaccepted" ' +
-    'data-focus="pl-filter-unaccepted"' + (state.unaccepted ? " checked" : "") + "> Unaccepted only</label>" +
-    '<button type="button" class="btn btn-primary pl-add-inline" data-pl="adding" data-focus="pl-adding">+ Feature' +
-    "</button></div>";
-}
-
-function addFormHtml(snap, features) {
-  const parents = (features.rows || []).filter(function (r) {
-    return !r.parent;
-  });
-  return '<form class="pl-add" data-pl-form="add" aria-labelledby="pl-add-h">' +
-    '<h2 class="ov-h" id="pl-add-h">New feature</h2>' +
-    '<p class="pl-fld"><label for="pl-add-title">Title</label>' +
-    '<input id="pl-add-title" name="title" type="text" maxlength="80" required autocomplete="off"></p>' +
-    '<p class="pl-fld"><label for="pl-add-acc">Acceptance (how the person knows it works)</label>' +
-    '<input id="pl-add-acc" name="acc" type="text" maxlength="160" autocomplete="off"></p>' +
-    '<p class="pl-fld"><label>Priority <select name="prio">' +
-    '<option value="1">1 (first)</option><option value="2" selected>2</option><option value="3">3</option>' +
-    "</select></label>" +
-    '<label>Phase <select name="phase"><option value="">None</option>' + phaseOptions(snap, "") +
-    "</select></label>" +
-    '<label>Sub-feature of <select name="parent"><option value="">None (top level)</option>' +
-    featOptions({ rows: parents }, "") + "</select></label></p>" +
-    '<p class="pl-err" role="alert" id="pl-add-err"></p>' +
-    '<p><button type="submit" class="btn btn-primary" data-focus="pl-add-submit">Add feature</button> ' +
-    '<button type="button" class="btn" data-pl="adding" data-focus="pl-add-cancel">Cancel</button></p></form>';
+  return '<li id="pl-feat-' + id + '" class="pl-item is-' + esc(row.state) +
+    (state.focus === row.id ? " is-focus" : "") +
+    '">' + head + (extra ? '<div class="pl-extras">' + extra + "</div>" : "") +
+    '<ul class="pl-sub" id="pl-sub-' + id + '" aria-label="Inside ' + id + '"' + (open ? "" : " hidden") + ">" +
+    sub.join("") + "</ul></li>";
 }
 
 function headHtml() {
-  return '<div class="pl-head ' + GRID + ' rg-head" aria-hidden="true"><span></span><span>ID</span>' +
-    "<span>Feature / acceptance</span><span class=\"pl-opt\">Phase</span><span class=\"pl-opt\">Pri</span>" +
-    "<span>Progress</span><span>Tasks</span><span>Est K</span><span class=\"pl-opt\">Spent K</span>" +
-    '<span class="pl-opt"><abbr title="Blocked tasks">Blk</abbr></span><span>State</span><span>Acc</span>' +
-    "<span></span></div>";
+  const cols = ["", "Plan", "ID", "Title", "Phase", "Progress", "Tasks", "Gaps", "State", "Acc", "", ""];
+  return '<div class="' + GRID + ' pl-head rg-head" aria-hidden="true">' +
+    cols.map((c) => "<span" + (c === "Tasks" || c === "Gaps" ? ' class="rg-num"' : "") + ">" + c + "</span>").join("") +
+    "</div>";
 }
 
-// The Planner markup for a snapshot. ui: status, phase, unaccepted, open (id to true), menu (feature id), adding.
-export function plannerHtml(snap, state) {
-  const features = snap.features || emptyFeatures();
+function liHtml(first, title, btn, pop) {
+  return '<li class="pl-li"><span class="rg-t">' + esc(first) + '</span><span class="rg-t" title="' + esc(title) +
+    '">' + esc(title) + "</span>" + btn + (pop || "") + "</li>";
+}
+
+function panelsHtml(snap, features, tree, state, waiting) {
+  const tasks = {};
+  for (const t of snap.tasks || []) tasks[t.id] = t;
+  const orphans = features.orphans || [];
+  const uncovered = (features.uncovered || []).filter((id) => tree.byId[id]);
+  const kinds = [["wait", waiting.length, "waiting for your OK", false], ["orph", orphans.length, "orphan tasks", true],
+    ["unc", uncovered.length, "uncovered", true]];
+  const chips = kinds.filter((c) => c[1] > 0).map(function (c) {
+    const key = c[0];
+    return '<button type="button" class="btn btn-small pl-sig' + (c[3] ? " is-warn" : "") + '" data-pl="panel" ' +
+      'data-val="' + key + '" aria-expanded="' + state.panels[key] + '" aria-controls="pl-panel-' + key +
+      '" data-focus="pl-sig:' + key + '">' + (c[3] ? "! " : "") + c[1] + " " + c[2] + "</button>";
+  });
+  if (!chips.length) return "";
+  const panel = (key, title, lis) => lis.length ? '<ul class="pl-panel" id="pl-panel-' + key + '" aria-label="' +
+    title +
+    '"' + (state.panels[key] ? "" : " hidden") + ">" + lis.join("") + "</ul>" : "";
+  const accept = (r) => liHtml(labelOf(r) + " " + r.id, r.title, '<button type="button" class="btn btn-small" ' +
+    'data-pl="accept-btn" data-id="' + esc(r.id) + '" aria-label="Accept ' + esc(r.id) + '">Accept</button>');
+  const assign = (id) => liHtml(id, tasks[id] ? tasks[id].title : "", '<button type="button" class="btn btn-small" ' +
+    'data-pl="assign-open" data-task="' + esc(id) + '" aria-haspopup="true" aria-expanded="' +
+      isPick(state, "assign", id) +
+    '"' + (isPick(state, "assign", id) ? ' aria-controls="pl-pop"' : "") + ' data-focus="pl-assign:' + esc(id) +
+    '" aria-label="Assign ' + esc(id) + ' to a plan item">Assign</button>',
+  isPick(state, "assign", id) ? assignPop(snap, tree, id) : "");
+  const unc = (id) => liHtml(labelOf(tree.byId[id]) + " " +
+    id, tree.byId[id].title, '<button type="button" class="btn btn-small" ' +
+    'data-pl="link-open" data-id="' + esc(id) + '">Link tasks</button>');
+  return '<div class="pl-sigs">' + chips.join("") + "</div>" +
+    panel("wait", "Waiting for your OK", waiting.map(accept)) +
+    panel("orph", "Orphan tasks", orphans.map(assign)) + panel("unc", "Uncovered plan items", uncovered.map(unc));
+}
+
+function isPick(state, kind, id) {
+  const p = state.pick;
+  return Boolean(p && p.kind === kind && (kind === "assign" ? p.task === id : p.id === id));
+}
+
+function toolbarHtml(state) {
+  const chips = STATUS.map((s) => '<button type="button" class="btn btn-small pl-flt" data-pl="status" data-val="' +
+    s[0] +
+    '" aria-pressed="' + (state.status === s[0]) + '" data-focus="pl-st:' + s[0] + '">' + s[1] + "</button>").join("");
+  return '<div class="pl-bar-t"><div class="pl-chips" role="group" aria-label="Filter by status">' + chips + "</div>" +
+    '<label class="pl-ck"><input type="checkbox" data-pl="unaccepted" data-focus="pl-un"' +
+    (state.unaccepted ? " checked" : "") + "> Unaccepted only</label>" +
+    '<button type="button" class="btn btn-primary pl-add" data-pl="add" data-id="" data-focus="pl-add">' +
+    "+ Plan phase</button></div>";
+}
+
+// The Planner markup for a snapshot. state: status, unaccepted, open (id to true or false), menu, edit, pick, panels.
+export function plannerHtml(snap, st) {
+  const state = Object.assign({ status: "", unaccepted: false, open: {}, menu: null, edit: null, pick: null,
+    project: ui.project, focus: "", panels: ui.panels }, st);
+  const features = featuresOf(snap);
   const rows = features.rows || [];
-  const tasks = taskMap(snap);
-  const blockedIds = snap.blocked || [];
-  const head = '<div class="page-head"><p class="page-title">Planner</p><p class="page-note">' +
-    esc(rows.length + " features · " + (features.uncovered || []).length + " uncovered") + "</p></div>";
-  const add = state.adding ? addFormHtml(snap, features) : "";
+  const tree = buildTree(rows);
+  const waiting = rows.filter((r) => r.state === "done" && !r.accepted);
+  const head = '<div class="page-head"><p class="page-title">Plan</p><p class="page-note">' +
+    esc(rows.length + " items · " + (features.orphans || []).length + " orphan tasks · " + waiting.length +
+    " waiting for your OK") + "</p></div>";
+  const addTop = state.edit && state.edit.kind === "add" && !state.edit.id ? editHtml(state.edit, {}) : "";
   if (!rows.length) {
-    const orphans = (features.orphans || []).length;
-    const orphanNote = orphans ? '<p class="page-note">' + esc(fmtCount(orphans) + " tasks are orphans.") + "</p>" : "";
-    return head + add + emptyHtml("No features yet. Features say what you're building; tasks say how.",
-      '<button type="button" class="btn btn-primary" data-pl="adding" data-focus="pl-adding">+ Feature</button>') +
-      orphanNote;
+    return head + addTop + emptyHtml("No plan yet. Ask your agent to create the roadmap.",
+      '<button type="button" class="btn btn-primary" data-pl="add" data-id="" data-focus="pl-add">' +
+      "+ Plan phase</button>") +
+      panelsHtml(snap, features, tree, state, waiting);
   }
-  const entries = orderedRows(rows, state);
-  const list = entries.length
-    ? '<ul class="pl-list" aria-label="Features">' + entries.map(function (entry) {
-      return featureHtml(snap, entry, tasks, blockedIds, state, rows);
-    }).join("") + "</ul>"
-    : emptyHtml("No features match these filters.");
-  // The floating + Feature button is for phones; the filter row carries its own on wide screens.
-  const fab = state.adding ? "" : '<button type="button" class="btn btn-primary pl-fab" data-pl="adding" ' +
-    'data-focus="pl-adding-fab">+ Feature</button>';
-  return head + calloutHtml(snap, features, state) + add + filtersHtml(snap, state) + headHtml() + list + fab;
+  const ctx = { snap: snap, tree: tree, state: state, direct: directTasks(snap), blocked: snap.blocked || [] };
+  const vis = tree.top.filter((r) => shown(r, tree, state));
+  const list = vis.length ? '<ul class="pl-list" aria-label="Plan">' +
+    vis.map((r, i) => itemHtml(ctx, r, 0, { i: i, n: vis.length })).join("") + "</ul>"
+    : emptyHtml("No plan items match these filters.");
+  return head + toolbarHtml(state) + addTop + panelsHtml(snap, features, tree, state, waiting) + headHtml() + list;
 }
 
-// Names the projects so the person can open a project's Planner. Used for the All projects scope.
 function pickProjectHtml(vm) {
   const projects = Array.isArray(vm.projects) ? vm.projects : [];
-  if (!projects.length) {
-    return emptyHtml("No projects yet.", '<a href="#/all/overview">Go to All projects</a>');
-  }
-  const items = projects.map(function (p) {
-    return '<li><a class="btn" href="#/p/' + esc(p.id) + '/planner">' + esc(p.name || p.id) + "</a></li>";
-  }).join("");
+  if (!projects.length) return emptyHtml("No projects yet.", '<a href="#/all/overview">Go to All projects</a>');
+  const items = projects.map((p) => '<li><a class="btn" href="#/p/' + esc(p.id) + '/planner">' + esc(p.name || p.id) +
+    "</a></li>").join("");
   return '<div class="page-head"><p class="page-title">Planner</p><p class="page-note">Pick a project</p></div>' +
     '<ul class="pl-pick-list" aria-label="Projects">' + items + "</ul>";
 }
 
-// A feature in the ?f= query (the Work drawer chip links there) is opened, the filters are cleared so it shows, and the
-// page scrolls to it once. The highlight stays while the query names it.
-function focusFrom(route) {
+// An item in the ?f= query (the Work drawer chip links there) is opened with its ancestors, the filters are cleared,
+// and the page scrolls to it once. The highlight stays while the query names it.
+function applyFocus(route, snap) {
   const f = route.filters && typeof route.filters.f === "string" ? route.filters.f : "";
-  return FEAT_ID.test(f) ? f : "";
-}
-
-function applyFocus(route, fid) {
+  const fid = FEAT_ID.test(f) ? f : "";
   const key = fid ? route.id + "#" + fid : "";
   ui.focus = fid;
   if (key === focusMark.key) return;
   focusMark.key = key;
   if (!fid) return;
-  ui.open[fid] = true;
+  const byId = buildTree(featuresOf(snap).rows || []).byId;
+  for (let r = byId[fid], n = 0; r && n < 4; n += 1) {
+    ui.open[r.id] = true;
+    r = r.parent ? byId[r.parent] : null;
+  }
   ui.status = "";
-  ui.phase = "";
   ui.unaccepted = false;
   if (typeof document === "undefined" || typeof setTimeout !== "function") return;
   setTimeout(function () {
@@ -362,21 +341,12 @@ export function sectionView(vm) {
   const state = pageState(vm);
   if (state) return state;
   ui.project = vm.route.id;
-  applyFocus(vm.route, focusFrom(vm.route));
+  applyFocus(vm.route, vm.project.snapshot);
   return plannerHtml(vm.project.snapshot, ui);
 }
 
 function rerender() {
   if (typeof document !== "undefined") document.dispatchEvent(new Event("rb:render"));
-}
-
-// A select or checkbox keeps its focus until it is left, and patch() does not redraw under a focused control. So the
-// control is blurred before the redraw, and the focus goes back to the same data-focus key afterwards.
-function redrawKeeping(target) {
-  const key = target.getAttribute("data-focus");
-  if (typeof target.blur === "function") target.blur();
-  rerender();
-  focusKey(key);
 }
 
 function focusKey(key) {
@@ -389,54 +359,122 @@ function focusKey(key) {
   }
 }
 
+// A checkbox keeps its focus until it is left, and patch() does not redraw under a focused control. So the control
+// is blurred before the redraw and the focus goes back to the same data-focus key afterwards.
+function redraw(key, target) {
+  if (target && typeof target.blur === "function") target.blur();
+  rerender();
+  focusKey(key);
+}
+
 function confirmAccept() {
   return typeof window !== "undefined" && typeof window.confirm === "function"
-    ? window.confirm("This feature is not done yet. Accept it anyway?") : false;
+    ? window.confirm("This item is not done yet. Accept it anyway?") : false;
 }
+
+function startEdit(kind, id) {
+  ui.edit = { kind: kind, id: id };
+  ui.menu = null;
+  ui.pick = null;
+  if (kind === "add" && id) ui.open[id] = true;
+  redraw("pl-edit");
+}
+
+function onPick(val) {
+  const pick = ui.pick;
+  ui.pick = null;
+  if (!pick) return;
+  if (pick.kind === "assign") {
+    run("feature.link", { task: pick.task, feats: [val] }, { label: "Assigned " + pick.task + " to " + val });
+    redraw("pl-assign:" + pick.task);
+  } else {
+    run("feature.link", { task: val, feats: [pick.id] }, { label: "Linked " + val + " to " + pick.id });
+    redraw("pl-more:" + pick.id);
+  }
+}
+
+const ACTIONS = {
+  toggle: (el, id) => {
+    ui.open[id] = el.getAttribute("aria-expanded") !== "true";
+    redraw("pl-tg:" + id);
+  },
+  menu: (el, id) => {
+    ui.menu = ui.menu === id ? null : id;
+    ui.pick = null;
+    redraw("pl-more:" + id);
+  },
+  status: (el) => {
+    ui.status = el.getAttribute("data-val");
+    redraw("pl-st:" + ui.status);
+  },
+  panel: (el) => {
+    const k = el.getAttribute("data-val");
+    ui.panels[k] = !ui.panels[k];
+    redraw("pl-sig:" + k);
+  },
+  add: (el, id) => startEdit("add", id),
+  rename: (el, id) => startEdit("rename", id),
+  "acc-edit": (el, id) => startEdit("acc", id),
+  "edit-cancel": () => {
+    const id = ui.edit ? ui.edit.id : "";
+    ui.edit = null;
+    redraw(id ? "pl-more:" + id : "pl-add");
+  },
+  ask: (el, id) => {
+    ui.menu = null;
+    const on = el.textContent === "Mark asked";
+    run("feature.set", { id: id, ask: on }, { label: (on ? "Marked asked " : "Cleared asked ") + id });
+    redraw("pl-more:" + id);
+  },
+  hold: (el, id) => {
+    const on = el.textContent === "Hold";
+    ui.menu = null;
+    run("feature.set", { id: id, hold: on }, { label: (on ? "Held " : "Resumed ") + id });
+    redraw("pl-more:" + id);
+  },
+  move: (el, id) => {
+    run("feature.move", { id: id, dir: el.getAttribute("data-dir") }, { label: "Moved " + id });
+    redraw("pl-more:" + id);
+  },
+  rm: (el, id) => {
+    ui.menu = null;
+    run("feature.rm", { id: id }, { label: "Removed " + id });
+  },
+  "link-open": (el, id) => {
+    ui.menu = null;
+    ui.pick = { kind: "link", id: id };
+    redraw("pl-pop-first");
+  },
+  "assign-open": (el) => {
+    const task = el.getAttribute("data-task");
+    ui.pick = isPick(ui, "assign", task) ? null : { kind: "assign", task: task };
+    redraw(ui.pick ? "pl-pop-first" : "pl-assign:" + task);
+  },
+  pick: (el) => onPick(el.getAttribute("data-val")),
+  "pick-close": () => {
+    const p = ui.pick;
+    ui.pick = null;
+    redraw(p && p.kind === "assign" ? "pl-assign:" + p.task : p ? "pl-more:" + p.id : "");
+  },
+  unlink: (el) => run("feature.unlink", { task: el.getAttribute("data-task"), feats: [el.getAttribute("data-id")] },
+    { label: "Unlinked " + el.getAttribute("data-task") }),
+  "accept-btn": (el, id) => run("feature.accept", { id: id, on: true }, { label: "Accepted " + id }),
+};
 
 function onClick(event) {
   const el = event.target && event.target.closest ? event.target.closest("[data-pl]") : null;
   if (!el || el.tagName !== "BUTTON" || el.disabled) return;
-  const action = el.getAttribute("data-pl");
-  const id = el.getAttribute("data-id");
-  if (action === "toggle") {
-    ui.open[id] = !ui.open[id];
-    rerender();
-  } else if (action === "menu") {
-    ui.menu = ui.menu === id ? null : id;
-    rerender();
-  } else if (action === "adding") {
-    ui.adding = !ui.adding;
-    rerender();
-  } else if (action === "filters") {
-    ui.filtersOpen = !ui.filtersOpen;
-    rerender();
-  } else if (action === "hold") {
-    run("feature.set", { id: id, hold: el.getAttribute("data-hold") === "1" },
-      { label: (el.getAttribute("data-hold") === "1" ? "Held " : "Resumed ") + id });
-  } else if (action === "rm") {
-    ui.menu = null;
-    run("feature.rm", { id: id }, { label: "Removed " + id });
-  } else if (action === "unlink") {
-    run("feature.unlink", { task: el.getAttribute("data-task"), feat: el.getAttribute("data-feat") },
-      { label: "Unlinked " + el.getAttribute("data-task") });
-  }
+  const act = ACTIONS[el.getAttribute("data-pl")];
+  if (act) act(el, el.getAttribute("data-id") || "");
 }
 
 function onChange(event) {
   const el = event.target;
   if (!el || !el.getAttribute) return;
   const action = el.getAttribute("data-pl");
-  if (!action) return;
-  if (action === "filter-status") {
-    ui.status = el.value;
-    redrawKeeping(el);
-  } else if (action === "filter-phase") {
-    ui.phase = el.value;
-    redrawKeeping(el);
-  } else if (action === "filter-unaccepted") {
+  if (action === "unaccepted") {
     ui.unaccepted = el.checked;
-    redrawKeeping(el);
+    redraw("pl-un", el);
   } else if (action === "accept") {
     const id = el.getAttribute("data-id");
     const on = el.checked;
@@ -445,42 +483,50 @@ function onChange(event) {
       return;
     }
     run("feature.accept", { id: id, on: on }, { label: (on ? "Accepted " : "Unaccepted ") + id });
-  } else if (action === "link") {
-    if (!el.value) return;
-    const task = el.value;
-    const feat = el.getAttribute("data-feat");
-    el.blur();
-    run("feature.link", { task: task, feats: [feat] }, { label: "Linked " + task + " to " + feat });
-  } else if (action === "assign") {
-    if (!el.value) return;
-    const task = el.getAttribute("data-task");
-    el.blur();
-    run("feature.link", { task: task, feats: [el.value] }, { label: "Assigned " + task });
   }
 }
 
 function onSubmit(event) {
   const form = event.target;
-  if (!form || form.getAttribute("data-pl-form") !== "add") return;
+  if (!form || form.getAttribute("data-pl-form") !== "edit" || !ui.edit) return;
   event.preventDefault();
-  const title = form.elements.title.value.trim();
+  const text = form.elements.text.value.trim();
   const err = form.querySelector(".pl-err");
-  if (!title) {
-    if (err) err.textContent = "Give the feature a title.";
-    form.elements.title.focus();
+  if (!text && ui.edit.kind !== "acc") {
+    if (err) err.textContent = "Give the item a title.";
+    form.elements.text.focus();
     return;
   }
-  const parent = form.elements.parent.value;
-  const args = {
-    title: title,
-    acc: form.elements.acc.value.trim(),
-    prio: Number(form.elements.prio.value),
-    phase: form.elements.phase.value || null,
-    parent: parent || null,
-  };
-  ui.adding = false;
-  form.reset();
-  run("feature.add", args, { label: "Feature added" });
+  const edit = ui.edit;
+  ui.edit = null;
+  if (edit.kind === "add") {
+    const ask = Boolean(form.elements.ask && form.elements.ask.checked);
+    run("feature.add", { title: text, acc: "", prio: 2, phase: null, parent: edit.id || null, ask: ask },
+      { label: "Plan item added" });
+  } else if (edit.kind === "rename") {
+    run("feature.set", { id: edit.id, title: text }, { label: "Renamed " + edit.id });
+  } else {
+    run("feature.set", { id: edit.id, acc: text }, { label: "Acceptance set for " + edit.id });
+  }
+  redraw(edit.id ? "pl-more:" + edit.id : "pl-add");
+}
+
+// Esc closes the open form, picker or menu and returns focus to its button; arrows move inside a picker.
+function onKeydown(event) {
+  const t = event.target;
+  if (event.key === "Escape") {
+    if (ui.edit) ACTIONS["edit-cancel"]();
+    else if (ui.pick) ACTIONS["pick-close"]();
+    else if (ui.menu) ACTIONS.menu(null, ui.menu);
+    return;
+  }
+  const pop = t && t.closest ? t.closest(".pl-pop") : null;
+  if (!pop || (event.key !== "ArrowDown" && event.key !== "ArrowUp")) return;
+  const btns = Array.from(pop.querySelectorAll("button:not([disabled])"));
+  const at = btns.indexOf(t);
+  const next = btns[(at + (event.key === "ArrowDown" ? 1 : btns.length - 1)) % btns.length];
+  event.preventDefault();
+  if (next) next.focus();
 }
 
 // Attach the listeners once. The guard keeps the module importable without a page (tests).
@@ -490,4 +536,5 @@ export function bind(el) {
   el.addEventListener("click", onClick);
   el.addEventListener("change", onChange);
   el.addEventListener("submit", onSubmit);
+  el.addEventListener("keydown", onKeydown);
 }
