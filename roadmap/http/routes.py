@@ -22,6 +22,7 @@ from roadmap.errors import (EXIT_CONFLICT, EXIT_ERROR, EXIT_EXTERNAL, EXIT_INVAL
 from roadmap import log as rlog
 from roadmap.http import security
 from roadmap.services import agentguard, commands, control, loader, usage
+from roadmap.services import git as git_service
 from roadmap.services import head as head_service
 from roadmap.services import tasks as task_service
 from roadmap.store import config as config_store
@@ -575,6 +576,114 @@ def project_head(app, req, match):
     return json_reply(200, body)
 
 
+# ---------------------------------------------------------------- git (GIT-SPEC step 2, read only)
+
+GIT_LOG_DEFAULT, GIT_LOG_MAX = 10, 100
+
+
+def _git_query(query, keys):
+    """The query of a git read: each of keys at most once and nothing else. Returns the pairs as a dict; else 400."""
+    pairs = parse_qsl(query or "", keep_blank_values=True)
+    names = [key for key, _ in pairs]
+    if len(names) != len(set(names)) or any(key not in keys for key in names):
+        raise RoadmapError("invalid_input", "the query takes " + (", ".join(keys) or "no values"), EXIT_USAGE)
+    return dict(pairs)
+
+
+def _git_project(match):
+    """(project id, project path) for a git route. The path is the registered folder; git runs only there."""
+    pid = _cmd_project(match.group("pid"))
+    return pid, config_store.get_project(pid)["path"]
+
+
+def _git_reply(app, obj):
+    """A git read as JSON. The phone listener gets the paths scrubbed, as for the snapshot."""
+    return json_reply(200, _phone_public(obj) if app.cmd_source == "phone" else obj)
+
+
+def _git_same_origin(app, req):
+    """Commit detail and diffs: never on the phone listener, and on the main listener only from this server's page."""
+    if app.cmd_source == "phone":
+        raise RoadmapError("forbidden", "git commit detail and diffs are not on the phone listener", EXIT_ERROR)
+    if not security.browser_proof(req.headers, app.port):
+        raise RoadmapError("forbidden", "git commit detail and diffs are for this server's own page only", EXIT_ERROR)
+
+
+def git_status(app, req, match):
+    """GET .../git/status: branch, upstream, ahead/behind, detached, in-progress, and the changed files."""
+    _git_query(req.query, ())
+    _, path = _git_project(match)
+    return _git_reply(app, git_service.read_status(path))
+
+
+def git_log(app, req, match):
+    """GET .../git/log?n=10: the newest commits (n from 1 to 100) with their task and job links."""
+    opts = _git_query(req.query, ("n",))
+    text = opts.get("n", str(GIT_LOG_DEFAULT))
+    if not re.fullmatch(r"\d{1,3}", text) or not 1 <= int(text) <= GIT_LOG_MAX:
+        raise RoadmapError("invalid_input", "n must be a whole number from 1 to 100", EXIT_USAGE)
+    _, path = _git_project(match)
+    return _git_reply(app, {"n": int(text), "rows": git_service.read_log(path, limit=int(text))})
+
+
+def git_branches(app, req, match):
+    """GET .../git/branches: the local branches, the current one flagged, with ahead/behind and last commit time."""
+    _git_query(req.query, ())
+    _, path = _git_project(match)
+    return _git_reply(app, {"branches": git_service.read_branches(path)})
+
+
+def git_show(app, req, match):
+    """GET .../git/show/{sha}: one commit (its links) and its files with +/- counts. Same-origin page only."""
+    _git_query(req.query, ())
+    _git_same_origin(app, req)
+    _, path = _git_project(match)
+    sha = git_service.valid_sha(match.group("sha"))
+    root = git_service.repo_root(path)
+    try:
+        text = git_service.run(root, ["show", "-s", "--format=" + git_service.LOG_FORMAT, sha, "--"])
+        numstat = git_service.run(root, ["show", "--numstat", "--no-renames", "--format=", sha, "--"])
+    except RoadmapError as exc:
+        if exc.code == "git_failed":
+            raise RoadmapError("not_found", "no commit " + sha, EXIT_NOT_FOUND)
+        raise
+    commits = git_service.parse_log(text)
+    if not commits:
+        raise RoadmapError("not_found", "no commit " + sha, EXIT_NOT_FOUND)
+    files = []
+    for line in numstat.splitlines():
+        parts = line.split("\t", 2)
+        if len(parts) == 3:
+            files.append({"path": parts[2], "added": None if parts[0] == "-" else parts[0],
+                          "deleted": None if parts[1] == "-" else parts[1]})
+    return _git_reply(app, {"commit": commits[0], "files": files})
+
+
+def git_diff(app, req, match):
+    """GET .../git/diff/{sha}?path=: one file's patch for that commit. Secret names are hidden; binary or over 1 MB
+    files are skipped with their size; the text is capped per file. Same-origin page only."""
+    opts = _git_query(req.query, ("path",))
+    if "path" not in opts:
+        raise RoadmapError("invalid_input", "the query needs path=<file>", EXIT_USAGE)
+    _git_same_origin(app, req)
+    _, project_path = _git_project(match)
+    sha = git_service.valid_sha(match.group("sha"))
+    rel = git_service.valid_rel_path(project_path, opts["path"])
+    if git_service.is_secret_path(rel):
+        return _git_reply(app, {"path": rel, "skipped": git_service.diff_skip_reason(rel, 0), "diff": None})
+    root = git_service.repo_root(project_path)
+    numstat = git_service.run(root, ["show", "--numstat", "--no-renames", "--format=", sha, "--", rel])
+    binary = any(line.startswith("-\t-\t") for line in numstat.splitlines())
+    raw = git_service.run(root, ["show", "--no-color", "--no-ext-diff", "--no-renames", "--format=", sha, "--", rel])
+    data = raw.encode("utf-8")
+    # numstat reports a binary file with '-'; the NUL stands in for it so the size rule words it the same way
+    reason = git_service.diff_skip_reason(rel, len(data), b"\0" if binary else data)
+    if reason is not None:
+        return _git_reply(app, {"path": rel, "skipped": reason, "diff": None})
+    text, truncated = git_service.cap_text(raw)
+    return _git_reply(app, {"path": rel, "skipped": None, "diff": text, "truncated": truncated})
+
+
 # ---------------------------------------------------------------- table
 
 _PID = r"[a-z0-9][a-z0-9-]{0,39}"
@@ -585,6 +694,11 @@ ROUTES = (
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/snapshot"), ("GET",), project_snapshot),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/notes(?:/(?P<name>[^/]*))?"), ("GET",), notes),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/head"), ("GET",), project_head),
+    (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/status"), ("GET",), git_status),
+    (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/log"), ("GET",), git_log),
+    (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/branches"), ("GET",), git_branches),
+    (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/show/(?P<sha>[^/]*)"), ("GET",), git_show),
+    (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/diff/(?P<sha>[^/]*)"), ("GET",), git_diff),
     (re.compile(r"/api/v1/usage"), ("GET",), usage_get),
     (re.compile(r"/api/v1/usage/sync"), ("POST",), usage_sync),
     (re.compile(r"/api/v1/cmd"), ("POST",), cmd),

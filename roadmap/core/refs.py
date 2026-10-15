@@ -11,7 +11,8 @@ import re
 
 REF_RE = re.compile(r"rb:[a-z0-9-]+(/[a-z]+/[A-Za-z0-9._-]+)?")
 PROJECT = "project"
-KINDS = ("phase", "task", "sub", "feature", "issue", "question", "job", "research", "section", "view", "ask")
+KINDS = ("phase", "task", "sub", "feature", "issue", "question", "job", "research", "section", "view", "ask",
+         "commit", "branch")
 LINE_MAX = 10
 SUB_SEP = ".s"
 
@@ -28,6 +29,8 @@ NEXT = {
     "section": "roadmap status",
     "view": "roadmap status",
     "ask": "roadmap head list",
+    "commit": "roadmap git show {id}",
+    "branch": "roadmap git branch",
     PROJECT: "roadmap project show {id}",
 }
 
@@ -168,6 +171,19 @@ def _ask_rows(item):
     return rows
 
 
+def _commit_rows(item):
+    return [[_pair("title", item.get("subject"))],
+            [_pair("sha", item.get("sha")), _pair("author", item.get("author")), _pair("time", item.get("time"))],
+            [_pair("task", item.get("task")), _pair("job", item.get("job"))]]
+
+
+def _branch_rows(item):
+    return [[_pair("title", item.get("name"))],
+            [_pair("current", "yes" if item.get("current") else "no"), _pair("ahead", item.get("ahead")),
+             _pair("behind", item.get("behind"))],
+            [_pair("upstream", item.get("upstream"))]]
+
+
 def _project_rows(snap, project):
     overall = snap.get("overall") or {}
     phases = overall.get("phases") or {}
@@ -208,6 +224,10 @@ def build(snap, project, kind, ident, item=None):
         rows = _research_rows(item)
     elif kind == "ask" and item:
         rows = _ask_rows(item)
+    elif kind == "commit" and item:
+        rows = _commit_rows(item)
+    elif kind == "branch" and item:
+        rows = _branch_rows(item)
     elif kind == "section" and "." in ident:
         rows = _view_rows(ident)
     elif kind == "view":
