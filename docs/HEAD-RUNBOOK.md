@@ -38,3 +38,7 @@ Weekly stop 95% (docs/autonomy.json in split_net). Usage is not automatic: push 
 2. Run the ui-ux-pro-max UX queries (`python3 ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<topic>" --domain ux -n 5`, no -I) for what changed.
 3. Opus (medium) or Cursor with the screenshots writes findings; agy only for text-only view audits (aria, strings, rows) verified by Haiku.
 4. File each finding as a task (`plan import` T lines, phase R8 'UX'), link to a feature, then run them as Haiku packages. See docs/UX-AUDIT.md.
+
+## Usage limits the person set (obey)
+- Weekly stop 95% (docs/autonomy.json). 5-hour stop 90% (set 2026-10-15): never launch or continue work past 90% of the 5-hour usage until the person says so.
+- Usage is not automatic here: ask the person for the current numbers (or read the Enter usage form), push them (`roadmap usage push`), and estimate burn from worker tokens between readings. Before every launch wave check the last reading; when unsure, ask.
