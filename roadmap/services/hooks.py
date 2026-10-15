@@ -146,8 +146,11 @@ class CursorDetector(_FileDetector):
             return None
         output, prompt = invocation
         label = _summary(prompt, 70) if prompt else os.path.basename(output)
-        return {"title": "Cursor Auto: " + label, "model": "cursor", "text": cmd, "kind": "file",
-                "watch": output, "agent": ""}
+        # The real engine is named by CURSOR_MODEL in the command (grok-4.7-xhigh, auto, ...); no value means auto.
+        engine = re.search(r"CURSOR_MODEL=(\S+)", cmd)
+        engine_model = engine.group(1) if engine else "auto"
+        return {"title": ("Cursor Auto" if engine_model == "auto" else "Cursor " + engine_model) + ": " + label, "model": "cursor", "text": cmd, "kind": "file",
+                "watch": output, "agent": "", "engine_model": engine_model}
 
 
 def _cursor_invocation(cmd):
@@ -1056,7 +1059,7 @@ def _start(data_dir, detector, entry, regex, known, now):
         _log("skip (no task id) from detector " + detector.name)
         return None
     try:
-        job = jobs.start_job(data_dir, title, entry["model"], task)
+        job = jobs.start_job(data_dir, title, entry["model"], task, engine_model=entry.get("engine_model"))
     except RoadmapError as exc:
         if exc.code == "locked":
             raise
