@@ -12,6 +12,7 @@ import { bannerHtml, chipHtml, emptyHtml, esc, setHtml, skeletonHtml } from "../
 import { MISSING, fmtDuration, fmtTokens } from "../format.js";
 import { buildHash, currentRoute, projectHash } from "../router.js";
 import { pageState } from "./inbox.js";
+import { tableHtml } from "./wf_table.js";
 
 const LANE_H = 44;
 const PLOT_W = 960;
@@ -801,7 +802,7 @@ function mapSvg(kit, ctx) {
   graph.edges.concat(graph.sequence || []).forEach(function (e) {
     if (flow.routes && flow.routes[e.id]) mapKinds.add(e.type);
   });
-  mapHasNow = !!(flow.now && flow.now.flag);
+  mapHasNow = !!(flow.now && flow.now.flag && graph.live);
   const phases = all.lanes.map(function (l) {
     return l.id;
   });
@@ -833,6 +834,8 @@ function mapSvg(kit, ctx) {
     ctlHtml("Centre on Now (N)", "now", "Now") + ctlHtml("Go to Start (S)", "start", "Start") +
     ctlHtml("Actual size", "actual", "100%") + ctlHtml("Show all phases", "all", "Show all", showAll) +
     ctlHtml("Clear focus", "focus-off", "Reset focus") +
+    '<a class="btn btn-small" href="' + esc(fullHash(ctx.pid)) +
+    '" target="_blank" rel="noopener">Open full screen</a>' +
     "</div>";
   // Focus mode lasts while its node's Details is open: Escape goes back to Projects (panel.js), which drops it here.
   st.focus = route.item ? st.focus : null;
@@ -928,39 +931,6 @@ function mapBody(route, raw, range, stamp) {
 
 function statusChip(word, status) {
   return chipHtml(word, CHIP[status] || "neutral");
-}
-
-function actionHtml(it, model) {
-  if (it.kind !== "job" || !it.task) return MISSING;
-  if (it.live) {
-    return '<button type="button" class="btn btn-small" data-wf-op="task.stop" data-wf-pid="' + esc(it.pid) +
-      '" data-wf-task="' + esc(it.task) + '" aria-label="Stop task ' + esc(it.task) + '">Stop</button>';
-  }
-  return '<a class="btn btn-small" href="' + esc(itemHref(model, it.pid, it.task)) + '" aria-label="Open task ' +
-    esc(it.task) + '">Open</a>';
-}
-
-// The Table: one row per job bar, with the same tracks as the detail strip (.wf-cols and .row-grid).
-export function tableHtml(model) {
-  const rows = model.items.filter(function (it) {
-    return it.kind === "job";
-  });
-  const head = "<tr><th scope=\"col\">Status</th><th scope=\"col\">Job</th><th scope=\"col\">Task</th>" +
-    "<th scope=\"col\">Model</th><th scope=\"col\" class=\"rg-num\">Start</th><th scope=\"col\" class=\"rg-num\">" +
-    "Duration</th><th scope=\"col\" class=\"rg-num\">Tokens (thousands)</th><th scope=\"col\">Action</th></tr>";
-  const body = rows.map(function (it) {
-    const task = it.task ? esc(it.task) + (model.multi ? " · " + esc(it.pname) : "") : MISSING;
-    const taskTitle = it.task ? ' title="' + esc(it.task) + '"' : "";
-    return "<tr>" + "<td>" + statusChip(it.word, it.status) + "</td>" + '<td class="wf-id">' + esc(it.job) + "</td>" +
-      "<td" + taskTitle + ">" + task + "</td>" + "<td>" + esc(modelText(it)) + "</td>" +
-      '<td class="rg-num num">' + clock(it.start) + "</td>" +
-      '<td class="rg-num num">' + esc(durationText(it, model.now)) + "</td>" +
-      '<td class="rg-num num">' + esc(it.tokensK == null ? MISSING : fmtTokens(it.tokensK)) + "</td>" +
-      "<td>" + actionHtml(it, model) + "</td></tr>";
-  }).join("");
-  return '<div class="wf-scroll" tabindex="0" role="region" aria-label="Jobs table">' +
-    '<table class="wf-table"><caption class="sr-only">Jobs in this range</caption>' +
-    "<thead>" + head + "</thead><tbody>" + body + "</tbody></table></div>";
 }
 
 // The detail strip for the selected bar, card or mark. Its tracks are the same as the Table's.
@@ -1105,7 +1075,7 @@ export function sectionView(vm) {
     body = emptyHtml("No jobs recorded yet.", "<span>Agents record work with <code class=\"code\">roadmap job start" +
       '</code>.</span> <a href="' + esc(agents) + '">Open Agents</a>');
   } else if (view === "table") {
-    body = model.jobCount ? tableHtml(model) : emptyRange(route, view);
+    body = tableHtml(model);
   } else if (view === "map") {
     body = mapBody(route, raws[0], range, stamp);
   } else {
@@ -1378,6 +1348,189 @@ function onWheel(e) {
   e.preventDefault();
   const rect = sc.getBoundingClientRect();
   zoomTimeline(timelineZoom * Math.exp(-e.deltaY / 200), e.clientX - rect.left, sc);
+}
+
+// R7.30: the Map alone in its own tab (#/full/<pid>/workflow, from the Map's "Open full screen" link). The diagram
+// fills the window; tapping a node, or Enter on a focused node, opens its details in a side panel. Escape or the
+// close button shuts the panel. A live refresh keeps the reader's pan and zoom.
+const FULL_STATUS = { doing: "Doing", blocked: "Blocked", todo: "To do", done: "Done", defer: "Deferred" };
+const full = { pid: null, stamp: null, graph: null, host: null, mapHost: null, panel: null, api: null,
+  key: null, taps: { last: null }, commits: new Map(), bound: false };
+
+export function fullHash(pid) {
+  return "#/full/" + pid + "/workflow";
+}
+
+function setStyle(el, css) {
+  Object.keys(css).forEach(function (k) {
+    el.style[k] = css[k];
+  });
+  return el;
+}
+
+function closePanel() {
+  full.key = null;
+  if (full.panel) full.panel.hidden = true;
+}
+
+// Builds the frame once per host: the map host, and the panel over its right edge (a sheet on a phone).
+function fullBuild(host) {
+  host.textContent = "";
+  const box = setStyle(document.createElement("div"), { position: "relative", width: "100vw", height: "100vh",
+    overflow: "hidden" });
+  const mapHost = setStyle(document.createElement("div"), { width: "100%", height: "100%" });
+  const panel = setStyle(document.createElement("aside"), { position: "absolute", top: "0", right: "0",
+    bottom: "0", width: "min(360px, 100vw)", overflow: "auto", padding: "16px", boxSizing: "border-box",
+    background: "var(--surface-1)", borderLeft: "1px solid var(--line)" });
+  panel.setAttribute("aria-label", "Item details");
+  panel.hidden = true;
+  box.appendChild(mapHost);
+  box.appendChild(panel);
+  host.appendChild(box);
+  full.host = host;
+  full.mapHost = mapHost;
+  full.panel = panel;
+  panel.addEventListener("click", function (e) {
+    if (closestEl(e.target, "[data-wf-full-close]")) closePanel();
+  });
+  mapHost.addEventListener("keydown", function (e) {
+    const el = e.key === "Enter" ? closestEl(e.target, "[data-wf-item]") : null;
+    if (el) openPanel(el.getAttribute("data-wf-item"));
+  });
+  if (!full.bound) {
+    full.bound = true;
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && full.panel && !full.panel.hidden) closePanel();
+    });
+  }
+}
+
+function loadCommits(pid) {
+  const have = full.commits.get(pid);
+  if (have && (have.pending || Date.now() - have.at < 10000)) return;
+  const entry = { rows: have ? have.rows : null, at: 0, pending: true };
+  full.commits.set(pid, entry);
+  getJson("/api/v1/projects/" + encodeURIComponent(pid) + "/git/log?n=100").then(function (res) {
+    const d = res.data;
+    entry.rows = Array.isArray(d) ? d : (d && Array.isArray(d.commits) ? d.commits : []);
+  }, function () {
+    entry.rows = [];
+  }).then(function () {
+    entry.pending = false;
+    entry.at = Date.now();
+    if (full.key) renderPanel();
+  });
+}
+
+function jobsHtml(jobs) {
+  if (!jobs.length) return "None";
+  return "<ul>" + jobs.map(function (j) {
+    const span = j.start !== null && j.end !== null ? (j.end - j.start) / 1000 : null;
+    const time = j.running ? "running" : fmtDuration(span);
+    return "<li>" + esc(j.model || j.job) + " · " + esc(j.status) + " · " + esc(time) + "</li>";
+  }).join("") + "</ul>";
+}
+
+function commitsHtml(rows) {
+  if (rows === null) return "Loading";
+  if (!rows.length) return "None linked";
+  return "<ul>" + rows.map(function (c) {
+    return "<li><code>" + esc(String(c.sha || "").slice(0, 7)) + "</code> " + esc(c.subject || "") + "</li>";
+  }).join("") + "</ul>";
+}
+
+// The details of the open item: id, title, status, phase, linked jobs, commits, blockers, and a link to its Work row.
+function renderPanel() {
+  const graph = full.graph;
+  const node = graph ? graph.nodes.find(function (n) {
+    return n.id === full.key;
+  }) : null;
+  if (!node) {
+    setHtml(full.panel, '<p>This item is not on the map.</p><button type="button" class="btn btn-small" ' +
+      'data-wf-full-close>Close</button>');
+    return;
+  }
+  const taskId = node.task || null;
+  const lane = (graph.lanes || []).find(function (l) {
+    return l.id === node.lane;
+  });
+  const jobs = taskId ? graph.nodes.filter(function (n) {
+    return n.type === "job" && n.job && n.parent === "task:" + taskId;
+  }) : [];
+  const blockers = graph.edges.filter(function (e) {
+    return e.type === "blocker" && e.to === node.id;
+  }).map(function (e) {
+    const b = graph.nodes.find(function (n) {
+      return n.id === e.from;
+    });
+    return b ? b.label : e.from;
+  });
+  const entry = full.commits.get(full.pid);
+  const rows = taskId ? (entry && entry.rows ? entry.rows.filter(function (c) {
+    return c.task === taskId;
+  }) : null) : [];
+  const work = taskId ? '<p><a href="#/p/' + esc(full.pid) + "/work/i/" + encodeURIComponent(taskId) +
+    '">Open in Work</a></p>' : "";
+  setHtml(full.panel, '<h2>' + esc(node.title || node.label || node.id) + "</h2>" +
+    "<dl><dt>ID</dt><dd>" + esc(taskId || node.job || node.id) + "</dd>" +
+    "<dt>Status</dt><dd>" + statusChip(FULL_STATUS[node.status] || node.status, node.status) + "</dd>" +
+    "<dt>Phase</dt><dd>" + esc(lane ? lane.label : "None") + "</dd>" +
+    "<dt>Blockers</dt><dd>" + (blockers.length ? esc(blockers.join(", ")) : "None") + "</dd>" +
+    "<dt>Jobs</dt><dd>" + jobsHtml(jobs) + "</dd>" +
+    "<dt>Commits</dt><dd>" + commitsHtml(rows) + "</dd></dl>" + work +
+    '<button type="button" class="btn btn-small" data-wf-full-close>Close</button>');
+}
+
+function openPanel(key) {
+  if (!key || !full.panel) return;
+  full.key = key;
+  renderPanel();
+  full.panel.hidden = false;
+  loadCommits(full.pid);
+}
+
+// Mounts the full-screen Map into host (#full-view). app.js calls it on every render of #/full/<pid>/workflow.
+export function mountFull(host, pid) {
+  if (!graphKit) {
+    loadGraph();
+    return;
+  }
+  const entry = cache.get(pid);
+  if (!entry || !entry.raw) {
+    fetchSnapshot(pid);
+    const failed = !!(entry && entry.error);
+    setHtml(host, failed ? bannerHtml("danger", "Workflow could not be loaded.", "") : skeletonHtml(["w-60", "w-90"]));
+    if (!failed) window.setTimeout(function () {
+      window.dispatchEvent(new Event("hashchange"));
+    }, 400);
+    return;
+  }
+  const same = full.pid === pid && full.host === host && !!full.panel;
+  if (same && full.stamp === entry.stamp && full.api) return;
+  const view = same && full.api ? full.api.view() : undefined;
+  if (!same) fullBuild(host);
+  if (full.api) full.api.destroy();
+  full.api = null;
+  full.pid = pid;
+  full.stamp = entry.stamp || "";
+  const graph = graphKit.model.buildGraph(entry.raw, { expand: true });
+  full.graph = graph;
+  full.mapHost.textContent = "";
+  if (!graph.nodes.length) {
+    setHtml(full.mapHost, emptyHtml("No tasks or jobs yet.", "<span>Agents record work with " +
+      "<code class=\"code\">roadmap job start</code>.</span>"));
+    closePanel();
+    return;
+  }
+  const flow = graphKit.layout.flowLayout(graph, { expandAll: false, open: [], close: [] });
+  full.api = graphKit.render.mountMap(full.mapHost, { graph: graph, lay: flow, pid: pid, focus: null,
+    taps: full.taps, fit: false, view: view, onTap: function (el) {
+      openPanel(el.getAttribute("data-wf-item"));
+    }, onClear: function () {}, onView: function () {} });
+  if (!view) openAtNow(full.api, flow);
+  const svg = full.mapHost.querySelector("svg");
+  if (svg) setStyle(svg, { height: "100%", borderRadius: "0", border: "0" });
+  if (full.key) renderPanel();
 }
 
 // Loaded by the section router on first visit, after <main> exists. Node tests have no such element.

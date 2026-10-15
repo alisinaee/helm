@@ -2,7 +2,7 @@
 tests/fixtures/workflow_snapshot.json.
 
 Checks: the four cases (empty, running, blocked, handoff) render their lanes, bars, arrows and cards; every bar and card
-is a focusable button with an aria-label and an SVG title; the Table has one row per job bar; the empty state reads as
+is a focusable button with an aria-label and an SVG title; the Table has one row per task; the empty state reads as
 the spec says; no inline style or inline handler is emitted; the escaped data stays escaped; the Stop and Start buttons
 use data-wf-op (cmd.js), never a page action; the route, the section list and the sprite carry the new section; and
 map.css stays within its 4.5 KB budget with the CSS total under the shared cap. The node checks are skipped when node
@@ -25,7 +25,6 @@ MAP_CSS_MAX = 4.5 * 1024
 CSS_TOTAL_MAX = 72 * 1024  # raised with the R7.12 copy column (see test_shell.py)
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=', re.IGNORECASE)
 OPEN_TAG = re.compile(r"<(g|rect|path|a|button)\b[^>]*data-wf-item=[^>]*>")
-BAR_KEY = re.compile(r'data-wf-item="j:')
 
 
 def read_text(path):
@@ -49,6 +48,10 @@ def markup(out):
         found.extend([case["timeline"], case["map"], case["mapStacked"], case["table"]])
     found.extend(out["sections"].values())
     return found
+
+
+with open(FIXTURE, encoding="utf-8") as _fh:
+    FIXTURE_DATA = json.load(_fh)
 
 
 class WorkflowViewTests(unittest.TestCase):
@@ -98,13 +101,18 @@ class WorkflowViewTests(unittest.TestCase):
                 close = html.find("</g>", match.end())
                 self.assertIn("<title>", html[match.end():close], opening[:160])
 
-    def test_table_has_one_row_per_job_bar(self):
+    def test_table_has_one_row_per_task(self):
+        # The Table (R7.114) lists each task once: its rows are the distinct tasks of the case's jobs.
         for name in ("running", "blocked", "handoff"):
             case = self.out["cases"][name]
-            timeline_bars = len(BAR_KEY.findall(case["timeline"]))
-            table_rows = case["table"].count("<tr><td>")
-            self.assertEqual(table_rows, timeline_bars, name)
-            self.assertEqual(table_rows, case["jobs"], name)
+            raw = FIXTURE_DATA[name]
+            tasks = {row[1] for row in raw["workflow"]["spans"] if row[1]}
+            tasks |= {q["task"] for q in raw.get("queue", []) if q.get("task")}
+            tasks |= {t for t in raw.get("blocked", []) if isinstance(t, str) and t}
+            tasks = sorted(tasks)
+            row_ids = re.findall(r'<tr><td class="wf-id">([^<]*)</td>', case["table"])
+            self.assertEqual(sorted(row_ids), tasks, name)
+            self.assertEqual(len(row_ids), len(set(row_ids)), name)
 
     def test_a_project_without_jobs_still_maps_its_tasks(self):
         # The Map is the default view and draws tasks, so a project with no job spans shows its flow, not the
@@ -125,9 +133,8 @@ class WorkflowViewTests(unittest.TestCase):
         self.assertNotIn("<i>work</i>", found)
 
     def test_stop_and_start_use_the_command_path(self):
-        # Running jobs in the Table carry Stop. Start only appears in the strip once a todo task is selected, so the
-        # module source is checked for it.
-        self.assertIn('data-wf-op="task.stop"', self.out["sections"]["table"])
+        # The Table's next action is a link (Open in Work, Answer, Retry). Stop and Start are in the strip and the
+        # module source, so the source is checked for them.
         source = read_text(os.path.join(WEB, "js", "views", "workflow.js"))
         self.assertIn('"task.start"', source)
         self.assertIn('"task.stop"', source)

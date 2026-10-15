@@ -37,6 +37,14 @@ export function legacyIssuesHash(hash) {
   return "#/p/" + m[1] + "/work" + (m[2] ? "/i/" + m[2] : "") + "?f=kind:issue" + (blockers ? ",blocked" : "");
 }
 
+// R7.30: "#/full/<pid>/workflow" is the Map alone in its own tab (app.js mounts it). Returns the project id, or null.
+const FULL_ROUTE = /^#\/full\/([a-z0-9][a-z0-9-]{0,39})\/workflow(?:\?.*)?$/;
+
+export function fullRouteOf(hash) {
+  const m = FULL_ROUTE.exec(String(hash || ""));
+  return m ? m[1] : null;
+}
+
 function redirectLegacyIssues() {
   const next = legacyIssuesHash(window.location.hash);
   if (next) window.location.replace(next);

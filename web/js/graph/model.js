@@ -13,7 +13,8 @@
 // Also returned (kept out of `nodes` and `edges`, so layout and render are unchanged): start and end (the Start and
 // End pseudo-nodes, ids "start" and "end"); sequence (edges task to next task in a phase, and last task of a phase to
 // the first task of the next, from Start and to End; kept apart from the `after` dependency edges); current (the Now
-// point: "task:<id>", "start" or "end"); parallel (groups of two or more active tasks in one phase: doing or partial,
+// point: "task:<id>", "start" or "end"); live (true when a running job owns Now, the only case that draws the "You are
+// here" flag); parallel (groups of two or more active tasks in one phase: doing or partial,
 // or with a running job). A phase node has `collapsed`: true when every task of the phase is done and none is deferred.
 
 export const NODE_CAP = 300;
@@ -97,13 +98,31 @@ function timeOf(task, jobs) {
   return times.length ? Math.min(...times) : null;
 }
 
-// The current point (Now) over the tasks that remain after the filters, in lane order: the first doing task; else Start
-// when nothing in the project is done yet; else the first todo after the last done task, or the first todo at all;
-// else, when only deferred work is left, the last done task (the last real work); else End. Held and blocked tasks
-// never take Now. `started` is whether any task of the whole project is done, so a filter cannot move Now to Start.
-function currentOf(order, started) {
-  const doing = order.find((t) => t.status === "doing");
-  if (doing) return "task:" + doing.id;
+// The task that owns the newest running job (the live span), or null. Only that task is "You are here"; a partial task
+// with no running job is not.
+function liveTaskOf(order, jobsByTask) {
+  let best = null;
+  let bestAt = 0;
+  order.forEach((t) => {
+    (jobsByTask.get(t.id) || []).forEach((j) => {
+      if (j.status !== "running") return;
+      const at = j.start === null ? 0 : j.start;
+      if (best === null || at > bestAt) {
+        best = t;
+        bestAt = at;
+      }
+    });
+  });
+  return best;
+}
+
+// The current point (Now) over the tasks that remain after the filters, in lane order: the task that owns the newest
+// running job (live); else Start when nothing in the project is done yet; else the first todo after the last done
+// task, or the first todo at all; else, when only deferred work is left, the last done task (the last real work);
+// else End. Held and blocked tasks never take Now. `started` is whether any task of the whole project is done, so a
+// filter cannot move Now to Start. A non-live Now only places the centre; it draws no flag.
+function currentOf(order, started, live) {
+  if (live) return "task:" + live.id;
   if (!started) return "start";
   let last = -1;
   order.forEach((t, i) => {
@@ -353,7 +372,8 @@ export function buildGraph(snap, filters) {
   const firstTimes = tasks.map((t) => timeOf(t, jobsByTask.get(t.id) || [])).filter((x) => x !== null);
   const projectTitle = isObj(raw.project) ? text(raw.project.title) : "";
   const left = tasks.filter((t) => t.status === "todo" || t.status === "doing").length;
-  const current = currentOf(keptOrder, tasks.some((t) => t.status === "done"));
+  const live = liveTaskOf(keptOrder, jobsByTask);
+  const current = currentOf(keptOrder, tasks.some((t) => t.status === "done"), live);
 
   const stats = { before: nodes.length, after: nodes.length, collapsed: [], capped: false,
     tasks: keptTasks.length, unattachedJobs };
@@ -387,6 +407,7 @@ export function buildGraph(snap, filters) {
       date: firstTimes.length ? Math.min(...firstTimes) : null },
     end: { id: "end", type: "end", label: left + " left", left },
     current: now,
+    live: live !== null,
     parallel,
   };
 }

@@ -276,11 +276,13 @@ class WorkflowModelTest(unittest.TestCase):
         g = model(snap([task("P1.1", "done"), task("P1.2", "defer"), task("P1.3", "todo")]))["graph"]
         self.assertEqual("task:P1.3", g["current"])
 
-    def test_current_point_doing_wins_over_an_earlier_todo(self):
+    def test_current_point_is_the_task_with_a_running_job_not_a_partial_one(self):
+        running = [["J1", "P1.2", "haiku", "worker", None, 1791979000, None, "running", None]]
         tasks = [task("P1.1", "todo"), task("P1.2", "partial"), task("P1.3", "todo")]
-        self.assertEqual("task:P1.2", model(snap(tasks))["graph"]["current"])
+        self.assertEqual("start", model(snap(tasks))["graph"]["current"])
+        self.assertEqual("task:P1.2", model(snap(tasks, spans=running))["graph"]["current"])
         tasks = [task("P1.1", "done"), task("P1.2", "todo"), task("P1.3", "doing")]
-        self.assertEqual("task:P1.3", model(snap(tasks))["graph"]["current"])
+        self.assertEqual("task:P1.2", model(snap(tasks))["graph"]["current"])
 
     def test_parallel_group_holds_active_tasks_of_one_phase(self):
         spans = [["J1", "P1.3", "haiku", "worker", None, 1791979000, None, "running", None]]
@@ -324,7 +326,9 @@ class WorkflowModelTest(unittest.TestCase):
         g = model(snap(tasks), filters={"status": ["todo"]})["graph"]
         self.assertEqual("task:P1.2", g["current"])
         self.assertIn("task:P1.2", [n["id"] for n in g["nodes"]])
-        self.assertEqual("task:P1.1", model(snap(tasks))["graph"]["current"])
+        self.assertEqual("task:P1.2", model(snap(tasks))["graph"]["current"])
+        spans = [["J1", "P1.1", "haiku", "worker", None, 1791979000, None, "running", None]]
+        self.assertEqual("task:P1.1", model(snap(tasks, spans=spans))["graph"]["current"])
 
     def test_a_now_task_folded_by_the_cap_points_at_its_phase(self):
         phases = [{"id": "P1", "title": "One", "approved": True}, {"id": "P2", "title": "Two", "approved": True}]
