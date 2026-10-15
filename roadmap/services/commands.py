@@ -430,6 +430,54 @@ def _h_plan_move(data_dir, a, now):
     return {"id": a["id"], "moved": True, "ref": a["ref"], "where": a["where"]}, summary, inverse
 
 
+# ---------------------------------------------------------------- task.add (R7.24 W1): quick add to todo
+
+def _check_task_add(a):
+    title = _opt_text(a, "title").strip()
+    if not title:
+        raise _usage("title is empty (allowed: text)", 'roadmap task add "<title>"')
+    if len(title) > parsers.TITLE_MAX:
+        raise _usage("title is " + str(len(title)) + " characters (allowed: up to " + str(parsers.TITLE_MAX) + ")")
+    if any(unicodedata.category(ch) == "Cc" for ch in title):
+        raise _usage("title has a control character (tabs and line breaks are not allowed)")
+    phase = _text(a.get("phase"))
+    if phase and not records.ID_OK.match(phase):
+        raise _usage("phase '" + phase + "' is not a phase id", "roadmap task list")
+    return {"title": title, "phase": phase}
+
+
+def _next_task_id(doc, phase):
+    numbers = [0]
+    for task in doc["tasks"]:
+        tid = task.get("id") if isinstance(task, dict) else None
+        if isinstance(tid, str) and tid.startswith(phase + ".") and tid[len(phase) + 1:].isdigit():
+            numbers.append(int(tid[len(phase) + 1:]))
+    return phase + "." + str(max(numbers) + 1)
+
+
+def _h_task_add(data_dir, a, now):
+    """Add one todo task. With no phase it goes to the first phase that is not done (never the Backlog phase). Undo
+    removes the task and keeps the phase (backlog.remove with phaseCreated false)."""
+    doc = tasks.load(data_dir)
+    ids = [p.get("id") for p in doc["phases"] if isinstance(p, dict)]
+    phase = a["phase"] or next((p.get("id") for p in doc["phases"] if isinstance(p, dict)
+                                and p.get("status") != "done" and p.get("id") != BACKLOG_PHASE), "")
+    if not phase:
+        raise _usage("no open phase to add to (give one: --phase P)", "roadmap task list")
+    if phase not in ids:
+        raise _usage("phase " + phase + " does not exist", "roadmap task list")
+    tid = _next_task_id(doc, phase)
+    rec = {"kind": "task", "line": 2, "id": tid, "phase": phase, "title": a["title"], "status": "todo",
+           "tokensK": 0, "thinking": BACKLOG_THINKING, "model": BACKLOG_MODEL, "needsUser": None,
+           "check": None, "checkK": None, "note": None, "after": None, "feats": None}
+    try:
+        tasks.apply(data_dir, [rec])
+    except tasks.PlanError as exc:
+        raise RoadmapError("usage", "; ".join(exc.errors)[:300], EXIT_USAGE, next="roadmap status")
+    return ({"id": tid, "phase": phase, "status": "todo"}, tid + " todo in " + phase,
+            {"op": "backlog.remove", "args": {"id": tid, "phase": phase, "phaseCreated": False}})
+
+
 # ---------------------------------------------------------------- questions and comments
 
 def _check_question_ask(a):
@@ -519,8 +567,12 @@ def _check_issue_status(a):
 
 
 def _h_issue_status(data_dir, a, now):
-    issue = issues.set_status(data_dir, a["id"], a["status"], now=now)
-    return {"id": a["id"], "status": a["status"]}, a["id"] + " " + a["status"], None
+    """Set any issue status (the Work board drag). Undo restores the prior status."""
+    prior = issues.get(data_dir, a["id"]).get("status")
+    issues.set_status(data_dir, a["id"], a["status"], now=now)
+    inverse = {"op": "issue.status", "args": {"id": a["id"], "status": prior}} if prior != a["status"] else None
+    return ({"id": a["id"], "status": a["status"], "changed": prior != a["status"], "was": prior},
+            a["id"] + " " + a["status"], inverse)
 
 
 def _check_issue_link(a):
@@ -683,6 +735,8 @@ OPS = {
     "task.stop": _Op(_check_task_id, _h_task_stop),
     "task.backlog": _Op(_check_task_id, _h_task_backlog),
     "task.promote": _Op(_check_task_id, _h_task_promote),
+    "task.add": _Op(_check_task_add, _h_task_add),
+    "task.move": _Op(_check_plan_move, _h_plan_move),
     "backlog.add": _Op(_check_backlog_add, _h_backlog_add),
     "subtask.toggle": _Op(_check_subtask_toggle, _h_subtask_toggle),
     "subtask.add": _Op(_check_subtask_add, _h_subtask_add),
@@ -696,7 +750,7 @@ OPS = {
     "undo": _Op(_check_undo, _h_undo),
     # Internal inverses, used only by undo.
     "queue.remove": _Op(_check_queue_remove, _h_queue_remove, public=False),
-    "issue.status": _Op(_check_issue_status, _h_issue_status, public=False),
+    "issue.status": _Op(_check_issue_status, _h_issue_status),
     "issue.links": _Op(_check_issue_links, _h_issue_links, public=False),
     "subtask.restore": _Op(_check_subtask_restore, _h_subtask_restore, public=False),
     "question.reopen": _Op(_check_question_reopen, _h_question_reopen, public=False),
