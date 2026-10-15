@@ -24,15 +24,21 @@ const VIEWS = [["timeline", "Timeline"], ["map", "Map"], ["table", "Table"]];
 const RANGE_STEP = { "2h": 1800000, today: 3 * HOUR, week: DAY, all: DAY };
 const SCOPE_MAX = 8;
 const FRESH_MS = 5000;
-const QUEUE_W = 112;
+const QUEUE_CHIP = 28;
+const PLOT_MIN = 320;
+const TICK_MIN_PX = 64;
 const QUEUE_GAP = 8;
 const OPEN_K = 0.75;
 const TICK_MAX = 200;
 const WORD = { running: "running", done: "done", failed: "failed" };
 // Engines that get their own lane (R7.74); any other model goes to "other". Head is the head role, whatever the model.
 const ENGINES = ["haiku", "sonnet", "opus", "agy", "cursor", "opencode"];
-const ROW_CLS = ["", "", "wf-r2", "wf-r3", "wf-r4"];
-const MAX_ROWS = 4;
+// A lane with several sub-rows is one 44 px cell per row in the label and gutter columns, so they stay in step
+// with the plot. The first cell carries the lane's label and count; the rest are empty spacers.
+function spacers(html, n) {
+  return n > 1 ? html.repeat(n - 1) : "";
+}
+const MAX_ROWS = 8;
 const BAR_GAP = 4;
 const TL_ZOOM_MAX = 8;
 const CHIP = { doing: "neutral", done: "success", blocked: "danger", queued: "neutral" };
@@ -47,6 +53,7 @@ let lastModel = null;
 let selectedKey = null;
 let scrollLeft = 0;
 let timelineZoom = 1;
+let tlPlotW = 0;  // the plot width at zoom 1, measured from the scroller
 let drag = null;
 let suppressClick = false;
 const touches = new Map();
@@ -373,8 +380,8 @@ export function layout(snap, range, now) {
     }).length };
 }
 
-function ticksOf(range) {
-  const step = RANGE_STEP[range.key] || RANGE_STEP.today;
+function ticksOf(range, every) {
+  const step = (RANGE_STEP[range.key] || RANGE_STEP.today) * (every || 1);
   const out = [];
   for (let t = Math.ceil(range.t0 / step) * step; t <= range.t1 && out.length < TICK_MAX; t += step) {
     out.push(t);
@@ -424,10 +431,26 @@ function viewOf(route) {
 }
 
 
-function rangeOf(route) {
+// The range the URL names, or null when it names none.
+function rangeIn(route) {
   const f = route.filters && route.filters.f ? String(route.filters.f) : "";
   const m = /(?:^|,)range:(2h|today|week|all)(?:,|$)/.exec(f);
-  return m ? m[1] : "today";
+  return m ? m[1] : null;
+}
+
+function rangeOf(route) {
+  return rangeIn(route) || "today";
+}
+
+// The Timeline opens on the narrowest range that has jobs (else All), so it is not empty when older jobs exist.
+function defaultRangeOf(route, raws) {
+  const snap = route.name === "project" ? raws[0] : raws;
+  const hit = RANGES.map(function (r) {
+    return r[0];
+  }).find(function (k) {
+    return layout(snap, k, nowMs()).jobCount > 0;
+  });
+  return hit || "all";
 }
 
 // The hash that opens an item's Details: the task in its project's Workflow view.
@@ -454,56 +477,67 @@ function gutterHtml(model, rows) {
     const sum = known.reduce(function (acc, it) {
       return acc + it.tokensK;
     }, 0);
-    return '<div class="wf-g ' + ROW_CLS[rows[i]] + '"><span class="num wf-gn">' + mine.length +
+    return '<div class="wf-g"><span class="num wf-gn">' + mine.length +
       '</span><span class="num wf-gt">' +
-      esc(known.length ? fmtTokens(sum) : MISSING) + "</span></div>";
+      esc(known.length ? fmtTokens(sum) : MISSING) + "</span></div>" +
+      spacers('<div class="wf-g" aria-hidden="true"></div>', rows[i]);
   }).join("");
 }
 
 function barHtml(it, g, now) {
   const w = Math.max(6, g.x1 - g.x0);
   const y = g.cy - 13;
-  // The label is the task id only, left out when it would not fit (the title and aria-label keep the details).
+  // The id is the label when it fits. When it does not, the bar has no text: the id is in its tooltip and aria-label.
   const label = it.task || it.job || "";
   const fits = label.length * 6.6 + 10 <= w;
-  const title = barTitle(it);
+  const title = barTitle(it) + (g.clipL ? ", starts before this range" : "") +
+    (g.clipR ? ", continues after this range" : "");
   const live = it.live ? '<rect class="wf-pulse" x="' + (g.x1 - 3) + '" y="' + y + '" width="3" height="26"/>' : "";
+  // Edge cues: a chevron at each end of a bar that runs past the range.
+  const cueL = g.clipL ? '<path class="wf-arrow" d="M ' + (g.x0 + 8) + " " + (g.cy - 5) + " L " + (g.x0 + 2) + " " +
+    g.cy + " L " + (g.x0 + 8) + " " + (g.cy + 5) + '"/>' : "";
+  const cueR = g.clipR ? '<path class="wf-arrow" d="M ' + (g.x1 - 8) + " " + (g.cy - 5) + " L " + (g.x1 - 2) + " " +
+    g.cy + " L " + (g.x1 - 8) + " " + (g.cy + 5) + '"/>' : "";
   return '<g class="wf-bar wf-b-' + esc(it.status) + (it.live ? " wf-live" : "") + '" tabindex="0" role="button" ' +
     'aria-label="' + esc(title) + '" data-focus="' + esc(it.key) + '" data-wf-item="' + esc(it.key) +
     '" data-wf-task="' + esc(it.task || "") + '" data-wf-pid="' + esc(it.pid) + '" data-lane="' + esc(g.lane) +
     '" data-x="' + g.x0 + '" data-y="' + g.cy + '"><title>' + esc(title) + '</title><rect x="' + g.x0 + '" y="' + y +
-    '" width="' + w + '" height="26" rx="4"/>' + live + (fits ? '<text x="' + (g.x0 + 6) + '" y="' + (g.cy + 4) +
-    '">' + esc(label) + "</text>" : "") + "</g>";
+    '" width="' + w + '" height="26" rx="4"/>' + live + cueL + cueR + (fits ? '<text x="' +
+    (g.x0 + (g.clipL ? 12 : 6)) + '" y="' + (g.cy + 4) + '">' + esc(label) + "</text>" : "") + "</g>";
 }
 
-// The Timeline: a fixed label column, the swimlane plot (one SVG, so arrows can cross lanes) and a fixed gutter. Bars
-// that overlap in one lane go to sub-rows (greedy packing), so none is drawn over another.
+// The Timeline: a fixed label column, the swimlane plot (one SVG, so arrows can cross lanes) and a fixed gutter. The
+// plot fills the scroller (tlPlotW, measured by measureTimeline) and grows with zoom. Bars that overlap in one lane go
+// to sub-rows (greedy packing), up to MAX_ROWS; the lane grows to its need and a "+N" chip counts what is left over.
+// Queued tasks are compact chips in the Queue lane, wrapped into rows, never piled on the right edge. Edges are drawn
+// above the bars, so the arrows stay visible. Bars that run past the range get an edge cue.
 export function timelineSvg(model) {
   const r = model.range;
-  const W = PLOT_W * timelineZoom;
+  const W = Math.max(PLOT_MIN, tlPlotW || PLOT_W) * timelineZoom;
   const span = r.t1 - r.t0 || 1;
   const X = function (t) {
     return Math.min(W, Math.max(0, ((t - r.t0) / span) * W));
   };
   const xNow = X(model.now);
   const geo = new Map();
-  let queued = 0;
+  const queue = [];
   model.items.forEach(function (it) {
     if (it.lane === undefined) return;
-    let x0;
-    let x1;
     if (it.kind === "queue") {
-      x0 = Math.min(xNow + QUEUE_GAP + queued * (QUEUE_W + QUEUE_GAP), W - QUEUE_W);
-      queued += 1;
-      x1 = x0 + QUEUE_W;
-    } else {
-      x0 = Math.min(X(it.start), W - 6);
-      x1 = Math.min(W, Math.max(X(it.end == null ? model.now : it.end), x0 + 6));
+      queue.push(it);
+      return;
     }
-    geo.set(it.key, { x0: x0, x1: x1, lane: it.lane, row: 0, cy: 0 });
+    const end = it.end == null ? model.now : it.end;
+    const x0 = Math.min(X(it.start), W - 6);
+    const x1 = Math.min(W, Math.max(X(end), x0 + 6));
+    geo.set(it.key, { x0: x0, x1: x1, lane: it.lane, row: 0, cy: 0, hidden: false, clipL: it.start < r.t0,
+      clipR: end > r.t1 });
   });
   const ends = model.lanes.map(function () {
     return [];
+  });
+  const hidden = model.lanes.map(function () {
+    return 0;
   });
   Array.from(geo.values()).sort(function (a, b) {
     return a.x0 - b.x0;
@@ -512,9 +546,31 @@ export function timelineSvg(model) {
     let at = rows.findIndex(function (end) {
       return g.x0 >= end + BAR_GAP;
     });
-    if (at < 0) at = rows.length < MAX_ROWS ? rows.length : MAX_ROWS - 1;
-    rows[at] = Math.max(rows[at] || 0, g.x1);
+    if (at < 0) at = rows.length;
+    if (at >= MAX_ROWS) {
+      g.hidden = true;
+      hidden[g.lane] += 1;
+      return;
+    }
+    rows[at] = g.x1;
     g.row = at;
+  });
+  // Queued tasks: compact chips filled left to right from Now (or from the left edge when Now leaves no room), then
+  // wrapped into the next row of the Queue lane.
+  const qStart = W - xNow - QUEUE_GAP >= QUEUE_CHIP * 2 ? xNow + QUEUE_GAP : QUEUE_GAP;
+  const perRow = Math.max(1, Math.floor((W - qStart) / (QUEUE_CHIP + QUEUE_GAP)));
+  queue.forEach(function (it, i) {
+    const row = Math.floor(i / perRow);
+    if (row >= MAX_ROWS) {
+      hidden[it.lane] += 1;
+      return;
+    }
+    const x0 = qStart + (i % perRow) * (QUEUE_CHIP + QUEUE_GAP);
+    const rows = ends[it.lane];
+    while (rows.length <= row) rows.push(0);
+    rows[row] = Math.max(rows[row], x0 + QUEUE_CHIP);
+    geo.set(it.key, { x0: x0, x1: x0 + QUEUE_CHIP, lane: it.lane, row: row, cy: 0, hidden: false, clipL: false,
+      clipR: false });
   });
   const laneRows = ends.map(function (rows) {
     return Math.max(1, rows.length);
@@ -532,10 +588,12 @@ export function timelineSvg(model) {
     return '<rect class="wf-lane' + (i % 2 ? " wf-lane-alt" : "") + '" x="0" y="' + laneTop[i] + '" width="' + W +
       '" height="' + laneRows[i] * LANE_H + '"/>';
   }).join("");
-  const grid = ticksOf(r).map(function (t) {
+  const every = Math.max(1, Math.ceil(TICK_MIN_PX / Math.max(1, ((RANGE_STEP[r.key] || RANGE_STEP.today) / span) * W)));
+  const ticks0 = ticksOf(r, every);
+  const grid = ticks0.map(function (t) {
     return '<line class="wf-tickline" x1="' + X(t) + '" y1="0" x2="' + X(t) + '" y2="' + H + '"/>';
   }).join("");
-  const ticks = ticksOf(r).map(function (t) {
+  const ticks = ticks0.map(function (t) {
     const x = Math.min(W - 16, Math.max(16, X(t)));
     return '<text class="wf-tick" x="' + x + '" y="' + (AXIS_H - 8) + '" text-anchor="middle">' +
       esc(tickText(t, r.key)) + "</text>";
@@ -544,21 +602,22 @@ export function timelineSvg(model) {
   model.edges.handoff.forEach(function (e) {
     const p = geo.get(e.from);
     const c = geo.get(e.to);
-    if (!p || !c) return;
+    if (!p || !c || p.hidden || c.hidden) return;
     const sx = Math.min(Math.max(c.x0, p.x0), p.x1);
     const mid = (p.cy + c.cy) / 2;
-    paths.push('<path class="wf-edge wf-e-handoff" d="M ' + sx + " " + p.cy + " C " + sx + " " + mid + ", " +
-      (c.x0 - 10) + " " + mid + ", " + c.x0 + " " + c.cy + '" marker-end="url(#wf-arrow)"/>');
+    paths.push('<path class="wf-edge wf-e-handoff" opacity="0.6" d="M ' + sx + " " + p.cy + " C " + sx + " " + mid +
+      ", " + (c.x0 - 10) + " " + mid + ", " + c.x0 + " " + c.cy + '" marker-end="url(#wf-arrow)"/>');
   });
   model.edges.block.forEach(function (e) {
     const b = e.blockKey ? geo.get(e.blockKey) : null;
     const j = e.jobKey ? geo.get(e.jobKey) : null;
-    if (!b || !j) return;
-    paths.push('<path class="wf-edge wf-e-block" d="M ' + b.x0 + " " + b.cy + " C " + (b.x0 - 12) + " " + b.cy +
-      ", " + (j.x0 - 12) + " " + j.cy + ", " + j.x0 + " " + j.cy + '" marker-end="url(#wf-arrow)"/>');
+    if (!b || !j || b.hidden || j.hidden) return;
+    paths.push('<path class="wf-edge wf-e-block" opacity="0.6" d="M ' + b.x0 + " " + b.cy + " C " + (b.x0 - 12) +
+      " " + b.cy + ", " + (j.x0 - 12) + " " + j.cy + ", " + j.x0 + " " + j.cy +
+      '" marker-end="url(#wf-arrow)"/>');
   });
   const bars = model.items.filter(function (it) {
-    return geo.has(it.key);
+    return geo.has(it.key) && !geo.get(it.key).hidden;
   }).map(function (it) {
     return barHtml(it, geo.get(it.key), model.now);
   }).join("");
@@ -570,8 +629,14 @@ export function timelineSvg(model) {
     return '<g class="wf-mark wf-m-' + esc(m.status) + '" role="img" aria-label="' + esc(m.label) + '"><title>' +
       esc(m.label) + '</title><path d="' + markPath(m.status, x, cy) + '"/></g>';
   }).join("");
+  // A "+N" chip in a lane's last row counts the bars the lane has no row for.
+  const more = hidden.map(function (n, i) {
+    if (!n) return "";
+    const cy = laneTop[i] + (laneRows[i] - 1) * LANE_H + LANE_H / 2;
+    return '<text class="wf-tick" x="' + (W - 6) + '" y="' + (cy + 4) + '" text-anchor="end">+' + n + "</text>";
+  }).join("");
   const plot = '<svg class="wf-plot" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H +
-    '" role="group" aria-label="Swimlanes">' + bg + grid + paths.join("") + bars + marks +
+    '" role="group" aria-label="Swimlanes">' + bg + grid + bars + paths.join("") + marks + more +
     '<line class="wf-now" x1="' + xNow + '" y1="0" x2="' + xNow + '" y2="' + H + '"/></svg>';
   // The now label turns to end at the right edge, so it stays inside the axis.
   const nowAt = xNow > W - 24 ? "end" : "middle";
@@ -579,7 +644,7 @@ export function timelineSvg(model) {
     '" aria-hidden="true" focusable="false"><defs>' + DEFS + "</defs>" + ticks +
     '<text class="wf-now-t" x="' + xNow + '" y="10" text-anchor="' + nowAt + '">now</text></svg>';
   const labels = model.lanes.map(function (lane, i) {
-    return laneLabelHtml(lane, ROW_CLS[laneRows[i]]);
+    return laneLabelHtml(lane, "") + spacers('<div class="wf-lbl" aria-hidden="true"></div>', laneRows[i]);
   }).join("");
   return '<div class="wf-scroll wf-tl" tabindex="0" role="region" aria-label="Workflow timeline">' +
     '<div class="wf-grid">' +
@@ -587,6 +652,31 @@ export function timelineSvg(model) {
     '<div class="wf-g wf-corner wf-gh"><span class="wf-gn">Jobs</span><span class="wf-gt">Tokens</span></div>' +
     '<div class="wf-labels">' + labels + "</div>" + plot + '<div class="wf-gutters">' + gutterHtml(model, laneRows) +
     "</div></div></div>";
+}
+
+// The plot width at zoom 1 is the scroller less the two sticky columns. measureTimeline reads it after each render and
+// on resize; a changed width re-renders once (the same hashchange path the zoom uses), so the loop settles.
+function measureTimeline(root) {
+  const sc = root && root.querySelector(".wf-tl");
+  const lab = root && root.querySelector(".wf-labels");
+  const gut = root && root.querySelector(".wf-gutters");
+  if (!sc || !lab || !gut) return;
+  const w = sc.clientWidth - lab.offsetWidth - gut.offsetWidth;
+  if (w > 0 && Math.abs(w - tlPlotW) > 2) {
+    tlPlotW = w;
+    window.dispatchEvent(new Event("hashchange"));
+  }
+}
+
+// The Now button scrolls the Timeline back to the now line (after a pan).
+function jumpToNow(root) {
+  const sc = root && root.querySelector(".wf-tl");
+  if (!sc || !lastModel || !lastModel.range) return;
+  const r = lastModel.range;
+  const W = Math.max(PLOT_MIN, tlPlotW || PLOT_W) * timelineZoom;
+  const x = ((lastModel.now - r.t0) / ((r.t1 - r.t0) || 1)) * W;
+  sc.scrollLeft = Math.max(0, x - sc.clientWidth / 2);
+  scrollLeft = sc.scrollLeft;
 }
 
 // Mark shapes differ by status (not colour alone): a dot for doing, a tick for done, a diamond for blocked.
@@ -1046,14 +1136,14 @@ export function sectionView(vm) {
     }
     return skeletonHtml(["w-60", "w-90"]);
   }
-  const range = rangeOf(route);
   const view = viewOf(route);
-  // Entering the Map from another view opens it again at Now; re-renders of the Map keep the reader's view.
-  if (view === "map" && lastView !== "map" && route.name === "project") mapStateFor(route.id).fitted = false;
-  lastView = view;
   const raws = entries.map(function (e) {
     return e.raw;
   });
+  const range = view === "map" ? rangeOf(route) : rangeIn(route) || defaultRangeOf(route, raws);
+  // Entering the Map from another view opens it again at Now; re-renders of the Map keep the reader's view.
+  if (view === "map" && lastView !== "map" && route.name === "project") mapStateFor(route.id).fitted = false;
+  lastView = view;
   const stamp = entries[0].stamp || "";
   // The Map draws from graph/model.js, so it skips the Timeline model; only its view, route and empty flags are kept.
   const model = view === "map" ? { empty: false, jobCount: 0, byKey: new Map() }
@@ -1068,7 +1158,8 @@ export function sectionView(vm) {
   const controls = '<div class="wf-controls"><nav class="seg plan-views" aria-label="View">' +
     viewLinks(route, view, range) +
     (view === "map" ? "" : '</nav><nav class="seg plan-views" aria-label="Range">' + rangeLinks(route, view, range) +
-      "</nav>") + "</div>";
+      "</nav>" + (view === "timeline" ? '<button type="button" class="btn btn-small" data-wf-now="1">Now</button>' :
+      "")) + "</div>";
   let body;
   if (model.empty && view !== "map") {
     const agents = route.name === "project" ? projectHash(route.id, "agents") : "#/all/agents";
@@ -1133,6 +1224,11 @@ function select(e) {
 function onClick(e) {
   if (suppressClick) {
     suppressClick = false;
+    return;
+  }
+  const nowBtn = closestEl(e.target, "[data-wf-now]");
+  if (nowBtn) {
+    jumpToNow(closestEl(nowBtn, ".wf-page"));
     return;
   }
   const retry = closestEl(e.target, "[data-wf-retry]");
@@ -1254,6 +1350,7 @@ export function bind(el) {
       const scroller = el.querySelector(".wf-scroll");
       if (scroller && scrollLeft && scroller.scrollLeft !== scrollLeft) scroller.scrollLeft = scrollLeft;
       mountMaps();
+      measureTimeline(el);
     }).observe(el, { childList: true });
   }
   // Crossing the 640 px line swaps the minimap for the phase chips, so the Map renders again.
@@ -1275,6 +1372,11 @@ export function bind(el) {
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onUp);
+  }
+  if (typeof ResizeObserver === "function") {
+    new ResizeObserver(function () {
+      measureTimeline(el);
+    }).observe(el);
   }
   el.addEventListener("pointerdown", onDown);
   el.addEventListener("wheel", onWheel, { passive: false });
