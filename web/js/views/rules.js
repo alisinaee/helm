@@ -44,11 +44,12 @@ function listHtml(rules, activeTab, project) {
   });
   if (!shown.length) return emptyHtml("No rules in this group.", "");
   return '<ul class="rule-list">' + shown.map(function (r) {
-    const value = r.kind === "budget" && r.value != null ? " (" + esc(r.value) + "k)" : "";
+    const value = r.kind === "budget" && r.value != null ? esc(r.value) + "k" : "";
     return '<li class="rule-row row-grid"><span class="rule-main rg-main">' +
       chipHtml(kindWord(r.kind), KIND_KIND[r.kind] || "neutral") +
-      ' <span class="rule-text">' + esc(r.text) + value + "</span></span>" +
+      ' <span class="rule-text">' + esc(r.text) + "</span></span>" +
       '<span class="rule-scope rg-t">' + esc(r.scope) + "</span>" +
+      '<span class="rg-num num">' + value + "</span>" +
       '<button type="button" class="btn btn-small" data-action="rule-rm" data-id="' + esc(r.id) +
       '" data-focus="rm-' + esc(r.id) + '" aria-label="Delete rule ' + esc(r.id) + '">Delete</button>' +
       copyButton("rule", r.id, "rule " + r.id, { project: project, sum: refSummary("rule", r) }) + "</li>";
