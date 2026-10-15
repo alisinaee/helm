@@ -13,7 +13,7 @@ import stat
 import time
 from datetime import datetime, timedelta, timezone
 
-from roadmap.core import head, secrets
+from roadmap.core import head, planfmt, secrets
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import jobs
 from roadmap.store import atomic, jsonl, lock
@@ -36,6 +36,14 @@ KINDS = ("ask", "decision", "rule", "bug", "preference", "question", "review", "
 SESSION_EVENTS = ("claim", "start", "end")
 MAX_LINKS = head.MAX_LINKS
 _ID_RE = re.compile(r"^H(\d+)$")
+CLOSE_NEXT = "roadmap head brief"
+CLOSES_PER_MINUTE = 3           # the 4th head close inside one minute is refused (use head next)
+CLOSE_WINDOW_S = 60
+REPEAT_WINDOW_S = 3600          # an answer may not repeat another head close of the last hour
+ANSWER_MIN = 20                 # an answer: text needs this many characters
+SHA_RE = re.compile(r"\b[0-9a-f]{7,40}\b")
+JOB_RE = re.compile(r"\bj\d+\b")
+ANSWER_RE = re.compile(r"answer:\s*(.*)", re.IGNORECASE | re.DOTALL)
 _CONTROL = re.compile("[\x00-\x08\x0b-\x1f\x7f]")  # keeps tab and newline; control characters are stripped
 _CLOSED = head.CLOSED_STATUSES
 
@@ -300,6 +308,71 @@ def capture(data_dir, text, *, session_id=None, src="hook", acct=None, kind=None
             raise
     _spool_append(data_dir, {"e": entry, "text": clean, "assets": names, "n": os.urandom(8).hex()}, timeout)
     return {"id": None, "status": "spooled", "kind": entry["kind"], "sum": entry["sum"], "len": entry["len"]}
+
+
+def _answer_key(text):
+    """The answer text of a note, lower-cased with single spaces, or '' when the note has no answer: part."""
+    match = ANSWER_RE.search(text or "")
+    return " ".join(match.group(1).split()).lower() if match else ""
+
+
+def _commit_exists(data_dir, sha):
+    """True when sha names a commit in the project's repo. Lazy import: gitops imports this module."""
+    from roadmap.services import gitops
+    try:
+        root = gitops._root(data_dir)
+        return gitops._ref_exists(root, sha + "^{commit}")
+    except RoadmapError:
+        return False
+
+
+def _real_ref(data_dir, note):
+    """True when the note names a commit sha that exists, or an existing job id."""
+    if any(_commit_exists(data_dir, sha) for sha in SHA_RE.findall(note)):
+        return True
+    wanted = set(JOB_RE.findall(note))
+    return bool(wanted) and any(str(job.get("id")) in wanted for job in jobs.list_jobs(data_dir))
+
+
+def check_close(data_dir, eid, note, now=None):
+    """Guard a head close (set status=done by the head): at most CLOSES_PER_MINUTE closes a minute, and a note with a
+    real ref (commit sha, job id) or an answer: text of ANSWER_MIN characters that does not repeat a close of the last
+    hour. Called by the head's CLI before a head close (not the person's, not the auto fold). The raw note is checked:
+    scrub would mask a 40-character sha."""
+    moment = (now if now is not None else datetime.now(timezone.utc)).astimezone(timezone.utc)
+    closes = [rec for rec in _records(data_dir)
+              if rec.get("t") == "u" and rec.get("by") == "head" and isinstance(rec.get("set"), dict)
+              and rec["set"].get("status") == "done"]
+    recent = [rec for rec in closes if 0 <= (moment - (head.parse_ts(rec.get("ts")) or moment)).total_seconds()
+              < CLOSE_WINDOW_S]
+    if len(recent) >= CLOSES_PER_MINUTE:
+        raise RoadmapError("usage", "more than %d closes a minute on head; use head next" % CLOSES_PER_MINUTE,
+                           EXIT_USAGE, next=CLOSE_NEXT)
+    if _real_ref(data_dir, note):
+        return
+    answer = _answer_key(note)
+    if len(answer) >= ANSWER_MIN:  # the answer text itself is compared, so a repeat of the last hour is refused
+        repeated = any(_answer_key(rec.get("note")) == answer for rec in closes
+                       if 0 <= (moment - (head.parse_ts(rec.get("ts")) or moment)).total_seconds() < REPEAT_WINDOW_S)
+        if repeated:
+            raise RoadmapError("usage", "this answer repeats another close in the last hour; say what this close "
+                               "answers", EXIT_USAGE, next=CLOSE_NEXT)
+        return
+    raise RoadmapError("usage", "a close needs a note with a real ref: a commit sha, a job id, or answer: text of "
+                       "%d+ characters" % ANSWER_MIN, EXIT_USAGE, next=CLOSE_NEXT)
+
+
+def check_umbrella_binds(data_dir, eid, adds=(), removes=(), now=None):
+    """A head bind that adds links may not leave the entry bound only to umbrella tasks (R7.31): the R7.34 rule,
+    extended from head set to head bind and head t. adds and removes are link refs such as task:R7.69."""
+    if not adds:
+        return
+    moment = (now if now is not None else datetime.now(timezone.utc)).astimezone(timezone.utc)
+    current = next((row["links"] for row in head.fold(_records(data_dir), now=moment) if row["id"] == eid), [])
+    final = [ref for ref in current if ref not in set(removes)] + list(adds)
+    if final and all(ref.startswith("task:") and planfmt.is_umbrella_task(ref[len("task:"):]) for ref in final):
+        raise RoadmapError("usage", eid + " would be bound only to an umbrella task; bind a real task first",
+                           EXIT_USAGE, next="roadmap head convert " + eid)
 
 
 def update(data_dir, eid, *, by, sets=None, links=(), note=None, now=None, timeout=None):
