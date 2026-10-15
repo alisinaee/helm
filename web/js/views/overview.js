@@ -145,12 +145,13 @@ function blockersHtml(snap) {
       { project: snap.id, count: 0 });
   }
   const tasks = snap.blocked.map(function (id) {
-    return '<li class="nz-row"><a href="' + esc(itemHash(snap.id, id)) + '">' + esc(id) +
-      "</a> is blocked" + taskCopy(snap, id) + "</li>";
+    return '<li class="nz-row nz-slot"><span class="nz-txt"><a href="' + esc(itemHash(snap.id, id)) + '">' + esc(id) +
+      "</a> is blocked</span>" + taskCopy(snap, id) + "</li>";
   });
+  // The issue rows keep the same two tracks: the text, then an empty action slot.
   const issues = blockers.map(function (i) {
-    return '<li class="nz-row">' + esc(i.id) + " " + esc(i.title) + (i.tasks.length
-      ? " (blocks " + esc(i.tasks.join(", ")) + ")" : "") + "</li>";
+    return '<li class="nz-row nz-slot"><span class="nz-txt">' + esc(i.id) + " " + esc(i.title) + (i.tasks.length
+      ? " (blocks " + esc(i.tasks.join(", ")) + ")" : "") + '</span><span class="nz-act"></span></li>';
   });
   return cardHtml("blockers", "Open blockers", fmtCount(snap.blocked.length) +
     (snap.blocked.length === 1 ? " task" : " tasks"),

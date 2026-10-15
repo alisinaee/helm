@@ -45,6 +45,7 @@
 .wk-tree-row{--rg:4.5rem minmax(0,1fr) 6.5rem 8rem;font-size:var(--fs-13)}
 .wk-sub{display:flex;gap:var(--sp-2);align-items:center;font-size:var(--fs-13);color:var(--text-2);min-height:var(--h-small)}
 .wk-subs li{display:grid;grid-template-columns:minmax(0,1fr) var(--ref-col);align-items:center}
+.wk-c-flags{white-space:normal}.wk-fn{display:inline-block;min-width:3.5rem;text-align:right}
 @media (max-width:767px){
 .wk-board{display:block}
 .wk-col[data-on=false]{display:none}
@@ -64,9 +65,9 @@ font-variant-numeric:tabular-nums}
 .wk-table .wk-c-ref{order:3;width:auto;margin-left:auto}
 .wk-table .wk-group-head{display:block}
 .wk-tree-row{display:grid;grid-template-columns:4.5rem minmax(0,1fr) var(--ref-col);row-gap:2px}
-.wk-tree-row>.wk-id{grid-column:1;grid-row:1}
-.wk-tree-row>.wk-title{grid-column:2;grid-row:1}
-.wk-tree-row>.ref-copy{grid-column:3;grid-row:1}
+.wk-tree-row>.wk-id{grid-area:1/1}
+.wk-tree-row>.wk-title{grid-area:1/2}
+.wk-tree-row>.ref-copy{grid-area:1/3}
 .wk-tree-row>.wk-word{grid-column:2;grid-row:2}
 .wk-tree-row>.rg-chips{grid-column:2;grid-row:3;justify-self:start}
 }
