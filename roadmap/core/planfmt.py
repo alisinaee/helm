@@ -19,10 +19,11 @@ FEAT_MAX_PER_TASK = 3                  # most feature ids in a task's feats list
 FEATURES_MAX = 60                      # most features in docs/features.json
 FEAT_TITLE_MAX = 80
 FEAT_ACC_MAX = 160
+FEAT_LEVELS = 3                        # levels of the plan tree: phase > sub plan > item (parent chain <= 2)
 PRIOS = ("1", "2", "3")
 PLAN_ALLOWED = ("P <id> <status> | <name>  or  T <id> <status> <tokensK> <model>/<thinking> "
                 "[!] [c:<check>/<checkK>] [a:<ids>] [f:<feats>] | <title> [# <note>]  or  "
-                "F <id> <-|hold> <1|2|3> <phase|-> <parent|-> | <title> [# <acceptance>]  or  "
+                "F <id> <-|hold> <1|2|3> <phase|-> <parent|-> [ask] | <title> [# <acceptance>]  or  "
                 "L <featureId> <taskId> [<taskId>...]")
 SET_ALLOWED = "<id> key=value ...; keys: " + ", ".join(SET_KEYS)
 _KEEP = object()  # marks a set value of "-": keep the current value
@@ -104,7 +105,43 @@ def parse_plan(text):
             continue
         seen[key] = lineno
         records.append(rec)
+    errors.extend(_tree_errors(records))
     return records, errors
+
+
+def _tree_errors(records):
+    """Parent loops and levels deeper than FEAT_LEVELS among the F lines of one input, in line order. A parent
+    defined later in the same input counts. A parent outside the input is checked by the service."""
+    feats = {rec["id"]: rec for rec in records if rec["kind"] == "feature"}
+    problems = []
+    for rec in records:
+        if rec["kind"] != "feature":
+            continue
+        level, loop_at = _level(rec, feats)
+        if loop_at is not None:
+            problems.append(_problem(rec["line"], rec["id"] + " is its own ancestor (parent loop back to "
+                                     + loop_at + ") (allowed: a parent chain that ends at a top-level feature or -)"
+                                     + " next: set the parent of " + loop_at + " to -"))
+        elif level > FEAT_LEVELS:
+            problems.append(_problem(rec["line"], rec["id"] + " would be level " + str(level)
+                                     + " (allowed: " + str(FEAT_LEVELS) + " levels: phase > sub plan > item)"
+                                     + " next: move " + rec["id"] + " to a parent one level up, or set its parent"
+                                     + " to -"))
+    return problems
+
+
+def _level(rec, feats):
+    """(level, loop_at): level 1 is a top-level feature; loop_at is the id that closes a parent loop, else None."""
+    level = 1
+    seen = {rec["id"]}
+    parent = rec.get("parent")
+    while parent is not None and parent in feats:
+        if parent in seen:
+            return level, parent
+        seen.add(parent)
+        level += 1
+        parent = feats[parent].get("parent")
+    return level, None
 
 
 def _parse_phase(line, lineno):
@@ -213,9 +250,12 @@ def _parse_feature(line, lineno):
     shape = "feature line needs an id, status, prio, phase, parent and '| title' (allowed: " + PLAN_ALLOWED + ")"
     head, sep, rest = line.partition("|")
     tokens = head.split()
-    if not sep or len(tokens) != 6:
+    if not sep or len(tokens) not in (6, 7):
         return None, _problem(lineno, shape)
-    _, fid, status, prio, phase, parent = tokens
+    if len(tokens) == 7 and tokens[6] != "ask":
+        return None, _problem(lineno, "'" + tokens[6] + "' is not valid after the parent (allowed: ask, or nothing)")
+    _, fid, status, prio, phase, parent = tokens[:6]
+    ask = len(tokens) == 7
     if not FEAT_ID_RE.match(fid):
         return None, _problem(lineno, "feature id '" + fid + "' must look like F3 (allowed: F1 to F99)")
     if status not in ("-", "hold"):
@@ -244,6 +284,8 @@ def _parse_feature(line, lineno):
     rec = {"kind": "feature", "line": lineno, "id": fid, "hold": status == "hold", "prio": int(prio),
            "phase": None if phase == "-" else phase, "parent": None if parent == "-" else parent,
            "title": title, "acc": acc}
+    if ask:
+        rec["ask"] = True
     return rec, None
 
 
@@ -401,8 +443,10 @@ def format_feature(feature):
     phase = feature.get("phase") if isinstance(feature.get("phase"), str) and feature.get("phase") else "-"
     parent = feature.get("parent") if isinstance(feature.get("parent"), str) and feature.get("parent") else "-"
     status = "hold" if feature.get("hold") is True else "-"
-    line = " ".join(["F", str(feature.get("id", "")), status, str(prio), phase, parent])
-    line += " | " + _one_line(feature.get("title", ""))
+    parts = ["F", str(feature.get("id", "")), status, str(prio), phase, parent]
+    if feature.get("ask") is True:
+        parts.append("ask")
+    line = " ".join(parts) + " | " + _one_line(feature.get("title", ""))
     acc = feature.get("acc")
     if isinstance(acc, str) and acc.strip():
         line += " # " + _one_line(acc)
