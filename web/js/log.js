@@ -86,11 +86,13 @@ function cut(value, max) {
   return text.length > max ? text.slice(0, Math.max(0, max - 1)) + "…" : text;
 }
 
-// Plain text for a log field: no query string or fragment on any URL, no home path (~), no CSRF value, one line.
+// Plain text for a log field: no query string or fragment in any string, no home path (~), no CSRF value, one line.
+// A home path (/Users/<name>, /home/<name>, C:\Users\<name>) is dropped whole and leaves only "~".
 function scrub(value, max) {
   let text = String(value == null ? "" : value);
-  text = text.replace(/([a-z][a-z0-9+.-]*:\/\/[^\s"'<>()]*?)[?#][^\s"'<>()]*/gi, "$1");
-  text = text.replace(/\/(Users|home)\/[^\s/"'()]+/g, "~");
+  text = text.replace(/[?#][^\s"'<>()]*/g, "");
+  text = text.replace(/\/(Users|home)\/[^\s/"'()]+(\/[^\s"'()]*)?/g, "~");
+  text = text.replace(/[A-Za-z]:\\Users\\[^\s\\"'()]+(\\[^\s"'()]*)?/g, "~");
   const token = csrfValue();
   if (token) text = text.split(token).join("[redacted]");
   return cut(text.replace(/\s+/g, " ").trim(), max);
@@ -234,7 +236,7 @@ function takeBatch() {
   return batch;
 }
 
-function send(batch, attempt) {
+function send(batch, attempt, keepalive) {
   const body = JSON.stringify({ sid: sid, events: batch });
   let pending;
   try {
@@ -247,7 +249,7 @@ function send(batch, attempt) {
       },
       body: body,
       credentials: "same-origin",
-      keepalive: true,
+      keepalive: keepalive,
     });
   } catch (err) {
     pending = Promise.reject(err);
@@ -267,26 +269,44 @@ function send(batch, attempt) {
 function failed(batch, attempt) {
   if (attempt === 0) {
     setTimeout(function () {
-      send(batch, 1);
+      send(batch, 1, false);
     }, RETRY_MS);
     return;
   }
   stats.dropped += batch.length;
 }
 
-function flush() {
+function stopTimer() {
   if (timer !== null) {
     clearTimeout(timer);
     timer = null;
   }
+}
+
+// Normal flush (timer, mark): every queued batch, sent without keepalive.
+function flush() {
+  stopTimer();
   if (!buffer.length) return;
   if (!active()) {
     buffer.length = 0;
     return;
   }
   while (buffer.length) {
-    send(takeBatch(), 0);
+    send(takeBatch(), 0, false);
   }
+}
+
+// Unload flush (pagehide, tab hidden): ONE keepalive batch (the browser caps all keepalive bodies at 64 KB together).
+// The rest stays queued and goes out on the next timer.
+function flushUnload() {
+  stopTimer();
+  if (!buffer.length) return;
+  if (!active()) {
+    buffer.length = 0;
+    return;
+  }
+  send(takeBatch(), 0, true);
+  if (buffer.length) schedule();
 }
 
 function consoleText(value) {
@@ -332,7 +352,13 @@ function onRejection(event) {
   }
 }
 
+// True when a URI is the log endpoint itself (a blocked log POST must not queue another ui.csp event).
+function isLogUri(uri) {
+  return /^(?:[a-z][a-z0-9+.-]*:\/\/[^/]+)?\/api\/v1\/log$/i.test(String(uri || "").split(/[?#]/)[0]);
+}
+
 function onCsp(event) {
+  if (isLogUri(event.blockedURI)) return;
   record("ui.csp", "WARN", "blocked " + scrub(event.violatedDirective, 60), {
     violatedDirective: scrub(event.violatedDirective, 60),
     blocked: hostOf(event.blockedURI),
@@ -346,23 +372,34 @@ function onSubmit(event) {
   record("ui.submit", "INFO", "submit", { form: scrub(name, 60) });
 }
 
-// Wrap console.error and console.warn: the original still runs, with the same arguments.
+// Wrap console.error and console.warn: the original always runs, with the same arguments. A busy flag stops a
+// console call made while recording (for example from a message getter) from recording again.
+let busy = false;
+
 function wrapConsole(name, lvl) {
   const original = console[name];
   if (typeof original !== "function") return;
   console[name] = function () {
+    const args = arguments;
+    let entered = false;
     try {
-      record("ui.console", lvl, consoleText(arguments[0]), null);
+      if (!busy) {
+        busy = true;
+        entered = true;
+        record("ui.console", lvl, consoleText(args[0]), null);
+      }
     } catch (err) {
-      return;
+      // Logging never blocks the console call; the original runs in finally.
+    } finally {
+      if (entered) busy = false;
+      original.apply(console, args);
     }
-    return original.apply(console, arguments);
   };
 }
 
 function flushNow() {
   try {
-    flush();
+    flushUnload();
   } catch (err) {
     return;
   }
@@ -408,7 +445,7 @@ export function mark(note) {
     const row = focus && focus.closest ? focus.closest("[data-ref]") : null;
     const ref = row ? validRef(row.getAttribute("data-ref")) : "";
     record("ui.mark", "INFO", String(note || "mark"), null, ref);
-    flushNow();
+    flush();
   } catch (err) {
     return;
   }
