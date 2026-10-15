@@ -650,6 +650,20 @@ function mergeRows(first, extra) {
   return out;
 }
 
+// A new snapshot is the newer state of the rows it holds: a paged row with the same id takes its status and links.
+function refreshPaged(pid, snapRows) {
+  const byId = new Map(snapRows.map(function (row) { return [String(row.id), row]; }));
+  pages.forEach(function (pg, key) {
+    if (key.indexOf(pid + "\n") !== 0) return;
+    pg.rows.forEach(function (row) {
+      const fresh = byId.get(String(row.id));
+      if (!fresh) return;
+      if (fresh.status !== undefined) row.status = fresh.status;
+      if (fresh.links !== undefined) row.links = fresh.links;
+    });
+  });
+}
+
 // "Showing N of TOTAL", a Load more button and the end marker the observer watches. pager: {pid, scope, shown,
 // total, more, error}; total is null until the first page is in.
 function pagerHtml(pager) {
@@ -922,6 +936,7 @@ export function sectionView(vm) {
   // The snapshot head first (first paint), then the paged rows of this scope, merged by id.
   const snapHead = vm.project.snapshot.head || null;
   const scope = scopeOf(opts.f);
+  refreshPaged(vm.route.id, rowsOf({ head: snapHead }));
   const pg = pages.get(vm.route.id + "\n" + scope) || null;
   const head = Object.assign({}, snapHead || {}, { rows: mergeRows(rowsOf({ head: snapHead }), pg ? pg.rows : []) });
   if (pg && pg.counts) {

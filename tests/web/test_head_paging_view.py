@@ -50,6 +50,13 @@ class PagingSource(unittest.TestCase):
         self.assertIn('class="hd-end"', self.src)
         self.assertIn('document.dispatchEvent(new Event("rb:render"))', self.src)
 
+    def test_a_new_snapshot_refreshes_paged_rows_with_the_same_id(self):
+        self.assertIn("function refreshPaged(pid, snapRows)", self.src)
+        self.assertIn("refreshPaged(vm.route.id, rowsOf({ head: snapHead }));", self.src)
+        self.assertIn("if (key.indexOf(pid + \"\\n\") !== 0) return;", self.src)
+        self.assertIn("if (fresh.status !== undefined) row.status = fresh.status;", self.src)
+        self.assertIn("if (fresh.links !== undefined) row.links = fresh.links;", self.src)
+
     def test_a_failed_page_is_not_retried_by_the_observer(self):
         self.assertIn("(auto && pg.error)", self.src)
 
