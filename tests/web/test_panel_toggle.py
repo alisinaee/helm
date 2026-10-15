@@ -20,7 +20,7 @@ KEYS = os.path.join(WEB, "js", "keys.js")
 
 NODE_SCRIPT = """
 import { pathToFileURL } from "node:url";
-globalThis.window = { matchMedia: () => ({ matches: false }) };
+globalThis.window = { matchMedia: () => ({ matches: false }), location: { hash: "" }, addEventListener() {} };
 const top = await import(pathToFileURL(process.env.WEB_DIR + "/js/views/topbar.js").href);
 const base = {
   route: { name: "project", id: "alpha", section: "work", view: "board" },

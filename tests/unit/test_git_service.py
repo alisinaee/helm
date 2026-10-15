@@ -369,7 +369,7 @@ class CappedRunnerTests(unittest.TestCase):
     def test_run_failure_with_empty_stderr_has_fallback_message(self):
         with _fake_git(self, "exit 1"):
             with self.assertRaises(RoadmapError) as ctx:
-                git.run(self.root, ["status"])
+                git.run(self.root, ["status"], timeout=30)  # a loaded machine must not hit the 5 s default
         self.assertEqual((ctx.exception.code, ctx.exception.message, ctx.exception.exit),
                          ("git_failed", "git failed", EXIT_EXTERNAL))
 
