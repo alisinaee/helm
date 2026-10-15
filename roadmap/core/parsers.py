@@ -192,6 +192,8 @@ def parse_jobs(text, now, name="jobs.json"):
             job["parent"] = j["parent"] if isinstance(j["parent"], str) and j["parent"] else None
         if "role" in j:
             job["role"] = j["role"] if isinstance(j["role"], str) and j["role"] else None
+        if "effort" in j:
+            job["effort"] = j["effort"] if isinstance(j["effort"], str) and j["effort"] else None
         jobs.append(job)
     return jobs, []
 

@@ -66,12 +66,14 @@ class AgentsRowsTest(unittest.TestCase):
         self.assertNotIn("rg-fin", text)
         self.assertNotIn("act-row", text)
 
-    def test_phone_turns_each_agent_row_into_two_lines(self):
-        flow = read(CSS, "flow.css")
-        self.assertIn(".row-grid.rg-agent { display: grid;", flow)
-        self.assertIn(".row-grid.rg-head { display: none; }", flow)
-        self.assertIn("contain: inline-size;", flow)
-        self.assertIn(".rg-agent>:nth-child(7) { grid-area: 1/6; }", flow)
+    def test_agent_rows_use_fixed_tracks_and_wrap_on_a_phone(self):
+        # The header (Model, Effort, Job, Task, Elapsed, Tokens) and every row share the same eight tracks.
+        css = read(CSS, "components.css")
+        self.assertIn("--rg: minmax(10rem, 13rem) 4.5rem minmax(0, 1fr) minmax(4.5rem, 8rem) 5rem 4.5rem 5rem;", css)
+        self.assertIn(".row-grid.rg-head { display: none; }", css)
+        self.assertIn("@media (min-width: 600px) { .row-grid.rg-head { display: grid; } }", css)
+        self.assertIn(".rg-agent>.rg-main { contain: inline-size; }", css)
+        self.assertIn(".rg-agent>:nth-child(8) { grid-column: 3; grid-row: 1 / 6 }", css)
 
     def test_running_tokens_say_not_yet(self):
         self.assertIn('"not yet"', read(VIEWS, "agents.js"))

@@ -41,12 +41,13 @@ def job(jid, status, **extra):
 def synthetic():
     running = [
         job("J1", "running", model="opus", task="P1.1", role="lead", started="2026-10-13T11:58:00Z",
-            elapsed_s=120, tokensK=40, parent=None),
-        job("J2", "running", model="haiku", task="P1.2", role="tests", parent="J1", started="2026-10-13T11:59:00Z",
-            elapsed_s=60, tokensK=9),
-        job("J3", "running", model="sonnet", task=None, role="docs", parent="J1", started="2026-10-13T11:59:30Z",
-            elapsed_s=30),
-        job("J4", "running", model="haiku", task="P2.1", started="2026-10-13T11:50:00Z", elapsed_s=600),
+            elapsed_s=120, tokensK=40, parent=None, effort="high"),
+        job("J2", "running", model="grok-4.7-xhigh", task="P1.2", role="tests", parent="J1",
+            started="2026-10-13T11:59:00Z", elapsed_s=60, tokensK=9, effort="medium"),
+        job("J3", "running", model="cursor", task=None, role="docs", parent="J1",
+            started="2026-10-13T11:59:30Z", elapsed_s=30),
+        job("J4", "running", model="agy", task="P2.1", started="2026-10-13T11:50:00Z", elapsed_s=600,
+            effort="low"),
     ]
     finished = []
     for n in range(12):
@@ -117,6 +118,22 @@ class AgentsResearchTests(unittest.TestCase):
         self.assertIn('class="rg-num num">', html)
         self.assertIn("data-started-ms=", html)
 
+    def test_model_column_shows_the_exact_engine(self):
+        html = self.out["agentsProject"]
+        for text in ("Opus 5.5", "cursor · Grok 4.7", "cursor · Auto", "agy · Gemini 3.8 Flash", "Haiku 5.5"):
+            self.assertIn(">" + text + "</span>", html, text)
+        self.assertNotIn('chip-neutral">grok-4.7-xhigh', html)
+        self.assertNotIn(">cursor<", html)
+        self.assertNotIn(">agy<", html)
+
+    def test_effort_column_shows_the_level_or_a_dash(self):
+        html = self.out["agentsProject"]
+        self.assertEqual(html.count('<span class="rg-chips ag-effort">'), 14)  # 4 running and 10 finished rows
+        self.assertIn('<span class="rg-chips ag-effort">high</span>', html)
+        self.assertIn('<span class="rg-chips ag-effort">medium</span>', html)
+        self.assertIn('<span class="rg-chips ag-effort">\u2014</span>', html)
+        self.assertIn('<span class="ag-effort">Effort</span>', html)
+
     def test_each_row_has_a_stop_button_and_a_task_less_job_has_it_disabled(self):
         html = self.out["agentsProject"]
         self.assertEqual(html.count('data-action="agent-stop"'), 4)
@@ -129,6 +146,19 @@ class AgentsResearchTests(unittest.TestCase):
         self.assertIn("Recently finished jobs", html)
         self.assertEqual(html.count('<li class="ag-row"><div class="row-grid rg-agent">'), 10)
         self.assertIn("Failed", html)
+
+    def test_effort_column_hides_when_no_job_recorded_one(self):
+        self.assertIn('class="ag-list" aria-label="Running agents"', self.out["agentsProject"])
+        self.assertNotIn("ag-noeffort", self.out["agentsProject"])
+        css = read_text(os.path.join(WEB, "css", "components.css"))
+        self.assertIn(".ag-noeffort .ag-effort { display: none; }", css)
+        self.assertIn("-webkit-line-clamp: 2;", css)
+
+    def test_rows_use_the_shared_fixed_tracks(self):
+        html = self.out["agentsProject"]
+        self.assertEqual(html.count('<div class="row-grid rg-agent">'), 14)
+        self.assertNotIn("grid-area", html)
+        self.assertNotIn("style=", html)
 
     def test_empty_state_reads_as_the_spec_says(self):
         self.assertIn("No agents running.", self.out["agentsIdle"])

@@ -43,6 +43,19 @@ class JobCommandTests(FixtureCase):
         self.assertEqual(json.loads(out)["error"]["code"], "not_found")
         self.assertEqual(self.read_jobs(), [])
 
+    def test_start_records_effort_only_when_given(self):
+        run_cli(["job", "start", "x", "opus", "--effort", "xhigh"])
+        run_cli(["job", "start", "y", "haiku"])
+        first, second = self.read_jobs()
+        self.assertEqual(first["effort"], "xhigh")
+        self.assertNotIn("effort", second)
+
+    def test_start_bad_effort_is_usage_error(self):
+        code, out, _ = run_cli(["job", "start", "x", "opus", "--effort", "turbo", "--json"])
+        self.assertEqual(code, 2)
+        self.assertEqual(json.loads(out)["error"]["code"], "usage")
+        self.assertEqual(self.read_jobs(), [])
+
     def test_start_bad_model_is_usage_error(self):
         code, out, _ = run_cli(["job", "start", "x", "gpt", "--json"])
         self.assertEqual(code, 2)

@@ -14,6 +14,7 @@ from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXI
 from roadmap.store import atomic, config, lock, schema
 
 MODELS = ("haiku", "sonnet", "opus", "cursor", "agy", "head")
+EFFORTS = ("low", "medium", "high", "xhigh", "max")
 KEEP_FINISHED = 200
 PARENT_ENV = "ROADMAP_PARENT_JOB"
 JOBS_FILE = "jobs.json"
@@ -68,7 +69,7 @@ def known_task_ids(data_dir):
     return {t["id"] for t in tasks if isinstance(t, dict) and isinstance(t.get("id"), str)}
 
 
-def start_job(data_dir, title, model, task=None, parent=None, role=None, environ=None):
+def start_job(data_dir, title, model, task=None, parent=None, role=None, environ=None, effort=None):
     """Record a new running job and return it. The task, when given, must exist in tasks.json (not_found).
     parent is the id of an existing job (the lead); role is lead or worker and needs a parent.
     With no parent given, the parent is $ROADMAP_PARENT_JOB (environ, default os.environ). A worker with no parent
@@ -77,6 +78,7 @@ def start_job(data_dir, title, model, task=None, parent=None, role=None, environ
     clean_title = _clean_title(title)
     clean_model = _clean_model(model)
     clean_task = _clean_task(task, data_dir)
+    clean_effort = _clean_effort(effort)
     with lock.locked(data_dir):
         doc = _read_doc(data_dir)
         clean_parent = _resolve_parent(parent, role, doc["jobs"], environ)
@@ -84,6 +86,8 @@ def start_job(data_dir, title, model, task=None, parent=None, role=None, environ
         job = {"id": _next_id(doc["jobs"]), "title": clean_title, "model": clean_model}
         if clean_task:
             job["task"] = clean_task
+        if clean_effort:
+            job["effort"] = clean_effort
         if clean_parent:
             job["parent"] = clean_parent
             job["role"] = clean_role
@@ -247,6 +251,14 @@ def _clean_title(title):
     if not text:
         raise RoadmapError("usage", "the job title must not be empty", EXIT_USAGE)
     return text[:TITLE_MAX]
+
+
+def _clean_effort(effort):
+    """The thinking effort of a job: empty (the default, nothing stored) or one of EFFORTS."""
+    text = "" if effort is None else str(effort).strip()
+    if text and text not in EFFORTS:
+        raise RoadmapError("usage", "effort must be one of " + ", ".join(EFFORTS), EXIT_USAGE)
+    return text
 
 
 def _clean_model(model):
