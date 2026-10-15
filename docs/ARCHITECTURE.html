@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roadmap Board Architecture</title>
+<style>
+:root {
+  --bg: #f7f7f5; --fg: #1d1d1b; --muted: #5d5d58; --line: #8a8a84;
+  --box: #ffffff; --box-line: #c9c9c2;
+  --a: #e8eefc; --a-line: #5b7bd5;   /* actors */
+  --s: #eaf6ee; --s-line: #3f9a5f;   /* services */
+  --d: #fdf3e3; --d-line: #c48a2c;   /* data */
+  --u: #f3ecfb; --u-line: #8a5cc8;   /* ui */
+  --warn: #b3412e;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161615; --fg: #ececea; --muted: #a5a59f; --line: #8d8d86;
+    --box: #20201f; --box-line: #3d3d3a;
+    --a: #1d2740; --a-line: #7d9cf0; --s: #17301f; --s-line: #5cc07f;
+    --d: #36290f; --d-line: #e0a84a; --u: #2a1f3b; --u-line: #b18ce6; --warn: #f08a75;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161615; --fg: #ececea; --muted: #a5a59f; --line: #8d8d86;
+  --box: #20201f; --box-line: #3d3d3a;
+  --a: #1d2740; --a-line: #7d9cf0; --s: #17301f; --s-line: #5cc07f;
+  --d: #36290f; --d-line: #e0a84a; --u: #2a1f3b; --u-line: #b18ce6; --warn: #f08a75;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 17px; margin: 32px 0 8px; }
+h3 { font-size: 14px; margin: 16px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+p.lead { color: var(--muted); margin: 0 0 16px; }
+code { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; }
+figure { margin: 0; }
+svg.main { width: 100%; max-width: 640px; height: auto; display: block; margin: 0 auto; }
+svg text { fill: var(--fg); font-family: inherit; }
+svg .t { font-size: 12.5px; font-weight: 600; }
+svg .s { font-size: 10.5px; fill: var(--muted); }
+svg .c { font-size: 10.5px; }
+svg .lbl { font-size: 10px; fill: var(--muted); font-style: italic; }
+svg .arrow { stroke: var(--line); stroke-width: 1.4; fill: none; }
+svg .ret { stroke: var(--u-line); stroke-width: 1.4; fill: none; stroke-dasharray: 4 3; }
+.ka { fill: var(--a); stroke: var(--a-line); } .ks { fill: var(--s); stroke: var(--s-line); }
+.kd { fill: var(--d); stroke: var(--d-line); } .ku { fill: var(--u); stroke: var(--u-line); }
+.kb { fill: var(--box); stroke: var(--box-line); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); margin: 10px 0 0; justify-content: center; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+  margin-right: 5px; vertical-align: -1px; border: 1px solid; }
+.legend .la::before { background: var(--a); border-color: var(--a-line); }
+.legend .ls::before { background: var(--s); border-color: var(--s-line); }
+.legend .ld::before { background: var(--d); border-color: var(--d-line); }
+.legend .lu::before { background: var(--u); border-color: var(--u-line); }
+ol.flow { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 0; align-items: center; }
+ol.flow li { background: var(--box); border: 1px solid var(--box-line); border-radius: 6px; padding: 5px 9px; font-size: 13px; }
+ol.flow li { position: relative; }
+ol.flow li + li::before { content: "\2192"; color: var(--line); position: absolute; left: -15px; }
+ol.flow li + li { margin-left: 18px; }
+ol.flow li.job { border-color: var(--s-line); } ol.flow li.msg { border-color: var(--a-line); }
+ol.flow li.end { background: var(--u); border-color: var(--u-line); }
+.note { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+ul.weak { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+ul.weak li { display: grid; grid-template-columns: 26px 1fr; gap: 0 8px; background: var(--box);
+  border: 1px solid var(--box-line); border-radius: 6px; padding: 8px 10px; font-size: 14px; }
+ul.weak .n { color: var(--warn); font-weight: 700; font-variant-numeric: tabular-nums; }
+ul.weak .f { display: block; font-size: 12.5px; color: var(--muted); }
+ul.weak .fix { display: block; font-size: 13px; }
+ul.weak .fix::before { content: "Fix: "; font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+<h1>Roadmap Board: how it works</h1>
+<p class="lead">One write path, files as the database, one snapshot read path, a polling browser app. R7.79.</p>
+
+<h2>1. Main flow</h2>
+<figure>
+<svg class="main" viewBox="0 0 420 930" role="img" aria-label="Architecture: actors write through the CLI or HTTP service into the services layer, which writes per-project data files; the loader builds a cached snapshot served by the HTTP API to the polling browser app.">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="var(--line)"/></marker>
+    <marker id="ahu" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="var(--u-line)"/></marker>
+  </defs>
+
+  <!-- Actors -->
+  <text class="lbl" x="10" y="14">actors</text>
+  <rect class="ka" x="10" y="22" width="180" height="38" rx="6"/>
+  <text class="t" x="20" y="38">Head agent</text><text class="s" x="20" y="52">Claude Code, plans + verifies</text>
+  <rect class="ka" x="10" y="66" width="180" height="38" rx="6"/>
+  <text class="t" x="20" y="82">Workers</text><text class="s" x="20" y="96">Haiku · agy · Cursor · OpenCode</text>
+  <rect class="ka" x="10" y="110" width="180" height="38" rx="6"/>
+  <text class="t" x="20" y="126">Claude Code hooks</text><text class="s" x="20" y="140">PostToolUse · SubagentStop</text>
+  <rect class="ka" x="200" y="22" width="180" height="126" rx="6"/>
+  <text class="t" x="212" y="44">Person in browser</text>
+  <text class="s" x="212" y="62">reads the board,</text>
+  <text class="s" x="212" y="76">clicks Start / Stop / undo,</text>
+  <text class="s" x="212" y="90">answers asks</text>
+  <text class="s" x="212" y="112">also types messages in</text>
+  <text class="s" x="212" y="126">Claude Code (hooks log Hn)</text>
+
+  <!-- Entry -->
+  <path class="arrow" d="M100 148V176" marker-end="url(#ah)"/>
+  <path class="arrow" d="M290 148V176" marker-end="url(#ah)"/>
+  <text class="lbl" x="106" y="166">shell</text><text class="lbl" x="296" y="166">GET / POST</text>
+  <rect class="kb" x="10" y="178" width="180" height="46" rx="6"/>
+  <text class="t" x="20" y="197"><tspan>CLI </tspan><tspan font-family="ui-monospace,Menlo,monospace" font-size="11.5">bin/roadmap</tspan></text>
+  <text class="s" x="20" y="213">job · head · task · usage · hook</text>
+  <rect class="kb" x="200" y="178" width="180" height="46" rx="6"/>
+  <text class="t" x="212" y="197">HTTP service</text>
+  <text class="s" x="212" y="213">127.0.0.1:8780 · launchd agent</text>
+
+  <!-- Services -->
+  <path class="arrow" d="M100 224V252" marker-end="url(#ah)"/>
+  <path class="arrow" d="M290 224V252" marker-end="url(#ah)"/>
+  <text class="lbl" x="122" y="243">commands.run(op, args, source)</text>
+  <rect class="ks" x="10" y="254" width="370" height="170" rx="8"/>
+  <text class="t" x="20" y="273">Services layer  <tspan class="s">roadmap/services</tspan></text>
+  <rect class="kb" x="20" y="282" width="350" height="26" rx="4"/>
+  <text class="c" x="28" y="299">commands.run + *ops: one write path, activity + undo</text>
+  <rect class="kb" x="20" y="314" width="172" height="22" rx="4"/><text class="c" x="28" y="329">jobs: start · done · fail · reap</text>
+  <rect class="kb" x="198" y="314" width="172" height="22" rx="4"/><text class="c" x="206" y="329">head: ledger · triage · bind</text>
+  <rect class="kb" x="20" y="342" width="172" height="22" rx="4"/><text class="c" x="28" y="357">hooks: events → jobs, Hn</text>
+  <rect class="kb" x="198" y="342" width="172" height="22" rx="4"/><text class="c" x="206" y="357">usage: keychain or push</text>
+  <rect class="kb" x="20" y="370" width="172" height="22" rx="4"/><text class="c" x="28" y="385">limits · budget · control (stop)</text>
+  <rect class="kb" x="198" y="370" width="172" height="22" rx="4"/><text class="c" x="206" y="385">git · gitops (safe runner)</text>
+  <rect class="kb" x="20" y="398" width="172" height="20" rx="4"/><text class="c" x="28" y="412">tasks · issues · asks · queue</text>
+  <rect class="kb" x="198" y="398" width="172" height="20" rx="4"/><text class="c" x="206" y="412">presence · launcher · notify</text>
+
+  <!-- Data -->
+  <path class="arrow" d="M195 424V452" marker-end="url(#ah)"/>
+  <text class="lbl" x="202" y="443">dir lock, re-read, atomic save</text>
+  <rect class="kd" x="10" y="454" width="370" height="122" rx="8"/>
+  <text class="t" x="20" y="473">Data files  <tspan class="s">&lt;project&gt;/docs/</tspan></text>
+  <rect class="kb" x="20" y="482" width="113" height="22" rx="4"/><text class="c" x="27" y="497">tasks.json</text>
+  <rect class="kb" x="138" y="482" width="113" height="22" rx="4"/><text class="c" x="145" y="497">jobs.json</text>
+  <rect class="kb" x="256" y="482" width="114" height="22" rx="4"/><text class="c" x="263" y="497">head.jsonl (+text)</text>
+  <rect class="kb" x="20" y="510" width="113" height="22" rx="4"/><text class="c" x="27" y="525">activity.jsonl</text>
+  <rect class="kb" x="138" y="510" width="113" height="22" rx="4"/><text class="c" x="145" y="525">undo.jsonl</text>
+  <rect class="kb" x="256" y="510" width="114" height="22" rx="4"/><text class="c" x="263" y="525">autonomy · budget</text>
+  <rect class="kb" x="20" y="538" width="350" height="30" rx="4"/>
+  <text class="c" x="27" y="552">issues · questions · features · comments · queue .json</text>
+  <text class="s" x="27" y="564">global state dir: usage ledger, control-*.json, presence-*.json</text>
+
+  <!-- Snapshot -->
+  <path class="arrow" d="M195 576V604" marker-end="url(#ah)"/>
+  <text class="lbl" x="202" y="595">read only</text>
+  <rect class="kb" x="10" y="606" width="370" height="54" rx="8"/>
+  <text class="t" x="20" y="625">Snapshot build</text>
+  <text class="s" x="20" y="641">loader.revision = stat (mtime, size) of each file</text>
+  <text class="s" x="20" y="654">same revision → cache hit · new → core/snapshot.py builds JSON</text>
+
+  <!-- API -->
+  <path class="arrow" d="M195 660V688" marker-end="url(#ah)"/>
+  <rect class="kb" x="10" y="690" width="370" height="78" rx="8"/>
+  <text class="t" x="20" y="709">HTTP API  <tspan class="s">roadmap/http/routes.py</tspan></text>
+  <text class="c" x="20" y="726">GET /projects/{id}/snapshot: ETag → 304 when unchanged</text>
+  <text class="c" x="20" y="742">GET /head and /jobs paged · /projects · /usage · /git/*</text>
+  <text class="c" x="20" y="758">POST /cmd (CSRF + agent guard) · /usage/sync · /log</text>
+
+  <!-- Browser -->
+  <path class="arrow" d="M195 768V796" marker-end="url(#ah)"/>
+  <text class="lbl" x="202" y="787">poll every 2 s (30 s when tab hidden)</text>
+  <rect class="ku" x="10" y="798" width="370" height="124" rx="8"/>
+  <text class="t" x="20" y="817">Browser app  <tspan class="s">web/js</tspan></text>
+  <text class="c" x="20" y="836">app.js loop → api.js → state.js (normalize, view model)</text>
+  <text class="c" x="20" y="852">→ dom.patch → section module (routes.js, lazy)</text>
+  <text class="s" x="20" y="872">views: Overview · Work · Head · Agents · Workflow · Tokens</text>
+  <text class="s" x="20" y="886">Git · Roadmap · Planner · Settings · Limits · Rules · …</text>
+  <text class="s" x="20" y="906">writes: cmd.js only (one write path)</text>
+
+  <!-- Return path: browser writes -->
+  <path class="ret" d="M380 902H404V201H382" marker-end="url(#ahu)"/>
+  <text class="lbl" transform="translate(414 560) rotate(-90)" text-anchor="middle" style="fill:var(--u-line)">click → POST /api/v1/cmd</text>
+</svg>
+<div class="legend"><span class="la">who acts</span><span class="ls">logic</span><span class="ld">files = database</span><span class="lu">UI</span></div>
+</figure>
+
+<h2>2. Two lifecycles</h2>
+<h3>A job</h3>
+<ol class="flow">
+  <li class="job">Head launches worker</li>
+  <li class="job"><code>job start</code> (hook or runner)</li>
+  <li class="job">task → Doing</li>
+  <li class="job">commit names task id</li>
+  <li class="job"><code>job done</code> → done candidate</li>
+  <li class="job">ask auto-closes</li>
+  <li class="end">Person reviews</li>
+</ol>
+<p class="note">Failures: <code>job fail --reason</code>; out-of-credit engines blocked 6 h (R7.70).</p>
+
+<h3>A person's message</h3>
+<ol class="flow">
+  <li class="msg">Hook logs it as Hn</li>
+  <li class="msg">Head triages + binds to task</li>
+  <li class="msg">Work (jobs above)</li>
+  <li class="end">Close with ref: commit, job or answer</li>
+</ol>
+<p class="note">The Stop hook runs <code>head brief --gate</code>: open Hn items block the session from ending.</p>
+
+<h2>3. Known weak spots</h2>
+<ul class="weak">
+  <li><span class="n">1</span><span>Usage cannot sync from the keychain on this Mac (desktop app login has no token item).
+    <span class="f">roadmap/services/usage.py</span>
+    <span class="fix">make <code>usage push</code> the main path; show reading age; refuse launches on a stale reading.</span></span></li>
+  <li><span class="n">2</span><span>Task status drift: Doing with no live job.
+    <span class="f">roadmap/services/jobs.py, tasks.py</span>
+    <span class="fix">on reap, flag (or revert) Doing tasks with no running job after N minutes.</span></span></li>
+  <li><span class="n">3</span><span>Many writers on jobs.json (hooks, CLI, gitops, shell runners, hand edits).
+    <span class="f">roadmap/services/jobs.py, tools/*-job.sh</span>
+    <span class="fix">every write through <code>bin/roadmap job</code>; a check that flags edits outside the lock.</span></span></li>
+  <li><span class="n">4</span><span>Stop-hook gate loops on the same block.
+    <span class="f">roadmap/commands/head.py (brief --gate)</span>
+    <span class="fix">print the next command, not just what is open; same block twice → let the stop through with a note.</span></span></li>
+  <li><span class="n">5</span><span>Cursor runs one job at a time; old call form still binds to R7.31.
+    <span class="f">tools/cursor-job.sh</span>
+    <span class="fix">a small queue with a lock; require the task id argument.</span></span></li>
+  <li><span class="n">6</span><span>agy makes about 1 in 3 wrong claims.
+    <span class="f">docs/reviews/agy-*.md</span>
+    <span class="fix">require file:line per claim; the head greps each one before acting; audits only.</span></span></li>
+  <li><span class="n">7</span><span>CSS files sit at their size caps.
+    <span class="f">tests/web/test_admin.py (CSS_BUDGET), test_workflow_view.py (MAP_CSS_MAX)</span>
+    <span class="fix">move repeated rules into components.css / tokens.css; drop dead selectors.</span></span></li>
+  <li><span class="n">8</span><span>Stale browser tabs after a service restart.
+    <span class="f">web/js/api.js (CSRF retry, R7.61)</span>
+    <span class="fix">also reload when <code>/api/v1/meta</code> reports a new build or start time.</span></span></li>
+  <li><span class="n">9</span><span>Limits written in several places that disagree (CLAUDE.md, skill, runbook, autonomy.json).
+    <span class="f">docs/autonomy.json</span>
+    <span class="fix">one source (autonomy.json); docs point to it; launch commands read it.</span></span></li>
+  <li><span class="n">10</span><span>Agent jobs are tracked only when the description holds a task id.
+    <span class="f">roadmap/services/hooks.py (DETECTORS)</span>
+    <span class="fix">untracked agent → a gate warning, not silence.</span></span></li>
+  <li><span class="n">11</span><span>Snapshot poll every 2 s per open tab stats every data file.
+    <span class="f">roadmap/services/loader.py (revision)</span>
+    <span class="fix">fine for now; if tabs pile up, cache the revision for ~1 s per project.</span></span></li>
+</ul>
+</main>
+</body>
+</html>
