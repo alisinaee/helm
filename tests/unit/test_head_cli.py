@@ -2,13 +2,16 @@
 columns, the one-call triage, claim and brief, review (the person's only: a non-TTY shell is refused), and the status
 line. Runs in a temp ROADMAP_HOME with a copy of the fixture project."""
 
+import argparse
 import contextlib
 import io
+import json
 import os
 import re
 import shutil
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 from roadmap.cli import main
@@ -289,6 +292,132 @@ class HeadAutopilotCli(unittest.TestCase):
         for word in ("verify the diff", "--tokens", "commit", "push", "next wave", "cursor or agy audit", "head set"):
             self.assertTrue(any(word in line for line in lines), word)
         self.assertEqual(lines[-1], "next: roadmap head brief --gate")
+
+
+class HeadCliGaps(HeadCliCase):
+    """Edge cases from docs/reviews/agy-head-testgaps-cli.md that the CLI tests did not cover."""
+
+    def test_log_reports_a_spooled_capture(self):
+        with mock.patch.object(head_cmd, "_write", return_value={"data": {"id": None, "kind": "ask"}}):
+            code, out, _ = _run(["head", "log", "a spooled ask"])
+        self.assertEqual(code, 0)
+        self.assertEqual(out, "ok logged, numbered after the next head write (spooled). next: roadmap head list\n")
+
+    def test_triage_status_flag_is_applied(self):
+        self.log("make the map open in a new tab")
+        code, out, _ = _run(["head", "t", "H1", "bug", "map tab", "--status", "declined"])
+        self.assertEqual(code, 0)
+        self.assertTrue(out.startswith("ok H1 bug declined"), out)
+        self.assertEqual(store.rows(self.data_dir)[0]["status"], "declined")
+
+    def test_bind_of_an_existing_link_says_nothing_new(self):
+        self.log("some ask")
+        _run(["head", "bind", "H1", "task:R1.1"])
+        code, out, _ = _run(["head", "bind", "H1", "task:R1.1"])
+        self.assertEqual(code, 0)
+        self.assertEqual(out, "ok H1 bound nothing new. next: roadmap head list\n")
+
+    def test_unbind_of_an_absent_link_says_nothing(self):
+        self.log("some ask")
+        code, out, _ = _run(["head", "unbind", "H1", "task:R9.9"])
+        self.assertEqual(code, 0)
+        self.assertEqual(out, "ok H1 unbound nothing. next: roadmap head list\n")
+
+    def test_convert_to_task_prints_the_new_ref(self):
+        self.log("make the map open in a new tab")
+        code, out, _ = _run(["head", "convert", "H1", "task"])
+        self.assertEqual(code, 0)
+        self.assertRegex(out, r"^ok H1 -> \S+\. next: roadmap head list\n$")
+
+    def test_review_reopen_writes_the_decision(self):
+        self.log("a done ask")
+        _run(["head", "set", "H1", "status=done"])
+        args = argparse.Namespace(project=PROJECT_ID, id="H1", decision="reopen", json=False)
+        out = io.StringIO()
+        with mock.patch.object(head_cmd, "_write", return_value={"data": {}}) as write, \
+                contextlib.redirect_stdout(out):
+            head_cmd._review(args)
+        self.assertEqual(out.getvalue(), "ok H1 reopened. next: roadmap head list\n")
+        self.assertEqual(write.call_args[0][1:], ("head.review", {"id": "H1", "action": "reopen"}))
+
+    def test_review_with_nothing_waiting(self):
+        self.log("an open ask")
+        code, out, _ = _run(["head", "review"])
+        self.assertEqual(code, 0)
+        self.assertEqual(out, "nothing to review\nnext: roadmap head list\n")
+
+    def test_show_entry_without_verbatim_text(self):
+        self.log("an ask")
+        with mock.patch.object(store, "text_of", return_value=None):
+            code, out, _ = _run(["head", "show", "H1"])
+        self.assertEqual(code, 0)
+        self.assertEqual(out.split("\n")[1], "text: (none)")
+
+    def test_show_unknown_entry_is_a_usage_error(self):
+        code, _, err = _run(["head", "show", "H9"])
+        self.assertEqual(code, 2)
+        self.assertIn("no head entry H9", err)
+
+    def test_list_rejects_a_zero_count(self):
+        code, _, err = _run(["head", "list", "--n", "0"])
+        self.assertEqual(code, 2)
+        self.assertIn("--n must be at least 1", err)
+
+    def test_list_kind_filter_with_no_match(self):
+        self.log("an ask")
+        code, out, _ = _run(["head", "list", "--kind", "rule"])
+        self.assertEqual(code, 0)
+        self.assertEqual(out.split("\n")[0], "no entries match (open)")
+
+    def test_claim_lists_asks_carried_from_an_earlier_session(self):
+        earlier = datetime.now(timezone.utc) - timedelta(hours=1)
+        store.capture(self.data_dir, "an ask carried over", session_id="old-session", now=earlier)
+        code, out, _ = _run(["head", "claim", "--model", "Sonnet 5.5"])
+        self.assertEqual(code, 0)
+        lines = out.rstrip("\n").split("\n")
+        self.assertTrue(lines[0].startswith("  H1 ask "), out)
+        self.assertEqual(lines[-1], "ok claim Sonnet 5.5, 1 carried. next: roadmap head brief")
+
+    def test_triage_list_shows_a_duplicate_suggestion(self):
+        self.log("make the map open in a new tab")
+        self.log("make the map open in a new tab")
+        _, out, _ = _run(["head", "triage"])
+        self.assertIn(" dup H1 ", out)
+
+    def test_import_json_envelope(self):
+        path = self._doc("json.md", "## 2\n- first json item\n")
+        code, out, _ = _run(["head", "import", "--doc", path, "--json"])
+        self.assertEqual(code, 0)
+        data = json.loads(out)["data"]
+        self.assertEqual(data["logged"], ["H1"])
+        self.assertEqual(data["skipped"], 0)
+        self.assertEqual(len(data["items"]), 1)
+
+
+class HeadGateCliGaps(HeadCliCase):
+    """The autopilot read (head brief --gate) with a stop state and an unreadable usage file."""
+
+    def setUp(self):
+        HeadCliCase.setUp(self)
+        patcher = mock.patch.object(head_cmd.hooks, "_git_counts", return_value=(2, None))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_stop_in_the_control_state_silences_the_gate(self):
+        self.log("an open ask")
+        with mock.patch.object(head_cmd.control, "read_state", return_value={"stop": True}):
+            _, out, _ = _run(["head", "brief", "--gate"])
+        self.assertEqual(out, "ok nothing pending\n")
+
+    def test_usage_file_from_a_newer_build_is_ignored_by_the_gate(self):
+        self.log("an open ask")
+        newer = os.path.join(self.tmp, "usage.json")
+        with open(newer, "w", encoding="utf-8") as fh:
+            json.dump({"schemaVersion": 999, "fiveHourPercent": 99}, fh)
+        with mock.patch.object(head_cmd.paths, "usage_file", return_value=newer):
+            code, out, _ = _run(["head", "brief", "--gate"])
+        self.assertEqual(code, 0)
+        self.assertTrue(out.startswith("continue: H1 unanswered "), out)
 
 
 if __name__ == "__main__":

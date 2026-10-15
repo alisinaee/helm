@@ -9,6 +9,7 @@ import unittest
 from datetime import datetime, timezone
 
 from roadmap.errors import RoadmapError
+from roadmap.services import head as head_svc
 from roadmap.services import headimport as imp
 
 NOW = datetime(2026, 10, 15, 12, 0, 0, tzinfo=timezone.utc)
@@ -163,6 +164,38 @@ class ImportTests(HeadImportCase):
         results = imp.import_doc(path, "1", now=NOW)
         self.assertTrue(results[0]["sum"].endswith("word…"))
         self.assertLessEqual(len(results[0]["sum"]), 100)
+
+
+class ImportEdges(HeadImportCase):
+    """Edge cases from docs/reviews/agy-head-testgaps-cli.md that the import tests did not cover."""
+
+    def write_doc(self, name, text):
+        path = os.path.join(self.root, name)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        return path
+
+    def test_tilde_fence_is_skipped(self):
+        path = self.write_doc("tilde.md", "## 2\n~~~\n1. code in a tilde fence\n~~~\n- real item\n")
+        self.assertEqual([i["text"] for i in imp.parse_doc(path, "2")], ["real item"])
+
+    def test_top_level_heading_ends_a_targeted_section(self):
+        path = self.write_doc("h1.md", "## 2\n- kept\n# Other\n- not kept\n")
+        self.assertEqual([i["text"] for i in imp.parse_doc(path, "2")], ["kept"])
+
+    def test_question_wins_over_a_decision_word(self):
+        self.assertEqual(imp._kind_of("Should we choose redis?"), "ask")
+        self.assertEqual(imp._kind_of("We chose redis."), "decision")
+
+    def test_spooled_captures_are_adopted_before_import_ids(self):
+        entry, clean = imp._build({"kind": "ask", "text": "spooled ask"}, NOW)
+        head_svc._spool_append(self.data, {"e": entry, "text": clean})
+        path = self.write_doc("after.md", "## 1\n- imported after\n")
+        results = imp.import_doc(path, "1", data_dir=self.data, now=NOW)
+        self.assertEqual([(r["sum"], r["id"]) for r in results], [("imported after", "H2")])
+        ids = {o["sum"]: o["id"] for o in self.ledger() if o.get("t") == "e"}
+        self.assertEqual(ids["spooled ask"], "H1")
+        self.assertEqual(os.path.getsize(os.path.join(self.data, head_svc.SPOOL_FILE)), 0)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ real projects. CLAUDECODE is cleared so the calls count as the person unless a t
 import json
 import os
 import subprocess
+import unittest
 from unittest import mock
 
 from roadmap.errors import EXIT_CONFLICT, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
@@ -266,3 +267,71 @@ class RegistryTests(GitOpsCase):
             with self.assertRaises(RoadmapError) as ctx:
                 self.run_op(name, {"sha": "abc1234", "name": "x"})
             self.assertEqual(ctx.exception.code, "usage")
+
+
+class ArgvGuardGaps(GitOpsCase):
+    """Argv and guard cases the agy audit (docs/reviews/agy-git-argv-audit.md) left unvalidated by tests. The two
+    expectedFailure tests are real gaps: commit paths are only checked by valid_rel_path, which accepts git pathspec
+    magic and globs, so they bypass the per-path job ownership check and the explicit-paths rule."""
+
+    def test_option_like_push_remote_is_refused(self):
+        with self.assertRaises(RoadmapError) as ctx:
+            self.run_op("git.push", {"remote": "--mirror"})
+        self.assertEqual(ctx.exception.exit, EXIT_USAGE)
+
+    def test_agent_push_checked_must_be_a_real_boolean(self):
+        self.write_policy(push="after-check", protected=["main"])
+        self.git("checkout", "-q", "-b", "agent/R7.12")
+        with self.assertRaises(RoadmapError) as ctx:
+            self.run_op("git.push", {"checked": "yes"}, source="agent")
+        self.assertEqual(ctx.exception.exit, EXIT_USAGE)
+
+    def test_switch_refuses_option_like_and_reflog_style_names(self):
+        for bad in ["-b", "@{-1}", "feat x"]:
+            with self.assertRaises(RoadmapError) as ctx:
+                self.run_op("git.switch", {"name": bad})
+            self.assertEqual(ctx.exception.exit, EXIT_USAGE)
+
+    def test_revert_takes_only_a_full_commit_id(self):
+        for bad in ["HEAD", "main", "HEAD~1"]:
+            with self.assertRaises(RoadmapError) as ctx:
+                self.run_op("git.revert", {"sha": bad})
+            self.assertEqual(ctx.exception.exit, EXIT_USAGE)
+
+    def test_switch_refuses_a_modified_tracked_file(self):
+        self.git("branch", "feat/x")
+        self.write("README.md", "changed\n")
+        with self.assertRaises(RoadmapError) as ctx:
+            self.run_op("git.switch", {"name": "feat/x"})
+        self.assertEqual(ctx.exception.code, "conflict")
+        self.assertEqual(self.git("rev-parse", "--abbrev-ref", "HEAD"), "main")
+
+    def test_owned_path_is_refused_under_another_spelling(self):
+        self.write("a.txt", "a\n")
+        self.write_jobs([{"id": "j1", "status": "running", "files": ["a.txt"]}])
+        with self.assertRaises(RoadmapError) as ctx:
+            self.run_op("git.commit", {"paths": ["./a.txt"], "message": "x"})
+        self.assertEqual(ctx.exception.code, "conflict")
+
+    def test_symlink_pointing_out_of_the_project_is_refused(self):
+        outside = os.path.join(self.tmp, "outside.txt")
+        with open(outside, "w", encoding="utf-8") as fh:
+            fh.write("x\n")
+        os.symlink(outside, os.path.join(self.folder, "link.txt"))
+        with self.assertRaises(RoadmapError) as ctx:
+            self.run_op("git.commit", {"paths": ["link.txt"], "message": "x"})
+        self.assertEqual(ctx.exception.exit, EXIT_USAGE)
+
+    @unittest.expectedFailure
+    def test_glob_pathspec_cannot_sweep_another_jobs_file(self):
+        self.write("a.txt", "a\n")
+        self.write_jobs([{"id": "j1", "status": "running", "files": ["a.txt"]}])
+        with self.assertRaises(RoadmapError):
+            self.run_op("git.commit", {"paths": ["*"], "message": "x"})
+
+    @unittest.expectedFailure
+    def test_magic_pathspec_is_refused(self):
+        self.write("a.txt", "a\n")
+        with self.assertRaises(RoadmapError) as ctx:
+            self.run_op("git.commit", {"paths": [":/"], "message": "x"})
+        self.assertEqual(ctx.exception.exit, EXIT_USAGE)
