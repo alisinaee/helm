@@ -1477,6 +1477,25 @@
       "note": "person request 2026-10-15; spec docs/GIT-SPEC.md"
     },
     {
+      "id": "R7.31",
+      "phase": "R7",
+      "title": "HEAD section: ledger of what the person asks and decides, bound to tasks/issues/reviews, with status",
+      "status": "partial",
+      "tokensK": 600,
+      "thinking": "high",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person: VERY IMPORTANT; see docs/HEAD-SECTION-REQUEST.md",
+      "feats": [
+        "F25"
+      ],
+      "at": {
+        "partial": "2026-10-15T09:18:31+03:30"
+      }
+    },
+    {
       "id": "R7.30",
       "phase": "R7",
       "title": "Workflow map: Open in new tab (full-screen view, left nav hidden) with node tap showing Details in the side panel",
@@ -1490,22 +1509,6 @@
       "note": "person request 2026-10-15",
       "feats": [
         "F13"
-      ]
-    },
-    {
-      "id": "R7.31",
-      "phase": "R7",
-      "title": "HEAD section: ledger of what the person asks and decides, bound to tasks/issues/reviews, with status",
-      "status": "todo",
-      "tokensK": 600,
-      "thinking": "high",
-      "model": "opus",
-      "needsUser": false,
-      "check": "none",
-      "checkK": 0,
-      "note": "person: VERY IMPORTANT; see docs/HEAD-SECTION-REQUEST.md",
-      "feats": [
-        "F25"
       ]
     }
   ],
