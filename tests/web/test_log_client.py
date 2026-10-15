@@ -95,7 +95,7 @@ R.lvl = ev.lvl;
 R.src = ev.src;
 R.msgLen = ev.msg.length;
 R.msgClean = !/SECRET|\?token|#frag|tok123|\/Users\//.test(JSON.stringify(ev));
-R.tilde = ev.msg.indexOf("~/Works") >= 0;
+R.tilde = ev.msg.indexOf(" ~ ") >= 0;
 R.route = ev.route;
 R.dataKeys = Object.keys(ev.data).length;
 R.longLen = ev.data.long.length;
@@ -114,12 +114,25 @@ const beforeBatch = sent.length;
 for (let i = 0; i < 230; i++) L.logEvent("ui.mark", "m" + i);
 R.bufferCap = L.status().buffered;
 R.droppedAtCap = L.status().dropped >= 30;
-await pagehide();
+L.mark("flush");
+await tick();
 const batches = sent.slice(beforeBatch);
 R.batchCount = batches.length;
 R.maxBatchEvents = Math.max.apply(null, batches.map(function (s) { return JSON.parse(s.init.body).events.length; }));
 R.maxBodyBytes = Math.max.apply(null, batches.map(function (s) { return s.init.body.length; }));
 R.batchedMarks = batches.reduce(function (n, s) { return n + JSON.parse(s.init.body).events.length; }, 0);
+R.normalNoKeepalive = batches.every(function (s) { return s.init.keepalive === false; });
+
+// Unload: pagehide sends ONE keepalive batch (14 KB cap) and leaves the rest queued; a second pagehide drains it.
+for (let i = 0; i < 40; i++) L.logEvent("ui.mark", "u" + i + " " + "x".repeat(380));
+const beforeUnload = sent.length;
+await pagehide();
+R.unloadSends = sent.length - beforeUnload;
+R.unloadBody = sent.length > beforeUnload ? sent[sent.length - 1].init.body.length : 0;
+R.unloadKeepalive = sent.length > beforeUnload ? sent[sent.length - 1].init.keepalive === true : false;
+R.unloadRest = L.status().buffered;
+await pagehide();
+R.unloadDrained = L.status().buffered;
 
 // Fail quiet: a 404 is retried once after the backoff, then the batch is dropped; nothing is logged about it.
 replyOk = false;
@@ -199,12 +212,26 @@ const ce = allEvents().filter(function (e) { return e.ev === "ui.console"; });
 R.consoleLvl = ce[ce.length - 1].lvl;
 R.consoleMsg = ce[ce.length - 1].msg;
 
+// Re-entry: a message getter that calls console.error again. Both calls reach the original; only the outer one records.
+const loggedBefore = logged.length;
+const ceBefore = allEvents().filter(function (e) { return e.ev === "ui.console"; }).length;
+let getterCalls = 0;
+console.error({ get message() { if (getterCalls++ === 0) console.error("inner"); return "outer"; } });
+R.reentryOriginals = logged.length - loggedBefore;
+R.reentryInner = logged.indexOf("inner") >= 0;
+await pagehide();
+R.reentryRecords = allEvents().filter(function (e) { return e.ev === "ui.console"; }).length - ceBefore;
+R.reentryMsg = allEvents().filter(function (e) { return e.ev === "ui.console"; }).pop().msg;
+
 // Window error, unhandled rejection and CSP violation hooks.
 (winHandlers.error || []).forEach(function (fn) {
   fn({ message: "Oops", filename: "http://localhost:8780/js/app.js?v=1", lineno: 3, colno: 4,
     error: { stack: "Error: Oops\n    at x (http://localhost:8780/js/app.js?v=1:3:4)" } });
 });
 (winHandlers.unhandledrejection || []).forEach(function (fn) { fn({ reason: new Error("rej") }); });
+(docHandlers.securitypolicyviolation || []).forEach(function (fn) {
+  fn({ violatedDirective: "connect-src", blockedURI: "http://localhost:8780/api/v1/log" });
+});
 (docHandlers.securitypolicyviolation || []).forEach(function (fn) {
   fn({ violatedDirective: "script-src-elem", blockedURI: "https://evil.example/x.js?k=1" });
 });
@@ -225,6 +252,13 @@ R.renderCount = every.filter(function (e) { return e.ev === "ui.render"; }).leng
 const route = every.filter(function (e) { return e.ev === "ui.route"; }).pop();
 R.routeClean = route.route.indexOf("?") < 0;
 R.eventNames = Array.from(new Set(every.map(function (e) { return e.ev; }))).sort();
+R.cspCount = every.filter(function (e) { return e.ev === "ui.csp"; }).length;
+
+// Scrub: Windows and POSIX home paths become ~, queries and fragments go from any string (relative ones too).
+L.logEvent("ui.error", "paths C:\\Users\\bob\\proj /home/ann/x/y?q=1 rel /?k=v#h end");
+await pagehide();
+const sc = allEvents().filter(function (e) { return e.msg.indexOf("paths") === 0; });
+R.scrubMsg = sc.length ? sc[sc.length - 1].msg : "";
 
 console.log(JSON.stringify(R));
 process.exit(0);
@@ -331,6 +365,28 @@ class LogClientNodeTests(unittest.TestCase):
         self.assertEqual(self.r["consoleLvl"], "ERROR")
         self.assertEqual(self.r["consoleMsg"], "bad thing")
 
+    def test_console_reentry_reaches_original_and_records_once(self):
+        self.assertEqual(self.r["reentryOriginals"], 2)
+        self.assertTrue(self.r["reentryInner"])
+        self.assertEqual(self.r["reentryRecords"], 1)
+        self.assertEqual(self.r["reentryMsg"], "outer")
+
+    def test_scrub_drops_home_paths_queries_and_fragments(self):
+        self.assertEqual(self.r["scrubMsg"], "paths ~ ~ rel / end")
+
+    def test_log_endpoint_csp_violation_is_ignored(self):
+        self.assertEqual(self.r["cspCount"], 1)
+
+    def test_unload_sends_one_keepalive_batch_and_keeps_the_rest(self):
+        self.assertEqual(self.r["unloadSends"], 1)
+        self.assertTrue(self.r["unloadKeepalive"])
+        self.assertLessEqual(self.r["unloadBody"], 16 * 1024)
+        self.assertGreater(self.r["unloadRest"], 0)
+        self.assertEqual(self.r["unloadDrained"], 0)
+
+    def test_normal_flush_sends_without_keepalive(self):
+        self.assertTrue(self.r["normalNoKeepalive"])
+
     def test_window_hooks_record_errors_without_query_strings(self):
         self.assertEqual(self.r["errLvl"], "ERROR")
         self.assertFalse(self.r["errStackLeak"])
@@ -359,9 +415,10 @@ class LogClientStaticTests(unittest.TestCase):
     def test_no_inline_handlers_in_the_module(self):
         self.assertIsNone(INLINE_HANDLER.search(self.src))
 
-    def test_keepalive_is_always_on_for_the_post(self):
-        self.assertIn("keepalive: true", self.src)
-        self.assertNotIn("keepalive: false", self.src)
+    def test_keepalive_only_on_the_single_unload_batch(self):
+        self.assertIn("keepalive: keepalive", self.src)
+        self.assertIn("send(takeBatch(), 0, true);", self.src)
+        self.assertNotIn("keepalive: true", self.src)
 
     def test_exports_the_small_api(self):
         for name in ("logEvent", "mark", "setEnabled", "status", "installLog", "logAction", "noteRequest",
