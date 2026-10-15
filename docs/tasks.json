@@ -1629,25 +1629,31 @@
       "id": "R7.40",
       "phase": "R7",
       "title": "Fix sync findings from Cursor P2 review (ETag, usage poll, dom patch)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 60,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:18:13+03:30"
+      }
     },
     {
       "id": "R7.41",
       "phase": "R7",
       "title": "Agents: fix effort and model mismatches from docs/reviews/head-agents-effort-audit.md (H84)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 40,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:23:22+03:30"
+      }
     },
     {
       "id": "R7.42",
@@ -1668,6 +1674,45 @@
       "id": "R7.43",
       "phase": "R7",
       "title": "Head view: card numbers in fixed columns; no horizontal scroll at 375px (agy P6)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:23:22+03:30"
+      }
+    },
+    {
+      "id": "R7.44",
+      "phase": "R7",
+      "title": "Head: show every ledger item (paged API + lazy load in head.js), no missing rows (H105)",
+      "status": "todo",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.45",
+      "phase": "R7",
+      "title": "Sections not syncing: root cause across server+client, permanent fix plan (H105)",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "high",
+      "model": "cursor",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.46",
+      "phase": "R7",
+      "title": "Audit Head ledger: list asks never handled, file tasks for them (H107)",
       "status": "todo",
       "tokensK": 20,
       "thinking": "low",
