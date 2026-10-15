@@ -38,6 +38,23 @@ START HERE in a new chat (any account, same Mac): `cd ~/Works/roadmap-board` and
 - Argon: gemini-4-argon via OpenCode returned "Insufficient account funds" (paid, no credit). Browser route: Claude extension is installed in Arc and listed as connected, but tab creation timed out; not yet tested.
 - First message for the new chat: `/head`
 
+### Checkpoint 6 (Opus head, 2026-10-15 ~16:35, STOPPED: 5h usage 85% > 80% stop; resets 18:10 local)
+- Last pushed: ad04454 (workflow map + timeline), 8b903e1 (A3 close guard), 9355ccc (Head default All, 133/133),
+  2769561 (A4 runners), 19b60a0 (W4.a snapshot), daa315e (A2 events), 5839797 (Head states/colors/questions).
+- STOPPED mid-edit (WIP in the tree, NOT committed; finish or revert each, then full suite):
+  R7.60 Agents full history + person-only remove: routes.py, commands.py, jobs.py (helpers), agents.js,
+    test_commands_service.py, tests/unit/test_jobs_history.py, tests/web/test_agents_history.py.
+  R7.77 usage band (Opus): usage.py, hooks.py, topbar.js, usage.js, test_tokens_simple.py, test_usage_entry.py,
+    tests/integration/test_limits_flow.py. Goal: automatic live usage, one stop value (top bar still says 95, must be 85).
+  R7.78 Work Doing = live jobs: snapshot.py (`running` per task), jobs.py (finish_job moves task back), board.js,
+    list.js, tests test_work_live_doing (unit + web). test_core_golden was failing (new key) when stopped.
+  R7.80 Head list in-place updates (wheel stalls: list node replaced each refresh, render 200-450 ms): not started.
+  R7.79 docs/ARCHITECTURE.html (Opus diagram): not written.
+- New tasks not started: R7.81 (needs-you Head asks in the Inbox, H138), R7.71 A5, R7.72 A6, R7.73 B/C, R7.76.
+- Cursor queue still runs (free): R3.7 logging review, then R7.59 full UI review -> docs/reviews/cursor-ui-full.md.
+- Usage: read it with the get_usage tool and push it (see HEAD-RUNBOOK); do not launch Claude workers >= 5h 80%.
+- First message for the new chat: `/head`
+
 ### Checkpoint 5 (Opus head, 2026-10-15, context near limit)
 - Pushed this session: 2b83d5b secrets (R7.35), 929c826 head list trim/order (R7.32), 8c456ee no umbrella-only
   binds (R7.34), 5e88be1 Agents opencode chip (R7.38), 2e48e57 head counts (R7.32). CSS cap test fixed by moving a
