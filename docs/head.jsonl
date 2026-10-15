@@ -1,0 +1,23 @@
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"TOKENS ARE VERY LIMITED: short replies;","len":170,"h":"sha1:e79445edb7c0","id":"H1"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"UI RULE 0 (top priority): numbers and actions align in fixed grid columns (right-aligned tabular…","len":464,"h":"sha1:bc0c73bc06e2","id":"H2"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"Workers: Haiku 5.5 subagents do the work;","len":818,"h":"sha1:946511903e29","id":"H3"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"Parallelism: only file overlap limits it;","len":278,"h":"sha1:d3a6b617a06e","id":"H4"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"The person wants the head NOT to be idle while tasks exist (\"this is the rule: dont be idle as…","len":273,"h":"sha1:5a1c4e4315a0","id":"H5"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"Always register jobs on the dashboard (hooks do it when the Agent description contains a real task…","len":225,"h":"sha1:f91fd16dc353","id":"H6"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"Worker prompts must always say: never `usage sync`, never read the keychain, no network, NEVER…","len":527,"h":"sha1:c58cfaf45728","id":"H7"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"Browser: never drive the person's dashboard tab;","len":78,"h":"sha1:dc13d10ef3de","id":"H8"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"Fresh session at ~70% context;","len":123,"h":"sha1:729408c99ac9","id":"H9"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"split-net project rules (memory, in ~/.claude/projects/-Users-ali-Works-split-net/memory/): never…","len":303,"h":"sha1:b9fd37266e44","id":"H10"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"Be the head like before: parallel workers on disjoint files, verify, register, commit, push;","len":272,"h":"sha1:24c0560de56a","id":"H11"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"Issues must be part of Work/board (not a separate section);","len":224,"h":"sha1:a9851de1eb8c","id":"H12"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"Tokens section must be SIMPLE: usage now + limit per PROJECT (one number) + one weekly stop;","len":110,"h":"sha1:c299c51dca1c","id":"H13"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"Rules section must show both projects' rules (done: 12 each).","len":184,"h":"sha1:a65fb476932e","id":"H14"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"A Git section (history, branches, auto commit/push policy, agents work close to git)…","len":206,"h":"sha1:1da601c1e195","id":"H15"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"Always care for UI/UX with the ui-ux-pro-max skill after every wave and file tasks from it (UX…","len":120,"h":"sha1:507756e89bdf","id":"H16"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"The side panel must be reopenable (done: top-bar toggle).","len":102,"h":"sha1:53fca1bc971a","id":"H17"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"decision","sum":"The **request ledger**: every person message that contains an ask, decision, rule, bug report or…","len":263,"h":"sha1:eb97b2e4ba7e","id":"H18"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"How the head (the AI session) **captures** them reliably and cheaply: a CLI (`roadmap head log…","len":398,"h":"sha1:449dd7053538","id":"H19"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"decision","sum":"**Conversion and traceability**: each ledger entry links to what it became (issue / task / review…","len":381,"h":"sha1:a45e25d95997","id":"H20"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"The **GUI section** \"Head\": who is head now (model, session start, usage), a timeline/list of asks…","len":347,"h":"sha1:de9d556d108a","id":"H21"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"Smartness: auto-summarise, auto-suggest the conversion (ask -> task vs issue vs review) and…","len":188,"h":"sha1:a1c2cde0ce91","id":"H22"}
+{"v":1,"t":"e","ts":"2026-10-15T06:08:34Z","src":"import","kind":"rule","sum":"Safety/privacy (no secrets), data model compatible with the existing files, Haiku-sized build…","len":164,"h":"sha1:17ccc9ae91db","id":"H23"}

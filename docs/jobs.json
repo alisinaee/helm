@@ -2224,9 +2224,10 @@
       "title": "cursor grok-4.7-xhigh: logging, guard and log endpoint security review",
       "model": "cursor",
       "task": "R3.7",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-15T08:36:27+03:30",
-      "ended": null
+      "ended": "2026-10-15T09:01:10+03:30",
+      "tokensK": 0.0
     },
     {
       "id": "j600",
@@ -2446,6 +2447,277 @@
       "started": "2026-10-15T08:44:12+03:30",
       "ended": "2026-10-15T08:52:04+03:30",
       "tokensK": 155.0
+    },
+    {
+      "id": "j623",
+      "title": "opus: HEAD section spec",
+      "model": "opus",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:07:35+03:30",
+      "ended": "2026-10-15T09:08:13+03:30",
+      "tokensK": 109.0
+    },
+    {
+      "id": "j624",
+      "title": "haiku: Git section step 1",
+      "model": "haiku",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T09:07:35+03:30",
+      "ended": "2026-10-15T09:09:00+03:30",
+      "tokensK": 81.0
+    },
+    {
+      "id": "j625",
+      "title": "haiku: HEAD H1 core fold",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:12:07+03:30",
+      "ended": "2026-10-15T09:14:12+03:30",
+      "tokensK": 82.0
+    },
+    {
+      "id": "j626",
+      "title": "haiku: HEAD H2 redaction",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:12:07+03:30",
+      "ended": "2026-10-15T09:14:12+03:30",
+      "tokensK": 74.0
+    },
+    {
+      "id": "j627",
+      "title": "cursor: grok review git.py",
+      "model": "cursor",
+      "task": "R7.29",
+      "status": "running",
+      "started": "2026-10-15T09:13:14+03:30",
+      "ended": null
+    },
+    {
+      "id": "j628",
+      "title": "agy: git test gaps + aria D",
+      "model": "agy",
+      "task": "R7.29",
+      "status": "failed",
+      "started": "2026-10-15T09:13:14+03:30",
+      "ended": "2026-10-15T09:13:39+03:30"
+    },
+    {
+      "id": "j629",
+      "title": "agy: agy: test-gap list for git service",
+      "model": "agy",
+      "task": "R7.29",
+      "status": "failed",
+      "started": "2026-10-15T09:13:14+03:30",
+      "ended": "2026-10-15T09:14:13+03:30"
+    },
+    {
+      "id": "j630",
+      "title": "agy: agy: test-gap list for git service",
+      "model": "agy",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T09:13:40+03:30",
+      "ended": "2026-10-15T09:15:16+03:30"
+    },
+    {
+      "id": "j631",
+      "title": "agy: agy: aria audit of top bar and settings",
+      "model": "agy",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T09:13:42+03:30",
+      "ended": "2026-10-15T09:16:50+03:30"
+    },
+    {
+      "id": "j632",
+      "title": "haiku: HEAD H3 store service",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:14:13+03:30",
+      "ended": "2026-10-15T09:18:17+03:30",
+      "tokensK": 113.0
+    },
+    {
+      "id": "j633",
+      "title": "haiku: HEAD H8 view",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:14:18+03:30",
+      "ended": "2026-10-15T09:18:58+03:30",
+      "tokensK": 141.0
+    },
+    {
+      "id": "j634",
+      "title": "haiku: HEAD H4 ops",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:18:18+03:30",
+      "ended": "2026-10-15T09:24:33+03:30",
+      "tokensK": 147.0
+    },
+    {
+      "id": "j635",
+      "title": "haiku: HEAD H6 hooks",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:18:18+03:30",
+      "ended": "2026-10-15T09:23:53+03:30",
+      "tokensK": 108.0
+    },
+    {
+      "id": "j636",
+      "title": "haiku: HEAD H7 snapshot api",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:18:18+03:30",
+      "ended": "2026-10-15T09:26:53+03:30",
+      "tokensK": 152.0
+    },
+    {
+      "id": "j637",
+      "title": "haiku: aria fixes keys/settings",
+      "model": "haiku",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T09:20:41+03:30",
+      "ended": "2026-10-15T09:22:29+03:30",
+      "tokensK": 105.0
+    },
+    {
+      "id": "j638",
+      "title": "haiku: git test gaps",
+      "model": "haiku",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T09:20:41+03:30",
+      "ended": "2026-10-15T09:21:34+03:30",
+      "tokensK": 75.0
+    },
+    {
+      "id": "j639",
+      "title": "haiku: HEAD H5 CLI",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:24:45+03:30",
+      "ended": "2026-10-15T09:32:34+03:30",
+      "tokensK": 146.0
+    },
+    {
+      "id": "j640",
+      "title": "haiku: HEAD H9 wire-up + loader",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:26:56+03:30",
+      "ended": "2026-10-15T09:32:47+03:30",
+      "tokensK": 104.0
+    },
+    {
+      "id": "j641",
+      "title": "haiku: HEAD H12 gate",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:30:25+03:30",
+      "ended": "2026-10-15T09:36:08+03:30",
+      "tokensK": 109.0
+    },
+    {
+      "id": "j642",
+      "title": "agy: agy: test gaps head core+service",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:30:25+03:30",
+      "ended": "2026-10-15T09:33:15+03:30"
+    },
+    {
+      "id": "j643",
+      "title": "cursor: grok review HEAD",
+      "model": "cursor",
+      "task": "R7.31",
+      "status": "running",
+      "started": "2026-10-15T09:30:25+03:30",
+      "ended": null
+    },
+    {
+      "id": "j644",
+      "title": "agy: agy: test gaps head ops+hook+secrets",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:30:27+03:30",
+      "ended": "2026-10-15T09:32:51+03:30"
+    },
+    {
+      "id": "j645",
+      "title": "agy: agy: aria+rows audit head view",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:30:29+03:30",
+      "ended": "2026-10-15T09:37:21+03:30"
+    },
+    {
+      "id": "j646",
+      "title": "haiku: HEAD H10 docs and skills",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:31:09+03:30",
+      "ended": "2026-10-15T09:32:47+03:30",
+      "tokensK": 98.0
+    },
+    {
+      "id": "j647",
+      "title": "haiku: HEAD H8b view gaps",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:31:09+03:30",
+      "ended": "2026-10-15T09:33:27+03:30",
+      "tokensK": 109.0
+    },
+    {
+      "id": "j648",
+      "title": "haiku: HEAD H11a head import service",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:31:09+03:30",
+      "ended": "2026-10-15T09:32:41+03:30",
+      "tokensK": 78.0
+    },
+    {
+      "id": "j649",
+      "title": "haiku: HEAD import CLI + snapshot acc/auto",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:32:43+03:30",
+      "ended": "2026-10-15T09:36:16+03:30",
+      "tokensK": 103.0
+    },
+    {
+      "id": "j650",
+      "title": "haiku: HEAD H9b page wiring",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:33:30+03:30",
+      "ended": "2026-10-15T09:38:29+03:30",
+      "tokensK": 124.0
     }
   ]
 }

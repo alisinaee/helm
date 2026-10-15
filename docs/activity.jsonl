@@ -47,3 +47,5 @@
 {"id":"A47","at":"2026-10-15T08:47:21+03:30","src":"agent","op":"task.status","sum":"R7.27 todo->done","undo":true}
 {"id":"A48","at":"2026-10-15T08:54:35+03:30","src":"agent","op":"feature.add","sum":"F25 added: Head section: ledger of the person's asks, bound ","undo":true}
 {"id":"A49","at":"2026-10-15T08:54:35+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.31","undo":true}
+{"id":"A50","at":"2026-10-15T09:04:56+03:30","src":"gui","op":"plan.move","sum":"moved R7.31 before R7.30","undo":true}
+{"id":"A51","at":"2026-10-15T09:18:31+03:30","src":"agent","op":"task.status","sum":"R7.31 todo->partial","undo":true}
