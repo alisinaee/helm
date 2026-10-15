@@ -53,7 +53,7 @@ SCRIPT = r"""
     getAttribute(k) { return Object.prototype.hasOwnProperty.call(this.attrs, k) ? this.attrs[k] : null; }
     appendChild(c) { c.parent = this; this.kids.push(c); return c; }
     addEventListener(t, f) { (this.handlers[t] = this.handlers[t] || []).push(f); }
-    fire(t, ev) { (this.handlers[t] || []).forEach((f) => f(ev)); }
+    fire(t, ev) { const e = Object.assign({ preventDefault() {} }, ev); (this.handlers[t] || []).forEach((f) => f(e)); }
     setPointerCapture() {}
     getBoundingClientRect() { return this.rect || { left: 0, top: 0, width: 800, height: 600 }; }
     focus() { log.focus.push(this.getAttribute("data-wf-item")); }
@@ -251,7 +251,29 @@ class ViewportSourceTests(unittest.TestCase):
 
     def test_minimap_is_within_120_lines_and_viewport_within_360(self):
         self.assertLessEqual(len(read_text(os.path.join(GRAPH, "minimap.js")).splitlines()), 120)
-        self.assertLessEqual(len(read_text(os.path.join(GRAPH, "viewport.js")).splitlines()), 440)
+        self.assertLessEqual(len(read_text(os.path.join(GRAPH, "viewport.js")).splitlines()), 460)
+
+    def test_a_pan_never_starts_a_text_selection(self):
+        text = read_text(os.path.join(GRAPH, "viewport.js"))
+        down = text[text.index('addEventListener("pointerdown"'):text.index('addEventListener("pointermove"')]
+        self.assertIn("isControl(e.target)", down)
+        self.assertIn("e.preventDefault()", down)
+        self.assertIn("clearSelection()", down)
+        self.assertIn("setPointerCapture(e.pointerId)", down)
+        self.assertIn("removeAllRanges()", text)
+        self.assertIn('addEventListener("mousedown"', text)
+        self.assertIn('addEventListener("selectstart"', text)
+        control = re.search(r'const CONTROL = "([^"]*)"', text).group(1)
+        for tag in ("button", "a", "input", "select", "textarea", ".wfg-ctl", ".wfm"):
+            self.assertIn(tag, control)
+
+    def test_map_css_stops_selection_and_keeps_touch_pan(self):
+        css = read_text(GRAPH_CSS)
+        for selector in (".wfg-svg", ".wfg-host", ".wfm"):
+            rule = re.search(re.escape(selector) + r"\{([^}]*)\}", css).group(1)
+            self.assertIn("user-select:none", rule, selector)
+            self.assertIn("-webkit-user-select:none", rule, selector)
+        self.assertIn("touch-action:none", re.search(r"\.wfg-svg\{([^}]*)\}", css).group(1))
 
     def test_reduced_motion_is_read_from_the_media_query(self):
         text = read_text(os.path.join(GRAPH, "viewport.js"))

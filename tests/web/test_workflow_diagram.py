@@ -84,7 +84,7 @@ class DiagramSourceTests(unittest.TestCase):
     def test_viewport_and_render_are_separate_modules(self):
         self.assertTrue(os.path.isfile(os.path.join(GRAPH_DIR, "viewport.js")))
         self.assertTrue(os.path.isfile(os.path.join(GRAPH_DIR, "render.js")))
-        self.assertLessEqual(len(read_text(os.path.join(GRAPH_DIR, "viewport.js")).splitlines()), 440)
+        self.assertLessEqual(len(read_text(os.path.join(GRAPH_DIR, "viewport.js")).splitlines()), 460)
 
 
 class DiagramCssTests(unittest.TestCase):

@@ -96,6 +96,8 @@ class WorkflowFlowLayoutTest(unittest.TestCase):
         big = snapshot(["P%d" % p for p in range(1, 6)],
                        [task("P%d.%d" % (p, k), "P%d" % p) for p in range(1, 6) for k in range(1, 71)])
         wide = snapshot(["P1"], [task("P1.%d" % k, "P1") for k in range(1, 101)])
+        folded = snapshot(["P%d" % p for p in range(1, 5)], [task("P%d.%d" % (p, k), "P%d" % p)
+                                                            for p in range(1, 5) for k in range(1, 3)])
         cases = [
             {"name": "snake", "snap": snake, "opts": {"expandAll": True}},
             {"name": "group", "snap": group, "opts": {"expandAll": True}},
@@ -109,6 +111,7 @@ class WorkflowFlowLayoutTest(unittest.TestCase):
             {"name": "blockers", "snap": load("with-blockers"), "opts": {"expandAll": True}},
             {"name": "cycle", "snap": load("cycle"), "opts": {"expandAll": True}},
             {"name": "empty", "snap": load("empty")},
+            {"name": "folded", "snap": folded, "opts": {"collapseAll": True}},
         ]
         cls.out = run(cases)
         cls.again = run(cases)
@@ -162,7 +165,11 @@ class WorkflowFlowLayoutTest(unittest.TestCase):
             graph = case["graph"]
             routes = case["flow"]["routes"]
             with self.subTest(case=name):
+                collapsed = set(case["flow"]["collapsed"])
                 for edge in list(graph["edges"]) + list(graph["sequence"]):
+                    if lane_of(graph).get(edge["from"]) == lane_of(graph).get(edge["to"]) in collapsed:
+                        self.assertNotIn(edge["id"], routes)
+                        continue
                     self.assertIn(edge["id"], routes)
                     points = routes[edge["id"]]
                     self.assertGreaterEqual(len(points), 2)
@@ -171,6 +178,31 @@ class WorkflowFlowLayoutTest(unittest.TestCase):
                         self.assertIsInstance(py, int)
                     for (ax, ay), (bx, by) in zip(points, points[1:]):
                         self.assertTrue(ax == bx or ay == by, "%s is not right-angled" % edge["id"])
+
+    def test_folded_frames_chain_one_arrow_left_to_right(self):
+        flow = self.flow("folded")
+        graph = self.out["folded"]["graph"]
+        self.assertEqual(4, len(flow["collapsed"]))
+        lanes = lane_of(graph)
+        frames = {f["lane"]: f for f in flow["frames"]}
+        routes = flow["routes"]
+        drawn = 0
+        for edge in graph["sequence"]:
+            src = lanes.get(edge["from"])
+            dst = lanes.get(edge["to"])
+            if src is not None and src == dst:
+                self.assertNotIn(edge["id"], routes, "an edge inside one folded frame is drawn")
+                continue
+            points = routes[edge["id"]]
+            drawn += 1
+            start = frames[src] if src is not None else flow["boxes"]["start"]
+            end = frames[dst] if dst is not None else flow["boxes"]["end"]
+            self.assertEqual([start["x"] + start["w"], start["y"] + start["h"] // 2], points[0], edge["id"])
+            self.assertEqual([end["x"], end["y"] + end["h"] // 2], points[-1], edge["id"])
+            self.assertLess(points[0][0], points[-1][0], "%s runs backwards" % edge["id"])
+            for (ax, ay), (bx, by) in zip(points, points[1:]):
+                self.assertGreaterEqual(bx, ax, "%s loops back" % edge["id"])
+        self.assertEqual(5, drawn)
 
     def test_parallel_group_stacks_in_one_column(self):
         flow = self.flow("group")

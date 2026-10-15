@@ -510,6 +510,14 @@ function crossRoute(S, D, fs, fd) {
   return [[sx, bottom(a)], [sx, chan], [gx, chan], [gx, cy(b)], [entry, cy(b)]];
 }
 
+// A folded frame sends its one arrow out of its right middle into the left side of the frame to its right.
+function cardRoute(S, D, fd) {
+  const a = S.box;
+  const b = D.box;
+  const gx = Math.round((right(a) + fd.x) / 2);
+  return [[right(a), cy(a)], [gx, cy(a)], [gx, cy(b)], [b.x, cy(b)]];
+}
+
 function routeEdge(S, D, frameBox) {
   if (S.kind === "start" && D.kind === "end") return [[right(S.box), cy(S.box)], [D.box.x, cy(D.box)]];
   if (S.kind === "start") {
@@ -522,7 +530,9 @@ function routeEdge(S, D, frameBox) {
   const fs = frameBox.get(S.lane);
   const fd = D.kind === "end" ? D.box : frameBox.get(D.lane);
   if (!fs || !fd) return null;
-  if (S.lane === D.lane) return insideRoute(S.box, D.box);
+  // Tasks inside one folded frame all draw on its card: their edges are hidden inside it, not looped back onto it.
+  if (S.lane === D.lane) return S.card ? null : insideRoute(S.box, D.box);
+  if (S.card && fd.x > fs.x) return cardRoute(S, D, fd);
   return crossRoute(S, D, fs, fd);
 }
 
@@ -656,7 +666,7 @@ export function flowLayout(graph, opts) {
     x += box.w + FRAME_GAP;
   });
   const mainBottom = frames.reduce((m, f) => Math.max(m, f.y + f.h), FLOW_TOP + END_H);
-  const endX = frames.length ? x - FRAME_GAP : x;
+  const endX = x;
   const pillY = Math.round(FLOW_TOP + (mainBottom - FLOW_TOP - END_H) / 2);
   const endBox = { x: endX, y: pillY, w: END_W, h: END_H };
   start.y = pillY;

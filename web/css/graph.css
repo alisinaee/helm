@@ -1,7 +1,7 @@
 /* Workflow diagram (WP72, R7.14 C). Tokens only; the SVG has no style attributes, so every colour is a class here. */
 .wfg-stage{position:relative}
-.wfg-host{min-height:240px}
-.wfg-svg{display:block;width:100%;height:min(64vh,560px);touch-action:none;overflow:hidden;cursor:grab;background:var(--surface-1);border:1px solid var(--line);border-radius:var(--r-card)}
+.wfg-host{min-height:240px;user-select:none;-webkit-user-select:none}
+.wfg-svg{display:block;width:100%;height:min(64vh,560px);touch-action:none;overflow:hidden;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;background:var(--surface-1);border:1px solid var(--line);border-radius:var(--r-card)}
 .wfg-ctl{position:absolute;top:var(--sp-2);right:var(--sp-2);display:flex;flex-wrap:wrap;gap:var(--sp-1);z-index:1}
 .wfg-bar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2) var(--sp-3);margin-bottom:var(--sp-2)}
 .wfg-count{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--text-2);font-size:var(--fs-12)}
@@ -62,7 +62,7 @@
 @media (prefers-reduced-motion: reduce){.wfg-pill.wfg-run rect,.wfg-s-doing .wfg-glyph{animation:none}}
 @media (max-width:767px){.wfg-ctl{position:static;justify-content:flex-end;margin-bottom:var(--sp-2)}}
 /* Minimap (R7.14 D): 160 by 90 overview in the bottom-right corner; hidden at 640 px and below (chips instead). */
-.wfm{position:absolute;right:var(--sp-2);bottom:var(--sp-2);width:160px;height:90px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-card);touch-action:none;cursor:pointer;z-index:1}
+.wfm{position:absolute;right:var(--sp-2);bottom:var(--sp-2);width:160px;height:90px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-card);touch-action:none;cursor:pointer;z-index:1;user-select:none;-webkit-user-select:none}
 .wfm-frame{fill:var(--line);fill-opacity:.55;stroke:var(--text-3);stroke-width:1px;vector-effect:non-scaling-stroke}
 .wfm-fold{fill:var(--text-3);fill-opacity:.5}
 .wfm-end{fill:var(--accent);fill-opacity:.35;stroke:var(--accent);stroke-width:1px;vector-effect:non-scaling-stroke}
