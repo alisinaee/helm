@@ -20,7 +20,7 @@ import unicodedata
 
 from roadmap import log as roadmap_log
 from roadmap.core import parsers, planfmt
-from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
+from roadmap.errors import EXIT_CONFLICT, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import activity, budget, comments, issues, jobs, questions, queue, records, tasks
 from roadmap.services import agentguard
 from roadmap.store import jsonl, lock, schema
@@ -95,6 +95,12 @@ def _h_task_status(data_dir, a, now):
     the budget once per task (budget.record_task_tokens); that spend is not reversed by undo. The task's at map gets
     the time of this change under its new status (newest only; the other statuses keep their old times)."""
     before = tasks.get(data_dir, a["id"])
+    if before.get("status") == "backlog":  # a backlog task leaves only by promote (to todo, person) or start (refused)
+        if a["status"] == "partial":
+            _refuse_backlog_start(a["id"], "backlog")
+        if a["status"] != "todo":
+            raise records.conflict(a["id"] + " is backlog; promote it to todo first", "roadmap task promote " + a["id"])
+        _person_only("promote", _propose_next(a["id"], "promote"))
     if a["status"] == "partial":  # a start (the CLI "task start" also writes partial): same WP62b rule as the CLI
         refusal = tasks.start_refusal(data_dir, [a["id"]])
         if refusal is not None:
@@ -118,7 +124,7 @@ def _h_task_status(data_dir, a, now):
         inverse_args = {"id": a["id"], "status": prior}
         if a["note"] is not None:
             inverse_args["note"] = before.get("note") or ""
-        inverse = {"op": "task.status", "args": inverse_args}
+        inverse = {"op": "task.backlog" if prior == "backlog" else "task.status", "args": inverse_args}
     return ({"id": a["id"], "status": a["status"], "changed": prior != a["status"], "was": prior,
              "budgetFed": fed}, summary, inverse)
 
@@ -166,7 +172,7 @@ def _check_task_id(a):
 
 
 def _h_task_start(data_dir, a, now):
-    tasks.get(data_dir, a["id"])
+    _refuse_backlog_start(a["id"], tasks.get(data_dir, a["id"]).get("status"))
     queue.enqueue(data_dir, a["id"], by=a["by"], now=now)
     return {"task": a["id"], "queued": True}, "queued " + a["id"], {"op": "queue.remove", "args": {"task": a["id"]}}
 
@@ -200,6 +206,123 @@ def _check_queue_remove(a):
 def _h_queue_remove(data_dir, a, now):
     removed = queue.dequeue(data_dir, a["task"])
     return {"task": a["task"], "removed": removed}, "dequeued " + a["task"], None
+
+
+# ---------------------------------------------------------------- backlog (R7.22): task.backlog, promote, backlog.add
+
+BACKLOG_PHASE = "BL"            # the reserved Backlog phase, used when backlog.add gets no phase
+BACKLOG_NAME = "Backlog"
+BACKLOG_MODEL = "haiku"         # placeholders, as in headops (the head's backlog tasks)
+BACKLOG_THINKING = "low"
+
+
+def _person_only(word, next_cmd):
+    """Refuse a call from an agent or the phone to a move only the person makes (promote, backlog)."""
+    src = current_source()
+    if agentguard.is_agent(src) or src == "phone":
+        raise RoadmapError("agent_refused", word + " is person-only", EXIT_CONFLICT, next=next_cmd)
+
+
+def _propose_next(task_id, word):
+    return "roadmap task note " + task_id + ' "propose ' + word + '"'
+
+
+def _refuse_backlog_start(task_id, status):
+    if status == "backlog":
+        raise records.conflict(task_id + " is backlog", "ask the person to promote")
+
+
+def _set_status(data_dir, task_id, status):
+    tasks.apply(data_dir, _set_records(task_id + " status=" + status))
+
+
+def _check_backlog_add(a):
+    title = _opt_text(a, "title").strip()
+    if not title:
+        raise _usage("title is empty (allowed: text)", 'roadmap backlog add "<title>"')
+    if len(title) > parsers.TITLE_MAX:
+        raise _usage("title is " + str(len(title)) + " characters (allowed: up to " + str(parsers.TITLE_MAX) + ")")
+    if any(unicodedata.category(ch) == "Cc" for ch in title):
+        raise _usage("title has a control character (tabs and line breaks are not allowed)")
+    phase = _text(a.get("phase"))
+    if phase and not records.ID_OK.match(phase):
+        raise _usage("phase '" + phase + "' is not a phase id", "roadmap task list")
+    return {"title": title, "phase": phase}
+
+
+def _h_task_backlog(data_dir, a, now):
+    """Demote a todo task to backlog (person only). Undo promotes it back. Only todo can go to backlog."""
+    task = tasks.get(data_dir, a["id"])
+    _person_only("backlog", _propose_next(a["id"], "backlog"))
+    prior = task.get("status") or "todo"
+    if prior == "backlog":
+        return {"id": a["id"], "status": "backlog", "changed": False}, a["id"] + " already backlog", None
+    if prior != "todo":
+        raise records.conflict(a["id"] + " is " + prior + "; only a todo task can go to backlog", "roadmap status")
+    _set_status(data_dir, a["id"], "backlog")
+    return ({"id": a["id"], "status": "backlog", "changed": True, "was": prior}, a["id"] + " todo->backlog",
+            {"op": "task.promote", "args": {"id": a["id"]}})
+
+
+def _h_task_promote(data_dir, a, now):
+    """Promote a backlog task to todo (person only). Undo puts it back in backlog."""
+    task = tasks.get(data_dir, a["id"])
+    _person_only("promote", _propose_next(a["id"], "promote"))
+    prior = task.get("status") or "todo"
+    if prior != "backlog":
+        raise records.conflict(a["id"] + " is " + prior + ", not backlog; not changed", "roadmap status")
+    _set_status(data_dir, a["id"], "todo")
+    return ({"id": a["id"], "status": "todo", "changed": True, "was": "backlog"}, a["id"] + " backlog->todo",
+            {"op": "task.backlog", "args": {"id": a["id"]}})
+
+
+def _h_backlog_add(data_dir, a, now):
+    """Add one backlog task (not started, not counted). With no phase it goes to the reserved BL phase, created on
+    first use. Undo removes the task, and the BL phase when this add created it."""
+    doc = tasks.load(data_dir)
+    phase = a["phase"] or BACKLOG_PHASE
+    created = phase not in [p.get("id") for p in doc["phases"] if isinstance(p, dict)]
+    if created and phase != BACKLOG_PHASE:
+        raise _usage("phase " + phase + " does not exist", "roadmap task list")
+    numbers = [0]
+    for task in doc["tasks"]:
+        tid = task.get("id") if isinstance(task, dict) else None
+        if isinstance(tid, str) and tid.startswith(phase + ".") and tid[len(phase) + 1:].isdigit():
+            numbers.append(int(tid[len(phase) + 1:]))
+    tid = phase + "." + str(max(numbers) + 1)
+    recs = []
+    if created:
+        recs.append({"kind": "phase", "line": 1, "id": phase, "name": BACKLOG_NAME, "status": None})
+    recs.append({"kind": "task", "line": 2, "id": tid, "phase": phase, "title": a["title"], "status": "backlog",
+                 "tokensK": 0, "thinking": BACKLOG_THINKING, "model": BACKLOG_MODEL, "needsUser": None,
+                 "check": None, "checkK": None, "note": None, "after": None, "feats": None})
+    try:
+        tasks.apply(data_dir, recs)
+    except tasks.PlanError as exc:
+        raise RoadmapError("usage", "; ".join(exc.errors)[:300], EXIT_USAGE, next="roadmap status")
+    return ({"id": tid, "phase": phase, "status": "backlog", "phaseCreated": created}, tid + " backlog in " + phase,
+            {"op": "backlog.remove", "args": {"id": tid, "phase": phase, "phaseCreated": created}})
+
+
+def _check_backlog_remove(a):
+    return {"id": _id(a, "id", "task id"), "phase": _text(a.get("phase")),
+            "phaseCreated": a.get("phaseCreated") is True}
+
+
+def _h_backlog_remove(data_dir, a, now):
+    """Undo of backlog.add: remove the task, and its phase when that add created the phase and it is now empty."""
+    path = tasks.tasks_path(data_dir)
+    with lock.locked(data_dir):
+        doc = tasks.load(data_dir)
+        kept = [t for t in doc["tasks"] if not (isinstance(t, dict) and t.get("id") == a["id"])]
+        if len(kept) == len(doc["tasks"]):
+            raise RoadmapError("not_found", "no task " + a["id"], EXIT_NOT_FOUND, next="roadmap status")
+        doc["tasks"] = kept
+        if a["phaseCreated"] and not any(isinstance(t, dict) and _phase_of(t) == a["phase"] for t in kept):
+            doc["phases"] = [p for p in doc["phases"] if not (isinstance(p, dict) and p.get("id") == a["phase"])]
+        doc["updated"] = planfmt.today()
+        schema.write_data("tasks", path, doc)
+    return {"id": a["id"], "removed": True}, "removed " + a["id"], None
 
 
 # ---------------------------------------------------------------- subtasks
@@ -558,6 +681,9 @@ OPS = {
     "task.rename": _Op(_check_task_rename, _h_task_rename),
     "task.start": _Op(_check_task_id, _h_task_start),
     "task.stop": _Op(_check_task_id, _h_task_stop),
+    "task.backlog": _Op(_check_task_id, _h_task_backlog),
+    "task.promote": _Op(_check_task_id, _h_task_promote),
+    "backlog.add": _Op(_check_backlog_add, _h_backlog_add),
     "subtask.toggle": _Op(_check_subtask_toggle, _h_subtask_toggle),
     "subtask.add": _Op(_check_subtask_add, _h_subtask_add),
     "plan.move": _Op(_check_plan_move, _h_plan_move),
@@ -574,6 +700,7 @@ OPS = {
     "issue.links": _Op(_check_issue_links, _h_issue_links, public=False),
     "subtask.restore": _Op(_check_subtask_restore, _h_subtask_restore, public=False),
     "question.reopen": _Op(_check_question_reopen, _h_question_reopen, public=False),
+    "backlog.remove": _Op(_check_backlog_remove, _h_backlog_remove, public=False),
 }
 
 
