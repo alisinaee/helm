@@ -28,7 +28,8 @@ const s = state.createStore();
 s.projects = projects;
 s.snapshots.splitnet = state.normalizeSnapshot(Object.assign({ project: { id: "splitnet", title: "split-net" } }, raw),
   now);
-s.usage = state.normalizeUsage({ weeklyPercent: 62, fiveHourPercent: 20, source: "fixture", ageS: 60 }, now);
+s.snapshots.splitnet.usage = state.normalizeUsage({ weeklyPercent: 62, fiveHourPercent: 20,
+  source: "fixture", ageS: 60 }, now);
 
 const route = (name, id, section, view) => ({ name: name, id: id, section: section, view: view || null, item: null,
   filters: {} });

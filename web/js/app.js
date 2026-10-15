@@ -1,12 +1,12 @@
-// Boot, the poll loop and the shell. Snapshots refresh every 2 s and plan usage every 30 s. While the tab is hidden
-// everything refreshes every 30 s. The shell (nav, top bar, toasts, help) renders on every pass; the section in
-// <main> is a module loaded on first visit (routes.js), and a section that fails renders its own error without taking
-// the shell down. Writes go through cmd.js, the one write path.
+// Boot, the poll loop and the shell. Snapshots refresh every 2 s; the usage reading rides in each snapshot
+// (snap.usage). While the tab is hidden everything refreshes every 30 s. The shell (nav, top bar, toasts, help)
+// renders on every pass; the section in <main> is a module loaded on first visit (routes.js), and a section that
+// fails renders its own error without taking the shell down. Writes go through cmd.js, the one write path.
 
 import { getJson, postJson } from "./api.js";
 import { bannerHtml, emptyHtml, esc, patch, setHidden, skeletonHtml } from "./dom.js";
 import { buildViewModel, createStore, isSheetWidth, loadPrefs, loadTheme, loadUi, nextTheme, normalizeSnapshot,
-  normalizeUsage, panelIsOpen, saveTheme, savePrefs, sectionOpenState, updateUi } from "./state.js";
+  panelIsOpen, saveTheme, savePrefs, sectionOpenState, updateUi } from "./state.js";
 import { currentRoute, onRouteChange } from "./router.js";
 import { loadSection, sectionById } from "./routes.js";
 import { configureCommands, pendingValue, run } from "./cmd.js";
@@ -26,7 +26,6 @@ import { installLog, logAction, noteRender, noteRoute } from "./log.js";
 
 const FAST_MS = 2000;
 const SLOW_MS = 30000;
-const USAGE_MS = 30000;
 
 const root = document.getElementById("app");
 const liveRegion = document.getElementById("live-status");
@@ -231,15 +230,22 @@ function announce(ok) {
   if (ok === false) liveRegion.textContent = "Disconnected, retrying.";
 }
 
-async function refreshUsage(now) {
-  try {
-    const res = await getJson("/api/v1/usage");
-    store.usage = normalizeUsage(res.data, now);
-    store.usageError = null;
-    store.usageFetchedAt = now;
-  } catch (err) {
-    store.usageError = err.message;
+// The rev of a project's stored snapshot, or null when none is stored.
+function storedRev(id) {
+  const snap = store.snapshots[id];
+  return snap && snap.rev ? snap.rev : null;
+}
+
+// The projects whose snapshot this poll reads: the open project always, and every other project whose summary rev
+// differs from the stored snapshot (or whose summary carries no rev). A project whose rev is unchanged is not read.
+function idsToRead(route) {
+  const ids = route.name === "project" ? [route.id] : [];
+  for (const row of store.projects || []) {
+    if (ids.indexOf(row.id) >= 0) continue;
+    const rev = typeof row.rev === "string" ? row.rev : null;
+    if (!rev || storedRev(row.id) !== rev) ids.push(row.id);
   }
+  return ids;
 }
 
 async function refresh() {
@@ -255,26 +261,16 @@ async function refresh() {
     store.conn = { ok: false, lastOkAt: store.conn.lastOkAt, error: err.message };
   }
   announce(store.conn.ok);
-  let ids;
-  if (route.name === "project") {
-    ids = [route.id];
-  } else {
-    ids = (store.projects || []).map(function (p) {
-      return p.id;
-    });
-  }
-  await Promise.all(ids.map(async function (id) {
+  await Promise.all(idsToRead(route).map(async function (id) {
     try {
       const res = await getJson("/api/v1/projects/" + encodeURIComponent(id) + "/snapshot");
-      store.snapshots[id] = normalizeSnapshot(res.data, now);
+      // 304: the stored body is still current. Keep it and its fetch time; nothing is re-normalized.
+      if (res.changed) store.snapshots[id] = normalizeSnapshot(res.data, now);
       delete store.snapshotErrors[id];
     } catch (err) {
       store.snapshotErrors[id] = err;
     }
   }));
-  if (now - store.usageFetchedAt >= USAGE_MS) {
-    await refreshUsage(now);
-  }
 }
 
 async function loop() {
@@ -308,14 +304,10 @@ async function syncUsage() {
   store.sync = { state: "running", message: "Syncing usage." };
   render();
   try {
-    const res = await postJson("/api/v1/usage/sync", {});
-    const now = Date.now();
-    store.usage = normalizeUsage(res.data || {}, now);
-    store.usageFetchedAt = now;
-    store.usageError = null;
+    await postJson("/api/v1/usage/sync", {});
     store.sync = { state: "ok", message: "Usage synced." };
     render();
-    // The band is updated; the snapshot meters (spend, weekly stop, block) come from the next snapshot.
+    // The new reading and meters come in the next snapshot (snap.usage, snap.meters): read it now.
     schedule(0);
     return;
   } catch (err) {
@@ -497,6 +489,7 @@ function boot() {
       const route = currentRoute();
       return route.name === "project" ? route.id : null;
     },
+    rev: storedRev,
   });
   setToastListener(function () {
     patch("toasts", toastsHtml());

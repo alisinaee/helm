@@ -1,7 +1,7 @@
 // The one write path (WP28). run() applies a change at once, posts it to /api/v1/cmd with the page's CSRF token, and
 // on failure reverts it and shows the server's message. A reply with undo:true gets an Undo toast; Undo posts the
-// undo op for that activity id, then the snapshot is read again. A pending value shows until the next snapshot that
-// was read after the reply, so a poll does not flip a control back before the server has it.
+// undo op for that activity id, then the snapshot is read again. A pending value shows until the project's snapshot
+// rev changes after the reply (the new generation has the write). A poll that finds the same rev does not settle it.
 
 import { postJson } from "./api.js";
 import { logAction } from "./log.js";
@@ -17,24 +17,42 @@ let rerender = function () {};
 let projectOf = function () {
   return null;
 };
+let revOf = function () {
+  return null;
+};
 
 export function configureCommands(opts) {
   writable = opts.writable;
   refreshNow = opts.refresh;
   rerender = opts.render;
   projectOf = opts.project;
+  revOf = opts.rev || revOf;
+}
+
+// Whether a pending entry has settled: the reply is in and the project's snapshot rev differs from the rev it had
+// when the change was sent. With no rev (a snapshot without one) the body time decides, as before.
+function settled(entry, fetchedAt) {
+  if (entry.repliedAt === null) return false;
+  const rev = revOf(entry.project);
+  if (rev === null || rev === undefined) return fetchedAt > entry.repliedAt;
+  return rev !== entry.baseRev;
 }
 
 // The value to show for a key while a change is pending, or undefined when the snapshot should decide.
+// fetchedAt is the control's snapshot body time, used only when the snapshot has no rev.
 export function pendingValue(key, fetchedAt, now) {
   const entry = pending.get(key);
   if (!entry) return undefined;
-  const settled = entry.doneAt !== null && fetchedAt > entry.doneAt;
-  if (settled || now > entry.expires) {
+  if (settled(entry, fetchedAt) || now > entry.expires) {
     pending.delete(key);
     return undefined;
   }
   return entry.value;
+}
+
+function holdValue(key, value, project) {
+  pending.set(key, { value: value, project: project, baseRev: revOf(project), repliedAt: null,
+    expires: Date.now() + PENDING_MS });
 }
 
 async function postOp(op, args, project) {
@@ -68,7 +86,7 @@ export async function run(op, args, opts) {
   const project = o.project || projectOf();
   const key = o.key || null;
   logAction(op, null, { project: project });
-  if (key) pending.set(key, { value: o.value, doneAt: null, expires: Date.now() + PENDING_MS });
+  if (key) holdValue(key, o.value, project);
   if (typeof o.apply === "function") o.apply();
   rerender();
   let reply;
@@ -82,7 +100,7 @@ export async function run(op, args, opts) {
     return null;
   }
   const data = reply.data || {};
-  if (key && pending.has(key)) pending.get(key).doneAt = Date.now();
+  if (key && pending.has(key)) pending.get(key).repliedAt = Date.now();
   const undoable = data.undo === true && typeof data.activity === "string";
   showToast({
     text: label,
@@ -127,7 +145,7 @@ export async function runBatch(items, opts) {
   for (const item of items) {
     if (!item.key) continue;
     keys.push(item.key);
-    pending.set(item.key, { value: item.value, doneAt: null, expires: Date.now() + PENDING_MS });
+    holdValue(item.key, item.value, project);
   }
   rerender();
   const activities = [];
@@ -142,7 +160,7 @@ export async function runBatch(items, opts) {
     }
   }
   for (const key of keys) {
-    if (pending.has(key)) pending.get(key).doneAt = Date.now();
+    if (pending.has(key)) pending.get(key).repliedAt = Date.now();
   }
   const count = items.length - failed;
   const text = count + " " + (o.done || "changes") + (failed ? "; " + failed + " failed" : "");
