@@ -46,27 +46,33 @@ async function loadText(pid, name) {
   requestRender();
 }
 
-// The onboarding steps for a project, each ticked from its snapshot when the snapshot shows it.
+// The onboarding steps for a project, each ticked from its snapshot when the snapshot shows it. A step with a
+// section names the page where it is done; its title links there.
 export function onboardingSteps(snap) {
   const phase = snap.phases && snap.phases[0];
   return [
     { title: "Register the project", done: true, hint: "roadmap project add <path>" },
-    { title: "Import the plan", done: snap.tasks.length > 0, hint: "roadmap plan import <file>" },
+    { title: "Import the plan", done: snap.tasks.length > 0, hint: "roadmap plan import <file>", section: "roadmap" },
     { title: "Set the rules", done: Array.isArray(snap.rules) && snap.rules.length > 0,
-      hint: "Rules section: add at least one rule" },
+      hint: "Add at least one rule.", section: "rules" },
     { title: "Approve phase 1", done: Boolean(phase && phase.approved),
-      hint: "Roadmap section: approve the first phase" },
+      hint: "Approve the first phase.", section: "roadmap" },
   ];
 }
 
-function checklistHtml(steps) {
+function stepTitleHtml(step, pid) {
+  if (!step.section) return esc(step.title);
+  return '<a href="' + esc(projectHash(pid, step.section)) + '">' + esc(step.title) + "</a>";
+}
+
+function checklistHtml(steps, pid) {
   const doneCount = steps.filter(function (s) {
     return s.done;
   }).length;
   return '<section class="ov-card" aria-label="Onboarding checklist"><h3 class="ov-h">Onboarding ' +
     esc(fmtCount(doneCount)) + " of " + steps.length + "</h3><ol class=\"act-list\">" + steps.map(function (s) {
       return '<li class="act-row"><span>' + chipHtml(s.done ? "Done" : "To do", s.done ? "success" : "neutral") +
-        '</span><span class="act-main"><span class="act-sum">' + esc(s.title) + "</span><br>" +
+        '</span><span class="act-main"><span class="act-sum">' + stepTitleHtml(s, pid) + "</span><br>" +
         '<span class="ov-sum">' + esc(s.hint) + "</span></span></li>";
     }).join("") + "</ol></section>";
 }
@@ -116,7 +122,7 @@ function notesHtml(pid) {
   if (entry.state === "error") return '<p class="ov-sum" role="alert">' + esc(entry.message) + "</p>";
   if (!entry.notes.length) {
     return emptyHtml("No research notes yet.", "Start one with <code class=\"code\">roadmap research new landscape " +
-      "&quot;Title&quot; --project " + esc(pid) + "</code>, then reload this page.");
+      "&quot;Title&quot; --project " + esc(pid) + "</code>, then press Reload notes.");
   }
   return '<ul class="nz-list" aria-label="Research notes">' + entry.notes.map(function (note) {
     return noteRowHtml(note, pid);
@@ -138,7 +144,7 @@ export function sectionView(vm) {
   if (!lists.has(pid)) loadList(pid);
   const snap = vm.project.snapshot;
   return '<div class="page-head"><h2 class="page-title">Research</h2><p class="page-note">Read only. Notes are ' +
-    "written with roadmap research, at most 6 per project.</p></div>" + checklistHtml(onboardingSteps(snap)) +
+    "written with roadmap research, at most 6 per project.</p></div>" + checklistHtml(onboardingSteps(snap), pid) +
     '<section class="ov-card" aria-label="Research notes list"><h3 class="ov-h">Notes</h3>' + notesCopy(pid) +
     notesHtml(pid) +
     '<p><button type="button" class="btn btn-small" data-action="note-refresh" data-project="' + esc(pid) +

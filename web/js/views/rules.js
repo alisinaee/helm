@@ -1,7 +1,8 @@
 // Rules (WP33): the project's rules in tabs by scope group, a delete on each rule, an add form (scope, kind, text
-// with a 160-character counter) and Sync to CLAUDE.md. Every change goes through run() in cmd.js (rules.add,
-// rules.rm, rules.sync). Rules belong to one project, so All projects shows a pointer to a project instead.
+// with a 160-character counter) and Sync to CLAUDE.md. Adds and deletes go through run() in cmd.js. Sync posts
+// itself so its toast can say what changed. Rules belong to one project, so All projects shows a pointer instead.
 
+import { postJson } from "../api.js";
 import { bannerHtml, chipHtml, emptyHtml, esc } from "../dom.js";
 import { run } from "../cmd.js";
 import { pageState } from "./inbox.js";
@@ -9,6 +10,7 @@ import { copyButton, refSummary } from "../ref.js";
 import { showToast } from "./toast.js";
 
 const MAX_TEXT = 160;
+const BUDGET_MAX = 100000;  // thousands of tokens, as the server checks it
 const TABS = [
   { id: "all", label: "All", test: function (s) { return s === "all"; } },
   { id: "lead", label: "Lead and worker", test: function (s) { return s === "lead" || s === "worker"; } },
@@ -42,18 +44,24 @@ function listHtml(rules, activeTab, project) {
   const shown = rules.filter(function (r) {
     return group.id === "all" ? true : group.test(r.scope);
   });
-  if (!shown.length) return emptyHtml("No rules in this group.", "");
+  if (!shown.length) return emptyGroupHtml(activeTab);
   return '<ul class="rule-list">' + shown.map(function (r) {
     const value = r.kind === "budget" && r.value != null ? esc(r.value) + "k" : "";
     return '<li class="rule-row row-grid"><span class="rule-main rg-main">' +
       chipHtml(kindWord(r.kind), KIND_KIND[r.kind] || "neutral") +
-      ' <span class="rule-text">' + esc(r.text) + "</span></span>" +
+      ' <span class="rule-text" title="' + esc(r.text) + '">' + esc(r.text) + "</span></span>" +
       '<span class="rule-scope rg-t">' + esc(r.scope) + "</span>" +
       '<span class="rg-num num">' + value + "</span>" +
       '<button type="button" class="btn btn-small" data-action="rule-rm" data-id="' + esc(r.id) +
       '" data-focus="rm-' + esc(r.id) + '" aria-label="Delete rule ' + esc(r.id) + '">Delete</button>' +
       copyButton("rule", r.id, "rule " + r.id, { project: project, sum: refSummary("rule", r) }) + "</li>";
   }).join("") + "</ul>";
+}
+
+function emptyGroupHtml(activeTab) {
+  if (activeTab === "all") return emptyHtml("No rules yet.", "Add the first one in the form below.");
+  return emptyHtml("No rules in this group.", '<button type="button" class="btn btn-small" data-action="rule-tab" ' +
+    'data-tab="all" data-focus="tab-all">Show all rules</button>');
 }
 
 function kindWord(kind) {
@@ -83,15 +91,18 @@ function addFormHtml() {
     '<div class="lim-edit">' +
     '<label class="lim-field"><span class="lim-label">Scope</span><select class="lim-select" data-rule="scope" ' +
     'data-focus="rule-scope">' + scopes + "</select></label>" +
-    '<label class="lim-field"><span class="lim-label">Or phase:ID or task:ID</span>' +
+    '<label class="lim-field"><span class="lim-label">Or one task or phase (e.g. task:R8.13)</span>' +
     '<input class="lim-text" type="text" maxlength="60" data-rule="custom" data-focus="rule-custom"></label>' +
     '<label class="lim-field"><span class="lim-label">Kind</span><select class="lim-select" data-rule="kind" ' +
     'data-focus="rule-kind">' + kinds + "</select></label>" +
-    '<label class="lim-field"><span class="lim-label">Budget in thousands (budget only)</span>' +
-    '<input class="lim-num" type="number" min="1" step="1" data-rule="value" data-focus="rule-value"></label>' +
-    '</div><label class="lim-field"><span class="lim-label">Rule text</span>' +
+    '<label class="lim-field" data-rule-budget hidden><span class="lim-label">Budget (thousands of tokens)</span>' +
+    '<input class="lim-num" type="number" min="1" max="' + BUDGET_MAX + '" step="1" data-rule="value" ' +
+    'data-focus="rule-value" aria-describedby="rule-value-err"></label>' +
+    '</div><p class="rule-err" id="rule-value-err" data-err-for="value"></p>' +
+    '<label class="lim-field"><span class="lim-label">Rule text</span>' +
     '<textarea class="rule-input" rows="2" maxlength="' + MAX_TEXT + '" data-rule="text" data-focus="rule-text" ' +
-    'aria-describedby="rule-count"></textarea></label>' +
+    'aria-describedby="rule-text-err rule-count"></textarea></label>' +
+    '<p class="rule-err" id="rule-text-err" data-err-for="text"></p>' +
     '<p class="rule-count num" id="rule-count" data-count-for="text">0/' + MAX_TEXT + " characters</p>" +
     '<button type="button" class="btn btn-primary" data-action="rule-add" data-focus="rule-add">Add rule</button>' +
     "</section>";
@@ -135,10 +146,29 @@ export function attachRuleListeners() {
   listening = true;
   main.addEventListener("input", function (event) {
     const t = event.target;
-    if (!t || t.getAttribute("data-rule") !== "text") return;
+    const name = t && t.getAttribute ? t.getAttribute("data-rule") : null;
+    if (!name) return;
+    setErr(t.closest(".rules-form"), name, "");
+    if (name !== "text") return;
     const count = main.querySelector('[data-count-for="text"]');
     if (count) count.textContent = t.value.length + "/" + MAX_TEXT + " characters";
   });
+  // Only a budget rule takes a number, so the budget field appears for that kind alone.
+  main.addEventListener("change", function (event) {
+    const t = event.target;
+    if (!t || t.getAttribute("data-rule") !== "kind") return;
+    const budget = t.closest(".rules-form").querySelector("[data-rule-budget]");
+    if (budget) budget.hidden = t.value !== "budget";
+  });
+}
+
+// The inline error under a field (data-err-for), and aria-invalid on the field itself. Empty text clears it.
+function setErr(root, name, message) {
+  if (!root) return;
+  const err = root.querySelector('[data-err-for="' + name + '"]');
+  const field = root.querySelector('[data-rule="' + name + '"]');
+  if (err) err.textContent = message;
+  if (field) field.setAttribute("aria-invalid", message ? "true" : "false");
 }
 
 function formValues(el) {
@@ -150,12 +180,32 @@ function formValues(el) {
   const scope = custom && custom.value.trim() ? custom.value.trim() : read("scope").value;
   const valueField = read("value");
   const raw = valueField ? valueField.value.trim() : "";
+  const kind = read("kind").value;
   return {
     scope: scope,
-    kind: read("kind").value,
+    kind: kind,
     text: read("text").value.trim(),
-    value: raw === "" ? null : Number(raw),
+    value: kind === "budget" && raw !== "" ? Number(raw) : null,
   };
+}
+
+// Sync posts directly so the toast can report the counts that the op returns.
+async function syncRules() {
+  try {
+    const reply = await postJson("/api/v1/cmd", { op: "rules.sync", args: { dryRun: false }, project: projectNow });
+    const result = (reply.data && reply.data.data) || {};
+    showToast({ text: syncSummary(result), tone: "success" });
+  } catch (err) {
+    showToast({ text: "Sync to CLAUDE.md failed: " + (err.message || "unknown error"), tone: "danger" });
+  }
+}
+
+function syncSummary(result) {
+  const added = result.added || 0;
+  const changed = result.changed || 0;
+  const removed = result.removed || 0;
+  if (!added && !changed && !removed) return "CLAUDE.md already matches the rules. Nothing changed.";
+  return "Synced to CLAUDE.md: " + added + " added, " + changed + " changed, " + removed + " removed.";
 }
 
 // Actions for the rules screen. Returns true when handled (app.js re-renders).
@@ -170,16 +220,23 @@ export function ruleAction(action, el) {
     return true;
   }
   if (action === "rule-add") {
+    const form = el.closest(".rules-form");
     const v = formValues(el);
-    if (!v.text) {
-      showToast({ text: "Enter the rule text first.", tone: "danger" });
-      return true;
+    const badValue = v.kind === "budget" && (!Number.isInteger(v.value) || v.value < 1 || v.value > BUDGET_MAX);
+    setErr(form, "text", v.text ? "" : "Write the rule text first.");
+    setErr(form, "value", badValue ? "Enter a whole number from 1 to " + BUDGET_MAX + "." : "");
+    const firstBad = !v.text ? "text" : badValue ? "value" : "";
+    if (firstBad) {
+      // false: no re-render, so the inline errors stay on screen.
+      const field = form.querySelector('[data-rule="' + firstBad + '"]');
+      if (field) field.focus();
+      return false;
     }
     run("rules.add", v, { project: projectNow, label: "Rule added" });
     return true;
   }
   if (action === "rule-sync") {
-    run("rules.sync", { dryRun: false }, { project: projectNow, label: "Synced to CLAUDE.md" });
+    syncRules();
     return true;
   }
   return false;

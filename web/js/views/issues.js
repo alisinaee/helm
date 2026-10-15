@@ -13,6 +13,11 @@ const TITLE_MAX = 120;
 const FILTERS = [["open", "Open"], ["blockers", "Blockers"], ["all", "All"]];
 const KIND_TONE = { blocker: "danger", risk: "warning", bug: "neutral", question: "neutral" };
 
+// "1 blocker", "2 blockers": the count and the noun agree.
+function countWord(n, one, many) {
+  return fmtCount(n) + " " + (n === 1 ? one : many);
+}
+
 function filterOf(vm) {
   const f = vm.route.filters ? vm.route.filters.f : null;
   return f === "blockers" || f === "all" ? f : "open";
@@ -86,7 +91,7 @@ function rowHtml(vm, issue) {
     '<p class="iss-title"><a href="' + esc(detail) + '">' + id + " " + esc(issue.title) + "</a></p>" +
     linksHtml(vm, issue) +
     '<p class="iss-act"><button type="button" class="btn btn-small" data-action="issue-close" data-issue="' + id +
-    '" aria-label="Close ' + id + '">Close</button>' + copy + "</p></li>";
+    '" aria-label="Close issue ' + id + '">Close issue</button>' + copy + "</p></li>";
 }
 
 export function sectionView(vm) {
@@ -109,8 +114,9 @@ export function sectionView(vm) {
   const note = filter === "all" ? '<p class="page-note">Closed issues are not shown here yet.</p>' : "";
   const openCopy = copyButton("section", "issues.open", "open issues",
     { project: vm.route.id, sum: refSummary("section", { count: snap.issues.length }) });
-  return '<div class="page-head"><p class="page-title">Issues</p><p class="page-note">' +
-    esc(fmtCount(snap.issues.length) + " open · " + fmtCount(blockers) + " blockers") + "</p>" + openCopy + "</div>" +
+  return '<div class="page-head"><h2 class="page-title">Issues</h2><p class="page-note">' +
+    esc(countWord(snap.issues.length, "open issue", "open issues") + " · " +
+      countWord(blockers, "blocker", "blockers")) + "</p>" + openCopy + "</div>" +
     formHtml(snap) + filterNav(vm, snap, filter) + list + note;
 }
 

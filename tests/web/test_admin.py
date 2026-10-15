@@ -19,7 +19,7 @@ VIEWS = os.path.join(JS, "views")
 CSS_DIR = os.path.join(WEB, "css")
 RENDER = os.path.join(TESTS, "web", "render_admin.mjs")
 NEW_VIEWS = ("tokens.js", "limits.js", "rules.js", "settings.js")
-CSS_BUDGET = 3500
+CSS_BUDGET = 3700  # UX group C adds the rule-err line (R8.13)
 HEX = re.compile(r"#[0-9a-fA-F]{3,8}\b")
 IMPORT = re.compile(r'from\s+"(\.[^"]+)"')
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=|<script', re.IGNORECASE)
