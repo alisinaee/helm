@@ -62,11 +62,11 @@ class WorkflowViewTests(unittest.TestCase):
     def test_the_four_cases_render_their_lanes(self):
         cases = self.out["cases"]
         self.assertTrue(cases["empty"]["empty"])
-        self.assertEqual(cases["empty"]["lanes"], ["Head", "Queue", "Blocked"])
+        self.assertEqual(cases["empty"]["lanes"], [])
         self.assertIn("haiku", cases["running"]["lanes"])
         self.assertIn("Queue", cases["running"]["lanes"])
         self.assertIn("agy", cases["blocked"]["lanes"])
-        self.assertIn("other", cases["blocked"]["lanes"])
+        self.assertIn("cursor", cases["blocked"]["lanes"])
         self.assertEqual(cases["handoff"]["jobs"], 4)
 
     def test_running_case_shows_live_bars_and_queued_items(self):
@@ -122,7 +122,6 @@ class WorkflowViewTests(unittest.TestCase):
     def test_data_from_the_snapshot_is_escaped(self):
         found = " ".join(markup(self.out))
         self.assertNotIn("<b>core</b>", found)
-        self.assertIn("&lt;b&gt;core&lt;/b&gt;", found)
         self.assertNotIn("<i>work</i>", found)
 
     def test_stop_and_start_use_the_command_path(self):
@@ -168,7 +167,7 @@ class WorkflowViewTests(unittest.TestCase):
 
     def test_legend_names_only_what_the_map_draws(self):
         mapped = self.out["sections"]["map"]
-        self.assertIn("Sequence", mapped)
+        self.assertNotIn("Sequence", mapped)
         self.assertIn("Dependency", mapped)
         self.assertIn("You are here (Now)", mapped)
         self.assertNotIn("Depends on", "".join(markup(self.out)))

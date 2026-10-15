@@ -28,6 +28,12 @@ const QUEUE_GAP = 8;
 const OPEN_K = 0.75;
 const TICK_MAX = 200;
 const WORD = { running: "running", done: "done", failed: "failed" };
+// Engines that get their own lane (R7.74); any other model goes to "other". Head is the head role, whatever the model.
+const ENGINES = ["haiku", "sonnet", "opus", "agy", "cursor", "opencode"];
+const ROW_CLS = ["", "", "wf-r2", "wf-r3", "wf-r4"];
+const MAX_ROWS = 4;
+const BAR_GAP = 4;
+const TL_ZOOM_MAX = 8;
 const CHIP = { doing: "neutral", done: "success", blocked: "danger", queued: "neutral" };
 const DEFS = '<marker id="wf-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" ' +
   'orient="auto-start-reverse"><path class="wf-arrow" d="M0 0L8 4L0 8z"/></marker>' +
@@ -39,6 +45,11 @@ const bound = new WeakSet();
 let lastModel = null;
 let selectedKey = null;
 let scrollLeft = 0;
+let timelineZoom = 1;
+let drag = null;
+let suppressClick = false;
+const touches = new Map();
+let lastHash = "";
 
 function isObj(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -88,10 +99,10 @@ function nowMs() {
   return Math.floor(Date.now() / 30000) * 30000;
 }
 
-// The lane of a job: the head (opus, or role head), a worker model lane, or other.
+// The lane of a job: the head role, its engine (haiku, sonnet, opus, agy, cursor, opencode) or other.
 export function laneKeyOf(model, role) {
-  if (model === "opus" || role === "head") return "head";
-  if (model === "haiku" || model === "sonnet" || model === "agy") return model;
+  if (role === "head") return "head";
+  if (ENGINES.indexOf(model) >= 0) return model;
   return "other";
 }
 
@@ -113,6 +124,14 @@ function cardClass(state) {
 
 // Snapshots are fetched by this view (normalizeSnapshot in state.js does not keep the workflow key). One request per
 // project per FRESH_MS at most. The next app render picks up the result, so nothing here re-renders by itself.
+// A short hash of the snapshot body: the Map's markup carries it, so a changed snapshot re-mounts the diagram.
+function stampOf(raw) {
+  const s = JSON.stringify(raw);
+  let h = 5381;
+  for (let i = 0; i < s.length; i += 1) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+  return h.toString(36) + ":" + s.length;
+}
+
 function fetchSnapshot(pid) {
   const now = Date.now();
   const entry = cache.get(pid) || { raw: null, at: 0, error: null, pending: false };
@@ -121,6 +140,7 @@ function fetchSnapshot(pid) {
   entry.pending = true;
   getJson("/api/v1/projects/" + encodeURIComponent(pid) + "/snapshot").then(function (res) {
     entry.raw = res.data || {};
+    entry.stamp = stampOf(entry.raw);
     entry.error = null;
   }, function (err) {
     entry.error = err;
@@ -196,15 +216,21 @@ export function layout(snap, range, now) {
       addLane(p.pid, p.name, "project", p.pid);
     });
   } else {
-    addLane("head", "Head", "head");
     const used = new Set(jobs.map(function (j) {
       return j.lane;
     }));
-    ["haiku", "sonnet", "agy", "other"].forEach(function (k) {
+    const hasQueue = !!single && list(single.raw.queue).some(function (q) {
+      return !!q.task;
+    });
+    const hasBlocked = !!single && Array.isArray(single.raw.blocked) && single.raw.blocked.some(function (id) {
+      return typeof id === "string" && id !== "";
+    });
+    if (used.has("head")) addLane("head", "Head", "head");
+    ENGINES.concat(["other"]).forEach(function (k) {
       if (used.has(k)) addLane(k, k, "model");
     });
-    addLane("queue", "Queue", "queue");
-    addLane("blocked", "Blocked", "blocked");
+    if (hasQueue) addLane("queue", "Queue", "queue");
+    if (hasBlocked) addLane("blocked", "Blocked", "blocked");
   }
 
   const items = [];
@@ -377,7 +403,7 @@ function barTitle(it) {
   const when = clock(it.start) + "–" + (it.end == null ? "now" : clock(it.end));
   const tokens = it.tokensK == null ? "unknown token count" : fmtTokens(it.tokensK) + " tokens";
   const pre = it.pname && it.pname !== it.pid ? it.pname + ": " : "";
-  return pre + who + ", " + it.word + ", " + when + ", " + tokens;
+  return pre + who + (it.title ? " (" + it.title + ")" : "") + ", " + it.word + ", " + when + ", " + tokens;
 }
 
 function hashFor(route, view, range, item) {
@@ -410,12 +436,13 @@ function itemHref(model, pid, task) {
     filters: Object.assign({}, route.filters || {}) });
 }
 
-function laneLabelHtml(lane) {
-  return '<div class="wf-lbl" title="' + esc(lane.label) + '"><span class="wf-sw wf-sw-' + esc(lane.kind === "model" ?
+function laneLabelHtml(lane, cls) {
+  return '<div class="wf-lbl ' + cls + '" title="' + esc(lane.label) + '">' +
+    '<span class="wf-sw wf-sw-' + esc(lane.kind === "model" ?
     lane.key : lane.kind) + '" aria-hidden="true"></span><span>' + esc(lane.label) + "</span></div>";
 }
 
-function gutterHtml(model) {
+function gutterHtml(model, rows) {
   return model.lanes.map(function (lane, i) {
     const mine = model.items.filter(function (it) {
       return it.kind === "job" && it.lane === i;
@@ -426,7 +453,8 @@ function gutterHtml(model) {
     const sum = known.reduce(function (acc, it) {
       return acc + it.tokensK;
     }, 0);
-    return '<div class="wf-g"><span class="num wf-gn">' + mine.length + '</span><span class="num wf-gt">' +
+    return '<div class="wf-g ' + ROW_CLS[rows[i]] + '"><span class="num wf-gn">' + mine.length +
+      '</span><span class="num wf-gt">' +
       esc(known.length ? fmtTokens(sum) : MISSING) + "</span></div>";
   }).join("");
 }
@@ -434,52 +462,80 @@ function gutterHtml(model) {
 function barHtml(it, g, now) {
   const w = Math.max(6, g.x1 - g.x0);
   const y = g.cy - 13;
-  const label = it.kind === "job" ? (it.task ? it.task + " " : "") + (it.title || it.job) : it.task || "";
+  // The label is the task id only, left out when it would not fit (the title and aria-label keep the details).
+  const label = it.task || it.job || "";
+  const fits = label.length * 6.6 + 10 <= w;
   const title = barTitle(it);
   const live = it.live ? '<rect class="wf-pulse" x="' + (g.x1 - 3) + '" y="' + y + '" width="3" height="26"/>' : "";
   return '<g class="wf-bar wf-b-' + esc(it.status) + (it.live ? " wf-live" : "") + '" tabindex="0" role="button" ' +
     'aria-label="' + esc(title) + '" data-focus="' + esc(it.key) + '" data-wf-item="' + esc(it.key) +
     '" data-wf-task="' + esc(it.task || "") + '" data-wf-pid="' + esc(it.pid) + '" data-lane="' + esc(g.lane) +
     '" data-x="' + g.x0 + '" data-y="' + g.cy + '"><title>' + esc(title) + '</title><rect x="' + g.x0 + '" y="' + y +
-    '" width="' + w + '" height="26" rx="4"/>' + live + '<text x="' + (g.x0 + 6) + '" y="' + (g.cy + 4) + '">' +
-    esc(clip(label, Math.floor((w - 10) / 6.6))) + "</text></g>";
+    '" width="' + w + '" height="26" rx="4"/>' + live + (fits ? '<text x="' + (g.x0 + 6) + '" y="' + (g.cy + 4) +
+    '">' + esc(label) + "</text>" : "") + "</g>";
 }
 
-// The Timeline: a fixed label column, the swimlane plot (one SVG, so arrows can cross lanes) and a fixed gutter.
+// The Timeline: a fixed label column, the swimlane plot (one SVG, so arrows can cross lanes) and a fixed gutter. Bars
+// that overlap in one lane go to sub-rows (greedy packing), so none is drawn over another.
 export function timelineSvg(model) {
   const r = model.range;
+  const W = PLOT_W * timelineZoom;
   const span = r.t1 - r.t0 || 1;
   const X = function (t) {
-    return Math.min(PLOT_W, Math.max(0, ((t - r.t0) / span) * PLOT_W));
+    return Math.min(W, Math.max(0, ((t - r.t0) / span) * W));
   };
-  const H = model.lanes.length * LANE_H;
   const xNow = X(model.now);
   const geo = new Map();
   let queued = 0;
   model.items.forEach(function (it) {
-    const lane = it.lane;
-    const cy = lane * LANE_H + LANE_H / 2;
+    if (it.lane === undefined) return;
     let x0;
     let x1;
     if (it.kind === "queue") {
-      x0 = Math.min(xNow + QUEUE_GAP + queued * (QUEUE_W + QUEUE_GAP), PLOT_W - QUEUE_W);
+      x0 = Math.min(xNow + QUEUE_GAP + queued * (QUEUE_W + QUEUE_GAP), W - QUEUE_W);
       queued += 1;
       x1 = x0 + QUEUE_W;
     } else {
-      x0 = Math.min(X(it.start), PLOT_W - 6);
-      x1 = Math.min(PLOT_W, Math.max(X(it.end == null ? model.now : it.end), x0 + 6));
+      x0 = Math.min(X(it.start), W - 6);
+      x1 = Math.min(W, Math.max(X(it.end == null ? model.now : it.end), x0 + 6));
     }
-    geo.set(it.key, { x0: x0, x1: x1, cy: cy, lane: lane });
+    geo.set(it.key, { x0: x0, x1: x1, lane: it.lane, row: 0, cy: 0 });
+  });
+  const ends = model.lanes.map(function () {
+    return [];
+  });
+  Array.from(geo.values()).sort(function (a, b) {
+    return a.x0 - b.x0;
+  }).forEach(function (g) {
+    const rows = ends[g.lane];
+    let at = rows.findIndex(function (end) {
+      return g.x0 >= end + BAR_GAP;
+    });
+    if (at < 0) at = rows.length < MAX_ROWS ? rows.length : MAX_ROWS - 1;
+    rows[at] = Math.max(rows[at] || 0, g.x1);
+    g.row = at;
+  });
+  const laneRows = ends.map(function (rows) {
+    return Math.max(1, rows.length);
+  });
+  const laneTop = [];
+  let H = 0;
+  laneRows.forEach(function (n) {
+    laneTop.push(H);
+    H += n * LANE_H;
+  });
+  geo.forEach(function (g) {
+    g.cy = laneTop[g.lane] + g.row * LANE_H + LANE_H / 2;
   });
   const bg = model.lanes.map(function (lane, i) {
-    return '<rect class="wf-lane' + (i % 2 ? " wf-lane-alt" : "") + '" x="0" y="' + i * LANE_H + '" width="' +
-      PLOT_W + '" height="' + LANE_H + '"/>';
+    return '<rect class="wf-lane' + (i % 2 ? " wf-lane-alt" : "") + '" x="0" y="' + laneTop[i] + '" width="' + W +
+      '" height="' + laneRows[i] * LANE_H + '"/>';
   }).join("");
   const grid = ticksOf(r).map(function (t) {
     return '<line class="wf-tickline" x1="' + X(t) + '" y1="0" x2="' + X(t) + '" y2="' + H + '"/>';
   }).join("");
   const ticks = ticksOf(r).map(function (t) {
-    const x = Math.min(PLOT_W - 16, Math.max(16, X(t)));
+    const x = Math.min(W - 16, Math.max(16, X(t)));
     return '<text class="wf-tick" x="' + x + '" y="' + (AXIS_H - 8) + '" text-anchor="middle">' +
       esc(tickText(t, r.key)) + "</text>";
   }).join("");
@@ -500,27 +556,47 @@ export function timelineSvg(model) {
     paths.push('<path class="wf-edge wf-e-block" d="M ' + b.x0 + " " + b.cy + " C " + (b.x0 - 12) + " " + b.cy +
       ", " + (j.x0 - 12) + " " + j.cy + ", " + j.x0 + " " + j.cy + '" marker-end="url(#wf-arrow)"/>');
   });
-  const bars = model.items.map(function (it) {
+  const bars = model.items.filter(function (it) {
+    return geo.has(it.key);
+  }).map(function (it) {
     return barHtml(it, geo.get(it.key), model.now);
   }).join("");
-  const marks = model.marks.map(function (m) {
+  const marks = model.marks.filter(function (m) {
+    return m.lane !== undefined;
+  }).map(function (m) {
     const x = X(m.t);
-    const cy = m.lane * LANE_H + LANE_H / 2;
+    const cy = laneTop[m.lane] + LANE_H / 2;
     return '<g class="wf-mark wf-m-' + esc(m.status) + '" role="img" aria-label="' + esc(m.label) + '"><title>' +
-      esc(m.label) + '</title><path d="M ' + x + " " + (cy - 6) + " L " + (x + 6) + " " + cy + " L " + x + " " +
-      (cy + 6) + " L " + (x - 6) + " " + cy + ' Z"/></g>';
+      esc(m.label) + '</title><path d="' + markPath(m.status, x, cy) + '"/></g>';
   }).join("");
-  const plot = '<svg class="wf-plot" width="' + PLOT_W + '" height="' + H + '" viewBox="0 0 ' + PLOT_W + " " + H +
+  const plot = '<svg class="wf-plot" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H +
     '" role="group" aria-label="Swimlanes">' + bg + grid + paths.join("") + bars + marks +
     '<line class="wf-now" x1="' + xNow + '" y1="0" x2="' + xNow + '" y2="' + H + '"/></svg>';
-  const axis = '<svg class="wf-axis" width="' + PLOT_W + '" height="' + AXIS_H + '" viewBox="0 0 ' + PLOT_W + " " +
-    AXIS_H + '" aria-hidden="true" focusable="false"><defs>' + DEFS + "</defs>" + ticks +
-    '<text class="wf-now-t" x="' + xNow + '" y="10" text-anchor="middle">now</text></svg>';
-  const labels = model.lanes.map(laneLabelHtml).join("");
-  return '<div class="wf-scroll"><div class="wf-grid">' + '<div class="wf-corner"></div>' + axis +
+  // The now label turns to end at the right edge, so it stays inside the axis.
+  const nowAt = xNow > W - 24 ? "end" : "middle";
+  const axis = '<svg class="wf-axis" width="' + W + '" height="' + AXIS_H + '" viewBox="0 0 ' + W + " " + AXIS_H +
+    '" aria-hidden="true" focusable="false"><defs>' + DEFS + "</defs>" + ticks +
+    '<text class="wf-now-t" x="' + xNow + '" y="10" text-anchor="' + nowAt + '">now</text></svg>';
+  const labels = model.lanes.map(function (lane, i) {
+    return laneLabelHtml(lane, ROW_CLS[laneRows[i]]);
+  }).join("");
+  return '<div class="wf-scroll wf-tl" tabindex="0" role="region" aria-label="Workflow timeline">' +
+    '<div class="wf-grid">' +
+    '<div class="wf-corner"></div>' + axis +
     '<div class="wf-g wf-corner wf-gh"><span class="wf-gn">Jobs</span><span class="wf-gt">Tokens</span></div>' +
-    '<div class="wf-labels">' + labels + "</div>" + plot + '<div class="wf-gutters">' + gutterHtml(model) +
+    '<div class="wf-labels">' + labels + "</div>" + plot + '<div class="wf-gutters">' + gutterHtml(model, laneRows) +
     "</div></div></div>";
+}
+
+// Mark shapes differ by status (not colour alone): a dot for doing, a tick for done, a diamond for blocked.
+function markPath(status, x, cy) {
+  if (status === "doing") return "M " + (x - 6) + " " + cy + " A 6 6 0 1 0 " + (x + 6) + " " + cy + " A 6 6 0 1 0 " +
+    (x - 6) + " " + cy + " Z";
+  if (status === "done") return "M " + (x - 7) + " " + cy + " L " + (x - 3) + " " + (cy + 4) + " L " + (x + 7) + " " +
+    (cy - 6) + " L " + (x + 5) + " " + (cy - 8) + " L " + (x - 3) + " " + (cy + 1) + " L " + (x - 5) + " " + (cy - 3) +
+    " Z";
+  return "M " + x + " " + (cy - 6) + " L " + (x + 6) + " " + cy + " L " + x + " " + (cy + 6) + " L " + (x - 6) + " " +
+    cy + " Z";
 }
 
 // The Map (WP72). R7.14 E: the left-to-right flow of graph/model.js, laid out by flowLayout() in graph/layout.js
@@ -677,6 +753,7 @@ function mapOp(op) {
   if (op === "out") api.zoom(0.8);
   else if (op === "in") api.zoom(1.25);
   else if (op === "fit") api.fit();
+  else if (op === "actual") api.zoom(1 / api.view().k);
   else if (op === "now") api.centerOn("now", false);
   else if (op === "start") api.centerOn("start", false);
   else if (op === "all") toggleAll();
@@ -735,7 +812,7 @@ function mapSvg(kit, ctx) {
   const count = '<div class="wfg-bar"><span class="wfg-count" aria-live="polite">' + matched + " of " + total +
     " items</span></div>";
   if (!matched) {
-    return count + filters + '<p class="wf-hint">No tasks match these filters.<a href="' +
+    return count + filters + '<p class="wf-hint">No tasks match these filters. <a href="' +
       esc(mapHash(route, range, { st: "", ag: "", ph: "" })) + '">Clear filters</a></p>';
   }
   // Folded phases hide their tasks: the note says how many are drawn, and Show all draws every phase (slow).
@@ -754,12 +831,13 @@ function mapSvg(kit, ctx) {
   const ctl = '<div class="wfg-ctl" role="toolbar" aria-label="Diagram controls">' +
     ctlHtml("Zoom out", "out", "−") + ctlHtml("Zoom in", "in", "+") + ctlHtml("Fit to screen", "fit", "Fit") +
     ctlHtml("Centre on Now (N)", "now", "Now") + ctlHtml("Go to Start (S)", "start", "Start") +
-    ctlHtml("Show all phases", "all", "Show all", showAll) + ctlHtml("Clear focus", "focus-off", "Reset focus") +
+    ctlHtml("Actual size", "actual", "100%") + ctlHtml("Show all phases", "all", "Show all", showAll) +
+    ctlHtml("Clear focus", "focus-off", "Reset focus") +
     "</div>";
   // Focus mode lasts while its node's Details is open: Escape goes back to Projects (panel.js), which drops it here.
   st.focus = route.item ? st.focus : null;
   if (activeMap && activeMap.focus !== st.focus) syncFocus(ctx.pid, st.focus, graph);
-  pendingMap = { graph: graph, flow: flow, lay: flow, pid: ctx.pid, focus: st.focus, view: st.view,
+  pendingMap = { graph: graph, flow: flow, lay: flow, pid: ctx.pid, focus: st.focus, view: st.view, rev: ctx.stamp,
     taps: st.taps,
     onTap: function (node) {
       const fold = node.getAttribute("data-wf-fold");
@@ -785,7 +863,7 @@ function mapSvg(kit, ctx) {
       mapStateFor(ctx.pid).view = v;
     } };
   return count + filters + note + crumbs + '<div class="wfg-stage">' + ctl +
-    '<div class="wfg-host" data-wf-map-host></div></div>';
+    '<div class="wfg-host" data-wf-map-host data-wf-rev="' + esc(ctx.stamp || "") + '"></div></div>';
 }
 
 // Opens the map centred on Now, fitted to its height but never below OPEN_K (so the card titles stay readable). Later
@@ -800,9 +878,15 @@ function openAtNow(api, flow) {
 function mountMaps() {
   if (!pendingMap || !graphKit || typeof document === "undefined") return;
   const host = document.querySelector("[data-wf-map-host]");
-  if (!host || host.firstChild) return;
+  if (!host) return;
   const st = pendingMap;
+  // The same revision is already drawn: keep it, so the reader's pan and zoom stay put.
+  if (host.firstChild && host.getAttribute("data-wf-rev") === st.rev) {
+    pendingMap = null;
+    return;
+  }
   pendingMap = null;
+  host.replaceChildren();
   const store = mapStateFor(st.pid);
   const opening = !store.fitted;
   store.fitted = true;
@@ -825,18 +909,21 @@ function mountMaps() {
   if (!narrow()) activeMap.mini = graphKit.minimap.mountMinimap(host.parentNode, { flow: st.flow, viewport: api });
 }
 
-function mapBody(route, raw, range) {
+function mapBody(route, raw, range, stamp) {
   mapKinds = null;
   mapHasNow = false;
   if (route.name !== "project") {
-    return '<p class="wf-hint">Select a project to view diagram.</p>';
+    return emptyHtml("Select a project to view diagram.", '<a href="#/all/projects">View projects</a>');
   }
-  if (graphFailed) return bannerHtml("danger", "Diagram failed to load.", "");
+  if (graphFailed) {
+    return bannerHtml("danger", "Diagram failed to load.", "") + '<p class="wf-hint"><button type="button" ' +
+      'class="btn btn-small" data-wf-retry="graph">Retry</button></p>';
+  }
   if (!graphKit) {
     loadGraph();
-    return '<div aria-busy="true">' + skeletonHtml(["w-60", "w-90"]) + "</div>";
+    return skeletonHtml(["w-60", "w-90"]);
   }
-  return mapSvg(graphKit, { pid: route.id, raw: raw, route: route, range: range, now: nowMs() });
+  return mapSvg(graphKit, { pid: route.id, raw: raw, route: route, range: range, now: nowMs(), stamp: stamp });
 }
 
 function statusChip(word, status) {
@@ -863,14 +950,16 @@ export function tableHtml(model) {
     "Duration</th><th scope=\"col\" class=\"rg-num\">Tokens (thousands)</th><th scope=\"col\">Action</th></tr>";
   const body = rows.map(function (it) {
     const task = it.task ? esc(it.task) + (model.multi ? " · " + esc(it.pname) : "") : MISSING;
+    const taskTitle = it.task ? ' title="' + esc(it.task) + '"' : "";
     return "<tr>" + "<td>" + statusChip(it.word, it.status) + "</td>" + '<td class="wf-id">' + esc(it.job) + "</td>" +
-      "<td>" + task + "</td>" + "<td>" + esc(modelText(it)) + "</td>" +
+      "<td" + taskTitle + ">" + task + "</td>" + "<td>" + esc(modelText(it)) + "</td>" +
       '<td class="rg-num num">' + clock(it.start) + "</td>" +
       '<td class="rg-num num">' + esc(durationText(it, model.now)) + "</td>" +
       '<td class="rg-num num">' + esc(it.tokensK == null ? MISSING : fmtTokens(it.tokensK)) + "</td>" +
       "<td>" + actionHtml(it, model) + "</td></tr>";
   }).join("");
-  return '<div class="wf-scroll"><table class="wf-table"><caption class="sr-only">Jobs in this range</caption>' +
+  return '<div class="wf-scroll" tabindex="0" role="region" aria-label="Jobs table">' +
+    '<table class="wf-table"><caption class="sr-only">Jobs in this range</caption>' +
     "<thead>" + head + "</thead><tbody>" + body + "</tbody></table></div>";
 }
 
@@ -899,8 +988,10 @@ function detailHtml(model, key) {
   const action = it.kind === "job" && it.task ? (it.live
     ? '<button type="button" class="btn btn-small" data-wf-op="task.stop" data-wf-pid="' + esc(it.pid) +
       '" data-wf-task="' + esc(it.task) + '" aria-label="Stop task ' + esc(it.task) + '">Stop</button>'
-    : '<a class="btn btn-small" href="' + esc(itemHref(model, it.pid, it.task)) + '">Open</a>')
-    : it.task ? '<a class="btn btn-small" href="' + esc(itemHref(model, it.pid, it.task)) + '">Open</a>' : MISSING;
+    : '<a class="btn btn-small" href="' + esc(itemHref(model, it.pid, it.task)) + '" aria-label="Open task ' +
+      esc(it.task) + '">Open</a>')
+    : it.task ? '<a class="btn btn-small" href="' + esc(itemHref(model, it.pid, it.task)) + '" aria-label="Open task ' +
+      esc(it.task) + '">Open</a>' : MISSING;
   return statusChip(it.word, kind) + '<span class="wf-id">' + esc(it.job || MISSING) + "</span>" +
     "<span>" + esc(it.task || MISSING) + "</span><span>" + esc(modelText(it)) + "</span>" +
     '<span class="rg-num num">' + (it.start == null ? MISSING : clock(it.start)) + "</span>" +
@@ -916,7 +1007,7 @@ function viewLinks(route, view, range) {
   }).join("");
 }
 
-function rangeLinks(route, view, range) {
+function rangeLinks(route, view, range) {  // the Timeline's time range (the Map has none)
   return RANGES.map(function (r) {
     const on = r[0] === range;
     return '<a href="' + esc(hashFor(route, view, r[0], null)) + '"' + (on ? ' aria-current="page"' : "") + ">" +
@@ -939,12 +1030,11 @@ function legendHtml(view, kinds, hasNow) {
   const dot = function (cls) {
     return '<span class="wf-key ' + cls + '" aria-hidden="true"></span>';
   };
-  const states = [keyItem(dot("wf-k-done"), "Done"), keyItem(dot("wf-k-doing"), "Running"),
-    keyItem(dot("wf-k-blocked"), "Blocked or failed"),
-    keyItem(dot("wf-k-queued"), view === "map" ? "Todo" : "Queued")];
+  const states = [keyItem(dot("wf-k-done"), "Done"), keyItem(dot("wf-k-doing"), "Doing"),
+    keyItem(dot("wf-k-queued"), "Todo"), keyItem(dot("wf-k-blocked"), "Blocked")];
   let extra = [];
   if (view === "map") {
-    const names = [["sequence", "Sequence", "wfg-e"], ["dependency", "Dependency", "wfg-e wfg-e-dependency"],
+    const names = [["dependency", "Dependency", "wfg-e wfg-e-dependency"],
       ["handoff", "Handoff", "wfg-e wfg-e-handoff"], ["blocker", "Blocker", "wfg-e wfg-e-blocker"]];
     extra = names.filter(function (n) {
       return kinds && kinds.has(n[0]);
@@ -981,9 +1071,10 @@ export function sectionView(vm) {
       return e && e.error;
     });
     if (failed) {
-      return bannerHtml("danger", "Could not load the workflow. Retrying.", failed.error.message || "Unknown error");
+      return bannerHtml("danger", "Could not load the workflow. Retrying.", failed.error.message || "Unknown error") +
+        '<p class="wf-hint"><button type="button" class="btn btn-small" data-wf-retry="data">Retry now</button></p>';
     }
-    return '<div aria-busy="true">' + skeletonHtml(["w-60", "w-90"]) + "</div>";
+    return skeletonHtml(["w-60", "w-90"]);
   }
   const range = rangeOf(route);
   const view = viewOf(route);
@@ -993,6 +1084,7 @@ export function sectionView(vm) {
   const raws = entries.map(function (e) {
     return e.raw;
   });
+  const stamp = entries[0].stamp || "";
   // The Map draws from graph/model.js, so it skips the Timeline model; only its view, route and empty flags are kept.
   const model = view === "map" ? { empty: false, jobCount: 0, byKey: new Map() }
     : layout(route.name === "project" ? raws[0] : raws, range, nowMs());
@@ -1005,24 +1097,31 @@ export function sectionView(vm) {
       "details, and press Enter to open its task.") + "</p></div>";
   const controls = '<div class="wf-controls"><nav class="seg plan-views" aria-label="View">' +
     viewLinks(route, view, range) +
-    '</nav><nav class="seg plan-views" aria-label="Range">' + rangeLinks(route, view, range) + "</nav></div>";
+    (view === "map" ? "" : '</nav><nav class="seg plan-views" aria-label="Range">' + rangeLinks(route, view, range) +
+      "</nav>") + "</div>";
   let body;
   if (model.empty && view !== "map") {
     const agents = route.name === "project" ? projectHash(route.id, "agents") : "#/all/agents";
     body = emptyHtml("No jobs recorded yet.", "<span>Agents record work with <code class=\"code\">roadmap job start" +
       '</code>.</span> <a href="' + esc(agents) + '">Open Agents</a>');
   } else if (view === "table") {
-    body = model.jobCount ? tableHtml(model) : '<p class="wf-hint">No jobs in this range.</p>';
+    body = model.jobCount ? tableHtml(model) : emptyRange(route, view);
   } else if (view === "map") {
-    body = mapBody(route, raws[0], range);
+    body = mapBody(route, raws[0], range, stamp);
   } else {
-    body = (model.jobCount ? "" : '<p class="wf-hint">No jobs in this range.</p>') + timelineSvg(model);
+    body = (model.jobCount ? "" : emptyRange(route, view)) + timelineSvg(model);
   }
   return '<div class="wf-page">' + head + controls + '<div class="wf" data-wf-view="' + esc(view) + '">' + body +
     // The Map has no strip: a tap opens the right panel's Details (navigate), so a strip would repeat it.
     (view === "map" ? "" : '<div class="wf-detail row-grid wf-cols">' + detailHtml(model, selectedKey) + "</div>") +
     legendHtml(view, mapKinds, mapHasNow) +
     "</div></div>";
+}
+
+// A range with no jobs: the reader can widen it to All.
+function emptyRange(route, view) {
+  return '<p class="wf-hint">No jobs in this range. <a href="' + esc(hashFor(route, view, "all", null)) +
+    '">Show all</a></p>';
 }
 
 // Operations from the strip or a row: Stop a running job's task, Start a todo task. Both go through cmd.js.
@@ -1062,6 +1161,24 @@ function select(e) {
 }
 
 function onClick(e) {
+  if (suppressClick) {
+    suppressClick = false;
+    return;
+  }
+  const retry = closestEl(e.target, "[data-wf-retry]");
+  if (retry) {
+    if (retry.getAttribute("data-wf-retry") === "graph") {
+      graphFailed = false;
+      loadGraph();
+    } else {
+      cache.forEach(function (entry) {
+        entry.at = 0;
+        entry.error = null;
+      });
+    }
+    window.dispatchEvent(new Event("hashchange"));
+    return;
+  }
   const mop = closestEl(e.target, "[data-wf-map-op]");
   if (mop) {
     mapOp(mop.getAttribute("data-wf-map-op"));
@@ -1179,10 +1296,88 @@ export function bind(el) {
     }
   }
   if (typeof window !== "undefined") {
+    lastHash = window.location.hash;
     window.addEventListener("hashchange", function () {
+      if (window.location.hash === lastHash) return;
+      lastHash = window.location.hash;
       scrollLeft = 0;
     });
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
   }
+  el.addEventListener("pointerdown", onDown);
+  el.addEventListener("wheel", onWheel, { passive: false });
+}
+
+// Timeline pan and zoom (R7.74). One pointer drags the plot sideways (mouse or touch); two pointers pinch; Ctrl or Meta
+// with the wheel zooms round the cursor. Pan lives in the scroller and zoom in timelineZoom, so a refresh keeps both.
+function tlScroller(target) {
+  return closestEl(target, ".wf-tl");
+}
+
+function zoomTimeline(next, cx, scroller) {
+  const z = Math.min(TL_ZOOM_MAX, Math.max(1, next));
+  if (Math.abs(z - timelineZoom) < 0.001) return;
+  const anchor = (scroller.scrollLeft + cx) / timelineZoom;
+  timelineZoom = z;
+  scrollLeft = Math.max(0, anchor * z - cx);
+  window.dispatchEvent(new Event("hashchange"));
+}
+
+function distanceOf(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function onDown(e) {
+  const sc = tlScroller(e.target);
+  if (!sc || (e.pointerType === "mouse" && e.button !== 0)) return;
+  touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  suppressClick = false;
+  if (touches.size === 1) {
+    drag = { pinch: false, x: e.clientX, left: sc.scrollLeft, moved: false, sc: sc };
+  } else if (touches.size === 2) {
+    const pts = Array.from(touches.values());
+    drag = { pinch: true, d0: distanceOf(pts[0], pts[1]), z0: timelineZoom, sc: sc, raf: null };
+  }
+}
+
+function onMove(e) {
+  if (!touches.has(e.pointerId)) return;
+  touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (!drag) return;
+  if (drag.pinch && touches.size >= 2) {
+    if (drag.raf) return;
+    drag.raf = window.requestAnimationFrame(function () {
+      const pts = Array.from(touches.values());
+      const rect = drag.sc.getBoundingClientRect();
+      const mid = (pts[0].x + pts[1].x) / 2 - rect.left;
+      const scale = distanceOf(pts[0], pts[1]) / (drag.d0 || 1);
+      drag.raf = null;
+      zoomTimeline(drag.z0 * scale, mid, drag.sc);
+    });
+    return;
+  }
+  if (!drag.pinch && touches.size === 1) {
+    const dx = e.clientX - drag.x;
+    if (Math.abs(dx) > 4) drag.moved = true;
+    if (drag.moved) drag.sc.scrollLeft = drag.left - dx;
+  }
+}
+
+function onUp(e) {
+  touches.delete(e.pointerId);
+  if (!drag) return;
+  if (drag.moved) suppressClick = true;
+  if (touches.size === 0 || (drag.pinch && touches.size < 2)) drag = null;
+}
+
+function onWheel(e) {
+  const sc = tlScroller(e.target);
+  if (!sc || !(e.ctrlKey || e.metaKey)) return;
+  e.preventDefault();
+  const rect = sc.getBoundingClientRect();
+  zoomTimeline(timelineZoom * Math.exp(-e.deltaY / 200), e.clientX - rect.left, sc);
 }
 
 // Loaded by the section router on first visit, after <main> exists. Node tests have no such element.

@@ -9,13 +9,12 @@ import { mountViewport } from "./viewport.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const PAD = 16;
-const CORNER = 8;
 const MARKERS = ["sequence", "dependency", "handoff", "blocker", "lead"];
 const GLYPH = { done: "✓", doing: "●", todo: "○", blocked: "✕", defer: "–" };
 const FOLD_OPEN = "▾";
 const FOLD_SHUT = "▸";
 // Characters that fit one line of a task title (the box is 200 wide, less the 10 px inset and the 28 px copy slot).
-const TITLE_CHARS = 26;
+const TITLE_CHARS = 20;
 const CHAR_PX = 6.4;
 
 function el(tag, attrs, kids) {
@@ -164,7 +163,8 @@ function taskNode(n, p, pid) {
 }
 
 function jobNode(n, p, pid) {
-  const cls = "wfg-n wfg-pill wfg-m-" + (n.model || "other") + (n.running ? " wfg-run" : "");
+  const cls = "wfg-n wfg-pill wfg-m-" + (n.model || "other") + " wfg-s-" + (n.status || "todo") +
+    (n.running ? " wfg-run" : "");
   const label = n.more ? "+" + n.more : clip(n.label, 5);
   return el("g", { class: cls, tabindex: -1, role: "button", "aria-label": nodeLabel(n),
     "data-wf-item": n.id, "data-wf-task": n.task || "", "data-wf-pid": pid,
@@ -279,27 +279,17 @@ function nowMarks(now) {
   return [halo, bar, flag];
 }
 
-// Rounded orthogonal polyline: each interior corner is cut back by up to CORNER and joined with a quadratic curve.
+// Smooth path through the route points: one cubic Bezier per segment, with horizontal tangents at both ends.
 function roundPath(pts) {
   if (!Array.isArray(pts) || pts.length < 2) return null;
   let d = "M" + pts[0][0] + " " + pts[0][1];
-  for (let i = 1; i < pts.length - 1; i += 1) {
-    const p = pts[i];
+  for (let i = 1; i < pts.length; i += 1) {
     const a = pts[i - 1];
-    const b = pts[i + 1];
-    const l1 = Math.abs(p[0] - a[0]) + Math.abs(p[1] - a[1]);
-    const l2 = Math.abs(b[0] - p[0]) + Math.abs(b[1] - p[1]);
-    const r = Math.min(CORNER, l1 / 2, l2 / 2);
-    if (r <= 0) {
-      d += "L" + p[0] + " " + p[1];
-    } else {
-      d += "L" + (p[0] + Math.sign(a[0] - p[0]) * r) + " " + (p[1] + Math.sign(a[1] - p[1]) * r) +
-        "Q" + p[0] + " " + p[1] + " " + (p[0] + Math.sign(b[0] - p[0]) * r) + " " +
-        (p[1] + Math.sign(b[1] - p[1]) * r);
-    }
+    const b = pts[i];
+    const mx = (a[0] + b[0]) / 2;
+    d += "C" + mx + " " + a[1] + " " + mx + " " + b[1] + " " + b[0] + " " + b[1];
   }
-  const last = pts[pts.length - 1];
-  return d + "L" + last[0] + " " + last[1];
+  return d;
 }
 
 function edgeNode(e, d, lead) {
@@ -405,7 +395,8 @@ export function buildMap(graph, lay, pid) {
   const before = function (id) {
     return curIdx >= 0 && idx.has(id) && idx.get(id) <= curIdx;
   };
-  (g.edges || []).concat(g.sequence || []).forEach(function (e) {
+  // Only handoff, dependency and blocker edges are drawn (WORKFLOW-DIAGRAM-SPEC); sequence edges only steer the layout.
+  (g.edges || []).forEach(function (e) {
     if (!e || seenEdge.has(e.id)) return;
     seenEdge.add(e.id);
     const d = roundPath(routes[e.id]);
