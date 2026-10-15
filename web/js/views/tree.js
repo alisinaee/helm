@@ -25,11 +25,12 @@ function taskHtml(ctx, task) {
   if (task.blocked) flags.push(chipHtml("blocked", "danger"));
   const copy = taskCopyHtml(ctx.pid, ctx.snap, copyItem(task));
   return '<li class="wk-tree-task" data-wk-task="' + esc(task.id) + '" data-state="' + esc(task.state) + '">' +
-    '<div class="wk-tree-row"><span class="wk-id num">' + esc(task.id) + "</span>" +
-    '<a class="wk-title" href="' + esc(taskHref(ctx, task.id)) + '" aria-label="Task ' + esc(task.id) + ": " +
+    '<div class="wk-tree-row row-grid"><span class="wk-id num">' + esc(task.id) + "</span>" +
+    '<a class="wk-title rg-t" href="' + esc(taskHref(ctx, task.id)) + '" aria-label="Task ' + esc(task.id) + ": " +
     esc(task.title) + '" data-focus="wk-title-' + esc(task.id) +
     '">' + esc(task.title) + "</a>" +
-    '<span class="wk-word">' + esc(STATE_LABEL[task.state] || task.state) + "</span>" + flags.join("") + copy +
+    '<span class="wk-word rg-t">' + esc(STATE_LABEL[task.state] || task.state) + "</span>" +
+    '<span class="rg-chips">' + flags.join("") + "</span>" + copy +
     "</div>" + subtaskHtml(ctx, task) + "</li>";
 }
 
@@ -47,8 +48,8 @@ function phaseHtml(ctx, phaseId, name, tasks, phase) {
   return '<section class="wk-phase"><h3 class="wk-phase-h"><button type="button" class="wk-phase-btn" ' +
     'aria-expanded="' + open + '" aria-controls="' + bodyId + '" data-action="toggle-item" data-item="' + esc(key) +
     '" data-focus="wk-phase-' + esc(phaseId) + '"><span class="wk-caret" aria-hidden="true">' + (open ? "▾" : "▸") +
-    '</span><span class="wk-id num">' + esc(phaseId) + "</span> <span>" + esc(name) + "</span>" +
-    '<span class="wk-count num">' + done + "/" + tasks.length + "</span></button>" + copy + "</h3>" +
+    '</span><span class="wk-id num">' + esc(phaseId) + '</span><span class="rg-t">' + esc(name) + "</span>" +
+    '<span class="wk-count num rg-num">' + done + "/" + tasks.length + "</span></button>" + copy + "</h3>" +
     '<ul class="wk-tree-tasks" id="' + bodyId + '"' + (open ? "" : " hidden") + ">" +
     tasks.map(function (t) {
       return taskHtml(ctx, t);

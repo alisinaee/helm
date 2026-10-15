@@ -78,9 +78,10 @@ function noteRowHtml(note, pid) {
     (isOpen ? "true" : "false") +
     '" data-action="note-open" data-project="' + esc(pid) + '" data-name="' + esc(note.name) +
     '" data-focus="note-' + esc(pid) + "-" + esc(note.name) + '">' +
-    '<span class="act-sum">' + esc(note.title || note.name) + "</span> " +
-    '<span class="ov-sum">' + esc(note.name + " · " + (note.size == null ? MISSING : fmtCount(note.size)) +
-      " bytes · " + lines) + "</span></button>" +
+    '<span class="note-main"><span class="act-sum rg-t">' + esc(note.title || note.name) + '</span>' +
+    '<span class="ov-sum rg-t">' + esc(note.name) + "</span></span>" +
+    '<span class="ov-sum rg-num">' + esc(note.size == null ? MISSING : fmtCount(note.size) + " bytes") + "</span>" +
+    '<span class="ov-sum rg-num">' + esc(lines) + "</span></button>" +
     copyButton("research", note.name, note.title || note.name, { project: pid, sum: refSummary("research", note) }) +
     "</li>";
 }

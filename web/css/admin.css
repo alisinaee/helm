@@ -7,7 +7,7 @@
 .lim-edit, .tk-override { align-items: flex-end; }
 .lim-block, .lim-list, .spend-list, .rule-list { display: grid; gap: var(--sp-2); padding: 0; margin: 0; list-style: none; }
 .lim-row, .rule-row { display: grid; gap: var(--sp-2); padding: var(--sp-2) 0; border-bottom: 1px solid var(--track); }
-.rule-row { --rg: minmax(0, 1fr) 6rem 5.5rem; align-items: center; }
+.rule-row { --rg: minmax(0, 1fr) 6rem 4.5rem 5.5rem; align-items: center; }
 .lim-title, .rule-text, .spend-name { flex: 1 1 12rem; min-width: 0; }
 .lim-id, .rule-scope, .lim-note, .lim-readonly, .lim-label, .pace, .met-legend, .acc-line, .rule-count {
   margin: 0; font-size: var(--fs-12); color: var(--text-3); }

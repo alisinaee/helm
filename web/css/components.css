@@ -1090,6 +1090,21 @@ li:has(> .p-row) { display: grid; grid-template-columns: minmax(0, 1fr) var(--re
   --rg: minmax(0, 1fr);
 }
 
+.note-row.row-grid > .btn {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5.5rem 4.5rem;
+  column-gap: var(--sp-2);
+  align-items: center;
+  width: 100%;
+  text-align: left;
+}
+
+.note-main {
+  display: flex;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
 .log-date {
   color: var(--text-2);
 }
@@ -1159,6 +1174,65 @@ li:has(> .p-row) { display: grid; grid-template-columns: minmax(0, 1fr) var(--re
   overflow-wrap: anywhere;
 }
 
+.ov-main { container-type: inline-size; }
+/* Phase rows reflow to two lines when the card is narrow (the Overview main column is about 470 px at 1440). */
+@container (max-width: 560px) {
+.phase-grid,
+.phase-row {
+  grid-template-columns: minmax(0, 1fr) 72px 48px;
+  column-gap: var(--sp-2);
+  padding: 0 var(--sp-2);
+}
+
+/* Phase row: the name on the first line, the bar under it, then the items count, tokens left and percent. */
+.phase-row > .ph-name {
+  grid-column: 1 / 4;
+  grid-row: 1;
+}
+
+.phase-row > .ph-meter {
+  grid-column: 1 / 4;
+  grid-row: 2;
+}
+
+.phase-row > .ph-count {
+  grid-column: 1;
+  grid-row: 3;
+  padding-left: var(--sp-4);
+  text-align: left;
+}
+
+.phase-row > .ph-left {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.phase-row > .ph-pct {
+  grid-column: 3;
+  grid-row: 3;
+}
+
+.phase-row {
+  row-gap: 2px;
+}
+
+/* The state word and the running word stay for screen readers only; the glyph and chip show them. */
+.ph-word,
+.ph-run-word {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* The column header does not fit a 3-column grid; the stacked stats name themselves. */
+.ph-head {
+  display: none;
+}
+}
+
 /* ---------- Narrow screens (under 640 px): stacked usage band, phase stats under the title, task rows in two lines ---------- */
 
 @media (max-width: 639px) {
@@ -1169,61 +1243,6 @@ li:has(> .p-row) { display: grid; grid-template-columns: minmax(0, 1fr) var(--re
 
   .band-actions > .btn {
     align-self: flex-start;
-  }
-
-  .phase-grid,
-  .phase-row {
-    grid-template-columns: minmax(0, 1fr) 72px 48px;
-    column-gap: var(--sp-2);
-    padding: 0 var(--sp-2);
-  }
-
-  /* Phase row: name and percent on the first line, the items count and tokens left under the title. */
-  .phase-row > .ph-name {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .phase-row > .ph-meter {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .phase-row > .ph-pct {
-    grid-column: 3;
-    grid-row: 1;
-  }
-
-  .phase-row > .ph-count {
-    grid-column: 1;
-    grid-row: 2;
-    padding-left: var(--sp-4);
-    text-align: left;
-  }
-
-  .phase-row > .ph-left {
-    grid-column: 2 / 4;
-    grid-row: 2;
-  }
-
-  .phase-row {
-    row-gap: 2px;
-  }
-
-  /* The state word and the running word stay for screen readers only; the glyph and chip show them. */
-  .ph-word,
-  .ph-run-word {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
-
-  /* The column header does not fit a 3-column grid; the stacked stats name themselves. */
-  .ph-head {
-    display: none;
   }
 
   .task-row {
