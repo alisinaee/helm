@@ -523,7 +523,7 @@ def _session_start(project, data_dir, clock, started, now=None):
 # ------------------------------------------------------------------ head capture: UserPromptSubmit (HEAD-SPEC section 3)
 
 HEAD_MIN_WORDS = 4         # a prompt of 3 words or fewer is an ack and is not logged
-HEAD_SKIP_PREFIXES = ("<task-notification", "<system-reminder", "<command-")
+HEAD_SKIP_PREFIXES = ("<task-notification", "<system-reminder", "<command-", "<bash-", "<local-command-")
 HEAD_NOLOG = "//nolog"
 HEAD_REPLY_CHARS = 120
 HEAD_SESSION_CHARS = 120

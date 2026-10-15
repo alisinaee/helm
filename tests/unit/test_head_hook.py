@@ -87,6 +87,24 @@ class SkipRuleTests(HeadHookCase):
             self.assertIsNone(self.prompt(text), text)
         self.assertEqual(self.entries(), [])
 
+    def test_terminal_echo_prompts_are_skipped(self):
+        echoes = ("<bash-input>ls -la</bash-input>", "<bash-stdout>file.txt</bash-stdout>",
+                  "<bash-stderr>permission denied</bash-stderr>",
+                  "<local-command-caveat>Caveat: the messages below were generated locally</local-command-caveat>",
+                  "<command-name>/head</command-name> <command-message>head</command-message>",
+                  "<command-message>head is running</command-message> <command-args>save</command-args>",
+                  "<local-command-stdout>Goodbye, the session ended now</local-command-stdout>",
+                  "<system-reminder>keep the answer short for this session</system-reminder>")
+        for text in echoes:
+            self.assertIsNone(self.prompt(text), text)
+        self.assertEqual(self.entries(), [])
+
+    def test_a_normal_message_after_echoes_is_logged(self):
+        self.assertIsNone(self.prompt("<bash-stdout>noise from the terminal</bash-stdout>"))
+        reply = self.prompt("please fix the broken export button on the board")
+        self.assertIn("head: logged H1 (bug?)", self.context(reply))
+        self.assertEqual([r["id"] for r in self.entries() if r.get("t") == "e"], ["H1"])
+
     def test_nolog_prefix_is_not_logged(self):
         self.assertIsNone(self.prompt("//nolog we talked about the export button at length"))
         self.assertEqual(self.entries(), [])
