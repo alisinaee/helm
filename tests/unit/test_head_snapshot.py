@@ -8,8 +8,8 @@ from datetime import datetime, timedelta, timezone
 
 from roadmap.core import head as head_rules
 from roadmap.core import refs
-from roadmap.core.snapshot import (HEAD_BYTES_MAX, HEAD_LINKS_MAX, HEAD_SUM_MAX, _head_view, build_snapshot,
-                                   head_link_state, head_row)
+from roadmap.core.snapshot import (HEAD_BYTES_MAX, HEAD_LINKED_MAX, HEAD_LINKS_MAX, HEAD_SUM_MAX, HEAD_TITLE_MAX,
+                                   _head_size, _head_view, build_snapshot, head_link_state, head_row)
 
 NOW = datetime(2026, 10, 15, 12, 0, 0, tzinfo=timezone.utc)
 
@@ -268,6 +268,98 @@ class HeadSuggest(unittest.TestCase):
         raw = json.dumps(head_view, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         self.assertLessEqual(len(raw), HEAD_BYTES_MAX)
         self.assertEqual(head_view["counts"]["open"], 40)
+
+
+LINK_TASKS = [{"id": "R7.31", "title": "Head section design", "state": "partial"},
+              {"id": "R1", "title": "Done thing", "state": "done"},
+              {"id": "R5", "title": "Todo thing", "state": "todo"}]
+LINK_ISSUES = [{"id": "I4", "title": "Blocker", "status": "open"}, {"id": "I5", "title": "Closed", "status": "closed"}]
+LINK_JOBS = [{"id": "j1", "title": "Build", "model": "Haiku", "task": "R7.31", "status": "running"},
+             {"id": "j2", "title": "Old", "model": "Opus", "task": "R1", "status": "done"},
+             {"id": "j5", "title": "Work", "model": "Sonnet", "task": "R5", "status": "running"}]
+
+
+def linked_view(records, tasks=LINK_TASKS, issues=LINK_ISSUES, jobs=LINK_JOBS):
+    link_state = head_link_state(tasks, jobs, issues)
+    return _head_view(records, link_state, NOW, tasks=tasks, issues=issues, jobs=jobs)
+
+
+class HeadLinkedProgAskOf(unittest.TestCase):
+    def test_links_resolve_with_title_status_and_running_jobs_only(self):
+        records = [entry("H1", 10, "Ask about head"),
+                   update("H1", 9, links=["+task:R7.31", "+task:R1", "+issue:I4", "+job:j1"])]
+        row = linked_view(records)["rows"][0]
+        by_ref = {item["ref"]: item for item in row["linked"]}
+        self.assertEqual(by_ref["task:R7.31"], {"ref": "task:R7.31", "title": "Head section design",
+                                                "status": "partial",
+                                                "jobs": [{"id": "j1", "model": "Haiku", "state": "running"}]})
+        self.assertEqual(by_ref["task:R1"]["jobs"], [])
+        self.assertEqual(by_ref["issue:I4"], {"ref": "issue:I4", "title": "Blocker", "status": "open", "jobs": []})
+        self.assertEqual(by_ref["job:j1"]["jobs"], [{"id": "j1", "model": "Haiku", "state": "running"}])
+        self.assertEqual(row["links"], ["task:R7.31", "task:R1", "issue:I4"])
+        self.assertEqual(row["status"], "doing")
+
+    def test_unresolved_refs_are_left_out_and_empty_linked_is_absent(self):
+        row = linked_view([entry("H1", 10, "Ask"), update("H1", 9, links=["+task:R99"])])["rows"][0]
+        self.assertNotIn("linked", row)
+        self.assertNotIn("prog", row)
+        self.assertEqual(row["links"], ["task:R99"])
+
+    def test_link_title_is_cut_to_sixty_characters(self):
+        tasks = [{"id": "R9", "title": "t" * 200, "state": "todo"}]
+        row = linked_view([entry("H1", 10, "Ask"), update("H1", 9, links=["+task:R9"])], tasks=tasks,
+                          jobs=[])["rows"][0]
+        self.assertEqual(len(row["linked"][0]["title"]), HEAD_TITLE_MAX)
+
+    def test_prog_counts_done_over_bound_task_links_only(self):
+        records = [entry("H1", 10, "Ask"),
+                   update("H1", 9, links=["+task:R7.31", "+task:R1", "+issue:I4", "+task:R99"])]
+        row = linked_view(records)["rows"][0]
+        self.assertEqual(row["prog"], {"done": 1, "total": 2})
+
+    def test_task_with_a_running_job_makes_the_ask_doing(self):
+        records = [entry("H1", 10, "Ask"), update("H1", 9, links=["+task:R5"])]
+        row = linked_view(records)["rows"][0]
+        self.assertEqual(row["status"], "doing")
+        self.assertEqual(row["linked"][0]["jobs"], [{"id": "j5", "model": "Sonnet", "state": "running"}])
+
+    def test_head_link_state_marks_running_jobs_and_issues(self):
+        state = head_link_state(LINK_TASKS, LINK_JOBS, LINK_ISSUES)
+        self.assertEqual(state["task:R5"], "running")
+        self.assertEqual(state["task:R7.31"], "running")
+        self.assertEqual(state["task:R1"], "done")
+        self.assertEqual(state["issue:I4"], "open")
+        self.assertEqual(state["issue:I5"], "done")
+
+    def test_titles_then_rows_are_dropped_to_fit_and_prog_stays(self):
+        tasks = [{"id": "T%d" % k, "title": "L" * 200, "state": "partial"} for k in range(240)]
+        records = [entry("H%d" % i, 30 + i, "Ask %d" % i) for i in range(1, 41)]
+        records += [update("H%d" % i, 1, links=["+task:T%d" % (6 * (i - 1) + k) for k in range(6)])
+                    for i in range(1, 41)]
+        view = linked_view(records, tasks=tasks, issues=[], jobs=[])
+        self.assertLessEqual(_head_size({k: v for k, v in view.items() if k != "askOf"}), HEAD_BYTES_MAX)
+        self.assertEqual(view["counts"]["open"], 40)
+        self.assertLess(len(view["rows"]), 40)
+        self.assertTrue(all(row["prog"] == {"done": 0, "total": 6} for row in view["rows"]))
+        self.assertTrue(all("title" not in item for row in view["rows"] for item in row.get("linked", [])))
+        self.assertLessEqual(len(view["rows"][0]["linked"]), HEAD_LINKED_MAX)
+
+    def test_ask_of_lists_asks_per_task_and_is_top_level_only(self):
+        records = [entry("H1", 30, "a"), update("H1", 29, links=["+task:R1"]),
+                   entry("H2", 20, "b"), update("H2", 19, links=["+task:R1", "+task:R2"]),
+                   entry("H3", 10, "c")]
+        result = snap(records)
+        self.assertEqual(result["askOf"], {"R1": ["H1", "H2"], "R2": ["H2"]})
+        self.assertNotIn("askOf", result["head"])
+
+    def test_ask_of_absent_without_head_records_and_empty_without_asks(self):
+        self.assertNotIn("askOf", build_snapshot({}, {}, NOW))
+        self.assertEqual(snap([entry("H1", 5, "No links")])["askOf"], {})
+
+    def test_ask_backlinks_keeps_the_newest_five_per_task(self):
+        entries = [{"id": "H%d" % i, "links": ["task:R1"]} for i in range(1, 8)]
+        self.assertEqual(refs.ask_backlinks(entries), {"R1": ["H3", "H4", "H5", "H6", "H7"]})
+        self.assertEqual(refs.ask_backlinks([]), {})
 
 
 if __name__ == "__main__":
