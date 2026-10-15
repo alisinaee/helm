@@ -18,6 +18,8 @@ export const SECTIONS = [
   { id: "rules", label: "Rules", icon: "rules", module: "./views/rules.js", bottom: false },
   { id: "research", label: "Research", icon: "research", module: "./views/research.js", bottom: false },
   { id: "activity", label: "Activity", icon: "activity", module: "./views/activity.js", bottom: false },
+  // Git (R7.29 W1.c). The sprite has no branch glyph yet, so it reuses the workflow icon.
+  { id: "git", label: "Git", icon: "workflow", module: "./views/git.js", bottom: false },
 ];
 
 export const SETTINGS = { id: "settings", label: "Settings", icon: "settings", module: "./views/settings.js",

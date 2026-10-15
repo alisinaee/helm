@@ -1,0 +1,6 @@
+.git-list{list-style:none;margin:0;padding:0}
+.git-files{--rg:1.75rem minmax(0,1fr) 3rem}
+.git-log{--rg:4.5rem minmax(0,1fr) 4.5rem}
+.git-br{--rg:minmax(0,1fr) 4.5rem 4.5rem}
+.git-form{display:grid;gap:var(--sp-2)}
+.git-form input,.git-form textarea{width:100%}
