@@ -550,6 +550,7 @@ def current_project():
 
 def _load_ops():
     from roadmap.services import cmdops  # noqa: F401  (importing registers the control, rules and budget ops)
+    from roadmap.services import gitops  # noqa: F401  (GIT-SPEC step 3: registers the git write ops)
 
 
 OPS = {

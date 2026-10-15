@@ -22,6 +22,7 @@ CURRENT = {
     "queue": 1,
     "features": 1,
     "head": 1,
+    "git": 1,
 }
 
 

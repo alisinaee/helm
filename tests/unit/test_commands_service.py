@@ -15,6 +15,7 @@ class RegistryTests(CmdCase):
             "budget.set", "comment.add", "control.override", "control.resume", "control.stop",
             "feature.accept", "feature.add", "feature.link", "feature.move", "feature.rm", "feature.set",
             "feature.unlink",
+            "git.branch", "git.commit", "git.push", "git.revert", "git.switch",
             "head.accept", "head.bind", "head.convert", "head.forget", "head.log", "head.merge", "head.review", "head.set", "head.split", "head.triage", "head.unbind",
             "issue.close",
             "issue.link", "issue.new", "limit.rm", "limit.set", "phase.approve", "plan.move", "question.answer",
