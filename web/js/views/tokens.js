@@ -43,7 +43,8 @@ function spendTableHtml(vm, snaps) {
   const rows = snaps.map(function (snap) {
     const week = snap.weekUse || {};
     const share = week.estPts == null ? MISSING : "≈ " + fmtPercent(week.estPts);
-    return '<li class="row-grid tk-spend"><span class="rg-t">' + esc(names[snap.id] || snap.title || snap.id) +
+    const name = names[snap.id] || snap.title || snap.id;
+    return '<li class="row-grid tk-spend"><span class="rg-t" title="' + esc(name) + '">' + esc(name) +
       '</span><span class="rg-num num">' + esc(fmtTokens(week.tokK)) + '</span><span class="rg-num num">' +
       esc(share) + '</span><span class="rg-num num">' + esc(reset) + "</span></li>";
   }).join("");

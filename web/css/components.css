@@ -469,8 +469,10 @@
   white-space: nowrap
 }
 .page-note { max-width: 90ch }
-.act-tok { text-align: right }
 .tk-spend { --rg: minmax(0, 1fr) 5.5rem 6.5rem 7rem 6.5rem; min-height: var(--h-row) }
+.tk-spend > :last-child { white-space: normal; overflow-wrap: anywhere }
+.rg-share { --rg: minmax(0, 1fr) auto 4.5rem 5.5rem }
+.rg-weekly { --rg: auto minmax(0, 1fr) auto auto }
 .placeholder {
   color: var(--text-2);
   padding: var(--sp-2) 0
@@ -801,6 +803,7 @@
 .ref-copy:hover,.ref-copy:focus-visible,.row-grid:hover .ref-copy{opacity:1}
 @media (pointer:coarse){.ref-copy{opacity:1}}
 .ref-text{width:100%;min-width:0}
+@media (pointer:coarse){.ref-copy{position:relative}.ref-copy::before{content:"";position:absolute;inset:-10px}}
 .ov-h:has(> .ref-copy) { display: flex; align-items: center; gap: var(--sp-2) }
 li:has(> .p-row) { display: grid; grid-template-columns: minmax(0, 1fr) var(--ref-col); align-items: center }
 .rc-move { --rg: 4.5rem 4.5rem minmax(0, 1fr); margin: 0; }

@@ -45,10 +45,11 @@
 .wf-sw-agy{background:var(--m-agy)}
 .wf-sw-blocked{background:var(--danger)}
 .wf-sw-project{background:var(--info)}
-.wf-cols{--rg:5.5rem 4.5rem minmax(0,1fr) 7rem 4rem 4.5rem 4.5rem 4.5rem;padding:var(--sp-2);border:1px solid var(--line);border-radius:var(--r-card)}
+.wf-cols{--rg:5.5rem 4.5rem minmax(0,1fr) 7rem 4rem 4.5rem 4.5rem auto;padding:var(--sp-2);border:1px solid var(--line);border-radius:var(--r-card)}
 .wf-cols>.wf-hint{grid-column:1/-1}
 .wf-table{width:100%;min-width:42rem;border-collapse:collapse;table-layout:fixed;font-size:var(--fs-13)}
 .wf-table th,.wf-table td{padding:var(--sp-1) var(--sp-2);border-bottom:1px solid var(--track);text-align:left;overflow:hidden;white-space:nowrap}
+.wf-table .rg-num{text-align:right}
 .wf-table th{font-size:var(--fs-11);color:var(--text-3)}
 .wf-table th:nth-child(1){width:5.5rem}
 .wf-table th:nth-child(2){width:4.5rem}

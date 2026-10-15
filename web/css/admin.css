@@ -8,9 +8,9 @@
 .lim-row { display: grid; }
 .lim-row, .rule-row { gap: var(--sp-2); padding: var(--sp-2) 0; border-bottom: 1px solid var(--track); }
 .rule-row { --rg: minmax(0, 1fr) 6rem 4.5rem 5.5rem; align-items: center; }
-.lim-title, .rule-text, .spend-name { flex: 1 1 12rem; min-width: 0 }
+.lim-title, .rule-text { flex: 1 1 12rem; min-width: 0 }
 .rule-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lim-id, .rule-scope, .lim-note, .lim-readonly, .lim-label, .pace, .met-legend, .acc-line, .rule-count {
+.lim-id, .rule-scope, .lim-note, .lim-readonly, .lim-label, .pace, .rule-count {
   margin: 0; font-size: var(--fs-12); color: var(--text-3) }
 .lim-field { display: grid; gap: var(--sp-1); min-width: 0 }
 .lim-select, .lim-num, .lim-text, .rule-input {
@@ -23,20 +23,12 @@
 .lim-value, .rules-form, .lim-stepper { display: grid; gap: var(--sp-2) }
 .lim-preview { margin: 0; font-size: var(--fs-12); color: var(--text-2) }
 .lim-edit-btn { display: none; }
-.met-row { display: grid; gap: var(--sp-3); grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)) }
 .met { display: grid; gap: var(--sp-2); min-width: 0 }
-.met-label { font-weight: 600 }
-.met-value { font-variant-numeric: tabular-nums }
-.mbar { position: relative }
-.mrail { position: absolute; left: 0; top: -4px; bottom: -4px }
 .mtick { position: absolute; right: 0; top: 0; bottom: 0; width: 2px; background: var(--text-1) }
-.mtick-day { width: 0; background: none; border-right: 2px dashed var(--text-2) }
 .met[data-state="unknown"] .meter-fill { background: var(--unknown) }
-.met[data-state="unknown"] .met-value { color: var(--unknown) }
 .tk-table { width: 100%; border-collapse: collapse; font-size: var(--fs-13) }
 .tk-table th, .tk-table td { text-align: left; padding: var(--sp-1) var(--sp-2); border-bottom: 1px solid var(--track) }
 .tk-table td { text-align: right }
-.spend-val { font-variant-numeric: tabular-nums; color: var(--text-2) }
 .acc details { margin-top: var(--sp-1); font-size: var(--fs-12); color: var(--text-2) }
 :root[data-density="compact"] .lim-row, :root[data-density="compact"] .rule-row { padding: var(--sp-1) 0 }
 @media (max-width: 599px) {

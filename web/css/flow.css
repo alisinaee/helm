@@ -33,6 +33,7 @@
   overflow-wrap: anywhere; font-size: var(--fs-13); color: var(--text-1) }
 .nz-kind { font-size: var(--fs-11); color: var(--text-3) }
 .mt-row { display: grid; gap: var(--sp-1) }
+.mt-text { text-align: right; font-variant-numeric: tabular-nums }
 .mt-label, .mt-text, .mt-pace, .mt-line { margin: 0; font-size: var(--fs-12); color: var(--text-2) }
 .act-row { display: grid; grid-template-columns: minmax(0, 1fr) 9.5rem; gap: var(--sp-1) var(--sp-2); align-items: center;
   min-height: var(--h-row); font-size: var(--fs-13); }

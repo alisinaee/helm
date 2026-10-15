@@ -518,7 +518,7 @@ export function timelineSvg(model) {
     '<text class="wf-now-t" x="' + xNow + '" y="10" text-anchor="middle">now</text></svg>';
   const labels = model.lanes.map(laneLabelHtml).join("");
   return '<div class="wf-scroll"><div class="wf-grid">' + '<div class="wf-corner"></div>' + axis +
-    '<div class="wf-g wf-corner wf-gh"><span>Jobs</span><span>Tokens</span></div>' +
+    '<div class="wf-g wf-corner wf-gh"><span class="wf-gn">Jobs</span><span class="wf-gt">Tokens</span></div>' +
     '<div class="wf-labels">' + labels + "</div>" + plot + '<div class="wf-gutters">' + gutterHtml(model) +
     "</div></div></div>";
 }
