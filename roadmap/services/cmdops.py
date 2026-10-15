@@ -19,6 +19,7 @@ from roadmap.services import budget as budget_service
 from roadmap.store import config as config_store
 from roadmap.store import schema
 from roadmap.services import featops  # noqa: F401  (WP52: registers the feature ops)
+from roadmap.services import headops  # noqa: F401  (HEAD-SPEC H4: registers the head ops)
 
 LOOSENING = frozenset(["control.resume", "control.override", "budget.set", "task.cap", "limit.set", "limit.rm",
                        "phase.approve", "rules.add", "rules.rm", "rules.sync"])
