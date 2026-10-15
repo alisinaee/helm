@@ -35,7 +35,7 @@ HEAD_LINKED_MAX = 6                                 # resolved links per head ro
 HEAD_TITLE_MAX = 60                                 # title characters per resolved link
 HEAD_JOB_STATES = ("running", "queued")             # the only jobs a resolved link lists
 HEAD_PREV_MAX = 3                                   # earlier sessions in the head key
-HEAD_BYTES_MAX = 3072                               # the head key as compact JSON; link titles, then rows, are dropped to fit
+HEAD_BYTES_MAX = 8192                               # the head key as compact JSON; link titles, then rows, are dropped to fit
 
 
 def _missing(name):
@@ -198,8 +198,11 @@ def _resolve_links(entry, index, live_jobs):
             jobs = [j for j in live_jobs if j.get("task") == ident]
         else:
             jobs = []
-        out.append({"ref": ref, "title": info["title"][:HEAD_TITLE_MAX], "status": info["status"],
-                    "jobs": [{"id": j["id"], "model": j["model"], "state": j["status"]} for j in jobs]})
+        item = {"ref": ref, "status": info["status"],
+                "jobs": [{"id": j["id"], "model": j["model"], "state": j["status"]} for j in jobs]}
+        if not out:  # only the first link carries its title; the rest keep ref, status and jobs
+            item["title"] = info["title"][:HEAD_TITLE_MAX]
+        out.append(item)
     return out
 
 

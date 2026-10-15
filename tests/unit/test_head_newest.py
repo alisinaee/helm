@@ -2,7 +2,7 @@
 Pure: records are built by hand, no file, network or service. Mirrors the setup in tests/unit/test_head_snapshot.py.
 
 Checks, with 40 synthetic head entries H1..H40 whose ts increases (H40 is the newest):
-(a) H40 is in the returned rows, (b) the serialized head block is <= HEAD_BYTES_MAX (3072) bytes,
+(a) H40 is in the returned rows, (b) the serialized head block is <= HEAD_BYTES_MAX bytes,
 (c) the rows keep the ids in descending order (newest first).
 
 Current code: (a) and (b) pass; (c) fails (open rows are listed oldest first), so only (c) is marked expectedFailure.
@@ -14,6 +14,8 @@ import json
 import re
 import unittest
 from datetime import datetime, timedelta, timezone
+
+from unittest import mock
 
 from roadmap.core.snapshot import HEAD_BYTES_MAX, build_snapshot
 
@@ -46,7 +48,9 @@ def id_number(row_id):
 class HeadNewestKept(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.full = build_snapshot({}, {}, NOW, head_records=newest_records())
+        # Cap forced to the old 3072 so the 40 rows overflow and the newest-first trim is exercised.
+        with mock.patch("roadmap.core.snapshot.HEAD_BYTES_MAX", 3072):
+            cls.full = build_snapshot({}, {}, NOW, head_records=newest_records())
         cls.head = cls.full["head"]
         cls.ids = [row["id"] for row in cls.head["rows"]]
 
