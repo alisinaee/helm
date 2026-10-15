@@ -148,17 +148,25 @@ function shellQuote(text) {
   return "'" + text.replace(/'/g, "'\\''") + "'";
 }
 
-function launchCommand(path) {
-  return "cd " + shellQuote(path) + " && claude \"roadmap watch\"";
+function launchLine(dir) {
+  return "cd " + dir + " && claude \"roadmap watch\"";
 }
+
+// The panel shows the path with the home folder as ~ (macOS, Linux and Windows). The real command is kept in memory
+// for the Copy command button only, so it never reaches the markup.
+export function redactPath(path) {
+  return path.replace(/^\/(Users|home)\/[^/]+/, "~").replace(/^[A-Za-z]:\\Users\\[^\\]+/, "~");
+}
+
+const launchByProject = new Map();
 
 // Copy the launch command. Without clipboard access the command stays on screen to select by hand.
 export function copyLaunch(el) {
-  const cmd = el.getAttribute("data-cmd") || "";
+  const cmd = launchByProject.get(el.getAttribute("data-project")) || "";
   const report = function (ok) {
     el.textContent = ok ? "Copied" : "Copy failed. Please copy manually.";
   };
-  if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
+  if (!cmd || !navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
     report(false);
     return;
   }
@@ -196,11 +204,12 @@ function queueHtml(task, snap, vm, now) {
     return sectionHtml("Run", '<p class="d-meta" role="status">' + esc(word) + "</p>" +
       '<div class="d-btns">' + buttons + "</div>");
   }
-  const cmd = launchCommand(snap.project.path);
-  const copy = '<button type="button" class="btn" data-side="copy-launch" data-cmd="' + esc(cmd) +
+  launchByProject.set(project, launchLine(shellQuote(snap.project.path)));
+  const shown = launchLine(redactPath(snap.project.path));
+  const copy = '<button type="button" class="btn" data-side="copy-launch" data-project="' + esc(project) +
     '" aria-label="Copy launch command" data-focus="copy-launch">Copy command</button>';
   return sectionHtml("Run", '<p class="d-meta" role="status">' + esc(word) + "</p>" +
-    '<p class="d-meta"><code>' + esc(cmd) + "</code></p>" + '<div class="d-btns">' + buttons + copy + "</div>");
+    '<p class="d-meta"><code>' + esc(shown) + "</code></p>" + '<div class="d-btns">' + buttons + copy + "</div>");
 }
 
 function capHtml(task, snap, vm, now) {
