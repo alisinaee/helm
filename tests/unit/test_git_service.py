@@ -1,9 +1,11 @@
 """Git core (GIT-SPEC step 1): validation, runner guards, parsers, redaction and caps. Repos are real temp repos."""
 
+import io
 import os
 import shutil
 import subprocess
 import tempfile
+import time
 import unittest
 from unittest import mock
 
@@ -19,6 +21,24 @@ def _sh(cwd, *args):
     subprocess.run(["git"] + list(args), cwd=cwd, env=env, check=True, capture_output=True)
 
 
+def _fake_git(test, body):
+    """Point the runner at a shell script that runs body instead of git. Returns the patch to use in a with."""
+    folder = tempfile.mkdtemp()
+    test.addCleanup(shutil.rmtree, folder, True)
+    path = os.path.join(folder, "git")
+    with open(path, "w") as fh:
+        fh.write("#!/bin/sh\n" + body + "\n")
+    os.chmod(path, 0o755)
+    return mock.patch.object(git, "_GIT", path)
+
+
+class _Pipe(io.BytesIO):
+    """A BytesIO that stays open after the runner closes it, so the test can read how far it was consumed."""
+
+    def close(self):
+        pass
+
+
 class ValidationTests(unittest.TestCase):
     def test_valid_refs(self):
         self.assertEqual(git.valid_ref("agent/R7.12"), "agent/R7.12")
@@ -26,7 +46,7 @@ class ValidationTests(unittest.TestCase):
 
     def test_invalid_refs_are_usage_errors(self):
         for bad in ["", "-x", "--force", "a..b", "a//b", "/a", "a/", ".hidden", "a/.b", "x.lock", "a b", "a@{1}",
-                    "a" * 101, None]:
+                    "a" * 101, None, "main\n"]:
             with self.assertRaises(RoadmapError, msg=repr(bad)) as ctx:
                 git.valid_ref(bad)
             self.assertEqual(ctx.exception.exit, EXIT_USAGE)
@@ -34,7 +54,7 @@ class ValidationTests(unittest.TestCase):
     def test_sha_is_7_to_40_hex(self):
         self.assertEqual(git.valid_sha("1a2b3c4"), "1a2b3c4")
         self.assertEqual(git.valid_sha("A" * 40), "A" * 40)
-        for bad in ["1a2b3c", "1a2b3c4d" * 6, "xyz1234", "--stat", ""]:
+        for bad in ["1a2b3c", "1a2b3c4d" * 6, "xyz1234", "--stat", "", "1a2b3c4\n"]:
             with self.assertRaises(RoadmapError):
                 git.valid_sha(bad)
 
@@ -42,7 +62,7 @@ class ValidationTests(unittest.TestCase):
         root = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, root, True)
         self.assertEqual(git.valid_rel_path(root, "a/b.txt"), os.path.join("a", "b.txt"))
-        for bad in ["", "/etc/passwd", "../x", "a/../../x", ".", "a\0b"]:
+        for bad in ["", "/etc/passwd", "../x", "a/../../x", ".", "a\0b", "-rf", "--config=x", "a\nb", "a\rb"]:
             with self.assertRaises(RoadmapError, msg=repr(bad)):
                 git.valid_rel_path(root, bad)
 
@@ -62,6 +82,11 @@ class RedactAndCapTests(unittest.TestCase):
         self.assertEqual(git.redact("https://user:tok123@github.com/a/b.git"), "https://***@github.com/a/b.git")
         self.assertEqual(git.redact("push to https://tok@host/x failed"), "push to https://***@host/x failed")
         self.assertEqual(git.redact("git@github.com:a/b.git"), "git@github.com:a/b.git")
+
+    def test_any_scheme_and_case_is_hidden(self):
+        self.assertEqual(git.redact("ssh://git:tok@host/a"), "ssh://***@host/a")
+        self.assertEqual(git.redact("HTTPS://user:tok@host/a"), "HTTPS://***@host/a")
+        self.assertEqual(git.redact("https://user@name:secret@host/a"), "https://***@host/a")
 
     def test_secret_names(self):
         for name in [".env", ".env.local", "server.pem", "my_key.txt", "id_ed25519", "keyboard.js"]:
@@ -106,13 +131,25 @@ class ParserTests(unittest.TestCase):
         self.assertIsNone(st["upstream"])
         self.assertEqual((st["ahead"], st["behind"]), (0, 0))
 
+    def test_short_porcelain_records_are_skipped_not_crashed(self):
+        st = git.parse_status("# branch.head main\0# branch.ab +1\0# branch.ab x y\0"
+                              "1 M.\0u UU\0? notes.txt\0" "2 R.\0")
+        self.assertEqual(st["branch"], "main")
+        self.assertEqual((st["ahead"], st["behind"]), (0, 0))
+        self.assertEqual((st["staged"], st["changed"], st["conflicts"]), ([], [], []))
+        self.assertEqual(st["untracked"], ["notes.txt"])
+
     def test_parse_log_task_and_job_trailers(self):
-        text = ("\x1eaaa111\x1fAli\x1f1700000000\x1fFirst\x1fFirst\n\nTask: R7.12\nJob: j12\n"
-                "\x1ebbb222\x1fAli\x1ftext\x1fPlain\x1fPlain\n")
+        text = ("aaa111\x00Ali\x001700000000\x00First\0First\n\nTask: R7.12\nJob: j12\0\n"
+                "bbb222\x00Ali\x00text\0Plain\0Plain\0\n")
         rows = git.parse_log(text)
         self.assertEqual(rows[0], {"sha": "aaa111", "author": "Ali", "time": 1700000000, "subject": "First",
                                    "task": "R7.12", "job": "j12"})
         self.assertEqual((rows[1]["time"], rows[1]["task"], rows[1]["job"]), (None, None, None))
+
+    def test_parse_log_redacts_author_and_subject(self):
+        rows = git.parse_log("aaa111\x00Ali\x001\x00see https://u:tok@host/a\0body\0\n")
+        self.assertEqual(rows[0]["subject"], "see https://***@host/a")
 
     def test_parse_branches(self):
         text = ("main\x1f*\x1forigin/main\x1fahead 2, behind 1\x1f1700000001\n"
@@ -196,44 +233,145 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual((ctx.exception.message, ctx.exception.exit), ("busy, retry", EXIT_CONFLICT))
         self.assertTrue(os.path.exists(lock))
 
-    def test_env_drops_caller_git_variables_and_sets_fixed_ones(self):
-        with mock.patch.dict(os.environ, {"GIT_DIR": "/nowhere", "GIT_CONFIG_GLOBAL": "/nowhere"}):
+    def test_env_drops_every_git_variable_and_sets_fixed_ones(self):
+        leaked = {"GIT_DIR": "/nowhere", "GIT_CONFIG_GLOBAL": "/nowhere", "GIT_SSH_COMMAND": "evil",
+                  "GIT_SSH": "evil", "GIT_EXTERNAL_DIFF": "evil", "GIT_EXEC_PATH": "/x", "GIT_PROXY_COMMAND": "evil",
+                  "GIT_ASKPASS": "evil", "SSH_ASKPASS": "evil", "GIT_TRACE": "/x", "GIT_TRACE_PACKET": "/x",
+                  "GIT_CURL_VERBOSE": "1", "GIT_TRACE2_EVENT": "/x"}
+        with mock.patch.dict(os.environ, leaked):
             env = git._env(optional_locks=True)
-        self.assertNotIn("GIT_DIR", env)
-        self.assertNotIn("GIT_CONFIG_GLOBAL", env)
+        for name in leaked:
+            self.assertNotIn(name, env)
+        self.assertEqual(env["GIT_NO_LAZY_FETCH"], "1")
         self.assertEqual(env["GIT_TERMINAL_PROMPT"], "0")
         self.assertEqual(env["GIT_PAGER"], "cat")
         self.assertEqual(env["LC_ALL"], "C")
         self.assertEqual(env["GIT_OPTIONAL_LOCKS"], "0")
         self.assertEqual(git._env(optional_locks=False)["GIT_OPTIONAL_LOCKS"], "1")
 
-    def test_timeout_and_big_output_are_errors(self):
-        self._repo()
-        with mock.patch.object(git.subprocess, "run", side_effect=subprocess.TimeoutExpired("git", 5)):
-            with self.assertRaises(RoadmapError) as ctx:
-                git.run(self.root, ["status"])
-        self.assertEqual(ctx.exception.code, "git_timeout")
-        fake = subprocess.CompletedProcess(["git"], 0, b"x" * (git.STDOUT_CAP + 1), b"")
-        with mock.patch.object(git.subprocess, "run", return_value=fake):
-            with self.assertRaises(RoadmapError) as ctx:
-                git.run(self.root, ["status"])
-        self.assertEqual((ctx.exception.code, ctx.exception.exit), ("git_too_big", EXIT_EXTERNAL))
+    def test_reads_pass_fsmonitor_and_credential_flags_first(self):
+        seen = os.path.join(self.home, "argv.txt")
+        with _fake_git(self, "printf '%s\\n' \"$@\" > '" + seen + "'"):
+            git.run(self.root, ["status"])
+        with open(seen) as fh:
+            argv = fh.read().splitlines()
+        self.assertEqual(argv, ["-c", "core.fsmonitor=false", "-c", "credential.helper=", "status"])
 
-    def test_stderr_is_cut_and_redacted(self):
-        secret = "https://user:tok@host/x " + "e" * 600
-        fake = subprocess.CompletedProcess(["git"], 1, b"", secret.encode())
-        with mock.patch.object(git.subprocess, "run", return_value=fake):
-            with self.assertRaises(RoadmapError) as ctx:
-                git.run(self.root, ["fetch"])
-        self.assertNotIn("tok", ctx.exception.message)
-        self.assertIn("https://***@host/x", ctx.exception.message)
-        self.assertLessEqual(len(ctx.exception.message), git.STDERR_CUT)
+    def test_status_never_runs_a_configured_fsmonitor_hook(self):
+        self._repo()
+        marker = os.path.join(self.home, "marker")
+        hook = os.path.join(self.home, "hook.sh")
+        with open(hook, "w") as fh:
+            fh.write("#!/bin/sh\ntouch '%s'\n" % marker)
+        os.chmod(hook, 0o755)
+        _sh(self.root, "config", "core.fsmonitor", hook)
+        git.read_status(self.root)
+        self.assertFalse(os.path.exists(marker))
+
+    def test_a_commit_message_cannot_forge_a_log_row(self):
+        self._repo()
+        _sh(self.root, "commit", "-q", "--allow-empty", "-m",
+            "Subject\n\nBody\x1e1111111\x1fEvil\x1fEvil\x1fEvil\nTask: R9.99\n")
+        log = git.read_log(self.root, limit=5)
+        self.assertEqual(len(log), 2)
+        self.assertEqual(log[0]["subject"], "Subject")
+        self.assertEqual(log[0]["task"], "R9.99")
+        self.assertNotIn("1111111", [row["sha"] for row in log])
+
+    def test_commit_subject_secret_is_redacted(self):
+        self._repo()
+        _sh(self.root, "commit", "-q", "--allow-empty", "-m", "push https://user:tok@host/a")
+        log = git.read_log(self.root, limit=1)
+        self.assertEqual(log[0]["subject"], "push https://***@host/a")
+        self.assertNotIn("tok", log[0]["subject"])
+
+    def test_read_log_limit_must_be_a_number(self):
+        self._repo()
+        with self.assertRaises(RoadmapError) as ctx:
+            git.read_log(self.root, limit="x")
+        self.assertEqual((ctx.exception.code, ctx.exception.exit), ("usage", EXIT_USAGE))
 
     def test_missing_git_is_external_error(self):
         with mock.patch.object(git, "_GIT", None), mock.patch.object(git.shutil, "which", return_value=None):
             with self.assertRaises(RoadmapError) as ctx:
                 git.git_path()
         self.assertEqual(ctx.exception.exit, EXIT_EXTERNAL)
+
+
+class CappedRunnerTests(unittest.TestCase):
+    """The runner against real pipes: a fake git script for timeouts and output caps, a real repo for read_log."""
+
+    def setUp(self):
+        self.root = os.path.realpath(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.root, True)
+
+    def test_timeout_kills_git_and_is_an_error(self):
+        with _fake_git(self, "sleep 30"):
+            started = time.monotonic()
+            with self.assertRaises(RoadmapError) as ctx:
+                git.run(self.root, ["status"], timeout=1)
+        self.assertEqual(ctx.exception.code, "git_timeout")
+        self.assertLess(time.monotonic() - started, 10)
+
+    def test_stdout_past_the_cap_is_an_error_and_the_child_stops(self):
+        with _fake_git(self, "head -c %d /dev/zero" % (git.STDOUT_CAP * 3)):
+            started = time.monotonic()
+            with self.assertRaises(RoadmapError) as ctx:
+                git.run(self.root, ["status"])
+        self.assertEqual((ctx.exception.code, ctx.exception.exit), ("git_too_big", EXIT_EXTERNAL))
+        self.assertLess(time.monotonic() - started, 10)
+
+    def test_pump_stops_reading_at_the_cap(self):
+        stream = _Pipe(b"x" * (10 * 1024 * 1024))
+        calls = []
+        kept, over = git._pump(stream, 10, on_over=lambda: calls.append(1))
+        self.assertEqual((kept, over, calls), (b"x" * 10, True, [1]))
+        self.assertLess(stream.tell(), 10 * 1024 * 1024)
+
+    def test_pump_without_a_cap_callback_drains_the_rest(self):
+        stream = _Pipe(b"y" * 300000)
+        kept, over = git._pump(stream, 10)
+        self.assertEqual((kept, over), (b"y" * 10, True))
+        self.assertEqual(stream.tell(), 300000)
+
+    def test_read_log_refuses_output_over_the_cap(self):
+        _sh(self.root, "init", "-q", "-b", "main")
+        folder = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, folder, True)
+        message = os.path.join(folder, "msg.txt")
+        with open(message, "w") as fh:
+            fh.write("x" * (git.STDOUT_CAP + 1000) + "\n")
+        with open(os.path.join(self.root, "a.txt"), "w") as fh:
+            fh.write("one\n")
+        _sh(self.root, "add", "a.txt")
+        _sh(self.root, "commit", "-q", "-F", message)
+        with self.assertRaises(RoadmapError) as ctx:
+            git.read_log(self.root)
+        self.assertEqual(ctx.exception.code, "git_too_big")
+
+    def test_stderr_is_cut_and_redacted(self):
+        secret = "https://user:tok@host/x " + "e" * 600
+        with _fake_git(self, "printf '%s' '" + secret + "' >&2; exit 1"):
+            with self.assertRaises(RoadmapError) as ctx:
+                git.run(self.root, ["fetch"])
+        self.assertNotIn("tok", ctx.exception.message)
+        self.assertIn("https://***@host/x", ctx.exception.message)
+        self.assertLessEqual(len(ctx.exception.message), git.STDERR_CUT)
+
+    def test_stderr_secret_past_the_cut_is_gone(self):
+        secret = "e" * 500 + " https://user:tok@host/x"
+        with _fake_git(self, "printf '%s' '" + secret + "' >&2; exit 1"):
+            with self.assertRaises(RoadmapError) as ctx:
+                git.run(self.root, ["fetch"])
+        self.assertNotIn("tok", ctx.exception.message)
+        self.assertLessEqual(len(ctx.exception.message), git.STDERR_CUT)
+
+    def test_run_failure_with_empty_stderr_has_fallback_message(self):
+        with _fake_git(self, "exit 1"):
+            with self.assertRaises(RoadmapError) as ctx:
+                git.run(self.root, ["status"])
+        self.assertEqual((ctx.exception.code, ctx.exception.message, ctx.exception.exit),
+                         ("git_failed", "git failed", EXIT_EXTERNAL))
 
 
 class GapTests(unittest.TestCase):
@@ -291,14 +429,6 @@ class GapTests(unittest.TestCase):
         self.assertNotIn("GIT_WORK_TREE", env)
         self.assertNotIn("GIT_INDEX_FILE", env)
 
-    def test_run_failure_with_empty_stderr_has_fallback_message(self):
-        fake = subprocess.CompletedProcess(["git"], 1, b"", b"")
-        with mock.patch.object(git.subprocess, "run", return_value=fake):
-            with self.assertRaises(RoadmapError) as ctx:
-                git.run(self.root, ["status"])
-        self.assertEqual((ctx.exception.code, ctx.exception.message, ctx.exception.exit),
-                         ("git_failed", "git failed", EXIT_EXTERNAL))
-
     def test_repo_root_refuses_empty_or_none_path(self):
         for bad in ["", None]:
             with self.assertRaises(RoadmapError, msg=repr(bad)) as ctx:
@@ -355,7 +485,7 @@ class GapTests(unittest.TestCase):
         self.assertEqual(st["conflicts"], ["clash.py"])
 
     def test_parse_log_skips_short_records(self):
-        text = "\x1ebad\x1fonly\x1ftwo\n\x1eaaa111\x1fAli\x1f1700000000\x1fOk\x1fOk\n"
+        text = "aaa111\x00Ali\x001700000000\x00Ok\0Ok\0\nbad\0only\0"
         rows = git.parse_log(text)
         self.assertEqual([r["sha"] for r in rows], ["aaa111"])
 
