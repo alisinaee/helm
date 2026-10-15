@@ -8,9 +8,11 @@ Content-Type and the body size before it does anything.
 import hashlib
 import json
 import os
+import platform
 import re
 import stat
 from datetime import datetime
+from urllib.parse import parse_qsl
 
 from roadmap import __version__
 from roadmap.core.snapshot import SNAPSHOT_SCHEMA_VERSION
@@ -330,6 +332,52 @@ def log_status(app, req, match):
                             "files": len(status["files"])})
 
 
+REPORT_DEFAULT_N, REPORT_MAX_N, REPORT_BYTES = 30, 100, 6 * 1024
+
+
+def _report_n(query):
+    """The n of GET /api/v1/log/report: absent gives 30, a number is capped to 1..100, and any other query is a 400."""
+    if not query:
+        return REPORT_DEFAULT_N
+    pairs = parse_qsl(query, keep_blank_values=True)
+    if len(pairs) != 1 or pairs[0][0] != "n" or not re.fullmatch(r"\d{1,6}", pairs[0][1]):
+        raise RoadmapError("invalid_input", "the only query value is n, a whole number (default 30, capped 1..100)",
+                           EXIT_USAGE)
+    return min(max(int(pairs[0][1]), 1), REPORT_MAX_N)
+
+
+def _report_project():
+    try:
+        return str(task_service.resolve(None)[0]["id"])
+    except Exception:  # no project registered yet: the report still answers
+        return "-"
+
+
+def _report_body(lines):
+    """The report text: a header, the event lines, and the hint. The oldest event lines are cut until it fits 6 KB."""
+    head = ["roadmap " + __version__, "project " + _report_project(), "time " + _now_iso(),
+            "python " + platform.python_version(), "os " + platform.system()]
+    tail = ["next: roadmap logs --session last"]
+    kept, dropped = list(lines), 0
+    while True:
+        note = ["(%d older lines cut)" % dropped] if dropped else []
+        body = "\n".join(head + (note + kept if kept else ["no events: no WARN or ERROR events yet"]) + tail) + "\n"
+        if len(body.encode("utf-8")) <= REPORT_BYTES or not kept:
+            return body
+        kept.pop(0)
+        dropped += 1
+
+
+def log_report(app, req, match):
+    """GET /api/v1/log/report?n=30: the plain-text debug report for the GUI's Copy button (R7.16 step 2b). The newest
+    n WARN and ERROR events and the last 5 ui.mark events, one line each, after a header with the versions. No paths,
+    no user name; every value is already redacted. The phone listener refuses this route (see PhoneApp.handle)."""
+    n = _report_n(req.query)
+    reply = Reply(200, _report_body(rlog.report_lines(n)).encode("utf-8"), ctype="text/plain; charset=utf-8")
+    reply.headers = [("Cache-Control", "no-store")]
+    return reply
+
+
 def _cmd_source(app, req):
     """(source, proven) of a cmd call on the main listener. A write is 'gui' only when the browser proof is on the
     request (Origin of this server and Sec-Fetch-Site same-origin). Any other write is labelled 'agent', so the guard
@@ -467,6 +515,7 @@ ROUTES = (
     (re.compile(r"/api/v1/cmd"), ("POST",), cmd),
     (re.compile(r"/api/v1/log"), ("POST",), log_post),
     (re.compile(r"/api/v1/log/status"), ("GET",), log_status),
+    (re.compile(r"/api/v1/log/report"), ("GET",), log_report),
     (re.compile(r"/data\.json"), ("GET",), legacy_data_json),
 )
 

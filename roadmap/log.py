@@ -526,3 +526,32 @@ def log_status():
         }
     except Exception:
         return {"error": True}
+
+
+REPORT_MARKS = 5
+REPORT_MSG_CAP = 160
+
+
+def _report_line(rec):
+    """One report line: hh:mm:ss src ev route ref msg. The message is collapsed to one line, scrubbed and capped."""
+    ts = str(rec.get("ts", ""))
+    clock = ts[11:19] if len(ts) >= 19 else "--:--:--"
+    msg = re.sub(r"\s+", " ", str(rec.get("msg") or "")).strip()
+    fields = [clock, str(rec.get("src") or "-"), str(rec.get("ev") or "-"), str(rec.get("route") or "-"),
+              str(rec.get("ref") or "-")]
+    line = " ".join(redact(field) for field in fields)
+    return line + " " + _cut(_scrub(redact(msg)), REPORT_MSG_CAP) if msg else line + " -"
+
+
+def report_lines(n):
+    """The event lines of the debug report, oldest first: the newest n WARN and ERROR events plus the last 5 ui.mark
+    events (no repeats). Each is 'hh:mm:ss src ev route ref msg'. Never raises: a failure gives an empty list."""
+    try:
+        warns = read_events(level_min="WARN", limit=n)
+        seen = [json.dumps(rec, sort_keys=True) for rec in warns]
+        marks = [rec for rec in read_events(ev="ui.mark", limit=REPORT_MARKS)
+                 if json.dumps(rec, sort_keys=True) not in seen]
+        merged = sorted(warns + marks, key=lambda rec: str(rec.get("ts", "")))
+        return [_report_line(rec) for rec in merged]
+    except Exception:
+        return []
