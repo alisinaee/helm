@@ -49,7 +49,9 @@ class ActivityRowsTest(unittest.TestCase):
 
     def test_undo_label_says_what_it_undoes(self):
         text = read(VIEWS, "activity.js")
-        self.assertIn('esc("Undo " + what) + "</button>"', text)
+        # R7.65: the visible label is the fixed word; the full text is in aria-label and title.
+        self.assertIn('>Undo</button>', text)
+        self.assertIn('title="\' + esc("Undo " + what)', text)
         self.assertIn('class="act-row row-grid"', text)
 
     def test_undo_sits_in_one_fixed_column(self):

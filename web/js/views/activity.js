@@ -10,15 +10,15 @@ const ALL_MAX = 50;
 // The source names in plain words (the log keeps gui, cli, agent or phone).
 const SOURCE_WORD = { gui: "Dashboard", cli: "Terminal", agent: "Agent", phone: "Phone" };
 
-// One activity line as a list item. The Undo button is shown only when the line says it can be undone, and its
-// visible label says what it undoes.
+// One activity line as a list item. The Undo button is shown only when the line says it can be undone. Its visible
+// label is the fixed word "Undo"; the full text (what it undoes) goes in aria-label and title.
 export function activityRowHtml(line, pid, pname, now, showProject) {
   const when = relTime(line.atMs, now);
   const what = line.sum || line.op || "change";
   const undo = line.undo
     ? '<button type="button" class="btn btn-small" data-action="undo-line" data-project="' + esc(pid) +
-      '" data-activity="' + esc(line.id) + '" aria-label="' + esc("Undo " + what) +
-      '" data-focus="undo-' + esc(pid) + "-" + esc(line.id) + '">' + esc("Undo " + what) + "</button>"
+      '" data-activity="' + esc(line.id) + '" aria-label="' + esc("Undo " + what) + '" title="' + esc("Undo " + what) +
+      '" data-focus="undo-' + esc(pid) + "-" + esc(line.id) + '">Undo</button>'
     : "";
   return '<li class="act-row row-grid"><span class="act-time num" title="' + esc(when.title) + '">' +
     esc(when.text || MISSING) + "</span>" +
