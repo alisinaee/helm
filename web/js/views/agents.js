@@ -11,29 +11,32 @@ import { itemHash, pageState, scopeSnapshots } from "./inbox.js";
 const FINISHED_MAX = 10;
 const STATUS_WORDS = { done: "Done", failed: "Failed" };
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"];
-const ENGINES = { haiku: "Haiku 5.5", sonnet: "Sonnet 5.5", opus: "Opus 5.5", agy: "agy · Gemini 3.8 Flash",
-  cursor: "cursor · Auto" };
+const ENGINES = { haiku: "Haiku 5.5", sonnet: "Sonnet 5.5", opus: "Opus 5.5", head: "head · Opus 5.5",
+  agy: "agy · Gemini 3.8 Flash", opencode: "opencode", cursor: "cursor · auto" };
+const LEVEL_SUFFIX = /-(low|medium|high|xhigh|max)$/;
 let ticking = false;
 
-// The exact engine of a job's model string: a bare word maps to its engine name; a more specific cursor name
-// (grok-4.7-xhigh, auto) maps to its model. A job with a recorded engine model (opencode, cursor) shows the engine
-// and that model, for example "opencode · laguna-s-2.1". Unknown strings are shown as they are; no model is a dash.
+// The engine of a job: a bare model word maps to its engine name. A job with a recorded engine model shows the engine
+// and that model: "cursor · grok-4.7" (the effort suffix is shown as the effort), "opencode · laguna-s-2.1".
+// Unknown strings are shown as they are; no model is a dash.
 export function engineLabel(model, engineModel) {
   const text = String(model || "").trim().toLowerCase();
-  const exact = String(engineModel || "").trim();
-  if (exact && (text === "opencode" || text === "cursor")) return text + " · " + exact;
+  const exact = String(engineModel || "").trim().toLowerCase();
+  if (exact && text === "cursor") return "cursor · " + exact.replace(LEVEL_SUFFIX, "");
+  if (exact && text === "opencode") return "opencode · " + exact;
   if (!text) return "—";
-  if (/grok-4\.7/.test(text)) return "cursor · Grok 4.7";
-  if (text === "auto") return "cursor · Auto";
   return ENGINES[text] || String(model).trim();
 }
 
-// The thinking effort of a job: the recorded level when there is one; otherwise the engine default ("default" for
-// Haiku, Sonnet, Opus and agy) or "not set" (cursor models and anything unknown). Never blank.
-export function effortLabel(effort, model) {
+// The thinking effort of a job: the recorded level when there is one; else the level in its engine model name
+// (cursor grok-4.7-xhigh is xhigh); else the engine default ("default" for Haiku, Sonnet, Opus, head and agy) or
+// "not set" (cursor auto, opencode and anything unknown). Never blank.
+export function effortLabel(effort, model, engineModel) {
   const text = String(effort || "").trim().toLowerCase();
   if (EFFORTS.indexOf(text) !== -1) return text;
-  return /^(haiku|sonnet|opus|agy)\b/.test(String(model || "").trim().toLowerCase()) ? "default" : "not set";
+  const level = LEVEL_SUFFIX.exec(String(engineModel || "").trim().toLowerCase());
+  if (level) return level[1];
+  return /^(haiku|sonnet|opus|head|agy)\b/.test(String(model || "").trim().toLowerCase()) ? "default" : "not set";
 }
 
 // The worker tree of one snapshot's running jobs: the roots (jobs whose parent is not running) and the children map.
@@ -103,7 +106,7 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
   const row = '<li class="ag-row" data-depth="' + depth + '"><div class="row-grid rg-agent">' +
     '<span class="rg-chips">' + chipHtml(engineLabel(job.model, job.engineModel), "neutral") +
     (job.role ? chipHtml(job.role, "neutral") : "") + badge + "</span>" +
-    '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort, job.model)) + "</span>" +
+    '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort, job.model, job.engineModel)) + "</span>" +
     '<span class="rg-main"><span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
     (handed ? " " + handed : "") + "</span>" +
     '<span class="rg-chips">' + taskHtml + "</span>" +
@@ -128,7 +131,7 @@ function finishedHtml(job, pid) {
   return '<li class="ag-row"><div class="row-grid rg-agent">' +
     '<span class="rg-chips">' + chipHtml(engineLabel(job.model, job.engineModel), "neutral") +
     chipHtml(word, kind) + "</span>" +
-    '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort, job.model)) + "</span>" +
+    '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort, job.model, job.engineModel)) + "</span>" +
     '<span class="rg-main"><span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span></span>" +
     '<span class="rg-chips">' + task + "</span>" +
     '<span class="rg-num num">' + esc(fmtDuration(job.elapsedS)) + "</span>" +

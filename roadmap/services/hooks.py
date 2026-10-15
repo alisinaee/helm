@@ -67,18 +67,22 @@ class AgentDetector:
 
     name = "agent"
 
-    def on_tool(self, tool, tool_input, tool_response):
+    def on_tool(self, tool, tool_input, tool_response, session_model=None):
         if tool not in ("Agent", "Task"):
             return None
         text = _response_text(tool_response).replace("\n", " ")
         agent = _AGENT_ID_RE.search(text)
         output = _OUTPUT_RE.search(text)
-        model = str(tool_input.get("model") or "haiku")
+        # No model in the call: the subagent runs on the session model (never a guessed default). "unknown" when the
+        # hook does not know the session model either.
+        model = str(tool_input.get("model") or session_model or "unknown")
+        effort = str(tool_input.get("effort") or "").strip().lower()
         description = str(tool_input.get("description") or "")
         prompt = str(tool_input.get("prompt") or "")
         return {
             "title": model + ": " + _summary(description),
             "model": model,
+            "effort": effort if effort in jobs.EFFORTS else "",
             "text": description + " " + prompt,
             "kind": "agent",
             "watch": output.group(1) if output else "",
@@ -116,7 +120,7 @@ class AgyDetector(_FileDetector):
 
     name = "agy"
 
-    def on_tool(self, tool, tool_input, tool_response):
+    def on_tool(self, tool, tool_input, tool_response, session_model=None):
         if tool != "Bash":
             return None
         cmd = str(tool_input.get("command") or "")
@@ -137,7 +141,7 @@ class CursorDetector(_FileDetector):
 
     name = "cursor"
 
-    def on_tool(self, tool, tool_input, tool_response):
+    def on_tool(self, tool, tool_input, tool_response, session_model=None):
         if tool != "Bash":
             return None
         cmd = str(tool_input.get("command") or "")
@@ -299,8 +303,10 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
                 tool = str(payload.get("tool_name") or "")
                 tool_input = payload.get("tool_input")
                 tool_input = tool_input if isinstance(tool_input, dict) else {}
+                session_model = _session_model(payload) if tool in ("Agent", "Task") else None
                 for detector in active:
-                    entry = detector.on_tool(tool, tool_input, payload.get("tool_response"))
+                    entry = detector.on_tool(tool, tool_input, payload.get("tool_response"),
+                                             session_model=session_model)
                     if entry is not None:
                         new = _start(data_dir, detector, entry, regex, known, now)
                         if new is not None:
@@ -553,6 +559,14 @@ def model_name(value):
 
 TRANSCRIPT_TAIL_BYTES = 64 * 1024
 TRANSCRIPT_TAIL_LINES = 50
+
+
+def _session_model(payload):
+    """The session's model as a job model word (haiku, sonnet, opus or head), or None when the hook does not know it or
+    the word is not a job model."""
+    name = model_name(payload.get("model")) or _transcript_model(payload.get("transcript_path"))
+    word = str(name or "").split(" ")[0].lower()
+    return word if word in jobs.MODELS else None
 
 
 def _transcript_model(path):
@@ -1059,7 +1073,8 @@ def _start(data_dir, detector, entry, regex, known, now):
         _log("skip (no task id) from detector " + detector.name)
         return None
     try:
-        job = jobs.start_job(data_dir, title, entry["model"], task, engine_model=entry.get("engine_model"))
+        job = jobs.start_job(data_dir, title, entry["model"], task, effort=entry.get("effort") or None,
+                             engine_model=entry.get("engine_model"))
     except RoadmapError as exc:
         if exc.code == "locked":
             raise

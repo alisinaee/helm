@@ -42,9 +42,9 @@ def synthetic():
     running = [
         job("J1", "running", model="opus", task="P1.1", role="lead", started="2026-10-13T11:58:00Z",
             elapsed_s=120, tokensK=40, parent=None, effort="high"),
-        job("J2", "running", model="grok-4.7-xhigh", task="P1.2", role="tests", parent="J1",
+        job("J2", "running", model="cursor", engine_model="grok-4.7-xhigh", task="P1.2", role="tests", parent="J1",
             started="2026-10-13T11:59:00Z", elapsed_s=60, tokensK=9, effort="medium"),
-        job("J3", "running", model="cursor", task=None, role="docs", parent="J1",
+        job("J3", "running", model="cursor", engine_model="auto", task=None, role="docs", parent="J1",
             started="2026-10-13T11:59:30Z", elapsed_s=30),
         job("J4", "running", model="agy", task="P2.1", started="2026-10-13T11:50:00Z", elapsed_s=600,
             effort="low"),
@@ -122,7 +122,7 @@ class AgentsResearchTests(unittest.TestCase):
 
     def test_model_column_shows_the_exact_engine(self):
         html = self.out["agentsProject"]
-        for text in ("Opus 5.5", "cursor · Grok 4.7", "cursor · Auto", "agy · Gemini 3.8 Flash", "Haiku 5.5"):
+        for text in ("Opus 5.5", "cursor · grok-4.7", "cursor · auto", "agy · Gemini 3.8 Flash", "Haiku 5.5"):
             self.assertIn(">" + text + "</span>", html, text)
         self.assertNotIn('chip-neutral">grok-4.7-xhigh', html)
         self.assertNotIn(">cursor<", html)
@@ -144,6 +144,24 @@ class AgentsResearchTests(unittest.TestCase):
         self.assertEqual(html.count('<span class="rg-chips ag-effort">not set</span>'), 1)   # cursor, not recorded
         self.assertNotIn('ag-effort">\u2014', html)
         self.assertIn('<span class="ag-effort">Effort</span>', html)
+
+    def test_head_opencode_and_cursor_effort_come_from_the_engine_name(self):
+        head = job("H1", "running", model="head", task=None, started="2026-10-13T11:00:00Z")
+        grok = job("G1", "running", model="cursor", engine_model="grok-4.7-xhigh", task=None)
+        opencode = job("O1", "running", model="opencode", engine_model="laguna-s-2.1", task=None)
+        path = os.path.join(self.tmp, "engines.json")
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump({"busy": {"project": {"id": "splitnet", "title": "split-net"}, "jobs": [head, grok, opencode],
+                                "blocked": [], "tasks": [], "phases": [], "rules": None}}, fh)
+        html = render(path)["agentsProject"]
+        self.assertIn(">head · Opus 5.5</span>", html)
+        self.assertIn(">cursor · grok-4.7</span>", html)
+        self.assertIn(">opencode · laguna-s-2.1</span>", html)
+        self.assertIn('<span class="rg-chips ag-effort">xhigh</span>', html)   # cursor, from its engine model
+        self.assertIn('<span class="rg-chips ag-effort">default</span>', html)  # head is Opus
+        self.assertIn('<span class="rg-chips ag-effort">not set</span>', html)  # opencode, not recorded
+        self.assertNotIn(">head<", html)
+        self.assertNotIn(">Cursor", html)
 
     def test_each_row_has_a_stop_button_and_a_task_less_job_has_it_disabled(self):
         html = self.out["agentsProject"]

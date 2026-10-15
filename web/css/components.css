@@ -813,8 +813,6 @@ li:has(> .p-row) { display: grid; grid-template-columns: minmax(0, 1fr) var(--re
    tokens, stop, copy). On a phone the cells wrap into two columns and the header is hidden. */
 .row-grid.rg-agent { --rg: minmax(10rem, 13rem) 4.5rem minmax(0, 1fr) minmax(4.5rem, 8rem) 5rem 4.5rem 5rem;
   grid-template-columns: var(--rg) var(--ref-col); align-items: center; }
-.ag-noeffort .row-grid.rg-agent { --rg: minmax(10rem, 13rem) minmax(0, 1fr) minmax(4.5rem, 8rem) 5rem 4.5rem 5rem; }
-.ag-noeffort .ag-effort { display: none; }
 .rg-agent .ag-title { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden; overflow-wrap: anywhere; }
 .rg-agent > .btn { min-width: 0; padding-inline: var(--sp-1); }
