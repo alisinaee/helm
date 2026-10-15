@@ -1,0 +1,10 @@
+| file:line | problem | fix |
+|---|---|---|
+| roadmap/http/routes.py:533 | Regex `r"H\d{1,4}"` accepts `H0` and IDs with leading zeroes like `H00`, which are not valid 1-based head IDs. | Change regex to `r"H[1-9]\d{0,3}"` to enforce valid head ID ranges. |
+| roadmap/http/routes.py:558 | `_head_history` checks truthiness (`if rec.get(key)`) instead of `is not None`, dropping valid empty strings or zero values in update records. | Change condition to `if rec.get(key) is not None`. |
+| roadmap/http/routes.py:570 | Snapshot loading and row derivations run for unauthorized `full=` requests before verifying `_same_page_read` at line 580, causing unnecessary disk I/O and CPU work. | Move the `_same_page_read` guard check up before calling `loader.load_snapshot`. |
+| roadmap/http/routes.py:576 | Entry existence check raises 404 before `_same_page_read` check at line 580 raises 403, leaking head ID existence to unauthorized cross-origin callers. | Perform `_same_page_read` authorization check before checking whether `full` exists in `entries`. |
+| roadmap/http/routes.py:578 | `body["full"] = {"id": full}` is assigned before verifying `_same_page_read` authorization at line 580. | Place `_same_page_read` verification before populating `body["full"]`. |
+| roadmap/http/routes.py:580 | Guard refusal in `project_head` raises 403 `forbidden` directly without recording a security event via `_guard_refused`, unlike `_write_guard` and `log_post`. | Call `_guard_refused(app, "forbidden", req.path)` before raising `RoadmapError`. |
+| roadmap/http/routes.py:583 | Direct key access on `details["reply"]` and `details["assets"]` raises `KeyError` (500 error) if `details_of` returns a dict missing optional keys. | Use `details.get("reply")` and `details.get("assets", [])` to handle optional fields safely. |
+| roadmap/http/routes.py:586 | `project_head` accesses `head_service._records(data_dir)`, calling a private module function across service boundaries. | Expose a public history API on `head_service` or return history directly within `head_service.details_of`. |

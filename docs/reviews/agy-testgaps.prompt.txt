@@ -1,0 +1,1 @@
+Read-only. In ~/Works/roadmap-board run `git log --oneline -12` and `git show --stat` for each; list behaviour changed by those commits that has no unit test, as file:line plus the missing test case. Max 20 lines. Change no files.

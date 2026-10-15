@@ -1,0 +1,12 @@
+| file:line | problem | fix |
+|---|---|---|
+| web/js/views/agents.js:14 | ENGINES maps haiku, sonnet, opus to "Haiku 5.5", "Sonnet 5.5", "Opus 5.5", but actual model versions are UNKNOWN and not 5.5. | Display actual model name or UNKNOWN instead of hardcoding 5.5. |
+| web/js/views/agents.js:24 | engineLabel only checks opencode or cursor for exact (job.engineModel); for any other engine, job.engineModel is ignored. | Support job.engineModel across all engines when exact is present. |
+| web/js/views/agents.js:25 | When job.model is missing or empty, line 25 returns "—" even if job.engineModel is present. | Return exact (job.engineModel) instead of "—" when text is empty and exact is present. |
+| web/js/views/agents.js:28 | ENGINES[text] direct lookup fails for full model strings like claude-3-5-sonnet, falling back to raw model string. | Normalize full model identifier strings or match engine prefixes before fallback. |
+| web/js/views/agents.js:35 | EFFORTS (web/js/views/agents.js:13) omits "default" and "none"; explicit job.effort of "default" or "none" fails indexOf and falls through to line 36. | Add "default" and "none" to EFFORTS or handle them before fallback. |
+| web/js/views/agents.js:36 | Regex /^(haiku\|sonnet\|opus\|agy)\b/ fails when job.model has a prefix like claude-3-5-sonnet, returning "not set" instead of "default". | Update regex to allow optional claude- prefix: /^(claude-)?(haiku\|sonnet\|opus\|agy)\b/. |
+| web/js/views/agents.js:82 | Delegated children chips call engineLabel(c.model) with one argument, omitting child field c.engineModel. | Pass c.engineModel as second argument: engineLabel(c.model, c.engineModel). |
+| web/js/views/agents.js:86 | Under Job column (web/js/views/agents.js:135), label prioritizes job.title over job.id, hiding job.id entirely from the visible row. | Render job.id alongside job.title in Job column cell. |
+| web/js/views/agents.js:92 | Under Model column header (web/js/views/agents.js:134), running row renders job.role chip and blocked badge inside Model cell. | Move job.role to a dedicated column or update column header to Model / Role. |
+| web/js/views/agents.js:117 | Finished row renders job.status chip under Model column (web/js/views/agents.js:134) and omits job.role entirely unlike running rows (web/js/views/agents.js:93). | Render job.role if present, and place job.status in a dedicated status column matching header. |

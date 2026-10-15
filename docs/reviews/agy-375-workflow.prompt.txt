@@ -1,0 +1,1 @@
+Read-only. In ~/Works/roadmap-board audit web/js/views/workflow.js and its CSS in web/css: (1) numbers right-aligned in fixed grid columns (docs/UI-CHECKLIST.md rule 0), (2) no horizontal page scroll at 375px, (3) actions in one fixed column. One line per finding with file:line. Max 20 lines. Change no files.

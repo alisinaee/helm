@@ -1,0 +1,13 @@
+| file:line | problem | fix |
+|---|---|---|
+| web/js/views/head.js:482 | `listRowHtml` omits `row.carried` indicator (↺), so carried-over items show no icon in list view unlike cards view (`web/js/views/head.js:370`) | Append `row.carried ? ' <span class="hd-carried" title="Carried over">↺</span>' : ""` to `#` cell content |
+| web/js/views/head.js:494 | Detail row `<tr class="hd-detail">` lacks `hidden` attribute when `open` is false, leaving empty `<tr><td>` rendered in table layout | Add `(open ? "" : " hidden")` to `<tr class="hd-detail">` |
+| web/js/views/head.js:639 | `setOpen` only toggles `panel.hidden = !on` on `div.hd-panel`, leaving `<tr class="hd-detail">` visible in table layout | Toggle `hidden` on parent `<tr class="hd-detail">` element as well |
+| web/js/views/head.js:467 | `LIST_COLS` headers for "Age" (`hd-age`) and "Added" (`hd-when`) lack `rg-num` class, causing header labels to left-align while numeric cells right-align | Change column classes to `"hd-age rg-num"` and `"hd-when rg-num"` in `LIST_COLS` |
+| web/js/views/head.js:603 | `loadText` updates `sumEl.textContent` with full summary text but leaves `sumEl.title` stale with truncated initial summary | Set `sumEl.title = nextSum` alongside `sumEl.textContent = nextSum` |
+| web/js/views/head.js:297 | `when` returns 0 for missing or invalid `row.ts`, causing rows without timestamps to sort to the top when `sort === "old"` | Return `Infinity` when sorting "old" so missing timestamps sort to bottom in both sort directions |
+| web/js/views/head.js:258 | `statusHtml` uses `STATUS_WORDS[st] || st` which evaluates to `undefined` if `row.status` is missing, rendering string `"undefined"` | Use `esc(STATUS_WORDS[st] || st || "")` |
+| web/js/views/head.js:489 | `listRowHtml` Bound cell checks `row.links && row.links.length`, rendering empty chip `<span class="chip chip-neutral" title=""></span>` if ref is empty | Check that at least one link has a non-empty `ref` before calling `boundHtml` |
+| web/js/views/head.js:500 | Table headers in `listHtml` provide no `aria-sort` attribute to indicate active sort order on the Added or # column | Add `aria-sort` (`descending` or `ascending`) to the active sort header `<th>` |
+| web/js/views/head.js:287 | `summaryText` does not normalize whitespace in `stem` before checking `text.indexOf(stem)`, causing match failure if input whitespace differs | Normalize whitespace in `stem` with `.split(/\s+/).join(" ")` before `text.indexOf(stem)` |
+| web/js/views/head.js:482 | Button in `#` cell has `aria-label` overriding button text `eid`, but lacks chevron or visual indicator that row expands | Add visual chevron icon or indicator inside `#` button matching card view |
