@@ -3,16 +3,19 @@ data-dir lock, keeps the redacted verbatim text in head-text.jsonl, parks hook c
 lock is busy, and writes the resume brief. The fold and heuristics are in roadmap/core/head.py; redaction in
 roadmap/core/secrets.py. Writers that take the lock adopt the spool first, in order."""
 
+import errno
 import fcntl
 import hashlib
 import json
 import os
 import re
+import stat
+import time
 from datetime import datetime, timedelta, timezone
 
 from roadmap.core import head, secrets
-from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
-from roadmap.store import jsonl, lock
+from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
+from roadmap.store import atomic, jsonl, lock
 
 FILE = "head.jsonl"
 TEXT_FILE = "head-text.jsonl"
@@ -20,6 +23,8 @@ SPOOL_FILE = "head-spool.jsonl"
 MAX_ENTRIES = 5000
 MAX_ID = 9999
 TEXT_MAX = 8000
+ASSETS_MAX = 20
+ASSET_CHARS = 200
 SUM_MAX = head.SUM_MAX
 NOTE_MAX = 160
 BRIEF_MAX_LINES = 15
@@ -56,14 +61,36 @@ def session_key(session_id):
 
 
 def clean_text(text):
-    """Control characters stripped, secrets masked, then cut to the verbatim limit (masks are never split)."""
-    return secrets.scrub(_CONTROL.sub("", "" if text is None else str(text)))[:TEXT_MAX]
+    """Control characters stripped, secrets masked, then cut to the verbatim limit. A cut never leaves half a mask:
+    a trailing '[' with no closing ']' after it is dropped."""
+    out = secrets.scrub(_CONTROL.sub("", "" if text is None else str(text)))[:TEXT_MAX]
+    open_at = out.rfind("[")
+    if open_at != -1 and "]" not in out[open_at:]:
+        out = out[:open_at]
+    return out
 
 
 def make_summary(text, given=None):
     """The one-line summary: the head's own text when given, else the heuristic. Masked, one line, 100 chars."""
     base = given if given is not None else head.summarize(text)
     return secrets.scrub(" ".join(str(base or "").split()))[:SUM_MAX]
+
+
+def clean_assets(items):
+    """Names and paths of a prompt's attachments (HEAD-SPEC section 13): text only, control characters stripped, masked,
+    each cut to ASSET_CHARS, no repeats, at most ASSETS_MAX. Anything that is not a list gives []. Never reads a file."""
+    out = []
+    if not isinstance(items, (list, tuple)):
+        return out
+    for item in items:
+        if not isinstance(item, str):
+            continue
+        name = secrets.scrub(_CONTROL.sub("", " ".join(item.split())))[:ASSET_CHARS].strip()
+        if name and name not in out:
+            out.append(name)
+        if len(out) >= ASSETS_MAX:
+            break
+    return out
 
 
 def _short(value, limit):
@@ -96,27 +123,69 @@ def _next_id(objs):
     return "H" + str(best + 1)
 
 
-def _append_entry_locked(data_dir, entry, text):
-    """Assign the next id and append the entry and its text. The caller holds the lock."""
+def _append_entry_locked(data_dir, entry, text, assets=None):
+    """Assign the next id and append the entry and its text (and its assets, when there are any). The caller holds
+    the lock."""
     objs, _ = jsonl.read_objects(_path(data_dir, FILE))
     eid = _next_id(objs)
     line = dict(entry, id=eid)
     jsonl.append_line(_path(data_dir, FILE), line)
-    jsonl.append_line(_path(data_dir, TEXT_FILE), {"id": eid, "text": text})
+    text_line = {"id": eid, "text": text}
+    if assets:
+        text_line["assets"] = list(assets)
+    jsonl.append_line(_path(data_dir, TEXT_FILE), text_line)
     return line
 
 
-def _spool_append(data_dir, payload):
+def _deadline(timeout):
+    """The monotonic time a bounded wait must stop at, or None when no timeout was given."""
+    return None if timeout is None else time.monotonic() + max(0.0, float(timeout))
+
+
+def _open_spool(path, flags):
+    """Open the spool without following a symlink, and require one regular file with a single link. A hard link
+    to another file on the volume would make writes land in that file, so it is refused, left unchanged."""
+    try:
+        fd = os.open(path, flags | os.O_NOFOLLOW, 0o600)
+    except OSError as exc:
+        if exc.errno == errno.ELOOP:
+            raise RoadmapError("invalid_data", "refusing a symlinked spool, left unchanged: " + path, EXIT_INVALID_DATA)
+        raise
+    st = os.fstat(fd)
+    if not stat.S_ISREG(st.st_mode) or st.st_nlink != 1:
+        os.close(fd)
+        raise RoadmapError("invalid_data", "refusing a spool that is not one regular file, left unchanged: " + path,
+                           EXIT_INVALID_DATA)
+    return fd
+
+
+def _flock_bounded(fh, timeout):
+    """Take the exclusive flock on fh, waiting at most timeout seconds (the lock default when None)."""
+    wait = lock.DEFAULT_TIMEOUT_S if timeout is None else timeout
+    deadline = time.monotonic() + max(0.0, float(wait))
+    while True:
+        try:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return
+        except OSError as exc:
+            if exc.errno not in (errno.EAGAIN, errno.EACCES, errno.EWOULDBLOCK):
+                raise
+            if time.monotonic() >= deadline:
+                raise RoadmapError("locked", "the head spool is busy; try again in a moment", EXIT_CONFLICT)
+            time.sleep(lock.POLL_S)
+
+
+def _spool_append(data_dir, payload, timeout=None):
     """Park one unnumbered entry in the spool without the directory lock. flock on the spool file orders it
-    against the adopting writer."""
+    against the adopting writer. The flock wait is bounded by timeout: past it, locked is raised and nothing is written."""
     path = _path(data_dir, SPOOL_FILE)
     if os.path.islink(path):
         raise RoadmapError("invalid_data", "refusing to append to a symlink, left unchanged: " + path, EXIT_INVALID_DATA)
     os.makedirs(data_dir, exist_ok=True)
     line = json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n"
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    fd = _open_spool(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND)
     with os.fdopen(fd, "a", encoding="utf-8") as fh:
-        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        _flock_bounded(fh, timeout)
         try:
             fh.write(line)
             fh.flush()
@@ -124,20 +193,51 @@ def _spool_append(data_dir, payload):
             fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
 
 
-def _adopt_locked(data_dir):
-    """Move spooled captures into head.jsonl, in spool order, then empty the spool. Caller holds the lock.
-    Returns the number adopted. Entries past the cap are dropped with a count in the result."""
+def _spooled_entry(e, text, nonce):
+    """Rebuild a spooled entry from its text, never trusting the spool's own fields: the text is cleaned again, the
+    summary masked again, and only the known keys are kept. nonce marks the entry, so a replayed spool line is not
+    logged twice."""
+    kind = e.get("kind")
+    if not (isinstance(kind, str) and kind.rstrip("?") in KINDS):
+        kind = head.guess_kind(text)
+    src = e.get("src") if e.get("src") in SOURCES else "hook"
+    sid = e.get("sid")
+    entry = {
+        "v": head.VERSION, "t": "e", "ts": str(e.get("ts") or _ts())[:32], "src": src,
+        "sid": str(sid)[:8] if isinstance(sid, str) and sid else None, "acct": _short(e.get("acct"), 8),
+        "kind": kind, "sum": make_summary(text, e.get("sum") if isinstance(e.get("sum"), str) else None),
+        "len": len(text), "h": _digest(text),
+    }
+    if isinstance(e.get("from"), str):
+        entry["from"] = e["from"][:12]
+    if nonce:
+        entry["n"] = nonce
+    return entry
+
+
+def _adopt_locked(data_dir, deadline=None):
+    """Move spooled captures into head.jsonl, in spool order. Caller holds the directory lock. Lines that could not
+    be adopted (the cap, a refused file, or the deadline passed) stay in the spool, in order, for the next writer.
+    A line whose nonce is already in head.jsonl (a replay after a crash) is not logged again. Returns the number adopted."""
     path = _path(data_dir, SPOOL_FILE)
     if not os.path.exists(path):
         return 0
     if os.path.islink(path):
         raise RoadmapError("invalid_data", "refusing to read a symlinked spool, left unchanged: " + path, EXIT_INVALID_DATA)
     adopted = 0
-    with os.fdopen(os.open(path, os.O_RDWR), "r+", encoding="utf-8") as fh:
+    fd = _open_spool(path, os.O_RDWR)
+    with os.fdopen(fd, "r+", encoding="utf-8") as fh:
         fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
         try:
-            for raw in fh.read().splitlines():
+            head_objs, _ = jsonl.read_objects(_path(data_dir, FILE))
+            seen = {o.get("n") for o in head_objs if o.get("t") == "e" and o.get("n")}
+            lines = fh.read().splitlines()
+            remaining = []
+            for raw in lines:
                 if not raw.strip():
+                    continue
+                if remaining or (deadline is not None and time.monotonic() >= deadline):
+                    remaining.append(raw)
                     continue
                 try:
                     payload = json.loads(raw)
@@ -145,13 +245,24 @@ def _adopt_locked(data_dir):
                     continue
                 if not isinstance(payload, dict) or not isinstance(payload.get("e"), dict):
                     continue
+                nonce = payload.get("n") if isinstance(payload.get("n"), str) else None
+                if nonce and nonce in seen:
+                    adopted += 1
+                    continue
+                text = clean_text(payload.get("text", ""))
+                extra = {"assets": clean_assets(payload.get("assets"))} if payload.get("assets") else {}
                 try:
-                    _append_entry_locked(data_dir, payload["e"], str(payload.get("text", "")))
+                    _append_entry_locked(data_dir, _spooled_entry(payload["e"], text, nonce), text, **extra)
                 except RoadmapError:
-                    break
+                    remaining.append(raw)
+                    continue
+                if nonce:
+                    seen.add(nonce)
                 adopted += 1
             fh.seek(0)
             fh.truncate()
+            if remaining:
+                fh.write("\n".join(remaining) + "\n")
             fh.flush()
         finally:
             fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
@@ -159,8 +270,8 @@ def _adopt_locked(data_dir):
 
 
 def capture(data_dir, text, *, session_id=None, src="hook", acct=None, kind=None, sum_text=None,
-            from_id=None, now=None, timeout=None):
-    """Log one message verbatim (redacted) with its heuristic kind and summary.
+            from_id=None, assets=None, now=None, timeout=None):
+    """Log one message verbatim (redacted) with its heuristic kind and summary, and its attachment names (assets).
 
     Returns {"id", "status": "logged" | "spooled", "kind", "sum", "len"}. The id is assigned under the lock.
     When the lock stays busy for timeout seconds (the default when None), the entry goes to the spool and has no id
@@ -170,6 +281,7 @@ def capture(data_dir, text, *, session_id=None, src="hook", acct=None, kind=None
     clean = clean_text(text)
     if not clean.strip():
         raise RoadmapError("usage", "nothing to log: the text is empty", EXIT_USAGE)
+    names = clean_assets(assets)
     entry = {
         "v": head.VERSION, "t": "e", "ts": _ts(now), "src": src, "sid": session_key(session_id),
         "acct": _short(acct, 8), "kind": (kind or head.guess_kind(clean)), "sum": make_summary(clean, sum_text),
@@ -179,13 +291,13 @@ def capture(data_dir, text, *, session_id=None, src="hook", acct=None, kind=None
         entry["from"] = str(from_id)[:12]
     try:
         with lock.locked(data_dir, timeout):
-            _adopt_locked(data_dir)
-            line = _append_entry_locked(data_dir, entry, clean)
+            _adopt_locked(data_dir, _deadline(timeout))
+            line = _append_entry_locked(data_dir, entry, clean, names)
         return {"id": line["id"], "status": "logged", "kind": line["kind"], "sum": line["sum"], "len": line["len"]}
     except RoadmapError as exc:
         if exc.code != "locked":
             raise
-    _spool_append(data_dir, {"e": entry, "text": clean})
+    _spool_append(data_dir, {"e": entry, "text": clean, "assets": names, "n": os.urandom(8).hex()}, timeout)
     return {"id": None, "status": "spooled", "kind": entry["kind"], "sum": entry["sum"], "len": entry["len"]}
 
 
@@ -222,7 +334,7 @@ def update(data_dir, eid, *, by, sets=None, links=(), note=None, now=None, timeo
     if clean_note:
         rec["note"] = clean_note
     with lock.locked(data_dir, timeout):
-        _adopt_locked(data_dir)
+        _adopt_locked(data_dir, _deadline(timeout))
         if not any(o.get("t") == "e" and o.get("id") == eid for o in _records(data_dir)):
             raise RoadmapError("not_found", "no head entry " + eid, EXIT_NOT_FOUND)
         jsonl.append_line(_path(data_dir, FILE), rec)
@@ -242,7 +354,7 @@ def session(data_dir, ev, *, session_id=None, acct=None, model=None, usage=None,
             rec["usage"] = kept
     rec = {k: v for k, v in rec.items() if v is not None}
     with lock.locked(data_dir, timeout):
-        _adopt_locked(data_dir)
+        _adopt_locked(data_dir, _deadline(timeout))
         jsonl.append_line(_path(data_dir, FILE), rec)
     return rec
 
@@ -260,6 +372,77 @@ def text_of(data_dir, eid):
         if obj.get("id") == eid and isinstance(obj.get("text"), str):
             found = obj["text"]
     return found
+
+
+def details_of(data_dir, eid):
+    """The text, reply and assets of one entry (HEAD-SPEC section 13): {"text", "reply", "assets"}; text and reply are
+    None when absent and assets is []. The last line for each key wins. Reads head-text.jsonl only."""
+    out = {"text": None, "reply": None, "assets": []}
+    objs, _ = jsonl.read_objects(_path(data_dir, TEXT_FILE))
+    for obj in objs:
+        if obj.get("id") != eid:
+            continue
+        if isinstance(obj.get("text"), str):
+            out["text"] = obj["text"]
+        if isinstance(obj.get("reply"), str):
+            out["reply"] = obj["reply"]
+        if isinstance(obj.get("assets"), list):
+            out["assets"] = clean_assets(obj["assets"])
+    return out
+
+
+def set_reply(data_dir, eid, reply, *, timeout=None):
+    """Store the head's reply to one entry (HEAD-SPEC section 13): one line in head-text.jsonl, redacted and cut to
+    TEXT_MAX by clean_text. The last reply line for an id wins. Empty reply raises usage, an unknown id not_found.
+    Returns the stored length."""
+    if not isinstance(eid, str) or not _ID_RE.match(eid):
+        raise RoadmapError("usage", "not a head id: " + repr(eid), EXIT_USAGE)
+    clean = clean_text(reply)
+    if not clean.strip():
+        raise RoadmapError("usage", "nothing to store: the reply is empty", EXIT_USAGE)
+    with lock.locked(data_dir, timeout):
+        _adopt_locked(data_dir, _deadline(timeout))
+        if not any(o.get("t") == "e" and o.get("id") == eid for o in _records(data_dir)):
+            raise RoadmapError("not_found", "no head entry " + eid, EXIT_NOT_FOUND)
+        jsonl.append_line(_path(data_dir, TEXT_FILE), {"id": eid, "reply": clean})
+    return len(clean)
+
+
+def latest_hook_entry(data_dir, session_id):
+    """The newest entry this session captured through the hook (src hook), or None. Reads head.jsonl only."""
+    key = session_key(session_id)
+    if key is None:
+        return None
+    found = None
+    for rec in _records(data_dir):
+        if rec.get("t") == "e" and rec.get("src") == "hook" and rec.get("sid") == key:
+            found = rec
+    return found
+
+
+def forget_text(data_dir, eid):
+    """Drop every verbatim line of one entry from head-text.jsonl, rewriting the file atomically (an append of an
+    empty text would leave the old lines in place). Other lines are kept as they are. The caller holds the lock.
+    Returns the number of lines dropped."""
+    path = _path(data_dir, TEXT_FILE)
+    if not os.path.exists(path):
+        return 0
+    kept, dropped = [], 0
+    for raw in jsonl.raw_lines(path):
+        if not raw.strip():
+            continue
+        try:
+            obj = json.loads(raw)
+        except ValueError:
+            kept.append(raw)
+            continue
+        if isinstance(obj, dict) and obj.get("id") == eid:
+            dropped += 1
+            continue
+        kept.append(raw)
+    if dropped:
+        atomic.write_text(path, "".join(line + "\n" for line in kept))
+    return dropped
 
 
 def _age_text(minutes):

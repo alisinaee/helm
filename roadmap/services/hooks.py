@@ -12,6 +12,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import threading
 import time
 
@@ -273,6 +274,7 @@ def _handle(raw, environ, cwd, now, clock, started):
             raise
         # A busy lock: return silently, so the hook exits 0 within its time budget. The next event tries again.
     if event == "Stop":
+        _head_reply_capture(payload, data_dir, now, clock, started)
         return _stop_pickup(payload, project, data_dir, now, clock, started) or _stop_gate(payload, project, data_dir,
                                                                                          now)
     return None
@@ -615,6 +617,114 @@ def _head_on(data_dir):
     return _head_config(data_dir).get("headCapture") is True
 
 
+# HEAD-SPEC section 13: the attachments named in a prompt (names and paths only, never read) and the reply of the turn.
+_ASSET_URL_RE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*://\S+")
+_ASSET_RE = re.compile(
+    r"@(?P<at>[^\s@\"'`<>]+)"
+    r"|(?P<path>(?:~|\.{1,2})?/[^\s\"'`<>()\[\]]+\.[A-Za-z][A-Za-z0-9]{0,7})"
+    r"|(?<![\w/.@-])(?P<name>\w[\w.-]*\.(?:png|jpe?g|gif|webp|heic|bmp|svg|pdf|docx?|xlsx?|pptx?|csv|txt|md|json"
+    r"|log|zip|py|js|ts|html?|css|ya?ml|toml))(?!\w)",
+    re.IGNORECASE)
+REPLY_TAIL_BYTES = 256 * 1024
+REPLY_SLACK_S = 5   # the logged entry may be stamped a few seconds before the prompt's own transcript stamp
+
+
+def prompt_assets(text):
+    """The attachment names of a prompt, in order: @file references, absolute or relative paths with an extension and
+    bare names of common file types. URLs are skipped. Names only; the file is never opened. Never raises."""
+    try:
+        if not isinstance(text, str):
+            return []
+        body = _ASSET_URL_RE.sub(" ", text)
+        found = []
+        for match in _ASSET_RE.finditer(body):
+            value = match.group("at") or match.group("path") or match.group("name") or ""
+            value = value.rstrip(".,;:!?)]}")
+            if value:
+                found.append(value)
+        return head_svc.clean_assets(found)
+    except Exception:
+        return []
+
+
+def _is_prompt(content):
+    """True when a transcript user entry is a typed prompt: text, not only tool results."""
+    if isinstance(content, str):
+        return bool(content.strip())
+    if isinstance(content, list):
+        return any(isinstance(b, dict) and b.get("type") == "text" and str(b.get("text") or "").strip()
+                   for b in content)
+    return False
+
+
+def _last_text(content):
+    """The last non-empty text block of an assistant message, stripped, or None."""
+    if isinstance(content, str):
+        return content.strip() or None
+    if not isinstance(content, list):
+        return None
+    texts = [b.get("text") for b in content if isinstance(b, dict) and b.get("type") == "text"]
+    texts = [t.strip() for t in texts if isinstance(t, str) and t.strip()]
+    return texts[-1] if texts else None
+
+
+def _turn_reply(path):
+    """(reply, prompt stamp) of the last turn in the transcript at path, read from its last 256 KB: the last assistant
+    text after the last typed user message, and that message's timestamp text. (None, None) when either is not found
+    inside the read. Fail-open: it never raises."""
+    try:
+        if not isinstance(path, str) or not path.strip() or not os.path.isfile(path):
+            return None, None
+        size = os.path.getsize(path)
+        with open(path, "rb") as fh:
+            fh.seek(max(0, size - REPLY_TAIL_BYTES))
+            chunk = fh.read(REPLY_TAIL_BYTES)
+        lines = chunk.decode("utf-8", errors="ignore").splitlines()
+        if size > REPLY_TAIL_BYTES and lines:
+            lines = lines[1:]  # the first line may start mid-entry
+        reply = None
+        for line in reversed(lines):
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            if not isinstance(entry, dict):
+                continue
+            message = entry.get("message") if isinstance(entry.get("message"), dict) else {}
+            if entry.get("type") == "user":
+                if not entry.get("isMeta") and _is_prompt(message.get("content")):
+                    return reply, entry.get("timestamp")
+                continue
+            if entry.get("type") == "assistant" and reply is None:
+                reply = _last_text(message.get("content"))
+        return None, None
+    except Exception:
+        return None, None
+
+
+def _head_reply_capture(payload, data_dir, now, clock, started):
+    """Store the reply of the turn on the newest entry of this session (HEAD-SPEC section 13), when that entry was
+    logged at or after the turn's prompt. Off unless the project captures. Fail-open: a busy lock or a problem goes to
+    the log and the Stop hook carries on."""
+    try:
+        if not _head_on(data_dir):
+            return
+        reply, stamp = _turn_reply(payload.get("transcript_path"))
+        if reply is None or not isinstance(stamp, str):
+            return
+        prompt_at = head_core.parse_ts(stamp[:19] + "Z")
+        entry = head_svc.latest_hook_entry(data_dir, payload.get("session_id"))
+        logged_at = head_core.parse_ts(entry.get("ts")) if entry else None
+        if prompt_at is None or logged_at is None or logged_at < prompt_at - datetime.timedelta(seconds=REPLY_SLACK_S):
+            return
+        budget = max(0.0, (PRE_TIMEOUT_S - (clock() - started)) * 0.5)
+        head_svc.set_reply(data_dir, entry["id"], reply, timeout=budget)
+    except RoadmapError as exc:
+        _log("head.reply skipped: " + exc.code)
+    except Exception as exc:
+        _log("head.reply error " + type(exc).__name__)
+
+
 def _user_prompt(payload, environ, cwd, now, clock, started):
     """Log the prompt for the head and reply with one triage line. Off unless the project sets headCapture. Fail-open:
     it never blocks the prompt, and the lock wait is a share of what is left of the 0.3 s budget (a busy lock spools)."""
@@ -646,7 +756,8 @@ def _user_prompt(payload, environ, cwd, now, clock, started):
     if len(stripped.split()) < HEAD_MIN_WORDS:
         return None
     try:
-        result = head_svc.capture(data_dir, text, session_id=session, src="hook", now=moment, timeout=budget)
+        result = head_svc.capture(data_dir, text, session_id=session, src="hook", assets=prompt_assets(text),
+                                  now=moment, timeout=budget)
     except RoadmapError as exc:
         _log("head.capture skipped: " + exc.code)
         return None
@@ -674,10 +785,14 @@ def _head_reply(result, untriaged):
     eid = result["id"]
     if eid is None:
         return "head: queued (%s), logged on the next head write." % kind
-    lead = 'head: logged %s (%s). triage: roadmap head t %s %s "' % (eid, kind, eid, kind.rstrip("?"))
-    tail = '"' + (" · %d untriaged" % untriaged if untriaged else "")
+    lead = "head: logged %s (%s). triage: roadmap head t %s %s " % (eid, kind, eid, kind.rstrip("?"))
+    tail = " · %d untriaged" % untriaged if untriaged else ""
     room = HEAD_REPLY_CHARS - len(lead) - len(tail)
-    return (lead + str(result["sum"])[:max(0, room)] + tail)[:HEAD_REPLY_CHARS]
+    # the summary is text from the prompt: it is shell-quoted, so a hint the agent copies can never run it
+    cut = " ".join(str(result["sum"]).split())[:max(0, room)]
+    while cut and len(shlex.quote(cut)) > room:
+        cut = cut[:-1]
+    return (lead + (shlex.quote(cut) if cut else "''") + tail)[:HEAD_REPLY_CHARS]
 
 
 def _head_session_lines(data_dir, now=None):

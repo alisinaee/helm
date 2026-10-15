@@ -10,6 +10,7 @@ from unittest import mock
 
 from roadmap.errors import RoadmapError
 from roadmap.services import hooks, hooks_install
+from roadmap.services import head as head_svc
 from roadmap.store import lock
 from tests.unit.test_control_support import ControlCase, read_json, write_json
 
@@ -45,6 +46,10 @@ class HeadHookCase(ControlCase):
             return []
         with open(self.head_file, encoding="utf-8") as fh:
             return [json.loads(line) for line in fh if line.strip()]
+
+    def text_lines(self):
+        with open(self.text_file, encoding="utf-8") as fh:
+            return [json.loads(x) for x in fh if x.strip()]
 
     def log_text(self):
         path = os.path.join(os.environ["ROADMAP_HOME"], "logs", "hooks.log")
@@ -338,3 +343,111 @@ class InstallTableTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AssetTests(HeadHookCase):
+    """HEAD-SPEC section 13: the attachment names of a prompt are stored with the text (names only, at most 20)."""
+
+    def test_prompt_assets_finds_names_paths_and_at_refs(self):
+        names = hooks.prompt_assets("see @docs/plan.md and the shot.png, then /tmp/out/build.log and https://x.io/a.png")
+        self.assertEqual(names, ["docs/plan.md", "shot.png", "/tmp/out/build.log"])
+
+    def test_prompt_assets_is_empty_for_plain_text_and_non_text(self):
+        self.assertEqual(hooks.prompt_assets("version 1.5 is out, no files here"), [])
+        self.assertEqual(hooks.prompt_assets(None), [])
+
+    def test_prompt_assets_keeps_at_most_twenty(self):
+        text = " ".join("file%d.png" % i for i in range(30))
+        self.assertEqual(len(hooks.prompt_assets(text)), 20)
+
+    def test_the_capture_stores_the_assets_with_the_text(self):
+        self.prompt("please check the attached shot.png and @docs/plan.md for the board")
+        line = self.text_lines()[-1]
+        self.assertEqual(line["assets"], ["shot.png", "docs/plan.md"])
+        self.assertIn("please check the attached", line["text"])
+
+    def test_a_prompt_without_files_has_no_assets_key(self):
+        self.prompt("please fix the broken export button on the board")
+        line = self.text_lines()[-1]
+        self.assertNotIn("assets", line)
+
+
+def _line(kind, text, stamp, meta=False):
+    entry = {"type": kind, "timestamp": stamp, "message": {"role": kind, "content": text}}
+    if meta:
+        entry["isMeta"] = True
+    return json.dumps(entry)
+
+
+class ReplyCaptureTests(HeadHookCase):
+    """HEAD-SPEC section 13: the Stop hook stores the turn's last assistant text on the session's newest hook entry."""
+
+    def setUp(self):
+        super().setUp()
+        self.transcript = os.path.join(self.docs, "transcript.jsonl")
+
+    def write_transcript(self, lines):
+        with open(self.transcript, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(lines) + "\n")
+
+    def stop(self, session="sess-1", path=None):
+        payload = {"hook_event_name": "Stop", "cwd": self.project, "session_id": session,
+                   "transcript_path": self.transcript if path is None else path, "stop_hook_active": False}
+        return hooks.run_hook(json.dumps(payload), now=MOMENT.timestamp())
+
+    def reply_of(self, eid):
+        return head_svc.details_of(self.docs, eid)["reply"]
+
+    def turn(self, prompt, reply_text, stamp="2026-10-15T09:30:00.000Z"):
+        return [_line("user", prompt, stamp),
+                _line("assistant", [{"type": "text", "text": "Let me look."}], "2026-10-15T09:30:01.000Z"),
+                _line("user", [{"type": "tool_result", "content": "ok"}], "2026-10-15T09:30:02.000Z"),
+                _line("assistant", [{"type": "text", "text": reply_text}], "2026-10-15T09:30:03.000Z")]
+
+    def test_stop_stores_the_last_assistant_text_of_the_turn(self):
+        self.prompt("please fix the broken export button on the board")
+        eid = self.entries()[-1]["id"]
+        self.write_transcript(self.turn("please fix the broken export button on the board", "Fixed the export button."))
+        self.stop()
+        self.assertEqual(self.reply_of(eid), "Fixed the export button.")
+
+    def test_a_turn_with_no_capture_gets_no_reply(self):
+        self.prompt("please fix the broken export button on the board")
+        eid = self.entries()[-1]["id"]
+        # the next turn is an ack that the hook did not log: its reply must not reach the older entry
+        self.write_transcript(self.turn("ok", "Done.", stamp="2026-10-15T10:00:00.000Z"))
+        self.stop()
+        self.assertIsNone(self.reply_of(eid))
+
+    def test_a_reply_is_redacted_and_capped(self):
+        self.prompt("please fix the broken export button on the board")
+        eid = self.entries()[-1]["id"]
+        text = "key " + SECRET + " mail ann@example.com " + ("x" * 9000)
+        self.write_transcript(self.turn("please fix the broken export button on the board", text))
+        self.stop()
+        reply = self.reply_of(eid)
+        self.assertNotIn(SECRET, reply)
+        self.assertNotIn("ann@example.com", reply)
+        self.assertLessEqual(len(reply), 8000)
+
+    def test_a_missing_transcript_fails_open(self):
+        self.prompt("please fix the broken export button on the board")
+        eid = self.entries()[-1]["id"]
+        self.stop(path=os.path.join(self.docs, "nope.jsonl"))  # the Stop gate may answer; no exception
+        self.assertIsNone(self.reply_of(eid))
+
+    def test_a_large_transcript_is_read_from_its_end_only(self):
+        self.prompt("please fix the broken export button on the board")
+        eid = self.entries()[-1]["id"]
+        old = [_line("assistant", [{"type": "text", "text": "old"}], "2026-10-14T08:00:00.000Z")] * 6000
+        turn = self.turn("please fix the broken export button on the board", "Fixed it at the end.")
+        self.write_transcript(old + turn)
+        self.assertGreater(os.path.getsize(self.transcript), hooks.REPLY_TAIL_BYTES)
+        self.stop()
+        self.assertEqual(self.reply_of(eid), "Fixed it at the end.")
+
+    def test_no_reply_is_read_when_capture_is_off(self):
+        self.set_config(headCapture=False)
+        self.write_transcript(self.turn("please fix the broken export button on the board", "Fixed."))
+        self.stop()
+        self.assertFalse(os.path.exists(self.text_file))
