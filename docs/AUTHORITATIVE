@@ -1,0 +1,2 @@
+This board is authoritative: split-net tools/sync-rb-board.py skips while this file exists.
+Register jobs with `bin/roadmap job start|done` (see docs/HEAD-RUNBOOK.md), not in split-net.
