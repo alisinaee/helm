@@ -103,3 +103,7 @@ Rows R7.13, 7.21, 7.22, 7.24, 7.26, 7.29, 7.30, 7.59 are human-level: keep as al
 
 Open questions for the person: (1) small items auto-accept (skip Review)? (2) keep phases as milestones over
 Work items? (3) confirm the 15-item R7 grouping and titles.
+
+## Decisions (person, 2026-10-15)
+- Every Work item goes through Review: only the person's accept makes it Done (no skip for small items).
+- Phases (R1-R7) stay as milestones above Work items.
