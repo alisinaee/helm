@@ -1,20 +1,31 @@
-// Agents (WP34): the running jobs as a tree (a lead job with its workers indented under it), the last 10 finished jobs,
-// and a Stop button per row (op task.stop). Elapsed time ticks in the browser from the job's start time. The swimlane
+// Agents (WP34): the running jobs as a tree (a lead job with its workers indented under it), and the finished jobs, the
+// whole history newest first (R7.60). The first AGENT_PAGE finished rows show at once; Load more shows the next ones,
+// from the snapshot or, past it, from the paged read GET .../jobs?offset&limit. Each finished row has a checkbox, and
+// Remove selected (op job.remove, person only, Undo in the toast) is the only way a finished job leaves the history.
+// Stop per running row (op task.stop). Elapsed time ticks in the browser from the job's start time. The swimlane
 // timeline is LATER. A worker is a job whose parent is the lead job (the parent and role fields come from WP20).
+// The history controls carry data-agent (not data-action) and are wired once, below, by document listeners.
 
+import { getJson } from "../api.js";
 import { run } from "../cmd.js";
 import { chipHtml, emptyHtml, esc } from "../dom.js";
 import { MISSING, fmtDuration, fmtTokens } from "../format.js";
 import { copyButton, refSummary } from "../ref.js";
 import { itemHash, pageState, scopeSnapshots } from "./inbox.js";
 
-const FINISHED_MAX = 10;
+const AGENT_PAGE = 10;
 const STATUS_WORDS = { done: "Done", failed: "Failed" };
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"];
 const ENGINES = { haiku: "Haiku 5.5", sonnet: "Sonnet 5.5", opus: "Opus 5.5", head: "head · Opus 5.5",
   agy: "agy · Gemini 3.8 Flash", opencode: "opencode", cursor: "cursor · auto" };
 const LEVEL_SUFFIX = /-(low|medium|high|xhigh|max)$/;
 let ticking = false;
+
+// Finished-history state per project: the visible count, the rows read from the paged route, the server total, the
+// number of rows known at the last render, and the loading and error state of a page. Selected finished jobs are kept
+// as "project\njob id" keys, so a selection survives a re-render.
+const history = new Map();
+const picked = new Set();
 
 // The engine of a job: a bare model word maps to its engine name. A job with a recorded engine model shows the engine
 // and that model: "cursor · grok-4.7" (the effort suffix is shown as the effort), "opencode · laguna-s-2.1".
@@ -69,14 +80,62 @@ function startMs(job) {
   return isNaN(t) ? 0 : t;
 }
 
-// The last FINISHED_MAX jobs that have ended, newest first.
+function endMs(job) {
+  return typeof job.endedMs === "number" ? job.endedMs : Date.parse(job.ended || "") || 0;
+}
+
+function byEndDesc(a, b) {
+  return endMs(b) - endMs(a);
+}
+
+// The finished jobs of a snapshot, newest first. The snapshot holds the whole job file, so none is cut here.
 export function finishedJobs(snap) {
   return (snap.jobs || []).filter(function (j) {
     return j.status !== "running";
-  }).sort(function (a, b) {
-    return (typeof b.endedMs === "number" ? b.endedMs : Date.parse(b.ended || "") || 0) -
-      (typeof a.endedMs === "number" ? a.endedMs : Date.parse(a.ended || "") || 0);
-  }).slice(0, FINISHED_MAX);
+  }).sort(byEndDesc);
+}
+
+// One finished job from the paged route (the job file's shape), in the snapshot's normalised fields.
+function shapeRow(j) {
+  const started = Date.parse(j.started || "");
+  const ended = Date.parse(j.ended || "");
+  return {
+    id: String(j.id || ""),
+    title: j.title || "",
+    model: j.model || null,
+    status: j.status || "",
+    task: j.task || null,
+    elapsedS: typeof j.elapsed_s === "number" ? j.elapsed_s : null,
+    tokensK: typeof j.tokensK === "number" ? j.tokensK : null,
+    startedMs: isNaN(started) ? null : started,
+    endedMs: isNaN(ended) ? null : ended,
+    parent: j.parent || null,
+    role: j.role || null,
+    effort: j.effort || null,
+    engineModel: j.engine_model || null,
+  };
+}
+
+function historyOf(pid) {
+  let hist = history.get(pid);
+  if (!hist) {
+    hist = { visible: AGENT_PAGE, rows: [], total: null, known: 0, loading: false, error: "" };
+    history.set(pid, hist);
+  }
+  return hist;
+}
+
+// Every finished job of a project: the snapshot's, plus the rows read from the paged route, deduped by id, newest
+// first.
+function historyRows(pid, snap) {
+  const seen = new Set();
+  const out = [];
+  for (const job of finishedJobs(snap).concat(historyOf(pid).rows)) {
+    if (seen.has(job.id)) continue;
+    seen.add(job.id);
+    out.push(job);
+  }
+  return out.sort(byEndDesc);
 }
 
 // Elapsed seconds for a running job, from its start time (so the figure ticks without a new snapshot).
@@ -120,14 +179,17 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
   }).join("") + "</ul></li>";
 }
 
-// A finished job on the same tracks as the running rows: model and status, title, task, elapsed, tokens, an empty
-// Stop cell, and the copy-reference button.
+// A finished job on the same tracks as the running rows: model and status, title, task, elapsed, tokens, the row's
+// select checkbox (in the Stop cell, which a finished row has no use for), and the copy-reference button.
 function finishedHtml(job, pid) {
   const word = STATUS_WORDS[job.status] || job.status;
   const kind = job.status === "failed" ? "danger" : "success";
   const label = job.title || job.id;
   const tokens = job.tokensK == null ? "unknown" : fmtTokens(job.tokensK);
   const task = job.task ? '<a href="' + esc(itemHash(pid, job.task)) + '">' + esc(job.task) + "</a>" : "";
+  const check = '<input type="checkbox" data-agent="select" data-project="' + esc(pid) + '" data-id="' +
+    esc(job.id) + '" data-focus="sel-' + esc(pid) + "-" + esc(job.id) + '" aria-label="' + esc("Select " + label) +
+    '"' + (picked.has(pid + "\n" + job.id) ? " checked" : "") + ">";
   return '<li class="ag-row"><div class="row-grid rg-agent">' +
     '<span class="rg-chips">' + chipHtml(engineLabel(job.model, job.engineModel), "neutral") +
     chipHtml(word, kind) + "</span>" +
@@ -135,8 +197,27 @@ function finishedHtml(job, pid) {
     '<span class="rg-main"><span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span></span>" +
     '<span class="rg-chips">' + task + "</span>" +
     '<span class="rg-num num">' + esc(fmtDuration(job.elapsedS)) + "</span>" +
-    '<span class="rg-num num">' + esc(tokens) + "</span><span></span>" +
+    '<span class="rg-num num">' + esc(tokens) + "</span><span>" + check + "</span>" +
     copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) }) + "</div></li>";
+}
+
+// The count line and the controls under the finished list: Remove selected (its count of picked rows of this project)
+// and Load more while the history has rows beyond those shown. An error of the last page is shown as an alert.
+function historyControls(pid, all, hist) {
+  const selected = Array.from(picked).filter(function (key) {
+    return key.indexOf(pid + "\n") === 0;
+  }).length;
+  const total = hist.total == null ? all.length : Math.max(hist.total, all.length);
+  const more = hist.total == null || all.length < hist.total;
+  const attrs = ' data-project="' + esc(pid) + '"';
+  return '<p class="ov-sum" aria-live="polite">Showing ' + esc(String(Math.min(hist.visible, all.length))) +
+    " of " + esc(String(total)) + " · " + esc(String(selected)) + " selected</p>" +
+    (hist.error ? '<p class="ov-sum" role="alert">' + esc(hist.error) + "</p>" : "") +
+    '<p class="ov-sum">' +
+    '<button type="button" class="btn btn-small" data-agent="remove"' + attrs + (selected ? "" : " disabled") + ">" +
+    "Remove selected</button> " +
+    (more ? '<button type="button" class="btn btn-small" data-agent="more"' + attrs +
+      (hist.loading ? " disabled" : "") + ">Load more</button>" : "") + "</p>";
 }
 
 // One block per project in view: its live tree and its finished jobs.
@@ -155,11 +236,14 @@ function projectBlock(entry, now, showName) {
       return agentRowHtml(job, entry.id, tree, blocked, now, 0);
     }).join("") + "</ul>"
     : emptyHtml("No agents running.");
-  const done = finishedJobs(snap);
-  const past = done.length
-    ? '<ol class="ag-list" aria-label="Last finished jobs">' + head + done.map(function (job) {
-      return finishedHtml(job, entry.id);
-    }).join("") + "</ol>"
+  const hist = historyOf(entry.id);
+  const all = historyRows(entry.id, snap);
+  hist.known = all.length;
+  const past = all.length
+    ? '<ol class="ag-list" aria-label="Last finished jobs">' + head +
+      all.slice(0, hist.visible).map(function (job) {
+        return finishedHtml(job, entry.id);
+      }).join("") + "</ol>" + historyControls(entry.id, all, hist)
     : '<p class="ov-sum">No finished jobs yet.</p>';
   return '<section class="ov-card" aria-label="Agents">' + heading + live +
     '<h3 class="ov-h">Recently finished jobs</h3>' + past + "</section>";
@@ -185,6 +269,92 @@ export function pageAction(action, el) {
   if (!task) return;
   const pid = el.getAttribute("data-project");
   run("task.stop", { id: task }, { project: pid, label: "Stop requested for " + task });
+}
+
+function rerender() {
+  document.dispatchEvent(new Event("rb:render"));
+}
+
+// A row's checkbox: the selection follows it.
+function pickRow(el) {
+  const key = el.getAttribute("data-project") + "\n" + el.getAttribute("data-id");
+  if (el.checked) picked.add(key);
+  else picked.delete(key);
+  rerender();
+}
+
+// Load more: reveal the rows already known, else read the next page after them from the paged route. One page is
+// requested at a time; a failed page shows its alert and the button stays.
+function loadMore(pid) {
+  const hist = historyOf(pid);
+  if (hist.loading) return;
+  if (hist.known > hist.visible) {
+    hist.visible += AGENT_PAGE;
+    rerender();
+    return;
+  }
+  hist.loading = true;
+  hist.error = "";
+  const url = "/api/v1/projects/" + encodeURIComponent(pid) + "/jobs?offset=" + hist.known + "&limit=" + AGENT_PAGE;
+  getJson(url).then(function (res) {
+    const data = res && res.data;
+    if (!res || res.status !== 200 || !data || !Array.isArray(data.rows)) throw new Error("page");
+    const have = new Set(hist.rows.map(function (r) {
+      return r.id;
+    }));
+    for (const raw of data.rows) {
+      const row = shapeRow(raw);
+      if (row.id && !have.has(row.id)) {
+        have.add(row.id);
+        hist.rows.push(row);
+      }
+    }
+    hist.total = typeof data.total === "number" ? data.total : hist.known + data.rows.length;
+    if (!data.rows.length) hist.total = hist.known;
+    hist.visible = hist.known + data.rows.length;
+  }).catch(function () {
+    hist.error = "Could not load more jobs. Try Load more again.";
+  }).finally(function () {
+    hist.loading = false;
+    rerender();
+  });
+}
+
+// Remove selected: job.remove on the picked rows of one project (person only; the toast offers Undo). The rows leave
+// this page's cache at once, and the snapshot that follows the write drops them from the snapshot too.
+function removeSelected(pid) {
+  const prefix = pid + "\n";
+  const ids = [];
+  for (const key of picked) {
+    if (key.indexOf(prefix) === 0) ids.push(key.slice(prefix.length));
+  }
+  if (!ids.length) return;
+  const hist = historyOf(pid);
+  run("job.remove", { ids: ids }, { project: pid, label: "Removed " + ids.length + " job(s)" }).then(function (data) {
+    if (!data) return;
+    for (const id of ids) picked.delete(prefix + id);
+    hist.rows = hist.rows.filter(function (row) {
+      return ids.indexOf(row.id) === -1;
+    });
+    rerender();
+  });
+}
+
+// The history controls are in the page's markup with data-agent, so they are wired once here (the page's data-action
+// list in app.js is not used for them). A checkbox fires change; the two buttons fire click.
+if (typeof document !== "undefined" && typeof document.addEventListener === "function") {
+  document.addEventListener("change", function (event) {
+    const el = event.target;
+    if (el && el.getAttribute && el.getAttribute("data-agent") === "select") pickRow(el);
+  });
+  document.addEventListener("click", function (event) {
+    const el = event.target && event.target.closest ? event.target.closest("[data-agent]") : null;
+    if (!el) return;
+    const action = el.getAttribute("data-agent");
+    const pid = el.getAttribute("data-project");
+    if (action === "more") loadMore(pid);
+    else if (action === "remove") removeSelected(pid);
+  });
 }
 
 // Refresh the elapsed text every second without a re-render (one ticker per page).

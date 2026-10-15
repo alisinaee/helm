@@ -683,6 +683,48 @@ def _origin_source(data_dir, activity_id):
     return None
 
 
+# ---------------------------------------------------------------- job history (R7.60)
+
+JOB_IDS_MAX = 200
+JOB_ID_RE = re.compile(r"^j\d{1,9}$")
+
+
+def _check_job_remove(a):
+    raw = a.get("ids")
+    if not isinstance(raw, list) or not 1 <= len(raw) <= JOB_IDS_MAX:
+        raise _usage("ids must be a list of 1 to 200 finished job ids such as j12", "roadmap status")
+    ids = []
+    for item in raw:
+        value = _text(item)
+        if not JOB_ID_RE.match(value):
+            raise _usage("job id '" + value[:40] + "' is not a job id such as j12", "roadmap status")
+        if value not in ids:
+            ids.append(value)
+    return {"ids": ids}
+
+
+def _check_job_restore(a):
+    raw = a.get("jobs")
+    if not isinstance(raw, list) or not raw or any(not isinstance(r, dict) for r in raw):
+        raise _usage("jobs must be a list of job records")
+    return {"jobs": raw}
+
+
+def _h_job_remove(data_dir, a, now):
+    """Remove finished jobs from the history (person only; an agent or the phone is refused). Undo puts them back."""
+    _person_only("job remove", "roadmap status")
+    removed = jobs.remove_jobs(data_dir, a["ids"])
+    ids = [r["id"] for r in removed]
+    return ({"removed": ids}, "removed " + str(len(ids)) + " job(s)",
+            {"op": "job.restore", "args": {"jobs": removed}})
+
+
+def _h_job_restore(data_dir, a, now):
+    """Undo of job.remove: the removed job records go back into jobs.json."""
+    back = jobs.restore_jobs(data_dir, a["jobs"])
+    return {"restored": back}, "restored " + str(back) + " job(s)", None
+
+
 # ---------------------------------------------------------------- registry
 
 class _Op(object):
@@ -755,6 +797,8 @@ OPS = {
     "subtask.restore": _Op(_check_subtask_restore, _h_subtask_restore, public=False),
     "question.reopen": _Op(_check_question_reopen, _h_question_reopen, public=False),
     "backlog.remove": _Op(_check_backlog_remove, _h_backlog_remove, public=False),
+    "job.remove": _Op(_check_job_remove, _h_job_remove),
+    "job.restore": _Op(_check_job_restore, _h_job_restore, public=False),
 }
 
 
