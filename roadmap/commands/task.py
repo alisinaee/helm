@@ -16,6 +16,7 @@ STATUS_FOR = {"done": "done", "start": "partial", "hold": "hold"}
 ERRORS_SHOWN = 5
 DIFFS_SHOWN = 10
 LIST_DEFAULT = 20
+OUT_LINES = 15  # most lines a human output prints without --full (a next: line counts)
 
 
 def _project_option():
@@ -43,6 +44,7 @@ def register(sub, common):
     listing.add_argument("--needs-you", action="store_true", help="only tasks that need the user")
     listing.add_argument("--limit", metavar="N", type=int, default=LIST_DEFAULT,
                          help="most tasks to print (default %d)" % LIST_DEFAULT)
+    listing.add_argument("--full", action="store_true", help="print past the 15-line cap")
     listing.set_defaults(handler=_list)
 
     for name, text in (("done", "mark tasks done"), ("start", "mark tasks started (partial)"),
@@ -51,6 +53,7 @@ def register(sub, common):
         parser.add_argument("ids", nargs="+", metavar="id", help="one or more task ids")
         parser.add_argument("--tokens", metavar="K", default=None, help="tokens used, in thousands (whole number)")
         parser.add_argument("--note", metavar="TEXT", default=None, help="short note; an empty value clears it")
+        parser.add_argument("--full", action="store_true", help="print past the 15-line cap")
         parser.set_defaults(handler=_change, status_word=name)
 
     for name, text in (("backlog", "move a task to the backlog (the person only)"),
@@ -77,16 +80,29 @@ def register(sub, common):
     bulk.add_argument("--after", metavar="IDS", default=None,
                       help="task ids this task waits for, comma separated (at most 5); an empty value clears them")
     bulk.add_argument("--dry-run", action="store_true", help="show what would change, write nothing")
+    bulk.add_argument("--full", action="store_true", help="print past the 15-line cap")
     bulk.set_defaults(handler=_set)
 
 
+def _full(args):
+    return getattr(args, "full", False)
+
+
+def _fit(lines, full, reserve=0):
+    """The lines that fit under OUT_LINES less reserve (room for a next: line); past that, one '+N more' line."""
+    room = OUT_LINES - reserve
+    if full or len(lines) <= room:
+        return lines
+    return lines[:room - 1] + ["+%d more (--full)" % (len(lines) - room + 1)]
+
+
 def plan_failure(errors, next_cmd, exit_code=EXIT_INVALID_DATA):
-    """The error for invalid input: the first ERRORS_SHOWN problems, one per line, then a next: line.
+    """The error for invalid input: the first ERRORS_SHOWN problems on one line, then a next: line.
     Nothing is written."""
     shown = list(errors[:ERRORS_SHOWN])
     if len(errors) > ERRORS_SHOWN and shown:
         shown[-1] += " (+%d more)" % (len(errors) - ERRORS_SHOWN)
-    return RoadmapError("invalid_plan", "\n".join(shown) or "invalid input", exit_code, next=next_cmd)
+    return RoadmapError("invalid_plan", "; ".join(shown) or "invalid input", exit_code, next=next_cmd)
 
 
 def apply_records(data_dir, project_id, records, next_cmd, dry_run=False, replace_phase=None):
@@ -101,18 +117,18 @@ def apply_records(data_dir, project_id, records, next_cmd, dry_run=False, replac
         raise plan_failure(exc.errors, cmd, exit_code)
 
 
-def print_diff(diff, json_mode):
+def print_diff(diff, json_mode, full=False):
     """Print the summary line and, for a dry run, up to DIFFS_SHOWN field diffs. Returns the json data."""
     summary = tasks.describe(diff)
     data = {"summary": summary, "changed": diff["changed"], "wrote": diff["wrote"], "dry_run": diff["dry_run"],
             "field_diffs": diff["field_diffs"], "backup": diff["backup"]}
     if not json_mode:
-        print(summary)
+        lines = [summary]
         if diff["dry_run"]:
-            for line in diff["field_diffs"][:DIFFS_SHOWN]:
-                print("~ " + line)
-            for tid in diff["tasks_removed"]:
-                print("- " + tid)
+            lines += ["~ " + line for line in diff["field_diffs"][:DIFFS_SHOWN]]
+            lines += ["- " + tid for tid in diff["tasks_removed"]]
+        for line in _fit(lines, full):
+            print(line)
         return None
     return data
 
@@ -135,10 +151,9 @@ def _list(args):
     _, data_dir = _data(args)
     rows = tasks.query(data_dir, phase=args.phase, status=args.status, needs_you=args.needs_you, limit=args.limit)
     if not getattr(args, "json", False):
-        if not rows:
-            print("no tasks")
-        for row in rows:
-            print(planfmt.format_task(row))
+        lines = [planfmt.format_task(row) for row in rows] or ["no tasks"]
+        for line in _fit(lines, _full(args)):
+            print(line)
         return None
     return {"tasks": rows}
 
@@ -166,8 +181,8 @@ def _change(args):
             payload["note"] = args.note
         commands.write(project_id, "task.status", payload, "roadmap task list --phase " + tid.split(".")[0])
     if not getattr(args, "json", False):
-        for tid in args.ids:
-            print(tid + " " + status)
+        for line in _fit([tid + " " + status for tid in args.ids], _full(args)):
+            print(line)
         return None
     return {"ids": list(args.ids), "status": status}
 
@@ -272,7 +287,7 @@ def _set(args):
         raise plan_failure(errors, next_cmd)
     _backlog_guard(records, data_dir)
     diff = apply_records(data_dir, project_id, records, next_cmd, dry_run=args.dry_run)
-    return print_diff(diff, getattr(args, "json", False))
+    return print_diff(diff, getattr(args, "json", False), _full(args))
 
 
 def _set_after(args, project_id, data_dir):
@@ -287,7 +302,7 @@ def _set_after(args, project_id, data_dir):
     if errors:
         raise plan_failure(errors, next_cmd, EXIT_USAGE)
     diff = apply_records(data_dir, project_id, records, next_cmd, dry_run=args.dry_run)
-    return print_diff(diff, getattr(args, "json", False))
+    return print_diff(diff, getattr(args, "json", False), _full(args))
 
 
 def _read_source(source):

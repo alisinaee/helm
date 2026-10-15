@@ -236,11 +236,11 @@ class TaskReadTests(TaskCmdCase):
         self.assertEqual(out.splitlines(), [
             "T M1.3 todo 5 haiku/low ! | Create hosting account and API key # needs your login"])
 
-    def test_list_default_limit_is_twenty_lines(self):
+    def test_list_default_limit_is_fifteen_lines(self):
         self.add_many_tasks(25)
         code, out, _ = self.cli(["task", "list"])
         self.assertEqual(code, 0)
-        self.assertEqual(len(out.splitlines()), 20)
+        self.assertEqual(len(out.splitlines()), 15)
 
     def test_list_filters_by_needs_you_and_phase(self):
         code, out, _ = self.cli(["task", "list", "--needs-you", "--phase", "M1"])

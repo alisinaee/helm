@@ -30,9 +30,11 @@ DONE_CHECKLIST = (            # HEAD-SPEC section 11 item 3: the worker-completi
     "6. tick the asks it answers: roadmap head set H<n> status=done note=\"<commit sha | job id | answer: ...>\"",
     "next: roadmap head brief --gate",
 )
-SHOW_MAX = 20                 # the show output in lines, header and text included
+OUT_LINES = 15                # most lines a human output prints without --full (a next: line counts)
+SHOW_MAX = 14                 # the show output in lines, header and text included (next: is the 15th)
 TEXT_SHOW_MAX = 200           # verbatim characters on the show line
-LIST_DEFAULT = 20
+LIST_DEFAULT = 13             # rows head list prints without --full
+JSON_LIST_DEFAULT = 20        # rows head list --json returns when --n is not given (unchanged)
 SET_FIELDS = ("status", "kind", "sum", "note")
 UNHANDLED = ("new", "understood")
 LIST_FILTERS = ("open", "unhandled", "doing", "needs", "done", "all")
@@ -79,12 +81,15 @@ def register(sub, common):
                            help="show the " + flag + " entries")
     listing.set_defaults(which="open")
     listing.add_argument("--kind", default=None, metavar="K", help="only this kind")
-    listing.add_argument("--n", type=int, default=LIST_DEFAULT, metavar="N", help="the newest N lines (default 20)")
+    listing.add_argument("--n", type=int, default=None, metavar="N",
+                         help="the newest N rows (default 13; --full prints all, or N past 13)")
     listing.add_argument("--q", default=None, metavar="TEXT", help="only summaries containing this text")
+    listing.add_argument("--full", action="store_true", help="print past the 15-line cap")
     listing.set_defaults(handler=_list)
 
-    show = add("show", "one entry: summary, verbatim, links with their states, history (at most 20 lines)")
+    show = add("show", "one entry: summary, verbatim, links with their states, history (at most 14 lines)")
     show.add_argument("id", metavar="H15")
+    show.add_argument("--full", action="store_true", help="print the whole history past the 15-line cap")
     show.set_defaults(handler=_show)
 
     setter = add("set", "change fields: head set H15 status=declined note=\"..\" (a done close needs a commit sha, "
@@ -123,23 +128,27 @@ def register(sub, common):
     claim = add("claim", "start a head session: writes a claim record and prints the carried-over open asks")
     claim.add_argument("--model", required=True, metavar="M", help="the model, for example \"Opus 5.5\"")
     claim.add_argument("--acct", default=None, metavar="B", help="the account letter")
+    claim.add_argument("--full", action="store_true", help="print past the 15-line cap")
     claim.set_defaults(handler=_claim)
 
     digest = add("brief", "the resume digest, at most 15 lines")
     digest.add_argument("--md", action="store_true", help="markdown bullets")
     digest.add_argument("--gate", action="store_true", help="the autopilot continue lines, or ok nothing pending")
     digest.add_argument("--done", action="store_true", help="the worker-completion checklist")
+    digest.add_argument("--full", action="store_true", help="print past the 15-line cap")
     digest.set_defaults(handler=_brief)
 
     add("pause", "pause the autopilot gate (writes the head-pause file)").set_defaults(handler=_pause)
     add("resume", "resume the autopilot gate (removes the head-pause file)").set_defaults(handler=_resume)
 
     untriaged = add("triage", "untriaged entries with suggestions")
+    untriaged.add_argument("--full", action="store_true", help="print past the 15-line cap")
     untriaged.set_defaults(handler=_triage_list)
 
     review = add("review", "the person's review: no id lists the done entries, H15 confirm or H15 reopen decides")
     review.add_argument("id", nargs="?", default=None, metavar="H15")
     review.add_argument("decision", nargs="?", default=None, metavar="confirm|reopen", choices=("confirm", "reopen"))
+    review.add_argument("--full", action="store_true", help="print past the 15-line cap")
     review.set_defaults(handler=_review)
 
     accept = add("accept", "mark an entry accepted (the person only)")
@@ -164,6 +173,18 @@ def _now():
 
 def _json(args):
     return getattr(args, "json", False)
+
+
+def _full(args):
+    return getattr(args, "full", False)
+
+
+def _fit(lines, full, reserve=0):
+    """The lines that fit under OUT_LINES less reserve (room for a next: line); past that, one '+N more' line."""
+    room = OUT_LINES - reserve
+    if full or len(lines) <= room:
+        return lines
+    return lines[:room - 1] + ["+%d more (--full)" % (len(lines) - room + 1)]
 
 
 def _state(project, data_dir, now=None):
@@ -420,8 +441,10 @@ def _claim(args):
     data = {"model": model, "acct": acct, "carried": [r["id"] for r in carried]}
     if _json(args):
         return data
-    for row in carried:
-        print("  %s %s %s %s" % (row["id"], _kind(row), row["status"], _flat(row["sum"], 60)))
+    carried_lines = ["  %s %s %s %s" % (row["id"], _kind(row), row["status"], _flat(row["sum"], 60))
+                     for row in carried]
+    for line in _fit(carried_lines, _full(args), reserve=1):
+        print(line)
     print("ok claim %s, %d carried. next: %s" % (model, len(carried), BRIEF))
     return None
 
@@ -430,16 +453,23 @@ def _claim(args):
 
 def _list(args):
     project, data_dir = tasks.resolve(args.project)
-    if args.n < 1:
+    if args.n is not None and args.n < 1:
         raise commands._usage("--n must be at least 1", NEXT)
     rows, _, now = _state(project, data_dir)
-    shown = _select(rows, args.which, args.kind, args.q)[-args.n:]
+    matched = _select(rows, args.which, args.kind, args.q)
     if _json(args):
-        return {"entries": [dict(r, age=_age(r, now)) for r in shown]}
+        return {"entries": [dict(r, age=_age(r, now)) for r in matched[-(args.n or JSON_LIST_DEFAULT):]]}
+    if args.n is not None:
+        cap = args.n if _full(args) else min(args.n, LIST_DEFAULT)
+    else:
+        cap = len(matched) if _full(args) else LIST_DEFAULT
+    shown = matched[-cap:]
     for row in shown:
         print(_list_line(row, now))
     if not shown:
         print("no entries match (" + args.which + ")")
+    if len(matched) > len(shown):
+        print("+%d older (--full, or --n)" % (len(matched) - len(shown)))
     pending = [r for r in shown if r["status"] in UNHANDLED]
     _next('roadmap head t %s <kind> "<sum>"' % pending[0]["id"] if pending else BRIEF)
     return None
@@ -472,11 +502,12 @@ def _show(args):
     if row["links"]:
         states = ["%s %s" % (ref, link_state.get(ref, "open")) for ref in row["links"]]
         lines.append("links: " + ", ".join(states))
-    room = SHOW_MAX - len(lines) - 1
+    limit = 10 ** 6 if _full(args) else SHOW_MAX
+    room = limit - len(lines) - 1
     if history:
         lines.append("history:")
         lines += history[-room:] if room > 0 else []
-    lines = lines[:SHOW_MAX]
+    lines = lines[:limit]
     print("\n".join(lines))
     _next('roadmap head t %s <kind> "<sum>"' % args.id if row["status"] in UNHANDLED else NEXT)
     return None
@@ -545,7 +576,7 @@ def _brief(args):
         lines = ["**" + lines[0] + "**"] + ["- " + line.strip() for line in lines[1:]]
     if _json(args):
         return {"lines": lines}
-    print("\n".join(lines))
+    print("\n".join(_fit(lines, _full(args))))
     return None
 
 
@@ -555,11 +586,14 @@ def _triage_list(args):
     todo = [r for r in rows if r["status"] in UNHANDLED and not r["triaged"]]
     if _json(args):
         return {"entries": [{"id": r["id"], "kind": _kind(r), "sum": r["sum"], "dup": r["dup"]} for r in todo]}
+    lines = []
     for row in todo:
         dup = " dup %s %.2f" % (row["dup"]["id"], row["dup"]["score"]) if row["dup"] else ""
-        print('%s %s%s | "%s"' % (row["id"], _kind(row), dup, _flat(row["sum"], 60)))
+        lines.append('%s %s%s | "%s"' % (row["id"], _kind(row), dup, _flat(row["sum"], 60)))
     if not todo:
-        print("no untriaged entries")
+        lines.append("no untriaged entries")
+    for line in _fit(lines, _full(args), reserve=1):
+        print(line)
     _next('roadmap head t %s <kind> "<sum>"' % todo[0]["id"] if todo else NEXT)
     return None
 
@@ -570,9 +604,8 @@ def _review_list(args):
     waiting = _awaiting(data_dir, rows)
     if _json(args):
         return {"entries": [dict(r, age=_age(r, now)) for r in waiting]}
-    for row in waiting:
-        print(_list_line(row, now))
-    if not waiting:
-        print("nothing to review")
+    lines = [_list_line(row, now) for row in waiting] or ["nothing to review"]
+    for line in _fit(lines, _full(args), reserve=1):
+        print(line)
     _next("roadmap head review %s confirm|reopen" % waiting[0]["id"] if waiting else NEXT)
     return None
