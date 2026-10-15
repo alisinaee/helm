@@ -141,7 +141,10 @@ class SectionRenderTests(unittest.TestCase):
     def test_question_without_options_has_no_answer_buttons(self):
         html = self.out["inboxProject"]
         self.assertIn("Keep the old file?", html)
-        self.assertIn("No options. Answer in terminal.", html)
+        start = html.index('data-qid="Q2"')
+        card = html[start:html.index("</article>", start)]
+        self.assertNotIn("qc-opt", card)
+        self.assertIn('data-form="inbox-question-answer"', card)
 
     def test_global_inbox_is_grouped_by_project(self):
         html = self.out["inboxAll"]
@@ -230,8 +233,8 @@ class SectionStaticTests(unittest.TestCase):
 
     def test_answer_keys_are_bound_once_on_import(self):
         text = read(os.path.join(WEB, "js", "views", "inbox.js"))
-        for key in ('"a"', '"1"', '"2"', '"3"', '"4"'):
-            self.assertIn("bindKey(" + key, text)
+        self.assertEqual(text.count("bindKey("), 1)
+        self.assertIn("bindKey(String(n), onDigit(n - 1))", text)
 
 
 if __name__ == "__main__":

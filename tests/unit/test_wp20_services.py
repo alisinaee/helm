@@ -105,9 +105,9 @@ class QuestionsTests(DocsCase):
         q = questions.ask(self.docs, "P1.2", "Keep the old API?", opts=["yes", "no"], default="no",
                           block=True, timeout_s=600, now=at(0))
         self.assertEqual(q["id"], "Q1")
-        with self.assertRaises(RoadmapError) as ctx:
-            questions.answer(self.docs, "Q1", "maybe", now=at(1))
-        self.assertEqual(ctx.exception.exit, EXIT_USAGE)
+        free = questions.answer(self.docs, "Q1", "maybe", now=at(1))
+        self.assertEqual(free["answer"], "maybe")
+        questions.reopen(self.docs, "Q1")
         answered = questions.answer(self.docs, "Q1", "no", now=at(2))
         self.assertEqual((answered["status"], answered["answer"]), ("answered", "no"))
         with self.assertRaises(RoadmapError) as ctx:

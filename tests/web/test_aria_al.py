@@ -37,7 +37,7 @@ EXPECTED = {
         'aria-label="\' + esc("Send answer for " + question.id)',
     ],
     "inbox.js": [
-        'aria-label="\' + esc("Choose " + opt + " for " + q.id)',
+        'aria-label="\' + esc("Choose " + part.label + " for " + q.id)',
         'aria-label="\' + esc("View task " + q.task)',
         'aria-label="\' + esc("View task " + entry.item.id)',
         'aria-label="\' + esc("View question " + e.q.id)',

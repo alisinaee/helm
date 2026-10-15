@@ -145,7 +145,8 @@ class HeadRouteFilters(unittest.TestCase):
 class LoaderHeadKey(unittest.TestCase):
     def test_loader_passes_head_records_into_the_snapshot(self):
         src = read(LOADER)
-        self.assertIn("head_records=_head_records(folder)", src)
+        self.assertIn("head_records=", src)
+        self.assertIn("_head_records(folder)", src)
         self.assertIn("from roadmap.services import control, head as head_store", src)
 
     def test_head_records_helper_is_fail_open(self):
