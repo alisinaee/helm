@@ -183,10 +183,10 @@ class CapsAndErrorsTests(unittest.TestCase):
         errs = features.validate([feat("F1", parent="F9")])
         self.assertTrue(any("parent F9 is not a valid feature" in e for e in errs))
         self.assertTrue(any("cannot be its own parent" in e for e in features.validate([feat("F1", parent="F1")])))
-        chain = [feat("F1"), feat("F2", parent="F1"), feat("F3", parent="F2")]
+        chain = [feat("F1"), feat("F2", parent="F1"), feat("F3", parent="F2"), feat("F4", parent="F3")]
         result = features.derive(chain, [], [])
-        self.assertEqual([r["id"] for r in result["rows"]], ["F1", "F2"])
-        self.assertTrue(any("F3" in e and "one level only" in e for e in result["errors"]))
+        self.assertEqual([r["id"] for r in result["rows"]], ["F1", "F2", "F3"])
+        self.assertTrue(any("F4" in e and "4th level" in e for e in result["errors"]))
 
     def test_duplicate_id_keeps_the_first(self):
         result = features.derive([feat("F1", title="first"), feat("F1", title="second")], [], [])
@@ -267,8 +267,8 @@ class NeverRaiseTests(unittest.TestCase):
 
 
 class SnapshotRowsTests(unittest.TestCase):
-    def test_rows_drop_the_task_list_and_keep_acc_only_while_not_done(self):
-        feats = [feat("F1", acc="shipped"), feat("F2", acc="still open")]
+    def test_rows_drop_the_task_list_and_keep_acc_only_until_accepted(self):
+        feats = [feat("F1", acc="shipped", accepted="2026-10-14"), feat("F2", acc="still open")]
         tasks = [task("A.1", "done", feats=["F1"]), task("A.2", "todo", feats=["F2"])]
         first, second = features.snapshot_rows(features.derive(feats, tasks, [])["rows"])
         self.assertNotIn("tasks", first)
