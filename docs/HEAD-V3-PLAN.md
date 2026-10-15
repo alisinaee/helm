@@ -146,3 +146,14 @@ Disagreements and decisions:
 6. Cursor: lease refuses empty files. Decision: same, except review/audit roles (read-only) take no lease.
 7. Added beyond Cursor: retry policy with backoff and a needs-you cap; untracked detector lines become asks
    instead of being dropped; reload on new build id.
+
+## Model change (R7.101, see docs/WORK-MODEL.md)
+
+General rule from the person: Work items (human, Jira-like) and agent tasks (packages) are different entities.
+- New table `work_items`; `tasks` becomes `agent_tasks` with required `work_id` (store migration v4). One Work item ->
+  many agent tasks; agent tasks never show as cards. Issues become Work items of kind issue.
+- Head asks bind to `work:W#`, not to packages; an ask closes when its Work item is Done (person accepted).
+- S1 fold extended: all agent tasks of a Work item done -> Work item Review (Inbox), never Done by itself.
+- Queue order uses the Work item prio; Q1 prio and Q3 fingerprint apply to Work items; U3 P column and N1
+  `head next` group by Work item. S2, S3, Q2, U1, U2 unchanged.
+- New packages M1-M10 (WORK-MODEL section 8) run before Wave 4; M1 + M2 can start now in parallel.
