@@ -1,0 +1,1 @@
+Read-only. In ~/Works/roadmap-board review roadmap/http/routes.py for the head paging route (offset/limit/f) and the ETag/304 logic: input validation, limits, path traversal, info leaks. One finding per line with file:line and severity. Max 20 lines. Change no files.

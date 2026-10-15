@@ -1,0 +1,1 @@
+Read-only. Compare README.md commands with `bin/roadmap --help` subcommands (read roadmap/cli.py): list wrong or missing commands. Max 20 lines. Change no files.
