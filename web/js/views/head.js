@@ -36,9 +36,11 @@ const SORTS = ["new", "old"];
 const SUM_SHOW = 240;
 const PAGE_SIZE = 50;
 
-// Client state: the verbatim texts fetched so far (key "project\nid"), the requests in flight, the open row ids, and
-// the hash row already opened once (so a re-render does not reopen a row the person closed).
+// Client state: the verbatim texts fetched so far (key "project\nid@rev"), the requests in flight, the open row ids,
+// and the hash row already opened once (so a re-render does not reopen a row the person closed). fullRev is the
+// revision of the snapshot on screen; a cached text is used only while its revision is the current one.
 const fullCache = new Map();
+let fullRev = "";
 const inflight = new Map();
 const openSet = new Set();
 const queue = [];
@@ -288,11 +290,29 @@ function assetsOf(list) {
   }).filter(Boolean).slice(0, 20);
 }
 
+// The revision of the snapshot in vm (snap.rev, else fetchedAt). A new revision drops every cached text of the old one,
+// so an open row shows the same generation as the rest of the screen.
+function setRev(vm) {
+  const snap = vm && vm.project && vm.project.snapshot ? vm.project.snapshot : null;
+  const rev = snap ? String(snap.rev || snap.fetchedAt || "") : "";
+  if (rev === fullRev) return rev;
+  fullRev = rev;
+  for (const key of Array.from(fullCache.keys())) {
+    if (!key.endsWith("@" + rev)) fullCache.delete(key);
+  }
+  return rev;
+}
+
+function fullKey(pid, id) {
+  return (pid || "") + "\n" + id + "@" + fullRev;
+}
+
 // The verbatim text of one row: the seeded vm.head.full when it is this row, else the fetched cache, else null.
 function fullOf(vm, pid, id) {
+  setRev(vm);
   const seeded = vm && vm.head && vm.head.full && vm.head.full.id === id ? vm.head.full : null;
   if (seeded) return normFull(seeded);
-  return fullCache.get((pid || "") + "\n" + id) || null;
+  return fullCache.get(fullKey(pid, id)) || null;
 }
 
 // The summary cell: the stored sum, or the first 140 characters of the verbatim text when the stored sum is only a
@@ -568,14 +588,14 @@ function idOf(item) {
 
 // Fetch the verbatim text of one row once: GET .../head?full=Hn (the server gives text only on the same-origin page).
 function fetchFull(pid, id) {
-  const key = pid + "\n" + id;
+  const key = fullKey(pid, id);
   if (fullCache.has(key)) return Promise.resolve(fullCache.get(key));
   if (!inflight.has(key)) {
     const url = "/api/v1/projects/" + encodeURIComponent(pid) + "/head?f=all&n=200&full=" + encodeURIComponent(id);
     const req = getJson(url).then(function (res) {
       const f = res && res.data && res.data.full ? res.data.full : {};
       const entry = normFull(f);
-      fullCache.set(key, entry);
+      if (key.endsWith("@" + fullRev)) fullCache.set(key, entry);
       return entry;
     }).finally(function () {
       inflight.delete(key);
