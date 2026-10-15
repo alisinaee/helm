@@ -115,6 +115,33 @@ class HeadRender(unittest.TestCase):
         self.assertIn('href="#head?f=unhandled"', out["screen"])
 
 
+class HeadRouteFilters(unittest.TestCase):
+    """The router keeps the Head query keys for the head section only (router.js HEAD_FILTER_KEYS)."""
+
+    def test_head_query_keys_survive_parse_and_redirect(self):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("node is not installed")
+        script = (
+            "const r = await import(process.argv[1]);"
+            "const hashes = ['#head?f=unhandled&q=api%20fix&kind=task&sid=alpha&id=H1', '#/all/roadmap?f=state:todo&q=x'];"
+            "const out = hashes.map((h) => { const p = r.parseRoute(h); return {section: p.section, filters: p.filters, redirect: p.redirect || null}; });"
+            "console.log(JSON.stringify(out));"
+        )
+        url = "file://" + os.path.join(WEB, "js", "router.js")
+        proc = subprocess.run([node, "--input-type=module", "-e", script, url],
+                              capture_output=True, text=True, timeout=60)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        head, roadmap = json.loads(proc.stdout)
+        self.assertEqual(head["section"], "head")
+        self.assertEqual(head["filters"], {"f": "unhandled", "q": "api fix", "kind": "task", "sid": "alpha", "id": "H1"})
+        self.assertIn("q=api+fix", head["redirect"])
+        self.assertIn("kind=task", head["redirect"])
+        self.assertEqual(roadmap["section"], "roadmap")
+        self.assertEqual(roadmap["filters"], {"f": "state:todo"})
+        self.assertNotIn("q=", roadmap["redirect"] or "")
+
+
 class LoaderHeadKey(unittest.TestCase):
     def test_loader_passes_head_records_into_the_snapshot(self):
         src = read(LOADER)
