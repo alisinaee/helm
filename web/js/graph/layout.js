@@ -15,12 +15,12 @@
 
 import { NODE_CAP } from "./model.js";
 
-export const NODE_W = 200;
-export const NODE_H = 52;
-export const PILL_W = 36;
+export const NODE_W = 168;
+export const NODE_H = 44;
+export const PILL_W = 52;
 export const PILL_H = 20;
 
-const PILL_STEP = 40;
+const PILL_STEP = 58;
 const PILL_DY = 58;
 const SLOT_GAP = 10;
 const COL_GAP = 32;
