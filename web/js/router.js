@@ -8,6 +8,8 @@ import { DEFAULT_SECTION, sectionById } from "./routes.js";
 const PROJECT_ID = /^[a-z0-9][a-z0-9-]{0,39}$/;
 const SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,59}$/;
 const FILTER_KEYS = ["f", "g"];
+// The Head section keeps its own query keys (see views/head.js hashOf); no other section gets them.
+const HEAD_FILTER_KEYS = ["f", "q", "kind", "sid", "id"];
 const FILTER_MAX = 200;
 
 function splitHash(hash) {
@@ -21,19 +23,23 @@ function splitHash(hash) {
   return { parts: parts, query: query };
 }
 
-function filtersFrom(query) {
+function keysFor(section) {
+  return section === "head" ? HEAD_FILTER_KEYS : FILTER_KEYS;
+}
+
+function filtersFrom(query, section) {
   const filters = {};
   const params = new URLSearchParams(query);
-  for (const key of FILTER_KEYS) {
+  for (const key of keysFor(section)) {
     const value = params.get(key);
     if (value && value.length <= FILTER_MAX) filters[key] = value;
   }
   return filters;
 }
 
-function queryFrom(filters) {
+function queryFrom(filters, section) {
   const params = new URLSearchParams();
-  for (const key of FILTER_KEYS) {
+  for (const key of keysFor(section)) {
     if (filters[key]) params.set(key, filters[key]);
   }
   const text = params.toString();
@@ -46,13 +52,12 @@ export function buildHash(route) {
   const section = route.section || DEFAULT_SECTION;
   const view = route.view ? "/" + route.view : "";
   const item = route.item ? "/i/" + route.item : "";
-  return base + "/" + section + view + item + queryFrom(route.filters || {});
+  return base + "/" + section + view + item + queryFrom(route.filters || {}, section);
 }
 
 export function parseRoute(hash) {
   const split = splitHash(hash);
   const parts = split.parts;
-  const filters = filtersFrom(split.query);
   let name = "home";
   let id = null;
   let rest = [];
@@ -70,6 +75,7 @@ export function parseRoute(hash) {
   // Old "#/p/<id>" links have no section: they go to that project's overview.
   let section = rest[0] || DEFAULT_SECTION;
   if (!sectionById(section)) section = DEFAULT_SECTION;
+  const filters = filtersFrom(split.query, section);
   let view = null;
   let item = null;
   const at = rest.indexOf("i");
