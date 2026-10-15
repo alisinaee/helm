@@ -18,6 +18,8 @@ const FIT_PAD = 16;
 const OPEN_MIN_K = 0.6;
 const STEP = { ArrowUp: [0, -1], ArrowDown: [0, 1] };
 const FOCUSABLE = "[data-wf-item]";
+// Presses on these keep their own behaviour: no pan, no preventDefault, no selection change.
+const CONTROL = "button, a, input, select, textarea, label, [contenteditable], .wfg-ctl, .wfm, [data-no-pan]";
 
 export function clampK(k) {
   return Math.min(MAX_K, Math.max(MIN_K, k));
@@ -202,6 +204,20 @@ function closestNode(el) {
   return el && typeof el.closest === "function" ? el.closest(FOCUSABLE) : null;
 }
 
+function isControl(el) {
+  return !!(el && typeof el.closest === "function" && el.closest(CONTROL));
+}
+
+// A pan must not start a text selection: this clears any selection the press left behind.
+function clearSelection() {
+  try {
+    const sel = globalThis.getSelection ? globalThis.getSelection() : null;
+    if (sel && typeof sel.removeAllRanges === "function") sel.removeAllRanges();
+  } catch (err) {
+    // No selection API here (node): nothing to clear.
+  }
+}
+
 function centreOf(el) {
   return { x: Number(el.getAttribute("data-cx")), y: Number(el.getAttribute("data-cy")) };
 }
@@ -323,6 +339,16 @@ export function mountViewport(svg, vpG, opts) {
   svg.addEventListener("pointerdown", function (e) {
     if (e.button > 0) return;
     stop();
+    if (!isControl(e.target)) {
+      // No native selection on a pan; focus moves by hand, so the keyboard still lands on the map.
+      e.preventDefault();
+      clearSelection();
+      try {
+        (closestNode(e.target) || svg).focus({ preventScroll: true });
+      } catch (err) {
+        // Not focusable (a synthetic target): the pan still runs.
+      }
+    }
     const p = local(e);
     downEl = e.target;
     try {
@@ -331,6 +357,13 @@ export function mountViewport(svg, vpG, opts) {
       // A pointer that is not active (a synthetic event) cannot be captured; the gesture still runs.
     }
     gest.down(e.pointerId, p.x, p.y);
+  });
+  // Belt and braces for browsers that start the selection on mousedown, and for keyboard select-all inside the map.
+  svg.addEventListener("mousedown", function (e) {
+    if (e.button === 0 && !isControl(e.target)) e.preventDefault();
+  });
+  svg.addEventListener("selectstart", function (e) {
+    e.preventDefault();
   });
   svg.addEventListener("pointermove", function (e) {
     const p = local(e);
