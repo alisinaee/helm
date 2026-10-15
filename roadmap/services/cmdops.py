@@ -20,6 +20,7 @@ from roadmap.store import config as config_store
 from roadmap.store import schema
 from roadmap.services import featops  # noqa: F401  (WP52: registers the feature ops)
 from roadmap.services import headops  # noqa: F401  (HEAD-SPEC H4: registers the head ops)
+from roadmap.services import work
 
 LOOSENING = frozenset(["control.resume", "control.override", "budget.set", "task.cap", "limit.set", "limit.rm",
                        "phase.approve", "rules.add", "rules.rm", "rules.sync"])
@@ -363,3 +364,12 @@ _register("rules.rm", _check_rules_rm, _h_rules_rm)
 _register("rules.sync", _check_rules_sync, _h_rules_sync)
 commands.OPS["usage.set"] = commands._Op(_check_usage_set, _h_usage_set)
 commands.OPS["usage.restore"] = commands._Op(_check_usage_restore, _h_usage_restore, public=False)
+
+# Work items (M4, docs/WORK-MODEL.md section 6): logged with an activity line; accept and reopen are person only.
+commands.OPS["work.add"] = commands._Op(work.check_add, work.h_add)
+commands.OPS["work.set"] = commands._Op(work.check_set, work.h_set)
+commands.OPS["work.link"] = commands._Op(work.check_link, work.h_link)
+commands.OPS["work.accept"] = commands._Op(work.check_one, work.h_accept)
+commands.OPS["work.reopen"] = commands._Op(work.check_one, work.h_reopen)
+commands.OPS["work.restore"] = commands._Op(work.check_restore, work.h_restore, public=False)
+commands.OPS["work.relink"] = commands._Op(work.check_relink, work.h_relink, public=False)
