@@ -43,6 +43,7 @@ let sid = newSid();
 let enabled = readEnabled();
 let installed = false;
 let timer = null;
+let tokenFresh = "";
 
 function newSid() {
   try {
@@ -66,6 +67,7 @@ function readEnabled() {
 
 // The page's CSRF value from its meta tag, or "" (phone pages carry none, and the placeholder is ignored).
 function csrfValue() {
+  if (tokenFresh) return tokenFresh;
   try {
     for (const meta of document.querySelectorAll('meta[name="csrf"]')) {
       const value = meta.getAttribute("content") || "";
@@ -258,18 +260,43 @@ function send(batch, attempt, keepalive) {
     if (res && res.ok) {
       stats.sent += batch.length;
     } else {
-      failed(batch, attempt);
+      failed(batch, attempt, res ? res.status : 0);
     }
   }, function () {
-    failed(batch, attempt);
+    failed(batch, attempt, 0);
   }).catch(function () {});
 }
 
-// One retry after RETRY_MS, then the batch is dropped. Nothing is logged about the failure.
-function failed(batch, attempt) {
+// The server answers 403 when the CSRF value no longer matches: a tab that loaded before the server restarted still
+// holds the old one. The page itself (GET /, same origin only) carries the current value, so re-read it from there.
+// Nothing is changed on the server; the guard still checks the value, the Origin and Sec-Fetch-Site.
+function refreshToken() {
+  try {
+    return fetch("/", { credentials: "same-origin", cache: "no-store" }).then(function (res) {
+      return res.ok ? res.text() : "";
+    }).then(function (html) {
+      const found = /<meta name="csrf" content="([^"]+)">/g;
+      let match = found.exec(html);
+      while (match && match[1] === "__CSRF__") match = found.exec(html);
+      if (match) tokenFresh = match[1];
+    }).catch(function () {});
+  } catch (err) {
+    return Promise.resolve();
+  }
+}
+
+// One retry after RETRY_MS, then the batch is dropped. After a 403 the CSRF value is re-read first. Nothing is logged.
+function failed(batch, attempt, status) {
   if (attempt === 0) {
     setTimeout(function () {
-      send(batch, 1, false);
+      const again = function () {
+        send(batch, 1, false);
+      };
+      if (status === 403) {
+        refreshToken().then(again, again);
+      } else {
+        again();
+      }
     }, RETRY_MS);
     return;
   }
