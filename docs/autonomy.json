@@ -5,7 +5,8 @@
     "stopAtPercent": 95,
     "setBy": "the person",
     "setOn": "2026-10-14",
-    "note": "Raised to 95% by the person on 2026-10-14."
+    "note": "Raised to 95% by the person on 2026-10-14. 2026-10-15: the person also set a 5-hour limit of 90%: the head must not launch or continue work past 90% of the 5-hour usage until the person says so (checked by the head from the latest reading).",
+    "fiveHourStopAtPercent": 90
   },
   "usage": {
     "weeklyPercent": 82,
