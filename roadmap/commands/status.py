@@ -7,7 +7,7 @@ issues, features, budget, you, next. The ask, queue, issues and budget lines com
 
 import os
 
-from roadmap.commands import research
+from roadmap.commands import head as head_cmd, research
 from roadmap.services import commands, features, jobs, limits, tasks
 
 MAX_LINES = 8
@@ -31,7 +31,7 @@ def compose(base, extras):
     run = [line for line in rest if line.startswith("run:")]
     if extras.get("running"):
         run = [extras["running"]]
-    gate = [extras["gate"]] if extras.get("gate") else []
+    gate = [line for line in (extras.get("gate"), extras.get("head")) if line]
     meters = [extras["limits"]] if extras.get("limits") else []
     plan = [extras["features"]] if extras.get("features") else []
     ordered = (head + run + gate + [extras["ask"], extras["queue"], extras["issues"]] + plan + [extras["budget"]]
@@ -83,6 +83,7 @@ def _run(args):
     extras["limits"] = limits.status_line(limits.evaluate_rows(project))
     extras["features"] = features.status_line(data_dir)
     extras["gate"] = gate_line(data_dir)
+    extras["head"] = head_cmd.status_line(project, data_dir)
     extras["running"] = running_line(jobs.list_jobs(data_dir))
     lines = compose(base, extras)
     if not getattr(args, "json", False):
