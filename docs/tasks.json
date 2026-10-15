@@ -1451,7 +1451,7 @@
       "id": "R7.28",
       "phase": "R7",
       "title": "Tokens and limits: one simple screen (stop at % weekly, optional share per project), remove per-task/preset knobs",
-      "status": "todo",
+      "status": "done",
       "tokensK": 150,
       "thinking": "low",
       "model": "haiku",
@@ -1461,7 +1461,10 @@
       "note": "person: no limit for each tiny section; spec docs/LIMITS-SIMPLE-SPEC.md",
       "feats": [
         "F10"
-      ]
+      ],
+      "at": {
+        "done": "2026-10-15T15:32:51+03:30"
+      }
     },
     {
       "id": "R7.29",
@@ -1830,6 +1833,105 @@
       "id": "R7.53",
       "phase": "R7",
       "title": "Fix real bugs from Cursor review of today commits (cursor-commits-review.md)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:32:51+03:30"
+      }
+    },
+    {
+      "id": "R7.54",
+      "phase": "R7",
+      "title": "Fix verified 375px and rule 0 findings from agy view audits (agy-375-*.md)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:25:56+03:30"
+      }
+    },
+    {
+      "id": "R7.55",
+      "phase": "R7",
+      "title": "agy audit wave 2: new routes security, API.md drift, README CLI drift",
+      "status": "todo",
+      "tokensK": 0,
+      "thinking": "high",
+      "model": "agy",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.56",
+      "phase": "R7",
+      "title": "375px deferred: mobile row wrap, agents nesting, overview blocker slots, list flags, workflow mobile numbers",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:41:30+03:30"
+      }
+    },
+    {
+      "id": "R7.57",
+      "phase": "R7",
+      "title": "Repaint keeps scroll position (Head list jumps to top every poll); skip identical writes (H118)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:30:20+03:30"
+      }
+    },
+    {
+      "id": "R7.58",
+      "phase": "R7",
+      "title": "UI log posts rejected by CSRF guard: client sends the token (no UI events logged)",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:32:16+03:30"
+      }
+    },
+    {
+      "id": "R7.59",
+      "phase": "R7",
+      "title": "Cursor grok xhigh: full UI and responsive review of every section; file each issue as a task (H119)",
+      "status": "todo",
+      "tokensK": 0,
+      "thinking": "high",
+      "model": "cursor",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.60",
+      "phase": "R7",
+      "title": "Agents: keep all job history (no auto-prune); person selects and removes history rows (H120)",
       "status": "todo",
       "tokensK": 40,
       "thinking": "low",
@@ -1839,9 +1941,159 @@
       "checkK": 0
     },
     {
-      "id": "R7.54",
+      "id": "R7.61",
       "phase": "R7",
-      "title": "Fix verified 375px and rule 0 findings from agy view audits (agy-375-*.md)",
+      "title": "api.js writes: after a CSRF 403 re-read the token and retry once (stale tab after restart)",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:33:39+03:30"
+      }
+    },
+    {
+      "id": "R7.62",
+      "phase": "R7",
+      "title": "Workflow map out of sync / wrong: find why and fix (H121)",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.63",
+      "phase": "R7",
+      "title": "Tokens + top bar: show stale usage clearly with Enter usage action; expire 5h reading after its reset; one source for limit state (H123)",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.64",
+      "phase": "R7",
+      "title": "Head agent v2 design: any model (Haiku, Cursor, Gemini) can be head; token-lean loop driven by the tool (H124)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:42:26+03:30"
+      }
+    },
+    {
+      "id": "R7.65",
+      "phase": "R7",
+      "title": "UI pattern: action buttons with long labels wrap and overflow (Activity Undo); short labels + nowrap in every view (H126)",
+      "status": "todo",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.67",
+      "phase": "R7",
+      "title": "Head v2 A1: one limits source + budget guard in job start",
+      "status": "todo",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.68",
+      "phase": "R7",
+      "title": "Head v2 A2: event-driven status (job start doing, commit refs, asks auto-close)",
+      "status": "todo",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.69",
+      "phase": "R7",
+      "title": "Head v2 A3: ask-close guard (real ref, rate limit, no umbrella)",
+      "status": "todo",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.70",
+      "phase": "R7",
+      "title": "Head v2 A4: runners take task id; fail reasons; engine unavailable",
+      "status": "todo",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.71",
+      "phase": "R7",
+      "title": "Head v2 A5: Agent jobs always bound to a task",
+      "status": "todo",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.72",
+      "phase": "R7",
+      "title": "Head v2 A6: compact output contract (<=15 lines)",
+      "status": "todo",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.73",
+      "phase": "R7",
+      "title": "Head v2 B/C: brief, verify, head next/done, gate prints commands, new skill",
+      "status": "todo",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.66",
+      "phase": "R7",
+      "title": "Head section: clear states (queue, doing, done, failed, needs you, blocked), kind colors, agent questions with answer UI (H127)",
       "status": "todo",
       "tokensK": 40,
       "thinking": "low",
