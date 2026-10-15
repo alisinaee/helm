@@ -9,11 +9,12 @@ the guard. Phone calls may not run any loosening op (resume, override, raising a
 the allowlist.
 """
 
+import datetime
 import math
 import os
 
 from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
-from roadmap.services import commands, control, jobs, limits, rules
+from roadmap.services import commands, control, jobs, limits, rules, usage
 from roadmap.services import budget as budget_service
 from roadmap.store import config as config_store
 from roadmap.store import schema
@@ -275,6 +276,73 @@ def _h_rules_sync(data_dir, a, now):
     return dict(counts) if isinstance(counts, dict) else {"result": str(counts)}, "rules sync", None
 
 
+# ---------------------------------------------------------------- usage (R7.27)
+
+USAGE_ISO_MAX = 40
+
+
+def _usage_percent(a, key, required):
+    value = a.get(key)
+    if value is None and not required:
+        return None
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) \
+            or not 0 <= value <= PERCENT_MAX:
+        raise commands._usage(key + " must be a number from 0 to 100")
+    return value
+
+
+def _usage_reset(a, key):
+    value = a.get(key)
+    if value is None:
+        return None
+    if not isinstance(value, str) or len(value.strip()) > USAGE_ISO_MAX:
+        raise commands._usage(key + " must be an ISO time such as 2026-10-16T08:00:00+01:00")
+    text = value.strip()
+    if not text:
+        return None
+    try:
+        datetime.datetime.fromisoformat(text)
+    except ValueError:
+        raise commands._usage(key + " must be an ISO time such as 2026-10-16T08:00:00+01:00")
+    return text
+
+
+def _check_usage_set(a):
+    return {"weekly": _usage_percent(a, "weekly", True), "fiveHour": _usage_percent(a, "fiveHour", False),
+            "weeklyResetsAt": _usage_reset(a, "weeklyResetsAt"),
+            "fiveHourResetsAt": _usage_reset(a, "fiveHourResetsAt")}
+
+
+def _h_usage_set(data_dir, a, now):
+    before = usage.stored_record()
+    result = usage.set_manual(a["weekly"], a["fiveHour"], a["weeklyResetsAt"], a["fiveHourResetsAt"], now=now)
+    touched = ["weeklyPercent", "weeklyResetsAt", "updated", "source", "lastError", "syncError"]
+    if a["fiveHour"] is not None:
+        touched += ["fiveHourPercent", "fiveHourResetsAt"]
+    inverse = {"op": "usage.restore", "args": {key: before.get(key) for key in touched}}
+    summary = "usage week " + str(result["usage"]["weeklyPercent"]) + "%"
+    if a["fiveHour"] is not None:
+        summary += " 5h " + str(result["usage"]["fiveHourPercent"]) + "%"
+    return {"usage": result["usage"], "mirrors": result["mirrors"]}, summary + " (manual entry)", inverse
+
+
+def _check_usage_restore(a):
+    fields = {}
+    for key in usage.RESTORE_FIELDS:
+        if key not in a:
+            continue
+        value = a[key]
+        if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float, str))):
+            raise commands._usage(key + " has a value of the wrong type")
+        fields[key] = value
+    return fields
+
+
+def _h_usage_restore(data_dir, a, now):
+    result = usage.restore(a)
+    return {"usage": result["usage"], "mirrors": result["mirrors"]}, "usage restored", None
+
+
 # ---------------------------------------------------------------- registration
 
 def _register(name, check, handler):
@@ -292,3 +360,5 @@ _register("phase.approve", _check_phase_approve, _h_phase_approve)
 _register("rules.add", _check_rules_add, _h_rules_add)
 _register("rules.rm", _check_rules_rm, _h_rules_rm)
 _register("rules.sync", _check_rules_sync, _h_rules_sync)
+commands.OPS["usage.set"] = commands._Op(_check_usage_set, _h_usage_set)
+commands.OPS["usage.restore"] = commands._Op(_check_usage_restore, _h_usage_restore, public=False)

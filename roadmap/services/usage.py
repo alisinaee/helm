@@ -12,7 +12,7 @@ import socket
 import subprocess
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from roadmap.errors import EXIT_INVALID_DATA, EXIT_USAGE, RoadmapError
 from roadmap.log import get_logger
@@ -30,19 +30,36 @@ KEYCHAIN_ITEM_NOT_FOUND = 44  # `security` exit status for errSecItemNotFound
 
 SOURCE_ENDPOINT = "Anthropic usage endpoint"
 SOURCE_PUSH = "manual push"
+SOURCE_MANUAL = "manual entry"
 DEFAULT_INTERVAL_S = 120
 MIN_INTERVAL_S = 30
 BACKOFF_S = 600
 BACKOFF_AFTER_FAILS = 3
 STALE_FACTOR = 2
+KEYCHAIN_BACKOFF_S = 6 * 3600     # after a keychain failure the background loop skips the keychain this long
+MANUAL_KEYCHAIN_GAP_S = 60        # a manual sync may retry a failed keychain read at most this often
 MIRROR_FIELDS = ("weeklyPercent", "fiveHourPercent", "weeklyResetsAt", "fiveHourResetsAt", "updated", "source")
-VIEW_FIELDS = MIRROR_FIELDS + ("lastError",)
+VIEW_FIELDS = MIRROR_FIELDS + ("lastError", "syncError")
+# Stable reason codes for syncError. The keychain ones back off; the others retry on the normal schedule.
+CODE_NO_TOKEN = "no_token"
+CODE_NO_ITEM = "no_item"
+CODE_DENIED = "denied"
+CODE_NET = "net"
+CODE_OTHER = "other"
+KEYCHAIN_CODES = (CODE_NO_TOKEN, CODE_NO_ITEM, CODE_DENIED)
+RESTORE_FIELDS = ("weeklyPercent", "weeklyResetsAt", "fiveHourPercent", "fiveHourResetsAt", "updated", "source",
+                  "lastError", "syncError")
 
 log = get_logger("services.usage")
 
 
 class UsageError(Exception):
-    """A usage read failed. str() is a short plain reason; it never contains the token."""
+    """A usage read failed. str() is a short plain reason; it never contains the token. code is the stable reason
+    code (CODE_* above) that the store keeps as syncError."""
+
+    def __init__(self, message, code=CODE_OTHER):
+        super().__init__(message)
+        self.code = code
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -64,15 +81,15 @@ def read_keychain_token():
     except OSError:
         raise UsageError("keychain tool is not available")
     if proc.returncode == KEYCHAIN_ITEM_NOT_FOUND:
-        raise UsageError("keychain item not found, sign in to Claude Code first")
+        raise UsageError("keychain item not found, sign in to Claude Code first", CODE_NO_ITEM)
     if proc.returncode != 0:
-        raise UsageError("keychain access denied or failed (exit %d)" % proc.returncode)
+        raise UsageError("keychain access denied or failed (exit %d)" % proc.returncode, CODE_DENIED)
     try:
         token = json.loads(proc.stdout)["claudeAiOauth"]["accessToken"]
     except (ValueError, KeyError, TypeError):
-        raise UsageError("keychain entry has no usable token")
+        raise UsageError("keychain entry has no usable token", CODE_NO_TOKEN)
     if not isinstance(token, str) or not token.strip():
-        raise UsageError("keychain entry has no usable token")
+        raise UsageError("keychain entry has no usable token", CODE_NO_TOKEN)
     return token.strip()
 
 
@@ -98,13 +115,13 @@ def http_fetch(token):
     except urllib.error.HTTPError as e:
         raise UsageError("usage endpoint answered HTTP %d" % e.code)
     except (socket.timeout, TimeoutError):
-        raise UsageError("usage endpoint timed out")
+        raise UsageError("usage endpoint timed out", CODE_NET)
     except urllib.error.URLError as e:
         if isinstance(e.reason, (socket.timeout, TimeoutError)):
-            raise UsageError("usage endpoint timed out")
-        raise UsageError("usage endpoint not reachable")
+            raise UsageError("usage endpoint timed out", CODE_NET)
+        raise UsageError("usage endpoint not reachable", CODE_NET)
     except OSError:
-        raise UsageError("usage endpoint not reachable")
+        raise UsageError("usage endpoint not reachable", CODE_NET)
     try:
         payload = json.loads(raw.decode("utf-8"))
     except (ValueError, UnicodeDecodeError):
@@ -227,21 +244,31 @@ def _update_store(changes):
     return current
 
 
-def _record_error(reason):
-    """Keep the last good values and only note why the newest read failed."""
-    _update_store({"lastError": reason})
+def _record_error(reason, code=CODE_OTHER, retry_after=None):
+    """Keep the last good values and only note why the newest read failed: the text, the reason code and, for a
+    keychain failure, the time before which the background loop does not read the keychain again."""
+    changes = {"lastError": reason, "syncError": code}
+    if retry_after is not None:
+        changes["keychainRetryAfter"] = retry_after
+    _update_store(changes)
 
 
-def _age_s(updated, now):
-    if not isinstance(updated, str):
+def _moment(text):
+    """An ISO string as an aware datetime, or None when it is not one."""
+    if not isinstance(text, str):
         return None
     try:
-        moment = datetime.fromisoformat(updated)
+        moment = datetime.fromisoformat(text)
     except ValueError:
         return None
     if moment.tzinfo is None:
         moment = moment.astimezone()
-    return (now - moment).total_seconds()
+    return moment
+
+
+def _age_s(updated, now):
+    moment = _moment(updated)
+    return None if moment is None else (now - moment).total_seconds()
 
 
 def view(record, interval_s=DEFAULT_INTERVAL_S, now=None):
@@ -306,16 +333,42 @@ def _result(stored, cfg, mirrors):
     return {"usage": view(stored, _interval(cfg)), "mirrors": mirrors}
 
 
-def sync_once(config=None, get_token=None, fetch=None):
-    """Read usage once, store it and mirror it when enabled. On failure the stored values stay and lastError is set;
-    UsageError is raised with the plain reason. get_token and fetch default to the keychain and the endpoint."""
+def _in_future(text, now):
+    moment = _moment(text)
+    return moment is not None and moment > now
+
+
+def sync_once(config=None, get_token=None, fetch=None, background=False, now=None):
+    """Read usage once, store it and mirror it when enabled. On failure the stored values stay, lastError and
+    syncError are set, and UsageError is raised with the plain reason. get_token and fetch default to the keychain
+    and the endpoint.
+
+    Keychain backoff: after a keychain failure (no token, no item, denied) the background loop (background=True)
+    skips the keychain until KEYCHAIN_BACKOFF_S has passed, and returns None without touching it. A manual sync
+    (the default) may retry, but no more than once per MANUAL_KEYCHAIN_GAP_S while the last failure was a keychain one.
+    """
     cfg = _config(config)
+    moment = now or datetime.now(timezone.utc)
+    store = _load_store()
+    if background and _in_future(store.get("keychainRetryAfter"), moment):
+        return None
+    if not background:
+        if store.get("syncError") in KEYCHAIN_CODES:
+            age = _age_s(store.get("manualAttemptAt"), moment)
+            if age is not None and age < MANUAL_KEYCHAIN_GAP_S:
+                raise UsageError("the keychain was checked a moment ago, try again in a minute",
+                                 store.get("syncError"))
+        _update_store({"manualAttemptAt": moment.isoformat(timespec="seconds")})
     try:
         reading = collect(get_token=get_token or read_keychain_token, fetch=fetch or http_fetch)
     except UsageError as exc:
-        _record_error(str(exc))
+        retry = None
+        if exc.code in KEYCHAIN_CODES:
+            retry = (moment + timedelta(seconds=KEYCHAIN_BACKOFF_S)).isoformat(timespec="seconds")
+        _record_error(str(exc), exc.code, retry)
         raise
-    stored, mirrors = _commit(dict(usage_record(reading, SOURCE_ENDPOINT), lastError=None), cfg)
+    changes = dict(usage_record(reading, SOURCE_ENDPOINT), lastError=None, syncError=None, keychainRetryAfter=None)
+    stored, mirrors = _commit(changes, cfg)
     result = _result(stored, cfg, mirrors)
     _control_after_write()
     return result
@@ -325,6 +378,43 @@ def show(config=None, now=None):
     """The stored usage with stale and ageS computed now."""
     cfg = _config(config)
     return view(_load_store(), _interval(cfg), now)
+
+
+def stored_record():
+    """The stored usage fields as they are now (undo keeps them before a write). Empty when nothing is stored."""
+    return _load_store()
+
+
+def _store_manual(changes, cfg, source, moment):
+    """The one path for usage given by hand (push and the usage.set op): stamp it, store it, mirror it, recompute
+    the control state. A manual value clears the last error."""
+    changes.update({"updated": moment.isoformat(timespec="seconds"), "source": source,
+                    "lastError": None, "syncError": None})
+    stored, mirrors = _commit(changes, cfg)
+    result = _result(stored, cfg, mirrors)
+    _control_after_write()
+    return result
+
+
+def set_manual(weekly, five_hour=None, weekly_resets=None, five_resets=None, config=None, now=None):
+    """Store usage typed in by the person or the head (the usage.set op). Percents are already checked by the op.
+    The weekly window is always replaced; the 5-hour window only when five_hour is given."""
+    cfg = _config(config)
+    moment = now or datetime.now().astimezone()
+    changes = {"weeklyPercent": _round_pct(weekly), "weeklyResetsAt": weekly_resets}
+    if five_hour is not None:
+        changes["fiveHourPercent"] = _round_pct(five_hour)
+        changes["fiveHourResetsAt"] = five_resets
+    return _store_manual(changes, cfg, SOURCE_MANUAL, moment)
+
+
+def restore(fields, config=None):
+    """Put back the stored usage fields that an undo of usage.set names. No ledger point is added."""
+    cfg = _config(config)
+    stored = _update_store({key: fields[key] for key in RESTORE_FIELDS if key in fields})
+    mirrors = mirror_to_projects(cfg, stored) if _mirror_enabled(cfg) else []
+    _control_after_write()
+    return _result(stored, cfg, mirrors)
 
 
 def parse_push(text):
@@ -363,13 +453,7 @@ def parse_push(text):
 def push(text, config=None):
     """Store usage given by hand (JSON text) and mirror it like a sync. Windows not in the input keep their values."""
     cfg = _config(config)
-    changes = parse_push(text)
-    changes.update({"updated": datetime.now().astimezone().isoformat(timespec="seconds"),
-                    "source": SOURCE_PUSH, "lastError": None})
-    stored, mirrors = _commit(changes, cfg)
-    result = _result(stored, cfg, mirrors)
-    _control_after_write()
-    return result
+    return _store_manual(parse_push(text), cfg, SOURCE_PUSH, datetime.now().astimezone())
 
 
 def _control_after_write():
@@ -394,7 +478,7 @@ def run_loop(stop_event, config=None, sync=None, wait=None):
     Failures are logged with the plain reason only."""
     cfg = _config(config)
     interval = _interval(cfg)
-    run_sync = sync if sync is not None else (lambda: sync_once(cfg))
+    run_sync = sync if sync is not None else (lambda: sync_once(cfg, background=True))
     pause = wait if wait is not None else stop_event.wait
     failures = 0
     while not pause(usage_wait_s(failures, interval)):
