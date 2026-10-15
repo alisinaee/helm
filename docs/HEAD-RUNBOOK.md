@@ -31,7 +31,7 @@ sync`; never touch port 8780, ~/.claude, keychain, split_net or the person's bro
 do not push; commit with the Co-Authored-By line; report in 5-6 lines.
 
 ## Limits
-Weekly stop 95% (docs/autonomy.json in split_net). Usage is not automatic: push it by hand (HANDOVER section 0, 6).
+Weekly stop 85% (H111; docs/autonomy.json). Usage is not automatic: push it by hand (HANDOVER section 0, 6).
 
 ## UX routine (after every wave; the person asked for it)
 1. `make check-ui` (own headless Chrome) for fresh screenshots in build/ui-smoke; look at 1440 and 375, dark and light, for every section.
@@ -40,7 +40,7 @@ Weekly stop 95% (docs/autonomy.json in split_net). Usage is not automatic: push 
 4. File each finding as a task (`plan import` T lines, phase R8 'UX'), link to a feature, then run them as Haiku packages. See docs/UX-AUDIT.md.
 
 ## Usage limits the person set (obey)
-- Weekly stop 95% (docs/autonomy.json). 5-hour stop 80% (H99, 2026-10-15, replaces 90%).
+- Weekly stop 85% (H111, 2026-10-15; was 95%). 5-hour stop 80% (H99, 2026-10-15, replaces 90%).
 - Models (H99, H101): head runs on Opus. Haiku 5.5 for edits; Opus or Sonnet 5.5 low/medium only for critical review,
   hard issues and planning advice; Cursor (auto or grok-4.7) and agy without limit. Run as many parallel subagents as
   files allow, watch them, never idle.
