@@ -31,13 +31,13 @@ const html = inbox.inboxBody(vm);
 const empty = { ...snap, rulesProposals: [] };
 const emptyHtml = inbox.inboxBody({ ...vm, snapshotList: [empty] });
 console.log(JSON.stringify({
-  block: html.indexOf('aria-labelledby="inbox-rules-h"') >= 0,
+  block: html.indexOf('data-key="r:alpha:RP1"') >= 0,
   text: html.indexOf("Keep small things as context") >= 0,
   links: html.indexOf('href="#/p/alpha/head?id=H12"') >= 0 && html.indexOf('href="#/p/alpha/head?id=H40"') >= 0,
   accept: html.indexOf('data-action="rule-accept" data-project="alpha" data-id="RP1"') >= 0,
   reject: html.indexOf('data-action="rule-reject" data-project="alpha" data-id="RP1"') >= 0,
   editForm: html.indexOf('data-form="inbox-rule-edit" data-project="alpha" data-id="RP1"') >= 0,
-  noBlockWhenEmpty: emptyHtml.indexOf("inbox-rules-h") < 0,
+  noBlockWhenEmpty: emptyHtml.indexOf("data-key=") < 0,
 }));
 """
 

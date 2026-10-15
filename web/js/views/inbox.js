@@ -1,12 +1,12 @@
-// Inbox (WP30): the open questions as cards: a vertical list of option buttons (label and description, the
-// recommended one first, the default highlighted), an "Other…" text box, a countdown when the question has a timeout,
-// and the task it belongs to. Needs-you tasks sit below. Across projects the cards are grouped by project. An answer
-// goes through cmd.js run() (op question.answer); the card collapses until the next snapshot.
-// Keys: 1 to 6 answer the focused question's option in that position (or the first open card) on the Inbox and
-// Overview pages.
-// The helpers pageState, collect and inboxPreviewHtml are shared with overview.js and activity.js.
+// Inbox (WP30, R7.111): one list of everything that needs you (open questions, Head asks, rule proposals and blocking
+// tasks), blocking questions first and newest first within a kind. Each item is one compact row: kind chip, one-line
+// title, project, age, and one action. A click or Enter on the row expands it to the full text and every action.
+// An answer collapses the row in place with a one-line confirmation and it leaves the list. Keys: j and k move between
+// rows, Enter expands, 1 to 6 answer the option in that position of the open row, Esc collapses.
+// Every action goes through cmd.js run() with the same op as before.
+// The helpers pageState, collect, questionCardHtml and inboxPreviewHtml are shared with Head, Overview and Activity.
 
-import { bannerHtml, chipHtml, emptyHtml, esc, skeletonHtml } from "../dom.js";
+import { bannerHtml, chipHtml, emptyHtml, esc, parseOne, skeletonHtml, swapNode } from "../dom.js";
 import { fmtDuration } from "../format.js";
 import { copyButton, refSummary } from "../ref.js";
 import { bindKey } from "../keys.js";
@@ -16,7 +16,20 @@ import { currentRoute, projectHash } from "../router.js";
 const KEY_MAX = 6;
 const REC_SUFFIX = " (recommended)";
 const TIME_UP = "Time expired; applying default choice.";
+const LEAVE_MS = 2400;
+// The filter bar: key, label and the item kind it shows ("all" shows everything).
+const FILTERS = [["all", "All"], ["questions", "Questions"], ["asks", "Head asks"], ["rules", "Rules"],
+  ["blockers", "Blockers"]];
+const FILTER_KIND = { questions: "question", asks: "ask", rules: "rule", blockers: "task" };
+// Chip tones as on the Head screen (head.js KIND_TONE), so a kind reads the same on both pages.
+const TONE = { question: "cursor", ask: "haiku", rule: "opus", decision: "success", bug: "danger",
+  preference: "agy", review: "warning", info: "defer", blocker: "danger" };
+// Priority of each kind (blocking questions first); ties sort newest first.
+const RANK = { question: 1, ask: 2, rule: 3, task: 4 };
 let counting = false;
+let filter = "all";
+// The keys of the rows that are expanded; a re-render keeps them open.
+const openSet = new Set();
 
 // A stored option is "Label", "Label: description" or "Label (recommended): description" (services/questions.py).
 export function optionParts(stored) {
@@ -170,7 +183,8 @@ function answerHtml(pid, q) {
     '<button type="submit" class="btn">Send</button></form>';
 }
 
-// One question card. A card answered in this page shows one line until the next snapshot drops it.
+// One question card, as Head shows it (Head's own question list). A card answered in this page shows one line until
+// the next snapshot drops it.
 export function questionCardHtml(entry, now, showProject) {
   const pid = entry.pid;
   const q = entry.q;
@@ -184,17 +198,10 @@ export function questionCardHtml(entry, now, showProject) {
   const blocks = q.block ? chipHtml("Blocks work", "warning") : "";
   const copy = copyButton("question", q.id, q.id + " " + q.text, { project: pid, sum: refSummary("question", q) });
   const options = answerHtml(pid, Object.assign({}, q, { opts: Array.isArray(q.opts) ? q.opts : [] }));
-  let timer = "";
-  if (q.askedMs != null && q.timeoutS != null) {
-    const deadline = q.askedMs + q.timeoutS * 1000;
-    const word = q.def ? "Defaults to " + q.def + " in " : "Times out in ";
-    timer = '<p class="qc-foot"><span class="qc-timer" data-deadline-ms="' + esc(deadline) + '" data-word="' +
-      esc(word) + '">' + esc(countdownText(deadline, word, now)) + "</span></p>";
-  }
   return '<article class="qc' + (q.block ? " is-blocking" : "") + '" data-pid="' + esc(pid) + '" data-qid="' +
     esc(q.id) + '"><header class="qc-head"><span class="qc-id">' + esc(q.id) + "</span>" +
     (showProject ? " " + chipHtml(entry.pname, "neutral") : "") + task + " " + blocks + copy + "</header>" +
-    '<h3 class="qc-text">' + esc(q.text) + "</h3>" + options + timer + "</article>";
+    '<h3 class="qc-text">' + esc(q.text) + "</h3>" + options + "</article>";
 }
 
 function needRowHtml(entry, showProject) {
@@ -202,34 +209,6 @@ function needRowHtml(entry, showProject) {
     esc(itemHash(entry.pid, entry.item.id)) + '" aria-label="' + esc("View task " + entry.item.id) + '">' +
     esc(entry.item.id) + "</a> " + esc(entry.item.title) +
     (showProject ? " " + chipHtml(entry.pname, "neutral") : "") + "</li>";
-}
-
-// One Head ask: its kind, summary, age and the head's note, then the reply form (head.set note) and the Head link.
-// A reply made on this page shows one line until the next snapshot drops it.
-export function headAskCardHtml(entry, now, showProject) {
-  const pid = entry.pid;
-  const row = entry.row;
-  const id = String(row.id);
-  const answered = pendingValue(headAskKey(pid, id), entry.snap.fetchedAt, now);
-  if (answered !== undefined) {
-    return '<article class="qc is-answered" data-pid="' + esc(pid) + '" data-id="' + esc(id) + '">' +
-      '<p class="qc-line">' + esc(id) + " answered: <strong>" + esc(answered) + "</strong></p></article>";
-  }
-  const kind = row.kind ? chipHtml(row.kind, "neutral") : "";
-  const age = typeof row.age === "number" ? '<span class="qc-id">Waiting ' + esc(fmtDuration(row.age * 60)) +
-    "</span>" : "";
-  const note = typeof row.note === "string" && row.note.trim() ? row.note : "The head needs your answer.";
-  return '<article class="qc" data-pid="' + esc(pid) + '" data-id="' + esc(id) + '">' +
-    '<header class="qc-head"><span class="qc-id">' + esc(id) + "</span> " + kind +
-    (showProject ? " " + chipHtml(entry.pname, "neutral") : "") + " " + age + "</header>" +
-    '<h3 class="qc-text">' + esc(row.sum || "") + "</h3>" +
-    '<p class="qc-foot">' + esc(note) + "</p>" +
-    '<form data-op="head.set" data-project="' + esc(pid) + '" data-id="' + esc(id) +
-    '" data-form="inbox-head-ask" aria-label="' + esc("Answer " + id) + '">' +
-    '<label><span class="qc-id">Your answer</span> <input name="note" required placeholder="Type an answer"></label> ' +
-    '<button type="submit" class="btn">Answer</button></form>' +
-    '<p class="qc-foot"><a href="' + esc(headHash(pid, id)) + '" aria-label="' + esc("Open " + id + " in Head") +
-    '">Open in Head</a></p></article>';
 }
 
 // The open rule proposals (snap.rulesProposals, R7.103) across the scopes, in snapshot order.
@@ -244,72 +223,206 @@ export function ruleProposals(scopes) {
   return out;
 }
 
-// One rule proposal: its text, the Head ids it came from (links), Accept, Edit and accept (a text box), and Reject.
-// The buttons go through pageAction, the edit form through onAskSubmit; both send rules.accept or rules.reject.
-export function ruleProposalHtml(entry) {
-  const pid = entry.pid;
-  const id = String(entry.row.id);
-  const sources = (entry.row.sources || []).map(function (src) {
+// Every open item across the scopes as one list: questions, Head asks, rule proposals and needs-you tasks. A question
+// or Head ask answered on this page is left out until the next snapshot.
+export function inboxItems(scopes, now) {
+  const found = collect(scopes);
+  const items = [];
+  for (const e of found.questions) {
+    if (pendingValue(questionKey(e.pid, e.q.id), e.snap.fetchedAt, now) !== undefined) continue;
+    items.push({ kind: "question", rank: e.q.block ? 0 : RANK.question, at: numberOrNull(e.q.askedMs),
+      key: "q:" + e.pid + ":" + e.q.id, pid: e.pid, pname: e.pname, id: String(e.q.id), title: e.q.text || "",
+      entry: e });
+  }
+  for (const e of found.asks) {
+    const id = String(e.row.id);
+    if (pendingValue(headAskKey(e.pid, id), e.snap.fetchedAt, now) !== undefined) continue;
+    const at = typeof e.row.age === "number" ? now - e.row.age * 60000 : null;
+    items.push({ kind: "ask", rank: RANK.ask, at: at, key: "a:" + e.pid + ":" + id, pid: e.pid, pname: e.pname,
+      id: id, title: e.row.sum || "", entry: e });
+  }
+  for (const e of ruleProposals(scopes)) {
+    items.push({ kind: "rule", rank: RANK.rule, at: null, key: "r:" + e.pid + ":" + e.row.id, pid: e.pid,
+      pname: e.pname, id: String(e.row.id), title: e.row.text || "", entry: e });
+  }
+  for (const e of found.needs) {
+    items.push({ kind: "task", rank: RANK.task, at: null, key: "t:" + e.pid + ":" + e.item.id, pid: e.pid,
+      pname: e.pname, id: String(e.item.id), title: e.item.title || "", entry: e });
+  }
+  return items.sort(function (a, b) {
+    return a.rank - b.rank || (b.at || 0) - (a.at || 0);
+  });
+}
+
+function numberOrNull(value) {
+  return typeof value === "number" && isFinite(value) ? value : null;
+}
+
+// The count of open items per filter key, and the total.
+function countsOf(items) {
+  const c = { all: items.length, questions: 0, asks: 0, rules: 0, blockers: 0 };
+  for (const it of items) {
+    if (it.kind === "question") c.questions += 1;
+    else if (it.kind === "ask") c.asks += 1;
+    else if (it.kind === "rule") c.rules += 1;
+    else c.blockers += 1;
+  }
+  return c;
+}
+
+// The age of an item as a short word: minutes, hours or days. Empty when the item has no time.
+function ageText(at, now) {
+  if (at == null) return "";
+  const sec = Math.max(0, (now - at) / 1000);
+  if (sec < 3600) return Math.max(1, Math.floor(sec / 60)) + "m";
+  if (sec < 172800) return Math.floor(sec / 3600) + "h";
+  return Math.floor(sec / 86400) + "d";
+}
+
+function summaryHtml(c) {
+  let text = c.all + " need you: " + c.questions + " questions, " + c.asks + " head asks, " + c.rules +
+    " rule proposals";
+  if (c.blockers) text += ", " + c.blockers + " blockers";
+  return '<section class="hd-now" aria-label="Inbox summary"><p class="hd-now-line">' + esc(text) + "</p></section>";
+}
+
+function filterHtml(c) {
+  return '<nav class="hd-filters" aria-label="Filter">' + FILTERS.map(function (pair) {
+    const cur = pair[0] === filter ? ' aria-current="page"' : "";
+    return '<button type="button" class="hd-filter" data-ib-filter="' + pair[0] + '" data-focus="ib-f-' +
+      pair[0] + '"' + cur + ">" + esc(pair[1]) + " " + c[pair[0]] + "</button>";
+  }).join("") + "</nav>";
+}
+
+function domKey(key) {
+  return String(key).replace(/[^A-Za-z0-9_-]/g, "_");
+}
+
+// The chip text and tone of a kind (a Head ask shows its Head kind).
+function chipOf(item) {
+  if (item.kind === "question") return chipHtml("question", TONE.question);
+  if (item.kind === "ask") {
+    const kind = item.entry.row.kind ? String(item.entry.row.kind) : "ask";
+    return chipHtml(kind, TONE[kind] || "neutral");
+  }
+  if (item.kind === "rule") return chipHtml("rule", TONE.rule);
+  return chipHtml("blocker", TONE.blocker);
+}
+
+// The one action of a row, in the fixed action column: expand (question, Head ask), Accept (rule), open the task.
+function actionHtml(item, bid, open) {
+  const dataExpanded = ' aria-expanded="' + (open ? "true" : "false") + '"';
+  if (item.kind === "question" || item.kind === "ask") {
+    const what = item.kind === "question" ? "Answer " : "Reply to ";
+    return '<button type="button" class="btn ib-expand"' + dataExpanded + ' aria-controls="' + bid +
+      '" aria-label="' + esc(what + item.id) + '">›</button>';
+  }
+  if (item.kind === "rule") {
+    return '<button type="button" class="btn" data-action="rule-accept" data-project="' + esc(item.pid) +
+      '" data-id="' + esc(item.id) + '" aria-label="' + esc("Accept " + item.id) + '">✓</button>';
+  }
+  return '<a class="btn" href="' + esc(itemHash(item.pid, item.id)) + '" aria-label="' +
+    esc("View task " + item.id) + '">↗</a>';
+}
+
+// The expanded question: the full text, the task link, the countdown, the option list and the free-text box.
+function questionBody(item, now) {
+  const e = item.entry;
+  const q = e.q;
+  const pid = e.pid;
+  const task = q.task ? ' <a class="qc-task" href="' + esc(itemHash(pid, q.task)) + '" aria-label="' +
+    esc("View task " + q.task) + '">' + esc(q.task) + "</a>" : "";
+  const blocks = q.block ? chipHtml("Blocks work", "warning") : "";
+  const copy = copyButton("question", q.id, q.id + " " + q.text, { project: pid, sum: refSummary("question", q) });
+  const options = answerHtml(pid, Object.assign({}, q, { opts: Array.isArray(q.opts) ? q.opts : [] }));
+  let timer = "";
+  if (q.askedMs != null && q.timeoutS != null) {
+    const deadline = q.askedMs + q.timeoutS * 1000;
+    const word = q.def ? "Defaults to " + q.def + " in " : "Times out in ";
+    timer = '<p class="qc-foot"><span class="qc-timer" data-deadline-ms="' + esc(deadline) + '" data-word="' +
+      esc(word) + '">' + esc(countdownText(deadline, word, now)) + "</span></p>";
+  }
+  return '<p class="qc-line"><span class="qc-id">' + esc(q.id) + "</span>" + task + " " + blocks + " " + copy +
+    "</p><p class=\"qc-text\">" + esc(q.text) + "</p>" + timer + options;
+}
+
+// The expanded Head ask: the summary, the head's note, the age, the reply form (head.set) and the Head link.
+function askBody(item) {
+  const e = item.entry;
+  const row = e.row;
+  const pid = e.pid;
+  const id = String(row.id);
+  const age = typeof row.age === "number" ? '<span class="qc-id">Waiting ' + esc(fmtDuration(row.age * 60)) +
+    "</span> " : "";
+  const note = typeof row.note === "string" && row.note.trim() ? row.note : "The head needs your answer.";
+  return '<p class="qc-text">' + esc(row.sum || "") + '</p><p class="qc-foot">' + age + esc(note) + "</p>" +
+    '<form data-op="head.set" data-project="' + esc(pid) + '" data-id="' + esc(id) +
+    '" data-form="inbox-head-ask" aria-label="' + esc("Answer " + id) + '">' +
+    '<label><span class="qc-id">Your answer</span> <input name="note" required placeholder="Type an answer"></label> ' +
+    '<button type="submit" class="btn">Answer</button></form>' +
+    '<p class="qc-foot"><a href="' + esc(headHash(pid, id)) + '" aria-label="' + esc("Open " + id + " in Head") +
+    '">Open in Head</a></p>';
+}
+
+// The expanded rule proposal: its text, the Head ids it came from, Reject, and the edit form (rules.accept).
+function ruleBody(item) {
+  const e = item.entry;
+  const row = e.row;
+  const pid = e.pid;
+  const id = String(row.id);
+  const sources = (row.sources || []).map(function (src) {
     return '<a href="' + esc(headHash(pid, src)) + '">' + esc(src) + "</a>";
   });
   const from = sources.length ? "From " + sources.join(", ") : "No Head source";
-  return '<li class="rp" data-pid="' + esc(pid) + '" data-id="' + esc(id) + '">' +
-    '<p class="qc-line"><span class="qc-id">' + esc(id) + "</span> " + esc(entry.row.text || "") + "</p>" +
-    '<p class="qc-foot">' + from + "</p>" +
-    '<p><button type="button" class="btn" data-action="rule-accept" data-project="' + esc(pid) + '" data-id="' +
-    esc(id) + '">Accept</button> <button type="button" data-action="rule-reject" data-project="' + esc(pid) +
-    '" data-id="' + esc(id) + '">Reject</button></p>' +
-    '<form data-form="inbox-rule-edit" data-project="' + esc(pid) + '" data-id="' + esc(id) +
-    '" aria-label="' + esc("Edit and accept " + id) + '">' +
-    '<label><span class="qc-id">Rule text</span> <input name="text" required maxlength="160" value="' +
-    esc(entry.row.text || "") + '"></label> <button type="submit">Edit and accept</button></form></li>';
+  return '<p class="qc-text">' + esc(row.text || "") + '</p><p class="qc-foot">' + from + "</p>" +
+    '<p><button type="button" data-action="rule-reject" data-project="' + esc(pid) + '" data-id="' + esc(id) +
+    '">Reject</button></p><form data-form="inbox-rule-edit" data-project="' + esc(pid) + '" data-id="' + esc(id) +
+    '" aria-label="' + esc("Edit and accept " + id) + '"><label><span class="qc-id">Rule text</span> ' +
+    '<input name="text" required maxlength="160" value="' + esc(row.text || "") + '"></label> ' +
+    "<button type=\"submit\">Edit and accept</button></form>";
 }
 
-// The Rule proposals block of the Inbox (empty when no proposal is open).
-export function ruleProposalsBlock(entries) {
-  if (!entries.length) return "";
-  return '<section class="ov-card" aria-labelledby="inbox-rules-h"><h2 class="ov-h" id="inbox-rules-h">' +
-    "Rule proposals</h2><ul class=\"nz-list\">" + entries.map(ruleProposalHtml).join("") + "</ul></section>";
+// The expanded needs-you task: its title and the link to it.
+function taskBody(item) {
+  return '<p class="qc-text">' + esc(item.title) + '</p><p class="qc-foot"><a href="' +
+    esc(itemHash(item.pid, item.id)) + '" aria-label="' + esc("View task " + item.id) + '">View task ' +
+    esc(item.id) + "</a></p>";
 }
 
-// The full Inbox page: question cards (grouped by project in All projects), then the Head asks, then the needs-you
-// tasks.
+// One row and its expanded body. The row is a list item: the chip, a one-line title with the project, the age, and the
+// action. The body is hidden until the row is open.
+function itemHtml(item, now, open) {
+  const dk = domKey(item.key);
+  const bid = "ib-body-" + dk;
+  let body;
+  if (item.kind === "question") body = questionBody(item, now);
+  else if (item.kind === "ask") body = askBody(item);
+  else if (item.kind === "rule") body = ruleBody(item);
+  else body = taskBody(item);
+  return '<li class="ib-item' + (open ? " is-open" : "") + '" data-key="' + esc(item.key) + '">' +
+    '<div class="row-grid rg-fin ib-row"><span class="ib-kind">' + chipOf(item) + "</span>" +
+    '<span class="rg-main ib-main" role="button" tabindex="0" aria-controls="' + bid + '" aria-expanded="' +
+    (open ? "true" : "false") + '" data-focus="ib-' + esc(dk) + '" title="' + esc(item.title) + '">' +
+    '<span class="rg-t"><span class="qc-id">' + esc(item.id) + "</span> " + esc(item.title) + "</span>" +
+    '<span class="qc-foot">' + esc(item.pname) + "</span></span>" +
+    '<span class="rg-num qc-foot">' + esc(ageText(item.at, now)) + "</span>" +
+    actionHtml(item, bid, open) + '</div><div class="ib-body" id="' + bid + '"' + (open ? "" : " hidden") + ">" +
+    body + "</div></li>";
+}
+
+// The full Inbox body: the summary, the filter bar, then the rows. Empty when nothing needs you.
 export function inboxBody(vm) {
   const now = Date.now();
-  const scopes = scopeSnapshots(vm);
-  const showProject = vm.route.name !== "project";
-  const c = collect(scopes);
-  const rules = ruleProposals(scopes);
-  if (!c.questions.length && !c.needs.length && !c.asks.length && !rules.length) {
-    return emptyHtml("Inbox empty. No actions pending.");
-  }
-  let html = "";
-  for (const s of scopes) {
-    const cards = c.questions.filter(function (e) {
-      return e.pid === s.id;
-    });
-    if (!cards.length) continue;
-    const head = showProject ? '<h3 class="grp-h"><a href="' + esc(projectHash(s.id, "inbox")) + '">' +
-      esc(s.name) + "</a></h3>" : "";
-    html += '<div class="grp">' + head + cards.map(function (e) {
-      return questionCardHtml(e, now, false);
-    }).join("") + "</div>";
-  }
-  if (!c.questions.length) html += '<p class="placeholder">No open questions.</p>';
-  if (c.asks.length) {
-    html += '<section class="ov-card" aria-labelledby="inbox-asks-h"><h2 class="ov-h" id="inbox-asks-h">' +
-      "Head asks</h2>" + c.asks.map(function (e) {
-        return headAskCardHtml(e, now, showProject);
-      }).join("") + "</section>";
-  }
-  html += ruleProposalsBlock(rules);
-  if (c.needs.length) {
-    html += '<section class="ov-card" aria-labelledby="inbox-needs-h"><h2 class="ov-h" id="inbox-needs-h">' +
-      "Needs you</h2><ul class=\"nz-list\">" + c.needs.map(function (e) {
-        return needRowHtml(e, showProject);
-      }).join("") + "</ul></section>";
-  }
-  return html;
+  const items = inboxItems(scopeSnapshots(vm), now);
+  if (!items.length) return emptyHtml("Nothing needs you.");
+  const c = countsOf(items);
+  const shown = items.filter(function (it) {
+    return filter === "all" || it.kind === FILTER_KIND[filter];
+  });
+  const rows = shown.length ? '<ul class="nz-list ib-list">' + shown.map(function (it) {
+    return itemHtml(it, now, openSet.has(it.key));
+  }).join("") + "</ul>" : '<p class="placeholder">Nothing in this filter.</p>';
+  return summaryHtml(c) + filterHtml(c) + rows;
 }
 
 // The Overview preview: up to limit rows, questions first, with no answer buttons. Links go to the Inbox.
@@ -335,13 +448,6 @@ export function inboxPreviewHtml(vm, limit) {
       " more)</a></p>"
     : "";
   return '<ul class="nz-list">' + rows.slice(0, limit).join("") + "</ul>" + more;
-}
-
-// The card that the "1" to "4" keys answer: the focused one, else the first open card on the page.
-function focusedCard() {
-  const active = document.activeElement;
-  const near = active && active.closest ? active.closest(".qc[data-qid]:not(.is-answered)") : null;
-  return near || document.querySelector("#main .qc[data-qid]:not(.is-answered)");
 }
 
 // A reply on a Head ask: the form's note goes through cmd.js run() as head.set (the same op as the Head screen's
@@ -372,11 +478,12 @@ function onAskSubmit(event) {
     value: value,
     label: id + " answered: " + value,
   });
+  leaveItem(form, id + " answered: " + value);
 }
 
 if (typeof document !== "undefined") document.addEventListener("submit", onAskSubmit);
 
-// The "Other…" box of a question card: free text goes through the same question.answer op as an option button.
+// The "Other…" box of a question row: free text goes through the same question.answer op as an option button.
 function onQuestionTextSubmit(event, form) {
   event.preventDefault();
   const pid = form.getAttribute("data-project");
@@ -384,7 +491,7 @@ function onQuestionTextSubmit(event, form) {
   const field = form.elements.namedItem("value");
   const value = field ? String(field.value || "").trim() : "";
   if (!value) return;
-  sendAnswer(pid, qid, value);
+  sendAnswer(pid, qid, value, form);
 }
 
 function onAnswerPage() {
@@ -392,21 +499,53 @@ function onAnswerPage() {
   return section === "inbox" || section === "overview";
 }
 
-function sendAnswer(pid, qid, value) {
+function sendAnswer(pid, qid, value, el) {
   run("question.answer", { id: qid, value: value }, {
     project: pid,
     key: questionKey(pid, qid),
     value: value,
     label: qid + " answered: " + value,
   });
+  leaveItem(el, qid + " answered: " + value);
 }
 
 function answerButton(el) {
-  sendAnswer(el.getAttribute("data-project"), el.getAttribute("data-qid"), el.getAttribute("data-value"));
+  sendAnswer(el.getAttribute("data-project"), el.getAttribute("data-qid"), el.getAttribute("data-value"), el);
 }
 
-// Click entry point for the page's buttons (app.js sends these data-action values here): an answer, an Undo on an
-// activity line, and the one-hour Override from the limit banner.
+// Set a row open or closed in place (no re-render). Its hit target, action and body follow the same state.
+function setOpen(item, on) {
+  if (!item) return;
+  item.classList.toggle("is-open", on);
+  for (const el of item.querySelectorAll("[aria-expanded]")) el.setAttribute("aria-expanded", on ? "true" : "false");
+  const body = item.querySelector(".ib-body");
+  if (body) body.hidden = !on;
+  const key = item.getAttribute("data-key");
+  if (on) openSet.add(key);
+  else openSet.delete(key);
+}
+
+// After an answer or an accept: the row is swapped for a one-line confirmation, focus moves to the next row, and the
+// confirmation leaves the list after a moment (the next snapshot drops the item for good).
+function leaveItem(el, text) {
+  const item = el && el.closest ? el.closest(".ib-item") : null;
+  if (!item || !item.parentNode) return;
+  openSet.delete(item.getAttribute("data-key"));
+  const next = item.nextElementSibling || item.previousElementSibling;
+  const hadFocus = item.contains(document.activeElement);
+  const fresh = swapNode(item, parseOne('<li class="qc is-answered ib-item" role="status"><p class="qc-line">' +
+    esc(text) + "</p></li>"));
+  if (hadFocus && next && next.querySelector) {
+    const main = next.querySelector(".ib-main");
+    if (main) main.focus();
+  }
+  window.setTimeout(function () {
+    if (fresh.parentNode) fresh.parentNode.removeChild(fresh);
+  }, LEAVE_MS);
+}
+
+// Click entry point for the page's buttons (app.js sends these data-action values here): an answer, an accept or
+// reject of a rule, an Undo on an activity line, and the one-hour Override from the limit banner.
 export function pageAction(action, el) {
   const pid = el.getAttribute("data-project");
   if (action === "inbox-answer") {
@@ -433,26 +572,98 @@ function ruleOp(op, el, extra) {
   const args = Object.assign({ id: id }, extra);
   const verb = op === "rules.accept" ? "accepted" : "rejected";
   run(op, args, { project: pid, label: id + " " + verb });
+  leaveItem(el, id + " " + verb);
 }
 
-// The keys 1 to 6 answer the focused card's option in that position (the list order, recommended first).
+// The row that keys 1 to 6 act on: the open row that holds focus. Null when no open row has focus.
+function openRowWithFocus() {
+  const active = document.activeElement;
+  const near = active && active.closest ? active.closest(".ib-item") : null;
+  return near && near.classList.contains("is-open") ? near : null;
+}
+
+// The keys 1 to 6 answer the open row's option in that position (the list order, recommended first).
 function onDigit(index) {
   return function () {
     if (!onAnswerPage()) return;
-    const card = focusedCard();
-    const button = card ? card.querySelectorAll(".qc-opt")[index] : null;
+    const item = openRowWithFocus();
+    const button = item ? item.querySelectorAll(".ib-body .qc-opt")[index] : null;
     if (button) answerButton(button);
   };
 }
 
+// j and k move focus to the next or previous row (on the Inbox page only).
+function moveFocus(step) {
+  return function () {
+    if (currentRoute().section !== "inbox") return;
+    const rows = Array.from(document.querySelectorAll("#main .ib-item .ib-main"));
+    if (!rows.length) return;
+    const active = document.activeElement;
+    const own = active && active.closest ? active.closest(".ib-item") : null;
+    const at = own ? rows.indexOf(own.querySelector(".ib-main")) : -1;
+    let next;
+    if (at < 0) next = step > 0 ? 0 : rows.length - 1;
+    else next = Math.min(rows.length - 1, Math.max(0, at + step));
+    rows[next].focus();
+  };
+}
+
+// Clicks on the page: a filter button, the Answer or Reply button, and a click on a row (not on its action).
+function onPageClick(event) {
+  const t = event.target;
+  if (!t || !t.closest) return;
+  const filterBtn = t.closest("[data-ib-filter]");
+  if (filterBtn && filterBtn.closest("#main")) {
+    filter = filterBtn.getAttribute("data-ib-filter");
+    document.dispatchEvent(new Event("rb:render"));
+    return;
+  }
+  const expand = t.closest(".ib-expand");
+  if (expand && expand.closest("#main")) {
+    const item = expand.closest(".ib-item");
+    setOpen(item, !item.classList.contains("is-open"));
+    return;
+  }
+  const row = t.closest(".ib-row");
+  if (row && row.closest("#main") && !t.closest("button, a, input, select, textarea, form")) {
+    const item = row.closest(".ib-item");
+    setOpen(item, !item.classList.contains("is-open"));
+  }
+}
+
+// Enter opens the focused row; Esc closes the open row that holds focus (also from its text box).
+function onPageKey(event) {
+  if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
+  const t = event.target;
+  if (!t || !t.closest || !t.closest("#main .ib-item")) return;
+  const item = t.closest(".ib-item");
+  if (event.key === "Escape" && item.classList.contains("is-open")) {
+    event.preventDefault();
+    setOpen(item, false);
+    const main = item.querySelector(".ib-main");
+    if (main) main.focus();
+    return;
+  }
+  if (event.key === "Enter" && t.classList.contains("ib-main")) {
+    event.preventDefault();
+    setOpen(item, !item.classList.contains("is-open"));
+  }
+}
+
+if (typeof document !== "undefined") {
+  document.addEventListener("click", onPageClick);
+  document.addEventListener("keydown", onPageKey);
+}
+
 for (let n = 1; n <= KEY_MAX; n++) bindKey(String(n), onDigit(n - 1));
+bindKey("j", moveFocus(1));
+bindKey("k", moveFocus(-1));
 
 export function sectionView(vm) {
   const state = pageState(vm);
   if (state) return state;
   watchCountdowns();
-  const found = collect(scopeSnapshots(vm));
-  const open = found.questions.length + found.asks.length;
+  const open = inboxItems(scopeSnapshots(vm), Date.now()).length;
   const sectionCopy = copyButton("section", "inbox.questions", "open questions",
     { project: vm.route.id, sum: refSummary("section", { count: open }) });
   return '<div class="page-head"><h2 class="page-title">Inbox</h2>' + sectionCopy + "</div>" + inboxBody(vm);
