@@ -34,6 +34,7 @@ SESSION_STATES = ("watching", "open", "none")       # presence.state() values (R
 HEAD_OPEN_MAX = 40                                  # HEAD-SPEC section 5: open asks in the head key, newest first
 HEAD_DONE_MAX = 5                                   # newest done asks in the head key
 HEAD_SUM_MAX = 60                                   # summary characters per head row
+HEAD_NOTE_MAX = 200                                  # latest note characters per head row (only when present)
 HEAD_LINKS_MAX = 3                                  # link refs per head row (links); the rest is a count
 HEAD_LINKED_MAX = 6                                 # resolved links per head row (linked), HEAD-SPEC section 12
 HEAD_TITLE_MAX = 60                                 # title characters per resolved link
@@ -261,6 +262,8 @@ def head_row(entry, moment, accepted=False, suggest=None, linked=None, prog=None
         row["dup"] = {"id": entry["dup"]["id"], "score": entry["dup"].get("score")}
     if suggest:
         row["suggest"] = list(suggest)
+    if entry.get("note"):
+        row["note"] = str(entry["note"])[:HEAD_NOTE_MAX]
     return row
 
 
@@ -334,10 +337,17 @@ def _head_view(records, link_state, moment, tasks=(), issues=(), jobs=(), issues
             index["job:" + j["id"]] = {"title": str(j.get("title") or ""), "status": j.get("status")}
     live_jobs = [j for j in jobs if j.get("status") in HEAD_JOB_STATES]
 
+    notes = {}
+    for rec in records:
+        if rec.get("t") == "u" and rec.get("note") and rec.get("id"):
+            notes[rec["id"]] = rec["note"]
+
     def row(e):
         suggest = None
         if e["status"] not in head_rules.CLOSED_STATUSES and not e["links"]:
             suggest = head_rules.suggest_binds(e["sum"], open_tasks, issues) or None
+        if e["id"] in notes:
+            e = dict(e, note=notes[e["id"]])
         return head_row(e, moment, e["id"] in accepted, suggest,
                         linked=_resolve_links(e, index, live_jobs) or None, prog=_progress(e, index))
 

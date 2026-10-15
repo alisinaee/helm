@@ -33,6 +33,10 @@ export function countsFor(vm) {
     needYou += (snap.needsYou || []).filter(function (row) {
       return row.kind === "task";
     }).length;
+    // Head rows the head marked needs-you (the Inbox's Head asks, R7.81).
+    needYou += ((snap.head && snap.head.rows) || []).filter(function (row) {
+      return row && row.status === "needs-you";
+    }).length;
     blockers += (snap.issues || []).filter(function (issue) {
       return issue.kind === "blocker";
     }).length;
