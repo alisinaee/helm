@@ -1,7 +1,9 @@
 // UsageBand: the weekly and five-hour plan meters, reset countdowns, the stale marker, the Sync now button and the
-// manual "Enter usage" form. The band is global: it is shown on Home and on every project. When the Mac cannot sync
-// usage by itself (syncError no_token, no_item or denied) the band says so in plain words, hides Sync now and offers
-// the form. Writes go through cmd.js run("usage.set").
+// manual "Enter usage" form. The band is global: it is shown on Home and on every project. Usage arrives without a
+// manual step (R7.77): Claude Code hooks store the rate limits they see, and the head pushes the app's numbers. When
+// the keychain cannot be read (syncError no_token, no_item or denied; the Claude app keeps its own sign-in) Sync now
+// is hidden and the band names the source and age instead. The form stays folded as a fallback; it opens when the
+// reading is old. Writes go through cmd.js run("usage.set").
 
 import { bannerHtml, esc, meterHtml, skeletonHtml } from "../dom.js";
 import { fmtAge, fmtPercent, fmtResets } from "../format.js";
@@ -10,9 +12,8 @@ import { run } from "../cmd.js";
 
 const NO_AUTO_SYNC = ["no_token", "no_item", "denied"];
 const PERCENT = /^\d{1,3}(\.\d{1,2})?$/;
-const NO_AUTO_TITLE = "Usage is not synced automatically on this Mac.";
-const NO_AUTO_DETAIL = "Enter your numbers below, or sign in once with `claude` then `/login` in a terminal " +
-  "to turn on auto sync.";
+const OLD_TITLE = "Usage is old.";
+const OLD_DETAIL = "It updates by itself when the head reads it from the app or a Claude Code session reports it.";
 
 // The typed values survive a redraw; the message is the last validation problem.
 let entryDraft = { weekly: "", fiveHour: "" };
@@ -40,7 +41,7 @@ function noAutoSync(u) {
 }
 
 function statusLine(u) {
-  if (noAutoSync(u)) return bannerHtml("warning", NO_AUTO_TITLE, NO_AUTO_DETAIL);
+  if (noAutoSync(u)) return u.stale || u.veryOld ? bannerHtml("warning", OLD_TITLE, OLD_DETAIL) : "";
   if (u.veryOld) {
     const why = u.lastError ? u.lastError : "no reading yet";
     return bannerHtml("danger", "Usage data outdated: " + why, "Click Sync now or check provider.");
@@ -59,10 +60,13 @@ function syncLine(sync) {
   return '<p class="band-status' + tone + '">' + esc(sync.message) + "</p>";
 }
 
-// Where the reading came from, in words: a value the person typed or pushed by hand, or one the endpoint synced.
-function sourceWord(source) {
+// Where the reading came from, in words: the head's push from the app, a Claude Code hook or status line, a value
+// typed by hand, or one the endpoint synced.
+export function sourceWord(source) {
   const s = String(source || "").toLowerCase();
-  if (/manual|entered|push/.test(s)) return "entered by you";
+  if (/push/.test(s)) return "by the head from the app";
+  if (/claude code/.test(s)) return "from Claude Code";
+  if (/manual|entered/.test(s)) return "entered by you";
   if (/endpoint|sync/.test(s)) return "synced";
   return "";
 }
@@ -74,13 +78,15 @@ function fieldHtml(label, name, focus) {
     '"></label>';
 }
 
-function entryHtml() {
+// The fallback form, folded while the reading is fresh (no manual step is needed then).
+function entryHtml(open) {
   const msg = entryMessage ? '<p class="band-status is-danger" role="alert">' + esc(entryMessage) + "</p>" : "";
-  return '<form class="tk-override usage-entry" data-usage-entry novalidate>' +
-    '<p class="lim-h2">Enter usage</p>' +
+  return '<details class="usage-more"' + (open || entryMessage ? " open" : "") +
+    '><summary class="band-sub">Enter usage by hand</summary>' +
+    '<form class="tk-override usage-entry" data-usage-entry novalidate>' +
     fieldHtml("This week %", "weekly", "usage-weekly") +
     fieldHtml("Last 5 hours %", "fiveHour", "usage-five-hour") +
-    '<button type="submit" class="btn" data-focus="usage-save">Save usage</button></form>' + msg;
+    '<button type="submit" class="btn" data-focus="usage-save">Save usage</button></form>' + msg + "</details>";
 }
 
 // Plain-words check of one typed percent. Blank means "leave this window as it is".
@@ -160,7 +166,8 @@ export function usageView(vm) {
     ? vm.projects[0].id : "");
   const copy = copyButton("section", "usage.band", "Usage", { project: pid,
     sum: refSummary("section", u.loaded ? 2 : 0) });
-  return '<div class="band' + compact + '">' + body + entryHtml() +
+  const old = !u.loaded || u.stale || u.veryOld;
+  return '<div class="band' + compact + '">' + body + entryHtml(old) +
     '<div class="band-actions">' + statusLine(u) + updatedHtml + syncButton + copy +
     syncLine(u.sync) + "</div></div>";
 }

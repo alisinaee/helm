@@ -1,4 +1,4 @@
-"""Checks for the usage band (R7.27): the honest message for a Mac that cannot sync usage by itself, the hidden Sync now
+"""Checks for the usage band (R7.27, R7.77): the honest message for a Mac whose keychain sync cannot work, the hidden Sync now
 button for those errors, the manual "Enter usage" form, and the one-line "Updated ... , source" note.
 
 Node renders web/js/views/usage.js with fake view models (no DOM). The checks: no_token, no_item and denied give the
@@ -19,9 +19,8 @@ REPO = os.path.dirname(TESTS)
 WEB = os.path.join(REPO, "web")
 
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=', re.IGNORECASE)
-NO_AUTO_TITLE = "Usage is not synced automatically on this Mac."
-NO_AUTO_DETAIL = ("Enter your numbers below, or sign in once with `claude` then `/login` in a terminal "
-                  "to turn on auto sync.")
+NO_AUTO_TITLE = "Usage is old."
+NO_AUTO_DETAIL = "It updates by itself when the head reads it from the app or a Claude Code session reports it."
 
 SCRIPT = """
 const usage = await import(process.argv[1]);
@@ -90,7 +89,7 @@ class UsageEntryTests(unittest.TestCase):
         self.assertIn('type="submit"', html)
 
     def test_source_and_age_share_one_line(self):
-        self.assertRegex(self.html["noToken"], r'<span class="band-sub">Updated [^<]*, entered by you</span>')
+        self.assertRegex(self.html["noToken"], r'<span class="band-sub">Updated [^<]*, by the head from the app</span>')
         self.assertRegex(self.html["denied"], r'<span class="band-sub">Updated [^<]*, synced</span>')
 
     def test_markup_has_no_inline_style_or_handlers(self):
