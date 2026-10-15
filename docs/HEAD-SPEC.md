@@ -257,3 +257,8 @@ Every ask, rule, decision or instruction the person gives in chat is logged by t
 4. **Back-link:** the Work/Planner task detail shows which asks it serves (`ask:H12` chip via refs.py).
 5. **Head AI rule:** record in /head skill and runbook: log every person message, triage + bind in the same turn, keep status current when jobs start/finish (`head set H12 status=doing` is automatic via the fold).
 Build as step H13 (snapshot links/prog + back-link) then H14 (GUI) after the Cursor redesign spec lands.
+
+## 13. What each Head item shows (the person, 2026-10-15)
+Each item must show, in order: (1) short summary; (2) the FULL user message text, plus its attachments (image/file names and paths, as listed in the message; the file itself is not copied); (3) the AI reply to that message (the assistant text of the same turn, redacted and capped at 8000 chars, from the Claude Code transcript at Stop); (4) state (new/bound/doing/done/needs-you, with the reason); (5) bound task(s) with live status and the running job/model.
+Data: head-text.jsonl record gains `reply` (text) and `assets` (list of names/paths). Capture: UserPromptSubmit stores text and assets; the Stop hook (or the next prompt) fills `reply` from transcript_path (last assistant text after the last user message). Both fail-open and within the hook budget.
+UI: the row shows summary + state + bound task in one line; opening it shows the user text block, the attachments list, the AI reply block (labelled "Head replied"), then the bound tasks and actions. Use the cursor redesign (docs/reviews/cursor-head-ui-grok.md) when it lands.
