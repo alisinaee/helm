@@ -15,6 +15,19 @@ NEXT_LOG = "roadmap git log"
 NEXT_BRANCH = "roadmap git branches"
 STATUS_FILES = 5
 LOG_DEFAULT = 10
+OUT_LINES = 15  # most lines a human output prints without --full (a next: line counts)
+
+
+def _full(args):
+    return getattr(args, "full", False)
+
+
+def _fit(lines, full, reserve=0):
+    """The lines that fit under OUT_LINES less reserve; past that, one '+N more' line."""
+    room = OUT_LINES - reserve
+    if full or len(lines) <= room:
+        return lines
+    return lines[:room - 1] + ["+%d more (--full)" % (len(lines) - room + 1)]
 
 
 def _project_option():
@@ -38,9 +51,11 @@ def register(sub, common):
     log.add_argument("--task", metavar="ID", default=None, help="only commits linked to this task")
     log.add_argument("--job", metavar="ID", default=None, help="only commits linked to this job")
     log.add_argument("-n", metavar="N", type=int, default=LOG_DEFAULT, help="how many (default %d)" % LOG_DEFAULT)
+    log.add_argument("--full", action="store_true", help="print past the 15-line cap")
     log.set_defaults(handler=_log)
 
     branches = actions.add_parser("branches", parents=[common, project], help="local branches")
+    branches.add_argument("--full", action="store_true", help="print past the 15-line cap")
     branches.set_defaults(handler=_branches)
 
     branch = actions.add_parser("branch", parents=[common, project],
@@ -52,6 +67,7 @@ def register(sub, common):
     show = actions.add_parser("show", parents=[common, project], help="one commit: header and file list")
     show.add_argument("sha", metavar="SHA", help="commit id, 7 to 40 hex characters")
     show.add_argument("--stat", action="store_true", help="show the diffstat instead of the file status letters")
+    show.add_argument("--full", action="store_true", help="print past the 15-line cap")
     show.set_defaults(handler=_show)
 
     commit = actions.add_parser("commit", parents=[common, project],
@@ -160,13 +176,14 @@ def _log(args):
         rows = [row for row in rows if row.get("job") == args.job]
     rows = rows[:args.n]
     if not getattr(args, "json", False):
-        if not rows:
-            print("no commits")
+        lines = []
         for row in rows:
             links = " ".join(part for part in (row.get("task"), row.get("job")) if part)
             tags = " [" + links + "]" if links else ""
-            print("%s  %-12.12s %4s  %s%s" % (row["sha"][:7], row["author"], _ago(row["time"]), row["subject"],
-                                            tags))
+            lines.append("%s  %-12.12s %4s  %s%s" % (row["sha"][:7], row["author"], _ago(row["time"]), row["subject"],
+                                                    tags))
+        for line in _fit(lines or ["no commits"], _full(args)):
+            print(line)
         return None
     return {"commits": rows}
 
@@ -175,8 +192,7 @@ def _branches(args):
     path, _ = _project(args.project, NEXT_BRANCH)
     rows = git.read_branches(path)
     if not getattr(args, "json", False):
-        if not rows:
-            print("no branches")
+        lines = []
         for row in rows:
             mark = "*" if row["current"] else " "
             track = ""
@@ -184,7 +200,9 @@ def _branches(args):
                 track = " -> %s +%d -%d" % (row["upstream"], row["ahead"], row["behind"])
                 if row["gone"]:
                     track += " (gone)"
-            print("%s %s%s  %s" % (mark, row["name"], track, _ago(row["time"])))
+            lines.append("%s %s%s  %s" % (mark, row["name"], track, _ago(row["time"])))
+        for line in _fit(lines or ["no branches"], _full(args)):
+            print(line)
         return None
     return {"branches": rows}
 
@@ -213,7 +231,8 @@ def _show(args):
     mode = "--stat" if args.stat else "--name-status"
     text = git.redact(git.run(root, ["show", "--no-color", "--format=%H  %an  %ar%n%s", mode, sha]))
     if not getattr(args, "json", False):
-        print(text.rstrip("\n"))
+        for line in _fit(text.rstrip("\n").split("\n"), _full(args)):
+            print(line)
         return None
     return {"sha": sha, "text": text.rstrip("\n")}
 

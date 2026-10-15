@@ -7,6 +7,19 @@ from roadmap.errors import EXIT_NOT_FOUND, RoadmapError
 from roadmap.services import budget, control, git, jobs
 
 DONE_WORDS = {"done": "done", "fail": "failed"}
+OUT_LINES = 15  # most lines a human output prints without --full (a next: line counts)
+
+
+def _full(args):
+    return getattr(args, "full", False)
+
+
+def _fit(lines, full, reserve=0):
+    """The lines that fit under OUT_LINES less reserve; past that, one '+N more' line."""
+    room = OUT_LINES - reserve
+    if full or len(lines) <= room:
+        return lines
+    return lines[:room - 1] + ["+%d more (--full)" % (len(lines) - room + 1)]
 
 
 def _project_option():
@@ -53,6 +66,7 @@ def register(sub, common):
     progress.set_defaults(handler=_progress)
 
     listing = actions.add_parser("list", parents=[common, project], help="list jobs")
+    listing.add_argument("--full", action="store_true", help="print past the 15-line cap")
     listing.set_defaults(handler=_list)
 
     prune = actions.add_parser("prune", parents=[common, project],
@@ -131,14 +145,15 @@ def _list(args):
     data_dir = _data_dir(args)
     rows = jobs.list_jobs(data_dir)
     if not getattr(args, "json", False):
-        if not rows:
-            print("no jobs")
+        blocked = jobs.engines_line(data_dir)
+        lines = []
         for job in rows:
             task = " [" + job["task"] + "]" if job.get("task") else ""
             note = "  -- " + job["note"] if job.get("note") else ""
-            print("%-6s %-8s %-7s%s %s%s" % (job.get("id", "?"), job.get("status", "?"), job.get("model", "?"),
-                                            task, job.get("title", ""), note))
-        blocked = jobs.engines_line(data_dir)
+            lines.append("%-6s %-8s %-7s%s %s%s" % (job.get("id", "?"), job.get("status", "?"), job.get("model", "?"),
+                                                    task, job.get("title", ""), note))
+        for line in _fit(lines or ["no jobs"], _full(args), reserve=1 if blocked else 0):
+            print(line)
         if blocked:
             print(blocked)
         return None
