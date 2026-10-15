@@ -2,8 +2,9 @@
 Overview chip, the stylesheet link, and the loader's head key.
 
 Static checks read the sources. The nav badge is rendered in node (render_head_wire.mjs) from a snapshot list with
-open asks; the check is skipped when node is not installed. The Head section keeps module null until head.js exports
-sectionView(vm) and vm.head is set (both outside this step), so it shows "Coming soon" and no route is broken.
+open asks; the check is skipped when node is not installed. The Head section loads web/js/views/head.js, whose
+sectionView(vm) reads the snapshot's head key; the render check folds the demo fixture (render_head.mjs) and checks
+the rows the screen draws.
 """
 
 import json
@@ -18,8 +19,11 @@ TESTS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.dirname(TESTS)
 sys.path.insert(0, REPO)
 
+from tests.web.test_head_view import view_model  # noqa: E402
+
 WEB = os.path.join(REPO, "web")
 RENDER = os.path.join(TESTS, "web", "render_head_wire.mjs")
+RENDER_HEAD = os.path.join(TESTS, "web", "render_head.mjs")
 LOADER = os.path.join(REPO, "roadmap", "services", "loader.py")
 
 
@@ -33,9 +37,16 @@ class HeadSection(unittest.TestCase):
         self.routes = read(os.path.join(WEB, "js", "routes.js"))
 
     def test_head_is_a_top_level_section_after_inbox(self):
-        self.assertIn('{ id: "head", label: "Head", icon: "head", module: null, bottom: false }', self.routes)
+        self.assertIn('{ id: "head", label: "Head", icon: "head", module: "./views/head.js", bottom: false }',
+                      self.routes)
         self.assertLess(self.routes.index('id: "inbox"'), self.routes.index('id: "head"'))
         self.assertLess(self.routes.index('id: "head"'), self.routes.index('id: "roadmap"'))
+
+    def test_head_module_exports_section_view(self):
+        src = read(os.path.join(WEB, "js", "views", "head.js"))
+        self.assertRegex(src, r"export function sectionView\(vm\)")
+        state = read(os.path.join(WEB, "js", "state.js"))
+        self.assertIn("head: raw.head && typeof raw.head === \"object\" ? raw.head : null", state)
 
     def test_head_section_icon_is_in_the_sprite(self):
         self.assertIn('<symbol id="i-head"', read(os.path.join(WEB, "icons.svg")))
@@ -77,6 +88,31 @@ class HeadBadgeAndChip(unittest.TestCase):
         self.assertEqual(out["headCount"], 5)
         self.assertTrue(out["navHasHead"])
         self.assertTrue(out["navBadge"])
+
+
+class HeadRender(unittest.TestCase):
+    def test_demo_fixture_renders_rows_and_escapes_text(self):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("node is not installed")
+        vm = view_model()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "vm.json")
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump(vm, fh)
+            proc = subprocess.run([node, "--experimental-default-type=module", RENDER_HEAD, WEB, path],
+                                  capture_output=True, text=True, timeout=60)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        out = json.loads(proc.stdout)
+        screen = out["screen"]
+        self.assertIn('class="hd-screen"', screen)
+        self.assertIn('data-project="alpha"', screen)
+        for row in vm["head"]["rows"]:
+            self.assertIn('data-id="' + row["id"] + '"', screen)
+        self.assertIn('data-id="H1"', out["open"])
+        self.assertNotIn("<img src=x", out["open"])
+        self.assertIn("&lt;img", out["open"])
+        self.assertIn('href="#head?f=unhandled"', out["screen"])
 
 
 class LoaderHeadKey(unittest.TestCase):

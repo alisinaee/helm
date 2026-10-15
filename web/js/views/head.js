@@ -6,11 +6,13 @@
 // menu and suggestion buttons, and the forms they open) and the copy button.
 
 import { esc } from "../dom.js";
+import { emptyHtml as pageEmpty } from "../dom.js";
 import { MISSING, fmtPercent } from "../format.js";
 import { copyButton } from "../ref.js";
 import { run } from "../cmd.js";
 import { buildHash } from "../router.js";
 import { showToast } from "./toast.js";
+import { pageState } from "./inbox.js";
 
 export const FILTERS = [["open", "Open"], ["unhandled", "Unhandled"], ["doing", "Doing"], ["needs", "Needs you"],
   ["done", "Done"], ["all", "All"]];
@@ -214,8 +216,8 @@ function rowHtml(vm, row, opts) {
     '<span class="hd-c hd-id">' + esc(id) + "</span>" +
     '<span class="hd-c hd-kind">' + esc(row.kind || "") + "</span>" +
     '<span class="hd-c hd-sum rg-t" title="' + esc(row.sum || "") + '">' + esc(row.sum || "") + "</span>" +
-    '<span class="hd-c hd-bound">' + boundHtml(row.links, opts.project) +(row.more ? ' <span class="chip chip-neutral">+' +
-      esc(row.more) + "</span>" : "") + "</span>" +
+    '<span class="hd-c hd-bound">' + boundHtml(row.links, opts.project) +
+      (row.more ? ' <span class="chip chip-neutral">+' + esc(row.more) + "</span>" : "") + "</span>" +
     '<span class="hd-c hd-status">' + statusHtml(row) + "</span>" +
     '<span class="hd-c hd-age rg-num' + (row.stale ? " hd-stale" : row.amber ? " hd-amber" : "") + '"' +
     (row.stale ? ' title="Stale"' : "") + ">" + esc(ageText(row.age)) + "</span>" +
@@ -336,6 +338,16 @@ export function attachHeadListeners() {
   if (!main) return;
   listening = true;
   main.addEventListener("click", function (event) {
+    // Filter, alert and ask-chip links keep the project scope: their hash is rewritten before the browser follows it.
+    const link = event.target && event.target.closest ? event.target.closest("a[href^='#head']") : null;
+    if (link) {
+      const pid = projectOf(link);
+      if (pid) {
+        event.preventDefault();
+        window.location.hash = scopedHash(link.getAttribute("href"), pid);
+      }
+      return;
+    }
     const btn = event.target && event.target.closest ? event.target.closest("[data-action]") : null;
     if (!btn) return;
     const action = btn.getAttribute("data-action");
@@ -410,6 +422,49 @@ export function attachHeadListeners() {
     const bar = el && el.closest ? el.closest(".hd-bar") : null;
     const key = el && el.getAttribute ? el.getAttribute("data-field") : null;
     if (!bar || !key) return;
-    window.location.hash = setField(bar, key, el.value || "").slice(1);
+    window.location.hash = scopedHash(setField(bar, key, el.value || ""), projectOf(el));
   });
+}
+
+// The Head hash is project-scoped in the app ("#/p/<id>/head?..."); hashOf() gives the bare "#head?..." form.
+function scopedHash(hash, project) {
+  return project ? hash.replace(/^#head/, "#/p/" + project + "/head") : hash;
+}
+
+// The query of the current page hash, read with the same keys hashOf() writes.
+function queryOf() {
+  const raw = String(window.location.hash || "");
+  const at = raw.indexOf("?");
+  return new URLSearchParams(at >= 0 ? raw.slice(at + 1) : "");
+}
+
+function pick(value, allowed, max) {
+  const text = value == null ? "" : String(value);
+  return text && text.length <= max && allowed.indexOf(text) >= 0 ? text : "";
+}
+
+// The screen for the project route. Head belongs to one project; the snapshot's head key is the only data it reads.
+export function sectionView(vm) {
+  if (vm.route.name !== "project") {
+    return pageEmpty("Head belongs to one project.", '<a href="#/all/overview">Go to All projects</a>');
+  }
+  const state = pageState(vm);
+  if (state) return state;
+  attachHeadListeners();
+  const params = queryOf();
+  const text = params.get("q") || "";
+  const sid = params.get("sid") || "";
+  const id = params.get("id") || "";
+  const opts = {
+    f: pick(params.get("f"), FILTERS.map(function (pair) {
+      return pair[0];
+    }), 20) || "open",
+    q: text.length <= 200 ? text : "",
+    kind: pick(params.get("kind"), KINDS, 20),
+    sid: sid.length <= 60 ? sid : "",
+    id: ITEM_ID.test(id) ? id : "",
+    project: vm.route.id,
+    readOnly: false,
+  };
+  return headHtml({ head: vm.project.snapshot.head || null }, opts);
 }

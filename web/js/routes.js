@@ -5,9 +5,9 @@
 export const SECTIONS = [
   { id: "overview", label: "Overview", icon: "overview", module: "./views/overview.js", bottom: true },
   { id: "inbox", label: "Inbox", icon: "inbox", module: "./views/inbox.js", bottom: true },
-  // Head (HEAD-SPEC section 5): module stays null until head.js exports sectionView(vm) and vm.head is set; until
-  // then the section shows "Coming soon". The nav badge and the Overview chip read the snapshot's head key.
-  { id: "head", label: "Head", icon: "head", module: null, bottom: false },
+  // Head (HEAD-SPEC section 5): head.js exports sectionView(vm) and reads the snapshot's head key
+  // (vm.project.snapshot.head). The nav badge and the Overview chip read the same key.
+  { id: "head", label: "Head", icon: "head", module: "./views/head.js", bottom: false },
   { id: "roadmap", label: "Roadmap", icon: "roadmap", module: "./views/roadmap.js", bottom: false },
   { id: "planner", label: "Planner", icon: "planner", module: "./views/planner.js", bottom: false },
   { id: "work", label: "Work", icon: "work", module: "./views/work.js", bottom: true },
