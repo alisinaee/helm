@@ -5016,12 +5016,13 @@
       "title": "haiku: R7.98 follow-up: remaining 9 failures + R7.97 gaps",
       "model": "haiku",
       "task": "R7.98",
-      "status": "running",
+      "status": "failed",
       "started": "2026-10-15T21:10:15+03:30",
-      "ended": null,
+      "ended": "2026-10-15T22:10:36+03:30",
       "refs": [
         "commit:8fbdb1879c1cb7f683a24d17aef547a30820f428"
-      ]
+      ],
+      "reason": "stopped: 5h usage 82% past the 80% stop"
     },
     {
       "id": "j890",
@@ -5105,6 +5106,72 @@
       "status": "done",
       "started": "2026-10-15T21:17:23+03:30",
       "ended": "2026-10-15T21:20:47+03:30"
+    },
+    {
+      "id": "j899",
+      "title": "haiku: R7.107 work model M3 migrate map",
+      "model": "haiku",
+      "task": "R7.107",
+      "status": "done",
+      "started": "2026-10-15T22:00:35+03:30",
+      "ended": "2026-10-15T22:03:34+03:30"
+    },
+    {
+      "id": "j900",
+      "title": "haiku: R7.108 work model M4 work ops",
+      "model": "haiku",
+      "task": "R7.108",
+      "status": "done",
+      "started": "2026-10-15T22:00:40+03:30",
+      "ended": "2026-10-15T22:06:57+03:30"
+    },
+    {
+      "id": "j901",
+      "title": "haiku: R7.109 Planner UI like Head",
+      "model": "haiku",
+      "task": "R7.109",
+      "status": "done",
+      "started": "2026-10-15T22:01:07+03:30",
+      "ended": "2026-10-15T22:08:32+03:30"
+    },
+    {
+      "id": "j902",
+      "title": "sonnet: R7.110 Roadmap section review and fix",
+      "model": "sonnet",
+      "task": "R7.110",
+      "effort": "medium",
+      "status": "done",
+      "started": "2026-10-15T22:02:13+03:30",
+      "ended": "2026-10-15T22:03:42+03:30"
+    },
+    {
+      "id": "j903",
+      "title": "haiku: R7.111 Inbox modern redesign",
+      "model": "haiku",
+      "task": "R7.111",
+      "status": "done",
+      "started": "2026-10-15T22:02:51+03:30",
+      "ended": "2026-10-15T22:09:55+03:30"
+    },
+    {
+      "id": "j904",
+      "title": "opus: R7.113 Opus plan system design and workflow",
+      "model": "opus",
+      "task": "R7.113",
+      "effort": "medium",
+      "status": "done",
+      "started": "2026-10-15T22:07:55+03:30",
+      "ended": "2026-10-15T22:09:24+03:30"
+    },
+    {
+      "id": "j905",
+      "title": "haiku: R7.112 workflow you-are-here and full screen",
+      "model": "haiku",
+      "task": "R7.112",
+      "status": "failed",
+      "started": "2026-10-15T22:08:01+03:30",
+      "ended": "2026-10-15T22:10:36+03:30",
+      "reason": "stopped: 5h usage 82% past the 80% stop"
     }
   ]
 }

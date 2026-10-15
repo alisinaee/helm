@@ -1341,7 +1341,7 @@
       "id": "R3.7",
       "phase": "R3",
       "title": "Cursor (grok 4.7 xhigh) review of the logging endpoint and core log",
-      "status": "partial",
+      "status": "done",
       "tokensK": 100,
       "thinking": "low",
       "model": "haiku",
@@ -1353,7 +1353,8 @@
         "F22"
       ],
       "at": {
-        "partial": "2026-10-15T15:45:28+03:30"
+        "partial": "2026-10-15T15:45:28+03:30",
+        "done": "2026-10-15T22:07:47+03:30"
       },
       "refs": [
         "commit:e6cb5c0f3266989eabfa21b98f437ec97aac6256"
@@ -3031,7 +3032,7 @@
       "id": "R7.106",
       "phase": "R7",
       "title": "Planner clean-up: features state from real work, remove unrelated, link orphan tasks, sync with workflow (H154)",
-      "status": "partial",
+      "status": "done",
       "tokensK": 30,
       "thinking": "low",
       "model": "haiku",
@@ -3041,7 +3042,130 @@
       "feats": [
         "F2"
       ],
-      "verify": true
+      "verify": true,
+      "at": {
+        "done": "2026-10-15T21:28:46+03:30"
+      }
+    },
+    {
+      "id": "R7.107",
+      "phase": "R7",
+      "title": "Work model M3: migrate R7 rows into 15 Work items (docs/work-map-R7.json), lift ask binds",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:03:42+03:30"
+      },
+      "refs": [
+        "commit:367557a5bba2938738c9d0ddc395ca68e4400d57"
+      ]
+    },
+    {
+      "id": "R7.108",
+      "phase": "R7",
+      "title": "Work model M4: work ops (add, link, set status, accept, reopen) with undo and events",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:07:05+03:30"
+      },
+      "refs": [
+        "commit:ad285dc4be7cb093231224a1b197ee26aa823f1f"
+      ]
+    },
+    {
+      "id": "R7.109",
+      "phase": "R7",
+      "title": "Planner UI like the Head section: filter bar, aligned rows with state/kind chips, expandable rows, in-place updates (H156)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:9ed028783fc22ec0f36eb5f89abebaa1dbef1709"
+      ],
+      "at": {
+        "done": "2026-10-15T22:09:52+03:30"
+      }
+    },
+    {
+      "id": "R7.110",
+      "phase": "R7",
+      "title": "Roadmap section: verify data is in sync (phases, progress, tasks) and make the UI clear (H157)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:fab0fe7a3354ae90777857bc2732f82d498cbcc7"
+      ],
+      "at": {
+        "done": "2026-10-15T22:04:36+03:30"
+      }
+    },
+    {
+      "id": "R7.111",
+      "phase": "R7",
+      "title": "Inbox redesign: modern, calm, one clear list with sections, Head-style rows and actions (H158)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:10:16+03:30"
+      },
+      "refs": [
+        "commit:7a06bda12fe2e82f1d8da46e141bcdf8a29426e6"
+      ]
+    },
+    {
+      "id": "R7.112",
+      "phase": "R7",
+      "title": "Workflow: You are here = live running jobs only; Open map in new tab full screen with side-panel details (R7.30) (H159)",
+      "status": "todo",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.113",
+      "phase": "R7",
+      "title": "System design section: plan (Opus) the project architecture map view; subtasks for Haiku (H159)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:09:52+03:30"
+      },
+      "refs": [
+        "commit:57496b93b2106e063ace452038f59851a368dd44"
+      ]
     }
   ],
   "schemaVersion": 1

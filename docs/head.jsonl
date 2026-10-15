@@ -421,3 +421,21 @@
 {"v":1,"t":"u","id":"H152","ts":"2026-10-15T17:54:53Z","by":"head","set":{"status":"done"},"note":"pipeline c8a155d; 14 proposals RP1-RP14 wait for your accept in the Inbox"}
 {"v":1,"t":"u","id":"H155","ts":"2026-10-15T17:54:53Z","by":"head","set":{"status":"done"},"note":"fixed in 70f1dd7 (main scroll contained)"}
 {"v":1,"t":"u","id":"H154","ts":"2026-10-15T17:58:03Z","by":"head","set":{"status":"needs-you"},"note":"planner cleaned (0 orphans, 26 items, docs/reviews/planner-cleanup.md); please check and accept the 10 waiting features"}
+{"v":1,"t":"u","id":"H153","ts":"2026-10-15T17:58:46Z","by":"head","set":{"status":"done"},"note":"cleaned in 264474a (0 orphans, states from git); checked on screen"}
+{"v":1,"t":"e","ts":"2026-10-15T18:30:55Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"the ui for planner is not good chaange it to what we have for head section","len":75,"h":"sha1:f85cfe01e6f2","id":"H156"}
+{"v":1,"t":"u","id":"H156","ts":"2026-10-15T18:31:02Z","by":"head","set":{"kind":"ask","sum":"Planner UI should look and work like the Head section"},"link":["+task:R7.109"]}
+{"v":1,"t":"e","ts":"2026-10-15T18:31:58Z","src":"hook","sid":"7ae29675","acct":null,"kind":"review?","sum":"check with sonnet or opus med or low , for the roadmap section , is that realy sync and ok ?","len":163,"h":"sha1:5d73ae0021cd","id":"H157"}
+{"v":1,"t":"u","id":"H157","ts":"2026-10-15T18:32:04Z","by":"head","set":{"kind":"review","sum":"Roadmap section: check sync, fix, make UI clear"},"link":["+task:R7.110"]}
+{"v":1,"t":"e","ts":"2026-10-15T18:32:33Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"the ui for the inbox is shit , make it better and modern","len":56,"h":"sha1:89b62c02e80a","id":"H158"}
+{"v":1,"t":"u","id":"H158","ts":"2026-10-15T18:32:44Z","by":"head","set":{"kind":"ask","sum":"Inbox UI: make it modern and better"},"link":["+task:R7.111"]}
+{"v":1,"t":"u","id":"H157","ts":"2026-10-15T18:34:36Z","by":"head","set":{"status":"done"},"note":"checked fab0fe7: numbers in sync; live doing added; clearer lanes; 375px no scroll verified"}
+{"v":1,"t":"e","ts":"2026-10-15T18:37:18Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"what is this you are here ?","len":711,"h":"sha1:fd5ab660da3e","id":"H159"}
+{"v":1,"t":"e","ts":"2026-10-15T18:37:36Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"change limit to weekly 98%","len":26,"h":"sha1:6d72eff0a2f0","id":"H160"}
+{"v":1,"t":"u","id":"H160","ts":"2026-10-15T18:37:47Z","by":"head","set":{"kind":"decision","sum":"weekly stop 98%"},"link":["+task:R7.36"]}
+{"v":1,"t":"u","id":"H159","ts":"2026-10-15T18:37:49Z","by":"head","set":{"kind":"ask","sum":"workflow: you-are-here wrong, full-screen tab, timeline UX, table purpose; new System design section"},"link":["+task:R7.112","+task:R7.113"]}
+{"v":1,"t":"u","id":"H156","ts":"2026-10-15T18:38:42Z","by":"auto","set":{"status":"done"},"note":"auto: R7.109 9ed0287"}
+{"v":1,"t":"u","id":"H158","ts":"2026-10-15T18:40:17Z","by":"auto","set":{"status":"done"},"note":"auto: R7.111 7a06bda"}
+{"v":1,"t":"u","id":"H156","ts":"2026-10-15T18:40:29Z","by":"head","set":{"status":"done"},"note":"planner rebuilt in 9ed0287 (Head style); checked on screen: 26 rows"}
+{"v":1,"t":"u","id":"H158","ts":"2026-10-15T18:40:29Z","by":"head","set":{"status":"done"},"note":"inbox redesigned in 7a06bda; checked on screen"}
+{"v":1,"t":"e","ts":"2026-10-15T18:41:40Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"i told u cotinue until 98","len":25,"h":"sha1:594ab588b141","id":"H161"}
+{"v":1,"t":"u","id":"H161","ts":"2026-10-15T18:43:38Z","by":"head","set":{"kind":"decision","sum":"continue until weekly 98%, past the 5h 80% stop"},"link":["+task:R7.36"]}

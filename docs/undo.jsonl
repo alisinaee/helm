@@ -465,3 +465,20 @@
 {"activity":"A496","sum":"H152 set status, note","op":"head.restore","args":{"steps":[{"id":"H152","set":{"status":"open"}}]},"at":"2026-10-15T21:24:53+03:30"}
 {"activity":"A497","sum":"H155 set status, note","op":"head.restore","args":{"steps":[{"id":"H155","set":{"status":"open"}}]},"at":"2026-10-15T21:24:53+03:30"}
 {"activity":"A498","sum":"H154 set status, note","op":"head.restore","args":{"steps":[{"id":"H154","set":{"status":"open"}}]},"at":"2026-10-15T21:28:03+03:30"}
+{"activity":"A499","sum":"H153 set status, note","op":"head.restore","args":{"steps":[{"id":"H153","set":{"status":"open"}}]},"at":"2026-10-15T21:28:46+03:30"}
+{"activity":"A500","sum":"R7.106 partial->done","op":"task.status","args":{"id":"R7.106","status":"partial"},"at":"2026-10-15T21:28:46+03:30"}
+{"activity":"A501","sum":"H156 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H156","set":{"kind":"ask","sum":"the ui for planner is not good chaange it to what we have for head section"},"link":["-task:R7.109"]}]},"at":"2026-10-15T22:01:02+03:30"}
+{"activity":"A502","sum":"H157 triaged as review","op":"head.restore","args":{"steps":[{"id":"H157","set":{"kind":"review","sum":"check with sonnet or opus med or low , for the roadmap section , is that realy sync and ok ?"},"link":["-task:R7.110"]}]},"at":"2026-10-15T22:02:04+03:30"}
+{"activity":"A503","sum":"H158 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H158","set":{"kind":"ask","sum":"the ui for the inbox is shit , make it better and modern"},"link":["-task:R7.111"]}]},"at":"2026-10-15T22:02:44+03:30"}
+{"activity":"A504","sum":"R7.107 partial->done","op":"task.status","args":{"id":"R7.107","status":"partial"},"at":"2026-10-15T22:03:42+03:30"}
+{"activity":"A506","sum":"H157 set status, note","op":"head.restore","args":{"steps":[{"id":"H157","set":{"status":"open"}}]},"at":"2026-10-15T22:04:36+03:30"}
+{"activity":"A507","sum":"R7.108 partial->done","op":"task.status","args":{"id":"R7.108","status":"partial"},"at":"2026-10-15T22:07:05+03:30"}
+{"activity":"A508","sum":"H160 triaged as decision","op":"head.restore","args":{"steps":[{"id":"H160","set":{"kind":"ask","sum":"change limit to weekly 98%"},"link":["-task:R7.36"]}]},"at":"2026-10-15T22:07:47+03:30"}
+{"activity":"A509","sum":"R3.7 partial->done","op":"task.status","args":{"id":"R3.7","status":"partial"},"at":"2026-10-15T22:07:47+03:30"}
+{"activity":"A510","sum":"H159 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H159","set":{"kind":"ask","sum":"what is this you are here ?"},"link":["-task:R7.112","-task:R7.113"]}]},"at":"2026-10-15T22:07:49+03:30"}
+{"activity":"A512","sum":"R7.113 partial->done","op":"task.status","args":{"id":"R7.113","status":"partial"},"at":"2026-10-15T22:09:52+03:30"}
+{"activity":"A513","sum":"R7.111 partial->done","op":"task.status","args":{"id":"R7.111","status":"partial"},"at":"2026-10-15T22:10:16+03:30"}
+{"activity":"A514","sum":"H156 set status, note","op":"head.restore","args":{"steps":[{"id":"H156","set":{"status":"done"}}]},"at":"2026-10-15T22:10:29+03:30"}
+{"activity":"A515","sum":"H158 set status, note","op":"head.restore","args":{"steps":[{"id":"H158","set":{"status":"done"}}]},"at":"2026-10-15T22:10:29+03:30"}
+{"activity":"A516","sum":"L1 global week pct 95% block removed","op":"limit.set","args":{"id":"L1","scope":"global","window":"week","kind":"pct","value":95.0,"action":"block"},"at":"2026-10-15T22:13:29+03:30"}
+{"activity":"A517","sum":"H161 triaged as decision","op":"head.restore","args":{"steps":[{"id":"H161","set":{"kind":"ask","sum":"i told u cotinue until 98"},"link":["-task:R7.36"]}]},"at":"2026-10-15T22:13:38+03:30"}

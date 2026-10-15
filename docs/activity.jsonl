@@ -1,20 +1,3 @@
-{"id":"A1","at":"2026-10-14T08:49:07+03:30","src":"gui","op":"phase.approve","sum":"approve R1","undo":true}
-{"id":"A2","at":"2026-10-14T13:16:43+03:30","src":"agent","op":"feature.add","sum":"F23 added: Copy reference id on every section and row","undo":true}
-{"id":"A3","at":"2026-10-14T13:16:50+03:30","src":"agent","op":"feature.link","sum":"link F23 to R7.12","undo":true}
-{"id":"A4","at":"2026-10-14T13:20:38+03:30","src":"agent","op":"feature.link","sum":"link F2 to R7.13","undo":true}
-{"id":"A5","at":"2026-10-14T13:24:17+03:30","src":"agent","op":"feature.link","sum":"link F13 to R7.14","undo":true}
-{"id":"A6","at":"2026-10-15T08:13:59+03:30","src":"agent","op":"feature.link","sum":"link F19 to R7.17","undo":true}
-{"id":"A7","at":"2026-10-15T08:13:59+03:30","src":"agent","op":"feature.link","sum":"link F22 to R7.16","undo":true}
-{"id":"A8","at":"2026-10-15T08:16:13+03:30","src":"agent","op":"feature.link","sum":"link F11 to R7.1","undo":false}
-{"id":"A9","at":"2026-10-15T08:16:13+03:30","src":"agent","op":"feature.link","sum":"link F11 to R7.20","undo":true}
-{"id":"A10","at":"2026-10-15T08:16:13+03:30","src":"agent","op":"feature.link","sum":"link F23 to R7.12","undo":false}
-{"id":"A11","at":"2026-10-15T08:16:13+03:30","src":"agent","op":"feature.link","sum":"link F13 to R7.14","undo":false}
-{"id":"A12","at":"2026-10-15T08:16:13+03:30","src":"agent","op":"feature.link","sum":"link F22 to R7.16","undo":false}
-{"id":"A13","at":"2026-10-15T08:16:13+03:30","src":"agent","op":"feature.link","sum":"link F22 to R7.6","undo":false}
-{"id":"A14","at":"2026-10-15T08:16:13+03:30","src":"agent","op":"feature.link","sum":"link F22 to R7.8","undo":true}
-{"id":"A15","at":"2026-10-15T08:16:13+03:30","src":"agent","op":"feature.link","sum":"link F22 to R7.18","undo":true}
-{"id":"A16","at":"2026-10-15T08:16:13+03:30","src":"agent","op":"feature.link","sum":"link F22 to R7.19","undo":true}
-{"id":"A17","at":"2026-10-15T08:16:13+03:30","src":"agent","op":"feature.link","sum":"link F22 to R3.3","undo":true}
 {"id":"A18","at":"2026-10-15T08:16:13+03:30","src":"agent","op":"feature.link","sum":"link F22 to R3.4","undo":true}
 {"id":"A19","at":"2026-10-15T08:16:13+03:30","src":"agent","op":"feature.link","sum":"link F22 to R3.5","undo":true}
 {"id":"A20","at":"2026-10-15T08:16:13+03:30","src":"agent","op":"feature.link","sum":"link F19 to R7.17","undo":false}
@@ -496,3 +479,22 @@
 {"id":"A496","at":"2026-10-15T21:24:53+03:30","src":"agent","op":"head.set","sum":"H152 set status, note","undo":true}
 {"id":"A497","at":"2026-10-15T21:24:53+03:30","src":"agent","op":"head.set","sum":"H155 set status, note","undo":true}
 {"id":"A498","at":"2026-10-15T21:28:03+03:30","src":"agent","op":"head.set","sum":"H154 set status, note","undo":true}
+{"id":"A499","at":"2026-10-15T21:28:46+03:30","src":"agent","op":"head.set","sum":"H153 set status, note","undo":true}
+{"id":"A500","at":"2026-10-15T21:28:46+03:30","src":"agent","op":"task.status","sum":"R7.106 partial->done","undo":true}
+{"id":"A501","at":"2026-10-15T22:01:02+03:30","src":"agent","op":"head.triage","sum":"H156 triaged as ask","undo":true}
+{"id":"A502","at":"2026-10-15T22:02:04+03:30","src":"agent","op":"head.triage","sum":"H157 triaged as review","undo":true}
+{"id":"A503","at":"2026-10-15T22:02:44+03:30","src":"agent","op":"head.triage","sum":"H158 triaged as ask","undo":true}
+{"id":"A504","at":"2026-10-15T22:03:42+03:30","src":"agent","op":"task.status","sum":"R7.107 partial->done","undo":true}
+{"id":"A505","at":"2026-10-15T22:04:36+03:30","src":"agent","op":"task.status","sum":"R7.110 done->done","undo":false}
+{"id":"A506","at":"2026-10-15T22:04:36+03:30","src":"agent","op":"head.set","sum":"H157 set status, note","undo":true}
+{"id":"A507","at":"2026-10-15T22:07:05+03:30","src":"agent","op":"task.status","sum":"R7.108 partial->done","undo":true}
+{"id":"A508","at":"2026-10-15T22:07:47+03:30","src":"agent","op":"head.triage","sum":"H160 triaged as decision","undo":true}
+{"id":"A509","at":"2026-10-15T22:07:47+03:30","src":"agent","op":"task.status","sum":"R3.7 partial->done","undo":true}
+{"id":"A510","at":"2026-10-15T22:07:49+03:30","src":"agent","op":"head.triage","sum":"H159 triaged as ask","undo":true}
+{"id":"A511","at":"2026-10-15T22:09:52+03:30","src":"agent","op":"task.status","sum":"R7.109 done->done","undo":false}
+{"id":"A512","at":"2026-10-15T22:09:52+03:30","src":"agent","op":"task.status","sum":"R7.113 partial->done","undo":true}
+{"id":"A513","at":"2026-10-15T22:10:16+03:30","src":"agent","op":"task.status","sum":"R7.111 partial->done","undo":true}
+{"id":"A514","at":"2026-10-15T22:10:29+03:30","src":"agent","op":"head.set","sum":"H156 set status, note","undo":true}
+{"id":"A515","at":"2026-10-15T22:10:29+03:30","src":"agent","op":"head.set","sum":"H158 set status, note","undo":true}
+{"id":"A516","at":"2026-10-15T22:13:29+03:30","src":"cli","op":"limit.rm","sum":"L1 global week pct 95% block removed","undo":true}
+{"id":"A517","at":"2026-10-15T22:13:38+03:30","src":"agent","op":"head.triage","sum":"H161 triaged as decision","undo":true}

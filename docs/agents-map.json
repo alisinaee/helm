@@ -73,5 +73,40 @@
     "task": "R7.106",
     "title": "haiku: R7.106 Planner clean-up",
     "model": "haiku"
+  },
+  "ad115493c71fddd89": {
+    "task": "R7.107",
+    "title": "haiku: R7.107 work model M3 migrate map",
+    "model": "haiku"
+  },
+  "a366cc68170ae2af4": {
+    "task": "R7.108",
+    "title": "haiku: R7.108 work model M4 work ops",
+    "model": "haiku"
+  },
+  "ac8564eb4e35756d9": {
+    "task": "R7.109",
+    "title": "haiku: R7.109 Planner UI like Head",
+    "model": "haiku"
+  },
+  "af9b7cd73f7cd3afe": {
+    "task": "R7.110",
+    "title": "sonnet: R7.110 Roadmap section review and fix",
+    "model": "sonnet"
+  },
+  "ac4249f996cbbd616": {
+    "task": "R7.111",
+    "title": "haiku: R7.111 Inbox modern redesign",
+    "model": "haiku"
+  },
+  "a6c4768dc728f9dfd": {
+    "task": "R7.113",
+    "title": "opus: R7.113 Opus plan system design and workflow",
+    "model": "opus"
+  },
+  "ad9d8421749ca6bdf": {
+    "task": "R7.112",
+    "title": "haiku: R7.112 workflow you-are-here and full screen",
+    "model": "haiku"
   }
 }
