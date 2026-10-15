@@ -546,12 +546,46 @@ def model_name(value):
     return text[:40]
 
 
+TRANSCRIPT_TAIL_BYTES = 64 * 1024
+TRANSCRIPT_TAIL_LINES = 50
+
+
+def _transcript_model(path):
+    """The short name of the newest 'claude-' model in the Claude Code transcript at path, read from its last 64 KB and
+    last 50 lines only. None when the path is not a file, the read fails, or no entry names a claude model. Fail-open."""
+    try:
+        if not isinstance(path, str) or not path.strip() or not os.path.isfile(path):
+            return None
+        size = os.path.getsize(path)
+        with open(path, "rb") as fh:
+            fh.seek(max(0, size - TRANSCRIPT_TAIL_BYTES))
+            chunk = fh.read(TRANSCRIPT_TAIL_BYTES)
+        lines = chunk.decode("utf-8", errors="ignore").splitlines()
+        if size > TRANSCRIPT_TAIL_BYTES and lines:
+            lines = lines[1:]  # the first line may start mid-entry
+        for line in reversed(lines[-TRANSCRIPT_TAIL_LINES:]):
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            if not isinstance(entry, dict):
+                continue
+            message = entry.get("message")
+            names = [entry.get("model"), message.get("model") if isinstance(message, dict) else None]
+            for name in names:
+                if isinstance(name, str) and name.startswith("claude-"):
+                    return model_name(name)
+        return None
+    except Exception:
+        return None
+
+
 def _head_claim(project, data_dir, payload, now, clock, started):
     """Record a 'claim' session record (which model works as head) when the project captures, the payload names a model,
     and the model or the session differs from the last claim of this project. Fail-open: it never raises and never
     blocks; a busy lock or a problem goes to the log."""
     try:
-        model = model_name(payload.get("model"))
+        model = model_name(payload.get("model")) or _transcript_model(payload.get("transcript_path"))
         if model is None or not _head_on(data_dir):
             return
         session_id = payload.get("session_id")
