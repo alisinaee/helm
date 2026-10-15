@@ -18,7 +18,7 @@ import time
 from roadmap import log as roadmap_log
 from roadmap.core import head as head_core
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, RoadmapError
-from roadmap.services import control, jobs, presence, rules
+from roadmap.services import control, git, jobs, presence, rules
 from roadmap.services import head as head_svc
 from roadmap.services import queue as queue_service
 from roadmap.store import atomic, lock, paths, schema
@@ -272,7 +272,8 @@ def _handle(raw, environ, cwd, now, clock, started):
             raise
         # A busy lock: return silently, so the hook exits 0 within its time budget. The next event tries again.
     if event == "Stop":
-        return _stop_pickup(payload, project, data_dir, now, clock, started)
+        return _stop_pickup(payload, project, data_dir, now, clock, started) or _stop_gate(payload, project, data_dir,
+                                                                                         now)
     return None
 
 
@@ -697,6 +698,63 @@ def _stop_pickup(payload, project, data_dir, now, clock=time.monotonic, started=
     if extra:
         reason += "\n" + "\n".join(extra)
     return {"decision": "block", "reason": reason}
+
+
+GATE_GIT_S = 2  # each git read in the gate: the Stop hook stays well inside its budget
+
+
+def _stop_gate(payload, project, data_dir, now):
+    """Stop hook, autopilot gate (HEAD-SPEC section 11, H12): when the head tries to end its turn and the gate has
+    continue items, block once with them. Off with head.gate false, while paused (head-pause file or a stop in the
+    control state), at a usage stop, and at most once per head_svc.GATE_WINDOW_S. A stop_hook_active Stop is never
+    blocked again. Fail-open: any error returns None."""
+    try:
+        if payload.get("stop_hook_active") or not _head_on(data_dir):  # the gate is part of head capture
+            return None
+        cfg = _head_config(data_dir).get("head")
+        if isinstance(cfg, dict) and cfg.get("gate") is False:
+            return None
+        stamp = os.path.join(data_dir, head_svc.GATE_STAMP_FILE)
+        saved = atomic.read_json(stamp, default={}) if os.path.exists(stamp) else {}
+        last = saved.get("at") if isinstance(saved, dict) else None
+        if isinstance(last, (int, float)) and 0 <= now - last < head_svc.GATE_WINDOW_S:
+            return None
+        state = control.read_state(project["id"]) or {}
+        paused = (os.path.exists(os.path.join(data_dir, head_svc.GATE_PAUSE_FILE)) or state.get("stop") is True)
+        if paused:
+            return None
+        moment = datetime.datetime.fromtimestamp(now, datetime.timezone.utc)
+        rows = head_svc.rows(data_dir, now=moment)
+        queue = [e.get("task") for e in queue_service.list_queue(data_dir)]
+        running = [j for j in jobs.list_jobs(data_dir) if j.get("status") == "running"]
+        dirty, unpushed = _git_counts(project["path"])
+        data, error = schema.read_data("usage", paths.usage_file())
+        usage = data if error is None and isinstance(data, dict) else None
+        items = head_svc.gate(rows, queue=queue, running=running, dirty=dirty, unpushed=unpushed, usage=usage,
+                              now=moment)
+        if not items:
+            return None
+        atomic.write_json(stamp, {"at": now})
+    except Exception as exc:  # fail open: the reason is logged by type only
+        _log("gate skipped: " + type(exc).__name__)
+        return None
+    _log("gate block " + str(len(items)) + " items")
+    return {"decision": "block", "reason": "roadmap head: continue with: " + "; ".join(items)}
+
+
+def _git_counts(folder):
+    """(uncommitted entries, unpushed commits), None for a count git cannot give. Read-only git with a short timeout."""
+    dirty = unpushed = None
+    try:
+        dirty = len([line for line in git.run(folder, ["status", "--porcelain"], timeout=GATE_GIT_S).splitlines()
+                     if line.strip()])
+    except RoadmapError:
+        dirty = None
+    try:
+        unpushed = int(git.run(folder, ["rev-list", "--count", "@{u}..HEAD"], timeout=GATE_GIT_S).strip() or 0)
+    except (RoadmapError, ValueError):
+        unpushed = None
+    return dirty, unpushed
 
 
 def _queued_task(data_dir):
