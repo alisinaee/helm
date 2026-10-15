@@ -2,9 +2,10 @@
 
 Cmd+K has a visible button in the top bar, and the shortcut list is in Settings (helpRows in keys.js). The Mark
 button, the m key and the palette command "Mark a bug here" call log.js mark() through topbar.js markBug(), and exist
-only on localhost with a CSRF value (never on the phone). Settings choice buttons keep aria-pressed and a tick on the
-chosen one. The source checks read the files; the node check renders the top bar with no window (phone-like) and
-is skipped when node is missing.
+only on localhost with a CSRF value (never on the phone). Settings choice buttons form a radiogroup (role radio with
+aria-checked and a tick on the chosen one, arrow keys move between them). Single-key shortcuts can be turned off in
+Settings, and Escape that closes the panel sheet returns focus to the panel toggle. The source checks read the files;
+the node check renders the top bar with no window (phone-like) and is skipped when node is missing.
 """
 
 import os
@@ -85,6 +86,30 @@ class KeysDiscoverSource(unittest.TestCase):
         self.assertIn('["Ctrl+K or Cmd+K",', rows)
         self.assertIn('["m", "Mark a bug here', rows)
 
+    def test_single_key_switch_is_stored_and_defaults_on(self):
+        self.assertIn('const SINGLE_KEY_SWITCH = "rb.keys.single";', self.src)
+        self.assertIn('window.localStorage.getItem(SINGLE_KEY_SWITCH) !== "0"', self.src)
+        self.assertIn("export function setSingleKeys(on)", self.src)
+        self.assertIn('window.localStorage.setItem(SINGLE_KEY_SWITCH, singleKeysMemo ? "1" : "0")', self.src)
+
+    def test_single_character_keys_are_gated_by_the_switch(self):
+        handler = self.src[self.src.index("function onKeydown(event)"):self.src.index("export function helpRows()")]
+        gate = handler.index('if (key.length === 1 && !singleKeysOn()) {')
+        self.assertLess(handler.index('if (key === "Escape") {'), gate)
+        self.assertLess(gate, handler.index('if (key === "?") {'))
+        self.assertLess(gate, handler.index("extra.has(key)"))
+
+    def test_modifier_shortcuts_are_not_gated(self):
+        self.assertIn('if (isPaletteKey(event)) {', self.src)
+        self.assertIn('event.altKey && !event.ctrlKey && !event.metaKey && !isTyping(event.target) && extra.has',
+                      self.src)
+
+    def test_escape_returns_focus_to_panel_toggle(self):
+        self.assertIn("closePanel();\n      focusPanelToggle();", self.src)
+        self.assertIn("function focusPanelToggle()", self.src)
+        self.assertIn("document.querySelector('[data-focus=\"panel-toggle\"]')", self.src)
+        self.assertIn("btn.focus()", self.src)
+
 
 class PaletteDiscoverSource(unittest.TestCase):
     @classmethod
@@ -101,13 +126,31 @@ class SettingsChoiceSource(unittest.TestCase):
     def setUpClass(cls):
         cls.src = read(SETTINGS_JS)
 
-    def test_choice_rows_keep_aria_pressed_and_a_tick(self):
-        self.assertIn('aria-pressed="\' + (on ? "true" : "false") +', self.src)
+    def test_choice_rows_are_radios_with_a_tick(self):
+        self.assertIn('role="radiogroup" aria-label="\' + esc(name) + \'"', self.src)
+        self.assertIn('role="radio" aria-checked="\' + (on ? "true" : "false") +', self.src)
+        self.assertIn('tabindex="\' + (on ? "0" : "-1") +', self.src)
+        self.assertNotIn("aria-pressed", self.src)
         self.assertIn('(on ? "i-check" : "i-blank")', self.src)
         self.assertIn('<svg class="ico" aria-hidden="true" focusable="false">', self.src)
 
+    def test_arrow_keys_move_and_choose_between_radios(self):
+        self.assertIn("function radioArrowKey(event)", self.src)
+        for key in ("ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"):
+            self.assertIn('"%s"' % key, self.src)
+        self.assertIn('el.getAttribute("role") !== "radio"', self.src)
+        self.assertIn("event.preventDefault();\n  next.focus();\n  next.click();", self.src)
+        self.assertIn('document.addEventListener("keydown", radioArrowKey);', self.src)
+
+    def test_single_key_switch_in_settings(self):
+        self.assertIn('import { helpRows, setSingleKeys, singleKeysOn } from "../keys.js";', self.src)
+        self.assertIn('choiceHtml("Single-key shortcuts", SINGLE_KEYS_SWITCH, on, "set-single-keys")', self.src)
+        self.assertIn('if (action === "set-single-keys") {\n    setSingleKeys(el.getAttribute("data-value") === "on");',
+                      self.src)
+        self.assertIn("singleKeysHtml() + keysHtml()", self.src)
+
     def test_settings_lists_the_shortcuts_from_keys(self):
-        self.assertIn('import { helpRows } from "../keys.js";', self.src)
+        self.assertIn('import { helpRows, setSingleKeys, singleKeysOn } from "../keys.js";', self.src)
         self.assertIn('<span class="kbd">\' + esc(row[0]) + "</span> "', self.src)
         self.assertIn("keysHtml() +", self.src)
 
