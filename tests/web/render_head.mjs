@@ -16,7 +16,7 @@ const empty = { head: { now: vm.head.now, prev: [], counts: {}, rows: [] } };
 
 console.log(JSON.stringify({
   screen: head.headHtml(vm, Object.assign({ f: "all" }, base)),
-  unhandled: head.headHtml(vm, Object.assign({ f: "unhandled" }, base)),
+  queue: head.headHtml(vm, Object.assign({ f: "queue" }, base)),
   done: head.headHtml(vm, Object.assign({ f: "done" }, base)),
   open: head.headHtml(vm, Object.assign({ f: "open", open: ["H1"] }, base)),
   readOnly: head.headHtml(vm, Object.assign({ f: "all", readOnly: true }, base)),
@@ -24,7 +24,7 @@ console.log(JSON.stringify({
   unclaimed: head.headHtml({ head: { counts: {}, rows: [] } }, Object.assign({ f: "open" }, base)),
   noMatch: head.headHtml(vm, Object.assign({ f: "open", q: "zzz-none" }, base)),
   noReply: head.headHtml(Object.assign({}, vm, { head: Object.assign({}, vm.head, { full: { id: "H1", text: "x", history: [] } }) }), Object.assign({ f: "open", open: ["H1"] }, base)),
-  hash: head.hashOf({ f: "unhandled", q: "a b", kind: "bug" }),
+  hash: head.hashOf({ f: "queue", q: "a b", kind: "bug" }),
   oldest: head.headHtml(vm, Object.assign({ f: "all", sort: "old" }, base)),
   hashOld: head.hashOf({ f: "all", sort: "old" }),
   hashNew: head.hashOf({ f: "all", sort: "new" }),

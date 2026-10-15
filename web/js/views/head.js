@@ -14,19 +14,24 @@ import { esc } from "../dom.js";
 import { emptyHtml as pageEmpty } from "../dom.js";
 import { fmtPercent } from "../format.js";
 import { copyButton } from "../ref.js";
-import { run } from "../cmd.js";
+import { pendingValue, run } from "../cmd.js";
 import { getJson } from "../api.js";
 import { buildHash } from "../router.js";
 import { showToast } from "./toast.js";
-import { pageState } from "./inbox.js";
+import { collect, pageAction, pageState, questionCardHtml, questionKey, watchCountdowns } from "./inbox.js";
 
-export const FILTERS = [["open", "Open"], ["unhandled", "Unhandled"], ["doing", "Doing"], ["needs", "Needs you"],
-  ["done", "Done"], ["all", "All"]];
+export const FILTERS = [["open", "Open"], ["queue", "Queue"], ["doing", "Doing"], ["done", "Done"],
+  ["failed", "Failed"], ["needs", "Needs you"], ["blocked", "Blocked"], ["closed", "Closed"], ["all", "All"]];
 const KINDS = ["ask", "decision", "rule", "bug", "preference", "question", "review", "info"];
-const STATUS_WORDS = { new: "new", understood: "understood", bound: "bound", doing: "doing", done: "done ✓",
-  declined: "declined", "needs-you": "needs you", merged: "merged" };
-const STATUS_TONE = { new: "neutral", understood: "neutral", bound: "neutral", doing: "success", done: "success",
-  declined: "neutral", "needs-you": "warning", merged: "neutral" };
+// Each ledger status shows as one state: [filter key, label, chip tone]. Tones are the existing token chips, distinct
+// per state; the kind chips use their own tones (KIND_TONE). Queue is new or understood, Doing is bound or doing.
+const STATE_OF = { new: ["queue", "Queue", "neutral"], understood: ["queue", "Queue", "neutral"],
+  bound: ["doing", "Doing", "sonnet"], doing: ["doing", "Doing", "sonnet"], done: ["done", "Done", "success"],
+  failed: ["failed", "Failed", "danger"], "needs-you": ["needs", "Needs you", "warning"],
+  blocked: ["blocked", "Blocked", "opus"], declined: ["closed", "Closed", "defer"],
+  merged: ["closed", "Closed", "defer"] };
+const KIND_TONE = { ask: "haiku", bug: "danger", rule: "opus", decision: "success", preference: "agy",
+  question: "cursor", review: "warning", info: "defer" };
 const CLOSED = ["done", "declined", "merged"];
 const UNHANDLED = ["new", "understood"];
 const BOUND_MAX = 2;
@@ -55,14 +60,16 @@ function rowsOf(vm) {
   return Array.isArray(head.rows) ? head.rows : [];
 }
 
+// The state of a ledger status: its filter key, label and chip tone (an unknown status shows as itself).
+function stateOf(status) {
+  return STATE_OF[status] || [String(status), String(status), "neutral"];
+}
+
 function passes(row, opts) {
   const f = opts.f || "open";
   const st = row.status;
   if (f === "open" && CLOSED.indexOf(st) >= 0) return false;
-  if (f === "unhandled" && UNHANDLED.indexOf(st) < 0) return false;
-  if (f === "doing" && st !== "doing") return false;
-  if (f === "needs" && st !== "needs-you") return false;
-  if (f === "done" && st !== "done") return false;
+  if (f !== "open" && f !== "all" && stateOf(st)[0] !== f) return false;
   if (opts.kind && row.kind !== opts.kind) return false;
   if (opts.sid && String(row.acct || row.sid || "") !== opts.sid) return false;
   if (opts.q) {
@@ -121,7 +128,7 @@ function nowHtml(head) {
 function alertsHtml(counts) {
   const items = [];
   if (counts.unhandled > 0) {
-    items.push('<a class="hd-alert" href="#head?f=unhandled">' + esc(counts.unhandled + " unhandled") +
+    items.push('<a class="hd-alert" href="#head?f=queue">' + esc(counts.unhandled + " queued") +
       " <span>Show</span></a>");
   }
   if (counts.needs > 0) {
@@ -255,7 +262,7 @@ function linkOf(ref) {
 // The chip tone of a bound task's status: a running or done task is good, a blocked one needs a look.
 function taskTone(st) {
   if (st === "done" || st === "doing") return "success";
-  return st === "blocked" ? "warning" : "neutral";
+  return st === "blocked" || st === "hold" ? "warning" : "neutral";
 }
 
 // The bound-to chips: at most max of them (the closed row shows two), each with its status when the snapshot has
@@ -278,12 +285,18 @@ function boundHtml(links, pid, max) {
 }
 
 function statusHtml(row) {
-  const st = row.status;
-  if (st === "done" && row.auto) {
+  if (row.status === "done" && row.auto) {
     return '<span class="chip chip-neutral hd-outline" title="Auto-done: waiting for the person">done?</span>';
   }
-  return '<span class="chip chip-' + esc(STATUS_TONE[st] || "neutral") + '">' + esc(STATUS_WORDS[st] || st) +
+  const state = stateOf(row.status);
+  return '<span class="chip chip-' + esc(state[2]) + '" data-state="' + esc(state[0]) + '">' + esc(state[1]) +
     "</span>";
+}
+
+// The kind chip: one tone per kind (KIND_TONE), neutral for any other kind.
+function kindHtml(kind) {
+  const tone = KIND_TONE[kind] || "neutral";
+  return '<span class="chip chip-' + esc(tone) + '">' + esc(kind || "") + "</span>";
 }
 
 // The text, history, reply and attachments of one row, as the view keeps them (the text is null on the phone).
@@ -371,7 +384,8 @@ function stateReason(row) {
     return row.acc ? "Confirmed by you" : "Done; waiting for you to confirm";
   }
   const words = { doing: "A bound task or job is running", "needs-you": "The head asked for you",
-    bound: "Bound to a task; not started", declined: "Declined", merged: "Merged into another entry" };
+    bound: "Bound to a task; not started", declined: "Declined", merged: "Merged into another entry",
+    failed: "A bound job failed", blocked: "A bound task is on hold or blocked" };
   return words[row.status] || "Not triaged yet";
 }
 
@@ -529,7 +543,7 @@ function listRowHtml(vm, row, opts) {
     cell("hd-n", '<button type="button" class="hd-hit" data-action="head-toggle" data-id="' + eid +
       '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="hd-p-' + eid + '" aria-label="' +
       esc((open ? "Hide " : "Show ") + id) + '">' + eid + "</button>") +
-    cell("hd-kind", '<span class="chip chip-neutral">' + esc(row.kind || "") + "</span>") +
+    cell("hd-kind", kindHtml(row.kind)) +
     cell("hd-sumc", '<span class="hd-sum" data-sum="' + esc(row.sum || "") + '" title="' + esc(shown) + '">' +
       esc(shown) + "</span>") +
     cell("hd-stc", statusHtml(row)) +
@@ -562,7 +576,26 @@ function emptyHtml(vm, opts) {
     esc(hashOf({ f: "all" })) + '">Show all</a></div>';
 }
 
-// The whole screen for one view model. opts: {f, q, kind, sid, open (ids of the open rows), project, readOnly}.
+// The agents' open questions at the top of the screen: the Inbox question card (its one-click answers) and a free-text
+// answer. Both send the Inbox's own answer path (inbox.js pageAction, op question.answer). Hidden when there are none.
+function questionsHtml(list) {
+  if (!list || !list.length) return "";
+  const now = Date.now();
+  return '<section class="hd-blk" aria-labelledby="hd-qh"><h3 id="hd-qh" class="hd-lbl">Questions from agents</h3>' +
+    list.map(function (e) {
+      const qid = esc(e.q.id);
+      const pid = esc(e.pid);
+      const card = questionCardHtml(e, now, false);
+      if (pendingValue(questionKey(e.pid, e.q.id), e.snap.fetchedAt, now) !== undefined) return card;
+      return card + '<form class="hd-form" data-op="question.answer" data-project="' + pid + '" data-qid="' + qid +
+        '" aria-label="Answer ' + qid + '"><label><span class="hd-lbl">Your answer</span>' +
+        '<input name="value" required placeholder="Type an answer"></label>' +
+        '<button type="submit" class="btn">Answer</button></form>';
+    }).join("") + "</section>";
+}
+
+// The whole screen for one view model. opts: {f, q, kind, sid, open (ids of the open rows), project, readOnly,
+// questions (the open agent questions: collect() entries)}.
 export function headHtml(vm, opts) {
   const o = opts || {};
   const head = vm && vm.head ? vm.head : {};
@@ -585,7 +618,8 @@ export function headHtml(vm, opts) {
     }).join("") + "</ul></div>" : listHtml(vm, rows, o);
   const pager = pagerHtml(o.pager);
   return '<section class="hd-screen" data-project="' + esc(o.project || "") + '" aria-labelledby="hd-h">' +
-    top + nowHtml(head) + alertsHtml(counts) + barHtml(vm, o) + body + pager + "</section>";
+    top + questionsHtml(o.questions) + nowHtml(head) + alertsHtml(counts) + barHtml(vm, o) + body + pager +
+    "</section>";
 }
 
 function projectOf(el) {
@@ -662,7 +696,7 @@ function loadText(item) {
 
 // The rows of the full ledger beyond the snapshot: the scope of a filter ("all" for All and Done, else "open").
 function scopeOf(f) {
-  return f === "all" || f === "done" ? "all" : "open";
+  return f === "all" || f === "done" || f === "closed" ? "all" : "open";
 }
 
 function inScope(row, scope) {
@@ -888,7 +922,13 @@ export function attachHeadListeners() {
       const el = form.elements.namedItem(name);
       return el ? String(el.value || "").trim() : "";
     };
-    if (op === "head.bind") {
+    if (op === "question.answer") {
+      // The typed answer goes through the Inbox's answer button path (pageAction reads these attributes).
+      const value = field("value");
+      if (!value) return;
+      form.setAttribute("data-value", value);
+      pageAction("inbox-answer", form);
+    } else if (op === "head.bind") {
       const refs = field("refs").split(",").map(function (ref) {
         return ref.trim();
       }).filter(Boolean);
@@ -946,6 +986,8 @@ export function sectionView(vm) {
   const params = queryOf();
   const text = params.get("q") || "";
   const sid = params.get("sid") || "";
+  // f=unhandled is the old name of Queue (the Overview chip still links to it).
+  const f = params.get("f") === "unhandled" ? "queue" : params.get("f");
   const id = params.get("id") || "";
   // A deep-linked row (#head?id=H12) opens once; after that the person's own open and close decide.
   if (ITEM_ID.test(id) && id !== seededId) {
@@ -953,7 +995,7 @@ export function sectionView(vm) {
     seededId = id;
   }
   const opts = {
-    f: pick(params.get("f"), FILTERS.map(function (pair) {
+    f: pick(f, FILTERS.map(function (pair) {
       return pair[0];
     }), 20) || "open",
     q: text.length <= 200 ? text : "",
@@ -978,10 +1020,13 @@ export function sectionView(vm) {
   const shown = head.rows.filter(function (row) {
     return inScope(row, scope);
   }).length;
+  const questions = collect([{ id: vm.route.id, name: vm.route.id, snap: vm.project.snapshot }]).questions;
+  watchCountdowns();
   opts.pager = {
     pid: vm.route.id, scope: scope, shown: shown, total: pg ? pg.total : null, error: pg ? pg.error : "",
     more: !pg || pg.total == null || pg.offset < pg.total,
   };
+  opts.questions = questions;
   const html = headHtml({ head: head }, opts);
   if (typeof setTimeout === "function") {
     setTimeout(function () {

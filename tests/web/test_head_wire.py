@@ -112,7 +112,7 @@ class HeadRender(unittest.TestCase):
         self.assertIn('data-id="H1"', out["open"])
         self.assertNotIn("<img src=x", out["open"])
         self.assertIn("&lt;img", out["open"])
-        self.assertIn('href="#head?f=unhandled"', out["screen"])
+        self.assertIn('href="#head?f=queue"', out["screen"])
 
 
 class HeadRouteFilters(unittest.TestCase):

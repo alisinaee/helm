@@ -59,7 +59,7 @@ def view_model():
             "dup": {"id": "H1", "score": 0.72} if entry["id"] == "H4" else None,
             "suggest": ["task:R7.31"] if entry["id"] == "H4" else [],
         })
-    return {"head": {
+    return {"pinNow": NOW.isoformat(), "head": {
         "now": {"model": "Opus 5.5", "acct": "B", "since": "09:02 (1h)", "usage": {"h5": 41, "wk": 63}},
         "prev": [{"model": "Opus 5.5", "acct": "A", "until": "08:55"}],
         "counts": {},
@@ -329,7 +329,7 @@ class HeadRender(unittest.TestCase):
 
     def test_alerts_count_unhandled_needs_and_unaccepted_done(self):
         html = self.out["screen"]
-        self.assertIn("1 unhandled", html)
+        self.assertIn("1 queued", html)
         self.assertIn("1 needs you", html)
         self.assertIn("1 done, not accepted", html)
         self.assertIn('href="#head?f=done"', html)
@@ -339,7 +339,7 @@ class HeadRender(unittest.TestCase):
         self.assertIn('data-action="head-accept" data-id="H7"', html)
         self.assertIn('data-action="head-reopen" data-id="H3"', html)
         self.assertIn('done?', html)
-        self.assertIn("done ✓", self.out["done"])
+        self.assertIn('data-state="done">Done</span>', self.out["done"])
 
     def test_row_ids_and_copy_refs_use_the_project(self):
         self.assertIn("rb:alpha/ask/H1", self.out["screen"])
@@ -348,10 +348,10 @@ class HeadRender(unittest.TestCase):
         self.assertIn('<span class="hd-c hd-status">', self.out["screen"])
 
     def test_filter_views_show_only_their_rows(self):
-        self.assertEqual(self.out["unhandled"].count('<li class="hd-item">'), 1)
+        self.assertEqual(self.out["queue"].count('<li class="hd-item">'), 1)
         self.assertEqual(self.out["done"].count('<li class="hd-item'), 2)
         self.assertEqual(self.out["open"].count('<li class="hd-item'), 5)
-        self.assertEqual(self.out["unhandled"].count('<li class="hd-item'), 1)
+        self.assertEqual(self.out["queue"].count('<li class="hd-item'), 1)
 
     def test_opened_row_has_four_labelled_blocks_in_order(self):
         html = self.out["open"]
@@ -466,7 +466,7 @@ class HeadRender(unittest.TestCase):
         self.assertEqual(self.out["hashCards"], "#head?f=all&view=cards")
 
     def test_hash_keeps_the_filter_state(self):
-        self.assertEqual(self.out["hash"], "#head?f=unhandled&q=a%20b&kind=bug")
+        self.assertEqual(self.out["hash"], "#head?f=queue&q=a%20b&kind=bug")
 
 
 if __name__ == "__main__":
