@@ -13,7 +13,8 @@ class RegistryTests(CmdCase):
     def test_public_ops_are_the_mvp_list(self):
         self.assertEqual(commands.public_ops(), sorted([
             "budget.set", "comment.add", "control.override", "control.resume", "control.stop",
-            "feature.accept", "feature.add", "feature.link", "feature.move", "feature.rm", "feature.set", "feature.unlink",
+            "feature.accept", "feature.add", "feature.link", "feature.move", "feature.rm", "feature.set",
+            "feature.unlink",
             "issue.close",
             "issue.link", "issue.new", "limit.rm", "limit.set", "phase.approve", "plan.move", "question.answer",
             "question.ask",
