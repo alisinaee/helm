@@ -38,6 +38,15 @@ START HERE in a new chat (any account, same Mac): `cd ~/Works/roadmap-board` and
 - Argon: gemini-4-argon via OpenCode returned "Insufficient account funds" (paid, no credit). Browser route: Claude extension is installed in Arc and listed as connected, but tab creation timed out; not yet tested.
 - First message for the new chat: `/head`
 
+### Checkpoint 10 (2026-10-15 ~22:30): paused, 5h 93% (hard limit near), weekly 96% (stop 98%)
+- Pushed: 52f2653 (Workflow: You are here = running jobs; full-screen map tab + side panel, R7.30 done; Table = one
+  row per task), cbc3f7e (Timeline 8 UX fixes). Both checked on screen. Service restarted (new wf_table.js).
+- Next: System design section packages A1-A8 (docs/SYSTEM-DESIGN-SECTION.md); Work model M5-M10; top bar reads
+  "stop off" because the weekly stop lives only in docs/autonomy.json (98) and no limit row exists: show the
+  autonomy stop in the top bar too.
+- Person to do: 14 rule proposals (Inbox), 10 features to accept (Planner).
+- First message for the new chat: `/head`
+
 ### Checkpoint 9 (2026-10-15 night): weekly 95% (stop 98%, person said continue past the 5h 80% stop, H161)
 - Pushed tonight: Work model (WORK-MODEL.md; M1 9f3deca, M2 32aa1e9, M3 367557a, M4 ad285dc), supervisor + leases
   (a59d9f9, review fixes 7cd98b1), store unified (4028be5), rules pipeline (c8a155d + 14 proposals RP1-RP14 waiting

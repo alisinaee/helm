@@ -1554,13 +1554,14 @@
       ],
       "at": {
         "partial": "2026-10-15T09:18:31+03:30"
-      }
+      },
+      "verify": true
     },
     {
       "id": "R7.30",
       "phase": "R7",
       "title": "Workflow map: Open in new tab (full-screen view, left nav hidden) with node tap showing Details in the side panel",
-      "status": "todo",
+      "status": "done",
       "tokensK": 60,
       "thinking": "low",
       "model": "haiku",
@@ -1570,6 +1571,12 @@
       "note": "person request 2026-10-15",
       "feats": [
         "F13"
+      ],
+      "at": {
+        "done": "2026-10-15T22:22:36+03:30"
+      },
+      "refs": [
+        "commit:52f26537c7c584242f3c61f31ceff6bc371da018"
       ]
     },
     {
@@ -3141,13 +3148,19 @@
       "id": "R7.112",
       "phase": "R7",
       "title": "Workflow: You are here = live running jobs only; Open map in new tab full screen with side-panel details (R7.30) (H159)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 40,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:22:36+03:30"
+      },
+      "refs": [
+        "commit:52f26537c7c584242f3c61f31ceff6bc371da018"
+      ]
     },
     {
       "id": "R7.113",
@@ -3165,6 +3178,42 @@
       },
       "refs": [
         "commit:57496b93b2106e063ace452038f59851a368dd44"
+      ]
+    },
+    {
+      "id": "R7.114",
+      "phase": "R7",
+      "title": "Workflow Table: one row per task (needs you, running, failed, queued, done) with next action; split into wf_table.js",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:22:36+03:30"
+      },
+      "refs": [
+        "commit:52f26537c7c584242f3c61f31ceff6bc371da018"
+      ]
+    },
+    {
+      "id": "R7.115",
+      "phase": "R7",
+      "title": "Workflow Timeline: fix the 8 UI/UX issues in SYSTEM-DESIGN-SECTION.md B-3",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:29:22+03:30"
+      },
+      "refs": [
+        "commit:cbc3f7e83fb6e7b05b523ef408b5fc733e3e820a"
       ]
     }
   ],

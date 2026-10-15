@@ -5172,6 +5172,33 @@
       "started": "2026-10-15T22:08:01+03:30",
       "ended": "2026-10-15T22:10:36+03:30",
       "reason": "stopped: 5h usage 82% past the 80% stop"
+    },
+    {
+      "id": "j906",
+      "title": "haiku: R7.112 workflow you-are-here and full screen",
+      "model": "haiku",
+      "task": "R7.112",
+      "status": "done",
+      "started": "2026-10-15T22:13:47+03:30",
+      "ended": "2026-10-15T22:22:04+03:30"
+    },
+    {
+      "id": "j907",
+      "title": "haiku: R7.114 workflow table useful",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T22:13:53+03:30",
+      "ended": "2026-10-15T22:17:27+03:30"
+    },
+    {
+      "id": "j908",
+      "title": "haiku: R7.115 Timeline UI/UX fixes",
+      "model": "haiku",
+      "task": "R7.115",
+      "status": "done",
+      "started": "2026-10-15T22:24:10+03:30",
+      "ended": "2026-10-15T22:28:55+03:30"
     }
   ]
 }

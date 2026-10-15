@@ -482,3 +482,9 @@
 {"activity":"A515","sum":"H158 set status, note","op":"head.restore","args":{"steps":[{"id":"H158","set":{"status":"done"}}]},"at":"2026-10-15T22:10:29+03:30"}
 {"activity":"A516","sum":"L1 global week pct 95% block removed","op":"limit.set","args":{"id":"L1","scope":"global","window":"week","kind":"pct","value":95.0,"action":"block"},"at":"2026-10-15T22:13:29+03:30"}
 {"activity":"A517","sum":"H161 triaged as decision","op":"head.restore","args":{"steps":[{"id":"H161","set":{"kind":"ask","sum":"i told u cotinue until 98"},"link":["-task:R7.36"]}]},"at":"2026-10-15T22:13:38+03:30"}
+{"activity":"A518","sum":"H159 bound task:R7.114","op":"head.restore","args":{"steps":[{"id":"H159","link":["-task:R7.114"]}]},"at":"2026-10-15T22:13:58+03:30"}
+{"activity":"A519","sum":"R7.112 partial->done","op":"task.status","args":{"id":"R7.112","status":"partial"},"at":"2026-10-15T22:22:36+03:30"}
+{"activity":"A520","sum":"R7.114 todo->done","op":"task.status","args":{"id":"R7.114","status":"todo"},"at":"2026-10-15T22:22:36+03:30"}
+{"activity":"A521","sum":"R7.30 todo->done","op":"task.status","args":{"id":"R7.30","status":"todo"},"at":"2026-10-15T22:22:36+03:30"}
+{"activity":"A522","sum":"H159 bound task:R7.115","op":"head.restore","args":{"steps":[{"id":"H159","link":["-task:R7.115"]}]},"at":"2026-10-15T22:24:06+03:30"}
+{"activity":"A523","sum":"R7.115 partial->done","op":"task.status","args":{"id":"R7.115","status":"partial"},"at":"2026-10-15T22:29:22+03:30"}

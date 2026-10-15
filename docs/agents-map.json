@@ -108,5 +108,20 @@
     "task": "R7.112",
     "title": "haiku: R7.112 workflow you-are-here and full screen",
     "model": "haiku"
+  },
+  "a16cd7da3d599f073": {
+    "task": "R7.112",
+    "title": "haiku: R7.112 workflow you-are-here and full screen",
+    "model": "haiku"
+  },
+  "addc99cc4135e6a8d": {
+    "task": "R7.31",
+    "title": "haiku: R7.114 workflow table useful",
+    "model": "haiku"
+  },
+  "ad73747f0f5a18d69": {
+    "task": "R7.115",
+    "title": "haiku: R7.115 Timeline UI/UX fixes",
+    "model": "haiku"
   }
 }

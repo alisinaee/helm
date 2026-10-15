@@ -439,3 +439,6 @@
 {"v":1,"t":"u","id":"H158","ts":"2026-10-15T18:40:29Z","by":"head","set":{"status":"done"},"note":"inbox redesigned in 7a06bda; checked on screen"}
 {"v":1,"t":"e","ts":"2026-10-15T18:41:40Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"i told u cotinue until 98","len":25,"h":"sha1:594ab588b141","id":"H161"}
 {"v":1,"t":"u","id":"H161","ts":"2026-10-15T18:43:38Z","by":"head","set":{"kind":"decision","sum":"continue until weekly 98%, past the 5h 80% stop"},"link":["+task:R7.36"]}
+{"v":1,"t":"u","id":"H159","ts":"2026-10-15T18:43:58Z","by":"head","link":["+task:R7.114"]}
+{"v":1,"t":"u","id":"H159","ts":"2026-10-15T18:52:36Z","by":"auto","set":{"status":"done"},"note":"auto: R7.112 52f2653, R7.113 57496b9, R7.114 52f2653"}
+{"v":1,"t":"u","id":"H159","ts":"2026-10-15T18:54:05Z","by":"head","link":["+task:R7.115"]}
