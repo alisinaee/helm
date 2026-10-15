@@ -2493,9 +2493,10 @@
       "title": "cursor: grok review git.py",
       "model": "cursor",
       "task": "R7.29",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-15T09:13:14+03:30",
-      "ended": null
+      "ended": "2026-10-15T09:39:06+03:30",
+      "tokensK": 0.0
     },
     {
       "id": "j628",
@@ -2647,9 +2648,10 @@
       "title": "cursor: grok review HEAD",
       "model": "cursor",
       "task": "R7.31",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-15T09:30:25+03:30",
-      "ended": null
+      "ended": "2026-10-15T10:02:00+03:30",
+      "tokensK": 0.0
     },
     {
       "id": "j644",
@@ -2718,6 +2720,1564 @@
       "started": "2026-10-15T09:33:30+03:30",
       "ended": "2026-10-15T09:38:29+03:30",
       "tokensK": 124.0
+    },
+    {
+      "id": "j651",
+      "title": "haiku: fix cursor git findings",
+      "model": "haiku",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T09:39:06+03:30",
+      "ended": "2026-10-15T09:43:24+03:30",
+      "tokensK": 130.0
+    },
+    {
+      "id": "j652",
+      "title": "haiku: fix cursor logging findings",
+      "model": "haiku",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T09:39:06+03:30",
+      "ended": "2026-10-15T09:44:02+03:30",
+      "tokensK": 117.0
+    },
+    {
+      "id": "j653",
+      "title": "haiku: Git step 2",
+      "model": "haiku",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T09:43:27+03:30",
+      "ended": "2026-10-15T09:47:40+03:30",
+      "tokensK": 121.0
+    },
+    {
+      "id": "j654",
+      "title": "haiku: router keeps head filters",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:43:27+03:30",
+      "ended": "2026-10-15T09:45:53+03:30",
+      "tokensK": 64.0
+    },
+    {
+      "id": "j655",
+      "title": "haiku: Git step 3 write ops",
+      "model": "haiku",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T09:46:00+03:30",
+      "ended": "2026-10-15T09:55:06+03:30",
+      "tokensK": 137.0
+    },
+    {
+      "id": "j656",
+      "title": "haiku: verify agy head audits",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:46:00+03:30",
+      "ended": "2026-10-15T09:52:09+03:30",
+      "tokensK": 207.0
+    },
+    {
+      "id": "j657",
+      "title": "haiku: Head UI expand rows + expand all",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:50:52+03:30",
+      "ended": "2026-10-15T09:55:31+03:30",
+      "tokensK": 144.0
+    },
+    {
+      "id": "j658",
+      "title": "haiku: HEAD brief --gate + pause CLI",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:52:41+03:30",
+      "ended": "2026-10-15T09:57:32+03:30",
+      "tokensK": 90.0
+    },
+    {
+      "id": "j659",
+      "title": "haiku: HEAD bind suggestions in snapshot",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:52:41+03:30",
+      "ended": "2026-10-15T10:00:09+03:30",
+      "tokensK": 98.0
+    },
+    {
+      "id": "j660",
+      "title": "haiku: auto head model claim in SessionStart",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:55:16+03:30",
+      "ended": "2026-10-15T09:58:22+03:30",
+      "tokensK": 74.0
+    },
+    {
+      "id": "j661",
+      "title": "haiku: free CSS budget (strip comments)",
+      "model": "haiku",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T09:55:58+03:30",
+      "ended": "2026-10-15T10:00:29+03:30",
+      "tokensK": 107.0
+    },
+    {
+      "id": "j662",
+      "title": "cursor: grok UI/UX review Head screen",
+      "model": "cursor",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T09:57:59+03:30",
+      "ended": "2026-10-15T12:16:27+03:30"
+    },
+    {
+      "id": "j663",
+      "title": "haiku: HEAD activity + needs-you notification",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:58:15+03:30",
+      "ended": "2026-10-15T10:01:53+03:30",
+      "tokensK": 101.0
+    },
+    {
+      "id": "j664",
+      "title": "agy: agy: test gaps head gate cli import",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:58:15+03:30",
+      "ended": "2026-10-15T10:00:59+03:30"
+    },
+    {
+      "id": "j665",
+      "title": "agy: agy: docs vs code head user guide",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T09:58:17+03:30",
+      "ended": "2026-10-15T10:07:31+03:30"
+    },
+    {
+      "id": "j666",
+      "title": "agy: agy: git step2-3 argv and guard audit",
+      "model": "agy",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T09:58:19+03:30",
+      "ended": "2026-10-15T10:01:45+03:30"
+    },
+    {
+      "id": "j667",
+      "title": "haiku: HEAD H13 resolved links + back-link",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:00:12+03:30",
+      "ended": "2026-10-15T10:04:54+03:30",
+      "tokensK": 121.0
+    },
+    {
+      "id": "j668",
+      "title": "haiku: fix cursor HEAD findings",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:02:00+03:30",
+      "ended": "2026-10-15T10:13:32+03:30",
+      "tokensK": 168.0
+    },
+    {
+      "id": "j669",
+      "title": "haiku: verify agy cli+git audits",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:02:00+03:30",
+      "ended": "2026-10-15T10:07:24+03:30",
+      "tokensK": 178.0
+    },
+    {
+      "id": "j670",
+      "title": "haiku: Head view space + text load fix",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:02:54+03:30",
+      "ended": "2026-10-15T10:06:42+03:30",
+      "tokensK": 135.0
+    },
+    {
+      "id": "j671",
+      "title": "agy: head a11y audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:05:05+03:30",
+      "ended": "2026-10-15T12:16:27+03:30"
+    },
+    {
+      "id": "j672",
+      "title": "agy: agy: Head view a11y and keyboard audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:05:05+03:30",
+      "ended": "2026-10-15T10:09:05+03:30"
+    },
+    {
+      "id": "j673",
+      "title": "agy: hook payload audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:05:05+03:30",
+      "ended": "2026-10-15T12:16:27+03:30"
+    },
+    {
+      "id": "j674",
+      "title": "agy: status logs gaps",
+      "model": "agy",
+      "task": "R7.29",
+      "status": "failed",
+      "started": "2026-10-15T10:05:05+03:30",
+      "ended": "2026-10-15T12:16:27+03:30"
+    },
+    {
+      "id": "j675",
+      "title": "cursor: grok review git write ops",
+      "model": "cursor",
+      "task": "R7.29",
+      "status": "failed",
+      "started": "2026-10-15T10:05:06+03:30",
+      "ended": "2026-10-15T12:16:27+03:30"
+    },
+    {
+      "id": "j676",
+      "title": "haiku: head auto model from transcript",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:05:06+03:30",
+      "ended": "2026-10-15T10:06:06+03:30",
+      "tokensK": 67.0
+    },
+    {
+      "id": "j677",
+      "title": "agy: agy: capture hook payload audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:05:07+03:30",
+      "ended": "2026-10-15T10:07:44+03:30"
+    },
+    {
+      "id": "j678",
+      "title": "agy: agy: roadmap logs and status audit",
+      "model": "agy",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T10:05:09+03:30",
+      "ended": "2026-10-15T10:07:09+03:30"
+    },
+    {
+      "id": "j679",
+      "title": "haiku: capture AI reply + assets",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:07:09+03:30",
+      "ended": "2026-10-15T10:17:39+03:30",
+      "tokensK": 131.0
+    },
+    {
+      "id": "j680",
+      "title": "haiku: head row detail view",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:07:09+03:30",
+      "ended": "2026-10-15T10:10:25+03:30",
+      "tokensK": 128.0
+    },
+    {
+      "id": "j681",
+      "title": "sonnet: fix git commit glob paths",
+      "model": "sonnet",
+      "task": "R7.29",
+      "status": "failed",
+      "started": "2026-10-15T10:10:03+03:30",
+      "ended": "2026-10-15T10:12:01+03:30"
+    },
+    {
+      "id": "j682",
+      "title": "opus: review head layout design",
+      "model": "opus",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:10:03+03:30",
+      "ended": "2026-10-15T10:11:48+03:30",
+      "tokensK": 10.0
+    },
+    {
+      "id": "j683",
+      "title": "haiku: fix git commit glob paths (re-run)",
+      "model": "haiku",
+      "task": "R7.29",
+      "status": "done",
+      "started": "2026-10-15T10:12:01+03:30",
+      "ended": "2026-10-15T10:14:24+03:30",
+      "tokensK": 60.0
+    },
+    {
+      "id": "j684",
+      "title": "haiku: Head as table list with columns",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:18:54+03:30",
+      "ended": "2026-10-15T10:22:15+03:30",
+      "tokensK": 123.0
+    },
+    {
+      "id": "j685",
+      "title": "agy: head snapshot trim audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:27:35+03:30",
+      "ended": "2026-10-15T12:16:27+03:30"
+    },
+    {
+      "id": "j686",
+      "title": "agy: agy: Head snapshot cap and newest-first audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:27:35+03:30",
+      "ended": "2026-10-15T10:31:34+03:30"
+    },
+    {
+      "id": "j687",
+      "title": "agy: head list layout audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:27:35+03:30",
+      "ended": "2026-10-15T12:16:27+03:30"
+    },
+    {
+      "id": "j688",
+      "title": "agy: head capture skip audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:27:35+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j689",
+      "title": "cursor: grok Head bugs review",
+      "model": "cursor",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:27:35+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j690",
+      "title": "Cursor Auto: Read-only bug hunt for the Head feature: roadmap/core/snapshot.py head",
+      "model": "cursor",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:27:35+03:30",
+      "ended": "2026-10-15T10:41:58+03:30"
+    },
+    {
+      "id": "j691",
+      "title": "agy: agy: Head list layout audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:27:37+03:30",
+      "ended": "2026-10-15T10:30:04+03:30"
+    },
+    {
+      "id": "j692",
+      "title": "agy: agy: Head capture hook skip rules audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:27:39+03:30",
+      "ended": "2026-10-15T10:29:25+03:30"
+    },
+    {
+      "id": "j693",
+      "title": "haiku: skip terminal bash-input in head capture",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:27:55+03:30",
+      "ended": "2026-10-15T10:28:30+03:30",
+      "tokensK": 61.0
+    },
+    {
+      "id": "j694",
+      "title": "haiku: head list fills viewport",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:27:55+03:30",
+      "ended": "2026-10-15T10:28:09+03:30",
+      "tokensK": 60.0
+    },
+    {
+      "id": "j695",
+      "title": "haiku: head tests for newest-first",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:27:55+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j696",
+      "title": "haiku: Head snapshot fit more newest rows",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:28:20+03:30",
+      "ended": "2026-10-15T10:29:40+03:30",
+      "tokensK": 84.0
+    },
+    {
+      "id": "j697",
+      "title": "opencode: laguna-s-2.1 max: Head snapshot trim audit",
+      "model": "opencode",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:44:28+03:30",
+      "ended": "2026-10-15T10:50:57+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j698",
+      "title": "opencode: nemotron-3-ultra max: Head list layout audit",
+      "model": "opencode",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:44:28+03:30",
+      "ended": "2026-10-15T10:50:57+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j699",
+      "title": "opencode: north-mini-code max: Head capture audit",
+      "model": "opencode",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:44:33+03:30",
+      "ended": "2026-10-15T10:50:59+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j700",
+      "title": "agy: research opencode workers and free models",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:48:41+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j701",
+      "title": "agy: agy research: better opencode workers and free models",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:48:41+03:30",
+      "ended": "2026-10-15T10:50:32+03:30"
+    },
+    {
+      "id": "j702",
+      "title": "cursor: research opencode workers and free models",
+      "model": "cursor",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:48:41+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j703",
+      "title": "Cursor Auto: Search the web and GitHub (read-only, no file edits). Find: (1) the be",
+      "model": "cursor",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:48:41+03:30",
+      "ended": "2026-10-15T10:54:42+03:30"
+    },
+    {
+      "id": "j704",
+      "title": "agy: agy: Head snapshot trim audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:51:13+03:30",
+      "ended": "2026-10-15T10:53:35+03:30"
+    },
+    {
+      "id": "j705",
+      "title": "agy: agy: Head fold statuses audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:51:15+03:30",
+      "ended": "2026-10-15T11:01:41+03:30"
+    },
+    {
+      "id": "j706",
+      "title": "agy: agy: Head service append audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:51:17+03:30",
+      "ended": "2026-10-15T11:17:01+03:30"
+    },
+    {
+      "id": "j707",
+      "title": "opencode: laguna head css max",
+      "model": "opencode",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:51:17+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j708",
+      "title": "opencode: nemotron head escape max",
+      "model": "opencode",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:51:18+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j709",
+      "title": "opencode: north git guards max",
+      "model": "opencode",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:51:18+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j710",
+      "title": "opencode: laguna secrets max",
+      "model": "opencode",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:51:18+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j711",
+      "title": "opencode: nemotron head cli max",
+      "model": "opencode",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:51:18+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j712",
+      "title": "opencode: north agents labels max",
+      "model": "opencode",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:51:18+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j713",
+      "title": "agy: agy: Head ops guards audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:51:19+03:30",
+      "ended": "2026-10-15T11:27:53+03:30"
+    },
+    {
+      "id": "j714",
+      "title": "cursor: parallel head bug hunt",
+      "model": "cursor",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T10:51:21+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j715",
+      "title": "Cursor Auto: Read-only bug hunt: roadmap/services/head.py, roadmap/services/headops",
+      "model": "cursor",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:51:21+03:30",
+      "ended": "2026-10-15T11:06:10+03:30"
+    },
+    {
+      "id": "j716",
+      "title": "agy: agy: Head import audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:53:35+03:30",
+      "ended": "2026-10-15T10:59:03+03:30"
+    },
+    {
+      "id": "j717",
+      "title": "Cursor Auto: Deep investigation, read-only, no edits. Question: why do different se",
+      "model": "cursor",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:54:09+03:30",
+      "ended": "2026-10-15T11:22:53+03:30"
+    },
+    {
+      "id": "j718",
+      "title": "agy: agy: Head sync poll path",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:55:15+03:30",
+      "ended": "2026-10-15T10:56:35+03:30"
+    },
+    {
+      "id": "j719",
+      "title": "agy: agy: Head route revision",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:55:17+03:30",
+      "ended": "2026-10-15T10:56:38+03:30"
+    },
+    {
+      "id": "j720",
+      "title": "agy: agy: Snapshot build cost",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:55:19+03:30",
+      "ended": "2026-10-15T10:57:56+03:30"
+    },
+    {
+      "id": "j721",
+      "title": "agy: agy: Loader cache",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:55:21+03:30",
+      "ended": "2026-10-15T10:56:42+03:30"
+    },
+    {
+      "id": "j722",
+      "title": "agy: agy: App routing sync",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:55:23+03:30",
+      "ended": "2026-10-15T11:01:07+03:30"
+    },
+    {
+      "id": "j723",
+      "title": "agy: agy: Job state writes",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:55:25+03:30",
+      "ended": "2026-10-15T10:57:08+03:30"
+    },
+    {
+      "id": "j724",
+      "title": "agy: agy: Head store writes",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:55:27+03:30",
+      "ended": "2026-10-15T10:57:06+03:30"
+    },
+    {
+      "id": "j725",
+      "title": "agy: agy: Store lock",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:55:29+03:30",
+      "ended": "2026-10-15T10:58:43+03:30"
+    },
+    {
+      "id": "j726",
+      "title": "agy: agy: Agents refresh",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:56:35+03:30",
+      "ended": "2026-10-15T10:58:04+03:30"
+    },
+    {
+      "id": "j727",
+      "title": "agy: agy: Overview refresh",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:56:38+03:30",
+      "ended": "2026-10-15T10:58:39+03:30"
+    },
+    {
+      "id": "j728",
+      "title": "agy: agy high: Head list table audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T10:57:22+03:30",
+      "ended": "2026-10-15T10:57:22+03:30"
+    },
+    {
+      "id": "j729",
+      "title": "agy: agy high: Head fold audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T10:57:24+03:30",
+      "ended": "2026-10-15T10:57:24+03:30"
+    },
+    {
+      "id": "j730",
+      "title": "agy: agy high: Head service audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T10:57:26+03:30",
+      "ended": "2026-10-15T10:57:26+03:30"
+    },
+    {
+      "id": "j731",
+      "title": "agy: agy high: Head ops audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T10:57:28+03:30",
+      "ended": "2026-10-15T10:57:28+03:30"
+    },
+    {
+      "id": "j732",
+      "title": "agy: agy high: Hooks capture audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T10:57:30+03:30",
+      "ended": "2026-10-15T10:57:30+03:30"
+    },
+    {
+      "id": "j733",
+      "title": "agy: agy high: Secrets audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T10:57:32+03:30",
+      "ended": "2026-10-15T10:57:32+03:30"
+    },
+    {
+      "id": "j734",
+      "title": "agy: agy high: Git read audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T10:57:34+03:30",
+      "ended": "2026-10-15T10:57:34+03:30"
+    },
+    {
+      "id": "j735",
+      "title": "agy: agy high: Agents list audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T10:57:36+03:30",
+      "ended": "2026-10-15T10:57:36+03:30"
+    },
+    {
+      "id": "j736",
+      "title": "agy: agy high: Head list table audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T10:58:39+03:30",
+      "ended": "2026-10-15T11:18:57+03:30"
+    },
+    {
+      "id": "j737",
+      "title": "agy: agy high: Head fold audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T10:58:41+03:30",
+      "ended": "2026-10-15T11:15:22+03:30"
+    },
+    {
+      "id": "j738",
+      "title": "agy: agy high: Head service audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T10:58:43+03:30",
+      "ended": "2026-10-15T11:27:19+03:30"
+    },
+    {
+      "id": "j739",
+      "title": "agy: agy high: Head ops audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T10:58:45+03:30",
+      "ended": "2026-10-15T11:31:56+03:30"
+    },
+    {
+      "id": "j740",
+      "title": "agy: agy high: Hooks capture audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T10:58:47+03:30",
+      "ended": "2026-10-15T11:05:56+03:30"
+    },
+    {
+      "id": "j741",
+      "title": "agy: agy high: Secrets audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T10:58:50+03:30",
+      "ended": "2026-10-15T11:05:13+03:30"
+    },
+    {
+      "id": "j742",
+      "title": "agy: agy high: Git read audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T10:58:52+03:30",
+      "ended": "2026-10-15T11:05:24+03:30"
+    },
+    {
+      "id": "j743",
+      "title": "agy: agy high: Agents list audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T10:58:54+03:30",
+      "ended": "2026-10-15T11:03:09+03:30"
+    },
+    {
+      "id": "j744",
+      "title": "agy: agy: Head hook capture audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T10:59:03+03:30",
+      "ended": "2026-10-15T11:02:14+03:30"
+    },
+    {
+      "id": "j745",
+      "title": "opencode: laguna-s-2.1:free max: Audit the Agents list effort column for",
+      "model": "opencode",
+      "task": "R7.31",
+      "effort": "max",
+      "status": "failed",
+      "started": "2026-10-15T10:59:28+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j746",
+      "title": "opencode: nemotron-3-ultra-550b-a5 max: Audit how job effort is stored and shown",
+      "model": "opencode",
+      "task": "R7.31",
+      "effort": "max",
+      "status": "failed",
+      "started": "2026-10-15T10:59:28+03:30",
+      "ended": "2026-10-15T12:16:28+03:30"
+    },
+    {
+      "id": "j747",
+      "title": "opencode: north-mini-code:free max: Audit the snapshot job rows for the effo",
+      "model": "opencode",
+      "task": "R7.31",
+      "effort": "max",
+      "status": "failed",
+      "started": "2026-10-15T10:59:28+03:30",
+      "ended": "2026-10-15T12:16:29+03:30"
+    },
+    {
+      "id": "j748",
+      "title": "opencode: engine-model check",
+      "model": "opencode",
+      "task": "R7.31",
+      "effort": "max",
+      "engine_model": "laguna-s-2.1",
+      "status": "done",
+      "started": "2026-10-15T10:59:48+03:30",
+      "ended": "2026-10-15T10:59:57+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j749",
+      "title": "Cursor Auto: Read-only. Problem: the Head section lazy loads rows, and the user can",
+      "model": "cursor",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T11:01:20+03:30",
+      "ended": "2026-10-15T11:13:14+03:30"
+    },
+    {
+      "id": "j750",
+      "title": "agy: agy: Head CLI audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T11:01:41+03:30",
+      "ended": "2026-10-15T11:07:02+03:30"
+    },
+    {
+      "id": "j751",
+      "title": "agy: agy: Head HTTP route audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T11:02:14+03:30",
+      "ended": "2026-10-15T11:11:06+03:30"
+    },
+    {
+      "id": "j752",
+      "title": "opencode: laguna-s-2.1 max: Say OK.",
+      "model": "opencode",
+      "task": "R7.31",
+      "effort": "max",
+      "engine_model": "laguna-s-2.1",
+      "status": "failed",
+      "started": "2026-10-15T11:02:31+03:30",
+      "ended": "2026-10-15T12:16:29+03:30"
+    },
+    {
+      "id": "j753",
+      "title": "opencode: nemotron-3-ultra-550b-a55b max: Check the Agents row labels. Max 6 rows, file:line",
+      "model": "opencode",
+      "task": "R7.31",
+      "effort": "max",
+      "engine_model": "nemotron-3-ultra-550b-a55b",
+      "status": "failed",
+      "started": "2026-10-15T11:04:36+03:30",
+      "ended": "2026-10-15T11:05:54+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j754",
+      "title": "opencode: laguna-s-2.1 max: Check the Agents row labels. Max 6 rows, file:line",
+      "model": "opencode",
+      "task": "R7.31",
+      "effort": "max",
+      "engine_model": "laguna-s-2.1",
+      "status": "failed",
+      "started": "2026-10-15T11:06:21+03:30",
+      "ended": "2026-10-15T12:16:29+03:30"
+    },
+    {
+      "id": "j755",
+      "title": "agy: agy: Head view list audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T11:07:02+03:30",
+      "ended": "2026-10-15T11:12:05+03:30"
+    },
+    {
+      "id": "j756",
+      "title": "agy: agy: Head CSS audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T11:11:06+03:30",
+      "ended": "2026-10-15T11:13:59+03:30"
+    },
+    {
+      "id": "j757",
+      "title": "agy: agy: Agents view audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T11:12:05+03:30",
+      "ended": "2026-10-15T11:21:07+03:30"
+    },
+    {
+      "id": "j758",
+      "title": "agy: agy: Secrets scrub audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T11:13:59+03:30",
+      "ended": "2026-10-15T11:17:33+03:30"
+    },
+    {
+      "id": "j759",
+      "title": "agy: agy: Git ops guards audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T11:17:01+03:30",
+      "ended": "2026-10-15T11:20:39+03:30"
+    },
+    {
+      "id": "j760",
+      "title": "agy: agy: Git read service audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-15T11:17:33+03:30",
+      "ended": "2026-10-15T11:23:31+03:30"
+    },
+    {
+      "id": "j761",
+      "title": "Cursor Auto: $4",
+      "model": "cursor",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-15T12:16:54+03:30",
+      "ended": "2026-10-15T13:18:29+03:30"
+    },
+    {
+      "id": "j762",
+      "title": "agy: agy high: Head list table audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T12:16:59+03:30",
+      "ended": "2026-10-15T12:17:42+03:30"
+    },
+    {
+      "id": "j763",
+      "title": "opencode: laguna-s-2.1 max: Audit the Head list cut in web/js/views/head.js. M",
+      "model": "opencode",
+      "task": "R7.31",
+      "effort": "max",
+      "engine_model": "laguna-s-2.1",
+      "status": "failed",
+      "started": "2026-10-15T12:16:59+03:30",
+      "ended": "2026-10-15T12:18:16+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j764",
+      "title": "cursor: grok 4.7 xhigh: why sections do not sync (rerun)",
+      "model": "cursor",
+      "task": "R7.31",
+      "effort": "xhigh",
+      "status": "failed",
+      "started": "2026-10-15T12:17:00+03:30",
+      "ended": "2026-10-15T12:31:25+03:30"
+    },
+    {
+      "id": "j765",
+      "title": "agy: agy high: Head fold audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T12:17:01+03:30",
+      "ended": "2026-10-15T12:25:19+03:30"
+    },
+    {
+      "id": "j766",
+      "title": "agy: agy high: Head service audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T12:17:03+03:30",
+      "ended": "2026-10-15T13:04:53+03:30"
+    },
+    {
+      "id": "j767",
+      "title": "agy: agy high: Head ops audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T12:17:05+03:30",
+      "ended": "2026-10-15T12:23:52+03:30"
+    },
+    {
+      "id": "j768",
+      "title": "agy: agy high: Hooks capture audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T12:17:07+03:30",
+      "ended": "2026-10-15T12:21:04+03:30"
+    },
+    {
+      "id": "j769",
+      "title": "agy: agy high: Secrets audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T12:17:09+03:30",
+      "ended": "2026-10-15T12:28:33+03:30"
+    },
+    {
+      "id": "j770",
+      "title": "agy: agy high: Git read audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T12:17:11+03:30",
+      "ended": "2026-10-15T12:22:43+03:30"
+    },
+    {
+      "id": "j771",
+      "title": "agy: agy high: Agents list audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T12:17:13+03:30",
+      "ended": "2026-10-15T12:17:27+03:30"
+    },
+    {
+      "id": "j772",
+      "title": "cursor: P1 list-cut review",
+      "model": "cursor",
+      "task": "R7.32",
+      "effort": "high",
+      "engine_model": "grok-4.7-xhigh",
+      "status": "done",
+      "started": "2026-10-15T13:51:29+03:30",
+      "ended": "2026-10-15T13:56:41+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j773",
+      "title": "opencode: P3 real head bindings",
+      "model": "opencode",
+      "task": "R7.34",
+      "status": "failed",
+      "started": "2026-10-15T13:51:35+03:30",
+      "ended": "2026-10-15T13:59:13+03:30"
+    },
+    {
+      "id": "j774",
+      "title": "opencode: P4 secrets scrub",
+      "model": "opencode",
+      "task": "R7.35",
+      "status": "failed",
+      "started": "2026-10-15T13:51:35+03:30",
+      "ended": "2026-10-15T13:59:13+03:30"
+    },
+    {
+      "id": "j775",
+      "title": "opus: low review of HEAD feature and asks (H89)",
+      "model": "opus",
+      "task": "R7.31",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-15T13:53:01+03:30",
+      "ended": "2026-10-15T13:53:01+03:30",
+      "tokensK": 70.0
+    },
+    {
+      "id": "j776",
+      "title": "agy: head GUI audit (read-only)",
+      "model": "agy",
+      "task": "R7.37",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T13:55:03+03:30",
+      "ended": "2026-10-15T13:55:22+03:30"
+    },
+    {
+      "id": "j777",
+      "title": "opencode: Agents shows opencode model (H54)",
+      "model": "opencode",
+      "task": "R7.38",
+      "effort": "low",
+      "status": "failed",
+      "started": "2026-10-15T13:56:35+03:30",
+      "ended": "2026-10-15T13:59:13+03:30"
+    },
+    {
+      "id": "j778",
+      "title": "opencode: Agents effort audit (H53)",
+      "model": "opencode",
+      "task": "R7.39",
+      "effort": "max",
+      "status": "failed",
+      "started": "2026-10-15T13:56:35+03:30",
+      "ended": "2026-10-15T13:59:13+03:30"
+    },
+    {
+      "id": "j779",
+      "title": "cursor: P2 sync findings",
+      "model": "cursor",
+      "task": "R7.33",
+      "effort": "high",
+      "engine_model": "grok-4.7-xhigh",
+      "status": "done",
+      "started": "2026-10-15T13:56:41+03:30",
+      "ended": "2026-10-15T14:01:57+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j780",
+      "title": "opencode: fix P1 head list cut and order",
+      "model": "opencode",
+      "task": "R7.32",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T13:57:04+03:30",
+      "ended": "2026-10-15T13:59:13+03:30"
+    },
+    {
+      "id": "j781",
+      "title": "agy: head GUI audit (read-only)",
+      "model": "agy",
+      "task": "R7.37",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T13:57:31+03:30",
+      "ended": "2026-10-15T14:03:22+03:30"
+    },
+    {
+      "id": "j782",
+      "title": "opencode: fix P1 head list cut and order",
+      "model": "opencode",
+      "task": "R7.32",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T13:59:13+03:30",
+      "ended": "2026-10-15T14:00:24+03:30"
+    },
+    {
+      "id": "j783",
+      "title": "opencode: P3 real head bindings",
+      "model": "opencode",
+      "task": "R7.34",
+      "effort": "low",
+      "status": "failed",
+      "started": "2026-10-15T13:59:13+03:30",
+      "ended": "2026-10-15T14:00:24+03:30"
+    },
+    {
+      "id": "j784",
+      "title": "opencode: P4 secrets scrub",
+      "model": "opencode",
+      "task": "R7.35",
+      "effort": "low",
+      "status": "failed",
+      "started": "2026-10-15T13:59:14+03:30",
+      "ended": "2026-10-15T14:00:24+03:30"
+    },
+    {
+      "id": "j785",
+      "title": "opencode: Agents shows opencode model (H54)",
+      "model": "opencode",
+      "task": "R7.38",
+      "effort": "low",
+      "status": "failed",
+      "started": "2026-10-15T13:59:14+03:30",
+      "ended": "2026-10-15T14:00:37+03:30"
+    },
+    {
+      "id": "j786",
+      "title": "opencode: Agents effort audit (H53)",
+      "model": "opencode",
+      "task": "R7.39",
+      "effort": "max",
+      "status": "failed",
+      "started": "2026-10-15T13:59:14+03:30",
+      "ended": "2026-10-15T14:00:19+03:30"
+    },
+    {
+      "id": "j787",
+      "title": "haiku: R7.32 fix head list cut and order",
+      "model": "haiku",
+      "task": "R7.32",
+      "status": "done",
+      "started": "2026-10-15T14:02:17+03:30",
+      "ended": "2026-10-15T14:04:15+03:30"
+    },
+    {
+      "id": "j788",
+      "title": "haiku: R7.34 head asks bind to real tasks",
+      "model": "haiku",
+      "task": "R7.34",
+      "status": "done",
+      "started": "2026-10-15T14:02:17+03:30",
+      "ended": "2026-10-15T14:04:10+03:30"
+    },
+    {
+      "id": "j789",
+      "title": "haiku: R7.35 secrets redaction finish",
+      "model": "haiku",
+      "task": "R7.35",
+      "status": "done",
+      "started": "2026-10-15T14:02:17+03:30",
+      "ended": "2026-10-15T14:03:24+03:30"
+    },
+    {
+      "id": "j790",
+      "title": "haiku: R7.38 Agents opencode model label",
+      "model": "haiku",
+      "task": "R7.38",
+      "status": "done",
+      "started": "2026-10-15T14:02:17+03:30",
+      "ended": "2026-10-15T14:09:28+03:30"
+    },
+    {
+      "id": "j791",
+      "title": "haiku: R7.39 Agents effort audit",
+      "model": "haiku",
+      "task": "R7.39",
+      "status": "done",
+      "started": "2026-10-15T14:02:18+03:30",
+      "ended": "2026-10-15T14:03:24+03:30"
+    },
+    {
+      "id": "j792",
+      "title": "haiku: R7.40 sync fix server side",
+      "model": "haiku",
+      "task": "R7.40",
+      "status": "done",
+      "started": "2026-10-15T14:15:56+03:30",
+      "ended": "2026-10-15T14:17:11+03:30"
+    },
+    {
+      "id": "j793",
+      "title": "haiku: R7.40 sync fix client side",
+      "model": "haiku",
+      "task": "R7.40",
+      "status": "done",
+      "started": "2026-10-15T14:15:59+03:30",
+      "ended": "2026-10-15T14:16:33+03:30"
+    },
+    {
+      "id": "j794",
+      "title": "haiku: R7.41 Agents effort and model fixes",
+      "model": "haiku",
+      "task": "R7.41",
+      "status": "done",
+      "started": "2026-10-15T14:16:02+03:30",
+      "ended": "2026-10-15T14:17:55+03:30"
+    },
+    {
+      "id": "j795",
+      "title": "haiku: R7.43 head view layout fixes",
+      "model": "haiku",
+      "task": "R7.43",
+      "status": "done",
+      "started": "2026-10-15T14:16:20+03:30",
+      "ended": "2026-10-15T14:17:45+03:30"
+    },
+    {
+      "id": "j796",
+      "title": "haiku: R7.41 fix two failing tests",
+      "model": "haiku",
+      "task": "R7.41",
+      "status": "done",
+      "started": "2026-10-15T14:20:42+03:30",
+      "ended": "2026-10-15T14:21:22+03:30"
+    },
+    {
+      "id": "j797",
+      "title": "cursor: R7.45 sync root cause",
+      "model": "cursor",
+      "task": "R7.45",
+      "effort": "high",
+      "engine_model": "grok-4.7-xhigh",
+      "status": "done",
+      "started": "2026-10-15T14:21:00+03:30",
+      "ended": "2026-10-15T14:29:42+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j798",
+      "title": "haiku: R7.44 head paging and lazy load",
+      "model": "haiku",
+      "task": "R7.44",
+      "status": "done",
+      "started": "2026-10-15T14:21:05+03:30",
+      "ended": "2026-10-15T14:26:29+03:30"
+    },
+    {
+      "id": "j799",
+      "title": "agy: 375px + rule 0 audit: overview",
+      "model": "agy",
+      "task": "R7.47",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T14:24:40+03:30",
+      "ended": "2026-10-15T14:36:51+03:30"
+    },
+    {
+      "id": "j800",
+      "title": "agy: 375px + rule 0 audit: work",
+      "model": "agy",
+      "task": "R7.47",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T14:24:42+03:30",
+      "ended": "2026-10-15T14:38:24+03:30"
+    },
+    {
+      "id": "j801",
+      "title": "agy: 375px + rule 0 audit: agents",
+      "model": "agy",
+      "task": "R7.47",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T14:24:44+03:30",
+      "ended": "2026-10-15T14:35:01+03:30"
+    },
+    {
+      "id": "j802",
+      "title": "agy: 375px + rule 0 audit: tokens",
+      "model": "agy",
+      "task": "R7.47",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T14:24:46+03:30",
+      "ended": "2026-10-15T14:37:19+03:30"
+    },
+    {
+      "id": "j803",
+      "title": "agy: 375px + rule 0 audit: roadmap",
+      "model": "agy",
+      "task": "R7.47",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-15T14:24:48+03:30",
+      "ended": "2026-10-15T14:25:03+03:30"
+    },
+    {
+      "id": "j804",
+      "title": "agy: 375px + rule 0 audit: workflow",
+      "model": "agy",
+      "task": "R7.47",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T14:24:50+03:30",
+      "ended": "2026-10-15T14:31:32+03:30"
+    },
+    {
+      "id": "j805",
+      "title": "agy: test gaps for today's commits",
+      "model": "agy",
+      "task": "R7.47",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T14:24:52+03:30",
+      "ended": "2026-10-15T14:30:30+03:30"
+    },
+    {
+      "id": "j806",
+      "title": "haiku: R7.49 head pager styles and refresh",
+      "model": "haiku",
+      "task": "R7.49",
+      "status": "done",
+      "started": "2026-10-15T14:28:41+03:30",
+      "ended": "2026-10-15T14:29:33+03:30"
+    },
+    {
+      "id": "j807",
+      "title": "cursor: R7.48 review today commits",
+      "model": "cursor",
+      "task": "R7.48",
+      "effort": "high",
+      "engine_model": "grok-4.7-xhigh",
+      "status": "done",
+      "started": "2026-10-15T14:30:01+03:30",
+      "ended": "2026-10-15T14:48:25+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j808",
+      "title": "haiku: R7.50 sync root fix server",
+      "model": "haiku",
+      "task": "R7.50",
+      "status": "done",
+      "started": "2026-10-15T14:31:49+03:30",
+      "ended": "2026-10-15T14:37:34+03:30"
+    },
+    {
+      "id": "j809",
+      "title": "haiku: R7.51 sync root fix client",
+      "model": "haiku",
+      "task": "R7.51",
+      "status": "done",
+      "started": "2026-10-15T14:31:55+03:30",
+      "ended": "2026-10-15T14:35:38+03:30"
+    },
+    {
+      "id": "j810",
+      "title": "haiku: R7.52 sync root fix dom and head",
+      "model": "haiku",
+      "task": "R7.52",
+      "status": "done",
+      "started": "2026-10-15T14:31:59+03:30",
+      "ended": "2026-10-15T14:34:15+03:30"
+    },
+    {
+      "id": "j811",
+      "title": "haiku: R7.54 fix verified 375px view findings",
+      "model": "haiku",
+      "task": "R7.54",
+      "status": "running",
+      "started": "2026-10-15T15:18:36+03:30",
+      "ended": null
+    },
+    {
+      "id": "j812",
+      "title": "haiku: R7.53 fix Cursor commit-review bugs",
+      "model": "haiku",
+      "task": "R7.53",
+      "status": "running",
+      "started": "2026-10-15T15:18:36+03:30",
+      "ended": null
     }
   ]
 }

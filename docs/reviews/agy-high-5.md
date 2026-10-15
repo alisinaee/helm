@@ -1,0 +1,12 @@
+| file:line | problem | fix |
+|---|---|---|
+| roadmap/core/secrets.py:29 | _KEYED matches bare "key" and prefixes like "task_key", causing false positives on task IDs such as key: R7.31, key=P1.2, or task_key=H2 | Exclude bare "key" from credential keywords or exempt short task ID patterns (R\d+\.\d+, P\d+\.\d+, H\d+) |
+| roadmap/core/secrets.py:31 | _PHONE_KEY matches any standalone "k=<val>", falsely masking task IDs passed in query parameters or flags (e.g. k=R7.31) | Scope regex to phone tunnel paths or require long hexadecimal format k=[0-9a-fA-F]{16,} |
+| roadmap/core/secrets.py:34 | _CARD_PLAIN matches any 13-19 digit number without Luhn check, falsely masking snowflake/numeric task IDs and 13-digit epoch timestamps | Implement Luhn checksum validation or exclude Unix epoch millisecond timestamp ranges (1[6-8]\d{11}) |
+| roadmap/core/secrets.py:37 | _OPAQUE matches 32+ char hyphenated strings; 36-char UUID task IDs fail GIT_SHA1 and are falsely masked as [secret] | Allowlist standard UUID task IDs in _opaque() with regex [0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12} |
+| roadmap/core/secrets.py:22 | _VENDOR AWS regex only matches AKIA, leaking temporary STS session access keys (ASIA...) and other AWS key types | Expand prefix to match temporary credentials: \b(AKIA\|ASIA)[0-9A-Z]{16}\b |
+| roadmap/core/secrets.py:21 | _VENDOR Slack regex only matches xox[abprs]-, leaking Slack app-level tokens (xapp-) and enterprise tokens (xoxe-) | Update prefix pattern to \b(?:xox[abeprs]\|xapp)-[A-Za-z0-9-]{10,} |
+| roadmap/core/secrets.py:43 | _opaque exempts all 40-hex strings via GIT_SHA1.fullmatch, leaking legacy 40-hex GitHub PATs and 40-hex secrets | Verify git context or prefix before exempting 40-hex strings as commit SHAs |
+| roadmap/core/secrets.py:43 | _opaque exempts 32+ char strings lacking digits or letters, leaking high-entropy secrets consisting purely of letters or digits | Use Shannon entropy or character set analysis instead of requiring both letters and digits |
+| roadmap/core/secrets.py:36 | _HOME only matches macOS /Users/[^/\s]+, leaking user home directories and usernames on Linux (/home/...) | Expand regex to match Linux home paths: (?:/Users\|/home)/[^/\s]+ |
+| roadmap/core/secrets.py:16 | _PEM uses \|\Z fallback in ungreedy match, which swallows and masks all remaining text to EOF if END delimiter is missing | Remove \|\Z or enforce maximum character span between BEGIN and END delimiters |

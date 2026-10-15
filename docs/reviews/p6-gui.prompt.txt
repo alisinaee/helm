@@ -1,0 +1,1 @@
+Read-only. Audit web/js/views/head.js and the head CSS in web/css. Report findings as file:line with one line each: number alignment in fixed grid columns, width at 375px with no horizontal scroll, reply and attachments blocks present. Max 25 lines. Write nothing else.
