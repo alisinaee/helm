@@ -305,6 +305,8 @@ def _check_set(a):
 def _h_set(data_dir, a, now):
     row = _row(data_dir, a["id"])
     _guard_status(data_dir, a["id"], a["status"])
+    if a["status"] is not None:
+        _check_real_bind(a["status"], row["links"], a["id"])
     sets = {key: a[key] for key in ("status", "kind", "sum") if a[key] is not None}
     store.update(data_dir, a["id"], by=_by(), sets=sets or None, note=a["note"], now=now)
     inverse = _undo([_step(a["id"], _prior(row, sets))]) if sets else None
@@ -431,6 +433,7 @@ def _h_review(data_dir, a, now):
     _person_only("head review")
     row = _row(data_dir, a["id"])
     status = "done" if a["action"] == "confirm" else "open"
+    _check_real_bind(status, row["links"], a["id"])
     store.update(data_dir, a["id"], by="person", sets={"status": status}, now=now)
     summary = a["id"] + (" confirmed done" if status == "done" else " reopened")
     return {"id": a["id"], "status": status}, summary, _undo([_step(a["id"], _prior(row, ["status"]))])

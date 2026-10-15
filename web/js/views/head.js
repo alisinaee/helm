@@ -96,7 +96,7 @@ function countsOf(head, rows) {
   return {
     unhandled: c.unhandled != null && c.unhandled <= unhandled ? c.unhandled : unhandled,
     needs: c.needs != null && c.needs <= needs ? c.needs : needs,
-    doneUnacc: c.doneUnacc != null && c.doneUnacc <= done ? c.doneUnacc : doneUnacc,
+    doneUnacc: c.doneUnacc != null && c.doneUnacc <= doneUnacc ? c.doneUnacc : doneUnacc,
   };
 }
 
@@ -217,6 +217,16 @@ function ageText(minutes) {
   if (minutes < 60) return Math.max(0, Math.round(minutes)) + "m";
   if (minutes < 1440) return Math.floor(minutes / 60) + "h";
   return Math.floor(minutes / 1440) + "d";
+}
+
+// Age, amber and stale of a row, from its ts at paint time (a 304 keeps the stored snapshot, so the build-time age
+// would stay old). Amber after 30 minutes and stale after 120, for unhandled rows only (head.fold rule).
+function rowAge(row) {
+  const at = typeof row.ts === "string" ? Date.parse(row.ts) : NaN;
+  if (!isFinite(at)) return { age: row.age, amber: !!row.amber, stale: !!row.stale };
+  const minutes = Math.max(0, (Date.now() - at) / 60000);
+  const unhandled = UNHANDLED.indexOf(row.status) >= 0;
+  return { age: Math.floor(minutes), amber: unhandled && minutes > 30, stale: unhandled && minutes > 120 };
 }
 
 // The section that shows each linked kind; the ref's id is the item selected there. Other kinds stay plain chips.
@@ -404,6 +414,7 @@ function rowHtml(vm, row, opts) {
   const pid = opts.project || null;
   const carried = row.carried ? ' <span class="hd-carried" title="Carried over">↺</span>' : "";
   const shown = summaryText(row.sum, fullOf(vm, pid, id));
+  const ra = rowAge(row);
   const line = '<div class="row-grid hd-row" data-id="' + eid + '">' +
     '<button type="button" class="hd-hit" data-action="head-toggle" data-id="' + eid + '" aria-expanded="' +
     (open ? "true" : "false") + '" aria-controls="hd-p-' + eid + '" aria-label="' +
@@ -416,8 +427,8 @@ function rowHtml(vm, row, opts) {
     '<span class="hd-meta">' +
     '<span class="hd-c hd-status">' + statusHtml(row) + "</span>" +
     '<span class="hd-c hd-bound">' + boundHtml(row.links, pid, BOUND_MAX) + "</span>" +
-    '<span class="hd-c hd-age rg-num' + (row.stale ? " hd-stale" : row.amber ? " hd-amber" : "") + '"' +
-    (row.stale ? ' title="Stale"' : "") + ">" + esc(ageText(row.age)) + "</span>" +
+    '<span class="hd-c hd-age rg-num' + (ra.stale ? " hd-stale" : ra.amber ? " hd-amber" : "") + '"' +
+    (ra.stale ? ' title="Stale"' : "") + ">" + esc(ageText(ra.age)) + "</span>" +
     '<span class="hd-c hd-when rg-num" title="' + esc(row.ts || "") + '">' + esc(whenText(row.ts)) + "</span>" +
     "</span></div>";
   return '<li class="hd-item' + (open ? " is-open" : "") + '">' + line + panelHtml(vm, row, opts, open) + "</li>";
@@ -510,8 +521,9 @@ function listRowHtml(vm, row, opts) {
   const cell = function (cls, html, attrs) {
     return '<td class="' + cls + '"' + (attrs || "") + ">" + html + "</td>";
   };
-  const age = cell("hd-age rg-num" + (row.stale ? " hd-stale" : row.amber ? " hd-amber" : ""),
-    esc(ageText(row.age)), row.stale ? ' title="Stale"' : "");
+  const ra = rowAge(row);
+  const age = cell("hd-age rg-num" + (ra.stale ? " hd-stale" : ra.amber ? " hd-amber" : ""),
+    esc(ageText(ra.age)), ra.stale ? ' title="Stale"' : "");
   const when = cell("hd-when rg-num", esc(whenText(row.ts)), ' title="' + esc(row.ts || "") + '"');
   const tr = '<tr class="hd-row" data-id="' + eid + '">' +
     cell("hd-n", '<button type="button" class="hd-hit" data-action="head-toggle" data-id="' + eid +

@@ -6,6 +6,9 @@ import { pathToFileURL } from "node:url";
 
 const web = process.argv[2];
 const vm = JSON.parse(readFileSync(process.argv[3], "utf-8"));
+// The row ages are counted from Date.now(): a pinned clock (vm.pinNow, an ISO time) keeps them fixed.
+const pinned = typeof vm.pinNow === "string" ? Date.parse(vm.pinNow) : NaN;
+if (Number.isFinite(pinned)) Date.now = () => pinned;
 const head = await import(pathToFileURL(web + "/js/views/head.js").href);
 
 const base = { project: "alpha", view: "cards" };
