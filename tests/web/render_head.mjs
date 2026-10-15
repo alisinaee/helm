@@ -20,6 +20,7 @@ console.log(JSON.stringify({
   empty: head.headHtml(empty, Object.assign({ f: "open" }, base)),
   unclaimed: head.headHtml({ head: { counts: {}, rows: [] } }, Object.assign({ f: "open" }, base)),
   noMatch: head.headHtml(vm, Object.assign({ f: "open", q: "zzz-none" }, base)),
+  noReply: head.headHtml(Object.assign({}, vm, { head: Object.assign({}, vm.head, { full: { id: "H1", text: "x", history: [] } }) }), Object.assign({ f: "open", open: ["H1"] }, base)),
   hash: head.hashOf({ f: "unhandled", q: "a b", kind: "bug" }),
   oldest: head.headHtml(vm, Object.assign({ f: "all", sort: "old" }, base)),
   hashOld: head.hashOf({ f: "all", sort: "old" }),

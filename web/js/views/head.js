@@ -10,7 +10,7 @@
 
 import { esc } from "../dom.js";
 import { emptyHtml as pageEmpty } from "../dom.js";
-import { MISSING, fmtPercent } from "../format.js";
+import { fmtPercent } from "../format.js";
 import { copyButton } from "../ref.js";
 import { run } from "../cmd.js";
 import { getJson } from "../api.js";
@@ -31,7 +31,7 @@ const BOUND_MAX = 2;
 const FULL_CONCURRENCY = 3;
 const FULL_ID = /^H\d{1,4}$/;
 const SORTS = ["new", "old"];
-const SUM_SHOW = 140;
+const SUM_SHOW = 240;
 
 // Client state: the verbatim texts fetched so far (key "project\nid"), the requests in flight, the open row ids, and
 // the hash row already opened once (so a re-render does not reopen a row the person closed).
@@ -206,17 +206,33 @@ function refHref(ref, pid) {
   return pid ? buildHash({ name: "project", id: pid, section: section, item: id }) : "#/all/" + section;
 }
 
-// The bound-to chips: at most max of them (the row shows two, the footer all), then +n for the rest.
+// A bound ref is "kind:id" (a plain string) or the snapshot object {ref, title, status, jobs}; both read the same way.
+function linkOf(ref) {
+  const obj = ref && typeof ref === "object" ? ref : { ref: ref };
+  return { ref: String(obj.ref || ""), title: obj.title ? String(obj.title) : "",
+    status: obj.status ? String(obj.status) : "", jobs: Array.isArray(obj.jobs) ? obj.jobs : [] };
+}
+
+// The chip tone of a bound task's status: a running or done task is good, a blocked one needs a look.
+function taskTone(st) {
+  if (st === "done" || st === "doing") return "success";
+  return st === "blocked" ? "warning" : "neutral";
+}
+
+// The bound-to chips: at most max of them (the closed row shows two), each with its status when the snapshot has
+// one, then +n for the rest. An entry with no bound task says so in words.
 function boundHtml(links, pid, max) {
-  const list = Array.isArray(links) ? links : [];
+  const list = Array.isArray(links) ? links.map(linkOf) : [];
   const limit = max == null ? BOUND_MAX : max;
-  const chips = list.slice(0, limit).map(function (ref) {
-    const label = String(ref).split(":").pop();
-    const href = refHref(ref, pid);
-    if (href) {
-      return '<a class="chip chip-neutral" href="' + esc(href) + '" title="' + esc(ref) + '">' + esc(label) + "</a>";
-    }
-    return '<span class="chip chip-neutral" title="' + esc(ref) + '">' + esc(label) + "</span>";
+  if (!list.length) return '<span class="hd-none">Not bound yet</span>';
+  const chips = list.slice(0, limit).map(function (link) {
+    const label = link.ref.split(":").pop();
+    const href = refHref(link.ref, pid);
+    const chip = href ? '<a class="chip chip-neutral" href="' + esc(href) + '" title="' + esc(link.ref) + '">' +
+      esc(label) + "</a>" : '<span class="chip chip-neutral" title="' + esc(link.ref) + '">' + esc(label) + "</span>";
+    const st = link.status ? '<span class="chip chip-' + esc(taskTone(link.status)) + '">' + esc(link.status) +
+      "</span>" : "";
+    return chip + st;
   });
   if (list.length > limit) chips.push('<span class="chip chip-neutral">+' + (list.length - limit) + "</span>");
   return chips.join("");
@@ -231,13 +247,24 @@ function statusHtml(row) {
     "</span>";
 }
 
+// The text, history, reply and attachments of one row, as the view keeps them (the text is null on the phone).
+function normFull(f) {
+  return { text: typeof f.text === "string" ? f.text : null, history: Array.isArray(f.history) ? f.history : [],
+    reply: typeof f.reply === "string" && f.reply.trim() ? f.reply : null, assets: assetsOf(f.assets) };
+}
+
+// The attachments of one entry: names or paths, as strings or {name|path} objects. Capped at 20; [] when absent.
+function assetsOf(list) {
+  if (!Array.isArray(list)) return [];
+  return list.map(function (a) {
+    return String(a && typeof a === "object" ? a.name || a.path || "" : a || "");
+  }).filter(Boolean).slice(0, 20);
+}
+
 // The verbatim text of one row: the seeded vm.head.full when it is this row, else the fetched cache, else null.
 function fullOf(vm, pid, id) {
   const seeded = vm && vm.head && vm.head.full && vm.head.full.id === id ? vm.head.full : null;
-  if (seeded) {
-    return { text: typeof seeded.text === "string" ? seeded.text : null,
-      history: Array.isArray(seeded.history) ? seeded.history : [] };
-  }
+  if (seeded) return normFull(seeded);
   return fullCache.get((pid || "") + "\n" + id) || null;
 }
 
@@ -246,7 +273,8 @@ function fullOf(vm, pid, id) {
 function summaryText(sum, full) {
   const text = full && typeof full.text === "string" ? full.text.split(/\s+/).filter(Boolean).join(" ") : "";
   const stem = String(sum || "").replace(/…$/, "");
-  if (!text || text.length <= stem.length || text.indexOf(stem) !== 0) return String(sum || "");
+  if (!text || text.length <= stem.length) return String(sum || "");
+  if (stem.length >= SUM_SHOW || text.indexOf(stem) !== 0) return String(sum || "");
   return text.slice(0, SUM_SHOW) + (text.length > SUM_SHOW ? "…" : "");
 }
 
@@ -265,56 +293,106 @@ function sortRows(rows, sort) {
   return sort === "old" ? sorted : sorted.reverse();
 }
 
-// What the text box says: the text, or why there is none (loading, or the phone listener gets no text).
+// What the "You wrote" box says: the text, or why there is none (loading, or the phone listener gets no text).
 function textNote(full) {
   if (!full) return "Loading the text…";
   if (full.text == null) return "The full text is only on this computer.";
   return full.text;
 }
 
+// What the "Head replied" box says: the captured reply, or the placeholder while loading or when none was captured.
+function replyNote(full) {
+  if (!full) return "Loading the reply…";
+  return full.reply || "No reply captured yet";
+}
+
+// Why the row is in its state, in words. The snapshot may send a reason; otherwise it is worked out from the status.
+function stateReason(row) {
+  if (row.reason) return String(row.reason);
+  if (row.status === "done") {
+    if (row.auto) return "All bound tasks are done; waiting for you to confirm";
+    return row.acc ? "Confirmed by you" : "Done; waiting for you to confirm";
+  }
+  const words = { doing: "A bound task or job is running", "needs-you": "The head asked for you",
+    bound: "Bound to a task; not started", declined: "Declined", merged: "Merged into another entry" };
+  return words[row.status] || "Not triaged yet";
+}
+
+// The "Bound to" block: each bound task with its id (a link to Work), title, status chip and running job model.
+function boundBlockHtml(row, pid) {
+  const items = (Array.isArray(row.links) ? row.links.map(linkOf) : []).map(function (link) {
+    const label = link.ref.split(":").pop();
+    const href = refHref(link.ref, pid);
+    const idHtml = href ? '<a class="chip chip-neutral" href="' + esc(href) + '" title="' + esc(link.ref) + '">' +
+      esc(label) + "</a>" : '<span class="chip chip-neutral">' + esc(label) + "</span>";
+    const title = link.title ? '<span class="hd-title">' + esc(link.title) + "</span>" : "";
+    const st = link.status ? '<span class="chip chip-' + esc(taskTone(link.status)) + '">' + esc(link.status) +
+      "</span>" : "";
+    const models = link.jobs.filter(function (j) {
+      return j && j.model && j.state !== "done";
+    }).map(function (j) {
+      return esc(j.model);
+    });
+    const job = models.length ? '<span class="hd-job">running: ' + models.join(", ") + "</span>" : "";
+    return '<li class="hd-link">' + idHtml + title + st + job + "</li>";
+  });
+  return '<div class="hd-blk"><p class="hd-lbl">Bound to</p>' + (items.length ? '<ul class="hd-links">' +
+    items.join("") + "</ul>" : '<p class="hd-none">Not bound yet. Use Bind below.</p>') + "</div>";
+}
+
+// The attachments list: shown only when the row has attachments (filled by loadText when the text arrives).
+function assetsHtml(full) {
+  const list = full ? full.assets : [];
+  return '<ul class="hd-assets" data-role="assets"' + (list.length ? "" : " hidden") + ">" +
+    list.map(function (name) {
+      return '<li class="hd-asset">' + esc(name) + "</li>";
+    }).join("") + "</ul>";
+}
+
+// The closed row: one line on the fixed tracks (chevron, id, summary, state, bound tasks, age, added, copy).
 function rowHtml(vm, row, opts) {
   const id = String(row.id);
   const eid = esc(id);
   const open = (opts.open || []).indexOf(id) >= 0;
   const pid = opts.project || null;
-  const acc = row.acc === true;
   const carried = row.carried ? ' <span class="hd-carried" title="Carried over">↺</span>' : "";
   const shown = summaryText(row.sum, fullOf(vm, pid, id));
-  const accCell = opts.readOnly ? '<span class="hd-c hd-acc-cell">' + (acc ? "✓" : "") + "</span>" :
-    '<span class="hd-c hd-acc-cell"><button type="button" class="hd-acc" role="checkbox" aria-checked="' +
-    (acc ? "true" : "false") + '" aria-label="' + esc("Accepted, " + id) + '" data-action="head-accept" data-id="' +
-    eid + '">' + (acc ? "☑" : "☐") + "</button></span>";
-  const row1 = '<div class="row-grid hd-row" data-id="' + eid + '">' +
+  const line = '<div class="row-grid hd-row" data-id="' + eid + '">' +
     '<button type="button" class="hd-hit" data-action="head-toggle" data-id="' + eid + '" aria-expanded="' +
     (open ? "true" : "false") + '" aria-controls="hd-p-' + eid + '" aria-label="' +
     esc((open ? "Hide " : "Show ") + id) + '"></button>' +
     '<span class="hd-c hd-chev" aria-hidden="true">▸</span>' +
     '<span class="hd-c hd-id">' + eid + carried + "</span>" +
-    '<span class="hd-c hd-kind">' + esc(row.kind || "") + "</span>" +
     '<span class="hd-c hd-sum rg-t" data-sum="' + esc(row.sum || "") + '" title="' + esc(shown) + '">' +
     esc(shown) + "</span>" +
-    '<span class="hd-c hd-bound">' + boundHtml(row.links, pid, BOUND_MAX) +
-      (row.more ? ' <span class="chip chip-neutral">+' + esc(row.more) + "</span>" : "") + "</span>" +
+    '<span class="hd-c hd-copy">' + copyButton("ask", id, id, { project: pid, sum: row.sum || "" }) + "</span>" +
+    '<span class="hd-meta">' +
     '<span class="hd-c hd-status">' + statusHtml(row) + "</span>" +
+    '<span class="hd-c hd-bound">' + boundHtml(row.links, pid, BOUND_MAX) + "</span>" +
     '<span class="hd-c hd-age rg-num' + (row.stale ? " hd-stale" : row.amber ? " hd-amber" : "") + '"' +
     (row.stale ? ' title="Stale"' : "") + ">" + esc(ageText(row.age)) + "</span>" +
     '<span class="hd-c hd-when rg-num" title="' + esc(row.ts || "") + '">' + esc(whenText(row.ts)) + "</span>" +
-    accCell +
-    '<span class="hd-c hd-copy">' + copyButton("ask", id, id, { project: pid, sum: row.sum || "" }) + "</span>" +
-    "</div>";
-  return '<li class="hd-item' + (open ? " is-open" : "") + '">' + row1 + panelHtml(vm, row, opts, open) + "</li>";
+    "</span></div>";
+  return '<li class="hd-item' + (open ? " is-open" : "") + '">' + line + panelHtml(vm, row, opts, open) + "</li>";
 }
 
-// The expanded part: the verbatim text, the history, and the footer (status, all bound-to chips, the actions).
-// Hidden until the row opens; the text is filled by loadText when the row opens and is cached after that.
+// The opened row: four labelled blocks (You wrote, Head replied, State, Bound to) and the action footer. Hidden until
+// the row opens; loadText fills the text, the reply and the attachments once the full route answers.
 function panelHtml(vm, row, opts, open) {
   const id = String(row.id);
   const eid = esc(id);
   const pid = opts.project || null;
   const full = fullOf(vm, pid, id);
   const hist = full && full.history.length ? full.history.join(" · ") : "";
-  const pre = '<pre class="hd-text" data-state="' + (full ? "ready" : "loading") + '">' +
-    esc(textNote(full)) + "</pre>";
+  const wrote = '<div class="hd-blk"><p class="hd-lbl">You wrote</p>' +
+    '<pre class="hd-text" data-state="' + (full ? "ready" : "loading") + '">' + esc(textNote(full)) + "</pre>" +
+    assetsHtml(full) + "</div>";
+  const reply = '<div class="hd-blk"><p class="hd-lbl">Head replied</p><pre class="hd-reply">' +
+    esc(replyNote(full)) + "</pre></div>";
+  const state = '<div class="hd-blk"><p class="hd-lbl">State</p><div class="hd-state">' + statusHtml(row) +
+    '<span class="hd-reason">' + esc(stateReason(row)) + "</span></div>" +
+    '<p class="hd-added" title="' + esc(row.ts || "") + '">Added ' + esc(whenText(row.ts, true)) + "</p>" +
+    '<p class="hd-hist">' + esc(hist) + "</p></div>";
   const acts = [];
   if (!opts.readOnly && row.status === "done" && !row.acc) {
     acts.push('<button type="button" class="btn" data-action="head-accept" data-id="' + eid +
@@ -350,15 +428,10 @@ function panelHtml(vm, row, opts, open) {
         eid + '">' + esc(name[0].toUpperCase() + name.slice(1)) + "...</button>");
     }
   }
-  const links = boundHtml(row.links, pid, Infinity);
-  const foot = '<div class="hd-foot"><div class="hd-foot-info">' + statusHtml(row) +
-    '<span class="hd-links">' + (links || '<span class="hd-none">' + MISSING + "</span>") + "</span></div>" +
-    (acts.length ? '<div class="hd-acts">' + acts.join("") + "</div>" : "") + "</div>";
+  const foot = acts.length ? '<div class="hd-foot"><div class="hd-acts">' + acts.join("") + "</div></div>" : "";
   const forms = opts.readOnly ? "" : formsHtml(id);
-  const added = '<p class="hd-added" title="' + esc(row.ts || "") + '">Added ' +
-    esc(whenText(row.ts, true)) + "</p>";
-  return '<div class="hd-panel" id="hd-p-' + eid + '"' + (open ? "" : " hidden") + ">" + pre + added +
-    '<p class="hd-hist">' + esc(hist) + "</p>" + foot + forms + "</div>";
+  return '<div class="hd-panel" id="hd-p-' + eid + '"' + (open ? "" : " hidden") + ">" + wrote + reply + state +
+    boundBlockHtml(row, pid) + foot + forms + "</div>";
 }
 
 // The Bind, Split and Merge forms. Hidden until the footer opens one; the submit listener sends them.
@@ -374,16 +447,6 @@ function formsHtml(id) {
     '<form class="hd-form" data-op="head.merge" data-id="' + eid + '" data-form="merge" hidden>' +
     '<label><span class="hd-lbl">Merge into</span><input name="into" placeholder="H9" required></label>' +
     '<button type="submit" class="btn">Merge</button></form>';
-}
-
-// The column names. It sits above the list, outside the <ul>, on the same tracks as the rows.
-function headerHtml() {
-  return '<div class="row-grid hd-row hd-head rg-head" aria-hidden="true">' +
-    '<span class="hd-c"></span><span class="hd-c">ID</span><span class="hd-c">Kind</span>' +
-    '<span class="hd-c">Summary</span><span class="hd-c">Bound to</span><span class="hd-c">Status</span>' +
-    '<span class="hd-c hd-age">Age</span><span class="hd-c hd-when">Added</span>' +
-    '<span class="hd-c">Acc</span>' +
-    '<span class="hd-c">Ref</span></div>';
 }
 
 function emptyHtml(vm, opts) {
@@ -412,7 +475,7 @@ export function headHtml(vm, opts) {
   const top = '<div class="hd-top"><h2 id="hd-h" class="hd-title">Head</h2>' +
     (rows.length ? '<button type="button" class="btn hd-all" data-action="head-expand-all">' +
       (allOpen ? "Collapse all" : "Expand all") + "</button>" : "") + "</div>";
-  const body = rows.length ? '<div class="hd-list">' + headerHtml() +
+  const body = rows.length ? '<div class="hd-list">' +
     '<ul class="hd-items" aria-label="Logged messages">' + rows.map(function (row) {
       return rowHtml(vm, row, o);
     }).join("") + "</ul></div>" : emptyHtml(vm, o);
@@ -438,8 +501,7 @@ function fetchFull(pid, id) {
     const url = "/api/v1/projects/" + encodeURIComponent(pid) + "/head?f=all&n=200&full=" + encodeURIComponent(id);
     const req = getJson(url).then(function (res) {
       const f = res && res.data && res.data.full ? res.data.full : {};
-      const entry = { text: typeof f.text === "string" ? f.text : null,
-        history: Array.isArray(f.history) ? f.history : [] };
+      const entry = normFull(f);
       fullCache.set(key, entry);
       return entry;
     }).finally(function () {
@@ -450,7 +512,22 @@ function fetchFull(pid, id) {
   return inflight.get(key);
 }
 
-// Fill one open row's text box and history from the cache (fetching when needed). Errors show in the box.
+// Fill the attachments list of one open row with text nodes (no markup), and show it only when there are some.
+function fillAssets(item, list) {
+  const ul = item.querySelector(".hd-assets");
+  if (!ul) return;
+  ul.textContent = "";
+  for (const name of list) {
+    const li = document.createElement("li");
+    li.className = "hd-asset";
+    li.textContent = name;
+    ul.appendChild(li);
+  }
+  ul.hidden = list.length === 0;
+}
+
+// Fill one open row's text box, reply, history and attachments from the cache (fetching when needed).
+// Errors show in the box.
 function loadText(item) {
   const id = idOf(item);
   const screen = item.closest ? item.closest(".hd-screen") : null;
@@ -462,6 +539,9 @@ function loadText(item) {
     pre.textContent = textNote(entry);
     pre.setAttribute("data-state", entry.text == null ? "none" : "ready");
     if (hist) hist.textContent = (entry.history || []).join(" · ");
+    const reply = item.querySelector(".hd-reply");
+    if (reply) reply.textContent = replyNote(entry);
+    fillAssets(item, entry.assets || []);
     const sumEl = item.querySelector(".hd-sum");
     if (sumEl) sumEl.textContent = summaryText(sumEl.getAttribute("data-sum"), entry);
   };
