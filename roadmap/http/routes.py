@@ -16,6 +16,7 @@ from roadmap import __version__
 from roadmap.core.snapshot import SNAPSHOT_SCHEMA_VERSION
 from roadmap.errors import (EXIT_CONFLICT, EXIT_ERROR, EXIT_EXTERNAL, EXIT_INVALID_DATA, EXIT_NOT_FOUND,
                             EXIT_USAGE, RoadmapError)
+from roadmap import log as rlog
 from roadmap.http import security
 from roadmap.services import agentguard, commands, control, loader, usage
 from roadmap.services import tasks as task_service
@@ -142,13 +143,21 @@ def _now_iso():
     return datetime.now().astimezone().isoformat(timespec="seconds")
 
 
+def _guard_refused(reason, path):
+    """Record one guard refusal (core.guard): the reason code and the path only. Never a header value or a body."""
+    rlog.debug_event("core", "WARN", "core.guard", msg=reason, route=path, data={"reason": reason})
+
+
 def _write_guard(app, req):
     """CSRF, Sec-Fetch-Site or Origin, then Content-Type, then body size. Raises before anything is done."""
-    if not security.write_request_allowed(req.headers, app.csrf_token(), app.port):
+    reason = security.write_refusal(req.headers, app.csrf_token(), app.port)
+    if reason is not None:
+        _guard_refused(reason, req.path)
         raise RoadmapError("forbidden", "this write needs the page's own CSRF token from the same origin",
                            EXIT_ERROR)
     ctype = (req.headers.get("Content-Type") or "").split(";")[0].strip().lower()
     if ctype != JSON_MEDIA:
+        _guard_refused("ctype", req.path)
         raise RoadmapError("unsupported_media_type", "write requests must send Content-Type: application/json",
                            EXIT_USAGE)
 
@@ -253,6 +262,72 @@ def cmd(app, req, match):
         raise
     control.after_write(project)
     return json_reply(200, reply)
+
+
+LOG_UI_LEVELS = ("DEBUG", "INFO", "WARN", "ERROR")
+_SID_RE = re.compile(r"[0-9a-f]{8}")
+
+
+def log_post(app, req, match):
+    """POST /api/v1/log {sid, events: [...]} (R7.16): a batch of browser debug events, at most 50. Order: the write
+    guard (403/415), the request rate (429), the body cap (413, 16 KB), the JSON shape (400), the event rate (429).
+    Each event is checked by log.debug_event: only ui.* names from the closed list are written, the source is always
+    'ui', and every value is capped and redacted. Answers 204 with no body; never returns what was logged."""
+    _write_guard(app, req)
+    if not app.log_requests.allow():
+        return error_reply(429, "rate_limited", "the debug log takes at most %d requests a second"
+                           % security.LOG_REQ_PER_S, headers=[("Retry-After", "1")])
+    try:
+        body = req.read_body(security.LOG_BODY_BYTES)
+    except RoadmapError as exc:
+        if exc.code == "too_large":
+            _guard_refused("body_cap", req.path)
+        raise
+    try:
+        parsed = security.strict_json_loads(body.decode("utf-8"))
+    except ValueError:
+        raise RoadmapError("invalid_input", "the body must be a JSON object with sid and events", EXIT_USAGE)
+    events = parsed.get("events") if isinstance(parsed, dict) else None
+    sid = parsed.get("sid") if isinstance(parsed, dict) else None
+    if not isinstance(events, list) or not isinstance(sid, str) or not _SID_RE.fullmatch(sid):
+        raise RoadmapError("invalid_input", "the body must be a JSON object with sid (8 hex) and events",
+                           EXIT_USAGE)
+    if len(events) > security.LOG_BATCH_MAX:
+        raise RoadmapError("invalid_input", "at most %d events per batch" % security.LOG_BATCH_MAX, EXIT_USAGE)
+    if not app.log_events.take(len(events)):
+        _guard_refused("rate", req.path)
+        return error_reply(429, "rate_limited", "the debug log takes at most %d events a minute"
+                           % security.LOG_EVENTS_PER_MIN, headers=[("Retry-After", "60")])
+    for event in events:
+        _log_ui_event(event, sid)
+    return Reply(204)
+
+
+def _log_ui_event(event, sid):
+    """Hand one browser event to the debug log. Unknown names, non-ui names and bad shapes are dropped silently."""
+    if not isinstance(event, dict):
+        return
+    name = event.get("ev")
+    if not isinstance(name, str) or not name.startswith("ui.") or name not in rlog.EVENTS:
+        return
+
+    def text(key):
+        value = event.get(key)
+        return value if isinstance(value, str) else None
+
+    level = event.get("lvl") if event.get("lvl") in LOG_UI_LEVELS else "INFO"
+    data = event.get("data") if isinstance(event.get("data"), dict) else None
+    rlog.debug_event("ui", level, name, msg=text("msg"), route=text("route"), ref=text("ref"), sid=sid, data=data)
+
+
+def log_status(app, req, match):
+    """GET /api/v1/log/status: whether the debug log is on, its size in bytes and its file count. No contents, no
+    names. The phone listener refuses this route (see PhoneApp.handle)."""
+    status = rlog.log_status()
+    if status.get("error"):
+        return json_reply(200, {"enabled": False, "bytes": 0, "files": 0})
+    return json_reply(200, {"enabled": status["enabled"], "bytes": status["total_bytes"],
+                            "files": len(status["files"])})
 
 
 def _cmd_source(app, req):
@@ -390,8 +465,23 @@ ROUTES = (
     (re.compile(r"/api/v1/usage"), ("GET",), usage_get),
     (re.compile(r"/api/v1/usage/sync"), ("POST",), usage_sync),
     (re.compile(r"/api/v1/cmd"), ("POST",), cmd),
+    (re.compile(r"/api/v1/log"), ("POST",), log_post),
+    (re.compile(r"/api/v1/log/status"), ("GET",), log_status),
     (re.compile(r"/data\.json"), ("GET",), legacy_data_json),
 )
+
+
+_NAMED_GROUP = re.compile(r"\(\?P<(\w+)>[^)]*\)")
+
+
+def route_template(path):
+    """The route template of a path (named parts as {name}, for example /api/v1/projects/{pid}/snapshot), or
+    'unmatched' when no route has that path. The debug log records this, never the concrete path."""
+    for pattern, _, _ in ROUTES:
+        if pattern.fullmatch(path):
+            text = _NAMED_GROUP.sub(lambda m: "{" + m.group(1) + "}", pattern.pattern)
+            return text.replace("(?:", "").replace(")?", "").replace("\\", "")
+    return "unmatched"
 
 
 def match(app, req):
