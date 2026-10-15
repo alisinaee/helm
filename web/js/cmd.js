@@ -4,6 +4,7 @@
 // was read after the reply, so a poll does not flip a control back before the server has it.
 
 import { postJson } from "./api.js";
+import { logAction } from "./log.js";
 import { showToast } from "./views/toast.js";
 
 const PENDING_MS = 10000;
@@ -66,6 +67,7 @@ export async function run(op, args, opts) {
   }
   const project = o.project || projectOf();
   const key = o.key || null;
+  logAction(op, null, { project: project });
   if (key) pending.set(key, { value: o.value, doneAt: null, expires: Date.now() + PENDING_MS });
   if (typeof o.apply === "function") o.apply();
   rerender();
@@ -120,6 +122,7 @@ export async function runBatch(items, opts) {
     return null;
   }
   const project = o.project || projectOf();
+  logAction("batch", null, { project: project, count: items.length });
   const keys = [];
   for (const item of items) {
     if (!item.key) continue;
