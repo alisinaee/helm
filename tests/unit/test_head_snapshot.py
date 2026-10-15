@@ -87,7 +87,7 @@ class HeadCountsAndRows(unittest.TestCase):
 
     def test_counts_follow_the_fold(self):
         head = snap(self.records)["head"]
-        self.assertEqual(head["counts"], {"open": 3, "unhandled": 2, "doing": 0, "needs": 1, "doneUnacc": 1})
+        self.assertEqual(head["counts"], {"open": 3, "unhandled": 2, "doing": 0, "needs": 1, "doneUnacc": 0})
 
     def test_open_rows_oldest_first_then_done(self):
         rows = snap(self.records)["head"]["rows"]
@@ -265,8 +265,8 @@ class HeadSuggest(unittest.TestCase):
         return _head_view(records, {}, NOW, tasks=tasks, issues=issues)
 
     def test_unbound_open_row_gets_suggest_from_open_tasks_and_issues(self):
-        row = self.view([entry("H1", 5, "Please check R7.31 soon")])["rows"][0]
-        self.assertEqual(row["suggest"], ["task:R7.31"])
+        row = self.view([entry("H1", 5, "Please check R7.40 soon")])["rows"][0]
+        self.assertEqual(row["suggest"], ["task:R7.40"])
 
     def test_title_overlap_suggests_open_task_and_issue_not_done_task(self):
         row = self.view([entry("H1", 5, "Fix the export button")])["rows"][0]
@@ -300,7 +300,7 @@ class HeadSuggest(unittest.TestCase):
                                             "state": "todo"}]})
         result = build_snapshot({"tasks.json": tasks_json}, {}, NOW,
                                 head_records=[entry("H1", 5, "Check R7.31 please")])
-        self.assertEqual(result["head"]["rows"][0]["suggest"], ["task:R7.31"])
+        self.assertNotIn("suggest", result["head"]["rows"][0])  # umbrella alone is not offered
 
     def test_suggest_keeps_the_block_under_three_kilobytes(self):
         tasks = [{"id": "R%d.%d" % (i, i), "title": "export map button %d" % i, "state": "todo"} for i in range(1, 60)]

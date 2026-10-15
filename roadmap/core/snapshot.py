@@ -342,7 +342,7 @@ def _head_view(records, link_state, moment, tasks=(), issues=(), jobs=(), issues
                        "unhandled": sum(1 for r in opened if r["status"] in ("new", "understood")),
                        "doing": sum(1 for r in opened if r["status"] == "doing"),
                        "needs": sum(1 for r in opened if r["status"] == "needs-you"),
-                       "doneUnacc": len(pairs) - len(opened)},
+                       "doneUnacc": sum(1 for is_open, _, r in pairs if not is_open and not r.get("acc"))},
             "rows": [r for _, _, r in pairs],
         }
 

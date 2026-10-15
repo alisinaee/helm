@@ -8,6 +8,8 @@ import json
 import re
 from datetime import datetime, timezone
 
+from roadmap.core import planfmt
+
 VERSION = 1
 RECORD_TYPES = ("e", "u", "s")
 LINK_KINDS = ("task", "sub", "issue", "feature", "question", "backlog", "review", "rule", "doc", "commit", "job", "ask")
@@ -152,7 +154,17 @@ def suggest_binds(text, tasks, issues):
                 scored.append((-score, order, "%s:%s" % (kind, rid)))
             order += 1
     scored.sort()
-    return [ref for _, _, ref in scored[:BIND_MAX]]
+    refs = [ref for _, _, ref in scored[:BIND_MAX]]
+    # An umbrella task (R7.31) may not be the only bind of an open ask (HEAD-SPEC 12), so it is suggested only
+    # next to a real task or issue.
+    if all(_umbrella_ref(ref) for ref in refs):
+        return []
+    return refs
+
+
+def _umbrella_ref(ref):
+    kind, _, rid = ref.partition(":")
+    return kind == "task" and planfmt.is_umbrella_task(rid)
 
 
 def _status(entry, link_state):

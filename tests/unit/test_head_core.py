@@ -365,7 +365,7 @@ class SuggestBindsTests(unittest.TestCase):
     ISSUES = [{"id": "I4", "title": "Export button fails"}]
 
     def test_id_mentioned_in_text_scores_one(self):
-        self.assertEqual(head.suggest_binds("ship R7.31 today", self.TASKS, []), ["task:R7.31"])
+        self.assertEqual(head.suggest_binds("ship R7.31 today", self.TASKS, []), [])
 
     def test_issue_id_mentioned_in_text(self):
         self.assertEqual(head.suggest_binds("see I4 again", self.TASKS, self.ISSUES), ["issue:I4"])
