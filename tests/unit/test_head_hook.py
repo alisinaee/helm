@@ -254,6 +254,82 @@ class ModelClaimTests(HeadHookCase):
         self.assertIn("head.claim skipped", self.log_text())
 
 
+class TranscriptModelTests(HeadHookCase):
+    """A payload with no model: the model is read from the transcript_path JSONL (last 64 KB, last 50 lines)."""
+
+    def setUp(self):
+        super().setUp()
+        self.transcript = os.path.join(self.docs, "session-transcript.jsonl")
+
+    def write_lines(self, lines):
+        with open(self.transcript, "w", encoding="utf-8") as fh:
+            for line in lines:
+                fh.write(line if isinstance(line, str) else json.dumps(line))
+                fh.write("\n")
+
+    def assistant(self, model):
+        return {"type": "assistant", "message": {"model": model, "role": "assistant", "content": "ok"}}
+
+    def run_event(self, event, transcript=None, model=None, session="sess-1"):
+        payload = {"hook_event_name": event, "cwd": self.project, "session_id": session}
+        if transcript is not None:
+            payload["transcript_path"] = transcript
+        if model is not None:
+            payload["model"] = model
+        if event == "UserPromptSubmit":
+            payload["prompt"] = "please fix the broken export button on the board"
+        return hooks.run_hook(json.dumps(payload), now=MOMENT.timestamp())
+
+    def claims(self):
+        return [r["model"] for r in self.entries() if r.get("t") == "s" and r.get("ev") == "claim"]
+
+    def test_session_start_reads_the_model_from_the_transcript(self):
+        self.write_lines([{"type": "user"}, self.assistant("claude-haiku-5-5")])
+        self.run_event("SessionStart", transcript=self.transcript)
+        self.assertEqual(self.claims(), ["Haiku 5.5"])
+
+    def test_a_model_switch_is_picked_up_at_the_next_prompt(self):
+        self.write_lines([self.assistant("claude-sonnet-5-5")])
+        self.run_event("SessionStart", transcript=self.transcript)
+        self.write_lines([self.assistant("claude-sonnet-5-5"), self.assistant("claude-haiku-5-5")])
+        self.run_event("UserPromptSubmit", transcript=self.transcript)
+        self.run_event("UserPromptSubmit", transcript=self.transcript)  # same model again: no new claim
+        self.assertEqual(self.claims(), ["Sonnet 5.5", "Haiku 5.5"])
+
+    def test_the_payload_model_wins_over_the_transcript(self):
+        self.write_lines([self.assistant("claude-haiku-5-5")])
+        self.run_event("SessionStart", transcript=self.transcript, model="claude-opus-5-5")
+        self.assertEqual(self.claims(), ["Opus 5.5"])
+
+    def test_malformed_lines_and_non_claude_models_are_skipped(self):
+        self.write_lines(["{not json", self.assistant("claude-sonnet-5-5"), self.assistant("<synthetic>"),
+                          '["list"]', "", "   "])
+        self.run_event("SessionStart", transcript=self.transcript)
+        self.assertEqual(self.claims(), ["Sonnet 5.5"])
+
+    def test_only_the_last_50_lines_are_scanned(self):
+        self.write_lines([self.assistant("claude-opus-5-5")] + [{"type": "user", "n": i} for i in range(55)])
+        self.run_event("SessionStart", transcript=self.transcript)
+        self.assertEqual(self.claims(), [])
+
+    def test_only_the_last_64_kb_are_read(self):
+        filler = "x" * 1000
+        self.write_lines([self.assistant("claude-opus-5-5")] + [{"type": "user", "pad": filler}] * 80)
+        self.assertGreater(os.path.getsize(self.transcript), 64 * 1024)
+        self.run_event("SessionStart", transcript=self.transcript)
+        self.assertEqual(self.claims(), [])
+
+    def test_a_missing_or_odd_transcript_path_is_fail_open(self):
+        for path in (os.path.join(self.docs, "nope.jsonl"), "", 42, self.docs):
+            self.assertIsNone(hooks._transcript_model(path), repr(path))
+        self.run_event("SessionStart", transcript=os.path.join(self.docs, "nope.jsonl"))
+        self.assertEqual(self.claims(), [])
+
+    def test_helper_reads_only_the_named_file(self):
+        self.write_lines([self.assistant("claude-haiku-5-5")])
+        self.assertEqual(hooks._transcript_model(self.transcript), "Haiku 5.5")
+
+
 class InstallTableTests(unittest.TestCase):
     def test_user_prompt_submit_is_in_the_event_table_without_a_matcher(self):
         rows = {event: (matcher, suffix) for event, matcher, suffix in hooks_install.EVENTS}
