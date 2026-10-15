@@ -1,8 +1,10 @@
 // Work, Board view (WP31), and the helpers the List and Tree views share: the project's tasks with their live
 // status (deferred tasks are not shown), the filter tokens, the status columns and one task card. The card's buttons
 // (Start, Done, Hold, Reopen and More) and the keys s d h x change status, and Alt+Up and Alt+Down move a card one
-// column. On fine pointers a card can also be dragged to a column, so drag is never the only path. Every write goes
-// through cmd.js run(), which gives the toast its Undo. Listeners attach once and act only inside a Work root (.wk).
+// column. On fine pointers a card can also be dragged to a column, so drag is never the only path. Issues (R7.97) are
+// cards too: open and doing ones from the snapshot, closed and wontfix ones in Done; their buttons run issue.status.
+// Every write goes through cmd.js run(), which gives the toast its Undo. Listeners attach once and act only inside a
+// Work root (.wk).
 
 import { chipHtml, esc, meterHtml } from "../dom.js";
 import { fmtTokens } from "../format.js";
@@ -84,6 +86,57 @@ export function workTasks(snap, now) {
   return out;
 }
 
+// Issues on the Board (R7.97). Open and doing issues come from the snapshot; closed and wontfix ones come from
+// issuesClosed (newest 5). A status set by a button or drag wins until the next snapshot agrees. Sev first, then id.
+const ISSUE_COLUMN = { open: "todo", doing: "partial", closed: "done", wontfix: "done" };
+const ISSUE_LABEL = { open: "open", doing: "doing", closed: "closed", wontfix: "won't fix" };
+
+function issuePendingKey(pid, id) {
+  return "issue:" + pid + ":" + id;
+}
+
+export function workIssues(snap, pid, now) {
+  const rows = [];
+  const seen = {};
+  (snap.issues || []).forEach(function (i) {
+    seen[i.id] = true;
+    rows.push({ id: i.id, title: i.title, kind: i.kind, sev: i.sev, status: i.status || "open", tasks: i.tasks || [] });
+  });
+  (snap.issuesClosed || []).forEach(function (i) {
+    if (seen[i.id]) return;
+    seen[i.id] = true;
+    rows.push({ id: i.id, title: i.title, kind: i.kind, sev: null, status: "closed", tasks: [] });
+  });
+  rows.sort(function (a, b) {
+    return (a.sev || 9) - (b.sev || 9) || a.id.localeCompare(b.id, undefined, { numeric: true });
+  });
+  return rows.map(function (row) {
+    const pending = pendingValue(issuePendingKey(pid, row.id), snap.fetchedAt, now);
+    const status = pending !== undefined ? pending : row.status;
+    return { isIssue: true, id: row.id, title: row.title, kind: row.kind || "issue", sev: row.sev, status: status,
+      state: ISSUE_COLUMN[status] || "todo", tasks: row.tasks, blocked: row.kind === "blocker" };
+  });
+}
+
+// The issue cards that pass the filters. The task-only filters (model, phase, needs) hide issues; status and blocked
+// apply to both.
+export function matchesIssue(item, F) {
+  if (F.kind === "task") return false;
+  if (F.needs || F.models.length || F.phases.length) return false;
+  if (F.blocked && !item.blocked) return false;
+  if (F.statuses.length && F.statuses.indexOf(columnKey(item.state)) < 0) return false;
+  return true;
+}
+
+// The open blocker issues that block a task (ids, in snapshot order).
+function blockersOf(snap, taskId) {
+  return (snap.issues || []).filter(function (i) {
+    return i.kind === "blocker" && (i.tasks || []).indexOf(taskId) >= 0;
+  }).map(function (i) {
+    return i.id;
+  });
+}
+
 // The task shape the copy-reference summary reads (ref.js): the feature ids, and subtasks as {t, d}.
 export function copyItem(task) {
   return {
@@ -104,12 +157,21 @@ const STATUS_KEYS = COLUMNS.map(function (c) {
 });
 const PHASE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,19}$/;
 
+// Kind (R7.97): kind:task, kind:issue or kind:all on the Board. Only the last kind token counts.
+const KIND_VALUES = ["task", "issue", "all"];
+
 export function parseFilters(text) {
-  const F = { tokens: [], needs: false, blocked: false, models: [], phases: [], statuses: [] };
+  const F = { tokens: [], needs: false, blocked: false, models: [], phases: [], statuses: [], kind: "" };
   for (const raw of String(text || "").split(",")) {
     const token = raw.trim();
     if (token === "needs" || token === "blocked") {
       F[token] = true;
+      F.tokens.push(token);
+    } else if (token.indexOf("kind:") === 0 && KIND_VALUES.indexOf(token.slice(5)) >= 0) {
+      F.kind = token.slice(5);
+      F.tokens = F.tokens.filter(function (t) {
+        return t.indexOf("kind:") !== 0;
+      });
       F.tokens.push(token);
     } else if (token.indexOf("model:") === 0 && MODELS.indexOf(token.slice(6)) >= 0) {
       F.models.push(token.slice(6));
@@ -190,10 +252,16 @@ export function filterBarHtml(ctx) {
   const statusChips = COLUMNS.map(function (c) {
     return filterChipHtml("status:" + c.key, c.label, pressed("status:" + c.key));
   }).join("");
+  // The Kind chips only steer the Board, which is the one view that shows issues.
+  const kindChips = ctx.view === "board"
+    ? groupHtml("Kind", filterChipHtml("kind:task", "Task", ctx.F.kind === "task") +
+      filterChipHtml("kind:issue", "Issue", ctx.F.kind === "issue") +
+      filterChipHtml("kind:all", "All", ctx.F.kind === "" || ctx.F.kind === "all"))
+    : "";
   const clear = tokens.length
     ? '<button type="button" class="btn btn-small" data-wk="clear" data-focus="wk-clear">Clear filters</button>'
     : "";
-  return '<div class="wk-filters">' + groupHtml("Show", flags) +
+  return '<div class="wk-filters">' + kindChips + groupHtml("Show", flags) +
     (models.length ? groupHtml("Model", modelChips) : "") +
     (phases.length ? groupHtml("Phase", phaseChips) : "") + groupHtml("Status", statusChips) + clear + "</div>";
 }
@@ -235,6 +303,10 @@ function cardHtml(ctx, task) {
   if (task.model) flags.push(modelChip(task.model));
   if (task.needsUser) flags.push(chipHtml("needs you", "warning"));
   if (task.blocked) flags.push(chipHtml("blocked", "danger"));
+  for (const id of blockersOf(ctx.snap, task.id)) {
+    flags.push('<a class="chip chip-danger" href="' + esc(issueHref(ctx, id)) + '" aria-label="' +
+      esc("Blocked by issue " + id) + '">⛔ ' + esc(id) + "</a>");
+  }
   if (task.started) flags.push(chipHtml("started", "neutral"));
   const pct = task.capK && task.spentK != null ? Math.min(100, (task.spentK / task.capK) * 100) : null;
   const subsDone = task.subs.filter(function (s) {
@@ -257,6 +329,41 @@ function cardHtml(ctx, task) {
     copy + "</div></li>";
 }
 
+function issueHref(ctx, id) {
+  return buildHash({ name: "project", id: ctx.pid, section: "work", view: "board", item: id, filters: ctx.filters });
+}
+
+// The buttons for an issue card: Start (open only), Close and Won't fix; a done issue gets Reopen. Each runs
+// issue.status through the same command path as a drag.
+function issueActionsHtml(item) {
+  const to = item.state === "done" ? [{ s: "open", label: "Reopen" }] : [];
+  if (item.state !== "done") {
+    if (item.status === "open") to.push({ s: "doing", label: "Start" });
+    to.push({ s: "closed", label: "Close" }, { s: "wontfix", label: "Won't fix" });
+  }
+  return to.map(function (t) {
+    return '<button type="button" class="btn btn-small" data-wk="issue-status" data-issue="' + esc(item.id) +
+      '" data-to="' + t.s + '" aria-label="' + esc(t.label + " " + item.id) + '">' + esc(t.label) + "</button>";
+  }).join("");
+}
+
+function issueCardHtml(ctx, item) {
+  const flags = [chipHtml("issue", "neutral"), chipHtml(item.kind, item.kind === "blocker" ? "danger" : "neutral")];
+  if (item.sev) flags.push(chipHtml("sev" + item.sev, "neutral"));
+  const links = item.tasks.length ? item.tasks.join(", ") : "no task linked";
+  const meta = '<span class="num">' + esc((item.kind === "blocker" ? "blocks " : "linked ") + links) + "</span>";
+  return '<li class="wk-card wk-issue' + (item.state === "done" ? " is-done" : "") + '" data-wk-issue="' +
+    esc(item.id) + '" data-state="' + esc(item.state) + '"><div class="wk-card-top"><span class="wk-id num">' +
+    esc(item.id) + "</span>" + flags.join("") + '</div><a class="wk-title" href="' + esc(issueHref(ctx, item.id)) +
+    '" data-focus="wk-title-' + esc(item.id) + '" title="' + esc(item.title) + '">' + esc(item.title) + "</a>" +
+    '<p class="wk-meta">' + meta + "</p>" + '<div class="wk-acts" role="group" aria-label="' +
+    esc("Actions for " + item.id) + '">' + issueActionsHtml(item) + "</div></li>";
+}
+
+function itemHtml(ctx, item) {
+  return item.isIssue ? issueCardHtml(ctx, item) : cardHtml(ctx, item);
+}
+
 function columnHtml(ctx, col, items) {
   const on = ctx.col === col.key ? "true" : "false";
   const head = '<h3 class="wk-col-head" id="wk-col-' + col.key + '"><span>' + esc(col.label) +
@@ -264,7 +371,7 @@ function columnHtml(ctx, col, items) {
     sectionCopyHtml(ctx.pid, "board." + col.key, col.label + " column", items.length) + "</h3>";
   const body = items.length
     ? items.map(function (t) {
-      return cardHtml(ctx, t);
+      return itemHtml(ctx, t);
     }).join("")
     : '<li class="wk-none">No tasks here.</li>';
   return '<section class="wk-col" data-state="' + col.state + '" data-on="' + on +
@@ -272,9 +379,9 @@ function columnHtml(ctx, col, items) {
 }
 
 // Phone shows one column at a time; this row picks it. On wider screens the tabs are hidden.
-function tabsHtml(ctx) {
+function tabsHtml(ctx, items) {
   const buttons = COLUMNS.map(function (col) {
-    const n = ctx.shown.filter(function (t) {
+    const n = items.filter(function (t) {
       return columnKey(t.state) === col.key;
     }).length;
     const colId = "wk-col-" + col.key;
@@ -287,8 +394,14 @@ function tabsHtml(ctx) {
 }
 
 export function boardView(ctx) {
+  // Issues come first in a column (sev, then id); tasks keep their order. Issues are hidden inside a feature scope.
+  const issues = ctx.feat ? [] : workIssues(ctx.snap, ctx.pid, Date.now()).filter(function (i) {
+    return matchesIssue(i, ctx.F);
+  });
+  const tasks = ctx.F.kind === "issue" ? [] : ctx.shown;
+  const all = issues.concat(tasks);
   const cols = COLUMNS.map(function (col) {
-    const items = ctx.shown.filter(function (t) {
+    const items = all.filter(function (t) {
       return columnKey(t.state) === col.key;
     });
     return columnHtml(ctx, col, items);
@@ -297,7 +410,25 @@ export function boardView(ctx) {
     ? "Drag a card to another column, or use its buttons. Keys: s Start, d Done, h Hold, x Reopen. " +
       "Alt+Up and Alt+Down move the focused card one column."
     : "Use buttons or keys s/d/h/x.";
-  return '<p class="wk-hint">' + esc(hint) + "</p>" + tabsHtml(ctx) + '<div class="wk-board">' + cols + "</div>";
+  return '<p class="wk-hint">' + esc(hint) + "</p>" + tabsHtml(ctx, all) + '<div class="wk-board">' + cols + "</div>";
+}
+
+// An issue button runs issue.status. The card moves at once (cmd.js keeps the value until the snapshot agrees).
+function setIssueStatus(pid, id, to) {
+  if (!pid || !id || !ISSUE_LABEL[to]) return;
+  run("issue.status", { id: id, status: to }, {
+    project: pid,
+    key: issuePendingKey(pid, id),
+    value: to,
+    label: id + " set to " + ISSUE_LABEL[to],
+  });
+}
+
+function onIssueClick(event) {
+  const el = event.target && event.target.closest ? event.target.closest('[data-wk="issue-status"]') : null;
+  const root = el ? el.closest(".wk") : null;
+  if (!root) return;
+  setIssueStatus(root.getAttribute("data-project"), el.getAttribute("data-issue"), el.getAttribute("data-to"));
 }
 
 // Change a task's status. The card moves at once (cmd.js keeps the value until the snapshot agrees), and the
@@ -425,6 +556,7 @@ bindKey("h", keyStatus("hold"));
 bindKey("x", keyStatus("todo"));
 if (typeof document !== "undefined") {
   document.addEventListener("keydown", onAltArrow);
+  document.addEventListener("click", onIssueClick);
   document.addEventListener("dragstart", onDragStart);
   document.addEventListener("dragover", onDragOver);
   document.addEventListener("dragleave", onDragLeave);

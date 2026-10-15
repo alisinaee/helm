@@ -238,7 +238,7 @@ class PlanStaticTests(unittest.TestCase):
     def test_routes_register_both_modules(self):
         routes = read(os.path.join(WEB, "js", "routes.js"))
         self.assertIn('"./views/roadmap.js"', routes)
-        self.assertIn('"./views/issues.js"', routes)
+        self.assertNotIn('"./views/issues.js"', routes)
         for name in ("roadmap.js", "issues.js"):
             self.assertTrue(os.path.isfile(os.path.join(WEB, "js", "views", name)), name)
 
