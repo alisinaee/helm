@@ -178,6 +178,42 @@ class HeadCliCase(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("needs confirm or reopen", err)
 
+    def _doc(self, name, text):
+        path = os.path.join(self.tmp, "split_net", name)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        return path
+
+    def test_import_grammar_and_idempotence(self):
+        path = self._doc("notes.md", "# Notes\n\n## 2\n1. Always use the staging host\n2. Please check the audit?\n\n"
+                                     "## 3\n- Not imported here\n")
+        code, out, _ = _run(["head", "import", "--doc", path, "--section", "2"])
+        self.assertEqual(code, 0)
+        self.assertEqual(out, "ok import 2 logged, 0 skipped. next: roadmap head list\n")
+        self.assertEqual(len(store.rows(self.data_dir)), 2)
+        code, out, _ = _run(["head", "import", "--doc", path, "--section", "2,2b"])
+        self.assertIn("ok import 0 logged, 2 skipped. next: roadmap head list", out)
+        self.assertEqual(len(store.rows(self.data_dir)), 2)
+
+    def test_import_whole_file_when_no_section(self):
+        path = self._doc("all.md", "## 2\n- first item\n## 3\n- second item\n")
+        code, out, _ = _run(["head", "import", "--doc", path])
+        self.assertIn("ok import 2 logged, 0 skipped.", out)
+
+    def test_import_refuses_paths_outside_the_project(self):
+        outside = os.path.join(self.tmp, "outside.md")
+        with open(outside, "w", encoding="utf-8") as fh:
+            fh.write("## 2\n- secret-ish item\n")
+        code, _, err = _run(["head", "import", "--doc", outside])
+        self.assertEqual(code, 2)
+        self.assertIn("inside the project folder", err)
+        self.assertEqual(store.rows(self.data_dir), [])
+
+    def test_import_missing_doc_is_not_found(self):
+        code, _, err = _run(["head", "import", "--doc", os.path.join(self.tmp, "split_net", "none.md")])
+        self.assertNotEqual(code, 0)
+        self.assertIn("no doc at", err)
+
     def test_status_line_only_with_entries(self):
         project = tasks.resolve(PROJECT_ID)[0]
         self.assertIsNone(head_cmd.status_line(project, self.data_dir))

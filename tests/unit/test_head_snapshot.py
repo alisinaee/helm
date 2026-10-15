@@ -6,6 +6,7 @@ import json
 import unittest
 from datetime import datetime, timedelta, timezone
 
+from roadmap.core import head as head_rules
 from roadmap.core import refs
 from roadmap.core.snapshot import (HEAD_BYTES_MAX, HEAD_LINKS_MAX, HEAD_SUM_MAX, build_snapshot, head_link_state,
                                    head_row)
@@ -147,6 +148,36 @@ class HeadSizeAndPrivacy(unittest.TestCase):
         full = snap(records)
         self.assertNotIn("text", set(walk_keys(full)))
         self.assertNotIn("verbatim", json.dumps(full))
+
+
+class HeadAcceptAndAutoFlags(unittest.TestCase):
+    def test_acc_only_when_the_person_last_set_done(self):
+        records = [entry("H1", 30, "Done by the head"), update("H1", 20, sets={"status": "done"}),
+                   entry("H2", 30, "Done by the person"), update("H2", 20, by="person", sets={"status": "done"}),
+                   entry("H3", 30, "Confirmed then reopened"),
+                   update("H3", 20, by="person", sets={"status": "done"}),
+                   update("H3", 10, by="person", sets={"status": "open"})]
+        rows = {row["id"]: row for row in snap(records)["head"]["rows"]}
+        self.assertEqual(rows["H2"]["status"], "done")
+        self.assertIs(rows["H2"]["acc"], True)
+        self.assertNotIn("acc", rows["H1"])
+        self.assertNotIn("acc", rows["H3"])
+
+    def test_auto_when_every_link_is_done_and_not_yet_confirmed(self):
+        records = [entry("H6", 5, "Linked ask"), update("H6", 4, links=["+task:R1.1"])]
+        folded = head_rules.fold(records, link_state={"task:R1.1": "done"}, now=NOW)[0]
+        row = head_row(folded, NOW)
+        self.assertEqual(row["status"], "done")
+        self.assertIs(row["auto"], True)
+        self.assertNotIn("acc", row)
+        self.assertNotIn("auto", head_row(dict(folded, auto_done=False), NOW))
+
+    def test_acc_and_auto_are_left_out_unless_true(self):
+        base = {"id": "H7", "kind": "ask", "sum": "x", "status": "done", "ts": stamp(0), "links": []}
+        self.assertEqual(head_row(base, NOW), {"id": "H7", "kind": "ask", "sum": "x", "status": "done", "age": 0})
+        self.assertIs(head_row(base, NOW, accepted=True)["acc"], True)
+        self.assertNotIn("acc", head_row(base, NOW, accepted=False))
+        self.assertNotIn("auto", head_row(dict(base, auto_done=True, status="open"), NOW))
 
 
 class HeadSessions(unittest.TestCase):
