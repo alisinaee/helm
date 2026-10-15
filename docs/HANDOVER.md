@@ -38,6 +38,13 @@ START HERE in a new chat (any account, same Mac): `cd ~/Works/roadmap-board` and
 - Argon: gemini-4-argon via OpenCode returned "Insufficient account funds" (paid, no credit). Browser route: Claude extension is installed in Arc and listed as connected, but tab creation timed out; not yet tested.
 - First message for the new chat: `/head`
 
+### Checkpoint 8 (2026-10-15 evening): weekly Claude usage 86% >= 85% stop; Claude work paused until Mon 19 Oct reset
+- v3 plan pushed: docs/HEAD-V3-PLAN.md (cc9afbb), based on docs/reviews/cursor-v3-analysis.md. Cursor is reviewing it
+  (docs/reviews/cursor-v3-plan-review.md) and running the full UI review (docs/reviews/cursor-ui-full.md).
+- Next when allowed: Wave 0 of HEAD-V3-PLAN (Merge button dup shape snapshot.py:261 vs head.js:486; loader revision
+  misses head-text/spool/gate/undo files; tasks never marked done from job/commit), then waves 1-6.
+- Person: weekly stop row still global 95% (run `bin/roadmap limit set --scope project --window week --pct 85`).
+
 ### Checkpoint 7 (2026-10-15, Claude usage limit reached)
 - Pushed since checkpoint 6: f0138ee (Work Doing = live jobs), 5be4e34 (Agents history), d900903 (ARCHITECTURE.html),
   6144de0 (usage auto + band), 3cb53d1 (Head in-place rows, wheel fixed). Suite 3491 OK.
