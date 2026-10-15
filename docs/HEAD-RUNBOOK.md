@@ -20,7 +20,7 @@ Run from `~/Works/roadmap-board` (hooks do not fire here, so the head registers 
 
 ## agy queue (sandbox off; needs VPN)
 `AGY_MAX=2 python3 ~/Works/split_net/tools/agy-queue.py <jobs.json> ~/Works/roadmap-board <results-dir>`
-jobs.json = `[{"id","title","task":"WP14","prompt"}]`; prompt follows the template in AGY-PLAYBOOK.md.
+jobs.json = `[{"id","title","task":"R7.19","prompt"}]`; prompt follows the template in AGY-PLAYBOOK.md.
 
 ## Cursor Auto review (VPN, one at a time)
 `tools/cursor-review2.sh <out.md> "<read-only review prompt>"` in the background, then register a `cursor` job.
