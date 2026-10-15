@@ -44,10 +44,63 @@ function readPrefs(pid, route) {
   };
 }
 
+// The plan item scope rides in f as a feat:<FeatureId> token (from the Planner). The board's filter helpers ignore it,
+// so it is split off here and kept apart from the tag filters. It is never saved as a preference.
+const FEAT_TOKEN = /^feat:(F[1-9][0-9]?)$/;
+
+function splitFeat(text) {
+  let feat = "";
+  const rest = [];
+  for (const raw of String(text || "").split(",")) {
+    const token = raw.trim();
+    const m = FEAT_TOKEN.exec(token);
+    if (m) feat = m[1];
+    else if (token) rest.push(token);
+  }
+  return { feat: feat, rest: rest.join(",") };
+}
+
+function joinFeat(feat, rest) {
+  const parts = [];
+  if (feat) parts.push("feat:" + feat);
+  if (rest) parts.push(rest);
+  return parts.join(",");
+}
+
+// The plan item and all its descendants (child items at any depth), as a set of feature ids.
+function subtreeIds(snap, feat) {
+  const ids = {};
+  ids[feat] = true;
+  const rows = snap.features && snap.features.rows ? snap.features.rows : [];
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const row of rows) {
+      if (row.parent && ids[row.parent] && !ids[row.id]) {
+        ids[row.id] = true;
+        grew = true;
+      }
+    }
+  }
+  return ids;
+}
+
+function featChipHtml(snap, feat) {
+  const row = ((snap.features && snap.features.rows) || []).find(function (r) {
+    return r.id === feat;
+  });
+  const text = row ? "Plan item: " + (row.label || row.id) + " " + (row.title || "") : "Plan item: " + feat;
+  return '<div class="wk-chips" role="group" aria-label="Plan item filter">' +
+    '<button type="button" class="wk-chip" aria-pressed="true" data-wk="feat-clear" data-focus="wk-feat-clear"' +
+    ' aria-label="Remove filter ' + esc(text.trim()) + '">' + esc(text.trim()) +
+    ' <span aria-hidden="true">&times;</span></button></div>';
+}
+
 function persist(pid, prefs) {
   const params = new URLSearchParams();
   params.set("v", prefs.view);
-  if (prefs.f) params.set("f", prefs.f);
+  const tags = splitFeat(prefs.f).rest;
+  if (tags) params.set("f", tags);
   if (prefs.g) params.set("g", prefs.g);
   params.set("s", prefs.sRaw || "n:asc");
   params.set("c", prefs.c);
@@ -139,17 +192,23 @@ export function sectionView(vm) {
   const pid = route.id;
   const prefs = readPrefs(pid, route);
   persist(pid, prefs);
-  const F = parseFilters(prefs.f);
+  const scope = splitFeat(prefs.f);
+  const F = parseFilters(scope.rest);
   const all = workTasks(snap, vm.now);
+  const members = scope.feat ? subtreeIds(snap, scope.feat) : null;
   const ctx = {
     pid: pid,
     snap: snap,
     view: prefs.view,
     all: all,
     shown: all.filter(function (t) {
+      if (members && !(t.feats || []).some(function (f) {
+        return members[f] === true;
+      })) return false;
       return matchesFilters(t, F);
     }),
     F: F,
+    feat: scope.feat,
     filters: cleanFilters(prefs.f, prefs.g),
     group: prefs.g,
     sort: prefs.sRaw || "n:asc",
@@ -157,7 +216,8 @@ export function sectionView(vm) {
     open: vm.prefsOpen || {},
     fine: finePointer(),
   };
-  return '<div class="wk" data-project="' + esc(pid) + '">' + headHtml(ctx) + bodyHtml(ctx) + "</div>";
+  const chip = ctx.feat ? featChipHtml(snap, ctx.feat) : "";
+  return '<div class="wk" data-project="' + esc(pid) + '">' + headHtml(ctx) + chip + bodyHtml(ctx) + "</div>";
 }
 
 // Bulk actions run one batch: the selected visible tasks, with the status or the run request from the bar.
@@ -210,9 +270,12 @@ function onClick(event) {
   if (kind === "view") {
     goWork(pid, { view: el.getAttribute("data-view") });
   } else if (kind === "filter") {
-    goWork(pid, { f: toggleToken(prefs.f, el.getAttribute("data-token")) });
+    const scope = splitFeat(prefs.f);
+    goWork(pid, { f: joinFeat(scope.feat, toggleToken(scope.rest, el.getAttribute("data-token"))) });
   } else if (kind === "clear") {
-    goWork(pid, { f: "" });
+    goWork(pid, { f: joinFeat(splitFeat(prefs.f).feat, "") });
+  } else if (kind === "feat-clear") {
+    goWork(pid, { f: splitFeat(prefs.f).rest });
   } else if (kind === "tab") {
     saveOnly(pid, { c: el.getAttribute("data-col") });
   } else if (kind === "sort") {
