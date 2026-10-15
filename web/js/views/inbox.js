@@ -232,6 +232,46 @@ export function headAskCardHtml(entry, now, showProject) {
     '">Open in Head</a></p></article>';
 }
 
+// The open rule proposals (snap.rulesProposals, R7.103) across the scopes, in snapshot order.
+export function ruleProposals(scopes) {
+  const out = [];
+  for (const s of scopes) {
+    const list = Array.isArray(s.snap.rulesProposals) ? s.snap.rulesProposals : [];
+    for (const p of list) {
+      if (p && p.id) out.push({ pid: s.id, pname: s.name, row: p });
+    }
+  }
+  return out;
+}
+
+// One rule proposal: its text, the Head ids it came from (links), Accept, Edit and accept (a text box), and Reject.
+// The buttons go through pageAction, the edit form through onAskSubmit; both send rules.accept or rules.reject.
+export function ruleProposalHtml(entry) {
+  const pid = entry.pid;
+  const id = String(entry.row.id);
+  const sources = (entry.row.sources || []).map(function (src) {
+    return '<a href="' + esc(headHash(pid, src)) + '">' + esc(src) + "</a>";
+  });
+  const from = sources.length ? "From " + sources.join(", ") : "No Head source";
+  return '<li class="rp" data-pid="' + esc(pid) + '" data-id="' + esc(id) + '">' +
+    '<p class="qc-line"><span class="qc-id">' + esc(id) + "</span> " + esc(entry.row.text || "") + "</p>" +
+    '<p class="qc-foot">' + from + "</p>" +
+    '<p><button type="button" class="btn" data-action="rule-accept" data-project="' + esc(pid) + '" data-id="' +
+    esc(id) + '">Accept</button> <button type="button" data-action="rule-reject" data-project="' + esc(pid) +
+    '" data-id="' + esc(id) + '">Reject</button></p>' +
+    '<form data-form="inbox-rule-edit" data-project="' + esc(pid) + '" data-id="' + esc(id) +
+    '" aria-label="' + esc("Edit and accept " + id) + '">' +
+    '<label><span class="qc-id">Rule text</span> <input name="text" required maxlength="160" value="' +
+    esc(entry.row.text || "") + '"></label> <button type="submit">Edit and accept</button></form></li>';
+}
+
+// The Rule proposals block of the Inbox (empty when no proposal is open).
+export function ruleProposalsBlock(entries) {
+  if (!entries.length) return "";
+  return '<section class="ov-card" aria-labelledby="inbox-rules-h"><h2 class="ov-h" id="inbox-rules-h">' +
+    "Rule proposals</h2><ul class=\"nz-list\">" + entries.map(ruleProposalHtml).join("") + "</ul></section>";
+}
+
 // The full Inbox page: question cards (grouped by project in All projects), then the Head asks, then the needs-you
 // tasks.
 export function inboxBody(vm) {
@@ -239,7 +279,10 @@ export function inboxBody(vm) {
   const scopes = scopeSnapshots(vm);
   const showProject = vm.route.name !== "project";
   const c = collect(scopes);
-  if (!c.questions.length && !c.needs.length && !c.asks.length) return emptyHtml("Inbox empty. No actions pending.");
+  const rules = ruleProposals(scopes);
+  if (!c.questions.length && !c.needs.length && !c.asks.length && !rules.length) {
+    return emptyHtml("Inbox empty. No actions pending.");
+  }
   let html = "";
   for (const s of scopes) {
     const cards = c.questions.filter(function (e) {
@@ -259,6 +302,7 @@ export function inboxBody(vm) {
         return headAskCardHtml(e, now, showProject);
       }).join("") + "</section>";
   }
+  html += ruleProposalsBlock(rules);
   if (c.needs.length) {
     html += '<section class="ov-card" aria-labelledby="inbox-needs-h"><h2 class="ov-h" id="inbox-needs-h">' +
       "Needs you</h2><ul class=\"nz-list\">" + c.needs.map(function (e) {
@@ -306,6 +350,13 @@ function onAskSubmit(event) {
   const form = event.target;
   if (form && form.getAttribute && form.getAttribute("data-form") === "inbox-question-answer") {
     onQuestionTextSubmit(event, form);
+    return;
+  }
+  if (form && form.getAttribute && form.getAttribute("data-form") === "inbox-rule-edit") {
+    event.preventDefault();
+    const field = form.elements.namedItem("text");
+    const text = field ? String(field.value || "").trim() : "";
+    if (text) ruleOp("rules.accept", form, { text: text });
     return;
   }
   if (!form || !form.getAttribute || form.getAttribute("data-form") !== "inbox-head-ask") return;
@@ -368,7 +419,20 @@ export function pageAction(action, el) {
     });
   } else if (action === "override") {
     run("control.override", { hours: 1 }, { project: pid, label: "Override set for 1 hour" });
+  } else if (action === "rule-accept") {
+    ruleOp("rules.accept", el, {});
+  } else if (action === "rule-reject") {
+    ruleOp("rules.reject", el, {});
   }
+}
+
+// Accept or reject a rule proposal (person-only ops): the proposal id comes from the element's data-id.
+function ruleOp(op, el, extra) {
+  const pid = el.getAttribute("data-project");
+  const id = el.getAttribute("data-id");
+  const args = Object.assign({ id: id }, extra);
+  const verb = op === "rules.accept" ? "accepted" : "rejected";
+  run(op, args, { project: pid, label: id + " " + verb });
 }
 
 // The keys 1 to 6 answer the focused card's option in that position (the list order, recommended first).

@@ -8,6 +8,7 @@ Sync writes the rules of the scopes all, lead and claude into CLAUDE.md, and onl
 <!-- roadmap:rules --> and <!-- /roadmap:rules -->. It makes a backup first, and it refuses broken markers.
 """
 
+import json
 import os
 import re
 
@@ -31,6 +32,10 @@ INTRO = "Roadmap rules (generated from docs/rules.txt by roadmap rules sync; edi
 TEMPLATE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates", "rules.txt")
 _SCOPE_RE = re.compile(r"^(phase|task):([A-Za-z0-9][A-Za-z0-9./-]{0,39})$")
 _LINE_RE = re.compile(r"^(R\d+)\s+(\S+)\s+(\S+)(?:\s+(\d+))?\s*\|\s?(.*?)\s*$")
+PROPOSALS_FILE = "rules-proposals.json"
+_PID_RE = re.compile(r"^RP\d+$")
+_HID_RE = re.compile(r"^H\d+$")
+_RID_RE = re.compile(r"^(RP|R)\d+$")
 
 
 # ------------------------------------------------------------------ format, parse, validate
@@ -335,3 +340,130 @@ def sync(project, data_dir, dry_run=False, source=None, now=None):
     summary = "rules sync +%d ~%d -%d" % (added, changed, removed)
     activity.append(data_dir, source or agentguard.source_name(), "rules.sync", summary, undo=False, now=now)
     return result
+
+
+# ------------------------------------------------------------------ proposals (R7.103): propose, accept, reject
+
+def _norm(text):
+    """The comparison form of a rule text: lower case, letters and digits only, single spaces."""
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", str(text or "").lower()).split())
+
+
+def _load_proposals(data_dir):
+    """The proposals in docs/rules-proposals.json, newest last. A missing file is empty."""
+    path = records.file_of(data_dir, PROPOSALS_FILE)
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            doc = json.load(fh)
+    except (OSError, ValueError) as exc:
+        raise RoadmapError("invalid_data", PROPOSALS_FILE + " cannot be read: " + str(exc), EXIT_INVALID_DATA)
+    items = doc.get("proposals") if isinstance(doc, dict) else None
+    if not isinstance(items, list):
+        raise RoadmapError("invalid_data", PROPOSALS_FILE + " has no proposals list", EXIT_INVALID_DATA)
+    return [dict(p) for p in items if isinstance(p, dict)]
+
+
+def _save_proposals(data_dir, items):
+    body = json.dumps({"proposals": items}, indent=2, ensure_ascii=False) + "\n"
+    atomic.write_text(records.file_of(data_dir, PROPOSALS_FILE), body)
+
+
+def _find_proposal(items, proposal_id):
+    wanted = str(proposal_id or "").strip().upper()
+    if not _PID_RE.match(wanted):
+        raise RoadmapError("usage", "a proposal id looks like RP1", EXIT_USAGE, next="roadmap rules proposals")
+    found = next((p for p in items if p.get("id") == wanted), None)
+    if found is None:
+        raise RoadmapError("not_found", "no proposal " + wanted, EXIT_NOT_FOUND, next="roadmap rules proposals")
+    return found
+
+
+def _clean_sources(sources):
+    out = []
+    for raw in sources or []:
+        sid = str(raw or "").strip().upper()
+        if not _HID_RE.match(sid):
+            raise RoadmapError("usage", "source '" + str(raw) + "' is not a Head id (H12)", EXIT_USAGE)
+        if sid not in out:
+            out.append(sid)
+    return out
+
+
+def proposals(data_dir):
+    """All proposals (every status), in file order. A missing file gives []."""
+    return _load_proposals(data_dir)
+
+
+def open_proposals(data_dir):
+    return [p for p in _load_proposals(data_dir) if p.get("status") == "proposed"]
+
+
+def propose(data_dir, text, sources=(), by=None):
+    """Store a proposal RPn with its source Head ids. Agents may propose. The text is compared with the rules and with
+    the proposals (normalised); a match returns {"id", "duplicate": True, "of": "rule" or "proposal"} and stores
+    nothing. by is the activity source of the call (default: this shell's)."""
+    clean = records.text_field(text, "proposal text", MAX_TEXT)
+    srcs = _clean_sources(sources)
+    who = by or agentguard.source_name()
+    key = _norm(clean)
+    with lock.locked(data_dir):
+        _, current, _ = read(data_dir)
+        for rule in current:
+            if _norm(rule["text"]) == key:
+                return {"id": rule["id"], "duplicate": True, "of": "rule"}
+        items = _load_proposals(data_dir)
+        for p in items:
+            if _norm(p.get("text")) == key:
+                return {"id": p.get("id"), "duplicate": True, "of": "proposal"}
+        best = 0
+        for p in items:
+            best = max(best, int(str(p.get("id"))[2:] or 0))
+        row = {"id": "RP%d" % (best + 1), "text": clean, "sources": srcs, "status": "proposed", "by": who,
+               "merged_into": None, "ts": records.now_iso()}
+        _save_proposals(data_dir, items + [row])
+    activity.append(data_dir, who, "rules.propose", row["id"] + " proposed: " + clean, undo=False)
+    return dict(row, duplicate=False)
+
+
+def accept(data_dir, proposal_id, edited_text=None, scope="all", kind="do", source=None):
+    """Person only. Appends the proposal's text (or edited_text) to docs/rules.txt through add() and records the new
+    rule id on the proposal. Returns the proposal with rule set."""
+    agentguard.refuse_if_agent("rules.accept", source)
+    found = _find_proposal(_load_proposals(data_dir), proposal_id)
+    if found.get("status") != "proposed":
+        raise RoadmapError("conflict", found["id"] + " is already " + str(found.get("status")), EXIT_CONFLICT,
+                           next="roadmap rules proposals")
+    text = found["text"] if edited_text is None else edited_text
+    rule = add(data_dir, scope, kind, text, source=source)
+    with lock.locked(data_dir):
+        items = _load_proposals(data_dir)
+        row = _find_proposal(items, found["id"])
+        row.update({"status": "accepted", "text": rule["text"], "rule": rule["id"]})
+        _save_proposals(data_dir, items)
+    activity.append(data_dir, source or agentguard.source_name(), "rules.accept",
+                    found["id"] + " accepted as " + rule["id"], undo=False)
+    return dict(row)
+
+
+def reject(data_dir, proposal_id, merged_into=None, source=None):
+    """Person only. Marks the proposal rejected, or merged when merged_into (a rule or proposal id) is given."""
+    agentguard.refuse_if_agent("rules.reject", source)
+    target = None
+    if merged_into is not None:
+        target = str(merged_into).strip().upper()
+        if not _RID_RE.match(target):
+            raise RoadmapError("usage", "merged_into must be a rule or proposal id", EXIT_USAGE)
+    with lock.locked(data_dir):
+        items = _load_proposals(data_dir)
+        row = _find_proposal(items, proposal_id)
+        if row.get("status") != "proposed":
+            raise RoadmapError("conflict", row["id"] + " is already " + str(row.get("status")), EXIT_CONFLICT,
+                               next="roadmap rules proposals")
+        row["status"] = "merged" if target else "rejected"
+        row["merged_into"] = target
+        _save_proposals(data_dir, items)
+    activity.append(data_dir, source or agentguard.source_name(), "rules.reject", row["id"] + " " + row["status"],
+                    undo=False)
+    return dict(row)

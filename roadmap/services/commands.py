@@ -774,6 +774,52 @@ def _load_ops():
     from roadmap.services import gitops  # noqa: F401  (GIT-SPEC step 3: registers the git write ops)
 
 
+# ---------------------------------------------------------------- rule proposals (R7.103)
+
+def _check_rules_propose(a):
+    text = a.get("text")
+    if not isinstance(text, str) or not text.strip():
+        raise _usage("text is required")
+    sources = a.get("sources", [])
+    if not isinstance(sources, list) or not all(isinstance(x, str) for x in sources):
+        raise _usage("sources must be a list of Head ids (H12)")
+    return {"text": text, "sources": sources}
+
+
+def _h_rules_propose(data_dir, a, now):
+    from roadmap.services import rules as rules_svc
+    row = rules_svc.propose(data_dir, a["text"], sources=a["sources"], by=current_source())
+    if row.get("duplicate"):
+        return row, "rule proposal kept: duplicate of " + row["id"], None
+    return row, "rule proposal " + row["id"] + " added", None
+
+
+def _check_rules_proposal_id(a):
+    return {"id": _id(a, "id", "proposal")}
+
+
+def _refuse_phone_rule(op):
+    if current_source() == "phone":
+        raise RoadmapError("forbidden", op + " is not allowed over the phone", EXIT_USAGE)
+
+
+def _h_rules_accept(data_dir, a, now):
+    from roadmap.services import rules as rules_svc
+    _refuse_phone_rule("rules.accept")
+    text = a.get("text")
+    if text is not None and not isinstance(text, str):
+        raise _usage("text must be a string or null")
+    row = rules_svc.accept(data_dir, a["id"], edited_text=text, source=current_source())
+    return row, "rule proposal " + row["id"] + " accepted as " + row["rule"], None
+
+
+def _h_rules_reject(data_dir, a, now):
+    from roadmap.services import rules as rules_svc
+    _refuse_phone_rule("rules.reject")
+    row = rules_svc.reject(data_dir, a["id"], source=current_source())
+    return row, "rule proposal " + row["id"] + " " + row["status"], None
+
+
 OPS = {
     "task.status": _Op(_check_task_status, _h_task_status),
     "task.rename": _Op(_check_task_rename, _h_task_rename),
@@ -803,6 +849,9 @@ OPS = {
     "backlog.remove": _Op(_check_backlog_remove, _h_backlog_remove, public=False),
     "job.remove": _Op(_check_job_remove, _h_job_remove),
     "job.restore": _Op(_check_job_restore, _h_job_restore, public=False),
+    "rules.propose": _Op(_check_rules_propose, _h_rules_propose, logs=False),
+    "rules.accept": _Op(_check_rules_proposal_id, _h_rules_accept, logs=False),
+    "rules.reject": _Op(_check_rules_proposal_id, _h_rules_reject, logs=False),
 }
 
 

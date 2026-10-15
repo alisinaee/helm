@@ -415,7 +415,8 @@ function onClick(event) {
     // closest() returns the copy button itself, so a row or section toggle does not fire too.
     // No render: copying changes nothing on the page.
     copyRef(el);
-  } else if (action === "inbox-answer" || action === "undo-line" || action === "override") {
+  } else if (action === "inbox-answer" || action === "undo-line" || action === "override" ||
+    action === "rule-accept" || action === "rule-reject") {
     pageAction(action, el);
   } else if (limitAction(action, el) || ruleAction(action, el) || settingsAction(action, el)) {
     render();

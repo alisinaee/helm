@@ -137,7 +137,7 @@ def _build(entry, folder, rev, now, store=None):
                           meters=limits.meters(entry, moment), rules=_rules_view(folder),
                           session=_session_view(folder), folder=_project_path(entry),
                           head_records=store["head"] if store is not None else _head_records(folder),
-                          rev=rev, usage=usage.show(now=moment))
+                          rev=rev, usage=usage.show(now=moment), rule_proposals=_rule_proposals(folder))
     snap["errors"] = errors + snap["errors"]
     return snap
 
@@ -196,6 +196,14 @@ def _read_store(dbp):
     head = [o for o in asks if o.get("v") == head_format.VERSION and o.get("t") in head_format.RECORD_TYPES]
     files = {"tasks.json": json.dumps({"phases": phases, "tasks": tasks}), "jobs.json": json.dumps({"jobs": jobs})}
     return {"rev": rev, "files": files, "head": head}
+
+
+def _rule_proposals(folder):
+    """Every rule proposal of the project (R7.103), or None when the file is missing or unreadable."""
+    try:
+        return rules.proposals(folder)
+    except Exception:  # noqa: BLE001 - a bad proposals file must not break the snapshot
+        return None
 
 
 def _head_records(folder):
