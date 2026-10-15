@@ -284,6 +284,20 @@ class DupTests(unittest.TestCase):
         self.assertEqual(one(rows, "H2")["dup"]["id"], "H1")
 
 
+class LinkedRunningWorkTests(unittest.TestCase):
+    """HEAD-SPEC section 12: the fold reads running work on a linked task or job as doing, and nothing else as doing."""
+
+    def test_running_job_on_a_linked_task_makes_the_ask_doing(self):
+        recs = [e("H1"), u("H1", link=["+task:R5"])]
+        self.assertEqual(one(head.fold(recs, {"task:R5": "running"}, now=NOW), "H1")["status"], "doing")
+        self.assertEqual(one(head.fold(recs, {"task:R5": "todo"}, now=NOW), "H1")["status"], "bound")
+
+    def test_finished_job_does_not_make_it_doing(self):
+        recs = [e("H1"), u("H1", link=["+job:j7"])]
+        self.assertEqual(one(head.fold(recs, {"job:j7": "open"}, now=NOW), "H1")["status"], "bound")
+        self.assertEqual(one(head.fold(recs, {"job:j7": "done"}, now=NOW), "H1")["status"], "done")
+
+
 class VerifiedGapTests(unittest.TestCase):
     """Test gaps confirmed in docs/reviews/agy-head-testgaps-core.md (rows for roadmap/core/head.py)."""
 

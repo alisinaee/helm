@@ -15,6 +15,7 @@ KINDS = ("phase", "task", "sub", "feature", "issue", "question", "job", "researc
          "commit", "branch")
 LINE_MAX = 10
 SUB_SEP = ".s"
+ASK_OF_MAX = 5                       # asks listed per task in ask_backlinks (the newest)
 
 # The full command a record points to, as the last line ("next: ..."). {id} is the ref's id, {task} the sub's task.
 NEXT = {
@@ -259,3 +260,18 @@ def data(ref, rows, next_cmd):
             obj.setdefault(key, value)
     obj["next"] = next_cmd
     return obj
+
+
+def ask_backlinks(entries):
+    """{task id: [ask ids]} for the task: links of the folded head entries, in file order (HEAD-SPEC section 12, the
+    Work/Planner 'ask:H12' chip). At most ASK_OF_MAX asks per task, the newest kept. A task with no ask is left out.
+    Pure."""
+    found = {}
+    for entry in entries or []:
+        eid = entry.get("id") if isinstance(entry, dict) else None
+        if not isinstance(eid, str):
+            continue
+        for ref in entry.get("links") or []:
+            if isinstance(ref, str) and ref.startswith("task:") and ref[len("task:"):]:
+                found.setdefault(ref[len("task:"):], []).append(eid)
+    return {tid: ids[-ASK_OF_MAX:] for tid, ids in sorted(found.items())}

@@ -11,6 +11,7 @@ from datetime import timedelta
 from roadmap.core import features as feature_rules
 from roadmap.core import head as head_rules
 from roadmap.core.extras import parse_extras
+from roadmap.core import refs as ref_rules
 from roadmap.core.parsers import (ISSUE_OPEN, error_entry, parse_activity, parse_autonomy, parse_budget,
                                   parse_comments, parse_issues, parse_jobs, parse_questions, parse_queue, parse_tasks,
                                   parse_ts)
@@ -29,9 +30,12 @@ SESSION_STATES = ("watching", "open", "none")       # presence.state() values (R
 HEAD_OPEN_MAX = 40                                  # HEAD-SPEC section 5: open asks in the head key, oldest first
 HEAD_DONE_MAX = 5                                   # newest done asks in the head key
 HEAD_SUM_MAX = 60                                   # summary characters per head row
-HEAD_LINKS_MAX = 3                                  # links per head row; the rest is a count
+HEAD_LINKS_MAX = 3                                  # link refs per head row (links); the rest is a count
+HEAD_LINKED_MAX = 6                                 # resolved links per head row (linked), HEAD-SPEC section 12
+HEAD_TITLE_MAX = 60                                 # title characters per resolved link
+HEAD_JOB_STATES = ("running", "queued")             # the only jobs a resolved link lists
 HEAD_PREV_MAX = 3                                   # earlier sessions in the head key
-HEAD_BYTES_MAX = 3072                               # the head key as compact JSON; rows are dropped to fit
+HEAD_BYTES_MAX = 3072                               # the head key as compact JSON; link titles, then rows, are dropped to fit
 
 
 def _missing(name):
@@ -162,21 +166,59 @@ def _workflow_view(jobs, issues_open, tasks_text, task_ids, moment):
             "edges": {"after": _after_edges(tasks_text, task_ids), "block": block}}
 
 
-def head_link_state(tasks, jobs):
-    """The link states the head fold reads: task:<id> from the task state, job:<id> as running, done or open."""
+def head_link_state(tasks, jobs, issues=()):
+    """The link states the head fold reads: task:<id> from the task state, job:<id> as running, done or open,
+    issue:<id> as open or done. A task with a running job on it reads as running, so the ask it is bound to is doing
+    (HEAD-SPEC section 2: a job runs on a linked task)."""
     state = {"task:" + t["id"]: t["state"] for t in tasks if t.get("id")}
     for job in jobs:
         if job.get("id"):
             state["job:" + job["id"]] = job["status"] if job.get("status") in ("running", "done") else "open"
+        if job.get("status") == "running" and job.get("task"):
+            state["task:" + job["task"]] = "running"
+    for issue in issues:
+        if issue.get("id"):
+            state["issue:" + issue["id"]] = "open" if issue.get("status") in ISSUE_OPEN else "done"
     return state
 
 
-def head_row(entry, moment, accepted=False, suggest=None):
+def _resolve_links(entry, index, live_jobs):
+    """The resolved links of a head row: [{ref,title,status,jobs:[{id,model,state}]}] at most HEAD_LINKED_MAX. A ref the
+    snapshot does not hold is left out. jobs lists the running or queued jobs on the link: the job itself for a job
+    link, the jobs whose task is the link for a task link."""
+    out = []
+    for ref in (entry.get("links") or [])[:HEAD_LINKED_MAX]:
+        info = index.get(ref)
+        if info is None:
+            continue
+        kind, _, ident = ref.partition(":")
+        if kind == "job":
+            jobs = [j for j in live_jobs if j["id"] == ident]
+        elif kind == "task":
+            jobs = [j for j in live_jobs if j.get("task") == ident]
+        else:
+            jobs = []
+        out.append({"ref": ref, "title": info["title"][:HEAD_TITLE_MAX], "status": info["status"],
+                    "jobs": [{"id": j["id"], "model": j["model"], "state": j["status"]} for j in jobs]})
+    return out
+
+
+def _progress(entry, index):
+    """{done, total} over the task links of a head row that the snapshot holds, or None when it has none."""
+    refs_t = [ref for ref in entry.get("links") or [] if ref.startswith("task:") and ref in index]
+    if not refs_t:
+        return None
+    return {"done": sum(1 for ref in refs_t if index[ref]["status"] == "done"), "total": len(refs_t)}
+
+
+def head_row(entry, moment, accepted=False, suggest=None, linked=None, prog=None):
     """One head row (HEAD-SPEC section 5), also used by the API: the summary cut, age in whole minutes, and the
     flags left out when empty (stale, carried, acc and auto only when true, links only when some, more, dup and
     suggest only when set). acc: the person's last status change was done (a confirmation or an accept), given by
     accepted. auto: the fold marked it done from its links, so it waits for the head or the person to confirm.
-    suggest: up to two bind refs (task:R7.31) from head.suggest_binds, given only for open unbound rows."""
+    suggest: up to two bind refs (task:R7.31) from head.suggest_binds, given only for open unbound rows.
+    linked: the resolved links (_resolve_links) and prog: {done,total} over the task links (_progress), each given
+    only when set."""
     ts = head_rules.parse_ts(entry.get("ts"))
     row = {"id": entry["id"], "kind": str(entry.get("kind") or "").rstrip("?"),
            "sum": (entry.get("sum") or "")[:HEAD_SUM_MAX], "status": entry["status"],
@@ -195,6 +237,10 @@ def head_row(entry, moment, accepted=False, suggest=None):
         row["links"] = links[:HEAD_LINKS_MAX]
         if len(links) > HEAD_LINKS_MAX:
             row["more"] = len(links) - HEAD_LINKS_MAX
+    if linked:
+        row["linked"] = linked
+    if prog:
+        row["prog"] = prog
     if entry.get("dup"):
         row["dup"] = entry["dup"]["id"]
     if suggest:
@@ -232,21 +278,39 @@ def _accepted_ids(records):
     return {eid for eid, mark in last.items() if mark == ("done", "person")}
 
 
-def _head_view(records, link_state, moment, tasks=(), issues=()):
-    """The head key: now, prev, counts and rows (open oldest first, then the newest done). Rows are dropped, done ones
-    first, until the key fits HEAD_BYTES_MAX; the counts stay exact. Open unbound rows get suggest from the open
-    tasks (state todo or partial) and the open issues."""
+def _head_size(view):
+    return len(json.dumps(view, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+
+
+def _head_view(records, link_state, moment, tasks=(), issues=(), jobs=(), issues_all=None):
+    """The head key: now, prev, counts and rows (open oldest first, then the newest done). Open unbound rows get
+    suggest from the open tasks (state todo or partial) and the open issues. Each row carries linked (resolved links,
+    from tasks, issues_all and jobs) and prog. To fit HEAD_BYTES_MAX the link titles are dropped first, then rows,
+    done ones first; prog and the counts stay. The result also has askOf (task id -> ask ids, from refs.ask_backlinks);
+    the caller takes it out of the head key."""
     entries = head_rules.fold(records, link_state=link_state, now=moment)
     accepted = _accepted_ids(records)
     open_rows = [e for e in entries if e["status"] not in head_rules.CLOSED_STATUSES]
     done_rows = [e for e in entries if e["status"] == "done"]
     open_tasks = [t for t in tasks if t.get("state") in ACTIVE]
+    index = {}
+    for t in tasks:
+        if t.get("id"):
+            index["task:" + t["id"]] = {"title": str(t.get("title") or ""), "status": t.get("state")}
+    for i in (issues if issues_all is None else issues_all):
+        if i.get("id"):
+            index["issue:" + i["id"]] = {"title": str(i.get("title") or ""), "status": i.get("status")}
+    for j in jobs:
+        if j.get("id"):
+            index["job:" + j["id"]] = {"title": str(j.get("title") or ""), "status": j.get("status")}
+    live_jobs = [j for j in jobs if j.get("status") in HEAD_JOB_STATES]
 
     def row(e):
         suggest = None
         if e["status"] not in head_rules.CLOSED_STATUSES and not e["links"]:
             suggest = head_rules.suggest_binds(e["sum"], open_tasks, issues) or None
-        return head_row(e, moment, e["id"] in accepted, suggest)
+        return head_row(e, moment, e["id"] in accepted, suggest,
+                        linked=_resolve_links(e, index, live_jobs) or None, prog=_progress(e, index))
 
     current, prev = _head_sessions(records)
     view = {
@@ -260,9 +324,17 @@ def _head_view(records, link_state, moment, tasks=(), issues=()):
                  + [row(e) for e in done_rows[-HEAD_DONE_MAX:]]),
     }
     rows = view["rows"]
-    while rows and len(json.dumps(view, ensure_ascii=False, separators=(",", ":")).encode("utf-8")) > HEAD_BYTES_MAX:
-        done_at = next((i for i, row in enumerate(rows) if row["status"] == "done"), len(rows) - 1)
+    titles_dropped = False
+    while rows and _head_size(view) > HEAD_BYTES_MAX:
+        if not titles_dropped:
+            for r in rows:
+                for item in r.get("linked") or []:
+                    item.pop("title", None)
+            titles_dropped = True
+            continue
+        done_at = next((i for i, r in enumerate(rows) if r["status"] == "done"), len(rows) - 1)
         rows.pop(done_at)
+    view["askOf"] = ref_rules.ask_backlinks(entries)
     return view
 
 
@@ -273,7 +345,8 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
     rules (WP33b: the parsed docs/rules.txt list) is added only when given, for the same reason.
     session (R7.1 T6: presence.state(), "watching"/"open"/"none") is added only when given; any other value reads as
     "none". folder (the project folder) is added as project.path only when given, for the Copy command.
-    head_records (HEAD-SPEC section 5: the raw head.jsonl records) adds the head key only when given.
+    head_records (HEAD-SPEC section 5: the raw head.jsonl records) adds the head key only when given, and askOf (task
+    id -> ask ids, HEAD-SPEC section 12) with it.
 
     server_time is now in ISO 8601 with whole seconds. Parse problems go into errors[]; nothing raises.
     """
@@ -462,5 +535,8 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
     if folder is not None:
         out["project"]["path"] = str(folder)
     if head_records is not None:
-        out["head"] = _head_view(head_records, head_link_state(tasks, jobs), moment, tasks=tasks, issues=issues_open)
+        head = _head_view(head_records, head_link_state(tasks, jobs, issues_all), moment, tasks=tasks,
+                          issues=issues_open, jobs=jobs, issues_all=issues_all)
+        out["askOf"] = head.pop("askOf")
+        out["head"] = head
     return out
