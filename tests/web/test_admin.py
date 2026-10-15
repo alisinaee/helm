@@ -104,46 +104,15 @@ class AdminRender(unittest.TestCase):
             for target in CONTROLS.findall(html):
                 self.assertIn(target, ids, "%s: aria-controls=%s" % (name, target))
 
-    def test_meters_show_day_and_week_with_pace_and_unknown(self):
-        html = self.out["project_tokens"]
-        self.assertIn("Today", html)
-        self.assertIn("This week", html)
-        self.assertIn("At this pace: limit reached about 16:40", html)
-        self.assertIn("Limit reached.", self.out["global_tokens"])
-        self.assertIn('data-state="unknown"', html)
-        self.assertIn("mtick-warn", html)
-        self.assertIn("mtick-day", html)
-
     def test_estimates_are_marked(self):
         self.assertIn("≈ ", self.out["project_tokens"])
 
-    def test_limit_rows_show_source_for_read_only_rows(self):
+    def test_spend_is_read_only_with_no_override_panel(self):
         html = self.out["project_tokens"]
-        self.assertIn("Read only, from weekly stop policy", html)
-        self.assertIn("Read only, from All projects", html)
-
-    def test_editor_fields_have_labels(self):
-        html = self.out["project_tokens"]
-        self.assertIn('<span class="lim-label">Window</span>', html)
-        self.assertIn('aria-label="Limit for L1, percent"', html)
-
-    def test_presets_show_in_scope_rules(self):
-        self.assertIn("Stay under 10% a day", self.out["project_add"])
-        self.assertIn("Weekly 60%", self.out["project_add"])
-        self.assertNotIn("Daily for all projects", self.out["project_add"])
-        self.assertIn("Daily for all projects", self.out["global_add"])
-
-    def test_empty_state_has_the_presets(self):
-        html = self.out["empty_tokens"]
-        self.assertIn("No limits; full weekly allowance available.", html)
-        self.assertIn("Stay under 10% a day", html)
-
-    def test_spend_and_override_sections(self):
-        html = self.out["project_tokens"]
-        self.assertIn("Top 5 tasks by spend", html)
-        self.assertIn('data-action="lim-override"', html)
-        self.assertNotIn("data-action=\"lim-override\"", self.out["global_tokens"])
-        self.assertIn("Spend by project", self.out["global_tokens"])
+        self.assertIn('<span class="rg-num">Tokens used</span>', html)
+        self.assertNotIn("lim-override", html)
+        self.assertNotIn("Token limit", html)
+        self.assertIn("Tokens used", self.out["global_tokens"])
 
     def test_rules_render_tabs_rows_and_sync(self):
         html = self.out["project_rules"]

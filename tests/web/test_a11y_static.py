@@ -264,7 +264,7 @@ class ContextualNames(unittest.TestCase):
     EXPECTED = {
         os.path.join("views", "tasks.js"): ['role="button" ', 'aria-label="Edit title for '],
         os.path.join("views", "toast.js"): ['aria-label="Undo ', 'aria-label="Dismiss notification: '],
-        os.path.join("views", "tokens.js"): ['aria-label="Save cap for ', 'aria-label="Apply override for '],
+        os.path.join("views", "tokens.js"): ['aria-label="Override for 1 hour, '],
         os.path.join("views", "tree.js"): ['aria-label="Task '],
         os.path.join("views", "topbar.js"): ['aria-haspopup="dialog"'],
     }

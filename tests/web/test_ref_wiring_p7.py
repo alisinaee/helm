@@ -155,8 +155,8 @@ class RefWiringP7Tests(unittest.TestCase):
 
     def test_panel_headers_carry_section_refs(self):
         refs = [b.get("data-ref") for b in copy_buttons(self.out["tokens"])]
-        for ref in ("rb:splitnet/section/tokens.limits", "rb:splitnet/section/tokens.account",
-                    "rb:splitnet/section/tokens.spend", "rb:splitnet/section/tokens.override"):
+        for ref in ("rb:splitnet/section/tokens.weekly", "rb:splitnet/section/tokens.share",
+                    "rb:splitnet/section/tokens.spend"):
             self.assertIn(ref, refs)
         usage_refs = [b.get("data-ref") for b in copy_buttons(self.out["usage"])]
         self.assertEqual(usage_refs, ["rb:splitnet/section/usage.band"])

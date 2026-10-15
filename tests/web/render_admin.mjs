@@ -60,14 +60,9 @@ function globalVm() {
   return vm;
 }
 
-const limits = await load("views/limits.js");
 const out = {};
 out.project_tokens = tokens.sectionView(projectVm());
 out.global_tokens = tokens.sectionView(globalVm());
-limits.limitAction("lim-add", null);
-out.project_add = tokens.sectionView(projectVm());
-out.global_add = tokens.sectionView(globalVm());
-limits.limitAction("lim-add", null);
 out.project_rules = rules.sectionView(projectVm());
 out.global_rules = rules.sectionView(globalVm());
 out.settings = settings.sectionView(globalVm());
