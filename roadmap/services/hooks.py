@@ -42,6 +42,10 @@ _OPERATOR_RE = re.compile(r"\s*(?:&&|\|\||[;|&])")
 HOOK_LOCK_TIMEOUT_S = 1.0  # each lock wait in one hook event: the hook must exit well inside its 10 s budget
 AGENT_FALLBACK_TASK = "R7.31"  # an agent job that names no task and no head job is bound here (A5)
 HEAD_JOB_WINDOW_S = 3600       # the head job an agent job falls back to started this recently
+AGENTS_MAP_FILE = "agents-map.json"  # agentId -> {task, title, model} of the agent jobs (R7.89), in the data folder
+AGENTS_MAP_MAX = 200                 # the newest entries kept in the agents map
+FOLLOWUP_MAX_S = 1800                # a follow-up job with no SubagentStop after this long is closed as done
+IDLE_LAUNCH_N = 3                    # task ids named in the idle alert of the Stop gate
 
 
 def _response_text(tool_response):
@@ -180,7 +184,22 @@ def _cursor_invocation(cmd):
     return token.strip("\"'"), prompt
 
 
-DETECTORS = {d.name: d for d in (AgentDetector(), AgyDetector(), CursorDetector())}
+class FollowupDetector:
+    """A SendMessage follow-up to a known subagent (R7.89). Not a file or output detector: it never starts from a tool
+    call (the follow-up is started in _run_event). It is closed by SubagentStop (same agent id), or as done after
+    FOLLOWUP_MAX_S by the stale sweep that every later event runs."""
+
+    name = "followup"
+
+    def on_tool(self, tool, tool_input, tool_response, session_model=None):
+        return None
+
+    def reap(self, entry, now):
+        age = now - float(entry.get("started") or now)
+        return "done" if age > FOLLOWUP_MAX_S else None
+
+
+DETECTORS = {d.name: d for d in (AgentDetector(), AgyDetector(), CursorDetector(), FollowupDetector())}
 
 
 def _first_line_has_error(path):
@@ -317,6 +336,12 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
                         new = _start(data_dir, detector, entry, regex, known, now)
                         if new is not None:
                             started.append(new)
+                            if detector.name == "agent" and new.get("agent"):
+                                _remember_agent(data_dir, new)
+                if tool == "SendMessage":
+                    new = _followup_start(data_dir, tool_input, now)
+                    if new is not None:
+                        started.append(new)
             elif event == "SubagentStop":
                 agent_id = str(payload.get("agent_id") or "")
                 if agent_id:
@@ -950,14 +975,52 @@ def _stop_gate(payload, project, data_dir, now):
         usage = data if error is None and isinstance(data, dict) else None
         items = head_svc.gate(rows, queue=queue, running=running, dirty=dirty, unpushed=unpushed, usage=usage,
                               now=moment)
-        if not items:
+        idle = "" if head_svc._at_stop(usage) else _idle_text(data_dir, rows, running, moment)
+        if not items and not idle:
             return None
         atomic.write_json(stamp, {"at": now})
     except Exception as exc:  # fail open: the reason is logged by type only
         _log("gate skipped: " + type(exc).__name__)
         return None
-    _log("gate block " + str(len(items)) + " items")
-    return {"decision": "block", "reason": "roadmap head: continue with: " + "; ".join(items)}
+    _log("gate block " + str(len(items)) + " items" + (" idle" if idle else ""))
+    head_text = "roadmap head: continue with: " + "; ".join(items) if items else ""
+    return {"decision": "block", "reason": " ".join(part for part in (idle, head_text) if part)}
+
+
+def _idle_text(data_dir, rows, running, moment):
+    """The idle alert (R7.89): with no job running, 'idle: 0 running, N free tasks; launch now: <top 3 ids>', or ''.
+    Free tasks are the todo tasks of tasks.json that no running job holds: the ones bound to an open head ask come
+    first, then the todo tasks of the current phase (the phase of the newest job, else of the first todo task). Never
+    raises: a problem gives ''."""
+    if running:
+        return ""
+    try:
+        tasks = [t for t in jobs.task_records(data_dir) if t.get("id")]
+        jobs_list = jobs.list_jobs(data_dir)
+    except (RoadmapError, OSError, ValueError):
+        return ""
+    todo = [t for t in tasks if t.get("status") == "todo"]
+    if not todo:
+        return ""
+    ask_tasks = set()
+    for row in rows or []:
+        if row.get("status") not in head_svc.GATE_OPEN:
+            continue
+        for ref in row.get("links") or []:
+            link = head_core.parse_link(ref)
+            if link is not None and link[0] == "task":
+                ask_tasks.add(link[1])
+    phase = None
+    for job in jobs_list:  # file order: the last job with a task names the current phase
+        if job.get("task"):
+            phase = next((t.get("phase") for t in tasks if t.get("id") == job["task"]), None)
+    if phase is None:
+        phase = todo[0].get("phase")
+    ranked = [str(t["id"]) for t in todo if str(t["id"]) in ask_tasks]
+    ranked += [str(t["id"]) for t in todo if t.get("phase") == phase and str(t["id"]) not in ranked]
+    if not ranked:
+        return ""
+    return "idle: 0 running, %d free tasks; launch now: %s." % (len(ranked), ", ".join(ranked[:IDLE_LAUNCH_N]))
 
 
 def _git_counts(folder):
@@ -1125,7 +1188,55 @@ def _start(data_dir, detector, entry, regex, known, now):
         return None
     _log("start %s %s task %s" % (job["id"], detector.name, task))
     return {"job": job["id"], "detector": detector.name, "kind": entry["kind"], "agent": entry["agent"],
-            "watch": entry["watch"], "started": now}
+            "watch": entry["watch"], "started": now, "task": task, "title": title, "model": entry["model"]}
+
+
+def _agents_map_read(data_dir):
+    """The agents map (agentId -> {task, title, model}) of the data folder. {} when it is missing or not an object."""
+    path = os.path.join(data_dir, AGENTS_MAP_FILE)
+    if not os.path.exists(path):
+        return {}
+    data = atomic.read_json(path, default={})
+    return data if isinstance(data, dict) else {}
+
+
+def _remember_agent(data_dir, entry):
+    """Store the agent job of a new Agent start under its agentId (newest AGENTS_MAP_MAX kept, insertion order). A busy
+    lock or a problem goes to the log: the job itself is already registered."""
+    try:
+        info = {"task": entry.get("task"), "title": entry.get("title"), "model": entry.get("model")}
+        with lock.locked(data_dir, timeout=HOOK_LOCK_TIMEOUT_S):
+            mapping = _agents_map_read(data_dir)
+            mapping.pop(entry["agent"], None)
+            mapping[entry["agent"]] = info
+            keep = list(mapping.items())[-AGENTS_MAP_MAX:]
+            atomic.write_json(os.path.join(data_dir, AGENTS_MAP_FILE), dict(keep))
+    except RoadmapError as exc:
+        _log("agents map skipped: " + exc.code)
+    except Exception as exc:
+        _log("agents map error " + type(exc).__name__)
+
+
+def _followup_start(data_dir, tool_input, now):
+    """A SendMessage whose 'to' names an agent in the agents map starts a job "<model>: <task> follow-up" bound to that
+    agent's task (R7.89). Returns the state entry, or None (unknown target, no task, or a failed start). A busy lock
+    raises locked, so the caller's event is retried by a later one."""
+    target = str(tool_input.get("to") or "").strip()
+    info = _agents_map_read(data_dir).get(target) if target else None
+    if not isinstance(info, dict) or not info.get("task"):
+        return None
+    model = str(info.get("model") or "unknown")
+    task = str(info["task"])
+    title = model + ": " + task + " follow-up"
+    try:
+        job = jobs.start_job(data_dir, title, model, task)
+    except RoadmapError as exc:
+        if exc.code == "locked":
+            raise
+        _log("skip follow-up: " + exc.message)
+        return None
+    _log("start %s followup task %s" % (job["id"], task))
+    return {"job": job["id"], "detector": "followup", "kind": "followup", "agent": target, "watch": "", "started": now}
 
 
 _GIT_COMMIT_RE = re.compile(r"\bgit\s+commit\b")

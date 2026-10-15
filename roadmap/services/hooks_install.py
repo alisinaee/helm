@@ -25,7 +25,7 @@ PRE_MATCHER = "Edit|Write|MultiEdit|NotebookEdit|Bash|Agent|Task|WebFetch|WebSea
 EVENTS = (
     ("PreToolUse", PRE_MATCHER, " pre"),
     ("SessionStart", None, ""),
-    ("PostToolUse", "Agent|Task|Bash", ""),
+    ("PostToolUse", "Agent|Task|Bash|SendMessage", ""),
     ("SubagentStop", None, ""),
     ("Stop", None, ""),
     ("UserPromptSubmit", None, ""),

@@ -41,7 +41,7 @@ class HooksInstallTests(ProjectCase):
         events = self.events()
         post = events["PostToolUse"]
         self.assertEqual(len(post), 1)
-        self.assertEqual(post[0]["matcher"], "Agent|Task|Bash")
+        self.assertEqual(post[0]["matcher"], "Agent|Task|Bash|SendMessage")
         self.assertEqual(post[0]["hooks"], [{"type": "command", "command": HOOK_CMD, "timeout": 10}])
         for event in ("SubagentStop", "Stop"):
             self.assertNotIn("matcher", events[event][0])
@@ -67,7 +67,7 @@ class HooksInstallTests(ProjectCase):
         self.assertEqual(len(stop), 2)
         post = settings["hooks"]["PostToolUse"]
         self.assertEqual(post[0]["matcher"], "Write")
-        self.assertEqual(post[1]["matcher"], "Agent|Task|Bash")
+        self.assertEqual(post[1]["matcher"], "Agent|Task|Bash|SendMessage")
 
     def test_backup_is_taken_before_changing_an_existing_file(self):
         original = {"permissions": {"allow": []}}
