@@ -367,7 +367,8 @@ def _apply_records(doc, records, replace_phase, fdoc):
 
 def _apply_features(fdoc, features, phases, unique, problems):
     """Upsert the F records into fdoc (features index in features). Each F line sets every field except accepted,
-    which only the person sets. Checks: phase exists, parent exists and is top level, and the 60-feature cap."""
+    which only the person sets. Checks: phase exists, the parent tree (see _check_feature_parents), and the
+    60-feature cap."""
     added = []
     for rec in unique:
         if rec["kind"] != "feature":
@@ -388,25 +389,87 @@ def _apply_features(fdoc, features, phases, unique, problems):
             features[fid] = entry
             fdoc["features"].append(entry)
             added.append(rec)
-    for rec in unique:
-        if rec["kind"] != "feature":
-            continue
-        parent = rec["parent"]
-        if parent is None:
-            continue
-        if parent not in features:
-            problems.append(("missing", _line(rec, "parent " + parent + " does not exist (allowed: an F line in this "
-                                              "input, or an existing feature id, or -)"), None))
-        elif features[parent].get("parent"):
-            problems.append(("invalid", _line(rec, "parent " + parent + " is itself a sub-feature (allowed: a "
-                                              "top-level feature; only one level of sub-features)"), None))
-        elif any(f.get("parent") == rec["id"] for f in fdoc["features"]):
-            problems.append(("invalid", _line(rec, rec["id"] + " has sub-features, so it cannot have a parent "
-                                              "(allowed: one level only)"), None))
+    _check_feature_parents(unique, features, problems)
     if len(fdoc["features"]) > planfmt.FEATURES_MAX:
         text = ("the file would have " + str(len(fdoc["features"])) + " features (allowed: up to "
                 + str(planfmt.FEATURES_MAX) + ")")
         problems.append(("invalid", _line(added[0], text) if added else text, None))
+
+
+FEATURE_LEVELS = core_features.MAX_ANCESTORS + 1      # phase > sub plan > item
+
+
+def _check_feature_parents(unique, features, problems):
+    """Parent checks for the F lines of one input, run after the input is applied to features (stored features and
+    F lines of this input alike, so a parent may come later in the input). Each parent must exist, the parent chain
+    above a feature must not loop or reach a missing feature, and the feature with all its sub-features must stay
+    within FEATURE_LEVELS levels. Every problem names its line and a next command."""
+    children = {}
+    for fid, feat in features.items():
+        if feat.get("parent") is not None:
+            children.setdefault(feat["parent"], []).append(fid)
+    for rec in unique:
+        if rec["kind"] != "feature" or rec["parent"] is None or rec["id"] not in features:
+            continue
+        fid, parent = rec["id"], rec["parent"]
+        if parent not in features:
+            problems.append(("missing", _line(rec, "parent " + parent + " does not exist (allowed: an F line in this "
+                                              "input, or an existing feature id, or -)"), "roadmap feature tree"))
+            continue
+        above, loop_at, missing = _chain_above(fid, features)
+        if loop_at is not None:
+            problems.append(("invalid", _line(rec, fid + " is its own ancestor (parent loop back to " + loop_at
+                                              + ") (allowed: a parent chain that ends at a top-level feature or -)"),
+                             "roadmap feature move " + fid + " --parent -"))
+            continue
+        if missing is not None:
+            problems.append(("invalid", _line(rec, "the parent chain of " + fid + " reaches " + missing
+                                              + ", which is not a feature (allowed: a parent chain that ends at a "
+                                              "top-level feature or -)"),
+                             "roadmap feature move " + fid + " --parent -"))
+            continue
+        below = _levels_below(fid, children)
+        deepest = above + 1 + below
+        if deepest > FEATURE_LEVELS:
+            problems.append(("invalid", _line(rec, fid + " would be level " + str(deepest)
+                                              + (" with its sub-features" if below else "")
+                                              + " (allowed: " + str(FEATURE_LEVELS)
+                                              + " levels: phase > sub plan > item)"),
+                             "roadmap feature move " + fid + " --parent -"))
+
+
+def _chain_above(fid, features):
+    """(parents above fid, id that closes a loop or None, id of a missing parent or None). Stops at a loop."""
+    seen = {fid}
+    count = 0
+    cur = features[fid].get("parent")
+    while cur is not None:
+        if cur in seen:
+            return count, cur, None
+        if cur not in features:
+            return count, None, cur
+        seen.add(cur)
+        count += 1
+        cur = features[cur].get("parent")
+    return count, None, None
+
+
+def _levels_below(fid, children):
+    """How many levels of sub-features sit under fid (0 when it has none). Each feature is visited once."""
+    seen = {fid}
+    layer = [fid]
+    depth = 0
+    while True:
+        nxt = []
+        for cur in layer:
+            for child in children.get(cur, []):
+                if child not in seen:
+                    seen.add(child)
+                    nxt.append(child)
+        if not nxt:
+            return depth
+        depth += 1
+        layer = nxt
 
 
 def _apply_link(tasks, features, rec, problems):
@@ -553,7 +616,7 @@ def _plan_error(problems):
     if len(missing) == len(problems) and missing[0][2]:
         next_cmd = missing[0][2]
     usage_only = all(p[0] == "usage" for p in problems)
-    if usage_only and problems[0][2]:
+    if problems[0][2] and (usage_only or not missing):
         next_cmd = problems[0][2]
     return PlanError([p[1] for p in problems], EXIT_USAGE if usage_only else exit_code, next_cmd, usage=usage_only)
 
