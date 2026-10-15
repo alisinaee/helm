@@ -25,6 +25,9 @@ RECENT_MAX = 2
 ACTIVITY_SHOWN = 15                                 # log lines on the Overview
 COMMENTS_SHOWN = 3                                  # newest comments per target
 WORKFLOW_SPANS = 200                                # newest job spans in the workflow key
+HEAD_JOB_LINK = ("running", "done", "failed")       # job states the head link keeps (failed reads as failed)
+ISSUE_CLOSED = ("closed", "wontfix")                # issue states out of the open list (issues.py CLOSED)
+ISSUES_CLOSED_MAX = 5                               # newest closed issues in the issuesClosed key (WORK-UNIFIED 1)
 WORKFLOW_DAYS = timedelta(days=7)                   # jobs that ended (or started) longer ago are dropped
 AFTER_MAX = 5                                       # most task ids in one after list
 SESSION_STATES = ("watching", "open", "none")       # presence.state() values (R7.1 T1)
@@ -167,6 +170,15 @@ def _workflow_view(jobs, issues_open, tasks_text, task_ids, moment):
             "edges": {"after": _after_edges(tasks_text, task_ids), "block": block}}
 
 
+def _issues_closed(issues_all):
+    """The newest ISSUES_CLOSED_MAX closed or wontfix issues as {id, title, kind, closed} (WORK-UNIFIED section 1).
+    Newest first by closed stamp, then created. The key is left out when no issue is closed (additive key)."""
+    closed = [i for i in issues_all if i.get("status") in ISSUE_CLOSED]
+    closed.sort(key=lambda i: i.get("closed") or i.get("created") or "", reverse=True)
+    return [{"id": i["id"], "title": i["title"], "kind": i["kind"], "closed": i.get("closed")}
+            for i in closed[:ISSUES_CLOSED_MAX]]
+
+
 def head_link_state(tasks, jobs, issues=()):
     """The link states the head fold reads: task:<id> from the task state, job:<id> as running, done or open,
     issue:<id> as open or done. A task with a running job on it reads as running, so the ask it is bound to is doing
@@ -174,7 +186,7 @@ def head_link_state(tasks, jobs, issues=()):
     state = {"task:" + t["id"]: t["state"] for t in tasks if t.get("id")}
     for job in jobs:
         if job.get("id"):
-            state["job:" + job["id"]] = job["status"] if job.get("status") in ("running", "done") else "open"
+            state["job:" + job["id"]] = job["status"] if job.get("status") in HEAD_JOB_LINK else "open"
         if job.get("status") == "running" and job.get("task"):
             state["task:" + job["task"]] = "running"
     for issue in issues:
@@ -562,6 +574,9 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
         "queue": queue_all,
         "activity": activity_all[-ACTIVITY_SHOWN:],
     })
+    closed = _issues_closed(issues_all)
+    if closed:
+        out["issuesClosed"] = closed
     if meters is not None:
         out["meters"] = meters
     if rules is not None:

@@ -135,7 +135,7 @@ class HeadRowShape(unittest.TestCase):
                                 [{"id": "j1", "status": "running"}, {"id": "j2", "status": "failed"},
                                  {"id": "j3", "status": "done"}])
         self.assertEqual(state, {"task:R7.31": "partial", "task:R1": "done", "job:j1": "running",
-                                 "job:j2": "open", "job:j3": "done"})
+                                 "job:j2": "failed", "job:j3": "done"})
 
 
 class HeadSizeAndPrivacy(unittest.TestCase):
