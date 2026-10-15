@@ -18,6 +18,7 @@ console.log(JSON.stringify({
   open: head.headHtml(vm, Object.assign({ f: "open", open: ["H1"] }, base)),
   readOnly: head.headHtml(vm, Object.assign({ f: "all", readOnly: true }, base)),
   empty: head.headHtml(empty, Object.assign({ f: "open" }, base)),
+  unclaimed: head.headHtml({ head: { counts: {}, rows: [] } }, Object.assign({ f: "open" }, base)),
   noMatch: head.headHtml(vm, Object.assign({ f: "open", q: "zzz-none" }, base)),
   hash: head.hashOf({ f: "unhandled", q: "a b", kind: "bug" }),
 }));

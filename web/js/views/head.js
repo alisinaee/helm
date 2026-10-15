@@ -84,14 +84,18 @@ function countsOf(head, rows) {
 function nowHtml(head) {
   const now = head.now || {};
   const usage = now.usage || {};
-  const parts = [now.model, now.acct ? "acct " + now.acct : null, now.since ? "since " + now.since : null,
+  // The model acting as head, as a badge first on the line; without a claim the line says how to claim one.
+  const badge = now.model ? '<strong class="hd-badge">Head: ' + esc(now.model) + "</strong>" :
+    '<strong class="hd-badge hd-badge-off">Head: not claimed (run roadmap head claim)</strong>';
+  const parts = [now.acct ? "acct " + now.acct : null, now.since ? "since " + now.since : null,
     usage.h5 != null ? "5h " + fmtPercent(usage.h5) : null, usage.wk != null ? "week " + fmtPercent(usage.wk) : null];
   const prev = (head.prev || []).slice(0, 3).map(function (p) {
     return [p.model, p.acct ? "acct " + p.acct : null, p.until ? "until " + p.until : null]
       .filter(Boolean).join(" ");
   });
-  return '<section class="hd-now" aria-label="Head now"><p class="hd-now-line">' +
-    esc(parts.filter(Boolean).join(" · ") || MISSING) + "</p>" +
+  const rest = parts.filter(Boolean).join(" · ");
+  return '<section class="hd-now" aria-label="Head now"><p class="hd-now-line">' + badge +
+    (rest ? ' <span class="hd-now-rest">' + esc(rest) + "</span>" : "") + "</p>" +
     (prev.length ? '<p class="page-note">prev: ' + esc(prev.join(", ")) + "</p>" : "") + "</section>";
 }
 
