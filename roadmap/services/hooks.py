@@ -304,6 +304,8 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
                 tool_input = payload.get("tool_input")
                 tool_input = tool_input if isinstance(tool_input, dict) else {}
                 session_model = _session_model(payload) if tool in ("Agent", "Task") else None
+                if tool == "Bash":
+                    _commit_candidates(project, data_dir, payload, tool_input, now)
                 for detector in active:
                     entry = detector.on_tool(tool, tool_input, payload.get("tool_response"),
                                              session_model=session_model)
@@ -1083,6 +1085,39 @@ def _start(data_dir, detector, entry, regex, known, now):
     _log("start %s %s task %s" % (job["id"], detector.name, task))
     return {"job": job["id"], "detector": detector.name, "kind": entry["kind"], "agent": entry["agent"],
             "watch": entry["watch"], "started": now}
+
+
+_GIT_COMMIT_RE = re.compile(r"\bgit\s+commit\b")
+_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+
+
+def _commit_candidates(project, data_dir, payload, tool_input, now):
+    """After a Bash git commit, bind HEAD to the tasks its message names (commit:<sha>) and log each done candidate.
+    A failed commit re-reads the old HEAD, which binds nothing new. Returns the bound task ids."""
+    command = str(tool_input.get("command") or "")
+    if not _GIT_COMMIT_RE.search(command):
+        return []
+    here = payload.get("cwd")
+    here = here if isinstance(here, str) and here else project["path"]
+    try:
+        out = git.run(here, ["log", "-1", "--format=%H%n%B"])
+    except RoadmapError:
+        return []
+    sha, _, body = out.partition("\n")
+    sha = sha.strip()
+    if not _SHA_RE.match(sha):
+        return []
+    from roadmap.services import gitops  # local: gitops is the commit op and imports jobs and head too
+    try:
+        bound = gitops.bind_message_commit(data_dir, sha, body)
+    except RoadmapError as exc:
+        if exc.code == "locked":
+            raise
+        _log("commit detect: " + exc.message)
+        return []
+    for task in bound:
+        _log("done candidate: " + task + " " + sha[:7])
+    return bound
 
 
 def _close_some(data_dir, entries, verdict):

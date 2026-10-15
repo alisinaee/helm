@@ -21,6 +21,7 @@ import re
 
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import agentguard, commands, jobs, records
+from roadmap.services import head as head_svc
 from roadmap.services import git
 from roadmap.store import config as config_store
 from roadmap.store import lock, schema
@@ -211,6 +212,21 @@ def _commit_path(root, path):
     return norm
 
 
+MSG_TASK_ID = re.compile(r"\bR\d+\.\d+\b")
+
+
+def bind_message_commit(data_dir, sha, message, task=None):
+    """Bind a commit to the known tasks its message names (R<n>.<n>) and to their running jobs, then fold the asks
+    whose tasks are all done. Returns the bound task ids, which the caller reports as done candidates."""
+    ids = set(MSG_TASK_ID.findall(message or ""))
+    if task:
+        ids.add(task)
+    bound = jobs.bind_commit(data_dir, sha, sorted(ids)) if ids else []
+    if bound:
+        head_svc.fold_asks(data_dir)
+    return bound
+
+
 def _h_commit(data_dir, a, now):
     root = _root(data_dir)
     paths = sorted(set(_commit_path(root, p) for p in a["paths"]))
@@ -227,8 +243,11 @@ def _h_commit(data_dir, a, now):
         _write(root, ["add", "--"] + paths)
         _write(root, ["commit", "--only", "-m", text, "--"] + paths)
     sha = _head(root)
-    data = {"sha": sha, "files": len(paths), "task": a["task"], "job": a["job"]}
+    candidates = bind_message_commit(data_dir, sha, a["message"], a["task"])
+    data = {"sha": sha, "files": len(paths), "task": a["task"], "job": a["job"], "candidates": candidates}
     summary = "commit " + sha[:7] + " " + str(len(paths)) + " file(s)"
+    if candidates:
+        summary += "; done candidate: " + ", ".join(candidates)
     return data, summary, {"op": "git.uncommit", "args": {"sha": sha}}
 
 

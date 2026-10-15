@@ -19,6 +19,7 @@ KEEP_FINISHED = 200
 PARENT_ENV = "ROADMAP_PARENT_JOB"
 JOBS_FILE = "jobs.json"
 TASKS_FILE = "tasks.json"
+COMMIT_REF = "commit:"
 TITLE_MAX = 200
 _ID_RE = re.compile(r"^j(\d+)$")
 _EPOCH = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
@@ -97,7 +98,67 @@ def start_job(data_dir, title, model, task=None, parent=None, role=None, environ
         job.update({"status": "running", "started": _now_iso(), "ended": None})
         doc["jobs"].append(job)
         _write_doc(data_dir, doc)
+        if clean_task:
+            _mark_partial(data_dir, clean_task)
     return dict(job)
+
+
+def task_records(data_dir):
+    """Every task dict in tasks.json (read only). A missing file gives an empty list; a newer or bad file raises."""
+    data, error = schema.read_data("tasks", os.path.join(data_dir, TASKS_FILE))
+    if error is not None:
+        raise RoadmapError("newer_schema", error["message"], EXIT_INVALID_DATA)
+    if data is None:
+        return []
+    if not isinstance(data.get("tasks"), list):
+        raise RoadmapError("invalid_data", "tasks.json has no 'tasks' list", EXIT_INVALID_DATA)
+    return [dict(t) for t in data["tasks"] if isinstance(t, dict)]
+
+
+def bind_commit(data_dir, sha, task_ids):
+    """Attach commit:<sha> to each known task named in task_ids and to the running job of that task. A commit
+    never changes a task status: the person or the head marks it done. Returns the bound task ids in order.
+    Adding the same commit twice changes nothing."""
+    _require_data_dir(data_dir)
+    known = known_task_ids(data_dir)
+    wanted = [t for t in dict.fromkeys(task_ids) if t in known]
+    if not wanted:
+        return []
+    ref = COMMIT_REF + str(sha).strip()
+    with lock.locked(data_dir):
+        path = os.path.join(data_dir, TASKS_FILE)
+        tdoc = schema.read_data("tasks", path)[0]
+        if tdoc is not None:
+            for task in tdoc.get("tasks") or []:
+                if isinstance(task, dict) and task.get("id") in wanted:
+                    refs = task.setdefault("refs", [])
+                    if ref not in refs:
+                        refs.append(ref)
+                        schema.write_data("tasks", path, tdoc)
+        doc = _read_doc(data_dir)
+        changed = False
+        for job in doc["jobs"]:
+            if isinstance(job, dict) and job.get("status") == "running" and job.get("task") in wanted:
+                refs = job.setdefault("refs", [])
+                if ref not in refs:
+                    refs.append(ref)
+                    changed = True
+        if changed:
+            _write_doc(data_dir, doc)
+    return wanted
+
+
+def _mark_partial(data_dir, task_id):
+    """A todo task that a job starts on becomes partial (doing). Other statuses are left alone."""
+    path = os.path.join(data_dir, TASKS_FILE)
+    data, error = schema.read_data("tasks", path)
+    if error is not None or data is None or not isinstance(data.get("tasks"), list):
+        return
+    for task in data["tasks"]:
+        if isinstance(task, dict) and task.get("id") == task_id and task.get("status") == "todo":
+            task["status"] = "partial"
+            schema.write_data("tasks", path, data)
+            return
 
 
 def finish_job(data_dir, job_id, status, note=None, tokens_k=None):
