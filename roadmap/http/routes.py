@@ -579,7 +579,10 @@ def project_head(app, req, match):
         if app.cmd_source != "phone":
             if not _same_page_read(req.headers, app.port):
                 raise RoadmapError("forbidden", "the full text is for this server's own page only", EXIT_ERROR)
-            body["full"]["text"] = head_service.text_of(data_dir, full)
+            details = head_service.details_of(data_dir, full)
+            body["full"]["text"] = details["text"]
+            body["full"]["reply"] = details["reply"]
+            body["full"]["assets"] = details["assets"]
             body["full"]["history"] = _head_history(head_service._records(data_dir), full)
     if app.cmd_source == "phone":
         body = _phone_public(body)

@@ -99,6 +99,21 @@ class HeadRoute(ServerCase):
         self.assertEqual((cross.status, foreign.status), (403, 403))
         self.assertNotIn(b"Please fix", cross.body + foreign.body)
 
+    def test_full_gives_reply_and_assets_on_the_same_origin_page(self):
+        # HEAD-SPEC section 13: the reply and the attachment names come with the text, same guard as the text.
+        head_service.set_reply(self.data_dir, self.second["id"], "Fixed the staging check.")
+        shot = head_service.capture(self.data_dir, "Please check the board shot and @docs/plan.md", session_id="s2",
+                                    src="hook", assets=["shot.png", "docs/plan.md"])
+        self.assertEqual(self.get("full=%s" % self.second["id"]).status, 403)
+        full = self.get("full=%s" % self.second["id"], headers=self.same_origin).json()["full"]
+        self.assertEqual(full["reply"], "Fixed the staging check.")
+        self.assertEqual(full["assets"], [])
+        full = self.get("full=%s" % shot["id"], headers=self.same_origin).json()["full"]
+        self.assertEqual(full["assets"], ["shot.png", "docs/plan.md"])
+        head_service.set_reply(self.data_dir, self.first["id"], "Reply to the export.")
+        self.assertEqual(self.get("full=%s" % self.first["id"], headers=self.same_origin).json()["full"]["reply"],
+                         "Reply to the export.")
+
     def test_full_unknown_id_gives_404(self):
         res = self.get("full=H999", headers=self.same_origin)
         self.assertEqual(res.status, 404)

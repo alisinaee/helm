@@ -380,3 +380,62 @@ class ScrubVectors(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ReplyAndAssets(HeadServiceCase):
+    """HEAD-SPEC section 13: assets are stored with the text, the reply is a text-file line that the last write wins,
+    and details_of reads both back."""
+
+    def test_assets_are_text_only_masked_unique_and_capped(self):
+        names = ["a.png", "a.png", 7, "b\x01.pdf", "x" * 300] + ["f%d.txt" % i for i in range(30)]
+        out = svc.clean_assets(names)
+        self.assertEqual(out[:3], ["a.png", "b.pdf", "x" * 200])
+        self.assertEqual(len(out), 20)
+        self.assertEqual(svc.clean_assets("not a list"), [])
+
+    def test_capture_stores_assets_and_details_reads_them_back(self):
+        out = svc.capture(self.data, "Please check the board shot", session_id="s1", src="hook",
+                          assets=["shot.png"], now=NOW)
+        details = svc.details_of(self.data, out["id"])
+        self.assertEqual(details, {"text": "Please check the board shot", "reply": None, "assets": ["shot.png"]})
+
+    def test_set_reply_is_redacted_and_the_last_reply_wins(self):
+        out = svc.capture(self.data, "Please check the board shot", session_id="s1", src="hook", now=NOW)
+        svc.set_reply(self.data, out["id"], "First reply with key sk-abcdef1234567890XYZ")
+        svc.set_reply(self.data, out["id"], "Second reply.")
+        details = svc.details_of(self.data, out["id"])
+        self.assertEqual(details["reply"], "Second reply.")
+        self.assertEqual(details["text"], "Please check the board shot")
+        self.assertNotIn("sk-abcdef", self.raw(svc.TEXT_FILE))
+
+    def test_reply_is_capped_at_8000_characters(self):
+        out = svc.capture(self.data, "Please check the board shot", session_id="s1", src="hook", now=NOW)
+        self.assertEqual(svc.set_reply(self.data, out["id"], "r" * 9000), 8000)
+        self.assertEqual(len(svc.details_of(self.data, out["id"])["reply"]), 8000)
+
+    def test_set_reply_rejects_unknown_ids_and_empty_text(self):
+        out = svc.capture(self.data, "Please check the board shot", session_id="s1", src="hook", now=NOW)
+        with self.assertRaises(RoadmapError) as unknown:
+            svc.set_reply(self.data, "H999", "Done.")
+        self.assertEqual(unknown.exception.code, "not_found")
+        with self.assertRaises(RoadmapError) as empty:
+            svc.set_reply(self.data, out["id"], "   ")
+        self.assertEqual(empty.exception.code, "usage")
+        self.assertIsNone(svc.details_of(self.data, out["id"])["reply"])
+
+    def test_latest_hook_entry_is_the_newest_hook_capture_of_the_session(self):
+        svc.capture(self.data, "First prompt of the session", session_id="s1", src="hook", now=NOW)
+        svc.capture(self.data, "Typed in the cli for s1", session_id="s1", src="cli", now=NOW)
+        newest = svc.capture(self.data, "Second prompt of the session", session_id="s1", src="hook", now=NOW)
+        self.assertEqual(svc.latest_hook_entry(self.data, "s1")["id"], newest["id"])
+        self.assertIsNone(svc.latest_hook_entry(self.data, "other"))
+        self.assertIsNone(svc.latest_hook_entry(self.data, None))
+
+    def test_spooled_assets_survive_the_adopt(self):
+        with mock.patch.object(svc.lock, "locked", side_effect=RoadmapError("locked", "busy", 4)):
+            out = svc.capture(self.data, "Please check the board shot", session_id="s1", src="hook",
+                              assets=["shot.png"], now=NOW, timeout=0)
+        self.assertEqual(out["status"], "spooled")
+        svc.session(self.data, "start", session_id="s1", now=NOW)
+        eid = self.entry_ids()[0]
+        self.assertEqual(svc.details_of(self.data, eid)["assets"], ["shot.png"])
