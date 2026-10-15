@@ -56,11 +56,14 @@ SCRIPT = r"""
     fire(t, ev) { const e = Object.assign({ preventDefault() {} }, ev); (this.handlers[t] || []).forEach((f) => f(e)); }
     setPointerCapture() {}
     getBoundingClientRect() { return this.rect || { left: 0, top: 0, width: 800, height: 600 }; }
-    focus() { log.focus.push(this.getAttribute("data-wf-item")); }
+    focus() { log.focus.push(this.getAttribute("data-wf-item") || this.getAttribute("data-wf-fold")); }
     matches(sel) {
-      if (sel.startsWith("[")) return this.getAttribute(sel.slice(1, -1)) !== null;
-      if (sel.startsWith(".")) return (this.getAttribute("class") || "").split(" ").includes(sel.slice(1));
-      return false;
+      return sel.split(",").some((part) => {
+        const s = part.trim();
+        if (s.startsWith("[")) return this.getAttribute(s.slice(1, -1)) !== null;
+        if (s.startsWith(".")) return (this.getAttribute("class") || "").split(" ").includes(s.slice(1));
+        return false;
+      });
     }
     closest(sel) {
       let n = this;
@@ -98,7 +101,8 @@ SCRIPT = r"""
       taps: { last: null }, onTap() {}, onClear() { log.cleared += 1; } }, opts || {}));
     return { svg: b.svg, ctl: ctl };
   };
-  const nodeOf = (svg, id) => svg.querySelectorAll("[data-wf-item]").find((n) => n.getAttribute("data-wf-item") === id);
+  const keyOf = (n) => n.getAttribute("data-wf-item") || n.getAttribute("data-wf-fold");
+  const nodeOf = (svg, id) => svg.querySelectorAll("[data-wf-item], .wfg-fold").find((n) => keyOf(n) === id);
   const screenOf = (ctl, pt) => { const v = ctl.view(); return { x: v.k * pt.x + v.x, y: v.k * pt.y + v.y }; };
   const centreOfNode = (svg, id) => {
     const n = nodeOf(svg, id);
@@ -157,7 +161,7 @@ SCRIPT = r"""
   const w = fresh({ reduce: true });
   log.focus.length = 0;
   w.svg.fire("keydown", key(w.svg, "ArrowRight"));
-  const ids = w.svg.querySelectorAll("[data-wf-item]").map((n) => n.getAttribute("data-wf-item"));
+  const ids = w.svg.querySelectorAll("[data-wf-item], .wfg-fold").map(keyOf);
   const pathIds = flow.path.filter((id) => ids.includes(id));
   for (let i = 1; i < ids.length + 1; i += 1) {
     const cur = nodeOf(w.svg, log.focus[log.focus.length - 1]);
@@ -212,6 +216,45 @@ SCRIPT = r"""
   out.minimapFrames = ms.querySelectorAll(".wfm-frame").length;
   out.flowFrames = flow.frames.length;
 
+  // Destroy (the SVG was replaced): the pending glide frame is cancelled and no view is reported after it.
+  const dq = [];
+  const dc = [];
+  let dt = 0;
+  let views = 0;
+  const d = fresh({ reduce: false, raf: (fn) => { dq.push(fn); return dq.length; }, cancel: (id) => dc.push(id),
+    clock: () => dt, onView: () => { views += 1; } });
+  d.ctl.centerOn(taskId);
+  const seenBefore = views;
+  d.ctl.destroy();
+  dt += 100;
+  while (dq.length) dq.shift()(dt);
+  out.destroy = { cancelled: dc.length, silent: views === seenBefore };
+
+  // The wheel scrolls the page unless Ctrl is held (a trackpad pinch sends Ctrl).
+  const wh = fresh({ reduce: true });
+  let wpd = 0;
+  const wv0 = JSON.stringify(wh.ctl.view());
+  wh.svg.fire("wheel", { deltaY: -100, clientX: 0, clientY: 0, ctrlKey: false, preventDefault() { wpd += 1; } });
+  out.wheelPlain = { prevented: wpd, unchanged: JSON.stringify(wh.ctl.view()) === wv0 };
+  wh.svg.fire("wheel", { deltaY: -100, clientX: 0, clientY: 0, ctrlKey: true, preventDefault() { wpd += 1; } });
+  out.wheelCtrl = { prevented: wpd, zoomed: wh.ctl.view().k > 1 };
+
+  // A hover (no button held) does not read the layout or paint.
+  const hv = fresh({ reduce: true });
+  let rects = 0;
+  const hrect = hv.svg.getBoundingClientRect.bind(hv.svg);
+  hv.svg.getBoundingClientRect = () => { rects += 1; return hrect(); };
+  hv.svg.fire("pointermove", { pointerId: 7, clientX: 10, clientY: 10 });
+  out.hover = { rects: rects };
+
+  // Roving focus: the arrows resume from the node that last took focus, when the SVG itself is the target.
+  const rv = fresh({ reduce: true });
+  const rnodes = rv.svg.querySelectorAll("[data-wf-item], .wfg-fold");
+  rv.svg.fire("focusin", { target: rnodes[0] });
+  log.focus.length = 0;
+  rv.svg.fire("keydown", key(rv.svg, "ArrowRight"));
+  out.roving = { focused: log.focus[0], second: keyOf(rnodes[1]) };
+
   // Pure helpers.
   out.layoutPoint = mm.layoutPoint({ w: 100, h: 50 }, { left: 10, top: 20, width: 200, height: 100 }, 70, 40);
   out.viewRect = mm.viewRect({ k: 2, x: -100, y: -50 }, { w: 800, h: 600 });
@@ -251,7 +294,7 @@ class ViewportSourceTests(unittest.TestCase):
 
     def test_minimap_is_within_120_lines_and_viewport_within_360(self):
         self.assertLessEqual(len(read_text(os.path.join(GRAPH, "minimap.js")).splitlines()), 120)
-        self.assertLessEqual(len(read_text(os.path.join(GRAPH, "viewport.js")).splitlines()), 460)
+        self.assertLessEqual(len(read_text(os.path.join(GRAPH, "viewport.js")).splitlines()), 490)
 
     def test_a_pan_never_starts_a_text_selection(self):
         text = read_text(os.path.join(GRAPH, "viewport.js"))
@@ -327,6 +370,20 @@ class ViewportNodeTests(unittest.TestCase):
 
     def test_a_pointer_cancels_a_glide(self):
         self.assertTrue(self.out["cancelled"]["same"])
+
+    def test_destroy_cancels_the_frame_and_silences_the_view(self):
+        self.assertEqual(self.out["destroy"]["cancelled"], 1)
+        self.assertTrue(self.out["destroy"]["silent"])
+
+    def test_wheel_without_ctrl_scrolls_the_page(self):
+        self.assertEqual(self.out["wheelPlain"], {"prevented": 0, "unchanged": True})
+        self.assertEqual(self.out["wheelCtrl"], {"prevented": 1, "zoomed": True})
+
+    def test_hover_does_not_read_the_layout(self):
+        self.assertEqual(self.out["hover"]["rects"], 0)
+
+    def test_arrows_resume_from_the_node_that_last_took_focus(self):
+        self.assertEqual(self.out["roving"]["focused"], self.out["roving"]["second"])
 
     def test_n_and_s_keys_centre_on_now_and_start(self):
         self.assertTrue(self.out["keyNow"]["halo"])

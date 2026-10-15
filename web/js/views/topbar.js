@@ -2,12 +2,40 @@
 // the Today and Week mini meters, the connection dot, the theme toggle and "?". The meters read only
 // snapshot meters.limits (WP27); when that is missing they show grey "unknown". The client does no limit maths.
 
+import { csrfToken } from "../api.js";
 import { esc, meterHtml } from "../dom.js";
+import { mark, status as logStatus } from "../log.js";
 import { SECTIONS, SETTINGS, sectionById } from "../routes.js";
 import { panelIsOpen } from "../state.js";
+import { showToast } from "./toast.js";
 
 const THEME_LABEL = { auto: "Auto", dark: "Dark", light: "Light" };
 const STATE_RANK = { ok: 0, unknown: 1, warn: 2, block: 3 };
+const MARK_LABEL = "I am seeing a bug here";
+const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\])$/;
+
+// The Mark button, the m key and the palette command exist only on localhost with a CSRF value (the phone has none).
+export function markAllowed() {
+  if (typeof window === "undefined" || typeof location === "undefined") return false;
+  return LOCAL_HOST.test(location.hostname) && Boolean(csrfToken());
+}
+
+// Phone width (under 600 px): the top bar has no room for Mark or Cmd+K, and a phone keyboard has no Cmd key.
+function phoneWidth() {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" &&
+    window.matchMedia("(max-width: 599px)").matches;
+}
+
+// Mark this moment in the debug log (R7.16 step 5b). mark() records the route and the ref of the focused row.
+export function markBug() {
+  if (!markAllowed()) return;
+  if (!logStatus().active) {
+    showToast({ text: "Logging is off. Turn it on in Settings > Logging." });
+    return;
+  }
+  mark(MARK_LABEL);
+  showToast({ text: "Marked" });
+}
 
 export function themeLabel(theme) {
   return THEME_LABEL[theme] || "Auto";
@@ -130,10 +158,25 @@ function panelToggleHtml(vm) {
     '<use href="/icons.svg#i-panel"></use></svg></button>';
 }
 
+// The command palette button (Cmd+K or Ctrl+K opens it too; keys.js handles data-action="palette-open").
+function paletteHtml() {
+  if (phoneWidth()) return "";
+  return '<button type="button" class="btn" data-action="palette-open" data-focus="palette" aria-haspopup="dialog"' +
+    ' aria-label="Command palette (Cmd+K or Ctrl+K)" title="Command palette (Cmd+K or Ctrl+K)">⌘K</button>';
+}
+
+// The Mark button (localhost only): flag icon and the word, with the full sentence in the name (keys.js handles it).
+function markHtml() {
+  if (!markAllowed() || phoneWidth()) return "";
+  return '<button type="button" class="btn" data-action="mark-bug" data-focus="mark-bug"' +
+    ' aria-label="Mark: ' + MARK_LABEL + '" title="' + MARK_LABEL + ' (m)">' +
+    '<svg class="ico" aria-hidden="true" focusable="false"><use href="/icons.svg#i-flag"></use></svg>Mark</button>';
+}
+
 export function topbarView(vm) {
   const theme = vm.theme || "auto";
   return '<div class="top-row">' + crumbHtml(vm) +
-    '<div class="top-tools">' + controlHtml(vm) + metersHtml(vm) + connHtml(vm.conn) +
+    '<div class="top-tools">' + controlHtml(vm) + metersHtml(vm) + connHtml(vm.conn) + markHtml() + paletteHtml() +
     '<button type="button" class="btn" data-action="cycle-theme" data-focus="theme" aria-label="Theme: ' +
     esc(themeLabel(theme)) + '. Change theme">' + esc(themeLabel(theme)) + "</button>" +
     '<button type="button" class="btn" data-action="help-open" data-focus="help" aria-haspopup="dialog"' +

@@ -4,7 +4,7 @@
 // card per project and Running now (home.js), and the Inbox across projects, grouped by project.
 
 import { esc, meterHtml } from "../dom.js";
-import { fmtCount, fmtTokens, MISSING } from "../format.js";
+import { fmtCount, fmtTokens } from "../format.js";
 import { copyButton, refSummary } from "../ref.js";
 import { homeView } from "./home.js";
 import { inboxHash, inboxPreviewHtml, itemHash, pageState, scopeSnapshots, watchCountdowns } from "./inbox.js";
@@ -21,6 +21,8 @@ const WARN_SHARE = 0.8;
 const WINDOW_WORD = { day: "daily", week: "weekly", total: "total" };
 const ACTIVITY_MAX = 15;
 const PREVIEW_MAX = 5;
+// The word for a value that is not known yet (a bare dash says nothing).
+const UNKNOWN = "unknown";
 
 function round1(n) {
   return Math.round(n * 10) / 10;
@@ -70,7 +72,7 @@ function limitBanner(worst, inProject) {
     '</p><p class="banner-detail">' + esc(detail) + "</p>" + button + "</div>";
 }
 
-// Running or Stopped, with one button (control.stop or control.resume), the same ops the top bar uses.
+// Running or Stopped. Stopped keeps its Resume button; Running has no button here (the top bar holds Stop).
 function controlBanner(vm) {
   const c = vm.control;
   if (!c || !c.known) return "";
@@ -82,16 +84,14 @@ function controlBanner(vm) {
   }
   const title = c.blocked ? "Limit reached; execution paused." : "Running. Agents may start jobs.";
   const detail = c.blocked && c.reason ? '<p class="banner-detail">' + esc(c.reason) + "</p>" : "";
-  return '<div class="banner ov-control"><p class="banner-title">' + esc(title) + "</p>" + detail +
-    '<p class="ov-actions"><button type="button" class="btn" data-action="control" data-op="control.stop" ' +
-    'data-project="' + esc(c.id) + '" data-focus="control"' + offline + ">Stop</button></p></div>";
+  return '<div class="banner ov-control"><p class="banner-title">' + esc(title) + "</p>" + detail + "</div>";
 }
 
 function limitLineHtml(row) {
   const share = row.limit > 0 && row.used != null ? Math.min(100, (row.used / row.limit) * 100) : null;
   const tone = row.state === "block" ? "danger" : row.state === "warn" ? "warning" : "accent";
   const label = (row.scope === "global" ? "All projects" : "This project") + ", " + (WINDOW_WORD[row.window] || "");
-  const text = row.used == null || row.limit == null ? MISSING
+  const text = row.used == null || row.limit == null ? UNKNOWN
     : (row.est ? "≈ " : "") + amountText(row);
   const pace = row.paceAt ? '<p class="mt-pace">Projected limit reached at ' +
     esc(String(row.paceAt).slice(11, 16)) + "</p>" : "";
@@ -106,11 +106,11 @@ function metersBody(snap) {
   if (!snap.meters) return '<p class="placeholder">Usage pending next sync.</p>';
   const rows = snap.meters;
   const today = day && day.value != null ? "Today: " + round1(day.value) + " points of your weekly allowance"
-    : "Today: " + MISSING;
+    : "Today: " + UNKNOWN;
   const thisWeek = week && week.value != null ? "This week: " + round1(week.value) + "% of your weekly allowance"
-    : "This week: " + MISSING;
-  const tokens = "Tokens tracked today " + (day && day.tokK != null ? fmtTokens(day.tokK) : MISSING) +
-    ", this week " + (week && week.tokK != null ? fmtTokens(week.tokK) : MISSING) + ".";
+    : "This week: " + UNKNOWN;
+  const tokens = "Tokens tracked today " + (day && day.tokK != null ? fmtTokens(day.tokK) : UNKNOWN) +
+    ", this week " + (week && week.tokK != null ? fmtTokens(week.tokK) : UNKNOWN) + ".";
   const list = rows.length
     ? '<ul class="mt-list">' + rows.map(limitLineHtml).join("") + "</ul>"
     : '<p class="placeholder">No limits set; full allowance available.</p>';

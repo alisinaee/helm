@@ -84,16 +84,16 @@ function cardHtml(project, snap, task, pos, count) {
     taskCopyHtml(project, snap, task) + "</p></li>";
 }
 
-// Lanes start open. The phone view stacks them, and each one folds with its header button.
-function laneOpen(vm, pid) {
-  const saved = vm.prefsOpen["lane:" + pid];
-  return typeof saved === "boolean" ? saved : true;
+// Lanes start open, except done phases, which start folded. Each one folds with its header button.
+function laneOpen(vm, phase) {
+  const saved = vm.prefsOpen["lane:" + phase.id];
+  return typeof saved === "boolean" ? saved : phase.state !== "done";
 }
 
 function laneHtml(vm, snap, phase) {
   const pid = phase.id;
   const id = esc(pid);
-  const open = laneOpen(vm, pid);
+  const open = laneOpen(vm, phase);
   const tasks = snap.tasks.filter(function (t) {
     return phaseOf(t) === pid && t.state !== "done";
   });
@@ -111,8 +111,8 @@ function laneHtml(vm, snap, phase) {
   const stats = '<div class="lane-stats"><span class="lane-state">' + esc(STATE_WORD[phase.state] || phase.state) +
     "</span>" + '<span class="num">' + esc(fmtCount(phase.done) + "/" + fmtCount(phase.total)) + " done</span>" +
     '<div class="lane-meter">' + meterHtml(pct, phase.state === "done" ? "success" : "accent") + "</div>" +
-    '<span class="num">est ' + esc(est == null ? MISSING : sizeText(est)) + "</span>" +
-    '<span class="num">spent ' + esc(money.spent == null ? MISSING : fmtTokens(money.spent)) + "</span>" +
+    '<span class="num">est ' + esc(est == null ? "unknown" : sizeText(est)) + "</span>" +
+    '<span class="num">spent ' + esc(money.spent == null ? "unknown" : fmtTokens(money.spent)) + "</span>" +
     '<span class="num">' + esc(budget) + "</span></div>";
   const body = cards || '<li class="lane-empty">No open tasks in this phase.</li>';
   return '<li class="lane"><div class="lane-head"><button type="button" class="lane-toggle" aria-expanded="' + open +

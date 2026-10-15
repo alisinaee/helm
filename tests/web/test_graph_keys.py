@@ -1,6 +1,7 @@
 """Keyboard on the workflow diagram canvas (R6.34b).
 
-Checks: the SVG canvas has tabindex 0 (one tab stop) and keeps role and aria-label; every node keeps tabindex 0; the
+Checks: the SVG canvas has tabindex 0 (the one tab stop) and keeps role and aria-label; every node is tabindex -1 (the
+arrow keys focus them, so Tab does not walk the diagram); the
 keydown handler is bound to the SVG, so keys work from the canvas and from a focused node; keyPlan maps + - 0 Escape,
 arrows and Shift+arrows as the spec says (run in node when node is installed); no style or on* attributes are added.
 """
@@ -33,10 +34,11 @@ class CanvasFocusSourceTest(unittest.TestCase):
         self.assertIn('role: "group"', attrs)
         self.assertIn('"aria-label": "Workflow diagram"', attrs)
 
-    def test_nodes_keep_their_own_tab_stop(self):
+    def test_nodes_are_script_focused_not_tab_stops(self):
         render = source("render.js")
-        nodes = re.findall(r'el\("g", \{ class: [^\n]*?tabindex: 0', render)
+        nodes = re.findall(r'el\("g", \{ class: [^\n]*?tabindex: -1', render)
         self.assertGreaterEqual(len(nodes), 4)
+        self.assertIsNone(re.search(r'tabindex: 0', render.replace('tabindex: 0, "aria-label": "Workflow', '')))
 
     def test_keydown_is_bound_to_the_svg(self):
         viewport = source("viewport.js")

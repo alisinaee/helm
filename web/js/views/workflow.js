@@ -437,9 +437,9 @@ function barHtml(it, g, now) {
   const label = it.kind === "job" ? (it.task ? it.task + " " : "") + (it.title || it.job) : it.task || "";
   const title = barTitle(it);
   const live = it.live ? '<rect class="wf-pulse" x="' + (g.x1 - 3) + '" y="' + y + '" width="3" height="26"/>' : "";
-  return '<g class="wf-bar wf-b-' + it.status + (it.live ? " wf-live" : "") + '" tabindex="0" role="button" ' +
+  return '<g class="wf-bar wf-b-' + esc(it.status) + (it.live ? " wf-live" : "") + '" tabindex="0" role="button" ' +
     'aria-label="' + esc(title) + '" data-focus="' + esc(it.key) + '" data-wf-item="' + esc(it.key) +
-    '" data-wf-task="' + esc(it.task || "") + '" data-wf-pid="' + esc(it.pid) + '" data-lane="' + g.lane +
+    '" data-wf-task="' + esc(it.task || "") + '" data-wf-pid="' + esc(it.pid) + '" data-lane="' + esc(g.lane) +
     '" data-x="' + g.x0 + '" data-y="' + g.cy + '"><title>' + esc(title) + '</title><rect x="' + g.x0 + '" y="' + y +
     '" width="' + w + '" height="26" rx="4"/>' + live + '<text x="' + (g.x0 + 6) + '" y="' + (g.cy + 4) + '">' +
     esc(clip(label, Math.floor((w - 10) / 6.6))) + "</text></g>";
@@ -506,7 +506,7 @@ export function timelineSvg(model) {
   const marks = model.marks.map(function (m) {
     const x = X(m.t);
     const cy = m.lane * LANE_H + LANE_H / 2;
-    return '<g class="wf-mark wf-m-' + m.status + '" role="img" aria-label="' + esc(m.label) + '"><title>' +
+    return '<g class="wf-mark wf-m-' + esc(m.status) + '" role="img" aria-label="' + esc(m.label) + '"><title>' +
       esc(m.label) + '</title><path d="M ' + x + " " + (cy - 6) + " L " + (x + 6) + " " + cy + " L " + x + " " +
       (cy + 6) + " L " + (x - 6) + " " + cy + ' Z"/></g>';
   }).join("");
@@ -710,8 +710,10 @@ function mapSvg(kit, ctx) {
     return emptyHtml("No tasks or jobs yet.", "<span>Agents record work with <code class=\"code\">roadmap job start" +
       '</code>.</span> <a href="' + esc(projectHash(ctx.pid, "agents")) + '">Open Agents</a>');
   }
-  const graph = kit.model.buildGraph(ctx.raw, { status: mapList(opts.st), agent: mapList(opts.ag),
-    phase: mapList(opts.ph), expand: true });
+  // With no filter the filtered graph is the expanded one, so it is built once; a filter needs its own build.
+  const filtered = mapList(opts.st).length + mapList(opts.ag).length + mapList(opts.ph).length > 0;
+  const graph = filtered ? kit.model.buildGraph(ctx.raw, { status: mapList(opts.st), agent: mapList(opts.ag),
+    phase: mapList(opts.ph), expand: true }) : all;
   const matched = countOf(graph);
   const flow = kit.layout.flowLayout(graph, { expandAll: showAll, open: folds.open, close: folds.shut });
   const shown = graph.nodes.filter(function (n) {
@@ -760,6 +762,11 @@ function mapSvg(kit, ctx) {
   pendingMap = { graph: graph, flow: flow, lay: flow, pid: ctx.pid, focus: st.focus, view: st.view,
     taps: st.taps,
     onTap: function (node) {
+      const fold = node.getAttribute("data-wf-fold");
+      if (fold) {
+        toggleFrame(fold);
+        return;
+      }
       const key = node.getAttribute("data-wf-item");
       if (key.indexOf("phase:") === 0) {
         toggleFrame(key);
@@ -800,7 +807,10 @@ function mountMaps() {
   const opening = !store.fitted;
   store.fitted = true;
   if (activeMap && activeMap.mini) activeMap.mini.stop();
-  const view = opening ? undefined : st.view;
+  // The old viewport stops first (its glide may still write a view); then the live view is read, not the one the
+  // render captured.
+  if (activeMap && activeMap.api) activeMap.api.destroy();
+  const view = opening ? undefined : store.view;
   const api = graphKit.render.mountMap(host, Object.assign({}, st, { fit: false, view: view }));
   activeMap = { pid: st.pid, api: api, graph: st.graph, flow: st.flow, svg: host.querySelector("svg"),
     focus: st.focus, fold: null, mini: null };
@@ -983,7 +993,9 @@ export function sectionView(vm) {
   const raws = entries.map(function (e) {
     return e.raw;
   });
-  const model = layout(route.name === "project" ? raws[0] : raws, range, nowMs());
+  // The Map draws from graph/model.js, so it skips the Timeline model; only its view, route and empty flags are kept.
+  const model = view === "map" ? { empty: false, jobCount: 0, byKey: new Map() }
+    : layout(route.name === "project" ? raws[0] : raws, range, nowMs());
   model.view = view;
   model.route = route;
   lastModel = model;

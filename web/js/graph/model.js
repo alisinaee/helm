@@ -14,7 +14,7 @@
 // End pseudo-nodes, ids "start" and "end"); sequence (edges task to next task in a phase, and last task of a phase to
 // the first task of the next, from Start and to End; kept apart from the `after` dependency edges); current (the Now
 // point: "task:<id>", "start" or "end"); parallel (groups of two or more active tasks in one phase: doing or partial,
-// or with a running job). A phase node has `collapsed`: true when every live (not deferred) task of the phase is done.
+// or with a running job). A phase node has `collapsed`: true when every task of the phase is done and none is deferred.
 
 export const NODE_CAP = 300;
 export const PILL_MAX = 3;
@@ -97,14 +97,22 @@ function timeOf(task, jobs) {
   return times.length ? Math.min(...times) : null;
 }
 
-// The current point (Now): the first doing task in chain order; else Start when nothing is done yet; else the first
-// task that is neither done nor deferred; else End.
-function currentOf(order) {
+// The current point (Now) over the tasks that remain after the filters, in lane order: the first doing task; else Start
+// when nothing in the project is done yet; else the first todo after the last done task, or the first todo at all;
+// else, when only deferred work is left, the last done task (the last real work); else End. Held and blocked tasks
+// never take Now. `started` is whether any task of the whole project is done, so a filter cannot move Now to Start.
+function currentOf(order, started) {
   const doing = order.find((t) => t.status === "doing");
   if (doing) return "task:" + doing.id;
-  if (!order.some((t) => t.status === "done")) return "start";
-  const next = order.find((t) => t.status !== "done" && t.status !== "defer");
-  return next ? "task:" + next.id : "end";
+  if (!started) return "start";
+  let last = -1;
+  order.forEach((t, i) => {
+    if (t.status === "done") last = i;
+  });
+  const next = order.find((t, i) => i > last && t.status === "todo") || order.find((t) => t.status === "todo");
+  if (next) return "task:" + next.id;
+  if (order.some((t) => t.status === "defer")) return "task:" + order[last].id;
+  return "end";
 }
 
 function pushRow(map, key, row) {
@@ -208,9 +216,9 @@ export function buildGraph(snap, filters) {
 
   const liveDone = new Map();
   tasks.forEach((t) => {
-    if (t.status === "defer") return;
-    const c = liveDone.get(laneKey(t)) || { open: 0, done: 0 };
+    const c = liveDone.get(laneKey(t)) || { open: 0, done: 0, deferred: 0 };
     if (t.status === "done") c.done += 1;
+    else if (t.status === "defer") c.deferred += 1;
     else c.open += 1;
     liveDone.set(laneKey(t), c);
   });
@@ -238,6 +246,7 @@ export function buildGraph(snap, filters) {
     return true;
   });
   const keptIds = new Set(keptTasks.map((t) => t.id));
+  const keptOrder = order.filter((t) => keptIds.has(t.id));
   const lanesOut = laneOrder.filter((id) => (!fPhase || fPhase.has(id)) &&
     (id !== "_" || keptTasks.some((t) => t.phase === null)));
 
@@ -250,7 +259,8 @@ export function buildGraph(snap, filters) {
     const tot = totals.get(id) || { done: 0, total: 0, tokensK: 0 };
     const live = liveDone.get(id);
     nodes.push({ id: "phase:" + id, type: "phase", lane: id, label: info.label, approved: info.approved,
-      done: tot.done, total: tot.total, tokensK: tot.tokensK, collapsed: !!live && live.open === 0 && live.done > 0 });
+      done: tot.done, total: tot.total, tokensK: tot.tokensK,
+      collapsed: !!live && live.open === 0 && live.done > 0 && live.deferred === 0 });
   });
 
   const afterCount = new Map();
@@ -342,7 +352,8 @@ export function buildGraph(snap, filters) {
 
   const firstTimes = tasks.map((t) => timeOf(t, jobsByTask.get(t.id) || [])).filter((x) => x !== null);
   const projectTitle = isObj(raw.project) ? text(raw.project.title) : "";
-  const left = tasks.filter((t) => t.status !== "done" && t.status !== "defer").length;
+  const left = tasks.filter((t) => t.status === "todo" || t.status === "doing").length;
+  const current = currentOf(keptOrder, tasks.some((t) => t.status === "done"));
 
   const stats = { before: nodes.length, after: nodes.length, collapsed: [], capped: false,
     tasks: keptTasks.length, unattachedJobs };
@@ -362,6 +373,10 @@ export function buildGraph(snap, filters) {
   }
   stats.after = finalNodes.length;
   stats.capped = finalNodes.length > NODE_CAP;
+  // A Now task that the cap folded into its phase's collapsed node points at that phase card instead.
+  let now = current;
+  const nowTask = current.indexOf("task:") === 0 ? taskById.get(current.slice(5)) : null;
+  if (nowTask && !finalNodes.some((n) => n.id === current)) now = "phase:" + laneKey(nowTask);
   return {
     nodes: finalNodes,
     edges: finalEdges.filter((e) => e.type !== "sequence"),
@@ -371,7 +386,7 @@ export function buildGraph(snap, filters) {
     start: { id: "start", type: "start", label: projectTitle || "Start",
       date: firstTimes.length ? Math.min(...firstTimes) : null },
     end: { id: "end", type: "end", label: left + " left", left },
-    current: currentOf(order),
+    current: now,
     parallel,
   };
 }

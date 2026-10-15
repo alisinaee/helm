@@ -13,7 +13,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 VIEWS = os.path.join(REPO, "web", "js", "views")
 
 EXPECTED = {
-    "activity.js": ['aria-label="\' + esc("Undo " + (line.sum || line.op || "change"))'],
+    "activity.js": ['aria-label="\' + esc("Undo " + what)'],
     "agents.js": ['aria-label="\' + esc("Task " + job.task)'],
     "board.js": [
         'aria-label="\' + esc("Move task " + task.id + " to Todo")',
@@ -42,11 +42,6 @@ EXPECTED = {
         'aria-label="\' + esc("View task " + entry.item.id)',
         'aria-label="\' + esc("View question " + e.q.id)',
     ],
-    "limits.js": [
-        'aria-label="\' + esc("Delete limit " + id)',
-        'aria-label="\' + esc("Delete limit " + row.id)',
-        'aria-label="\' + esc((sheetOpen ? "Done editing" : "Edit") + " limit " + row.id)',
-    ],
     "list.js": [
         'aria-label="Start selected tasks"',
         'aria-label="Stop selected tasks"',
@@ -58,8 +53,6 @@ EXPECTED = {
 SKIPPED = {
     "board.js": ['aria-controls="wk-filters"'],
     "issues.js": ['aria-controls="iss-list"'],
-    "limits.js": ['aria-controls="\' + esc("lim-prev-"', 'aria-controls="\' + esc("lim-input-"',
-                  'aria-controls="\' + esc("lim-presets"'],
     "nav.js": ['aria-controls="nav-list"'],
 }
 

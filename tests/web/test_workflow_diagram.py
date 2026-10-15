@@ -84,7 +84,7 @@ class DiagramSourceTests(unittest.TestCase):
     def test_viewport_and_render_are_separate_modules(self):
         self.assertTrue(os.path.isfile(os.path.join(GRAPH_DIR, "viewport.js")))
         self.assertTrue(os.path.isfile(os.path.join(GRAPH_DIR, "render.js")))
-        self.assertLessEqual(len(read_text(os.path.join(GRAPH_DIR, "viewport.js")).splitlines()), 460)
+        self.assertLessEqual(len(read_text(os.path.join(GRAPH_DIR, "viewport.js")).splitlines()), 490)
 
 
 class DiagramCssTests(unittest.TestCase):
@@ -182,7 +182,7 @@ class DiagramNodeTests(unittest.TestCase):
             for node in case["nodes"]:
                 self.assertTrue(node["label"], "%s %s has no aria-label" % (name, node["id"]))
                 self.assertEqual(node["role"], "button", name)
-                self.assertEqual(node["tabindex"], "0", name)
+                self.assertEqual(node["tabindex"], "-1", name)
 
     def test_the_viewport_starts_at_the_identity_transform(self):
         for name, case in self.out["cases"].items():

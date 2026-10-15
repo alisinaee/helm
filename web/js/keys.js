@@ -1,6 +1,7 @@
 // Keyboard map (WP28). Keys are ignored while a text field or select has focus, and while Ctrl, Meta or Alt is down.
 // Shell keys: "?" help, "[" collapse the nav, "]" show or hide the panel, "z" undo the newest undoable toast,
-// "Esc" closes the help dialog or the panel sheet, and "g" then a letter goes to a section (g h is All projects).
+// "Esc" closes the help dialog or the panel sheet, "g" then a letter goes to a section (g h is All projects), and
+// "m" marks a bug here (localhost only, R8.21). The top bar Mark and palette buttons are clicks, handled in initKeys.
 // Views add their own keys with bindKey(); the per-item keys (j k Enter s x d h c and so on) arrive with their views.
 
 import { sectionHash, currentRoute, homeHash } from "./router.js";
@@ -8,6 +9,7 @@ import { SECTIONS, SETTINGS } from "./routes.js";
 import { isSheetWidth, loadUi, panelIsOpen, updateUi } from "./state.js";
 import { triggerUndo } from "./views/toast.js";
 import { isPaletteKey } from "./views/palette.js";
+import { markAllowed, markBug } from "./views/topbar.js";
 
 const CHORD_MS = 1000;
 const CHORD_KEYS = { h: "home", o: "overview", i: "inbox", r: "roadmap", w: "work", u: "issues", a: "agents",
@@ -118,6 +120,8 @@ function onKeydown(event) {
     togglePanel();
   } else if (key === "z") {
     if (triggerUndo()) event.preventDefault();
+  } else if (key === "m") {
+    if (markAllowed()) markBug();
   } else if (extra.has(key)) {
     extra.get(key)(event);
   }
@@ -130,6 +134,7 @@ export function helpRows() {
     ["[", "Collapse or expand the navigation"],
     ["]", "Show or hide the side panel"],
     ["z", "Undo the last change"],
+    ["m", "Mark a bug here: notes this screen in the debug log (on this Mac only)"],
     ["Esc", "Close this list, or the panel sheet"],
     ["g then o i r w u a t e n v ,", "Go to a section: Overview, Inbox, Roadmap, Work, Issues, Agents, " +
       "Tokens, Rules, Research, Activity, Settings"],
@@ -137,6 +142,19 @@ export function helpRows() {
   ];
 }
 
+// Top bar buttons that are not app.js actions: the Mark button and the Cmd+K button.
+function onShellClick(event) {
+  const el = event.target && event.target.closest ? event.target.closest("[data-action]") : null;
+  if (!el) return;
+  const action = el.getAttribute("data-action");
+  if (action === "mark-bug") {
+    markBug();
+  } else if (action === "palette-open") {
+    hooks.openPalette();
+  }
+}
+
 export function initKeys() {
   document.addEventListener("keydown", onKeydown);
+  document.addEventListener("click", onShellClick);
 }

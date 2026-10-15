@@ -2,12 +2,15 @@
 .lanes, .lane-cards, .tl, .iss-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); min-width: 0; }
 .lane, .iss-form { display: grid; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); background: var(--surface-1); border-radius: var(--r-card); min-width: 0; }
 .iss-filters { margin-top: var(--sp-3); }
-.lane-head { display: grid; gap: var(--sp-1); min-width: 0; }
+.lane-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-1) var(--sp-2); min-width: 0; }
+.lane-act { --rg: 6.5rem; }
+.rc-move { display: grid; }
+.rc-move > .btn { width: 100%; margin: 0; }
 .lane-toggle { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); min-height: var(--h-row); padding: 0; border: 0; background: none; color: var(--text-1); font: inherit; text-align: left; cursor: pointer; }
-.lane-caret { width: 1em; color: var(--text-3); }
+.lane-caret { width: 24px; text-align: center; color: var(--text-3); }
 .lane-id { font-family: var(--font-mono); font-weight: 600; }
 .lane-name { font-weight: 600; overflow-wrap: anywhere; }
-.lane-stats, .tl-text, .rc-top, .rc-meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); align-items: center; margin: 0; font-size: var(--fs-12); color: var(--text-2); }
+.lane-stats, .tl-text, .rc-top, .rc-meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); align-items: center; margin: 0; font-size: var(--fs-12); color: var(--text-2); grid-column: 1 / -1; }
 .lane-meter { flex: 1 1 8rem; min-width: 6rem; }
 .lane-empty { color: var(--text-3); font-size: var(--fs-12); }
 .lane-cards { display: flex; flex-wrap: wrap; gap: var(--sp-2); }

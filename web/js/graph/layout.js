@@ -631,8 +631,10 @@ export function flowLayout(graph, opts) {
   };
   // The cap: done phases are already cards; then todo phases two or more past Now (furthest first); then every frame
   // but Now's (summary). Show all (expandAll) skips it.
+  // Start (curIdx -1) keeps the first frame open and End the last; the frame kept open is the one the cap spares.
   let capped = false;
   if (o.expandAll !== true && countNodes() > NODE_CAP) {
+    const keep = Math.min(laneIds.length - 1, Math.max(0, curIdx));
     for (let i = laneIds.length - 1; i >= 0 && countNodes() > NODE_CAP; i -= 1) {
       const lane = laneIds[i];
       const ph = phaseOf.get(lane);
@@ -640,8 +642,10 @@ export function flowLayout(graph, opts) {
       if (i >= curIdx + 2 && todo && !open.has(lane)) collapsed.add(lane);
     }
     for (let i = laneIds.length - 1; i >= 0 && countNodes() > NODE_CAP; i -= 1) {
-      if (i !== curIdx) collapsed.add(laneIds[i]);
+      if (i !== keep) collapsed.add(laneIds[i]);
     }
+    // Last resort: one phase alone is over the cap, so Now's frame folds too (its Now point moves to the card).
+    if (countNodes() > NODE_CAP && laneIds.length) collapsed.add(laneIds[keep]);
     capped = countNodes() > NODE_CAP;
   }
 
@@ -705,7 +709,8 @@ export function flowLayout(graph, opts) {
     const lane = laneOf(n);
     const rec = frameRec.get(lane);
     if (!rec) return null;
-    if (rec.collapsed) return { kind: "node", lane, box: rec.box, card: true };
+    // A phase id (Now on a folded task) points at the whole frame: its card when folded, its box when open.
+    if (rec.collapsed || n.type === "phase") return { kind: "node", lane, box: rec.box, card: true };
     const b = boxes[id];
     return b ? { kind: "node", lane, box: b, card: false } : null;
   };

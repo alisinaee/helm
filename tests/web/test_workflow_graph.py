@@ -293,14 +293,45 @@ class WorkflowModelTest(unittest.TestCase):
         tasks = [task("P1.1", "doing"), task("P1.2", "todo")]
         self.assertEqual([], model(snap(tasks))["graph"]["parallel"])
 
-    def test_phase_is_collapsed_only_when_every_live_task_is_done(self):
+    def test_phase_is_collapsed_only_when_every_task_is_done_and_none_deferred(self):
         phases = [{"id": "P1", "title": "One", "approved": True}, {"id": "P2", "title": "Two", "approved": True},
                   {"id": "P3", "title": "Three", "approved": True}]
         tasks = [task("P1.1", "done"), task("P2.1", "done", phase="P2"), task("P2.2", "defer", phase="P2"),
                  task("P3.1", "done", phase="P3"), task("P3.2", "todo", phase="P3")]
         nodes = model(snap(tasks, phases=phases))["graph"]["nodes"]
         flags = {n["lane"]: n["collapsed"] for n in nodes if n["type"] == "phase"}
-        self.assertEqual({"P1": True, "P2": True, "P3": False}, flags)
+        self.assertEqual({"P1": True, "P2": False, "P3": False}, flags)
+
+    def test_now_skips_a_held_task_after_a_done_one(self):
+        g = model(snap([task("P1.1", "done"), task("P1.2", "hold"), task("P1.3", "todo")]))["graph"]
+        self.assertEqual("task:P1.3", g["current"])
+        blocked = model(snap([task("P1.1", "done"), task("P1.2", "block")]))["graph"]
+        self.assertEqual("end", blocked["current"])
+        self.assertEqual("0 left", blocked["end"]["label"])
+
+    def test_left_counts_todo_and_doing_only(self):
+        tasks = [task("P1.1", "done"), task("P1.2", "block"), task("P1.3", "todo"), task("P1.4", "partial"),
+                 task("P1.5", "defer")]
+        self.assertEqual("2 left", model(snap(tasks))["graph"]["end"]["label"])
+
+    def test_deferred_only_work_keeps_now_on_the_last_real_task(self):
+        g = model(snap([task("P1.1", "done"), task("P1.2", "defer")]))["graph"]
+        self.assertEqual("task:P1.1", g["current"])
+        self.assertEqual("0 left", g["end"]["label"])
+
+    def test_now_is_computed_on_the_tasks_left_after_the_filters(self):
+        tasks = [task("P1.0", "done"), task("P1.1", "doing"), task("P1.2", "todo")]
+        g = model(snap(tasks), filters={"status": ["todo"]})["graph"]
+        self.assertEqual("task:P1.2", g["current"])
+        self.assertIn("task:P1.2", [n["id"] for n in g["nodes"]])
+        self.assertEqual("task:P1.1", model(snap(tasks))["graph"]["current"])
+
+    def test_a_now_task_folded_by_the_cap_points_at_its_phase(self):
+        phases = [{"id": "P1", "title": "One", "approved": True}, {"id": "P2", "title": "Two", "approved": True}]
+        tasks = [task("P1.1", "done")] + [task("P2.%d" % k, "defer", phase="P2") for k in range(1, 305)]
+        g = model(snap(tasks, phases=phases))["graph"]
+        self.assertEqual("phase:P1", g["current"])
+        self.assertNotIn("task:P1.1", [n["id"] for n in g["nodes"]])
 
     def test_sequence_survives_the_cap_collapse(self):
         with open(os.path.join(FIXTURES, "350-tasks.json"), encoding="utf-8") as f:

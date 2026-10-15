@@ -16,7 +16,7 @@ ROW_RENDERERS = {
     "running.js": "row-grid run-item",
     "home.js": "row-grid run-row",
     "activity.js": 'class="act-row row-grid"',
-    "limits.js": "lim-head row-grid",
+    "limits.js": "row-grid rg-share",
     "inbox.js": "qc-opts row-grid",
     "issues.js": "iss-top row-grid",
     "projects.js": "p-badges row-grid",

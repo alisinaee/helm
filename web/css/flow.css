@@ -40,18 +40,23 @@
 .nz-kind { font-size: var(--fs-11); color: var(--text-3); }
 .mt-row { display: grid; gap: var(--sp-1); }
 .mt-label, .mt-text, .mt-pace, .mt-line { margin: 0; font-size: var(--fs-12); color: var(--text-2); }
-.act-row { --rg: 6.5rem minmax(0, 1fr) auto; display: grid; grid-template-columns: var(--rg) var(--ref-col); gap: var(--sp-2); align-items: start;
+.act-row { display: grid; grid-template-columns: minmax(0, 1fr) 9.5rem; gap: var(--sp-1) var(--sp-2); align-items: center;
   min-height: var(--h-row); font-size: var(--fs-13); }
+.act-row .btn { white-space: normal; width: 100%; margin: 0; }
 .act-time { color: var(--text-3); font-size: var(--fs-12); }
-.act-main { min-width: 0; overflow-wrap: anywhere; color: var(--text-1); }
+.act-main { grid-area: 2 / 1 / 3 / 3; min-width: 0; overflow-wrap: anywhere; color: var(--text-1); }
 .act-sum { font-weight: 500; }
 
 /* Phone: one column, touch targets of 44 px. */
 @media (max-width: 599px) {
   .qc-opt, .ov-actions .btn, .act-row .btn { min-height: 44px; }
   .qc-opts > .btn { margin-left: 0; }
-  .act-row { grid-template-columns: minmax(0, 1fr); }
-  .act-row .btn { justify-self: start; }
+  .row-grid.rg-agent { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto var(--ref-col); }
+  .row-grid.rg-head { display: none; }
+  .rg-agent>:nth-child(1) { grid-area: 1/1; } .rg-agent>:nth-child(2) { grid-area: 1/2/2/6; contain: inline-size; }
+  .rg-agent>:nth-child(3) { grid-area: 2/2; } .rg-agent>:nth-child(4) { grid-area: 2/3; }
+  .rg-agent>:nth-child(5) { grid-area: 2/4; } .rg-agent>:nth-child(6) { grid-area: 2/5; }
+  .rg-agent>:nth-child(7) { grid-area: 1/6; }
 }
 
 /* Agents, Research (WP34). */

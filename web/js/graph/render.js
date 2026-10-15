@@ -62,16 +62,18 @@ function push(map, key, value) {
   map.get(key).push(value);
 }
 
-// The ids reachable from key, following edges forward (downstream) or backward (upstream), over all edge types.
+// The ids reachable from key, following edges forward (downstream) or backward (upstream), over all edge types. The
+// adjacency is built once, and the queue is read by index (no shift).
 function reach(edges, start, forward) {
+  const next = new Map();
+  edges.forEach(function (e) {
+    push(next, forward ? e.from : e.to, forward ? e.to : e.from);
+  });
   const seen = new Set([start]);
   const queue = [start];
-  while (queue.length) {
-    const cur = queue.shift();
-    edges.forEach(function (e) {
-      const from = forward ? e.from : e.to;
-      const to = forward ? e.to : e.from;
-      if (from === cur && !seen.has(to)) {
+  for (let i = 0; i < queue.length; i += 1) {
+    (next.get(queue[i]) || []).forEach(function (to) {
+      if (!seen.has(to)) {
         seen.add(to);
         queue.push(to);
       }
@@ -147,7 +149,7 @@ function taskNode(n, p, pid) {
   const x = p.x;
   const y = p.y;
   const lines = titleLines(n.title || n.label, TITLE_CHARS);
-  return el("g", { class: "wfg-n wfg-task wfg-s-" + st, tabindex: 0, role: "button", "aria-label": nodeLabel(n),
+  return el("g", { class: "wfg-n wfg-task wfg-s-" + st, tabindex: -1, role: "button", "aria-label": nodeLabel(n),
     "data-wf-item": n.id, "data-wf-task": n.task || "", "data-wf-pid": pid, "data-cx": x + p.w / 2,
     "data-cy": y + p.h / 2 }, [
     el("title", null, [txt(n.title || n.label || n.id)]),
@@ -164,7 +166,7 @@ function taskNode(n, p, pid) {
 function jobNode(n, p, pid) {
   const cls = "wfg-n wfg-pill wfg-m-" + (n.model || "other") + (n.running ? " wfg-run" : "");
   const label = n.more ? "+" + n.more : clip(n.label, 5);
-  return el("g", { class: cls, tabindex: 0, role: "button", "aria-label": nodeLabel(n),
+  return el("g", { class: cls, tabindex: -1, role: "button", "aria-label": nodeLabel(n),
     "data-wf-item": n.id, "data-wf-task": n.task || "", "data-wf-pid": pid,
     "data-cx": p.x + p.w / 2, "data-cy": p.y + p.h / 2 }, [
     el("rect", Object.assign({ rx: 10 }, boxAttrs(p))),
@@ -179,7 +181,7 @@ function issueNode(n, p, pid) {
   const h = p.h;
   const d = "M" + (x + 10) + " " + y + "L" + (x + w - 10) + " " + y + "L" + (x + w) + " " + (y + h / 2) +
     "L" + (x + w - 10) + " " + (y + h) + "L" + (x + 10) + " " + (y + h) + "L" + x + " " + (y + h / 2) + "Z";
-  return el("g", { class: "wfg-n wfg-issue wfg-s-blocked", tabindex: 0, role: "button", "aria-label": nodeLabel(n),
+  return el("g", { class: "wfg-n wfg-issue wfg-s-blocked", tabindex: -1, role: "button", "aria-label": nodeLabel(n),
     "data-wf-item": n.id, "data-wf-task": n.task || "", "data-wf-pid": pid, "data-cx": x + w / 2,
     "data-cy": y + h / 2 }, [
     el("path", { class: "wfg-box", d: d }),
@@ -188,7 +190,7 @@ function issueNode(n, p, pid) {
 }
 
 function queueNode(n, p, pid) {
-  return el("g", { class: "wfg-n wfg-queue", tabindex: 0, role: "button", "aria-label": nodeLabel(n),
+  return el("g", { class: "wfg-n wfg-queue", tabindex: -1, role: "button", "aria-label": nodeLabel(n),
     "data-wf-item": n.id, "data-wf-task": "", "data-wf-pid": pid, "data-cx": p.x + p.w / 2,
     "data-cy": p.y + p.h / 2 }, [
     el("rect", Object.assign({ rx: 10 }, boxAttrs(p))),
@@ -198,7 +200,7 @@ function queueNode(n, p, pid) {
 
 // A folded phase's done tasks: one focusable node with no task to open.
 function collapseNode(n, p, pid) {
-  return el("g", { class: "wfg-n wfg-task wfg-s-done", tabindex: 0, role: "button", "aria-label": n.label,
+  return el("g", { class: "wfg-n wfg-task wfg-s-done", tabindex: -1, role: "button", "aria-label": n.label,
     "data-wf-item": n.id, "data-wf-task": "", "data-wf-pid": pid, "data-cx": p.x + p.w / 2,
     "data-cy": p.y + p.h / 2 }, [
     el("rect", Object.assign({ class: "wfg-box", rx: 6 }, boxAttrs(p))),
@@ -210,7 +212,7 @@ function collapseNode(n, p, pid) {
 // A folded phase: a 200 by 56 card with its progress and an expand glyph. The card is the node for that frame.
 function cardNode(f, p, pid) {
   const st = f.total > 0 && f.done >= f.total ? "done" : "todo";
-  return el("g", { class: "wfg-n wfg-card wfg-s-" + st, tabindex: 0, role: "button",
+  return el("g", { class: "wfg-n wfg-card wfg-s-" + st, tabindex: -1, role: "button",
     "aria-label": frameLabel(f) + ", folded. Expand", "data-wf-item": f.id, "data-wf-task": "", "data-wf-pid": pid,
     "data-cx": p.x + p.w / 2, "data-cy": p.y + p.h / 2 }, [
     el("rect", { class: "wfg-box", rx: 8, x: p.x, y: p.y, width: p.w, height: p.h }),
@@ -236,8 +238,9 @@ function frameBand(f) {
 // The fold toggle of an open phase, placed before the phase's first node in focus order.
 function foldNode(f, pid) {
   const s = f.slot;
-  return el("g", { class: "wfg-fold", tabindex: 0, role: "button", "aria-label": "Collapse phase " + f.label,
-    "aria-expanded": "true", "data-wf-fold": f.id, "data-wf-pid": pid }, [
+  return el("g", { class: "wfg-fold", tabindex: -1, role: "button", "aria-label": "Collapse phase " + f.label,
+    "aria-expanded": "true", "data-wf-fold": f.id, "data-wf-pid": pid,
+    "data-cx": s.x + s.w / 2, "data-cy": s.y + s.h / 2 }, [
     el("rect", { class: "wfg-fold-box", x: s.x, y: s.y, width: s.w, height: s.h, rx: 4 }),
     el("text", { class: "wfg-glyph", x: s.x + s.w / 2, y: s.y + 16, "text-anchor": "middle" }, [txt(FOLD_OPEN)]),
   ]);
@@ -245,7 +248,7 @@ function foldNode(f, pid) {
 
 // Start and End: pills at the ends of the path. Start shows the project and its first date; End shows "n left".
 function endpointNode(id, p, pid, label, sub) {
-  return el("g", { class: "wfg-n wfg-end wfg-" + id, tabindex: 0, role: "button",
+  return el("g", { class: "wfg-n wfg-end wfg-" + id, tabindex: -1, role: "button",
     "aria-label": sub ? label + ", " + sub : label, "data-wf-item": id, "data-wf-task": "", "data-wf-pid": pid,
     "data-cx": p.x + p.w / 2, "data-cy": p.y + p.h / 2 }, [
     el("rect", { class: "wfg-pill-box", rx: 22, x: p.x, y: p.y, width: p.w, height: p.h }),
@@ -428,8 +431,9 @@ export function buildMap(graph, lay, pid) {
   vp.appendChild(el("g", { class: "wfg-bands" }, bands));
   vp.appendChild(el("g", { class: "wfg-edges" }, edges));
   vp.appendChild(el("g", { class: "wfg-nodes" }, nodes.concat(nowMarks(flow.now))));
-  // tabindex 0 puts the canvas itself in the tab order (one stop, before the nodes) so + - 0 Escape work from it;
-  // the nodes keep their own tabindex 0. The global :focus-visible outline in base.css is the focus ring.
+  // tabindex 0 puts the canvas itself in the tab order: the one tab stop, so + - 0 Escape work from it. The nodes are
+  // tabindex -1 and take focus from the arrow keys (viewport.js), which keeps Tab from walking every node.
+  // The global :focus-visible outline in base.css is the focus ring.
   const svg = el("svg", { class: "wfg-svg", role: "group", tabindex: 0, "aria-label": "Workflow diagram",
     "aria-describedby": "wf-legend" }, [defs, vp]);
   return { svg: svg, vp: vp, box: { w: flow.width || 0, h: flow.height || 0 } };

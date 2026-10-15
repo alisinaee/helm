@@ -20,7 +20,8 @@ export function nextSection(vm) {
     ? '<ol class="next-list">' + items.map(function (item) {
       return "<li>" + esc(item) + "</li>";
     }).join("") + "</ol>"
-    : '<p class="placeholder">Queue is empty.</p>';
+    : '<p class="placeholder">Nothing is queued. <a href="#/p/' + esc(vm.route.id) +
+      '/roadmap">Open Roadmap</a> to see the open tasks.</p>';
   const html = sectionHtml({
     id: "next",
     title: "Next up",
