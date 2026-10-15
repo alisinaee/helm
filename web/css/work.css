@@ -1,6 +1,6 @@
 /* Work section (WP31): board, list, tree, filters, bulk bar. Tokens only. */
 .wk{display:grid;gap:var(--sp-3);min-width:0}
-.wk-top,.wk-filters,.wk-groupbar,.wk-bulk,.wk-chips,.wk-card-top,.wk-acts,.wk-tree-row,.wk-field{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
+.wk-top,.wk-filters,.wk-groupbar,.wk-bulk,.wk-chips,.wk-card-top,.wk-acts,.wk-field{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
 .wk-views button,.wk-tab,.wk-chip,.wk-sort,.wk-phase-btn,.wk-menu summary{font:inherit;color:var(--text-2);background:var(--surface-1);border:1px solid var(--line);border-radius:var(--r-control);min-height:var(--h-control);padding:0 var(--sp-2);cursor:pointer}
 .wk-views button[aria-pressed=true],.wk-tab[aria-pressed=true],.wk-chip[aria-pressed=true]{background:var(--sel);color:var(--accent);border-color:var(--accent)}
 .wk :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
@@ -30,17 +30,20 @@
 .wk-bulk-count{margin:0;font-size:var(--fs-13);color:var(--text-1)}
 .wk-tablewrap{overflow-x:auto}
 .wk-table{width:100%;border-collapse:collapse;font-size:var(--fs-13)}
-.wk-table th,.wk-table td{height:var(--h-row);padding:0 var(--sp-2);border-bottom:1px solid var(--track);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-2)}
+.wk-table th,.wk-table td{height:var(--h-row);padding:0 var(--sp-1);border-bottom:1px solid var(--track);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-2)}
 .wk-table th{color:var(--text-3);font-size:var(--fs-12)}
-.wk-table .wk-c-title{max-width:360px}
-.wk-table .wk-c-title a{color:var(--text-1);text-decoration:none}
+.wk-table{table-layout:fixed}
+.wk-table .wk-c-title a{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-1);text-decoration:none}
+.wk-c-sel{width:2rem}.wk-c-id{width:4.5rem}.wk-c-phase{width:3rem}.wk-c-status,.wk-c-model{width:4.5rem}
+.wk-c-est,.wk-c-spent,.wk-c-cap{width:3.75rem;text-align:right}.wk-c-flags{width:6.5rem}
+.wk-c-ref,.wk-table th.wk-c-ref{width:var(--ref-col);padding:0}
 .wk-sort{min-height:var(--h-small);border:0;background:none;padding:0;color:var(--text-3)}
 .wk-group-head th{background:var(--surface-2);color:var(--text-1)}
 .wk-phase{border-bottom:1px solid var(--track);padding:var(--sp-2) 0}
-.wk-phase-h{margin:0 0 var(--sp-2);font-size:var(--fs-13)}
-.wk-phase-btn{display:flex;align-items:center;gap:var(--sp-2);width:100%;text-align:left}
+.wk-phase-h{display:grid;grid-template-columns:minmax(0,1fr) var(--ref-col);align-items:center;margin:0 0 var(--sp-2);font-size:var(--fs-13)}
+.wk-phase-btn{display:grid;grid-template-columns:1rem 4.5rem minmax(0,1fr) 4.5rem;column-gap:var(--sp-2);align-items:center;width:100%;text-align:left}
 .wk-tree-task{padding:var(--sp-1) 0 var(--sp-1) var(--sp-4)}
-.wk-tree-row{font-size:var(--fs-13)}
+.wk-tree-row{--rg:4.5rem minmax(0,1fr) 6.5rem 8rem;font-size:var(--fs-13)}
 .wk-sub{display:flex;gap:var(--sp-2);align-items:center;font-size:var(--fs-13);color:var(--text-2);min-height:var(--h-small)}
 @media (max-width:767px){
 .wk-board{display:block}
@@ -51,7 +54,15 @@
 .wk-card .wk-acts{opacity:1}
 .wk-table thead,.wk-c-sel,.wk-c-phase,.wk-c-est,.wk-c-spent,.wk-c-cap,.wk-bulk{display:none}
 .wk-table tr{display:flex;flex-wrap:wrap;gap:4px var(--sp-2);padding:var(--sp-2) 0;min-height:44px;border-bottom:1px solid var(--track)}
-.wk-table td,.wk-table th{height:auto;border:0;padding:0;white-space:normal}
-.wk-table .wk-c-title{order:2;flex:1 1 100%;max-width:none}
+.wk-table{table-layout:auto}
+.wk-table td,.wk-table th{height:auto;border:0;padding:0;white-space:normal;width:auto}
+.wk-table .wk-c-title{order:2;flex:1 1 100%;width:auto}
+.wk-table .wk-c-ref{order:3;width:auto;margin-left:auto}
 .wk-table .wk-group-head{display:block}
+.wk-tree-row{display:grid;grid-template-columns:4.5rem minmax(0,1fr) var(--ref-col);row-gap:2px}
+.wk-tree-row>.wk-id{grid-column:1;grid-row:1}
+.wk-tree-row>.wk-title{grid-column:2;grid-row:1}
+.wk-tree-row>.ref-copy{grid-column:3;grid-row:1}
+.wk-tree-row>.wk-word,.wk-tree-row>.rg-chips{grid-column:2;grid-row:2}
+.wk-tree-row>.rg-chips{justify-self:end}
 }
