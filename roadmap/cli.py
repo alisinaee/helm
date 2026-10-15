@@ -17,6 +17,7 @@ COMMAND_MODULES = (
     "project",
     "job",
     "task",
+    "backlog",
     "plan",
     "issue",
     "subtask",

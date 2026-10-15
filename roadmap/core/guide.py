@@ -28,7 +28,8 @@ _LINES = (
     "Plan text: one record per line; a task id is <phase>.<n>",
     "P <id> <status> | <name>",
     "T <id> <status> <tokensK> <model>/<thinking> [!] [c:<check>/<checkK>] | <title> [# <note>]",
-    "status: todo, partial, done, hold or -. model: haiku, sonnet, opus or -. thinking: low, medium, high or -.",
+    "status: todo, partial, done, hold, backlog or -. "
+    "model: haiku, sonnet, opus or -. thinking: low, medium, high or -.",
     "Example: P P1 todo | Foundations",
     "Example: T P1.1 todo 20 haiku/low | Scaffold repo and lint",
     "Example: T P1.2 todo 5 haiku/low ! | Create the hosting account # needs your login",

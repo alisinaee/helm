@@ -165,7 +165,7 @@ class ParseSetLineTests(unittest.TestCase):
 
     def test_errors_name_the_problem_and_the_allowed_values(self):
         cases = {
-            "P2.4 status=finished": "status 'finished' is not valid (allowed: todo|partial|done|hold|-)",
+            "P2.4 status=finished": "status 'finished' is not valid (allowed: todo|partial|done|hold|backlog|-)",
             "P2.4 colour=red": "unknown key 'colour' (allowed: status, tokensK",
             "P2.4 status=done status=todo": "key 'status' is given twice",
             "P2.4": "no fields to change",
