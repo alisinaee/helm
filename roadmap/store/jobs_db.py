@@ -4,14 +4,16 @@ services/jobs.py says sqlite.
 start, finish, list and claim. Every write is one IMMEDIATE transaction: the jobs row and its event (events.append)
 commit together or not at all. The full job record lives in the data column, shaped like a jobs.json entry.
 claim is single-flight per task: while a job runs on the task, a second claim returns that job unchanged.
-Files of an edit job are required; only review and audit jobs may claim with no files.
+Files of an edit job are required; only review and audit jobs may claim with no files. A claim leases its files in
+the same transaction (refused with a conflict when another live job holds one), and finish releases the job's
+leases in its transaction.
 """
 
 import json
 import re
 
 from roadmap.errors import EXIT_CONFLICT, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
-from roadmap.services import jobs
+from roadmap.services import jobs, leases
 from roadmap.store import db, events
 
 KINDS = ("edit", "review", "audit")
@@ -137,6 +139,7 @@ def finish(data_dir, job_id, status, note=None, tokens_k=None, reason=None):
                 job["reason"] = clean_reason
             _save(conn, job)
             events.append(conn, "job.finished", "job", wanted, {"status": status, "tokensK": job.get("tokensK")})
+            leases.release(conn, wanted)
         _after_finish(data_dir, conn, job, status)
     finally:
         conn.close()
@@ -193,6 +196,10 @@ def claim(data_dir, task, files, worker, kind="edit", title=None, model="unknown
             job = {"id": _next_id(conn), "title": clean_title, "model": clean_model, "task": clean_task,
                    "status": "running", "started": jobs._now_iso(), "ended": None,
                    "worker": clean_worker, "kind": clean_kind, "files": clean_files}
+            held = leases.acquire(conn, job["id"], clean_files, event=False)
+            if not held["ok"]:
+                raise RoadmapError("conflict", "files held by " + held["job"] + ": " + ", ".join(held["files"]),
+                                   EXIT_CONFLICT)
             _save(conn, job)
             events.append(conn, "job.claimed", "job", job["id"], {"task": clean_task, "worker": clean_worker,
                                                                   "kind": clean_kind, "files": clean_files})

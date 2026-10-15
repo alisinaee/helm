@@ -5,8 +5,9 @@ job refuses the request, and the refusal names that job and the files. heartbeat
 its heartbeat time, release() frees them, expired() lists the leases whose time has run out.
 
 Callers run these inside db.txn(); each lease change appends its event in that same transaction. A lease
-whose job is no longer running, or whose time has run out, does not block anyone. Not wired into the service
-yet (S2 does that).
+counts while its job is queued, claimed or running and its time has not run out; a lease of a finished, failed
+or deleted job (or an expired one) does not block anyone. drop_expired also removes leases whose job row is gone.
+Not wired into the service yet (S2 does that).
 """
 
 import json
@@ -15,6 +16,7 @@ import time
 from roadmap.store import events
 
 DEFAULT_TTL_S = 180.0
+LIVE_JOB_STATUSES = ("queued", "claimed", "running")
 
 
 def _now(now):
@@ -27,12 +29,14 @@ def _job_status(conn, job_id):
 
 
 def _live(conn, row, now):
-    """True when a lease row still holds its file: its time has not run out and its job still runs."""
-    return float(row["expires"]) > now and _job_status(conn, row["job_id"]) == "running"
+    """True when a lease row still holds its file: its time has not run out and its job is queued, claimed or
+    running."""
+    return float(row["expires"]) > now and _job_status(conn, row["job_id"]) in LIVE_JOB_STATUSES
 
 
-def acquire(conn, job_id, files, ttl_s=DEFAULT_TTL_S, now=None):
-    """Lease every file for job_id, all or nothing.
+def acquire(conn, job_id, files, ttl_s=DEFAULT_TTL_S, now=None, event=True):
+    """Lease every file for job_id, all or nothing. event=False leaves the event to the caller (a claim records
+    its files in its own job.claimed event).
 
     Returns {"ok": True, "files": [...]} when every file is leased. Otherwise returns
     {"ok": False, "job": <first conflicting job id>, "files": [its files], "conflicts": {job: [files]}}
@@ -53,7 +57,8 @@ def acquire(conn, job_id, files, ttl_s=DEFAULT_TTL_S, now=None):
     for name in wanted:
         conn.execute("INSERT OR REPLACE INTO leases (file, job_id, acquired, expires) VALUES (?, ?, ?, ?)",
                      (name, job_id, now_s, expires))
-    events.append(conn, "lease.acquired", "job", job_id, {"files": wanted})
+    if event:
+        events.append(conn, "lease.acquired", "job", job_id, {"files": wanted})
     return {"ok": True, "files": wanted}
 
 
@@ -89,19 +94,26 @@ def expired(conn, now=None):
 
 
 def drop_expired(conn, now=None):
-    """Delete the expired leases and append one lease.expired event per job. Returns the files dropped."""
+    """Delete the expired leases and the leases whose job row is gone, one lease.expired event per job. Returns
+    the files dropped."""
     gone = expired(conn, now)
     by_job = {}
     for item in gone:
         by_job.setdefault(item["job_id"], []).append(item["file"])
         conn.execute("DELETE FROM leases WHERE file = ?", (item["file"],))
+    orphans = conn.execute("SELECT file, job_id FROM leases WHERE job_id NOT IN (SELECT id FROM jobs)"
+                           " ORDER BY file").fetchall()
+    for row in orphans:
+        by_job.setdefault(row["job_id"], []).append(row["file"])
+    if orphans:
+        conn.execute("DELETE FROM leases WHERE job_id NOT IN (SELECT id FROM jobs)")
     for job_id in sorted(by_job):
-        events.append(conn, "lease.expired", "job", job_id, {"files": by_job[job_id]})
-    return [item["file"] for item in gone]
+        events.append(conn, "lease.expired", "job", job_id, {"files": sorted(by_job[job_id])})
+    return [item["file"] for item in gone] + [row["file"] for row in orphans]
 
 
 def held_files(conn, now=None):
-    """Files under a live lease (time not run out, job still running), as a set."""
+    """Files under a live lease (time not run out, job queued, claimed or running), as a set."""
     now_s = _now(now)
     rows = conn.execute("SELECT file, job_id, expires FROM leases WHERE expires > ?", (now_s,)).fetchall()
-    return {r["file"] for r in rows if _job_status(conn, r["job_id"]) == "running"}
+    return {r["file"] for r in rows if _job_status(conn, r["job_id"]) in LIVE_JOB_STATUSES}

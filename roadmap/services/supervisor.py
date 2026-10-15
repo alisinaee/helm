@@ -4,31 +4,43 @@ nothing due changes nothing.
 
 Steps, each state change in its own transaction with its event:
   1 reap: running jobs with no heartbeat for HEARTBEAT_TTL_S -> failed ("no heartbeat"); leases freed.
-  2 leases: leases past their expiry are dropped.
-  3 retry: a failed job is re-queued on the same task as a queued job (max MAX_RETRIES retries, backoff 60 s then
-    300 s). After the last retry, the task's asks go to needs-you.
-  4 fold: tasks whose jobs are all done and that have a commit ref -> done; open asks whose tasks are all done ->
-    closed by auto, with the commit shas in the note.
-next_launches() returns the queued jobs to start next: priority P0..P3 (default P2), then age, skipping jobs whose
-task already runs or whose files are leased. Not wired into the service yet (S2 does that).
+  2 leases: leases past their expiry (or whose job is gone) are dropped.
+  3 retry: a failed job whose cause is lost ("no heartbeat") or engine unavailable is re-queued on the same task as a
+    queued job (max MAX_RETRIES retries, backoff 2 min then 10 min). Any other failure, and a job whose retries are
+    used up, sends the task's asks to needs-you.
+  4 fold: tasks whose latest done job carries a commit ref, and whose other jobs are done or superseded by a later
+    done job -> done; open asks whose tasks are all done -> closed by auto, with the commit shas in the note.
+next_launches() picks the queued jobs to start next: priority P0..P3 (default P2), then age, skipping jobs whose
+task already runs or whose files are leased. Each pick is reserved in the caller's transaction: its status goes
+queued -> claimed and its files are leased. Not wired into the service yet (S2 does that).
 """
 
 import datetime
 import json
+import logging
+import math
 import time
 import uuid
 
-from roadmap.services import leases
+from roadmap.services import jobs, leases
 from roadmap.store import db, events, jobs_db
 
 HEARTBEAT_TTL_S = 180.0
 MAX_RETRIES = 2
-BACKOFF_S = (60.0, 300.0)
+BACKOFF_S = (120.0, 600.0)
 LOCK_KEY = "supervisor.lock"
 LOCK_TTL_S = 60.0
 PRIORITIES = ("P0", "P1", "P2", "P3")
 DEFAULT_PRIO = "P2"
 HAND_STATUSES = ("merged", "declined", "needs-you", "done")
+LOST_REASON = "no heartbeat"
+DONE_EXCLUDED = ("done", "cancelled")
+LIVE_JOB_STATUSES = ("running", "claimed")
+
+if leases.DEFAULT_TTL_S < HEARTBEAT_TTL_S:  # a lease must outlive a live job's heartbeat window
+    raise RuntimeError("leases.DEFAULT_TTL_S must be at least HEARTBEAT_TTL_S")
+
+_log = logging.getLogger(__name__)
 
 
 def _now(now):
@@ -46,6 +58,21 @@ def _epoch_of_iso(text):
         return None
 
 
+def _beat_epoch(value):
+    """Epoch seconds of a heartbeat value (a number, or numeric or ISO text); None when it is none of these."""
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        number = float(value)
+    else:
+        text = str(value).strip()
+        try:
+            number = float(text)
+        except ValueError:
+            return _epoch_of_iso(text)
+    return number if math.isfinite(number) else None
+
+
 def _prio_rank(job):
     prio = str(job.get("prio") or DEFAULT_PRIO)
     return PRIORITIES.index(prio) if prio in PRIORITIES else PRIORITIES.index(DEFAULT_PRIO)
@@ -53,6 +80,12 @@ def _prio_rank(job):
 
 def _commit_shas(data):
     return [str(r)[len("commit:"):][:7] for r in (data or {}).get("refs") or [] if str(r).startswith("commit:")]
+
+
+def _retryable(reason):
+    """A failure is retried only when its cause is lost (no heartbeat) or the engine is unavailable."""
+    text = str(reason or "")
+    return text == LOST_REASON or bool(jobs._UNAVAILABLE_RE.search(text))
 
 
 def _set_task_status(conn, task_id, status):
@@ -81,18 +114,28 @@ def _reap(conn, now):
     rows = conn.execute("SELECT data FROM jobs WHERE status = 'running' ORDER BY rowid").fetchall()
     for row in rows:
         job = json.loads(row["data"])
-        beat = job.get("heartbeat")
-        if beat is None:
+        if job.get("heartbeat") is not None:
+            beat = _beat_epoch(job["heartbeat"])
+            if beat is None:
+                _log.warning("supervisor: job %s has a bad heartbeat %r; skipped", job.get("id"), job["heartbeat"])
+                continue
+        else:
             beat = _epoch_of_iso(job.get("started"))
-        if beat is None or now - float(beat) <= HEARTBEAT_TTL_S:
+        if beat is None or now - beat <= HEARTBEAT_TTL_S:
             continue
-        job.update({"status": "failed", "ended": _iso(now), "failed_at": now, "reason": "no heartbeat"})
+        job.update({"status": "failed", "ended": _iso(now), "failed_at": now, "reason": LOST_REASON})
         jobs_db._save(conn, job)
         leases.release(conn, job["id"])
-        events.append(conn, "job.failed", "job", job["id"], {"reason": "no heartbeat", "task": job.get("task")})
+        events.append(conn, "job.failed", "job", job["id"], {"reason": LOST_REASON, "task": job.get("task")})
         _reset_partial(conn, job.get("task"))
         reaped.append(job["id"])
     return reaped
+
+
+def needs_you_tasks(conn):
+    """Task ids marked needs-you by an escalation, read from the store with SQL (no migration needed)."""
+    rows = conn.execute("SELECT id FROM tasks WHERE json_extract(data, '$.needs_you') = 1 ORDER BY rowid")
+    return [r["id"] for r in rows.fetchall()]
 
 
 def _task_needs_you(conn, task_id, job_id):
@@ -113,55 +156,74 @@ def _task_needs_you(conn, task_id, job_id):
     events.append(conn, "task.needs_you", "task", task_id, {"job": job_id})
 
 
+def _escalate(conn, job, task, needs_you):
+    job["escalated"] = True
+    jobs_db._save(conn, job)
+    _task_needs_you(conn, task, job["id"])
+    needs_you.append(task)
+
+
+def _later_done(conn, task, seq):
+    row = conn.execute("SELECT 1 FROM jobs WHERE task = ? AND status = 'done' AND rowid > ?", (task, seq)).fetchone()
+    return row is not None
+
+
 def _retry(conn, now):
     queued, needs_you = [], []
-    rows = conn.execute("SELECT data FROM jobs WHERE status = 'failed' ORDER BY rowid").fetchall()
+    rows = conn.execute("SELECT rowid AS seq, data FROM jobs WHERE status = 'failed' ORDER BY rowid").fetchall()
     for row in rows:
         job = json.loads(row["data"])
         task = job.get("task")
-        if not task or job.get("retried_by") or job.get("escalated"):
+        if not task or job.get("retried_by") or job.get("escalated") or _later_done(conn, task, row["seq"]):
             continue
         attempt = int(job.get("attempt") or 1)
-        if attempt <= MAX_RETRIES:
-            failed_at = job.get("failed_at")
-            if failed_at is None:
-                failed_at = _epoch_of_iso(job.get("ended"))
-            failed_at = now if failed_at is None else float(failed_at)
-            wait = BACKOFF_S[min(attempt - 1, len(BACKOFF_S) - 1)]
-            new_id = jobs_db._next_id(conn)
-            new = {"id": new_id, "title": job["title"], "model": job["model"], "task": task, "status": "queued",
-                   "started": None, "ended": None, "kind": job.get("kind") or "edit",
-                   "files": list(job.get("files") or []), "prio": job.get("prio") or DEFAULT_PRIO,
-                   "attempt": attempt + 1, "retry_of": job["id"], "queued_at": now,
-                   "not_before": failed_at + wait}
-            if job.get("worker"):
-                new["worker"] = job["worker"]
-            jobs_db._save(conn, new)
-            job["retried_by"] = new_id
-            jobs_db._save(conn, job)
-            events.append(conn, "job.queued", "job", new_id, {"task": task, "retry_of": job["id"],
-                                                             "attempt": attempt + 1, "not_before": new["not_before"]})
-            queued.append(new_id)
-        else:
-            job["escalated"] = True
-            jobs_db._save(conn, job)
-            _task_needs_you(conn, task, job["id"])
-            needs_you.append(task)
+        if not _retryable(job.get("reason")) or attempt > MAX_RETRIES:
+            _escalate(conn, job, task, needs_you)
+            continue
+        failed_at = job.get("failed_at")
+        if failed_at is None:
+            failed_at = _epoch_of_iso(job.get("ended"))
+        failed_at = now if failed_at is None else float(failed_at)
+        wait = BACKOFF_S[min(attempt - 1, len(BACKOFF_S) - 1)]
+        new_id = jobs_db._next_id(conn)
+        new = {"id": new_id, "title": job["title"], "model": job["model"], "task": task, "status": "queued",
+               "started": None, "ended": None, "kind": job.get("kind") or "edit",
+               "files": list(job.get("files") or []), "prio": job.get("prio") or DEFAULT_PRIO,
+               "attempt": attempt + 1, "retry_of": job["id"], "queued_at": now,
+               "not_before": failed_at + wait}
+        if job.get("worker"):
+            new["worker"] = job["worker"]
+        jobs_db._save(conn, new)
+        job["retried_by"] = new_id
+        jobs_db._save(conn, job)
+        events.append(conn, "job.queued", "job", new_id, {"task": task, "retry_of": job["id"],
+                                                         "attempt": attempt + 1, "not_before": new["not_before"]})
+        queued.append(new_id)
     return queued, needs_you
 
 
 def _fold_tasks(conn):
+    """A task is done when its latest done job carries a commit ref (bound to this task's own jobs) and every other
+    job of the task is done, cancelled, or a failure superseded by a later done job."""
     done = []
-    rows = conn.execute("SELECT id, data FROM tasks WHERE status != 'done' ORDER BY rowid").fetchall()
+    rows = conn.execute("SELECT id FROM tasks WHERE status != 'done' ORDER BY rowid").fetchall()
     for row in rows:
-        data = json.loads(row["data"])
-        if not _commit_shas(data):
+        task_id = row["id"]
+        jobs_of = conn.execute("SELECT rowid AS seq, status, data FROM jobs WHERE task = ? ORDER BY rowid",
+                               (task_id,)).fetchall()
+        dones = [r["seq"] for r in jobs_of if r["status"] == "done"]
+        if not dones:
             continue
-        states = [r["status"] for r in conn.execute("SELECT status FROM jobs WHERE task = ?", (row["id"],))]
-        if not states or any(s != "done" for s in states):
+        last_done = max(dones)
+        bound = any(_commit_shas(json.loads(r["data"])) for r in jobs_of if r["status"] == "done")
+        if not bound:
             continue
-        _set_task_status(conn, row["id"], "done")
-        done.append(row["id"])
+        blocking = [r for r in jobs_of if r["status"] not in DONE_EXCLUDED
+                    and not (r["status"] == "failed" and r["seq"] < last_done)]
+        if blocking:
+            continue
+        _set_task_status(conn, task_id, "done")
+        done.append(task_id)
     return done
 
 
@@ -207,7 +269,8 @@ def _drop_lock(conn, owner):
 
 def tick(data_dir, now=None):
     """One supervisor pass. Returns {"ran": False, "reason": ...} when another pass holds the lock, else
-    {"ran": True, "reaped", "expired_leases", "queued", "needs_you", "done_tasks", "closed_asks"} with lists of ids."""
+    {"ran": True, "reaped", "expired_leases", "queued", "needs_you", "done_tasks", "closed_asks"} with lists of ids.
+    An error in the pass propagates after the lock is released."""
     now_s = _now(now)
     owner = uuid.uuid4().hex
     conn = db.open_project(data_dir)
@@ -221,24 +284,27 @@ def tick(data_dir, now=None):
                 report["queued"], report["needs_you"] = _retry(conn, now_s)
                 report["done_tasks"] = _fold_tasks(conn)
                 report["closed_asks"] = _fold_asks(conn)
+            report["ran"] = True
         finally:
             with db.txn(conn):
                 _drop_lock(conn, owner)
     finally:
         conn.close()
-    report["ran"] = True
     return report
 
 
 def next_launches(conn, slots, now=None):
     """The queued jobs to start next, at most slots of them, best first: priority P0..P3, then age (queued_at),
-    then insertion order. Skips a job whose task already runs or whose files are leased or taken by an earlier
-    pick. Returns job dicts; reads only."""
+    then insertion order. Skips a job whose task already runs or is claimed, or whose files are leased or taken by
+    an earlier pick. Each pick is reserved in the caller's transaction: its status goes queued -> claimed and its
+    files are leased, so the same job is never returned twice. Returns job dicts (claimed)."""
     limit = max(0, int(slots))
     if limit == 0:
         return []
     now_s = _now(now)
-    busy = {r["task"] for r in conn.execute("SELECT task FROM jobs WHERE status = 'running' AND task IS NOT NULL")}
+    placeholders = ",".join("?" for _ in LIVE_JOB_STATUSES)
+    busy = {r["task"] for r in conn.execute(
+        "SELECT task FROM jobs WHERE status IN (" + placeholders + ") AND task IS NOT NULL", LIVE_JOB_STATUSES)}
     taken = leases.held_files(conn, now_s)
     queued = []
     for row in conn.execute("SELECT rowid, data FROM jobs WHERE status = 'queued' ORDER BY rowid").fetchall():
@@ -254,6 +320,16 @@ def next_launches(conn, slots, now=None):
         files = set(job.get("files") or [])
         if (task and task in busy) or (files & taken):
             continue
+        if not leases.acquire(conn, job["id"], sorted(files), now=now_s)["ok"]:
+            continue
+        job["status"] = "claimed"
+        job["claimed_at"] = _iso(now_s)
+        cur = conn.execute("UPDATE jobs SET status = 'claimed', data = ? WHERE id = ? AND status = 'queued'",
+                           (json.dumps(job, sort_keys=True), job["id"]))
+        if cur.rowcount != 1:
+            leases.release(conn, job["id"])
+            continue
+        events.append(conn, "job.claimed", "job", job["id"], {"task": task, "by": "supervisor"})
         picked.append(job)
         taken |= files
         if task:
