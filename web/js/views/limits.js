@@ -98,8 +98,8 @@ export function weeklyStopHtml(vm) {
     'inputmode="numeric" value="' + esc(String(shown)) + '"> %</label>' +
     '<span class="lim-weekly-text">of my weekly usage</span>' + chip + "</form>" +
     ownStopsHtml(vm, on ? shown : null) +
-    '<p class="page-note">' + (on ? "Warning at 80%. Agents stop starting jobs at this share of the week." :
-      "Off: no weekly stop for any project.") + "</p>" +
+    '<p class="page-note">' + (on ? "Warning at 80% of the stop." : "Off: no weekly stop for any project.") +
+      "</p>" +
     "</section>";
 }
 
