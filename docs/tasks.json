@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-14",
+  "updated": "2026-10-15",
   "phases": [
     {
       "id": "R1",
@@ -19,7 +19,7 @@
     {
       "id": "R4",
       "name": "Agent interface and research workflow",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "R5",
@@ -34,7 +34,7 @@
     {
       "id": "R7",
       "name": "Remaining work",
-      "status": "todo"
+      "status": "partial"
     }
   ],
   "tasks": [
@@ -256,7 +256,7 @@
       "thinking": "medium",
       "model": "haiku",
       "needsUser": true,
-      "note": "WP14 | spec: docs/roadmap-board-architecture.md section 6 | R1 review (Cursor Auto) found 7; all fixed commit d2714fd (174k tokens); cutover still waits on the keychain Allow",
+      "note": "WP14 | R7.3a done dbcc846",
       "check": "none",
       "checkK": 0,
       "feats": [
@@ -319,12 +319,12 @@
       "id": "R4.4",
       "phase": "R4",
       "title": "Opus final review (low effort)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 60,
       "thinking": "medium",
       "model": "opus",
       "needsUser": false,
-      "note": "WP18 | person request 2026-10-13: separate general project, research-first onboarding, very low token cost for agents",
+      "note": "WP18 | Opus final review: blockers = GUI start gate (fixed 07b69bc), RELEASE.md port (fixed), cutover pending",
       "check": "none",
       "checkK": 0,
       "feats": [
@@ -822,12 +822,12 @@
       "id": "R6.25",
       "phase": "R6",
       "title": "roadmap-board Planner B2: plan format F/L records",
-      "status": "partial",
+      "status": "done",
       "tokensK": 35,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
-      "note": "WP51 | commit c3070bb, 22 tests; gap: plan export does not emit F lines yet (format_feature + tasks.load_features)",
+      "note": "WP51 | c3070bb, 1fcf076 plan export emits F lines; round-trip tests 2a46b26",
       "check": "none",
       "checkK": 0
     },
@@ -853,7 +853,7 @@
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
-      "note": "WP53 | done 2026-10-14, 194k tokens commit 42b408b, 14 tests; WP55 wires route: call bind(sectionEl) once, scope from vm.route.id",
+      "note": "WP53 | 42b408b + 5a5b9ab planner fixes (?f= opens feature, global Pick a project, phone filter/FAB, snapshot ~14 KB for 60 features)",
       "check": "none",
       "checkK": 0
     },
@@ -887,12 +887,12 @@
       "id": "R6.30",
       "phase": "R6",
       "title": "roadmap-board Planner S1: seed 22 features for roadmap-board + docs",
-      "status": "todo",
+      "status": "done",
       "tokensK": 15,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
-      "note": "WP56 | spec: roadmap-board/docs/PLANNER-SPEC.md section 5",
+      "note": "WP56 | commit 99ed112: 22 features seeded, 0 uncovered; sync keeps feats (split-net 73e5bf9); F11b folded into F11",
       "check": "none",
       "checkK": 0
     },
@@ -926,12 +926,12 @@
       "id": "R6.33",
       "phase": "R6",
       "title": "roadmap-board Workflow diagram B: renderer + pan/zoom/pinch + integration",
-      "status": "todo",
+      "status": "done",
       "tokensK": 120,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
-      "note": "WP72 | spec: roadmap-board/docs/WORKFLOW-DIAGRAM-SPEC.md section 3",
+      "note": "WP72 | commit 4c81b34 diagram renderer (SVG map, pan/pinch/wheel/tap, focus mode, CSP clean) + test fixes; route is /workflow/map (not ?v=map); router.js FILTER_KEYS change not done; ui_smoke flaky under load",
       "check": "none",
       "checkK": 0,
       "feats": [
@@ -942,12 +942,12 @@
       "id": "R6.34",
       "phase": "R6",
       "title": "roadmap-board Workflow diagram C: touch/mouse/CSP verification",
-      "status": "todo",
+      "status": "done",
       "tokensK": 40,
       "thinking": "medium",
       "model": "sonnet",
       "needsUser": false,
-      "note": "WP73 | spec: roadmap-board/docs/WORKFLOW-DIAGRAM-SPEC.md section 3",
+      "note": "WP73 | 3f71920 verify; 51de26b canvas focus fix (keys from canvas not browser-rechecked)",
       "check": "none",
       "checkK": 0,
       "feats": [
@@ -957,10 +957,10 @@
     {
       "id": "R7.1",
       "phase": "R7",
-      "title": "Start from the GUI wakes an open session",
-      "status": "todo",
-      "tokensK": 40,
-      "thinking": "medium",
+      "title": "GUI Start wakes a session (presence, watch, hooks, launcher, queue, snapshot, GUI)",
+      "status": "done",
+      "tokensK": 649,
+      "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
@@ -972,10 +972,10 @@
     {
       "id": "R7.2",
       "phase": "R7",
-      "title": "Measure full-cycle agent token cost end to end and record it",
-      "status": "todo",
-      "tokensK": 30,
-      "thinking": "medium",
+      "title": "Measure full-cycle agent token cost",
+      "status": "done",
+      "tokensK": 67,
+      "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
@@ -987,24 +987,25 @@
     {
       "id": "R7.3",
       "phase": "R7",
-      "title": "Inline title edit for tasks and plan lines in the GUI",
-      "status": "todo",
-      "tokensK": 25,
+      "title": "Inline task title edit (task.rename op + double-click/F2)",
+      "status": "done",
+      "tokensK": 175,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
       "feats": [
-        "F5"
+        "F5",
+        "F6"
       ]
     },
     {
       "id": "R7.4",
       "phase": "R7",
-      "title": "Planner gaps: confirm F/L plan export round-trip and the orphan Assign picker",
-      "status": "todo",
-      "tokensK": 20,
+      "title": "Planner plan-format round-trip and gap tests",
+      "status": "done",
+      "tokensK": 40,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
@@ -1017,9 +1018,9 @@
     {
       "id": "R7.5",
       "phase": "R7",
-      "title": "Finish row alignment across sections; check at 1440 and 375 px",
-      "status": "todo",
-      "tokensK": 20,
+      "title": "Row alignment (rule 0): tokens/phases done; tree/list/overview squeeze left",
+      "status": "partial",
+      "tokensK": 281,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
@@ -1032,10 +1033,10 @@
     {
       "id": "R7.6",
       "phase": "R7",
-      "title": "Docs refresh: README, agent guide and skills match the 1.0 commands",
-      "status": "todo",
-      "tokensK": 30,
-      "thinking": "medium",
+      "title": "Docs match the real commands (README, interface, release, API, security, changelog)",
+      "status": "done",
+      "tokensK": 242,
+      "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
@@ -1047,9 +1048,195 @@
     {
       "id": "R7.7",
       "phase": "R7",
-      "title": "Plain-words pass over GUI labels, status text and docs",
+      "title": "Plain-words wording pass over the GUI views",
+      "status": "done",
+      "tokensK": 247,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F14",
+        "F19"
+      ]
+    },
+    {
+      "id": "R7.12",
+      "phase": "R7",
+      "title": "Copy reference icon on rows and sections + roadmap ref command (docs/skills step left)",
+      "status": "partial",
+      "tokensK": 1150,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-14: paste a unique ref to the agent; spec docs/R7.12-SPEC.md",
+      "feats": [
+        "F23"
+      ]
+    },
+    {
+      "id": "R7.13",
+      "phase": "R7",
+      "title": "Planner v2: project structure and plan tree (design done, waits for decisions)",
       "status": "todo",
-      "tokensK": 20,
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-14; spec docs/PLANNER-V2-SPEC.md",
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R7.14",
+      "phase": "R7",
+      "title": "Workflow map v2: FigJam-style flow from start to now",
+      "status": "done",
+      "tokensK": 1015,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-14; spec docs/WORKFLOW-V2-SPEC.md",
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R7.16",
+      "phase": "R7",
+      "title": "Full UI and core event log + roadmap logs + Mark bug button",
+      "status": "partial",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-15; spec docs/LOGGING-SPEC.md",
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.17",
+      "phase": "R7",
+      "title": "Workflow map: no text selection while dragging; clean collapsed arrows",
+      "status": "partial",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person bug report 2026-10-15",
+      "feats": [
+        "F19"
+      ]
+    },
+    {
+      "id": "R3.3",
+      "phase": "R3",
+      "title": "Planner backend review (Cursor) and fixes: person-only accept, plan import order",
+      "status": "done",
+      "tokensK": 340,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R3.4",
+      "phase": "R3",
+      "title": "R7.1 security review (Cursor) and hardening",
+      "status": "done",
+      "tokensK": 203,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R3.5",
+      "phase": "R3",
+      "title": "Loader treats empty or null project path as no folder",
+      "status": "done",
+      "tokensK": 62,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.8",
+      "phase": "R7",
+      "title": "Gap tests from verified agy lists (presence, launcher, guard, queue, rename, planfmt)",
+      "status": "done",
+      "tokensK": 521,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.9",
+      "phase": "R7",
+      "title": "Aria fixes and audits (views a-z)",
+      "status": "done",
+      "tokensK": 290,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F19"
+      ]
+    },
+    {
+      "id": "R7.10",
+      "phase": "R7",
+      "title": "Smaller snapshot feature rows",
+      "status": "done",
+      "tokensK": 96,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R7.11",
+      "phase": "R7",
+      "title": "status keeps the features line with many jobs",
+      "status": "done",
+      "tokensK": 72,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
@@ -1058,6 +1245,52 @@
       "feats": [
         "F14"
       ]
+    },
+    {
+      "id": "R7.18",
+      "phase": "R7",
+      "title": "Lint clean (lint_py, lint_js)",
+      "status": "done",
+      "tokensK": 147,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.19",
+      "phase": "R7",
+      "title": "agy audit verification batches and next-wave planning",
+      "status": "done",
+      "tokensK": 530,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.20",
+      "phase": "R7",
+      "title": "GUI Start gated in an unapproved phase",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F11"
+      ]
     }
-  ]
+  ],
+  "schemaVersion": 1
 }
