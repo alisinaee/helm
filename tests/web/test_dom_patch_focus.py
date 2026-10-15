@@ -51,6 +51,7 @@ const FRAMES = {
   A: function () { return [makeEl("INPUT", { id: "q", value: "old" })]; },
   B: function () { return [makeEl("INPUT", { id: "q", value: "new" })]; },
   S: function () { return [makeEl("SELECT", { "data-focus": "sort", value: "a" })]; },
+  S2: function () { return [makeEl("SELECT", { "data-focus": "sort", value: "a" })]; },
   T: function () { return [makeEl("SPAN", { id: "x" })]; },
   U: function () { return [makeEl("INPUT", { id: "other", value: "z" })]; },
 };
@@ -78,7 +79,7 @@ doc.active = null;
 const s0 = sec.children[0];
 s0.value = "b";
 doc.active = s0;
-out.select = patch("sec", "S") && doc.active === sec.children[0];
+out.select = patch("sec", "S2") && doc.active === sec.children[0];
 
 doc.active = null;
 out.unfocusedWrites = patch("sec", "T");
