@@ -1,6 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true" focusable="false">
   <symbol id="i-overview" viewBox="0 0 24 24"><path d="M3 10.5 12 4l9 6.5V20h-6v-6H9v6H3z"/></symbol>
   <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13l2.5-7h13L21 13v6H3z M3 13h5l1.5 2h5L16 13h5"/></symbol>
+  <symbol id="i-head" viewBox="0 0 24 24"><path d="M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8z M5 20a7 7 0 0 1 14 0 M9 6h6"/></symbol>
   <symbol id="i-roadmap" viewBox="0 0 24 24"><path d="M3 5h5v14H3z M10 5h4v9h-4z M16 5h5v12h-5z"/></symbol>
   <symbol id="i-planner" viewBox="0 0 24 24"><path d="M4 5h2v2H4z M9 6h11M4 12h2v2H4z M9 13h11M4 19h2v2H4z M9 20h11"/></symbol>
   <symbol id="i-work" viewBox="0 0 24 24"><path d="M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z"/></symbol>

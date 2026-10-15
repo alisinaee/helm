@@ -24,7 +24,10 @@ export function countsFor(vm) {
   let blockers = 0;
   let running = 0;
   let tasksNeedingYou = 0;
+  let headAsks = 0;
   for (const snap of snaps) {
+    // Open asks the head has not handled yet (HEAD-SPEC section 5, snapshot head.counts.unhandled).
+    headAsks += (snap.head && snap.head.counts && snap.head.counts.unhandled) || 0;
     // The same rows the Inbox page lists: open questions, and the needs-you task rows.
     questions += (snap.questions || []).length;
     needYou += (snap.needsYou || []).filter(function (row) {
@@ -44,7 +47,7 @@ export function countsFor(vm) {
     else if (row.state === "warn" && limitTone !== "danger") limitTone = "warning";
   }
   return { inbox: questions + needYou, work: tasksNeedingYou, agents: running, tokens: limitTone,
-    issues: blockers };
+    issues: blockers, head: headAsks };
 }
 
 function badgeFor(section, counts) {
@@ -55,6 +58,10 @@ function badgeFor(section, counts) {
   if (section.id === "issues" && counts.issues > 0) {
     return '<span class="nav-b" data-tone="danger">' + esc(counts.issues) +
       '<span class="sr-only">' + (counts.issues === 1 ? " open blocker" : " open blockers") + "</span></span>";
+  }
+  if (section.id === "head" && counts.head > 0) {
+    return '<span class="nav-b" data-tone="neutral">' + esc(counts.head) +
+      '<span class="sr-only"> open asks</span></span>';
   }
   if (section.id === "work" && counts.work > 0) {
     return '<span class="nav-b" data-tone="danger">' + esc(counts.work) +
