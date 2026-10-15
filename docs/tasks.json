@@ -1487,7 +1487,7 @@
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "person: VERY IMPORTANT; see docs/HEAD-SECTION-REQUEST.md",
+      "note": "HIGHEST PRIORITY (person): all other work yields to HEAD H1-H12, spec docs/HEAD-SPEC.md",
       "feats": [
         "F25"
       ],
