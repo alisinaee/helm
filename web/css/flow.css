@@ -31,6 +31,8 @@
 .nz-list, .mt-list, .act-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2) }
 .nz-row { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); align-items: center; min-width: 0;
   overflow-wrap: anywhere; font-size: var(--fs-13); color: var(--text-1) }
+.nz-slot { display: grid; grid-template-columns: minmax(0, 1fr) var(--ref-col); align-items: center }
+.nz-txt { min-width: 0; overflow-wrap: anywhere }
 .nz-kind { font-size: var(--fs-11); color: var(--text-3) }
 .mt-row { display: grid; gap: var(--sp-1) }
 .mt-text { text-align: right; font-variant-numeric: tabular-nums }
@@ -52,3 +54,11 @@
 .note-text { margin: 0; padding: var(--sp-3); max-height: 60vh; overflow: auto; white-space: pre-wrap;
   overflow-wrap: anywhere; font: var(--fs-12) / 1.5 var(--font-mono); background: var(--surface-2); border-radius: var(--r-card) }
 @media (max-width: 599px) { .ag-row .btn, .nz-list .btn { min-height: 44px } }
+/* Workflow detail strip on a phone (R7.56): text rows, then the number cells and the action column. */
+@media (max-width: 767px) {
+.row-grid.wf-cols{grid-template-columns:minmax(0,1fr) 4.5rem 4.5rem 6.5rem}
+.wf-cols>:nth-child(1){grid-column:1/-1}.wf-cols>:nth-child(2){grid-column:1;grid-row:2}
+.wf-cols>:nth-child(3){grid-column:1/-1;grid-row:3}.wf-cols>:nth-child(4){grid-column:1;grid-row:4}
+.wf-cols>:nth-child(5){grid-column:2;grid-row:4}.wf-cols>:nth-child(6){grid-column:3;grid-row:4}
+.wf-cols>:nth-child(7){grid-column:4;grid-row:4}.wf-cols>:nth-child(8){grid-column:4;grid-row:2;justify-self:end}
+}
