@@ -4,6 +4,7 @@
 
 import { esc, meterHtml } from "../dom.js";
 import { SECTIONS, SETTINGS, sectionById } from "../routes.js";
+import { panelIsOpen } from "../state.js";
 
 const THEME_LABEL = { auto: "Auto", dark: "Dark", light: "Light" };
 const STATE_RANK = { ok: 0, unknown: 1, warn: 2, block: 3 };
@@ -111,6 +112,24 @@ function connHtml(conn) {
   return '<span class="conn" data-state="wait"><span class="dot" aria-hidden="true"></span>Connecting</span>';
 }
 
+// The side panel toggle, always last: it shows the panel again after its Close button hid it. Same handler as the
+// project crumb. The "]" key is the shortcut (keys.js), named in the title.
+// Without a window (a node render), an unset panel state reads as closed.
+function sideOpen(ui) {
+  if (!ui) return false;
+  if (typeof ui.panelOpen === "boolean") return ui.panelOpen;
+  return typeof window !== "undefined" && panelIsOpen(ui);
+}
+
+function panelToggleHtml(vm) {
+  const open = sideOpen(vm.ui);
+  const label = open ? "Hide side panel" : "Show side panel";
+  return '<button type="button" class="btn" data-action="panel-toggle" data-focus="panel-toggle"' +
+    ' aria-pressed="' + (open ? "true" : "false") + '" aria-label="' + label +
+    '" title="' + label + ' (])"><svg class="ico" aria-hidden="true" focusable="false">' +
+    '<use href="/icons.svg#i-panel"></use></svg></button>';
+}
+
 export function topbarView(vm) {
   const theme = vm.theme || "auto";
   return '<div class="top-row">' + crumbHtml(vm) +
@@ -118,6 +137,6 @@ export function topbarView(vm) {
     '<button type="button" class="btn" data-action="cycle-theme" data-focus="theme" aria-label="Theme: ' +
     esc(themeLabel(theme)) + '. Change theme">' + esc(themeLabel(theme)) + "</button>" +
     '<button type="button" class="btn" data-action="help-open" data-focus="help" aria-haspopup="dialog"' +
-    ' aria-label="Keyboard shortcuts">?</button>' +
+    ' aria-label="Keyboard shortcuts">?</button>' + panelToggleHtml(vm) +
     "</div></div>";
 }
