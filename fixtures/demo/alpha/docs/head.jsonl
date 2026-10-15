@@ -1,0 +1,14 @@
+{"v":1,"t":"s","ts":"2026-10-15T09:02:00Z","sid":"a1b2c3d4","acct":"B","model":"Opus 5.5","ev":"claim","usage":{"h5":41,"wk":63}}
+{"v":1,"t":"e","id":"H1","ts":"2026-10-15T09:12:03Z","src":"hook","sid":"a1b2c3d4","acct":"B","kind":"ask","sum":"Head section design (Opus, high)","len":812,"h":"sha1:3f9c2a71d0b4"}
+{"v":1,"t":"u","id":"H1","ts":"2026-10-15T09:13:00Z","by":"head","set":{"kind":"ask","sum":"Head section design (Opus, high)"},"link":["+task:R7.31"]}
+{"v":1,"t":"e","id":"H2","ts":"2026-10-15T09:14:00Z","src":"hook","sid":"a1b2c3d4","acct":"B","kind":"bug","sum":"Top bar scrolls at 375 px","len":96,"h":"sha1:8b1e04c5f7a2"}
+{"v":1,"t":"u","id":"H2","ts":"2026-10-15T09:15:00Z","by":"head","set":{"kind":"bug","sum":"Top bar scrolls at 375 px"},"link":["+issue:I12"]}
+{"v":1,"t":"e","id":"H3","ts":"2026-10-15T08:40:00Z","src":"cli","sid":"e5f6a7b8","acct":"A","kind":"rule","sum":"5h stop at 90%","len":40,"h":"sha1:c2d7e9a10f63"}
+{"v":1,"t":"u","id":"H3","ts":"2026-10-15T08:41:00Z","by":"person","set":{"status":"done","accepted":true}}
+{"v":1,"t":"e","id":"H4","ts":"2026-10-15T09:20:00Z","src":"hook","sid":"a1b2c3d4","acct":"B","kind":"ask","sum":"Make the Head grid match rule 0","len":130,"h":"sha1:5a0f3e7b92c1"}
+{"v":1,"t":"e","id":"H5","ts":"2026-10-15T09:30:00Z","src":"hook","sid":"a1b2c3d4","acct":"B","kind":"question","sum":"Does the hook run on the phone too?","len":52,"h":"sha1:e41b6d08a3f9"}
+{"v":1,"t":"u","id":"H5","ts":"2026-10-15T09:31:00Z","by":"head","set":{"status":"needs-you","kind":"question","sum":"Does the hook run on the phone too?"}}
+{"v":1,"t":"e","id":"H6","ts":"2026-10-15T09:40:00Z","src":"hook","sid":"a1b2c3d4","acct":"B","kind":"ask","sum":"Hook budget stays at 0.3 s","len":77,"h":"sha1:7d2c90be14a6"}
+{"v":1,"t":"u","id":"H6","ts":"2026-10-15T09:41:00Z","by":"head","set":{"kind":"ask","sum":"Hook budget stays at 0.3 s"},"link":["+task:R7.31"]}
+{"v":1,"t":"e","id":"H7","ts":"2026-10-15T07:50:00Z","src":"cli","sid":"e5f6a7b8","acct":"A","kind":"review","sum":"Cursor review of the capture","len":60,"h":"sha1:0c6b1f8d2e57"}
+{"v":1,"t":"u","id":"H7","ts":"2026-10-15T07:55:00Z","by":"head","set":{"kind":"review","sum":"Cursor review of the capture"},"link":["+job:j599"]}
