@@ -152,6 +152,16 @@ class AgentsResearchTests(unittest.TestCase):
         disabled = re.findall(r'<button [^>]*data-action="agent-stop"[^>]*disabled', html)
         self.assertEqual(len(disabled), 1)
 
+    def test_delegated_chip_shows_the_engine_model_of_an_opencode_worker(self):
+        lead = job("L1", "running", model="opencode", task=None, engine_model="laguna-s-2.1")
+        worker = job("W1", "running", model="opencode", task=None, parent="L1", engine_model="laguna-s-2.1")
+        path = os.path.join(self.tmp, "delegated.json")
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump({"busy": {"project": {"id": "splitnet", "title": "split-net"}, "jobs": [lead, worker],
+                                "blocked": [], "tasks": [], "phases": [], "rules": None}}, fh)
+        html = render(path)["agentsProject"]
+        self.assertIn("Delegated to opencode · laguna-s-2.1", html)
+
     def test_only_the_last_ten_finished_jobs_are_listed(self):
         html = self.out["agentsProject"]
         self.assertIn("Recently finished jobs", html)

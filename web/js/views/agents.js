@@ -91,7 +91,7 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     : '<span class="mt-label">No task assigned</span>';
   const handed = children.length
     ? chipHtml("Delegated to " + children.map(function (c) {
-      return c.role || engineLabel(c.model);
+      return c.role || engineLabel(c.model, c.engineModel);
     }).join(", "), "neutral")
     : "";
   const badge = job.task && blocked.indexOf(job.task) !== -1 ? chipHtml("blocked", "danger") : "";
