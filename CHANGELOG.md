@@ -72,6 +72,7 @@ interactive GUI shell are all in place. The two security reviews (R1 and R2) are
 - **UI smoke** (WP9, WP35b): `make check-ui` drives the shell in Google Chrome and skips when Chrome is not installed.
 - **Release tooling** (WP37): `tools/install-skills.py` installs the three skill drafts with a backup and a dry run;
   `make release-check` runs the full gate; `docs/RELEASE.md` is the release and cutover checklist.
+- **Copy references** (R7.12): every row and section has a copy button that puts `rb:<project>/<kind>/<id>` and a one-line state on the clipboard. `roadmap ref <ref>` resolves a pasted ref in one read-only call; the worker and lead skills and `docs/AGENT-INTERFACE.md` describe it.
 
 ### Limits and defaults
 

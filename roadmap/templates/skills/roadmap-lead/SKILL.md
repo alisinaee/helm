@@ -10,6 +10,7 @@ description: Use when you plan a project on its roadmap board, import or export 
 - Phase approval is the person's job. Never approve a phase yourself; ask the user in chat to approve it.
 - Budgets and limits are read-only for agents. Run `roadmap budget show` and `roadmap limit show`. Never run `limit set`, `limit rm`, `limit budget` or `override`; report the numbers and ask the user.
 - Every command takes `--json`. On an error, run the `next:` command.
+- Pasted `rb:` refs: resolve with `roadmap ref <ref>`, act with the matching feature/task command (example: orphan task -> `roadmap feature link F7 R3.2`).
 
 ## 1. Plan (budget 2k tokens)
 ```

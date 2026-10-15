@@ -172,6 +172,13 @@ Ops: `limit.set`, `limit.rm`, `budget.set`, `task.cap`, `control.override`.
 - The total stays at +25 KB, so all CSS is ≤51 KB.
 - **New tokens:** `--w-nav`, `--w-rail`, `--w-side`, `--h-top`, `--h-bnav`, `--shadow-1`, `--shadow-2`, `--scrim`, `--sel`, `--drop`, `--z-over`, `--z-toast`, `--t-fast`, plus `--unknown` (grey for the stale-meter state).
 
+## 3b. Copy reference column (R7.12)
+
+- Every row grid ends with a fixed last track `var(--ref-col)` = `1.5rem`, present even when the row has no ref, so no column moves (UI rule 0). Section headers put the copy button after their existing actions.
+- The copy button is a real `<button>` with an icon (`i-copy`) and an `aria-label`. It is faint (0.4 opacity) until the row is hovered or the button is focused, then full opacity.
+- On touch devices it is always full opacity, because there is no hover.
+- No new max-width and no fixed pixel width other than `--ref-col`. Light and dark themes use the existing tokens.
+
 ## 4. Routing and state (unchanged, plus one change)
 
 - Routes: `#/all/<section>` for global scope and `#/p/<id>/<section>[/<view>][/i/<item>]`, with filters in `?f=…&g=…`. Old links redirect.
