@@ -8,15 +8,28 @@ person's only: the op refuses an agent, the phone and a bare non-TTY shell. Outp
 
 import argparse
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from roadmap.core import head as core
 from roadmap.core.snapshot import head_link_state
-from roadmap.services import commands, headimport, loader, tasks
+from roadmap.services import commands, control, headimport, hooks, jobs, loader, tasks
 from roadmap.services import head as store
+from roadmap.services import queue as queue_service
+from roadmap.store import paths, schema
 
 NEXT = "roadmap head list"
 BRIEF = "roadmap head brief"
+GATE_LINES = 5                # the gate's continue lines (head_svc.GATE_LIMIT)
+DONE_CHECKLIST = (            # HEAD-SPEC section 11 item 3: the worker-completion checklist
+    "done checklist (HEAD-SPEC 11.3):",
+    "1. verify the diff: git diff --stat, then the tests",
+    "2. close the job with tokens: roadmap job done <id> \"note\" --tokens K",
+    "3. commit your own files by path, then push",
+    "4. launch the next wave on disjoint files",
+    "5. run the cursor or agy audit on this change",
+    "6. tick the asks it answers: roadmap head set H<n> status=done",
+    "next: roadmap head brief --gate",
+)
 SHOW_MAX = 20                 # the show output in lines, header and text included
 TEXT_SHOW_MAX = 200           # verbatim characters on the show line
 LIST_DEFAULT = 20
@@ -113,7 +126,12 @@ def register(sub, common):
 
     digest = add("brief", "the resume digest, at most 15 lines")
     digest.add_argument("--md", action="store_true", help="markdown bullets")
+    digest.add_argument("--gate", action="store_true", help="the autopilot continue lines, or ok nothing pending")
+    digest.add_argument("--done", action="store_true", help="the worker-completion checklist")
     digest.set_defaults(handler=_brief)
+
+    add("pause", "pause the autopilot gate (writes the head-pause file)").set_defaults(handler=_pause)
+    add("resume", "resume the autopilot gate (removes the head-pause file)").set_defaults(handler=_resume)
 
     untriaged = add("triage", "untriaged entries with suggestions")
     untriaged.set_defaults(handler=_triage_list)
@@ -448,8 +466,62 @@ def _show(args):
     return None
 
 
+def _gate_items(project, data_dir, now):
+    """The autopilot continue items, read the way the Stop hook reads them (hooks._stop_gate): the head config switch,
+    the pause file or a stop in the control state, the queue, running jobs, git counts and the usage file. The
+    hook's one-block-per-window stamp is not applied here: this is a read."""
+    cfg = hooks._head_config(data_dir).get("head")
+    if isinstance(cfg, dict) and cfg.get("gate") is False:
+        return []
+    state = control.read_state(project["id"]) or {}
+    paused = os.path.exists(os.path.join(data_dir, store.GATE_PAUSE_FILE)) or state.get("stop") is True
+    rows = store.rows(data_dir, now=now)
+    queue = [e.get("task") for e in queue_service.list_queue(data_dir)]
+    running = [j for j in jobs.list_jobs(data_dir) if j.get("status") == "running"]
+    dirty, unpushed = hooks._git_counts(project["path"])
+    data, error = schema.read_data("usage", paths.usage_file())
+    usage = data if error is None and isinstance(data, dict) else None
+    return store.gate(rows, queue=queue, running=running, dirty=dirty, unpushed=unpushed, usage=usage,
+                      paused=paused, now=now)
+
+
+def _gate(project, data_dir):
+    with commands.next_on_error(BRIEF):
+        items = _gate_items(project, data_dir, _now())
+    if not items:
+        print("ok nothing pending")
+        return None
+    for item in items[:GATE_LINES]:
+        print("continue: " + item)
+    return None
+
+
+def _pause(args):
+    project, data_dir = tasks.resolve(args.project)
+    os.makedirs(data_dir, exist_ok=True)
+    with open(os.path.join(data_dir, store.GATE_PAUSE_FILE), "w", encoding="utf-8") as fh:
+        fh.write(_now().isoformat(timespec="seconds") + "\n")
+    _ok("head paused: the gate stays silent", "roadmap head resume")
+    return None
+
+
+def _resume(args):
+    project, data_dir = tasks.resolve(args.project)
+    path = os.path.join(data_dir, store.GATE_PAUSE_FILE)
+    was = os.path.exists(path)
+    if was:
+        os.remove(path)
+    _ok("head resumed" if was else "head was not paused", BRIEF + " --gate")
+    return None
+
+
 def _brief(args):
     project, data_dir = tasks.resolve(args.project)
+    if args.gate:
+        return _gate(project, data_dir)
+    if args.done:
+        print("\n".join(DONE_CHECKLIST))
+        return None
     with commands.next_on_error(NEXT):
         rows, link_state, now = _state(project, data_dir)
         lines = store.brief(data_dir, link_state=link_state, now=now)
