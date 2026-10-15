@@ -361,7 +361,7 @@ def _head_view(records, link_state, moment, tasks=(), issues=(), jobs=(), issues
 
 
 def build_snapshot(files, config, now, control=None, meters=None, rules=None, session=None, folder=None,
-                   head_records=None):
+                   head_records=None, rev=None, usage=None):
     """The snapshot dict. Same shape as the old server's build(), plus "project" and "schemaVersion".
     meters (WP27: limits, today, week) is added only when given, so a snapshot built without it is unchanged.
     rules (WP33b: the parsed docs/rules.txt list) is added only when given, for the same reason.
@@ -369,6 +369,8 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
     "none". folder (the project folder) is added as project.path only when given, for the Copy command.
     head_records (HEAD-SPEC section 5: the raw head.jsonl records) adds the head key only when given, and askOf (task
     id -> ask ids, HEAD-SPEC section 12) with it.
+    rev (the revision string, loader.revision) and usage (the usage view) add those keys only when given, as meters
+    does. The loader passes both, so every served snapshot has them.
 
     server_time is now in ISO 8601 with whole seconds. Parse problems go into errors[]; nothing raises.
     """
@@ -562,4 +564,8 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
                           issues=issues_open, jobs=jobs, issues_all=issues_all)
         out["askOf"] = head.pop("askOf")
         out["head"] = head
+    if rev is not None:
+        out["rev"] = rev
+    if usage is not None:
+        out["usage"] = usage
     return out

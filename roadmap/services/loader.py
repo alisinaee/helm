@@ -5,17 +5,20 @@ file never raises: it becomes an entry in the snapshot's errors[]. port_owner() 
 is allowed only in services/; it runs lsof, read-only.
 """
 
+import hashlib
 import json
 import os
 import subprocess
+import threading
 from datetime import datetime
 
 from roadmap.core.extras import extra_file
 from roadmap.core.parsers import error_entry
 from roadmap.core.snapshot import build_snapshot
 from roadmap.errors import RoadmapError
-from roadmap.services import control, head as head_store, limits, presence, rules
+from roadmap.services import control, head as head_store, limits, presence, rules, usage
 from roadmap.store import config as config_store
+from roadmap.store import paths
 
 BASE_FILES = ("tasks.json", "jobs.json", "autonomy.json", "issues.json", "questions.json", "comments.json",
               "budget.json", "queue.json", "activity.jsonl", "features.json")
@@ -33,10 +36,74 @@ def project_folder(entry):
     return os.path.join(root, data_dir if isinstance(data_dir, str) and data_dir else config_store.DEFAULT_DATA_DIR)
 
 
+_CACHE = {}  # project id -> (rev, snapshot): the last build per project; one entry each, so memory stays bounded
+_CACHE_LOCK = threading.Lock()
+
+
+def _stamp(path):
+    """(path, mtime_ns, size) of one file, or (path, None, None) when it is missing or cannot be stat'ed."""
+    try:
+        st = os.stat(path)
+    except OSError:
+        return (path, None, None)
+    return (path, st.st_mtime_ns, st.st_size)
+
+
+def revision(data_dir, project_id=None):
+    """A 16-hex-character revision of everything one snapshot reads: (path, mtime_ns, size) of each project data file
+    (the base files, roadmap.config.json, the configured extras, head.jsonl and rules.txt), the project's presence
+    file and control file when they apply, and the usage file. A missing file stamps as None, so creating or deleting
+    one changes the revision. Only stat calls and one small config read; nothing is parsed or built."""
+    stamps = []
+    if data_dir is not None:
+        names = list(BASE_FILES) + [CONFIG_FILE]
+        cfg = _read_project_config(data_dir, [])
+        names += [name for name in _extra_names(cfg, []) if name not in names]
+        names += [head_store.FILE, rules.FILE]
+        stamps += [_stamp(os.path.join(data_dir, name)) for name in names]
+        stamps.append(_stamp(presence.file_for(data_dir)))
+    if project_id is not None:
+        try:
+            stamps.append(_stamp(control.control_path(project_id)))
+        except RoadmapError:
+            stamps.append(("control", None, None))
+    stamps.append(_stamp(paths.usage_file()))
+    raw = json.dumps(stamps, separators=(",", ":"))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+
+def project_revision(project_id):
+    """The revision of one registered project, with no build. Unknown ids raise not_found, as load_snapshot does."""
+    entry = config_store.get_project(project_id)
+    return revision(project_folder(entry), project_id)
+
+
 def load_snapshot(project_id, now=None):
-    """The snapshot of one registered project. Raises not_found (exit 3) only for an unknown id."""
+    """The snapshot of one registered project, with "rev" (its revision) and "usage" (usage.show()) in it.
+
+    One build per (project, revision): while the revision is unchanged the cached build is returned. On a cache hit
+    only the two cheap keys are refreshed on the returned copy: server_time (now) and usage (ageS and stale move with
+    the clock). Every other clock-driven value (jobs' elapsed_s and age, head ages, meters) stays as of the build of
+    that revision, which is when the data last changed. A call with now= always builds and never caches (tests).
+    Raises not_found (exit 3) only for an unknown id."""
     entry = config_store.get_project(project_id)
     folder = project_folder(entry)
+    rev = revision(folder, project_id)
+    if now is None:
+        with _CACHE_LOCK:
+            hit = _CACHE.get(project_id)
+        if hit is not None and hit[0] == rev:
+            moment = datetime.now().astimezone()
+            return dict(hit[1], server_time=moment.isoformat(timespec="seconds"), usage=usage.show(now=moment))
+    snap = _build(entry, folder, rev, now)
+    if now is None:
+        with _CACHE_LOCK:
+            _CACHE[project_id] = (rev, snap)
+    return dict(snap)
+
+
+def _build(entry, folder, rev, now):
+    """One snapshot build for a project entry at revision rev. Missing or unreadable files add errors[], not raises."""
     errors = []
     project_cfg = _read_project_config(folder, errors)
     project_cfg.setdefault("id", entry["id"])
@@ -50,7 +117,7 @@ def load_snapshot(project_id, now=None):
     snap = build_snapshot(files, project_cfg, moment, control=_control_view(entry["id"]),
                           meters=limits.meters(entry, moment), rules=_rules_view(folder),
                           session=_session_view(folder), folder=_project_path(entry),
-                          head_records=_head_records(folder))
+                          head_records=_head_records(folder), rev=rev, usage=usage.show(now=moment))
     snap["errors"] = errors + snap["errors"]
     return snap
 
