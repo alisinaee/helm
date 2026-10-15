@@ -229,8 +229,28 @@
       "phase": "R7",
       "hold": false,
       "accepted": null
+    },
+    {
+      "id": "F24",
+      "title": "Git sync and history: auto commit, push, history, branches",
+      "acc": "The person sees and controls every change agents make; commits link to tasks and jobs",
+      "prio": 1,
+      "parent": null,
+      "phase": "R7",
+      "hold": false,
+      "accepted": null
+    },
+    {
+      "id": "F25",
+      "title": "Head section: ledger of the person's asks, bound to tasks, with status",
+      "acc": "Everything the person asks or decides is logged, summarised, converted to a task/issue/review and tracked to done",
+      "prio": 1,
+      "parent": null,
+      "phase": "R7",
+      "hold": false,
+      "accepted": null
     }
   ],
-  "updated": "2026-10-14",
+  "updated": "2026-10-15",
   "schemaVersion": 1
 }

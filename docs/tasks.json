@@ -1129,7 +1129,7 @@
       "id": "R7.17",
       "phase": "R7",
       "title": "Workflow map: no text selection while dragging; clean collapsed arrows",
-      "status": "partial",
+      "status": "done",
       "tokensK": 40,
       "thinking": "low",
       "model": "haiku",
@@ -1139,7 +1139,10 @@
       "note": "person bug report 2026-10-15",
       "feats": [
         "F19"
-      ]
+      ],
+      "at": {
+        "done": "2026-10-15T08:19:05+03:30"
+      }
     },
     {
       "id": "R3.3",
@@ -1289,6 +1292,220 @@
       "checkK": 0,
       "feats": [
         "F11"
+      ]
+    },
+    {
+      "id": "R3.6",
+      "phase": "R3",
+      "title": "Cursor (grok 4.7 xhigh) review of the web code: graph, refs, views, log client",
+      "status": "todo",
+      "tokensK": 120,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person: go full power; cursor grok xhigh allowed",
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R3.7",
+      "phase": "R3",
+      "title": "Cursor (grok 4.7 xhigh) review of the logging endpoint and core log",
+      "status": "todo",
+      "tokensK": 100,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "after R7.16 steps 2-3",
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.21",
+      "phase": "R7",
+      "title": "Finish plan: remaining work to 1.0.0 in waves (Opus advice)",
+      "status": "todo",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person: go full power",
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.22",
+      "phase": "R7",
+      "title": "Backlog: status, section, CLI, board column (ideas not yet committed)",
+      "status": "todo",
+      "tokensK": 250,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-15; spec docs/BACKLOG-SPEC.md",
+      "feats": [
+        "F5",
+        "F6"
+      ]
+    },
+    {
+      "id": "R7.23",
+      "phase": "R7",
+      "title": "Always-visible button to reopen the closed right side panel",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person bug report 2026-10-15",
+      "feats": [
+        "F18"
+      ],
+      "at": {
+        "done": "2026-10-15T08:34:36+03:30"
+      }
+    },
+    {
+      "id": "R7.24",
+      "phase": "R7",
+      "title": "Work section v2: complete the board like Trello (cards, quick add, drag, filters, swimlanes)",
+      "status": "todo",
+      "tokensK": 400,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-15; spec docs/WORK-V2-SPEC.md",
+      "feats": [
+        "F6",
+        "F5"
+      ]
+    },
+    {
+      "id": "R7.25",
+      "phase": "R7",
+      "title": "Issues become part of Work/board; Work is interactive: + Add anything (task, issue, idea, question, subtask, comment)",
+      "status": "todo",
+      "tokensK": 300,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-15; spec docs/WORK-UNIFIED-SPEC.md",
+      "feats": [
+        "F7",
+        "F6"
+      ]
+    },
+    {
+      "id": "R7.26",
+      "phase": "R7",
+      "title": "UX audit with ui-ux-pro-max across all sections + recurring UX routine",
+      "status": "todo",
+      "tokensK": 80,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-15",
+      "feats": [
+        "F19"
+      ]
+    },
+    {
+      "id": "R7.27",
+      "phase": "R7",
+      "title": "Usage sync: honest message, back-off, manual usage entry (no keychain token on this Mac)",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person bug report 2026-10-15",
+      "feats": [
+        "F10"
+      ],
+      "at": {
+        "done": "2026-10-15T08:47:21+03:30"
+      }
+    },
+    {
+      "id": "R7.28",
+      "phase": "R7",
+      "title": "Tokens and limits: one simple screen (stop at % weekly, optional share per project), remove per-task/preset knobs",
+      "status": "todo",
+      "tokensK": 150,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person: no limit for each tiny section; spec docs/LIMITS-SIMPLE-SPEC.md",
+      "feats": [
+        "F10"
+      ]
+    },
+    {
+      "id": "R7.29",
+      "phase": "R7",
+      "title": "Git section: status, history, branches, commit/push policy, roadmap git commands",
+      "status": "todo",
+      "tokensK": 600,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-15; spec docs/GIT-SPEC.md"
+    },
+    {
+      "id": "R7.30",
+      "phase": "R7",
+      "title": "Workflow map: Open in new tab (full-screen view, left nav hidden) with node tap showing Details in the side panel",
+      "status": "todo",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-15",
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R7.31",
+      "phase": "R7",
+      "title": "HEAD section: ledger of what the person asks and decides, bound to tasks/issues/reviews, with status",
+      "status": "todo",
+      "tokensK": 600,
+      "thinking": "high",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person: VERY IMPORTANT; see docs/HEAD-SECTION-REQUEST.md",
+      "feats": [
+        "F25"
       ]
     }
   ],

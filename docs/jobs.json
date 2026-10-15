@@ -1874,27 +1874,578 @@
       "title": "haiku: R7.17 map drag selects text and collapsed arrows",
       "model": "haiku",
       "task": "R7.17",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-15T08:13:59+03:30",
-      "ended": null
+      "ended": "2026-10-15T08:19:05+03:30",
+      "tokensK": 152.0
     },
     {
       "id": "j564",
       "title": "haiku: R7.16 step 1 debug log writer",
       "model": "haiku",
       "task": "R7.16",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-15T08:14:53+03:30",
-      "ended": null
+      "ended": "2026-10-15T08:23:33+03:30",
+      "tokensK": 109.0
     },
     {
       "id": "j565",
       "title": "haiku: R7.16 step 4 browser log client",
       "model": "haiku",
       "task": "R7.16",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-15T08:14:53+03:30",
+      "ended": "2026-10-15T08:20:58+03:30",
+      "tokensK": 139.0
+    },
+    {
+      "id": "j566",
+      "title": "test: registry check",
+      "model": "haiku",
+      "task": "R7.18",
+      "status": "done",
+      "started": "2026-10-15T08:16:30+03:30",
+      "ended": "2026-10-15T08:16:30+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j567",
+      "title": "haiku: R7.13 H1 plan tree core",
+      "model": "haiku",
+      "task": "R7.13",
+      "status": "done",
+      "started": "2026-10-15T08:20:58+03:30",
+      "ended": "2026-10-15T08:25:58+03:30",
+      "tokensK": 104.0
+    },
+    {
+      "id": "j568",
+      "title": "haiku: R7.13 H2 plan tree grammar",
+      "model": "haiku",
+      "task": "R7.13",
+      "status": "done",
+      "started": "2026-10-15T08:20:58+03:30",
+      "ended": "2026-10-15T08:27:27+03:30",
+      "tokensK": 94.0
+    },
+    {
+      "id": "j569",
+      "title": "haiku: R7.12 P8 docs and skills for refs",
+      "model": "haiku",
+      "task": "R7.12",
+      "status": "done",
+      "started": "2026-10-15T08:20:58+03:30",
+      "ended": "2026-10-15T08:25:45+03:30",
+      "tokensK": 86.0
+    },
+    {
+      "id": "j570",
+      "title": "haiku: R7.5 B rows tree list overview research rules",
+      "model": "haiku",
+      "task": "R7.5",
+      "status": "done",
+      "started": "2026-10-15T08:20:58+03:30",
+      "ended": "2026-10-15T08:33:56+03:30",
+      "tokensK": 212.0
+    },
+    {
+      "id": "j571",
+      "title": "cursor grok-4.7-xhigh: web code review (graph, refs, views, log client)",
+      "model": "cursor",
+      "task": "R3.6",
+      "status": "done",
+      "started": "2026-10-15T08:21:25+03:30",
+      "ended": "2026-10-15T08:21:46+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j572",
+      "title": "agy: copy-reference coverage audit",
+      "model": "agy",
+      "task": "R7.12",
+      "status": "failed",
+      "started": "2026-10-15T08:22:08+03:30",
+      "ended": "2026-10-15T08:22:14+03:30"
+    },
+    {
+      "id": "j573",
+      "title": "agy: workflow map accessibility audit",
+      "model": "agy",
+      "task": "R7.14",
+      "status": "failed",
+      "started": "2026-10-15T08:22:10+03:30",
+      "ended": "2026-10-15T08:22:15+03:30"
+    },
+    {
+      "id": "j574",
+      "title": "agy: log client privacy and loop audit",
+      "model": "agy",
+      "task": "R7.16",
+      "status": "failed",
+      "started": "2026-10-15T08:22:12+03:30",
+      "ended": "2026-10-15T08:22:17+03:30"
+    },
+    {
+      "id": "j575",
+      "title": "agy: CSP and innerHTML audit of new JS",
+      "model": "agy",
+      "task": "R7.9",
+      "status": "failed",
+      "started": "2026-10-15T08:22:14+03:30",
+      "ended": "2026-10-15T08:22:20+03:30"
+    },
+    {
+      "id": "j576",
+      "title": "agy: HANDOVER stale-facts audit",
+      "model": "agy",
+      "task": "R7.19",
+      "status": "failed",
+      "started": "2026-10-15T08:22:16+03:30",
+      "ended": "2026-10-15T08:22:21+03:30"
+    },
+    {
+      "id": "j577",
+      "title": "opus: R7.21 plan to finish the project manager",
+      "model": "opus",
+      "task": "R7.19",
+      "status": "done",
+      "started": "2026-10-15T08:22:34+03:30",
+      "ended": "2026-10-15T08:24:58+03:30",
+      "tokensK": 88.0
+    },
+    {
+      "id": "j578",
+      "title": "opus: R7.22 design Backlog status and section",
+      "model": "opus",
+      "task": "R7.19",
+      "status": "done",
+      "started": "2026-10-15T08:23:14+03:30",
+      "ended": "2026-10-15T08:23:49+03:30",
+      "tokensK": 57.0
+    },
+    {
+      "id": "j579",
+      "title": "haiku: R7.16 step 2 POST /api/v1/log, guard, core emitters",
+      "model": "haiku",
+      "task": "R7.16",
+      "status": "done",
+      "started": "2026-10-15T08:23:33+03:30",
+      "ended": "2026-10-15T08:30:11+03:30",
+      "tokensK": 126.0
+    },
+    {
+      "id": "j580",
+      "title": "haiku: R7.16 step 3 roadmap logs command, core.write, hook events",
+      "model": "haiku",
+      "task": "R7.16",
+      "status": "done",
+      "started": "2026-10-15T08:23:33+03:30",
+      "ended": "2026-10-15T08:29:32+03:30",
+      "tokensK": 117.0
+    },
+    {
+      "id": "j581",
+      "title": "cursor grok-4.7-xhigh: web code review (rerun, VPN on)",
+      "model": "cursor",
+      "task": "R3.6",
+      "status": "done",
+      "started": "2026-10-15T08:24:16+03:30",
+      "ended": "2026-10-15T08:40:40+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j582",
+      "title": "agy: copy-reference coverage audit",
+      "model": "agy",
+      "task": "R7.12",
+      "status": "done",
+      "started": "2026-10-15T08:24:16+03:30",
+      "ended": "2026-10-15T08:29:50+03:30"
+    },
+    {
+      "id": "j583",
+      "title": "agy: workflow map accessibility audit",
+      "model": "agy",
+      "task": "R7.14",
+      "status": "done",
+      "started": "2026-10-15T08:24:18+03:30",
+      "ended": "2026-10-15T08:28:55+03:30"
+    },
+    {
+      "id": "j584",
+      "title": "agy: log client privacy and loop audit",
+      "model": "agy",
+      "task": "R7.16",
+      "status": "done",
+      "started": "2026-10-15T08:24:20+03:30",
+      "ended": "2026-10-15T08:28:47+03:30"
+    },
+    {
+      "id": "j585",
+      "title": "haiku: R7.9d CSP rows and aria-controls ids",
+      "model": "haiku",
+      "task": "R7.9",
+      "status": "done",
+      "started": "2026-10-15T08:24:58+03:30",
+      "ended": "2026-10-15T08:25:58+03:30",
+      "tokensK": 77.0
+    },
+    {
+      "id": "j586",
+      "title": "haiku: R7.13 H3 plan tree services and snapshot",
+      "model": "haiku",
+      "task": "R7.13",
+      "status": "done",
+      "started": "2026-10-15T08:25:58+03:30",
+      "ended": "2026-10-15T08:32:32+03:30",
+      "tokensK": 127.0
+    },
+    {
+      "id": "j587",
+      "title": "haiku: R7.23 side panel toggle button in the top bar",
+      "model": "haiku",
+      "task": "R7.23",
+      "status": "done",
+      "started": "2026-10-15T08:26:57+03:30",
+      "ended": "2026-10-15T08:34:36+03:30",
+      "tokensK": 104.0
+    },
+    {
+      "id": "j588",
+      "title": "agy: CSP and innerHTML audit of new JS",
+      "model": "agy",
+      "task": "R7.9",
+      "status": "done",
+      "started": "2026-10-15T08:28:47+03:30",
+      "ended": "2026-10-15T08:32:46+03:30"
+    },
+    {
+      "id": "j589",
+      "title": "agy: HANDOVER stale-facts audit",
+      "model": "agy",
+      "task": "R7.19",
+      "status": "done",
+      "started": "2026-10-15T08:28:56+03:30",
+      "ended": "2026-10-15T08:32:32+03:30"
+    },
+    {
+      "id": "j590",
+      "title": "sonnet: R7.13 H5 Planner v2 plan tree screen",
+      "model": "sonnet",
+      "task": "R7.13",
+      "status": "done",
+      "started": "2026-10-15T08:29:13+03:30",
+      "ended": "2026-10-15T08:40:18+03:30",
+      "tokensK": 190.0
+    },
+    {
+      "id": "j591",
+      "title": "haiku: R7.13 H6 Work filter by plan item subtree",
+      "model": "haiku",
+      "task": "R7.13",
+      "status": "done",
+      "started": "2026-10-15T08:29:13+03:30",
+      "ended": "2026-10-15T08:36:59+03:30",
+      "tokensK": 104.0
+    },
+    {
+      "id": "j592",
+      "title": "haiku: R7.16 step 2b GET /api/v1/log/report",
+      "model": "haiku",
+      "task": "R7.16",
+      "status": "done",
+      "started": "2026-10-15T08:30:11+03:30",
+      "ended": "2026-10-15T08:34:58+03:30",
+      "tokensK": 102.0
+    },
+    {
+      "id": "j593",
+      "title": "haiku: R7.16 step 5a Settings Logging section",
+      "model": "haiku",
+      "task": "R7.16",
+      "status": "done",
+      "started": "2026-10-15T08:30:11+03:30",
+      "ended": "2026-10-15T08:38:20+03:30",
+      "tokensK": 96.0
+    },
+    {
+      "id": "j594",
+      "title": "opus: R7.24 design Work section like Trello",
+      "model": "opus",
+      "task": "R7.19",
+      "status": "done",
+      "started": "2026-10-15T08:30:38+03:30",
+      "ended": "2026-10-15T08:33:14+03:30",
+      "tokensK": 85.0
+    },
+    {
+      "id": "j595",
+      "title": "haiku: R7.13 H4 feature tree, move, ask, template --tree",
+      "model": "haiku",
+      "task": "R7.13",
+      "status": "done",
+      "started": "2026-10-15T08:32:37+03:30",
+      "ended": "2026-10-15T08:39:57+03:30",
+      "tokensK": 132.0
+    },
+    {
+      "id": "j596",
+      "title": "haiku: R7.22 backlog step 1 status, plan format, CLI",
+      "model": "haiku",
+      "task": "R7.22",
+      "status": "done",
+      "started": "2026-10-15T08:33:15+03:30",
+      "ended": "2026-10-15T08:45:44+03:30",
+      "tokensK": 133.0
+    },
+    {
+      "id": "j597",
+      "title": "opus: R7.25 unify Issues into Work, add anything",
+      "model": "opus",
+      "task": "R7.19",
+      "status": "done",
+      "started": "2026-10-15T08:33:33+03:30",
+      "ended": "2026-10-15T08:35:35+03:30",
+      "tokensK": 84.0
+    },
+    {
+      "id": "j598",
+      "title": "haiku: verify agy batch 4 (p01-p05)",
+      "model": "haiku",
+      "task": "R7.19",
+      "status": "done",
+      "started": "2026-10-15T08:34:10+03:30",
+      "ended": "2026-10-15T08:42:32+03:30",
+      "tokensK": 161.0
+    },
+    {
+      "id": "j599",
+      "title": "cursor grok-4.7-xhigh: logging, guard and log endpoint security review",
+      "model": "cursor",
+      "task": "R3.7",
+      "status": "running",
+      "started": "2026-10-15T08:36:27+03:30",
       "ended": null
+    },
+    {
+      "id": "j600",
+      "title": "agy: debug log writer test gaps",
+      "model": "agy",
+      "task": "R7.8",
+      "status": "done",
+      "started": "2026-10-15T08:36:27+03:30",
+      "ended": "2026-10-15T08:39:19+03:30"
+    },
+    {
+      "id": "j601",
+      "title": "agy: log routes and logs command test gaps",
+      "model": "agy",
+      "task": "R7.8",
+      "status": "done",
+      "started": "2026-10-15T08:36:29+03:30",
+      "ended": "2026-10-15T08:40:18+03:30"
+    },
+    {
+      "id": "j602",
+      "title": "agy: plan tree core and move test gaps",
+      "model": "agy",
+      "task": "R7.8",
+      "status": "done",
+      "started": "2026-10-15T08:36:31+03:30",
+      "ended": "2026-10-15T08:39:51+03:30"
+    },
+    {
+      "id": "j603",
+      "title": "opus: R7.26 UX audit with the ui-ux-pro-max skill",
+      "model": "opus",
+      "task": "R7.19",
+      "status": "done",
+      "started": "2026-10-15T08:37:27+03:30",
+      "ended": "2026-10-15T08:41:21+03:30",
+      "tokensK": 129.0
+    },
+    {
+      "id": "j604",
+      "title": "haiku: R7.27 usage backend back-off, reason code, usage.set op",
+      "model": "haiku",
+      "task": "R7.27",
+      "status": "done",
+      "started": "2026-10-15T08:38:16+03:30",
+      "ended": "2026-10-15T08:47:21+03:30",
+      "tokensK": 155.0
+    },
+    {
+      "id": "j605",
+      "title": "haiku: R7.27 usage GUI honest banner and enter usage",
+      "model": "haiku",
+      "task": "R7.27",
+      "status": "done",
+      "started": "2026-10-15T08:38:16+03:30",
+      "ended": "2026-10-15T08:40:23+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j606",
+      "title": "opus: R7.28 design a simple Tokens and limits section",
+      "model": "opus",
+      "task": "R7.19",
+      "status": "done",
+      "started": "2026-10-15T08:38:38+03:30",
+      "ended": "2026-10-15T08:39:57+03:30",
+      "tokensK": 69.0
+    },
+    {
+      "id": "j607",
+      "title": "agy: AGENT-INTERFACE vs commands audit",
+      "model": "agy",
+      "task": "R7.6",
+      "status": "done",
+      "started": "2026-10-15T08:39:19+03:30",
+      "ended": "2026-10-15T08:42:59+03:30"
+    },
+    {
+      "id": "j608",
+      "title": "agy: API.md new routes and ops audit",
+      "model": "agy",
+      "task": "R7.6",
+      "status": "done",
+      "started": "2026-10-15T08:39:51+03:30",
+      "ended": "2026-10-15T08:44:55+03:30"
+    },
+    {
+      "id": "j609",
+      "title": "haiku: R7.13 H3b plan import honours 3 levels",
+      "model": "haiku",
+      "task": "R7.13",
+      "status": "done",
+      "started": "2026-10-15T08:39:57+03:30",
+      "ended": "2026-10-15T08:45:30+03:30",
+      "tokensK": 102.0
+    },
+    {
+      "id": "j610",
+      "title": "agy: CHANGELOG draft for R7 work",
+      "model": "agy",
+      "task": "R7.6",
+      "status": "done",
+      "started": "2026-10-15T08:40:18+03:30",
+      "ended": "2026-10-15T08:42:36+03:30"
+    },
+    {
+      "id": "j611",
+      "title": "haiku: R7.27 usage GUI honest banner and enter usage (re-registered)",
+      "model": "haiku",
+      "task": "R7.27",
+      "status": "done",
+      "started": "2026-10-15T08:40:34+03:30",
+      "ended": "2026-10-15T08:43:54+03:30",
+      "tokensK": 96.0
+    },
+    {
+      "id": "j612",
+      "title": "opus: R7.29 design the Git section and agent git integration",
+      "model": "opus",
+      "task": "R7.19",
+      "status": "done",
+      "started": "2026-10-15T08:41:17+03:30",
+      "ended": "2026-10-15T08:43:01+03:30",
+      "tokensK": 74.0
+    },
+    {
+      "id": "j613",
+      "title": "haiku: UX A chrome and nav (R8.1-3, R8.18-19)",
+      "model": "haiku",
+      "task": "R7.26",
+      "status": "done",
+      "started": "2026-10-15T08:41:56+03:30",
+      "ended": "2026-10-15T08:49:33+03:30",
+      "tokensK": 153.0
+    },
+    {
+      "id": "j614",
+      "title": "haiku: UX B overview, activity, agents, roadmap rows (R8.5-10)",
+      "model": "haiku",
+      "task": "R7.26",
+      "status": "failed",
+      "started": "2026-10-15T08:41:56+03:30",
+      "ended": "2026-10-15T08:54:35+03:30"
+    },
+    {
+      "id": "j615",
+      "title": "haiku: UX C rules, research, issues polish (R8.13-17)",
+      "model": "haiku",
+      "task": "R7.26",
+      "status": "done",
+      "started": "2026-10-15T08:41:56+03:30",
+      "ended": "2026-10-15T08:52:59+03:30",
+      "tokensK": 189.0
+    },
+    {
+      "id": "j616",
+      "title": "haiku: UX D Cmd-K button, Mark button, settings state (R8.20-23)",
+      "model": "haiku",
+      "task": "R7.26",
+      "status": "failed",
+      "started": "2026-10-15T08:41:56+03:30",
+      "ended": "2026-10-15T08:54:35+03:30"
+    },
+    {
+      "id": "j617",
+      "title": "agy: demo fixture with a plan tree",
+      "model": "agy",
+      "task": "R7.13",
+      "status": "done",
+      "started": "2026-10-15T08:42:37+03:30",
+      "ended": "2026-10-15T08:45:44+03:30"
+    },
+    {
+      "id": "j618",
+      "title": "haiku: Cursor fixes: workflow Now point, filters, glide, perf, keyboard",
+      "model": "haiku",
+      "task": "R3.6",
+      "status": "failed",
+      "started": "2026-10-15T08:43:01+03:30",
+      "ended": "2026-10-15T08:54:35+03:30"
+    },
+    {
+      "id": "j619",
+      "title": "haiku: Cursor fixes: log client scrub, console re-entry, CSP loop, flush cap",
+      "model": "haiku",
+      "task": "R3.6",
+      "status": "done",
+      "started": "2026-10-15T08:43:01+03:30",
+      "ended": "2026-10-15T08:52:16+03:30",
+      "tokensK": 102.0
+    },
+    {
+      "id": "j620",
+      "title": "haiku: Cursor fixes: title edit keyboard, rename cache, redacted run path",
+      "model": "haiku",
+      "task": "R3.6",
+      "status": "done",
+      "started": "2026-10-15T08:43:02+03:30",
+      "ended": "2026-10-15T08:52:33+03:30",
+      "tokensK": 105.0
+    },
+    {
+      "id": "j621",
+      "title": "haiku: R7.28 A limits.js weekly stop and share per project",
+      "model": "haiku",
+      "task": "R7.28",
+      "status": "failed",
+      "started": "2026-10-15T08:44:12+03:30",
+      "ended": "2026-10-15T08:54:35+03:30"
+    },
+    {
+      "id": "j622",
+      "title": "haiku: R7.28 B simple Tokens screen",
+      "model": "haiku",
+      "task": "R7.28",
+      "status": "done",
+      "started": "2026-10-15T08:44:12+03:30",
+      "ended": "2026-10-15T08:52:04+03:30",
+      "tokensK": 155.0
     }
   ]
 }
