@@ -28,6 +28,7 @@ EVENTS = (
     ("PostToolUse", "Agent|Task|Bash", ""),
     ("SubagentStop", None, ""),
     ("Stop", None, ""),
+    ("UserPromptSubmit", None, ""),
 )
 _UNSAFE_CHARS = set(" \t\"'$`\\;&|<>()*?[]{}!#~")
 

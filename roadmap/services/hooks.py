@@ -16,8 +16,10 @@ import threading
 import time
 
 from roadmap import log as roadmap_log
+from roadmap.core import head as head_core
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, RoadmapError
 from roadmap.services import control, jobs, presence, rules
+from roadmap.services import head as head_svc
 from roadmap.services import queue as queue_service
 from roadmap.store import atomic, lock, paths, schema
 
@@ -242,6 +244,8 @@ def _handle(raw, environ, cwd, now, clock, started):
     event = str(payload.get("hook_event_name") or "")
     if event == "PreToolUse":
         return _pre_tool_use(payload, environ, cwd, now, clock, started)
+    if event == "UserPromptSubmit":
+        return _user_prompt(payload, environ, cwd, now, clock, started)
     tool = str(payload.get("tool_name") or "")
     _log(event + " " + tool)
     project = _project_for(payload, environ, cwd)
@@ -253,7 +257,7 @@ def _handle(raw, environ, cwd, now, clock, started):
         return None
     _touch_presence(project, now, clock, started)
     if event == "SessionStart":
-        return _session_start(project, data_dir, clock, started)
+        return _session_start(project, data_dir, clock, started, now)
     pattern, names = project_settings(data_dir)
     regex = task_regex(pattern)
     known = jobs.known_task_ids(data_dir)
@@ -492,8 +496,9 @@ def _log_denial(pid, reason, now):
     _log("denied " + pid + ": " + reason)
 
 
-def _session_start(project, data_dir, clock, started):
-    """Up to INBOX_LINES lines for the agent's context: the stop line first, then queued and answered items."""
+def _session_start(project, data_dir, clock, started, now=None):
+    """Up to INBOX_LINES lines for the agent's context: the stop line first, then queued and answered items, then
+    the head's line (HEAD-SPEC section 3) when the project captures."""
     lines = []
     try:
         state = control.read_state(project["id"])
@@ -503,11 +508,132 @@ def _session_start(project, data_dir, clock, started):
         stamp = control.clock_text(state.get("stoppedAt"))
         lines.append("roadmap: stopped by user at " + stamp + ". Run roadmap inbox.")
     lines += control.pending_lines(data_dir, limit=INBOX_LINES - len(lines))
-    if not lines:
+    head_lines = _head_session_lines(data_dir, now)
+    if not lines and not head_lines:
         return None
-    extra = _rule_lines(data_dir, _queued_task(data_dir), clock, started)
+    extra = _rule_lines(data_dir, _queued_task(data_dir), clock, started) if lines else []
     return {"hookSpecificOutput": {"hookEventName": "SessionStart",
-                                   "additionalContext": "\n".join(lines[:INBOX_LINES] + extra)}}
+                                   "additionalContext": "\n".join(lines[:INBOX_LINES] + extra + head_lines)}}
+
+
+# ------------------------------------------------------------------ head capture: UserPromptSubmit (HEAD-SPEC section 3)
+
+HEAD_MIN_WORDS = 4         # a prompt of 3 words or fewer is an ack and is not logged
+HEAD_SKIP_PREFIXES = ("<task-notification", "<system-reminder", "<command-")
+HEAD_NOLOG = "//nolog"
+HEAD_REPLY_CHARS = 120
+HEAD_SESSION_CHARS = 120
+HEAD_SESSION_ASKS = 3
+_BARE_SLASH_RE = re.compile(r"/[A-Za-z0-9_:.-]+")
+
+
+def _head_config(data_dir):
+    """The project's roadmap.config.json as a dict, or {} when it is missing or unreadable."""
+    data, error = schema.read_data("roadmap_config", os.path.join(data_dir, "roadmap.config.json"))
+    return data if error is None and isinstance(data, dict) else {}
+
+
+def _head_on(data_dir):
+    return _head_config(data_dir).get("headCapture") is True
+
+
+def _user_prompt(payload, environ, cwd, now, clock, started):
+    """Log the prompt for the head and reply with one triage line. Off unless the project sets headCapture. Fail-open:
+    it never blocks the prompt, and the lock wait is a share of what is left of the 0.3 s budget (a busy lock spools)."""
+    project = _project_for(payload, environ, cwd)
+    if project is None:
+        return None
+    data_dir = jobs.data_dir_of(project)
+    if not os.path.isdir(data_dir) or not _head_on(data_dir):
+        return None
+    text = payload.get("prompt")
+    if not isinstance(text, str):
+        _log("skip: head prompt is not text")
+        return None
+    stripped = text.strip()
+    session = payload.get("session_id")
+    moment = datetime.datetime.fromtimestamp(now, datetime.timezone.utc)
+    if not stripped or stripped.startswith(HEAD_NOLOG) or stripped.startswith(HEAD_SKIP_PREFIXES):
+        return None
+    budget = max(0.0, (PRE_TIMEOUT_S - (clock() - started)) * 0.5)
+    if _BARE_SLASH_RE.fullmatch(stripped):
+        try:
+            head_svc.session(data_dir, "start", session_id=session, now=moment, timeout=budget)
+        except RoadmapError as exc:
+            _log("head.session skipped: " + exc.code)
+        return None
+    if len(stripped.split()) < HEAD_MIN_WORDS:
+        return None
+    try:
+        result = head_svc.capture(data_dir, text, session_id=session, src="hook", now=moment, timeout=budget)
+    except RoadmapError as exc:
+        _log("head.capture skipped: " + exc.code)
+        return None
+    _log("head.capture %s %s len=%d" % (result["id"] or "spooled", result["kind"], result["len"]))
+    hint = _head_config(data_dir).get("head")
+    if isinstance(hint, dict) and hint.get("hint") is False:
+        return None
+    untriaged = 0 if _too_slow(clock, started) else _untriaged(data_dir, moment, result["id"])
+    reply = _head_reply(result, untriaged)
+    return {"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": reply}}
+
+
+def _untriaged(data_dir, moment, own):
+    """How many other entries wait for triage (new or understood). Never raises."""
+    try:
+        rows = head_svc.rows(data_dir, now=moment)
+    except Exception:
+        return 0
+    return sum(1 for r in rows if r["status"] in ("new", "understood") and r["id"] != own)
+
+
+def _head_reply(result, untriaged):
+    """The one reply line, at most HEAD_REPLY_CHARS: the id, the guessed kind and the triage command."""
+    kind = str(result["kind"])
+    eid = result["id"]
+    if eid is None:
+        return "head: queued (%s), logged on the next head write." % kind
+    lead = 'head: logged %s (%s). triage: roadmap head t %s %s "' % (eid, kind, eid, kind.rstrip("?"))
+    tail = '"' + (" · %d untriaged" % untriaged if untriaged else "")
+    room = HEAD_REPLY_CHARS - len(lead) - len(tail)
+    return (lead + str(result["sum"])[:max(0, room)] + tail)[:HEAD_REPLY_CHARS]
+
+
+def _head_session_lines(data_dir, now=None):
+    """At most one SessionStart line: the open asks (oldest first, with their age) and the needs-you count. Empty
+    unless the project captures. Never raises."""
+    try:
+        if not _head_on(data_dir):
+            return []
+        moment = datetime.datetime.fromtimestamp(time.time() if now is None else now, datetime.timezone.utc)
+        items = head_svc.rows(data_dir, now=moment)
+    except Exception:
+        return []
+    open_rows = [r for r in items if r["status"] not in head_core.CLOSED_STATUSES]
+    asks = sorted((r for r in open_rows if r["status"] != "needs-you"
+                   and str(r["kind"]).rstrip("?") not in ("decision", "rule")), key=lambda r: str(r["ts"]))
+    needs = [r for r in open_rows if r["status"] == "needs-you"]
+    if not asks and not needs:
+        return []
+    segments = []
+    if asks:
+        names = [r["id"] + ((" " + _short_age(r["age_min"])) if r.get("age_min") is not None else "")
+                 for r in asks[:HEAD_SESSION_ASKS]]
+        more = " …" if len(asks) > HEAD_SESSION_ASKS else ""
+        segments.append("%d open asks (%s%s)" % (len(asks), ", ".join(names), more))
+    if needs:
+        segments.append("%d needs-you" % len(needs))
+    line = "head: " + ", ".join(segments) + ". Run roadmap head brief."
+    return [line[:HEAD_SESSION_CHARS]]
+
+
+def _short_age(minutes):
+    minutes = max(0, int(minutes))
+    if minutes < 60:
+        return "%dm" % minutes
+    if minutes < 1440:
+        return "%dh" % (minutes // 60)
+    return "%dd" % (minutes // 1440)
 
 
 def _stop_pickup(payload, project, data_dir, now, clock=time.monotonic, started=None):
