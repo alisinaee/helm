@@ -27,10 +27,27 @@ export function columnKey(state) {
   return "todo";
 }
 
+// R7.78: the live column of a task. Doing is exactly the tasks with a running job; a todo or partial task with no
+// running job is Todo (partial ones carry the started chip). Hold and Done keep their status.
+export function liveState(state, running) {
+  if (state === "done" || state === "hold") return state;
+  return running > 0 ? "partial" : "todo";
+}
+
+// Running jobs per task id, from the snapshot's job list (the same jobs the Running card reads).
+function runningByTask(snap) {
+  const counts = {};
+  for (const job of snap.jobs || []) {
+    if (job.status === "running" && job.task) counts[job.task] = (counts[job.task] || 0) + 1;
+  }
+  return counts;
+}
+
 // Every task that is not deferred, with the status and subtask states a pending write shows until the next snapshot.
 export function workTasks(snap, now) {
   const blocked = new Set(snap.blocked || []);
   const names = {};
+  const running = runningByTask(snap);
   for (const phase of snap.phases) names[phase.id] = phase.name;
   const out = [];
   snap.tasks.forEach(function (t, index) {
@@ -41,6 +58,8 @@ export function workTasks(snap, now) {
       const flag = pendingValue("sub:" + addr, snap.fetchedAt, now);
       return { addr: addr, t: s.t, done: flag !== undefined ? flag : s.d };
     });
+    const stored = pending !== undefined ? pending : t.state;
+    const live = running[t.id] || 0;
     out.push({
       id: t.id,
       order: index,
@@ -48,7 +67,9 @@ export function workTasks(snap, now) {
       feats: t.feats || [],
       phase: t.phase,
       phaseName: names[t.phase] || t.phase,
-      state: pending !== undefined ? pending : t.state,
+      state: liveState(stored, live),
+      started: stored === "partial" && live === 0,
+      running: live,
       model: t.model,
       needsUser: t.needsUser,
       blocked: blocked.has(t.id),
@@ -214,6 +235,7 @@ function cardHtml(ctx, task) {
   if (task.model) flags.push(modelChip(task.model));
   if (task.needsUser) flags.push(chipHtml("needs you", "warning"));
   if (task.blocked) flags.push(chipHtml("blocked", "danger"));
+  if (task.started) flags.push(chipHtml("started", "neutral"));
   const pct = task.capK && task.spentK != null ? Math.min(100, (task.spentK / task.capK) * 100) : null;
   const subsDone = task.subs.filter(function (s) {
     return s.done;

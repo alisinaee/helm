@@ -17,7 +17,7 @@ SKIP = {"tokens.js", "topbar.js", "limits.js", "head.js"}
 # or control name), or a user's own answer or plan item that must be read in full (the answer also has its
 # aria-label). A new entry here needs a reason; any other concatenated label fails the test.
 ALLOWED = {
-    ("board.js", 197): "task state word from a fixed table",
+    ("board.js", 218): "task state word from a fixed table",
     ("git.js", 195): "git tab name from a fixed list",
     ("settings.js", 50): "option label from a fixed list",
     ("workflow.js", 716): "control text passed by fixed callers",

@@ -174,6 +174,7 @@ function rowHtml(ctx, task, checked) {
   const flags = [];
   if (task.needsUser) flags.push(chipHtml("needs you", "warning"));
   if (task.blocked) flags.push(chipHtml("blocked", "danger"));
+  if (task.started) flags.push(chipHtml("started", "neutral"));
   if (task.subs.length) flags.push('<span class="num wk-fn">' + subsDone + "/" + task.subs.length + " sub</span>");
   if (task.comments) flags.push('<span class="num wk-fn">' + task.comments + " cmt</span>");
   return '<tr class="' + (task.state === "done" ? "is-done" : "") + '" data-wk-task="' + esc(task.id) +
