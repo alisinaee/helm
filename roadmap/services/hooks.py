@@ -250,6 +250,8 @@ def _handle(raw, environ, cwd, now, clock, started):
         _log("skip: stdin is not a JSON object")
         return None
     event = str(payload.get("hook_event_name") or "")
+    if event in USAGE_EVENTS:
+        _usage_auto(payload, now)
     if event == "PreToolUse":
         return _pre_tool_use(payload, environ, cwd, now, clock, started)
     if event == "UserPromptSubmit":
@@ -1164,6 +1166,22 @@ def _read_state(path):
 def _write_state(path, project_id, state):
     """Save the state atomically at the current schema. The caller holds the state directory lock."""
     schema.write_data("hooks", path, {"project": project_id, "active": state["active"]})
+
+
+USAGE_EVENTS = ("UserPromptSubmit", "Stop", "PostToolUse", "SessionStart")
+
+
+def _usage_auto(payload, now):
+    """Keep account usage current with no manual step (R7.77): a rate_limits block in the payload, else a fresh status
+    line sidecar, is stored at most once a minute (services/usage.auto_update). Never fails the hook."""
+    from roadmap.services import usage as usage_svc
+    try:
+        moment = datetime.datetime.fromtimestamp(now).astimezone()
+        source = usage_svc.auto_update(payload, moment)
+        if source:
+            _log("usage updated from " + source)
+    except Exception as exc:  # usage is best effort; the hook's own work must go on
+        _log("usage skip: " + type(exc).__name__)
 
 
 def _log(message):

@@ -81,7 +81,7 @@ class LimitsFlowTests(unittest.TestCase):
         usage_path = os.path.join(sb.state_dir, "usage.json")
         with open(usage_path, encoding="utf-8") as fh:
             reading = json.load(fh)
-        old = datetime.datetime.now().astimezone() - datetime.timedelta(minutes=40)
+        old = datetime.datetime.now().astimezone() - datetime.timedelta(minutes=120)  # past the 90-minute freshness rule
         reading["updated"] = old.isoformat(timespec="seconds")
         with open(usage_path, "w", encoding="utf-8") as fh:
             json.dump(reading, fh)

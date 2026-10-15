@@ -84,11 +84,22 @@ function controlHtml(vm) {
     esc(c.id) + '" data-focus="control"' + offline + ">Stop</button>";
 }
 
-// The weekly stop from the meter rows (the same row the Tokens screen edits): "stop 95%", "stop off", or unknown
-// when the snapshot has no meters at all.
+// The stop that binds first: the lowest blocking weekly stop, the project's own (autonomy.json, an acct row) or the
+// global percent on the week. Both block, so the lower one is the real stop (R7.77). Else the Tokens rule.
+export function bindingStopRow(rows) {
+  if (!Array.isArray(rows)) return null;
+  const blocking = rows.filter(function (r) {
+    const weekly = r.kind === "acct" || (r.scope === "global" && r.kind === "pct" && r.window === "week");
+    return weekly && r.action !== "warn" && typeof r.limit === "number";
+  });
+  if (!blocking.length) return weeklyStopRow(rows);
+  return blocking.reduce(function (a, b) { return b.limit < a.limit ? b : a; });
+}
+
+// The weekly stop from the meter rows: "stop 85%", "stop off", or unknown when the snapshot has no meters at all.
 function stopText(rows) {
   if (rows === null) return "stop unknown";
-  const row = weeklyStopRow(rows);
+  const row = bindingStopRow(rows);
   return row ? "stop " + fmtPercent(row.limit) : "stop off";
 }
 

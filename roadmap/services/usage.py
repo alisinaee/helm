@@ -489,6 +489,76 @@ def push(text, config=None):
     return _store_manual(parse_push(text), cfg, SOURCE_PUSH, datetime.now().astimezone())
 
 
+# ---------------------------------------------------------------- automatic readings (R7.77)
+# Claude Code hands account rate limits to the status line command as
+# {"rate_limits": {"five_hour": {"used_percentage", "resets_at"}, "seven_day": {...}}}; a hook payload may carry the
+# same block. A status line script may also leave the last block in a sidecar file (token-optimizer writes
+# ~/.claude/token-optimizer/rate-limits.json). Neither holds a secret. The hooks feed whatever they find here, at most
+# once per AUTO_GAP_S, and only a reading newer than the stored one replaces it.
+
+SOURCE_HOOK = "Claude Code hook"
+SOURCE_STATUSLINE = "Claude Code status line"
+AUTO_GAP_S = 60
+SIDECAR_MAX_AGE_S = 15 * 60
+WINDOWS = (("seven_day", "weekly"), ("five_hour", "fiveHour"))
+
+
+def sidecar_path():
+    return os.path.join(os.path.expanduser("~"), ".claude", "token-optimizer", "rate-limits.json")
+
+
+def parse_rate_limits(block):
+    """The usage changes in a Claude Code rate_limits block, or {} when it has no usable window."""
+    changes = {}
+    if not isinstance(block, dict):
+        return changes
+    for kind, prefix in WINDOWS:
+        window = block.get(kind)
+        value = _percent(window.get("used_percentage")) if isinstance(window, dict) else None
+        if value is None or not (0 <= value <= 100):
+            continue
+        changes[prefix + "Percent"] = _round_pct(value)
+        changes[prefix + "ResetsAt"] = _iso(window.get("resets_at"))
+    return changes
+
+
+def read_sidecar(path=None, now=None):
+    """(changes, moment) from a fresh status line sidecar file, or ({}, None)."""
+    path = path or sidecar_path()
+    now = now or datetime.now().astimezone()
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.loads(handle.read(65536))
+    except (OSError, ValueError):
+        return {}, None
+    stamp = data.get("timestamp") if isinstance(data, dict) else None
+    if isinstance(stamp, bool) or not isinstance(stamp, (int, float)):
+        return {}, None
+    moment = datetime.fromtimestamp(int(stamp / 1000 if stamp > 1e11 else stamp)).astimezone()
+    if (now - moment).total_seconds() > SIDECAR_MAX_AGE_S:
+        return {}, None
+    return parse_rate_limits(data), moment
+
+
+def auto_update(payload=None, now=None, config=None, sidecar=None):
+    """Store usage from a hook payload's rate_limits block, else from the status line sidecar. At most once per
+    AUTO_GAP_S (counted from the stored reading); a reading not newer than the stored one is skipped. Returns the source stored, or None. Never raises
+    for a missing or bad reading."""
+    now = (now or datetime.now().astimezone()).replace(microsecond=0)
+    block = payload.get("rate_limits") if isinstance(payload, dict) else None
+    changes, moment, source = parse_rate_limits(block), now, SOURCE_HOOK
+    if not changes:
+        changes, moment = read_sidecar(sidecar, now)
+        source = SOURCE_STATUSLINE
+    if not changes:
+        return None  # nothing to store: no lock is taken, so a hook with no reading costs one small file read
+    stored = _moment(_load_store().get("updated"))
+    if stored is not None and (moment <= stored or (now - stored).total_seconds() < AUTO_GAP_S):
+        return None
+    _store_manual(changes, _config(config), source, moment)
+    return source
+
+
 def _control_after_write():
     """After a usage write, recompute the control state of every project: the limit rows read usage and the ledger.
     Best effort: control.recompute_all never raises."""
