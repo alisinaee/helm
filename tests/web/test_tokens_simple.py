@@ -78,7 +78,7 @@ class TokensSimpleRender(unittest.TestCase):
     def test_no_token_case_says_so_in_plain_words(self):
         html = self.out["noToken"]
         self.assertNotIn("/login", html)
-        self.assertNotIn('data-action="sync-usage"', html)
+        self.assertIn('>Request update<', html)
 
     def test_weekly_stop_and_share_come_from_limits(self):
         if not real_limits_exports():

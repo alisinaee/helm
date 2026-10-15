@@ -8,7 +8,7 @@ import { run, runBatch } from "../cmd.js";
 import { buildHash, currentRoute } from "../router.js";
 import { loadUi, updateUi } from "../state.js";
 import { boardView, COLUMNS, filterBarHtml, finePointer, matchesFilters, parseFilters, setStatus, toggleToken,
-  workTasks } from "./board.js";
+  matchesIssue, workIssues, workTasks } from "./board.js";
 import { clearSelection, groupBarHtml, GROUPS, listView, nextSort, parseSort, setAllSelected, setSelected } from
   "./list.js";
 import { subtaskToggle, treeView } from "./tree.js";
@@ -161,13 +161,26 @@ function headHtml(ctx) {
     '<div class="wk-top"><div class="seg wk-views" role="group" aria-label="Work view">' + buttons + "</div></div>";
 }
 
+// The issue cards that pass the filters (the Board shows them; none inside a feature scope).
+function issuesShown(ctx) {
+  if (ctx.feat) return [];
+  return workIssues(ctx.snap, ctx.pid, Date.now()).filter(function (i) {
+    return matchesIssue(i, ctx.F);
+  });
+}
+
 function bodyHtml(ctx) {
-  if (!ctx.all.length) {
+  const issues = issuesShown(ctx);
+  if (!ctx.all.length && !issues.length) {
     return emptyHtml("No tasks in this project yet.", "<span>Tasks load from the project plan.</span>");
   }
   if (!ctx.shown.length) {
-    return filterBarHtml(ctx) + emptyHtml("No tasks match these filters.",
-      '<button type="button" class="btn btn-small" data-wk="clear" data-focus="wk-clear">Clear filters</button>');
+    // Filters can leave no task while issue cards still match: those show on the Board, not a "no match" line.
+    if (!issues.length) {
+      return filterBarHtml(ctx) + emptyHtml("No tasks match these filters.",
+        '<button type="button" class="btn btn-small" data-wk="clear" data-focus="wk-clear">Clear filters</button>');
+    }
+    return filterBarHtml(ctx) + boardView(ctx);
   }
   if (ctx.view === "list") return filterBarHtml(ctx) + groupBarHtml(ctx) + listView(ctx);
   if (ctx.view === "tree") return filterBarHtml(ctx) + treeView(ctx);

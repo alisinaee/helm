@@ -18,6 +18,8 @@ globalThis.document = {
   },
 };
 globalThis.window = globalThis;
+globalThis.window.location = { hash: "" };
+globalThis.window.addEventListener = () => {};
 
 const NOW = 1800000000;
 const ALPHA = {
