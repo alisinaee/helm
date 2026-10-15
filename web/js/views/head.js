@@ -3,8 +3,8 @@
 // stays at the right edge. A row is toggled by a stretched button that covers the whole row (keyboard: Enter/Space,
 // aria-expanded); the buttons and links in the row sit above it. An open row shows the verbatim text (fetched once
 // per row from the read route with full=H.., cached), the history, and a footer with the status, the bound-to chips
-// and the actions. The screen renders the snapshot the server folds (head: {now, prev, counts, rows}).
-// Filters and the deep-linked open row live in the page hash (#head?f=open&id=H12).
+// and the actions. The screen paints every snapshot head.rows entry (head: {now, prev, counts, rows}). A filter only
+// selects among those rows. Filters and the deep-linked open row live in the page hash (#head?f=open&id=H12).
 // Every value goes through esc() or textContent; the commands are head.accept, head.set, head.bind, head.split,
 // head.merge and the copy button.
 
@@ -64,22 +64,29 @@ function passes(row, opts) {
   return true;
 }
 
-// The counts line: the server's counts when present, else the same numbers from the rows it sent.
+// A server count is used only when it is not larger than the matching rows. A bigger unhandled or needs count
+// falls back to those rows; a bigger doneUnacc falls back to done rows that are not accepted.
 function countsOf(head, rows) {
   const c = head.counts || {};
   const count = function (test) {
     return rows.filter(test).length;
   };
+  const unhandled = count(function (r) {
+    return UNHANDLED.indexOf(r.status) >= 0;
+  });
+  const needs = count(function (r) {
+    return r.status === "needs-you";
+  });
+  const done = count(function (r) {
+    return r.status === "done";
+  });
+  const doneUnacc = count(function (r) {
+    return r.status === "done" && !r.acc;
+  });
   return {
-    unhandled: c.unhandled != null ? c.unhandled : count(function (r) {
-      return UNHANDLED.indexOf(r.status) >= 0;
-    }),
-    needs: c.needs != null ? c.needs : count(function (r) {
-      return r.status === "needs-you";
-    }),
-    doneUnacc: c.doneUnacc != null ? c.doneUnacc : count(function (r) {
-      return r.status === "done" && !r.acc;
-    }),
+    unhandled: c.unhandled != null && c.unhandled <= unhandled ? c.unhandled : unhandled,
+    needs: c.needs != null && c.needs <= needs ? c.needs : needs,
+    doneUnacc: c.doneUnacc != null && c.doneUnacc <= done ? c.doneUnacc : doneUnacc,
   };
 }
 
