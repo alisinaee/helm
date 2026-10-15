@@ -1,16 +1,16 @@
-// Top bar (WP28): the scope crumb (project name, section, view), the control pill with one Stop or Resume button,
-// the Today and Week mini meters, the connection dot, the theme toggle and "?". The meters read only
-// snapshot meters.limits (WP27); when that is missing they show grey "unknown". The client does no limit maths.
+// Top bar (WP28, R7.28 W1.d): the scope crumb (project name, section, view), the control pill with one Stop or Resume
+// button, one text line "Week 63% · stop 95%" (the weekly share from snap.usage and the weekly stop row), the
+// connection dot, the theme toggle and "?". The client does no limit maths; missing values read "unknown".
 
 import { csrfToken } from "../api.js";
-import { esc, meterHtml } from "../dom.js";
+import { esc } from "../dom.js";
+import { fmtPercent } from "../format.js";
 import { mark, status as logStatus } from "../log.js";
 import { SECTIONS, SETTINGS, sectionById } from "../routes.js";
 import { panelIsOpen } from "../state.js";
 import { showToast } from "./toast.js";
 
 const THEME_LABEL = { auto: "Auto", dark: "Dark", light: "Light" };
-const STATE_RANK = { ok: 0, unknown: 1, warn: 2, block: 3 };
 const MARK_LABEL = "I am seeing a bug here";
 const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\])$/;
 
@@ -82,52 +82,25 @@ function controlHtml(vm) {
     esc(c.id) + '" data-focus="control"' + offline + ">Stop</button>";
 }
 
-// The tightest row for a window: the highest state, then the highest used share.
-function tightest(rows) {
-  let best = null;
-  let bestShare = -1;
-  for (const row of rows) {
-    const share = row.limit > 0 && row.used != null ? row.used / row.limit : 0;
-    if (!best || STATE_RANK[row.state] > STATE_RANK[best.state] ||
-        (STATE_RANK[row.state] === STATE_RANK[best.state] && share > bestShare)) {
-      best = row;
-      bestShare = share;
-    }
-  }
-  return best;
+// The weekly stop: the global pct row on the week. Null rows mean meters are unknown; no row means the stop is off.
+function stopText(rows) {
+  if (rows === null) return "stop unknown";
+  const row = rows.find(function (r) {
+    return r.scope === "global" && r.kind === "pct" && r.window === "week";
+  });
+  return row ? "stop " + fmtPercent(row.limit) : "stop off";
 }
 
-function unit(row) {
-  return row.kind === "pct" || row.kind === "acct" ? "%" : "k tok";
-}
-
-function miniHtml(label, rows, win) {
-  if (rows === null) {
-    return '<span class="mini is-unknown"><span class="mini-l">' + esc(label) + "</span>" +
-      meterHtml(null, "unknown") + '<span class="mini-v">unknown</span></span>';
-  }
-  const row = tightest(rows.filter(function (r) {
-    return r.window === win;
-  }));
-  if (!row) {
-    return '<span class="mini"><span class="mini-l">' + esc(label) +
-      '</span><span class="mini-v">no limit</span></span>';
-  }
-  if (row.state === "unknown" || row.used == null || row.limit == null) {
-    return '<span class="mini is-unknown"><span class="mini-l">' + esc(label) + "</span>" +
-      meterHtml(null, "unknown") + '<span class="mini-v">unknown</span></span>';
-  }
-  const share = row.limit > 0 ? (row.used / row.limit) * 100 : 0;
-  const tone = row.state === "block" ? "danger" : row.state === "warn" ? "warning" : "accent";
-  const text = (row.est ? "≈" : "") + String(Math.round(row.used * 10) / 10) + "/" +
-    String(row.limit) + unit(row);
-  return '<span class="mini"><span class="mini-l">' + esc(label) + "</span>" + meterHtml(share, tone) +
-    '<span class="mini-v">' + esc(text) + "</span></span>";
+// "Week 63% · stop 95%": the weekly share (snap.usage) and the weekly stop. Pure, so the render test can check it.
+export function meterText(usage, rows) {
+  const known = usage && typeof usage.weeklyPercent === "number";
+  const week = known ? "Week " + fmtPercent(usage.weeklyPercent) : "Week unknown";
+  return week + " · " + stopText(rows);
 }
 
 function metersHtml(vm) {
-  return '<div class="top-meters" aria-label="Usage limits">' + miniHtml("Today", vm.meterRows, "day") +
-    miniHtml("Week", vm.meterRows, "week") + "</div>";
+  return '<span class="top-meters" title="Weekly usage and the weekly stop">' +
+    esc(meterText(vm.usage, vm.meterRows)) + "</span>";
 }
 
 function connHtml(conn) {

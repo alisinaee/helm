@@ -73,4 +73,13 @@ out.noToken = tokens.sectionView(vmOf({ name: "project", id: "splitnet" },
 const empty = state.createStore();
 empty.projects = [];
 out.empty = tokens.sectionView(state.buildViewModel(empty, { name: "home", id: null }, prefs, now));
+
+// The top bar text (topbar.js): the weekly share from snap.usage and the weekly stop from the meter rows.
+const topbar = await load("views/topbar.js");
+const bar = (route, rows, usage) => topbar.topbarView({ route: route, control: null, conn: { ok: true },
+  meterRows: rows, usage: usage, theme: "auto", ui: { panelOpen: true } });
+out.topbar = bar({ name: "project", id: "splitnet" }, okMeters.limits, { weeklyPercent: 63 });
+out.topbarAll = bar({ name: "home", id: null }, okMeters.limits, { weeklyPercent: 63 });
+out.topbarOff = bar({ name: "home", id: null }, [], { weeklyPercent: 12 });
+out.topbarUnknown = bar({ name: "home", id: null }, null, null);
 console.log(JSON.stringify(out));

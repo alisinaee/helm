@@ -132,6 +132,27 @@ class TokensSimpleRender(unittest.TestCase):
                 opening = m.group(0)
                 self.assertTrue("aria-label=" in opening or m.group(1).strip(), name)
 
+    def test_limit_sentence_is_printed_once(self):
+        html = self.out["blocked"]
+        self.assertEqual(html.count("agents stop starting new jobs"), 1)
+        self.assertEqual(self.out["project"].count("agents stop starting"), 1)
+
+    def test_all_view_names_no_project_in_the_weekly_stop(self):
+        # The All view has no project route: its weekly stop form and its top bar carry no slug.
+        self.assertIn('data-form="weekly" data-project=""', self.out["global"])
+        self.assertNotIn('data-project="splitnet"', self.out["topbarAll"])
+        self.assertNotIn('data-project="alpha"', self.out["topbarAll"])
+
+    def test_top_bar_is_one_weekly_line(self):
+        self.assertIn('<span class="top-meters" title="Weekly usage and the weekly stop">'
+                      "Week 63% · stop 95%</span>", self.out["topbar"])
+        self.assertIn("Week 63% · stop 95%", self.out["topbarAll"])
+        self.assertNotIn("mini", self.out["topbar"])
+
+    def test_top_bar_says_off_and_unknown_in_words(self):
+        self.assertIn("Week 12% · stop off", self.out["topbarOff"])
+        self.assertIn("Week unknown · stop unknown", self.out["topbarUnknown"])
+
 
 class TokensSimpleSource(unittest.TestCase):
 
@@ -142,6 +163,13 @@ class TokensSimpleSource(unittest.TestCase):
     def test_no_innerhtml_and_no_long_lines(self):
         self.assertNotIn("innerHTML", self.src)
         self.assertTrue(all(len(line) <= 120 for line in self.src.split("\n")))
+
+    def test_top_bar_source_is_short_lined_and_has_no_mini_meters(self):
+        with open(os.path.join(VIEWS, "topbar.js"), encoding="utf-8") as fh:
+            top = fh.read()
+        self.assertTrue(all(len(line) <= 120 for line in top.split("\n")))
+        self.assertNotIn("innerHTML", top)
+        self.assertNotIn("miniHtml", top)
 
     def test_keeps_the_route_export(self):
         self.assertIn("export function sectionView(vm)", self.src)

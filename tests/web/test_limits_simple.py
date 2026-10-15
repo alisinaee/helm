@@ -43,6 +43,9 @@ class LimitsSimpleSource(unittest.TestCase):
     def test_only_limit_set_and_limit_rm_are_sent(self):
         self.assertEqual(sorted(set(OPS.findall(self.src))), ["limit.rm", "limit.set"])
 
+    def test_no_long_lines(self):
+        self.assertTrue(all(len(line) <= 120 for line in self.src.split("\n")))
+
     def test_no_inline_markup_and_no_innerhtml(self):
         self.assertIsNone(INLINE.search(self.src))
         self.assertNotIn("innerHTML", self.src)
@@ -85,6 +88,7 @@ class LimitsSimpleRender(unittest.TestCase):
         # The one sentence about the limit and the override is printed once, by tokens.js.
         self.assertNotIn("override for 1 hour", self.out["weekly"])
         self.assertNotIn("agents stop starting", self.out["weekly"])
+        self.assertNotIn("stop starting", self.out["weekly"])
 
     def test_all_view_names_no_project_in_copy_refs(self):
         # The All view (no project route) must not carry the first project's slug into its refs or forms.

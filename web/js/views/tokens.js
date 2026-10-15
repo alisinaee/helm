@@ -61,9 +61,9 @@ export function sectionView(vm) {
   if (state) return state;
   const isProject = vm.route.name === "project";
   const snaps = isProject ? [vm.project.snapshot] : (vm.snapshotList || []);
-  const pid = isProject ? vm.route.id : (vm.projects[0] ? vm.projects[0].id : null);
-  // Copy refs name one project: the project view's own. All projects has none, so its section refs are omitted.
-  const refPid = isProject ? pid : null;
+  // The All view names no project (never the first project's slug): its copy refs and the override carry none.
+  const pid = isProject ? vm.route.id : null;
+  const refPid = pid;
   const measured = snaps.some(function (s) {
     return Array.isArray(s.meters);
   });
