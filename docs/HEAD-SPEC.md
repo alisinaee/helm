@@ -239,3 +239,12 @@ Head now  Opus 5.5 · acct B · since 09:02 (3h) · 5h 41% · week 63%      prev
 - Capture every typed message automatically (headCapture on).
 - The head may mark an ask done; the GUI gets a Review button so the person can confirm or reopen. Only the person accepts.
 - CSS cap: raise if needed, as little as possible (head.css first, tidy others).
+
+## 11. Head autopilot: the head must not need reminders (the person, 2026-10-15)
+Problem: the head forgets open asks, goes idle, skips cursor/agy audits, registers jobs late. Fix = the ledger drives the head, not memory:
+1. **Stop-hook gate (H12):** when the head tries to end a turn, the Stop hook runs `head brief --gate`. If open asks (new/understood/bound/doing/needs-head), queued tasks, or finished-but-uncommitted worker results exist, usage is under the stops (5h 90%, weekly 98%) and the person has not said "stop", the hook returns a block with the 5 top items ("continue: H12 unanswered 40m, task R7.29 step 2 free, no cursor/agy running"). Fail-open; max 1 block per 10 min; `head pause` / person "stop" disables it.
+2. **Idle-resource check in the same brief:** lists "cursor idle", "agy idle", free non-overlapping tasks, unregistered running workers, uncommitted diffs, unpushed commits. Every head turn start (SessionStart + UserPromptSubmit reply, <=120 chars) shows the top 3.
+3. **Every worker/agent completion note** triggers the runbook checklist printed by `head brief --done`: verify diff, close job with tokens, commit, push, launch next wave, run cursor/agy audit on it, tick asks.
+4. **Ask coverage:** an ask with no link after 15 min is shown red in the GUI and in the gate; the person's Review button is the only way to close.
+5. **Resume:** `/head` skill runs `head claim` + `head brief --gate` first, so a new account has the full list without re-explaining.
+Build as step H12 after H6 (hook) and H5 (CLI); files: roadmap/services/hooks.py (Stop branch), roadmap/commands/head.py, tests/unit/test_head_gate.py.
