@@ -6,6 +6,18 @@ Each work package writes a fragment in `changes/WPn.md`; the fragments are merge
 
 ## [Unreleased]
 
+### Added
+
+- **Head ledger** (R7.31, HEAD-SPEC): every message the person types is logged by the UserPromptSubmit hook, with no
+  AI work; the head triages each one (`roadmap head t`) and binds it to tasks, issues, docs or commits.
+- **Head CLI**: `roadmap head log|t|list|show|set|bind|unbind|split|merge|convert|claim|brief|triage|review|accept|forget`.
+  `head brief` is the resume digest a new chat reads first. `review`, `accept` and `forget` are the person's only.
+- **Head API**: `GET /api/v1/projects/{id}/head` (the rows; `full=` for one verbatim text, not on the phone) and the
+  `head.*` ops on `POST /api/v1/cmd`.
+- **Head screen**: asks with status, age and links; a Review button confirms or reopens the entries the head marked done.
+- **Head docs**: `docs/HEAD-USER.md` (for the person), the head ledger section in `docs/HEAD-RUNBOOK.md`, and the
+  head commands in `docs/AGENT-INTERFACE.md`.
+
 ## [1.0.0] - Unreleased
 
 First full release of roadmap-board: a local dashboard and job tracker for projects built with Claude Code. It runs

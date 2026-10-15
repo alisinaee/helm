@@ -173,6 +173,32 @@ Re-planning later uses `roadmap plan export --phase P`, an edit to a few lines, 
 
 A unit test asserts it is ≤ 40 lines and that every command it names parses.
 
+## 4a. Head commands (the ask ledger, HEAD-SPEC section 4)
+
+`roadmap head` keeps the person's asks and decisions. The UserPromptSubmit hook logs every typed message with no AI
+work; the head triages it. Each command prints `ok ..` then `next: ..`; `--json` gives the envelope.
+
+| Command | Output |
+|---|---|
+| `head log "<text>" [--kind K] [--sum S] [--bind REF..]` | `ok H15 ask new. next: roadmap head t H15 ..` |
+| `head t H15 <kind> "<sum>" [REF..] [--status S]` | one-call triage: `ok H15 ask bound task:R7.31` |
+| `head list [--open\|--unhandled\|--doing\|--needs\|--done\|--all] [--kind K] [--n 20] [--q text]` | one line per entry |
+| `head show H15` | summary, verbatim, links with their states, history (at most 20 lines) |
+| `head set H15 status=.. note=".."`, `bind H15 REF..`, `unbind H15 REF..` | `ok ..` |
+| `head split H15 "<a>" "<b>"`, `head merge H16 --into H9` | two new entries, or a duplicate merged |
+| `head convert H15 task\|issue\|backlog\|rule` | creates through the existing ops and binds it |
+| `head claim --model "Opus 5.5" [--acct B]` | writes a session record, prints the carried-over open asks |
+| `head brief [--md]` | the resume digest, at most 15 lines |
+| `head triage` | untriaged entries with suggestions |
+| `head review [H15 confirm\|reopen]` | person only: lists done entries awaiting confirmation, or decides one |
+| `head accept H15`, `head forget H15` | person only (`forget` blanks the verbatim, keeps the summary) |
+
+- **Status:** `new`, `understood`, `bound`, `doing`, `done`, `declined`, `needs-you`, `merged`. A status comes from
+  the links: `done` only when every link is done, or when the head sets it. The person confirms with `review`.
+- **Refs:** `task:`, `sub:`, `issue:`, `feature:`, `question:`, `backlog:`, `review:`, `rule:`, `doc:`, `commit:`,
+  `job:`, `ask:`. At most 6 per entry. `convert H15 rule` sets `needs-you` (the person adds it to rules.txt).
+- Agents cannot change the text, the time or the source of an entry. There is no delete.
+
 ## 5. Work packages
 
 ### WP16: task, plan and status CLI and formats (2 Haiku jobs; about 90k total; check: sonnet, 15k)

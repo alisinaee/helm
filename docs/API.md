@@ -24,6 +24,7 @@ marked `...`.
 | GET | `/api/v1/projects/{id}/snapshot` | the project snapshot. `ETag`; `304` on a matching `If-None-Match` |
 | GET | `/api/v1/projects/{id}/notes` | the project's research notes: `{notes: [{name, title, size, lines}]}` (read only) |
 | GET | `/api/v1/projects/{id}/notes/{name}` | one research note as plain text, UTF-8 (read only) |
+| GET | `/api/v1/projects/{id}/head` | the head ledger rows: `{entries: [...]}`; `f`, `n`, `full=H<id>` (see below) |
 | GET | `/api/v1/usage` | the stored plan usage |
 | POST | `/api/v1/usage/sync` | reads the plan usage now, then returns the `/api/v1/usage` object |
 | POST | `/api/v1/cmd` | runs one command-registry op: body `{op, args, project?}`, reply `{ok, data, activity, undo}` (see below) |
@@ -152,6 +153,17 @@ clock, so the tag changes while a job runs.
 
 `ETag` and `Cache-Control: no-cache` are sent on every snapshot reply, so a browser or proxy always revalidates.
 
+### GET /api/v1/projects/{id}/head
+
+The head ledger rows (HEAD-SPEC section 5). Query: `f=open` (default; `all` adds the closed ones), `n` (the number of
+rows, at most 100), and `full=H12` for one entry with its verbatim `text` and its `history`. Same-origin guard as the
+other reads. On the phone listener the reply has no `text` and no `history`.
+
+```json
+{"entries": [{"id": "H15", "kind": "ask", "sum": "Head section design", "status": "doing", "age": "2h",
+              "stale": false, "carried": false, "links": ["task:R7.31", "feature:F25"], "more": 0, "dup": null}]}
+```
+
 ### GET /api/v1/projects/{id}/notes and /notes/{name}
 
 Read-only access to the research notes that `roadmap research` writes under the project's data folder
@@ -227,6 +239,11 @@ Feature ops (WP52): `feature.add` (`title`, `acc`?, `prio`?, `phase`?, `parent`?
 `feature.unlink` (`task`, `feats` of 1 to 3 feature ids), `feature.accept` (`id`, `on`?, `confirm`?, `date`?), `feature.rm` (`id`, only when
 the feature has no tasks and no sub-features). `feature.accept` is for the person: an agent shell, or a phone call,
 gets `409 agent_refused` with `next: ask the person`.
+
+Head ops (HEAD-SPEC section 5): `head.log`, `head.triage`, `head.set`, `head.bind`, `head.unbind`, `head.split`,
+`head.merge`, `head.convert` for the head and its workers. `head.review`, `head.accept` and `head.forget` are the
+person's only: an agent or a script gets `409 agent_refused` with `next: ask the person`. `head.restore` is internal
+(it runs undo). Head ops are not on the phone listener. The hook's capture writes no activity line.
 
 Errors, in the order checked: `403 forbidden` (CSRF, origin, or not allowed on this listener), `415` (not JSON),
 `413` (body over 4 KB), `422 invalid_args`, `404 unknown_op` (`error.problems` lists the first problem), `429
