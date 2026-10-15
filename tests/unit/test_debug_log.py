@@ -313,3 +313,64 @@ class FailOpenTests(DebugCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ReviewFixTests(DebugCase):
+    """Regressions from docs/reviews/cursor-logging-grok.md: stack budget, key cut order, stored-field scrub,
+    token shapes, one bad line never blanks a read, and one-line report output."""
+
+    def test_stack_keeps_its_own_budget_when_the_rest_fits(self):
+        frames = "\n".join("frame_%02d.py:%d in some_function_name_here" % (i, i) for i in range(12))
+        self.emit(ev="ui.error", data={"type": "TypeError", "stack": frames + "\n" + "x" * 900})
+        data = self.lines()[0]["data"]
+        self.assertEqual(data["type"], "TypeError")
+        self.assertIn("frame_00.py", data["stack"])
+        self.assertNotEqual(data, {"cut": True})
+
+    def test_long_key_ending_in_a_denied_word_is_dropped(self):
+        self.emit(data={"x" * 45 + "password": "hunter2", "ok": 1})
+        data = self.lines()[0]["data"]
+        self.assertNotIn("hunter2", json.dumps(data))
+        self.assertEqual(data["ok"], 1)
+
+    def test_api_key_and_session_keys_are_dropped(self):
+        self.emit(data={"apiKey": "abc", "api_key": "def", "session": "ghi", "keep": "yes"})
+        data = self.lines()[0]["data"]
+        self.assertEqual(data, {"keep": "yes"})
+
+    def test_token_and_github_and_openai_shapes_are_redacted_in_msg(self):
+        self.emit(msg="a token=AAA1 b ghp_BBB2 c sk-proj-CCC3")
+        text = json.dumps(self.lines()[0])
+        for secret in ("AAA1", "BBB2", "CCC3"):
+            self.assertNotIn(secret, text)
+
+    def test_route_and_ref_have_no_control_characters_or_absolute_paths(self):
+        self.emit(route="#/tasks\nfake line\x1b[31m /Users/someone/projects/x", ref="rb:p/task/1\r\t")
+        rec = self.lines()[0]
+        self.assertNotIn("\n", rec["route"])
+        self.assertNotIn("\x1b", rec["route"])
+        self.assertNotIn("/Users/someone", rec["route"])
+        self.assertEqual(rec["route"].split("/")[0], "#")  # the hash route itself is kept
+        self.assertNotIn("\r", rec["ref"])
+
+    def test_hash_route_keeps_its_path_segment(self):
+        self.emit(route="#/head/section")
+        self.assertEqual(self.lines()[0]["route"], "#/head/section")
+
+    def test_a_line_too_deep_to_parse_is_skipped_not_fatal(self):
+        self.emit(msg="before")
+        with open(self.logs(), "a", encoding="utf-8") as fh:
+            fh.write("[" * 100000 + "]" * 100000 + "\n")
+        self.emit(msg="after")
+        msgs = [rec["msg"] for rec in log.read_events()]
+        self.assertEqual(msgs, ["before", "after"])
+
+    def test_report_is_one_line_per_event_even_for_old_records(self):
+        rec = {"ts": "2026-10-15T10:00:00.000+00:00", "sid": "s", "src": "ui", "lvl": "WARN", "ev": "ui.error",
+               "route": "#/a\nforged line /Users/someone/x", "msg": "boom"}
+        os.makedirs(os.path.dirname(self.logs()), exist_ok=True)
+        with open(self.logs(), "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(rec) + "\n")
+        lines = log.report_lines(10)
+        self.assertEqual(len(lines), 1)
+        self.assertNotIn("/Users/someone", lines[0])

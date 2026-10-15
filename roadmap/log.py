@@ -31,7 +31,11 @@ _REDACTIONS = (
     (re.compile(r"Bearer\s+\S+"), "Bearer [redacted]"),
     (re.compile(r"sk-ant-\S+"), "sk-ant-[redacted]"),
     (re.compile(r"k=\S+"), "k=[redacted]"),
+    (re.compile(r"token=\S+"), "token=[redacted]"),
+    (re.compile(r"ghp_\w+"), "ghp_[redacted]"),
+    (re.compile(r"sk-proj-\S+"), "sk-proj-[redacted]"),
 )
+_CTRL = re.compile(r"[\x00-\x1f\x7f]")
 
 _root = logging.getLogger(ROOT_NAME)
 if not _root.handlers:
@@ -116,8 +120,10 @@ EVENTS = frozenset((
 _MSG_CAP, _ROUTE_CAP, _REF_CAP, _SID_CAP = 300, 120, 120, 32
 _STR_CAP, _STACK_CAP, _DATA_CAP = 200, 1500, 1024
 _MAX_KEYS, _MAX_ITEMS, _MAX_DEPTH, _MAX_FRAMES = 20, 10, 3, 12
-_DENIED_KEYS = ("token", "cookie", "csrf", "auth", "passw", "secret", "clip", "value")
+_DENIED_KEYS = ("token", "cookie", "csrf", "auth", "passw", "secret", "clip", "value", "apikey", "api_key",
+                "session")
 _ABS_PATH = re.compile(r"(?<![\w~./])/[^\s'\"<>]+")
+_HOME_PATH = re.compile(r"/(?:Users|home)/[^\s/\"'<>]+(?:/[^\s\"'<>]*)?")
 _DEFAULTS = {"enabled": True, "debug": False}
 _state_override = None
 _lock = threading.Lock()
@@ -155,12 +161,23 @@ def _scrub(text):
     return _ABS_PATH.sub(lambda m: "…/" + os.path.basename(m.group(0).rstrip("/")), text)
 
 
+def printable(text):
+    """Return text with every control character (newline, tab, ESC...) replaced by a space, so it prints as one line."""
+    return _CTRL.sub(" ", str(text))
+
+
 def _clean_text(value, limit):
-    return _cut(_scrub(redact(value)), limit)
+    return _cut(_scrub(redact(printable(value))), limit)
+
+
+def _clean_field(value, limit):
+    """A route or ref: no control characters, redacted, and any home directory path (/Users/<name>...) shown as ~.
+    Other path-like text (such as /api/v1/log) is kept as it is."""
+    return _cut(_HOME_PATH.sub("~", redact(printable(value))), limit)
 
 
 def _clean_stack(text):
-    return _cut("\n".join(text.splitlines()[:_MAX_FRAMES]), _STACK_CAP)
+    return _cut("\n".join(_scrub(text).splitlines()[:_MAX_FRAMES]), _STACK_CAP)
 
 
 def _clean(value, depth=0, key=""):
@@ -178,9 +195,10 @@ def _clean(value, depth=0, key=""):
     if isinstance(value, dict):
         out = {}
         for raw_key, item in list(value.items())[:_MAX_KEYS]:
-            name = _cut(redact(str(raw_key)), 40)
-            if any(part in name.lower() for part in _DENIED_KEYS):
+            full = redact(str(raw_key))
+            if any(part in full.lower() for part in _DENIED_KEYS):
                 continue
+            name = _cut(full, 40)
             out[name] = _clean(item, depth + 1, name)
         return out
     if isinstance(value, (list, tuple)):
@@ -189,12 +207,16 @@ def _clean(value, depth=0, key=""):
 
 
 def _clean_data(data):
-    """Return the data object within 20 keys, 10 items and 1 KB serialized; over the cap it becomes {"cut": true}."""
+    """Return the data object within 20 keys, 10 items and 1 KB serialized (not counting the stack, which has its own
+    1500-byte cap); over the cap it becomes {"cut": true}."""
     if data is None:
         return None
     cleaned = _clean(data if isinstance(data, dict) else {"detail": data})
+    stack = cleaned.pop("stack", None) if isinstance(cleaned, dict) else None
     if len(json.dumps(cleaned, ensure_ascii=False, separators=(",", ":")).encode("utf-8")) > _DATA_CAP:
         return {"cut": True}
+    if stack is not None:
+        cleaned["stack"] = stack
     return cleaned
 
 
@@ -386,11 +408,11 @@ def _build_record(src, level, ev, msg, route, ref, sid, data):
         "src": src,
         "lvl": level,
         "ev": ev,
-        "route": _cut(redact(_strip_query(route or "")), _ROUTE_CAP),
+        "route": _clean_field(_strip_query(route or ""), _ROUTE_CAP),
         "msg": _clean_text("" if msg is None else str(msg), _MSG_CAP),
     }
     if ref:
-        record["ref"] = _cut(redact(_strip_query(ref)), _REF_CAP)
+        record["ref"] = _clean_field(_strip_query(ref), _REF_CAP)
     cleaned = _clean_data(data)
     if cleaned is not None:
         record["data"] = cleaned
@@ -452,7 +474,7 @@ def _iter_records(path):
         for raw in fh:
             try:
                 rec = json.loads(raw.decode("utf-8"))
-            except (UnicodeDecodeError, ValueError):
+            except Exception:  # bad UTF-8, bad JSON, or a line too deep or too large to parse: skip only that line
                 continue
             if isinstance(rec, dict) and isinstance(rec.get("ev"), str):
                 yield rec
@@ -539,7 +561,7 @@ def _report_line(rec):
     msg = re.sub(r"\s+", " ", str(rec.get("msg") or "")).strip()
     fields = [clock, str(rec.get("src") or "-"), str(rec.get("ev") or "-"), str(rec.get("route") or "-"),
               str(rec.get("ref") or "-")]
-    line = " ".join(redact(field) for field in fields)
+    line = " ".join(printable(_HOME_PATH.sub("~", redact(field))) for field in fields)
     return line + " " + _cut(_scrub(redact(msg)), REPORT_MSG_CAP) if msg else line + " -"
 
 

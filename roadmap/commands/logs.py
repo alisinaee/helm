@@ -92,7 +92,8 @@ def _query(args, level, limit, ev=None):
     since = _since(args.since)
     session = args.session
     if session == "last":
-        newest = roadmap_log.read_events(since=since, limit=1)
+        newest = roadmap_log.read_events(since=since, src=args.src, ev=ev if ev is not None else args.ev,
+                                         ref=args.ref, level_min=level, limit=1)
         if not newest:
             return []
         session = newest[-1].get("sid")
@@ -112,8 +113,9 @@ def _clock(rec):
 
 def _line(rec):
     """One event as hh:mm:ss src ev route ref msg. Missing route or ref shows as a dash."""
-    parts = [_clock(rec), str(rec.get("src") or "-"), str(rec.get("ev") or "-"), str(rec.get("route") or "-"),
-             str(rec.get("ref") or "-"), _short(rec.get("msg"))]
+    parts = [_clock(rec), str(rec.get("src") or "-"), str(rec.get("ev") or "-"),
+             roadmap_log.printable(rec.get("route") or "-"), roadmap_log.printable(rec.get("ref") or "-"),
+             _short(rec.get("msg"))]
     return " ".join(parts).rstrip()
 
 
