@@ -1,5 +1,5 @@
 /* App shell (WP28). Breakpoints: 1200, 1199 (rail) and 640 px (phone). */
-.app{display:grid;grid-template-columns:var(--w-nav) minmax(0,1fr) auto;grid-template-rows:var(--h-top) minmax(0,1fr);grid-template-areas:"nav top side" "nav main side";min-height:100vh;padding:0}
+.app{display:grid;grid-template-columns:var(--w-nav) minmax(0,1fr) auto;grid-template-rows:var(--h-top) minmax(0,1fr);grid-template-areas:"nav top side" "nav main side";height:100vh;min-height:0;padding:0}
 .app[data-nav="mini"]{grid-template-columns:var(--w-rail) minmax(0,1fr) auto}
 .nav{grid-area:nav;display:flex;flex-direction:column;gap:var(--sp-1);min-width:0;padding:var(--sp-3) var(--sp-2);background:var(--surface-1);border-right:1px solid var(--track);overflow:hidden}
 .nav-list,.nav-foot{display:flex;flex-direction:column;gap:2px}
@@ -38,11 +38,11 @@
 .mini .meter{width:56px;height:6px}
 .mini-v{font-variant-numeric:tabular-nums}
 .mini.is-unknown .mini-v,.mini.is-unknown .mini-l{color:var(--unknown)}
-.main{grid-area:main;min-width:0;padding:var(--sp-4) var(--sp-6) var(--sp-8);overflow-x:hidden}
+.main{grid-area:main;min-width:0;min-height:0;padding:var(--sp-4) var(--sp-6) var(--sp-8);overflow-x:hidden;overflow-y:auto}
 .side{grid-area:side;display:flex;flex-direction:column;width:var(--w-side);min-width:0;overflow:hidden;background:var(--surface-1);border-left:1px solid var(--track)}
 .app[data-panel="closed"] .side{width:0;visibility:hidden;border-left:0}
 .side-tabs{display:flex;gap:var(--sp-1);padding:var(--sp-2);border-bottom:1px solid var(--track)}
-.side-body{padding:var(--sp-4);overflow:auto}
+.side-body{flex:1 1 auto;min-height:0;padding:var(--sp-4);overflow:auto}
 .bnav{display:none;position:relative;background:var(--surface-1);border-top:1px solid var(--track)}
 .bnav-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:100%}
 .bnav-i{flex-direction:column;justify-content:center;gap:2px;min-height:var(--h-bnav);padding:var(--sp-1);font-size:var(--fs-11);text-align:center}
@@ -65,6 +65,8 @@
 .app[data-panel="open"] .side{transform:none;visibility:visible}
 }
 @media (max-width:640px){
+.app{height:auto;min-height:100vh}
+.main{overflow-y:visible}
 .app,.app[data-nav]{grid-template-columns:minmax(0,1fr);grid-template-rows:var(--h-top) minmax(0,1fr);grid-template-areas:"top" "main";padding-bottom:var(--h-bnav)}
 .nav{display:none}
 .bnav{display:block;position:fixed;left:0;right:0;bottom:0;height:var(--h-bnav);z-index:var(--z-over)}
