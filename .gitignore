@@ -5,3 +5,4 @@ __pycache__/
 build/
 .agy-staff/
 docs/reviews/agy-out/
+docs/head-spool.jsonl
