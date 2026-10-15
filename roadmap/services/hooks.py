@@ -40,6 +40,8 @@ _SECRET_RE = re.compile(r"sk-[A-Za-z0-9_-]{8,}|gh[pousr]_[A-Za-z0-9]{8,}|xox[abp
 _QUOTED_PROMPT_RE = re.compile(r"""\s+(?:"((?:[^"\\]|\\.)*)"|'([^']*)')""")
 _OPERATOR_RE = re.compile(r"\s*(?:&&|\|\||[;|&])")
 HOOK_LOCK_TIMEOUT_S = 1.0  # each lock wait in one hook event: the hook must exit well inside its 10 s budget
+AGENT_FALLBACK_TASK = "R7.31"  # an agent job that names no task and no head job is bound here (A5)
+HEAD_JOB_WINDOW_S = 3600       # the head job an agent job falls back to started this recently
 
 
 def _response_text(tool_response):
@@ -1068,12 +1070,49 @@ def _project_for(payload, environ, cwd):
         return None
 
 
+def _parse_time(value):
+    """The epoch seconds of an ISO time stamp, or None when it does not parse."""
+    try:
+        return datetime.datetime.fromisoformat(str(value)).timestamp()
+    except (TypeError, ValueError):
+        return None
+
+
+def _agent_fallback_task(data_dir, known, now):
+    """The task of an agent job that names none in its description or prompt (A5): the task of the newest running job
+    the head started in the last hour, else AGENT_FALLBACK_TASK (logged as a warning). Returns None only when the
+    fallback task is not in tasks.json; the job is then registered with no task rather than dropped."""
+    try:
+        records = jobs.list_jobs(data_dir)
+    except RoadmapError:
+        records = []
+    best = None
+    best_at = None
+    for job in records:
+        if job.get("status") != "running" or job.get("task") not in known:
+            continue
+        if job.get("model") != "head" and job.get("role") != "lead":
+            continue
+        at = _parse_time(job.get("started"))
+        if at is None or not 0 <= now - at <= HEAD_JOB_WINDOW_S:
+            continue
+        if best_at is None or at >= best_at:  # a tie (same second) goes to the later job in the file
+            best, best_at = job, at
+    if best is not None:
+        return best["task"]
+    _log("warning: agent job names no task; bound to fallback " + AGENT_FALLBACK_TASK)
+    return AGENT_FALLBACK_TASK if AGENT_FALLBACK_TASK in known else None
+
+
 def _start(data_dir, detector, entry, regex, known, now):
-    """Register a job for a detected start when the text names a known task. Returns the new state entry, or None.
-    A busy project lock raises locked, so nothing is registered and the caller returns silently."""
+    """Register a job for a detected start when the text names a known task. An agent job that names none still gets
+    a task (_agent_fallback_task). Returns the new state entry, or None. A busy project lock raises locked, so nothing
+    is registered and the caller returns silently."""
     task = find_task(entry["text"], regex, known)
     title = entry["title"][:120]
-    if task is None:
+    if task is None and detector.name == "agent":
+        task = _agent_fallback_task(data_dir, known, now)
+    if task is None and detector.name != "agent":
         _log("skip (no task id) from detector " + detector.name)
         return None
     try:

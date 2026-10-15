@@ -75,11 +75,16 @@ class AgentDetectorTests(HookTestCase):
         self.assertNotIn("effort", job)
         self.assertEqual(job["model"], "sonnet")
 
-    def test_payload_without_a_known_task_registers_nothing(self):
+    def test_payload_without_a_known_task_is_still_registered(self):
+        # A5: no known id in description or prompt -> the job is always registered; with no head job in the last
+        # hour and no R7.31 in tasks.json, it is registered with no task (never dropped).
         self.agent_start(description="refactor the parser P9.9 and nothing else")
         self.agent_start(description="no id at all", agent_id="b1b2c3d4e5")
-        self.assertEqual(self.read_jobs(), [])
-        self.assertIsNone(self.state_active())
+        jobs_now = self.read_jobs()
+        self.assertEqual(len(jobs_now), 2)
+        self.assertTrue(all("task" not in j and j["status"] == "running" for j in jobs_now))
+        self.assertEqual(len(self.state_active()), 2)
+        self.assertIn("warning: agent job names no task", self.log_text())
 
     def test_unknown_model_registers_nothing_and_logs_why(self):
         self.agent_start(model="gpt-9")
@@ -175,9 +180,10 @@ class DetectorSelectionTests(HookTestCase):
         write_json(os.path.join(self.docs, "roadmap.config.json"),
                    dict(ROADMAP_CONFIG, taskIdPattern=r"^WP[0-9]+$"))
         self.agent_start(description="P0.8 is not a task in this project")
-        self.assertEqual(self.read_jobs(), [])
+        self.assertNotIn("task", self.read_jobs()[0])  # not a task here: registered with the fallback (none here)
         self.agent_start(description="WP4 is", agent_id="c1b2c3d4e5")
-        self.assertEqual(self.read_jobs()[0]["task"], "WP4")
+        self.assertEqual(self.read_jobs()[1]["task"], "WP4")
+        self.assertEqual(len(self.read_jobs()), 2)
 
     def test_pattern_matching_is_unanchored_inside_text(self):
         regex = hooks.task_regex(r"^[A-Z]+[0-9]+(\.[0-9]+)?$")
