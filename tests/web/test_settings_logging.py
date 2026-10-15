@@ -32,7 +32,7 @@ class SettingsLoggingSource(unittest.TestCase):
     def test_switch_is_on_and_off_buttons_with_pressed_state(self):
         self.assertIn('{ id: "on", label: "On" }', self.src)
         self.assertIn('{ id: "off", label: "Off" }', self.src)
-        self.assertIn("aria-pressed", self.src)
+        self.assertIn("aria-checked", self.src)
 
     def test_switch_label_and_group_name(self):
         self.assertIn("Record what happens in this dashboard (stays on this Mac)", self.src)
