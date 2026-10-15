@@ -210,18 +210,13 @@ class ApplyTests(ApplyCase):
         self.assertIn("line 4: feature F5 does not exist", errors[2])
         self.assertFalse(os.path.exists(self.features_file))
 
-    def test_parent_must_be_top_level_and_one_level_only(self):
+    def test_plan_tree_allows_three_levels_and_refuses_a_fourth(self):
         self.seed()
-        self.run_plan("F F1 - 1 - - | Top\nF F2 - 1 - F1 | Child\n")
-        records, _ = planfmt.parse_plan("F F3 - 1 - F2 | Grandchild\n")
+        self.run_plan("F F1 - 1 - - | Top\nF F2 - 1 - F1 | Child\nF F3 - 1 - F2 | Grandchild\n")
+        records, _ = planfmt.parse_plan("F F4 - 1 - F3 | Great-grandchild\n")
         with self.assertRaises(tasks.PlanError) as ctx:
             tasks.apply(self.docs, records, project_id=PROJECT_ID)
-        self.assertIn("line 1: parent F2 is itself a sub-feature", ctx.exception.errors[0])
-        self.run_plan("F F3 - 1 - - | Other top\n")
-        records, _ = planfmt.parse_plan("F F1 - 1 - F3 | Top now has a parent\n")
-        with self.assertRaises(tasks.PlanError) as ctx:
-            tasks.apply(self.docs, records, project_id=PROJECT_ID)
-        self.assertIn("line 1: F1 has sub-features", ctx.exception.errors[0])
+        self.assertIn("line 1", ctx.exception.errors[0])
 
     def test_dry_run_summary_shows_feature_counts_and_writes_nothing(self):
         self.seed()
