@@ -1,0 +1,22 @@
+{
+  "spent": {
+    "R7.18": {
+      "haiku": 0.0
+    },
+    "R7.17": {
+      "haiku": 152.0
+    }
+  },
+  "jobs": [
+    "j566",
+    "j563"
+  ],
+  "limits": {
+    "phases": {},
+    "models": {},
+    "tasks": {},
+    "project": null
+  },
+  "limitRows": [],
+  "schemaVersion": 1
+}

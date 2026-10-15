@@ -1,0 +1,36 @@
+| function | missing case | expected result |
+|---|---|---|
+| `_moment` | `now=None` fallback to system time (`roadmap/services/launcher.py:27`, uncalled in `tests/unit/test_launcher.py:36-92`) | Returns float timestamp from `time.time()` (`roadmap/services/launcher.py:27`) |
+| `_moment` | `now` passed as string numeric or int (`roadmap/services/launcher.py:27`, only int 1000 tested in `tests/unit/test_launcher.py:36`) | Returns `float(now)` (`roadmap/services/launcher.py:27`) |
+| `_project_for` | `data_dir` passed as non-string path-like object (`roadmap/services/launcher.py:32`) | Converts via `str(data_dir)` and resolves normalized abspath (`roadmap/services/launcher.py:32`) |
+| `_project_for` | Non-dict item in `config["projects"]` list (`roadmap/services/launcher.py:34-35`, all entries valid in `tests/unit/test_launcher.py:23`) | Skips non-dict item and continues loop without error (`roadmap/services/launcher.py:35`) |
+| `_project_for` | Project entry with missing or non-string `path` (`roadmap/services/launcher.py:36-38`) | Skips entry and returns `None` (`roadmap/services/launcher.py:38,42`) |
+| `_project_for` | Project entry with empty string `path=""` (`roadmap/services/launcher.py:37-38`) | Skips entry and returns `None` (`roadmap/services/launcher.py:38,42`) |
+| `_project_for` | Project entry without `dataDir` defaults to `"docs"` (`roadmap/services/launcher.py:39`, explicit in `tests/unit/test_launcher.py:23`) | Matches target path when data directory is `"docs"` (`roadmap/services/launcher.py:39-41`) |
+| `_project_for` | Project entry with custom `dataDir` matching target (`roadmap/services/launcher.py:39-40`) | Returns matching project dict (`roadmap/services/launcher.py:41`) |
+| `_valid_dir` | Non-string `path` argument like `None` or `123` (`roadmap/services/launcher.py:47`) | Returns `False` (`roadmap/services/launcher.py:48`) |
+| `_valid_dir` | `path` points to an existing regular file instead of a folder (`roadmap/services/launcher.py:47`) | Returns `False` via `os.path.isdir(path)` check (`roadmap/services/launcher.py:47-48`) |
+| `_valid_dir` | `path` contains ASCII control character < 32 like `\n` or `\t` (`roadmap/services/launcher.py:49`) | Returns `False` (`roadmap/services/launcher.py:49`) |
+| `_valid_dir` | `path` contains ASCII DEL 127 character `\x7f` (`roadmap/services/launcher.py:49`) | Returns `False` (`roadmap/services/launcher.py:49`) |
+| `_script` | `path` containing backslashes requiring `\\\\` escaping (`roadmap/services/launcher.py:55`, quote tested in `tests/unit/test_launcher.py:50-51`) | Returns AppleScript string with doubled backslashes (`roadmap/services/launcher.py:55-56`) |
+| `_script` | Direct verification of full AppleScript command structure (`roadmap/services/launcher.py:53-56`) | Returns `'tell application "Terminal" to do script "' + escaped + '"'` (`roadmap/services/launcher.py:56`) |
+| `_recent` | Stamp file `launch.json` content is not a dict (`roadmap/services/launcher.py:63`) | Treats stamp as invalid and returns `False` (`roadmap/services/launcher.py:65`) |
+| `_recent` | Stamp file contains boolean timestamp `{"at": True}` (`roadmap/services/launcher.py:64`) | `isinstance(last, bool)` evaluates `True`, returns `False` (`roadmap/services/launcher.py:64-65`) |
+| `_recent` | Stamp file contains non-numeric timestamp `{"at": "invalid"}` or `{"at": None}` (`roadmap/services/launcher.py:64`) | Returns `False` (`roadmap/services/launcher.py:65`) |
+| `_recent` | Clock skew where stamp timestamp is in future `moment - last < 0` (`roadmap/services/launcher.py:66`) | Condition `0 <= moment - float(last)` is `False`, returns `False` (`roadmap/services/launcher.py:66`) |
+| `_recent` | Elapsed time exactly equals `RATE_S = 600` (`roadmap/services/launcher.py:21,66`, only 599 and 601 tested in `tests/unit/test_launcher.py:55,57`) | Strict inequality `< RATE_S` evaluates `False`, returns `False` (`roadmap/services/launcher.py:66`) |
+| `_recent` | Elapsed time is exactly `0` with `moment == float(last)` (`roadmap/services/launcher.py:66`) | Condition `0 <= 0 < RATE_S` evaluates `True`, returns `True` (`roadmap/services/launcher.py:66`) |
+| `_recent` | `atomic.read_json` raises unexpected `OSError` (`roadmap/services/launcher.py:67`) | Exception caught in `except Exception:` block, returns `False` (`roadmap/services/launcher.py:67-68`) |
+| `_stamp` | Direct verification that `launch.json` is written to state directory (`roadmap/services/launcher.py:74-75`) | Writes `{"at": moment}` via `atomic.write_json` (`roadmap/services/launcher.py:75`) |
+| `_stamp` | `atomic.write_json` raises exception e.g. `PermissionError` (`roadmap/services/launcher.py:76`) | Exception caught, logged at debug, does not raise (`roadmap/services/launcher.py:76-77`) |
+| `_run` | Execution succeeds with process exit code 0 (`roadmap/services/launcher.py:82-83`, uncalled in `tests/unit/test_launcher.py:30`) | Invokes `subprocess.run` with `TIMEOUT_S = 10` and returns `True` (`roadmap/services/launcher.py:22,82-83`) |
+| `_run` | Execution fails with non-zero process exit code (`roadmap/services/launcher.py:83`) | Returns `False` on `result.returncode != 0` (`roadmap/services/launcher.py:83`) |
+| `_run` | `subprocess.run` raises `subprocess.TimeoutExpired` on timeout (`roadmap/services/launcher.py:22,82`) | Exception propagates to caller (`roadmap/services/launcher.py:82`) / UNKNOWN |
+| `maybe_launch` | `runner=None` on non-macOS platform `sys.platform != "darwin"` (`roadmap/services/launcher.py:90`) | Returns `False` without running command (`roadmap/services/launcher.py:90-91`) |
+| `maybe_launch` | `runner=None` on macOS when `"unittest"` not in `sys.modules` (`roadmap/services/launcher.py:90,103`) | Dispatches execution to real runner `_run` (`roadmap/services/launcher.py:103`) |
+| `maybe_launch` | `launchOnStart` set to truthy non-boolean e.g. `"true"` or `1` (`roadmap/services/launcher.py:93`, only bools in `tests/unit/test_launcher.py:35,37`) | Identity check `is not True` fails, returns `False` (`roadmap/services/launcher.py:93-94`) |
+| `maybe_launch` | Project path contains ASCII control characters rejecting `_valid_dir` (`roadmap/services/launcher.py:49,96`) | Returns `False` without invoking runner (`roadmap/services/launcher.py:96-97`) |
+| `maybe_launch` | `now=None` passed to `maybe_launch` (`roadmap/services/launcher.py:86,98`, only explicit `now=1000` in `tests/unit/test_launcher.py:36-92`) | Evaluates current time via `_moment(None)` (`roadmap/services/launcher.py:27,98`) |
+| `maybe_launch` | Custom runner returns `False` on process failure (`roadmap/services/launcher.py:103-104`, returns `True` in `tests/unit/test_launcher.py:32`) | Still returns `True` indicating launch was initiated (`roadmap/services/launcher.py:104`) |
+| `maybe_launch` | `presence.state` raises unexpected exception (`roadmap/services/launcher.py:99,105`) | Fail-open exception handler catches error, logs debug, returns `False` (`roadmap/services/launcher.py:105-107`) |
+| `maybe_launch` | `config.load` raises unexpected exception (`roadmap/services/launcher.py:33,92,105`) | Fail-open exception handler catches error, logs debug, returns `False` (`roadmap/services/launcher.py:105-107`) |

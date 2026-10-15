@@ -219,6 +219,16 @@
       "phase": null,
       "hold": false,
       "accepted": null
+    },
+    {
+      "id": "F23",
+      "title": "Copy reference id on every section and row",
+      "acc": "Every section and row has a copy icon; the pasted ref lets an agent look the thing up",
+      "prio": 2,
+      "parent": null,
+      "phase": "R7",
+      "hold": false,
+      "accepted": null
     }
   ],
   "updated": "2026-10-14",

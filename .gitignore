@@ -4,3 +4,4 @@ __pycache__/
 *.log
 build/
 .agy-staff/
+docs/reviews/agy-out/

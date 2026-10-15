@@ -1,0 +1,13 @@
+| doc line | doc says | code says (file:line) | fix |
+|---|---|---|---|
+| 138 | The GET feature route and the CLI feature output keep the full row. | No GET feature route exists in ROUTES (roadmap/http/routes.py:370-380) | Remove GET feature route reference or implement GET route in roadmap/http/routes.py |
+| 216-217 | task.rename (id, title: 1 to 120 characters, no control characters; undoable) | Checks len(title) > parsers.TITLE_MAX; value of TITLE_MAX is UNKNOWN in permitted files (roadmap/services/commands.py:131) | Align doc limit with parsers.TITLE_MAX |
+| 217 | task.start (no arguments documented) | _check_task_id requires id and accepts optional by (roadmap/services/commands.py:164) | Document args as task.start (id, by?) |
+| 217 | task.stop (no arguments documented) | _check_task_id requires id and accepts optional by (roadmap/services/commands.py:164) | Document args as task.stop (id, by?) |
+| 218 | subtask.add is omitted from write ops | subtask.add is a public op taking id and optional title (roadmap/services/commands.py:231, 560) | Add subtask.add (id, title?) to ops list |
+| 218 | subtask.toggle (addr, done) (done not marked optional) | _check_subtask_toggle uses _opt_bool; done is optional and toggles state when omitted (roadmap/services/commands.py:211, 225) | Document done as optional: subtask.toggle (addr, done?) |
+| 218 | question.ask is omitted from write ops | question.ask is a public op taking text, task?, opts?, default?, block?, timeout? (roadmap/services/commands.py:321, 562) | Add question.ask (text, task?, opts?, default?, block?, timeout?) to ops list |
+| 219 | issue.new (no arguments documented) | _check_issue_new requires tasks, title, and accepts optional kind, sev, note, by (roadmap/services/commands.py:361-366, 565) | Document args as issue.new (title, tasks, kind?, sev?, note?, by?) |
+| 219 | issue.link is omitted from write ops | issue.link is a public op taking id and tasks (roadmap/services/commands.py:402-404, 567) | Add issue.link (id, tasks) to ops list |
+| 227 | feature.unlink (task, feats) (feats size constraint omitted) | _feat_list requires feats to be a list of 1 to 3 feature ids (roadmap/services/featops.py:119, 144) | Document feats constraint: feature.unlink (task, feats of 1 to 3 feature ids) |
+| 231-232 | POST /api/v1/cmd error order lists 413 (body size) before 415 (not JSON), and 404 (unknown_op) before 422 (invalid_args) | _write_guard checks 415 before reading body (413), and cmd checks JSON dict body (422) before unknown op (404) (roadmap/http/routes.py:136-139, 217-224) | Reorder error check documentation to match code check order (403, 415, 413, 422, 404) |
