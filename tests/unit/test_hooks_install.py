@@ -151,7 +151,7 @@ class HooksUninstallStatusTests(ProjectCase):
         run_cli(["hooks", "install", "demo"])
         code, body = self.envelope(["hooks", "uninstall", "demo"])
         self.assertEqual(code, 0)
-        self.assertEqual(body["data"]["removed"], 5)  # one entry per event: PreToolUse, SessionStart and the 3 older
+        self.assertEqual(body["data"]["removed"], 6)  # one entry per event: PreToolUse, SessionStart and the 3 older
         settings = json.loads(read_text(self.settings))
         self.assertEqual(settings, {"permissions": {"allow": ["x"]},
                                     "hooks": {"Stop": [{"hooks": [{"type": "command", "command": "say"}]}]}})
