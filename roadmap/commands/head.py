@@ -12,7 +12,7 @@ from datetime import datetime
 
 from roadmap.core import head as core
 from roadmap.core.snapshot import head_link_state
-from roadmap.services import commands, loader, tasks
+from roadmap.services import commands, headimport, loader, tasks
 from roadmap.services import head as store
 
 NEXT = "roadmap head list"
@@ -38,7 +38,7 @@ def register(sub, common):
     project = _project_option()
     group = sub.add_parser("head", parents=[common],
                            help="the ask ledger: log, t, list, show, set, bind, unbind, split, merge, convert, claim, "
-                                "brief, triage, review, accept, forget")
+                                "brief, triage, review, accept, forget, import")
     actions = group.add_subparsers(dest="action", metavar="ACTION", required=True)
 
     def add(name, help_text, **kwargs):
@@ -130,6 +130,11 @@ def register(sub, common):
     forget = add("forget", "blank the verbatim text of an entry, keep the summary (the person only)")
     forget.add_argument("id", metavar="H15")
     forget.set_defaults(handler=_forget)
+
+    imp = add("import", "seed the ledger from a markdown doc: head import --doc FILE [--section 2,2b]")
+    imp.add_argument("--doc", required=True, metavar="FILE", help="a markdown file inside the project folder")
+    imp.add_argument("--section", default=None, metavar="N,N", help="only these `## <n>` sections (default: all)")
+    imp.set_defaults(handler=_import)
 
 
 # ---------------------------------------------------------------- shared helpers
@@ -344,6 +349,28 @@ def _accept(args):
 def _forget(args):
     reply = _write(args, "head.forget", {"id": args.id})
     return _emit_write(args, reply, "%s verbatim forgotten" % args.id, NEXT)
+
+
+def _inside_project(path, project):
+    """The real path of a doc that lies inside the project folder; anything else is refused."""
+    root = os.path.realpath(project["path"])
+    doc = os.path.realpath(os.path.abspath(os.path.expanduser(path)))
+    if doc != root and not doc.startswith(root.rstrip(os.sep) + os.sep):
+        raise commands._usage("head import reads only files inside the project folder (" + root + ")", NEXT)
+    return doc
+
+
+def _import(args):
+    project, data_dir = tasks.resolve(args.project)
+    doc = _inside_project(args.doc, project)
+    with commands.next_on_error(NEXT):
+        results = headimport.import_doc(doc, args.section, data_dir)
+    logged = [r["id"] for r in results if r["status"] == "logged"]
+    skipped = len(results) - len(logged)
+    if _json(args):
+        return {"logged": logged, "skipped": skipped, "items": results}
+    _ok("import %d logged, %d skipped" % (len(logged), skipped), NEXT)
+    return None
 
 
 def _claim(args):
