@@ -19,9 +19,13 @@ class HookTestCase(FixtureCase):
         hooks.run_hook(json.dumps(payload))
 
     def agent_start(self, description="Parser fix P0.8", model="sonnet", output="/nonexistent/out.output",
-                    agent_id="a1b2c3d4e5"):
-        self.fire(hook_event_name="PostToolUse", tool_name="Agent",
-                  tool_input={"model": model, "description": description, "prompt": "do it"},
+                    agent_id="a1b2c3d4e5", effort=None):
+        tool_input = {"description": description, "prompt": "do it"}
+        if model is not None:
+            tool_input["model"] = model
+        if effort is not None:
+            tool_input["effort"] = effort
+        self.fire(hook_event_name="PostToolUse", tool_name="Agent", tool_input=tool_input,
                   tool_response={"agentId": agent_id, "output_file": output})
 
     def state_active(self):
@@ -48,12 +52,28 @@ class AgentDetectorTests(HookTestCase):
         self.assertEqual(mode_of(os.path.join(os.environ["ROADMAP_HOME"], "state", "hooks-demo.json")), 0o600)
 
     def test_task_id_may_come_from_the_prompt(self):
-        self.fire(hook_event_name="PostToolUse", tool_name="Task",
+        self.fire(hook_event_name="PostToolUse", tool_name="Task", model="claude-opus-5-5",
                   tool_input={"description": "review", "prompt": "Check WP4 now"},
                   tool_response={"agentId": "zz99887766"})
         job = self.read_jobs()[0]
         self.assertEqual(job["task"], "WP4")
-        self.assertEqual(job["model"], "haiku")  # no model given: the default
+        self.assertEqual(job["model"], "opus")  # no model given: the session model the hook knows
+
+    def test_no_model_and_no_known_session_model_is_not_labelled_haiku(self):
+        self.agent_start(model=None)
+        jobs = self.read_jobs()
+        self.assertEqual(len(jobs), 1)  # "unknown" is a valid job model: tracked, never labelled haiku
+        self.assertEqual(jobs[0]["model"], "unknown")
+
+    def test_agent_effort_is_recorded_when_the_call_carries_it(self):
+        self.agent_start(effort="High")
+        self.assertEqual(self.read_jobs()[0]["effort"], "high")
+
+    def test_agent_effort_outside_the_levels_is_not_recorded(self):
+        self.agent_start(effort="turbo")
+        job = self.read_jobs()[0]
+        self.assertNotIn("effort", job)
+        self.assertEqual(job["model"], "sonnet")
 
     def test_payload_without_a_known_task_registers_nothing(self):
         self.agent_start(description="refactor the parser P9.9 and nothing else")

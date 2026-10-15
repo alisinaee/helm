@@ -13,7 +13,7 @@ import re
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.store import atomic, config, lock, schema
 
-MODELS = ("haiku", "sonnet", "opus", "cursor", "agy", "opencode", "head")
+MODELS = ("haiku", "sonnet", "opus", "cursor", "agy", "opencode", "head", "unknown")
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 KEEP_FINISHED = 200
 PARENT_ENV = "ROADMAP_PARENT_JOB"
