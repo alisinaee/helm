@@ -59,17 +59,14 @@ function badgeFor(section, counts) {
     return '<span class="nav-b" data-tone="neutral">' + esc(counts.inbox) +
       '<span class="sr-only"> waiting for you</span></span>';
   }
-  if (section.id === "issues" && counts.issues > 0) {
-    return '<span class="nav-b" data-tone="danger">' + esc(counts.issues) +
-      '<span class="sr-only">' + (counts.issues === 1 ? " open blocker" : " open blockers") + "</span></span>";
-  }
   if (section.id === "head" && counts.head > 0) {
     return '<span class="nav-b" data-tone="neutral">' + esc(counts.head) +
       '<span class="sr-only"> open asks</span></span>';
   }
-  if (section.id === "work" && counts.work > 0) {
-    return '<span class="nav-b" data-tone="danger">' + esc(counts.work) +
-      '<span class="sr-only"> tasks need you</span></span>';
+  // Work badge (R7.97): tasks that need you plus open blockers, which now live on the Work board.
+  if (section.id === "work" && counts.work + counts.issues > 0) {
+    return '<span class="nav-b" data-tone="danger">' + esc(counts.work + counts.issues) +
+      '<span class="sr-only"> tasks need you or open blockers</span></span>';
   }
   if (section.id === "agents" && counts.agents > 0) {
     return '<span class="nav-b" data-tone="success">' + esc(counts.agents) +

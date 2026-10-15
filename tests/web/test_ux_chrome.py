@@ -32,7 +32,7 @@ const one = nav.countsFor({
   snapshotList: [{ questions: [], needsYou: [], issues: [{ kind: "blocker" }], tasks: [] }],
 });
 const inboxHtml = nav.navView({ route: { section: "inbox" }, ui: {}, snapshotList: [snap] });
-const issuesHtml = nav.navView({ route: { section: "issues" }, ui: {}, snapshotList: [snap] });
+const issuesHtml = nav.navView({ route: { section: "work" }, ui: {}, snapshotList: [snap] });
 console.log(JSON.stringify({ counts, one, inboxHtml, issuesHtml, skel: dom.skeletonHtml(["w-60"]) }));
 """
 
@@ -69,9 +69,10 @@ class NavBadgeTests(unittest.TestCase):
     def test_inbox_badge_is_drawn_and_says_waiting(self):
         self.assertIn('data-tone="neutral">3<span class="sr-only"> waiting for you', self.out["inboxHtml"])
 
-    def test_issues_badge_is_danger_and_singular_for_one(self):
+    def test_work_badge_counts_open_blockers_and_is_danger(self):
         html = self.out["issuesHtml"]
-        self.assertIn('data-tone="danger">1<span class="sr-only"> open blocker</span>', html)
+        self.assertIn('data-tone="danger">1<span class="sr-only"> tasks need you or open blockers</span>', html)
+        self.assertNotIn(">Issues</span>", html)
 
 
 class SkeletonTests(unittest.TestCase):

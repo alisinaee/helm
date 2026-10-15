@@ -11,7 +11,6 @@ export const SECTIONS = [
   { id: "roadmap", label: "Roadmap", icon: "roadmap", module: "./views/roadmap.js", bottom: false },
   { id: "planner", label: "Planner", icon: "planner", module: "./views/planner.js", bottom: false },
   { id: "work", label: "Work", icon: "work", module: "./views/work.js", bottom: true },
-  { id: "issues", label: "Issues", icon: "issues", module: "./views/issues.js", bottom: true },
   { id: "agents", label: "Agents", icon: "agents", module: "./views/agents.js", bottom: false },
   { id: "workflow", label: "Workflow", icon: "workflow", module: "./views/workflow.js", bottom: false },
   { id: "tokens", label: "Tokens", icon: "tokens", module: "./views/tokens.js", bottom: false },
@@ -26,6 +25,27 @@ export const SETTINGS = { id: "settings", label: "Settings", icon: "settings", m
   bottom: false };
 
 export const DEFAULT_SECTION = "overview";
+
+// R7.97: the Issues section is gone; issues live on Work with Kind=Issue. Old links (#/p/<id>/issues[/i/<I>][?f=]) map
+// to Work; f=blockers becomes the Blocked filter on issues. Returns the new hash, or null when the hash is not old.
+const LEGACY_ISSUES = /^#\/p\/([a-z0-9][a-z0-9-]{0,39})\/issues(?:\/i\/([A-Za-z0-9][A-Za-z0-9._-]{0,59}))?(?:\?(.*))?$/;
+
+export function legacyIssuesHash(hash) {
+  const m = LEGACY_ISSUES.exec(String(hash || ""));
+  if (!m) return null;
+  const blockers = new URLSearchParams(m[3] || "").get("f") === "blockers";
+  return "#/p/" + m[1] + "/work" + (m[2] ? "/i/" + m[2] : "") + "?f=kind:issue" + (blockers ? ",blocked" : "");
+}
+
+function redirectLegacyIssues() {
+  const next = legacyIssuesHash(window.location.hash);
+  if (next) window.location.replace(next);
+}
+
+if (typeof window !== "undefined") {
+  redirectLegacyIssues();
+  window.addEventListener("hashchange", redirectLegacyIssues);
+}
 
 export function sectionById(id) {
   if (id === SETTINGS.id) return SETTINGS;
