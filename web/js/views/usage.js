@@ -1,9 +1,9 @@
 // UsageBand: the weekly and five-hour plan meters, reset countdowns, the stale marker, the Sync now button and the
 // manual "Enter usage" form. The band is global: it is shown on Home and on every project. Usage arrives without a
 // manual step (R7.77): Claude Code hooks store the rate limits they see, and the head pushes the app's numbers. When
-// the keychain cannot be read (syncError no_token, no_item or denied; the Claude app keeps its own sign-in) Sync now
-// is hidden and the band names the source and age instead. The form stays folded as a fallback; it opens when the
-// reading is old. Writes go through cmd.js run("usage.set").
+// the keychain has no claude.ai login (syncError no_token or no_item: the desktop app signs in) the button reads
+// Request update and asks the head for a reading; a denied keychain hides Sync now and the band names the source.
+// The form stays folded as a fallback; it opens when the reading is old. Writes go through cmd.js run("usage.set").
 
 import { bannerHtml, esc, meterHtml, skeletonHtml } from "../dom.js";
 import { fmtAge, fmtPercent, fmtResets } from "../format.js";
@@ -11,9 +11,12 @@ import { copyButton, refSummary } from "../ref.js";
 import { run } from "../cmd.js";
 
 const NO_AUTO_SYNC = ["no_token", "no_item", "denied"];
+const UNAVAILABLE_CODES = ["no_token", "no_item"];
 const PERCENT = /^\d{1,3}(\.\d{1,2})?$/;
 const OLD_TITLE = "Usage is old.";
 const OLD_DETAIL = "It updates by itself when the head reads it from the app or a Claude Code session reports it.";
+const UNAVAILABLE_DETAIL = "This Mac signs in through the desktop app; the head updates usage.";
+const ASKED = "Asked the head for a fresh reading";
 
 // The typed values survive a redraw; the message is the last validation problem.
 let entryDraft = { weekly: "", fiveHour: "" };
@@ -40,7 +43,13 @@ function noAutoSync(u) {
   return NO_AUTO_SYNC.indexOf(u.syncError) !== -1;
 }
 
+// No claude.ai login in the keychain: not an error. The button asks the head for a reading instead.
+function unavailable(u) {
+  return u.status === "unavailable" || UNAVAILABLE_CODES.indexOf(u.syncError) !== -1;
+}
+
 function statusLine(u) {
+  if (unavailable(u)) return u.stale || u.veryOld ? bannerHtml("warning", OLD_TITLE, UNAVAILABLE_DETAIL) : "";
   if (noAutoSync(u)) return u.stale || u.veryOld ? bannerHtml("warning", OLD_TITLE, OLD_DETAIL) : "";
   if (u.veryOld) {
     const why = u.lastError ? u.lastError : "no reading yet";
@@ -54,8 +63,9 @@ function statusLine(u) {
   return "";
 }
 
-function syncLine(sync) {
+function syncLine(sync, u) {
   if (!sync || !sync.message) return "";
+  if (unavailable(u) && sync.state !== "error") return '<p class="band-status">' + esc(ASKED) + "</p>";
   const tone = sync.state === "error" ? " is-danger" : "";
   return '<p class="band-status' + tone + '">' + esc(sync.message) + "</p>";
 }
@@ -159,9 +169,11 @@ export function usageView(vm) {
   const source = sourceWord(u.source);
   const updatedHtml = u.loaded && u.ageNow != null ? '<span class="band-sub">Updated ' +
     esc(fmtAge(u.ageNow)) + (source ? ", " + esc(source) : "") + "</span>" : "";
-  const syncButton = noAutoSync(u) ? "" :
+  const asks = unavailable(u);
+  const syncButton = noAutoSync(u) && !asks ? "" :
     '<button type="button" class="btn" data-action="sync-usage" data-focus="sync"' +
-    (syncing ? " disabled" : "") + ">" + (syncing ? "Syncing" : "Sync now") + "</button>";
+    (syncing ? " disabled" : "") + ">" + (asks ? (syncing ? "Requesting" : "Request update") :
+    (syncing ? "Syncing" : "Sync now")) + "</button>";
   const pid = vm.route && vm.route.name === "project" ? vm.route.id : (vm.projects && vm.projects[0]
     ? vm.projects[0].id : "");
   const copy = copyButton("section", "usage.band", "Usage", { project: pid,
@@ -169,5 +181,5 @@ export function usageView(vm) {
   const old = !u.loaded || u.stale || u.veryOld;
   return '<div class="band' + compact + '">' + body + entryHtml(old) +
     '<div class="band-actions">' + statusLine(u) + updatedHtml + syncButton + copy +
-    syncLine(u.sync) + "</div></div>";
+    syncLine(u.sync, u) + "</div></div>";
 }

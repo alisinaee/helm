@@ -25,6 +25,14 @@ console.log(JSON.stringify({
   hook: usage.usageView(vm({ source: "Claude Code hook" })),
   stop: top.meterText({ weeklyPercent: 80, stale: false }, rows),
   onlyGlobal: top.meterText({ weeklyPercent: 80, stale: false }, rows.slice(0, 1)),
+  unavail: usage.usageView(vm({ syncError: "no_token", status: "unavailable", sync: null })),
+  unavailOld: usage.usageView(vm({ syncError: "no_token", status: "unavailable", stale: true, veryOld: true,
+    ageNow: 7200 })),
+  asked: usage.usageView(vm({ syncError: "no_token", status: "unavailable",
+    sync: { state: "ok", message: "Usage synced." } })),
+  denied: usage.usageView(vm({ syncError: "denied" })),
+  netError: usage.usageView(vm({ syncError: "net", status: "error", lastError: "usage endpoint not reachable",
+    sync: { state: "error", message: "Sync failed: x" } })),
 }));
 """
 
@@ -63,6 +71,36 @@ class UsageBandCopyTests(unittest.TestCase):
     def test_top_bar_shows_the_binding_stop(self):
         self.assertIn("stop 85%", self.out["stop"])
         self.assertIn("stop 95%", self.out["onlyGlobal"])
+
+    def test_unavailable_reads_request_update_not_an_error(self):
+        html = self.out["unavail"]
+        self.assertIn("Request update", html)
+        self.assertNotIn("Sync now", html)
+        self.assertNotIn("is-danger", html)
+        self.assertNotIn("Asked the head", html)
+
+    def test_unavailable_old_names_the_desktop_app(self):
+        html = self.out["unavailOld"]
+        self.assertIn("Usage is old.", html)
+        self.assertIn("this mac signs in through the desktop app", html.lower())
+        self.assertNotIn("is-danger", html)
+
+    def test_after_a_tap_unavailable_says_the_head_was_asked(self):
+        html = self.out["asked"]
+        self.assertIn("Asked the head for a fresh reading", html)
+        self.assertNotIn("Usage synced.", html)
+        self.assertNotIn("is-danger", html)
+
+    def test_denied_keychain_keeps_the_hidden_sync(self):
+        html = self.out["denied"]
+        self.assertNotIn("Request update", html)
+        self.assertNotIn("Sync now", html)
+
+    def test_real_error_stays_red(self):
+        html = self.out["netError"]
+        self.assertIn("is-danger", html)
+        self.assertIn("Sync failed: x", html)
+        self.assertNotIn("Asked the head", html)
 
 
 if __name__ == "__main__":

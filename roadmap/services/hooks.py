@@ -976,7 +976,9 @@ def _stop_gate(payload, project, data_dir, now):
         items = head_svc.gate(rows, queue=queue, running=running, dirty=dirty, unpushed=unpushed, usage=usage,
                               now=moment)
         idle = "" if head_svc._at_stop(usage) else _idle_text(data_dir, rows, running, moment)
-        if not items and not idle:
+        from roadmap.services import usage as usage_svc  # local, as in _usage_auto
+        asked = usage_svc.refresh_requested(moment)  # a manual sync asked for a fresh usage reading
+        if not items and not idle and not asked:
             return None
         atomic.write_json(stamp, {"at": now})
     except Exception as exc:  # fail open: the reason is logged by type only
@@ -984,7 +986,8 @@ def _stop_gate(payload, project, data_dir, now):
         return None
     _log("gate block " + str(len(items)) + " items" + (" idle" if idle else ""))
     head_text = "roadmap head: continue with: " + "; ".join(items) if items else ""
-    return {"decision": "block", "reason": " ".join(part for part in (idle, head_text) if part)}
+    refresh = "usage refresh requested" if asked else ""
+    return {"decision": "block", "reason": " ".join(part for part in (idle, head_text, refresh) if part)}
 
 
 def _idle_text(data_dir, rows, running, moment):

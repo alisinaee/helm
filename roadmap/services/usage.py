@@ -48,6 +48,13 @@ CODE_DENIED = "denied"
 CODE_NET = "net"
 CODE_OTHER = "other"
 KEYCHAIN_CODES = (CODE_NO_TOKEN, CODE_NO_ITEM, CODE_DENIED)
+# No claude.ai login in the keychain (desktop app sign-in): not an error. The head pushes the readings instead.
+UNAVAILABLE_CODES = (CODE_NO_TOKEN, CODE_NO_ITEM)
+STATUS_UNAVAILABLE = "unavailable"
+STATUS_ERROR = "error"
+UNAVAILABLE_REASON = "this Mac signs in through the desktop app; the head updates usage"
+REQUEST_FILE = "usage-request.json"   # written by a manual sync that is unavailable; read by the head's Stop gate
+REQUEST_MAX_AGE_S = 30 * 60
 RESTORE_FIELDS = ("weeklyPercent", "weeklyResetsAt", "fiveHourPercent", "fiveHourResetsAt", "updated", "source",
                   "lastError", "syncError")
 
@@ -261,6 +268,35 @@ def _update_store(changes):
     return current
 
 
+def request_path():
+    return os.path.join(paths.state_dir(), REQUEST_FILE)
+
+
+def refresh_requested(now=None):
+    """True while a manual sync's request flag asks the head for a fresh reading (at most REQUEST_MAX_AGE_S old)."""
+    moment = now or datetime.now(timezone.utc)
+    try:
+        data = atomic.read_json(request_path(), default={})
+    except (OSError, RoadmapError, ValueError):
+        return False
+    age = _age_s(data.get("at") if isinstance(data, dict) else None, moment)
+    return age is not None and 0 <= age < REQUEST_MAX_AGE_S
+
+
+def _write_request(moment):
+    try:
+        atomic.write_json(request_path(), {"at": moment.isoformat(timespec="seconds")})
+    except OSError:
+        log.warning("usage refresh request not written")
+
+
+def _clear_request():
+    try:
+        os.remove(request_path())
+    except OSError:
+        pass
+
+
 def _record_error(reason, code=CODE_OTHER, retry_after=None):
     """Keep the last good values and only note why the newest read failed: the text, the reason code and, for a
     keychain failure, the time before which the background loop does not read the keychain again."""
@@ -312,7 +348,16 @@ def view(record, max_age=MAX_USAGE_AGE_MIN * 60, now=None):
         out[prefix + "Reason"] = REASON_RESET_PASSED if passed else None
         if passed:
             out[prefix + "Percent"] = None
+    out["status"], out["reason"] = _status(record)
     return out
+
+
+def _status(record):
+    """(status, reason) of the last sync: unavailable (no claude.ai login here), error (a real failure), or None."""
+    code = record.get("syncError")
+    if code in UNAVAILABLE_CODES:
+        return STATUS_UNAVAILABLE, UNAVAILABLE_REASON
+    return (STATUS_ERROR, record.get("lastError")) if code else (None, None)
 
 
 def _mirror_one(project, block):
@@ -347,6 +392,7 @@ def mirror_to_projects(cfg, record):
 
 def _commit(changes, cfg):
     stored = _update_store(changes)
+    _clear_request()  # a new reading answers any refresh the head was asked for
     _record_ledger(changes, stored)
     mirrors = mirror_to_projects(cfg, stored) if _mirror_enabled(cfg) else []
     return stored, mirrors
@@ -389,6 +435,8 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
         if store.get("syncError") in KEYCHAIN_CODES:
             age = _age_s(store.get("manualAttemptAt"), moment)
             if age is not None and age < MANUAL_KEYCHAIN_GAP_S:
+                if store.get("syncError") in UNAVAILABLE_CODES:
+                    return _unavailable(cfg, moment, background)
                 raise UsageError("the keychain was checked a moment ago, try again in a minute",
                                  store.get("syncError"))
         _update_store({"manualAttemptAt": moment.isoformat(timespec="seconds")})
@@ -398,6 +446,9 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
         retry = None
         if exc.code in KEYCHAIN_CODES:
             retry = (moment + timedelta(seconds=KEYCHAIN_BACKOFF_S)).isoformat(timespec="seconds")
+        if exc.code in UNAVAILABLE_CODES:
+            _update_store({"syncError": exc.code, "lastError": None, "keychainRetryAfter": retry})
+            return _unavailable(cfg, moment, background)
         _record_error(str(exc), exc.code, retry)
         raise
     changes = dict(usage_record(reading, SOURCE_ENDPOINT), lastError=None, syncError=None, keychainRetryAfter=None)
@@ -405,6 +456,16 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
     result = _result(stored, cfg, mirrors)
     _control_after_write()
     return result
+
+
+def _unavailable(cfg, moment, background):
+    """The keychain has no claude.ai login: not an error, so lastError is not set. A manual sync asks the head for a
+    fresh reading by writing the request flag. Returns the sync result with status "unavailable"."""
+    if not background:
+        _write_request(moment)
+    stored = _load_store()
+    return {"ok": True, "status": STATUS_UNAVAILABLE, "reason": UNAVAILABLE_REASON,
+            "usage": view(stored, max_age_s(cfg)), "mirrors": []}
 
 
 def show(config=None, now=None):

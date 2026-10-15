@@ -1,10 +1,11 @@
-"""Checks for the usage band (R7.27, R7.77): the honest message for a Mac whose keychain sync cannot work, the hidden Sync now
-button for those errors, the manual "Enter usage" form, and the one-line "Updated ... , source" note.
+"""Checks for the usage band (R7.27, R7.77, R7.100): no claude.ai login (no_token, no_item) is unavailable with a
+Request update button and no red error; a denied keychain gives the plain-words message and no Sync now button; the
+manual "Enter usage" form, the one-line "Updated ... , source" note.
 
-Node renders web/js/views/usage.js with fake view models (no DOM). The checks: no_token, no_item and denied give the
-plain-words message and no Sync now button; net and other errors keep Sync now; the form has two labelled decimal
-inputs wired to usage.set through the form; the markup has no inline style or on* handler; the source is named in words;
-normalizeUsage keeps syncError. The node checks are skipped when node is not installed.
+Node renders web/js/views/usage.js with fake view models (no DOM). The checks: net and other errors keep Sync now;
+the form has two labelled decimal inputs wired to usage.set through the form; the markup has no inline style or on*
+handler; the source is named in words; normalizeUsage keeps syncError. The node checks are skipped when node is not
+installed.
 """
 
 import json
@@ -21,6 +22,7 @@ WEB = os.path.join(REPO, "web")
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=', re.IGNORECASE)
 NO_AUTO_TITLE = "Usage is old."
 NO_AUTO_DETAIL = "It updates by itself when the head reads it from the app or a Claude Code session reports it."
+UNAVAILABLE_DETAIL = "This Mac signs in through the desktop app; the head updates usage."
 
 SCRIPT = """
 const usage = await import(process.argv[1]);
@@ -58,17 +60,28 @@ class UsageEntryTests(unittest.TestCase):
             raise AssertionError(proc.stderr[-800:])
         cls.html = json.loads(proc.stdout)
 
-    def test_no_auto_sync_errors_say_so_in_plain_words(self):
-        for key in ("noToken", "noItem", "denied"):
+    def test_denied_says_so_in_plain_words(self):
+        self.assertIn(NO_AUTO_TITLE, self.html["denied"])
+        self.assertIn(NO_AUTO_DETAIL, self.html["denied"])
+        self.assertNotIn("Usage data outdated", self.html["denied"])
+
+    def test_no_login_is_unavailable_not_an_error(self):
+        for key in ("noToken", "noItem"):
             self.assertIn(NO_AUTO_TITLE, self.html[key], key)
-            self.assertIn(NO_AUTO_DETAIL, self.html[key], key)
+            self.assertIn(UNAVAILABLE_DETAIL, self.html[key], key)
             self.assertNotIn("Usage data outdated", self.html[key], key)
+            self.assertNotIn("is-danger", self.html[key], key)
             self.assertNotIn("keychain entry has no usable token", self.html[key], key)
 
-    def test_no_auto_sync_errors_hide_sync_now(self):
-        for key in ("noToken", "noItem", "denied"):
-            self.assertNotIn('data-action="sync-usage"', self.html[key], key)
+    def test_no_login_offers_request_update_not_sync_now(self):
+        for key in ("noToken", "noItem"):
+            self.assertIn('data-action="sync-usage"', self.html[key], key)
+            self.assertIn("Request update", self.html[key], key)
             self.assertNotIn("Sync now", self.html[key], key)
+
+    def test_denied_hides_sync_now(self):
+        self.assertNotIn('data-action="sync-usage"', self.html["denied"])
+        self.assertNotIn("Sync now", self.html["denied"])
 
     def test_net_and_other_errors_keep_sync_now(self):
         for key in ("net", "other", "plainOld"):
