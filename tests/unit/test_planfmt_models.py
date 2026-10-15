@@ -10,7 +10,7 @@ from roadmap.core import planfmt
 
 class PlanModelWordTests(unittest.TestCase):
     def test_models_list_matches_the_job_model_words(self):
-        self.assertEqual(planfmt.MODELS, ("haiku", "sonnet", "opus", "cursor", "agy", "head"))
+        self.assertEqual(planfmt.MODELS, ("haiku", "sonnet", "opus", "cursor", "agy", "opencode", "head"))
 
     def test_task_line_accepts_each_model_word(self):
         for model in planfmt.MODELS:
@@ -39,7 +39,7 @@ class PlanModelWordTests(unittest.TestCase):
         self.assertEqual(records, [])
         self.assertEqual(len(errors), 1)
         self.assertTrue(errors[0].startswith("line 1: model 'gpt' is not valid"), errors[0])
-        self.assertIn("haiku|sonnet|opus|cursor|agy|head|-", errors[0])
+        self.assertIn("haiku|sonnet|opus|cursor|agy|opencode|head|-", errors[0])
 
 
 if __name__ == "__main__":
