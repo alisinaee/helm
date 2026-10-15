@@ -121,8 +121,8 @@ def task_records(data_dir):
 
 
 def bind_commit(data_dir, sha, task_ids):
-    """Attach commit:<sha> to each known task named in task_ids and to the running job of that task. A commit
-    never changes a task status: the person or the head marks it done. Returns the bound task ids in order.
+    """Attach commit:<sha> to each known task named in task_ids and to the running job of that task. A bound task
+    becomes done and loses its verify flag (H2). Returns the bound task ids in order.
     Adding the same commit twice changes nothing."""
     _require_data_dir(data_dir)
     known = known_task_ids(data_dir)
@@ -137,8 +137,12 @@ def bind_commit(data_dir, sha, task_ids):
             for task in tdoc.get("tasks") or []:
                 if isinstance(task, dict) and task.get("id") in wanted:
                     refs = task.setdefault("refs", [])
-                    if ref not in refs:
-                        refs.append(ref)
+                    stale = task.get("status") != "done" or "verify" in task
+                    if ref not in refs or stale:
+                        if ref not in refs:
+                            refs.append(ref)
+                        task["status"] = "done"
+                        task.pop("verify", None)
                         schema.write_data("tasks", path, tdoc)
         doc = _read_doc(data_dir)
         changed = False
@@ -199,9 +203,27 @@ def finish_job(data_dir, job_id, status, note=None, tokens_k=None, reason=None):
         _write_doc(data_dir, doc)
         if status == "failed" and job.get("task"):
             _reset_partial(data_dir, doc, job["task"])
+        if status == "done" and job.get("task"):
+            _mark_verify(data_dir, doc, job["task"])
     if clean_reason and _UNAVAILABLE_RE.search(clean_reason):
         _block_engine(data_dir, str(job.get("model") or ""), clean_reason)
     return dict(job)
+
+
+def _mark_verify(data_dir, doc, task_id):
+    """H2: when the last running job on a task ends done, a task not yet done gets verify (work finished, needs a
+    check). Its status stays as it is; a commit that binds the task makes it done and clears verify."""
+    if any(isinstance(j, dict) and j.get("status") == "running" and j.get("task") == task_id for j in doc["jobs"]):
+        return
+    path = os.path.join(data_dir, TASKS_FILE)
+    data, error = schema.read_data("tasks", path)
+    if error is not None or data is None or not isinstance(data.get("tasks"), list):
+        return
+    for task in data["tasks"]:
+        if isinstance(task, dict) and task.get("id") == task_id and task.get("status") != "done":
+            task["verify"] = True
+            schema.write_data("tasks", path, data)
+            return
 
 
 def _reset_partial(data_dir, doc, task_id):

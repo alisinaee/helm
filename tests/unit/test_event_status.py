@@ -117,7 +117,7 @@ class CommitBindingTests(EventCase):
         sha = self.git("rev-parse", "HEAD")
         self.assertEqual(out["data"]["candidates"], ["R7.45"])
         self.assertIn("commit:" + sha, self.task("R7.45")["refs"])
-        self.assertEqual(self.task("R7.45")["status"], "todo")
+        self.assertEqual(self.task("R7.45")["status"], "done")
 
     def test_bind_message_commit_reads_ids_from_the_message(self):
         sha = self.commit_file("c.txt", "R7.44 and R7.45 together")
