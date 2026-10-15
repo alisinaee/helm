@@ -39,6 +39,31 @@ def jobs_path(data_dir):
     return os.path.join(data_dir, JOBS_FILE)
 
 
+def store_backend(data_dir):
+    """'sqlite' when ROADMAP_STORE is set to sqlite, or the project entry has store: sqlite; otherwise 'json'.
+    A config that cannot be read keeps the JSON default (the JSON commands report the same file themselves)."""
+    env = os.environ.get("ROADMAP_STORE", "").strip().lower()
+    if env:
+        return env
+    try:
+        projects = config.list_projects()
+    except RoadmapError:
+        return "json"
+    here = os.path.normpath(os.path.abspath(data_dir))
+    for project in projects:
+        if os.path.normpath(data_dir_of(project)) == here and project.get("store"):
+            return str(project["store"]).strip().lower()
+    return "json"
+
+
+def claim_job(data_dir, task, files, worker, kind=None, title=None, model=None):
+    """Single-flight claim of a task (sqlite backend only; see store/jobs_db.claim). Returns (job, created)."""
+    if store_backend(data_dir) != "sqlite":
+        raise RoadmapError("usage", "claim needs the sqlite store (ROADMAP_STORE=sqlite or store: sqlite)", EXIT_USAGE)
+    from roadmap.store import jobs_db
+    return jobs_db.claim(data_dir, task, files, worker, kind=kind, title=title, model=model or "unknown")
+
+
 def resolve_project(explicit=None, environ=None, cwd=None):
     """Return the registered project a command acts on. Order: explicit id, $ROADMAP_PROJECT, then the registered
     project whose folder contains cwd (the longest match wins). Unknown ids and no match give not_found (exit 3)."""
@@ -80,6 +105,10 @@ def start_job(data_dir, title, model, task=None, parent=None, role=None, environ
     parent is the id of an existing job (the lead); role is lead or worker and needs a parent.
     With no parent given, the parent is $ROADMAP_PARENT_JOB (environ, default os.environ). A worker with no parent
     and exactly one running lead (role lead, or model head) gets that lead as its parent."""
+    if store_backend(data_dir) == "sqlite":
+        from roadmap.store import jobs_db
+        return jobs_db.start(data_dir, title, model, task=task, parent=parent, role=role, effort=effort,
+                             engine_model=engine_model)
     _require_data_dir(data_dir)
     clean_title = _clean_title(title)
     clean_model = _clean_model(model)
@@ -177,6 +206,9 @@ def finish_job(data_dir, job_id, status, note=None, tokens_k=None, reason=None):
     takes tokens_k minus progressK (see budget_remainder). A total below the counted progress is a usage error.
     reason (failed jobs only) is the first line of the error, kept to REASON_MAX characters. A known reason
     (see _UNAVAILABLE_RE) also marks the job's engine unavailable for ENGINE_BLOCK_HOURS."""
+    if store_backend(data_dir) == "sqlite":
+        from roadmap.store import jobs_db
+        return jobs_db.finish(data_dir, job_id, status, note=note, tokens_k=tokens_k, reason=reason)
     _require_data_dir(data_dir)
     if status not in ("done", "failed"):
         raise RoadmapError("usage", "status must be done or failed", EXIT_USAGE)
@@ -332,6 +364,9 @@ def progress_job(data_dir, job_id, tokens_k):
 
 def list_jobs(data_dir):
     """Return every job record in file order. A corrupt file is invalid_data (exit 5)."""
+    if store_backend(data_dir) == "sqlite":
+        from roadmap.store import jobs_db
+        return jobs_db.list_jobs(data_dir)
     _require_data_dir(data_dir)
     return [dict(j) for j in _read_doc(data_dir)["jobs"] if isinstance(j, dict)]
 
