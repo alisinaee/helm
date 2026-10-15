@@ -313,7 +313,27 @@ def _newest(entries):
     return sorted(entries, key=_newest_key, reverse=True)
 
 
-def _head_view(records, link_state, moment, tasks=(), issues=(), jobs=(), issues_all=None):
+RULE_STATE_RANK = {"in rules": 0, "proposed": 1, "kept as context": 2}
+RULE_STATE_OF = {"accepted": "in rules", "proposed": "proposed", "rejected": "kept as context",
+                 "merged": "kept as context"}
+
+
+def rule_state_map(proposals):
+    """{Hn: ruleState} from the rule proposals (every status). An accepted proposal sourced from Hn gives "in rules",
+    an open one "proposed", a rejected or merged one "kept as context"; the strongest state wins. Hn with none is
+    "to review" (given by the caller)."""
+    out = {}
+    for p in proposals or []:
+        state = RULE_STATE_OF.get(p.get("status"))
+        if state is None:
+            continue
+        for src in p.get("sources") or []:
+            if src not in out or RULE_STATE_RANK[state] < RULE_STATE_RANK[out[src]]:
+                out[src] = state
+    return out
+
+
+def _head_view(records, link_state, moment, tasks=(), issues=(), jobs=(), issues_all=None, rule_states=None):
     """The head key: now, prev, counts and rows (newest first, open and done together, as the head screen sorts them).
     Open unbound rows get suggest from the open tasks (state todo or partial) and the open issues. Each row carries
     linked (resolved links, from tasks, issues_all and jobs) and prog. Rows are the newest HEAD_OPEN_MAX open and
@@ -348,8 +368,11 @@ def _head_view(records, link_state, moment, tasks=(), issues=(), jobs=(), issues
             suggest = head_rules.suggest_binds(e["sum"], open_tasks, issues) or None
         if e["id"] in notes:
             e = dict(e, note=notes[e["id"]])
-        return head_row(e, moment, e["id"] in accepted, suggest,
-                        linked=_resolve_links(e, index, live_jobs) or None, prog=_progress(e, index))
+        out = head_row(e, moment, e["id"] in accepted, suggest,
+                       linked=_resolve_links(e, index, live_jobs) or None, prog=_progress(e, index))
+        if out["kind"] == "rule":
+            out["ruleState"] = (rule_states or {}).get(e["id"], "to review")
+        return out
 
     current, prev = _head_sessions(records)
     # (is_open, entry, row) for the newest open and newest done rows, newest first across both (the screen order).
@@ -384,7 +407,7 @@ def _head_view(records, link_state, moment, tasks=(), issues=(), jobs=(), issues
 
 
 def build_snapshot(files, config, now, control=None, meters=None, rules=None, session=None, folder=None,
-                   head_records=None, rev=None, usage=None):
+                   head_records=None, rev=None, usage=None, rule_proposals=None):
     """The snapshot dict. Same shape as the old server's build(), plus "project" and "schemaVersion".
     meters (WP27: limits, today, week) is added only when given, so a snapshot built without it is unchanged.
     rules (WP33b: the parsed docs/rules.txt list) is added only when given, for the same reason.
@@ -394,6 +417,8 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
     id -> ask ids, HEAD-SPEC section 12) with it.
     rev (the revision string, loader.revision) and usage (the usage view) add those keys only when given, as meters
     does. The loader passes both, so every served snapshot has them.
+    rule_proposals (R7.103: every rule proposal dict) adds rulesProposals (the open ones, id, text, sources) only when
+    some are open, and gives each Head row of kind rule its ruleState (rule_state_map).
 
     server_time is now in ISO 8601 with whole seconds. Parse problems go into errors[]; nothing raises.
     """
@@ -597,9 +622,14 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
         out["project"]["path"] = str(folder)
     if head_records is not None:
         head = _head_view(head_records, head_link_state(tasks, jobs, issues_all), moment, tasks=tasks,
-                          issues=issues_open, jobs=jobs, issues_all=issues_all)
+                          issues=issues_open, jobs=jobs, issues_all=issues_all,
+                          rule_states=rule_state_map(rule_proposals))
         out["askOf"] = head.pop("askOf")
         out["head"] = head
+    opened = [p for p in rule_proposals or [] if p.get("status") == "proposed"]
+    if opened:
+        out["rulesProposals"] = [{"id": p.get("id"), "text": p.get("text"), "sources": list(p.get("sources") or [])}
+                                 for p in opened]
     if rev is not None:
         out["rev"] = rev
     if usage is not None:

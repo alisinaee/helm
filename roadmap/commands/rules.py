@@ -1,6 +1,8 @@
-"""Command group rules: show, add, rm, sync and check the project rules (services/rules.py).
+"""Command group rules: show, add, rm, sync and check the project rules (services/rules.py), and the proposals
+that lead to them (propose, proposals, accept, reject).
 
-show is for the lead and for workers (at most 12 lines). add, rm and sync are refused from an agent shell.
+show is for the lead and for workers (at most 12 lines). add, rm, sync, accept and reject are refused from an agent
+shell. propose is open to agents.
 """
 
 from roadmap.services import rules, tasks
@@ -39,6 +41,28 @@ def register(sub, common):
     check = actions.add_parser("check", parents=[common], help="validate docs/rules.txt against the caps")
     check.add_argument("--project", default=None, metavar="ID")
     check.set_defaults(handler=_check)
+
+    propose = actions.add_parser("propose", parents=[common], help="propose a rule (agents may); the person accepts")
+    propose.add_argument("text", help="the proposed rule, at most 160 characters")
+    propose.add_argument("--from", dest="sources", action="append", default=[], metavar="Hn",
+                         help="a Head id the rule comes from (repeat for more)")
+    propose.add_argument("--project", default=None, metavar="ID")
+    propose.set_defaults(handler=_propose)
+
+    listing = actions.add_parser("proposals", parents=[common], help="the open rule proposals (at most 15 lines)")
+    listing.add_argument("--project", default=None, metavar="ID")
+    listing.set_defaults(handler=_proposals)
+
+    accept = actions.add_parser("accept", parents=[common], help="accept a proposal into docs/rules.txt (person only)")
+    accept.add_argument("proposal_id", metavar="RP1")
+    accept.add_argument("--text", default=None, help="the rule text to keep instead of the proposal's")
+    accept.add_argument("--project", default=None, metavar="ID")
+    accept.set_defaults(handler=_accept)
+
+    reject = actions.add_parser("reject", parents=[common], help="reject a proposal (person only)")
+    reject.add_argument("proposal_id", metavar="RP1")
+    reject.add_argument("--project", default=None, metavar="ID")
+    reject.set_defaults(handler=_reject)
 
 
 def _json(args):
@@ -89,4 +113,53 @@ def _check(args):
     if _json(args):
         return {"rules": count}
     print("ok: %d rules" % count)
+    return None
+
+
+def _propose(args):
+    _, data_dir = tasks.resolve(args.project)
+    row = rules.propose(data_dir, args.text, sources=args.sources)
+    if _json(args):
+        return dict(row)
+    if row.get("duplicate"):
+        print("duplicate of %s %s" % ("rule" if row["of"] == "rule" else "proposal", row["id"]))
+    else:
+        print("%s proposed" % row["id"])
+    return None
+
+
+PROPOSAL_LINES = 15
+
+
+def _proposals(args):
+    _, data_dir = tasks.resolve(args.project)
+    items = rules.open_proposals(data_dir)
+    lines = []
+    for row in items:
+        srcs = ", ".join(row.get("sources") or []) or "no source"
+        lines.append("%s (from %s) %s" % (row["id"], srcs, row["text"]))
+    if len(lines) > PROPOSAL_LINES:
+        lines = lines[:PROPOSAL_LINES - 1] + ["+%d more" % (len(lines) - PROPOSAL_LINES + 1)]
+    if _json(args):
+        return {"proposals": items}
+    for line in lines or ["no open proposals"]:
+        print(line)
+    return None
+
+
+def _accept(args):
+    _, data_dir = tasks.resolve(args.project)
+    row = rules.accept(data_dir, args.proposal_id, edited_text=args.text)
+    if _json(args):
+        return dict(row)
+    print("%s accepted as %s" % (row["id"], row["rule"]))
+    return None
+
+
+def _reject(args):
+    _, data_dir = tasks.resolve(args.project)
+    row = rules.reject(data_dir, args.proposal_id)
+    if _json(args):
+        return dict(row)
+    print("%s rejected" % row["id"])
     return None

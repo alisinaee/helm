@@ -11,6 +11,7 @@
 // head.merge and the copy button.
 
 import { esc } from "../dom.js";
+import { chipHtml } from "../dom.js";
 import { emptyHtml as pageEmpty, parseOne, swapNode } from "../dom.js";
 import { fmtPercent } from "../format.js";
 import { copyButton } from "../ref.js";
@@ -299,6 +300,14 @@ function kindHtml(kind) {
   return '<span class="chip chip-' + esc(tone) + '">' + esc(kind || "") + "</span>";
 }
 
+// The rule state chip on a rule row (R7.103): in rules, proposed, kept as context, or to review. Empty for other kinds.
+const RULE_STATE_TONE = { "in rules": "success", "proposed": "haiku", "kept as context": "neutral",
+  "to review": "warning" };
+function ruleStateHtml(row) {
+  if (row.kind !== "rule" || !row.ruleState) return "";
+  return " " + chipHtml(row.ruleState, RULE_STATE_TONE[row.ruleState] || "neutral");
+}
+
 // The text, history, reply and attachments of one row, as the view keeps them (the text is null on the phone).
 function normFull(f) {
   return { text: typeof f.text === "string" ? f.text : null, history: Array.isArray(f.history) ? f.history : [],
@@ -543,7 +552,7 @@ function listRowHtml(vm, row, opts) {
     cell("hd-n", '<button type="button" class="hd-hit" data-action="head-toggle" data-id="' + eid +
       '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="hd-p-' + eid + '" aria-label="' +
       esc((open ? "Hide " : "Show ") + id) + '">' + eid + "</button>") +
-    cell("hd-kind", kindHtml(row.kind)) +
+    cell("hd-kind", kindHtml(row.kind) + ruleStateHtml(row)) +
     cell("hd-sumc", '<span class="hd-sum" data-sum="' + esc(row.sum || "") + '" title="' + esc(shown) + '">' +
       esc(shown) + "</span>") +
     cell("hd-stc", statusHtml(row)) +
