@@ -63,7 +63,7 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
   const stop = '<button type="button" class="btn btn-small" data-action="agent-stop" data-project="' + esc(pid) +
     '" data-task="' + esc(job.task || "") + '" data-focus="stop-' + esc(pid) + "-" + esc(job.id) + '"' +
     (job.task ? "" : " disabled") + ' aria-label="Stop ' + esc(label) + '">Stop</button>';
-  const tokens = job.tokensK == null ? MISSING : fmtTokens(job.tokensK);
+  const tokens = job.tokensK == null ? "not yet" : fmtTokens(job.tokensK);
   const row = '<li class="ag-row" data-depth="' + depth + '"><div class="row-grid rg-agent">' +
     '<span class="rg-chips">' + chipHtml(job.model || "model", "neutral") +
     (job.role ? chipHtml(job.role, "neutral") : "") + badge + "</span>" +
@@ -80,15 +80,21 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
   }).join("") + "</ul></li>";
 }
 
-function finishedHtml(job) {
+// A finished job on the same tracks as the running rows: model and status, title, task, elapsed, tokens, an empty
+// Stop cell, and the copy-reference button.
+function finishedHtml(job, pid) {
   const word = STATUS_WORDS[job.status] || job.status;
   const kind = job.status === "failed" ? "danger" : "success";
-  const tokens = job.tokensK == null ? MISSING : fmtTokens(job.tokensK);
-  return '<li class="act-row row-grid rg-fin"><span class="act-time num">' +
-    esc(fmtDuration(job.elapsedS)) + "</span>" +
-    '<span class="act-main"><span class="act-sum">' + esc(job.title || job.id) + "</span> " +
-    chipHtml(job.model || "model", "neutral") + " " + chipHtml(word, kind) + "</span>" +
-    '<span class="act-tok num">' + esc(tokens) + "</span></li>";
+  const label = job.title || job.id;
+  const tokens = job.tokensK == null ? "unknown" : fmtTokens(job.tokensK);
+  const task = job.task ? '<a href="' + esc(itemHash(pid, job.task)) + '">' + esc(job.task) + "</a>" : "";
+  return '<li class="ag-row"><div class="row-grid rg-agent">' +
+    '<span class="rg-chips">' + chipHtml(job.model || "model", "neutral") + chipHtml(word, kind) + "</span>" +
+    '<span class="rg-main"><span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span></span>" +
+    '<span class="rg-chips">' + task + "</span>" +
+    '<span class="rg-num num">' + esc(fmtDuration(job.elapsedS)) + "</span>" +
+    '<span class="rg-num num">' + esc(tokens) + "</span><span></span>" +
+    copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) }) + "</div></li>";
 }
 
 // One block per project in view: its live tree and its finished jobs.
@@ -107,7 +113,9 @@ function projectBlock(entry, now, showName) {
     : emptyHtml("No agents running.");
   const done = finishedJobs(snap);
   const past = done.length
-    ? '<ol class="act-list" aria-label="Last finished jobs">' + done.map(finishedHtml).join("") + "</ol>"
+    ? '<ol class="ag-list" aria-label="Last finished jobs">' + done.map(function (job) {
+      return finishedHtml(job, entry.id);
+    }).join("") + "</ol>"
     : '<p class="ov-sum">No finished jobs yet.</p>';
   return '<section class="ov-card" aria-label="Agents">' + heading + live +
     '<h3 class="ov-h">Recently finished jobs</h3>' + past + "</section>";

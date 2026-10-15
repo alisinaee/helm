@@ -4,6 +4,7 @@
 
 import { esc } from "../dom.js";
 import { csrfToken, getJson } from "../api.js";
+import { helpRows } from "../keys.js";
 import { setEnabled, status as logStatusNow } from "../log.js";
 import { loadUi, saveTheme, updateUi } from "../state.js";
 import { showToast } from "./toast.js";
@@ -33,12 +34,23 @@ let serverLog = null;
 let serverLogFailed = false;
 let serverLogAt = 0;
 
+// Choice buttons: aria-pressed for the state, and a tick for the chosen one (not colour alone). The blank
+// icon keeps the other labels in the same place.
 function choiceHtml(name, options, current, action) {
   return '<div class="rule-tabs" role="group" aria-label="' + esc(name) + '">' + options.map(function (o) {
-    return '<button type="button" class="btn btn-small" aria-pressed="' + (o.id === current ? "true" : "false") +
+    const on = o.id === current;
+    return '<button type="button" class="btn btn-small" aria-pressed="' + (on ? "true" : "false") +
       '" data-action="' + esc(action) + '" data-value="' + esc(o.id) + '" data-focus="' + esc(action) + "-" +
-      esc(o.id) + '">' + esc(o.label) + "</button>";
+      esc(o.id) + '"><svg class="ico" aria-hidden="true" focusable="false"><use href="/icons.svg#' +
+      (on ? "i-check" : "i-blank") + '"></use></svg>' + esc(o.label) + "</button>";
   }).join("") + "</div>";
+}
+
+// The shortcut list from keys.js, the same rows as the ? help: one line per shortcut, so it wraps on a phone.
+function keysHtml() {
+  return helpRows().map(function (row) {
+    return '<p class="page-note"><span class="kbd">' + esc(row[0]) + "</span> " + esc(row[1]) + "</p>";
+  }).join("");
 }
 
 function applyDensity(value) {
@@ -119,9 +131,9 @@ export function sectionView() {
     '<section class="ov-card" aria-labelledby="set-phone"><h3 id="set-phone" class="lim-h">Phone</h3>' +
     '<p class="page-note">Read only on a phone: it can see every project and answer questions. It cannot change ' +
     "limits, overrides, rules, caps or approvals.</p></section>" +
-    '<section class="ov-card" aria-labelledby="set-keys"><h3 id="set-keys" class="lim-h">Keyboard</h3>' +
-    '<p class="page-note">Press ? for the list of shortcuts.</p>' +
-    '<button type="button" class="btn" data-action="help-open" data-focus="help-open">Keyboard shortcuts</button>' +
+    '<section class="ov-card" aria-labelledby="set-keys"><h3 id="set-keys" class="lim-h">Keyboard shortcuts</h3>' +
+    '<p class="page-note">Press ? anywhere to see this list.</p>' + keysHtml() +
+    '<button type="button" class="btn" data-action="help-open" data-focus="help-open">Show in a dialog</button>' +
     "</section>" +
     logging +
     '<section class="ov-card" aria-labelledby="set-data"><h3 id="set-data" class="lim-h">Data</h3>' +

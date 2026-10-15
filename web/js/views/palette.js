@@ -6,6 +6,7 @@ import { esc, patch } from "../dom.js";
 import { run } from "../cmd.js";
 import { buildHash, currentRoute, sectionHash } from "../router.js";
 import { SECTIONS, SETTINGS } from "../routes.js";
+import { markAllowed, markBug } from "./topbar.js";
 
 const LIMIT = 10;
 const KIND_LABEL = { task: "task", issue: "issue", question: "question", cmd: "command" };
@@ -47,6 +48,7 @@ function openItem(pid, section, item) {
 // Commands that act on a project need one; in All projects only the navigation commands are listed.
 export function commandsFor(snap, pid) {
   const out = [];
+  if (markAllowed()) out.push(cmd(">mark", "Mark a bug here", () => markBug()));
   if (pid) {
     out.push(cmd(">stop", "Stop agents in this project",
       () => run("control.stop", {}, { project: pid, key: "control:" + pid, value: true, label: "Stopped" })));

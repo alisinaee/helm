@@ -167,9 +167,11 @@ class SectionRenderTests(unittest.TestCase):
         self.assertIn("All projects usage: 90% of the daily limit.", html)
         self.assertNotIn('data-action="override"', html)
 
-    def test_running_banner_has_one_stop_button(self):
+    def test_running_banner_has_no_stop_button(self):
+        # The top bar holds Stop; the Overview banner only says what is running.
         html = self.out["overviewProject"]
-        self.assertEqual(html.count('data-op="control.stop"'), 1)
+        self.assertEqual(html.count('data-op="control.stop"'), 0)
+        self.assertIn("Running. Agents may start jobs.", html)
 
     def test_meters_show_plain_words_and_the_pace_clock(self):
         html = self.out["overviewProject"]

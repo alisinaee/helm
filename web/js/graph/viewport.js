@@ -1,11 +1,13 @@
 // Workflow diagram viewport (WP72, WP70-B, R7.14 D). The gesture state machine is pure (pointer and wheel input in,
 // view out), so the node tests can drive it with synthetic events. mountViewport() binds it to one SVG with Pointer
-// Events and pointer capture: one pointer pans, two pinch-zoom, the wheel zooms at the cursor, and a pointer that moves
-// 6 px or less is a tap (select). Two taps within 300 ms and 24 px zoom 2x. The view is { k, x, y } in screen pixels;
+// Events and pointer capture: one pointer pans, two pinch-zoom, and a pointer that moves 6 px or less is a tap
+// (select). Two taps within 300 ms and 24 px zoom 2x. Ctrl+wheel (a trackpad pinch) zooms at the cursor; a plain
+// wheel scrolls the page. The view is { k, x, y } in screen pixels;
 // the viewport <g> gets transform="translate(x y) scale(k)" as an attribute, and every change is pushed to subscribers
 // (the minimap reads it there). Keys: + and - zoom, 0 fits, Escape clears, N centres on Now, S on Start (eased, or
 // instant under reduced motion), Left and Right walk the path order node by node, Up and Down move to the nearest node
-// in that direction, Shift+arrows pan 40 px. Ctrl, Meta and Alt combinations are left to the browser.
+// in that direction, Shift+arrows pan 40 px. Ctrl, Meta and Alt combinations are left to the browser. The SVG is the
+// one tab stop; the nodes take focus by script (tabindex -1), and the arrows resume from the last node reached.
 
 export const MIN_K = 0.25;
 export const MAX_K = 3;
@@ -17,7 +19,8 @@ const PAN_STEP = 40;
 const FIT_PAD = 16;
 const OPEN_MIN_K = 0.6;
 const STEP = { ArrowUp: [0, -1], ArrowDown: [0, 1] };
-const FOCUSABLE = "[data-wf-item]";
+// The nodes in path order, and the fold toggles of open phases (they sit before their phase's first node).
+const FOCUSABLE = "[data-wf-item], .wfg-fold";
 // Presses on these keep their own behaviour: no pan, no preventDefault, no selection change.
 const CONTROL = "button, a, input, select, textarea, label, [contenteditable], .wfg-ctl, .wfm, [data-no-pan]";
 
@@ -228,9 +231,10 @@ function haloCentre(h) {
 }
 
 // Binds the gestures and keys to one SVG. opts: { view, box: {w, h}, taps, fit, onTap(el), onClear(), onView(view),
-// raf, clock, reduce }. raf and clock default to the browser; reduce overrides reducedMotion() (the tests use it).
-// Returns the controls: zoom(f), fit(), actual(), view(), size(), centerOn(target, instant), walk(step, from),
-// subscribe(fn) (fn runs now and on every change; returns an unsubscribe), stop(). Nothing here runs in node.
+// raf, cancel, clock, reduce }. raf, cancel and clock default to the browser; reduce overrides reducedMotion() (the
+// tests use it). Returns the controls: zoom(f), fit(), actual(), view(), size(), centerOn(target, instant),
+// walk(step, from), subscribe(fn) (fn runs now and on every change; returns an unsubscribe), stop() (ends a glide),
+// destroy() (ends a glide and makes every later change silent: the SVG was replaced). Nothing here runs in node.
 export function mountViewport(svg, vpG, opts) {
   const clock = opts.clock || function () {
     return Date.now();
@@ -238,6 +242,13 @@ export function mountViewport(svg, vpG, opts) {
   const frame = opts.raf || function (fn) {
     return globalThis.requestAnimationFrame(fn);
   };
+  const cancel = opts.cancel || function (id) {
+    if (typeof globalThis.cancelAnimationFrame === "function") globalThis.cancelAnimationFrame(id);
+  };
+  let alive = true;
+  let frameId = null;
+  let active = null;
+  const held = new Set();
   const motionOff = function () {
     return opts.reduce !== undefined ? !!opts.reduce : reducedMotion();
   };
@@ -254,6 +265,7 @@ export function mountViewport(svg, vpG, opts) {
   let downEl = null;
   let glide = 0;
   const paint = function () {
+    if (!alive || svg.isConnected === false) return;
     const v = gest.view;
     const at = "translate(" + v.x.toFixed(1) + " " + v.y.toFixed(1) + ") scale(" + v.k.toFixed(3) + ")";
     vpG.setAttribute("transform", at);
@@ -264,6 +276,13 @@ export function mountViewport(svg, vpG, opts) {
   };
   const stop = function () {
     glide += 1;
+    if (frameId !== null) cancel(frameId);
+    frameId = null;
+  };
+  const destroy = function () {
+    alive = false;
+    subs.length = 0;
+    stop();
   };
   const nodes = function () {
     return Array.from(svg.querySelectorAll(FOCUSABLE));
@@ -291,13 +310,14 @@ export function mountViewport(svg, vpG, opts) {
     }
     const t0 = clock();
     const step = function () {
+      frameId = null;
       if (token !== glide) return;
       const p = Math.min(1, (clock() - t0) / GLIDE_MS);
       gest.setView(tween(from, to, ease(p)));
       paint();
-      if (p < 1) frame(step);
+      if (p < 1) frameId = frame(step);
     };
-    frame(step);
+    frameId = frame(step);
   };
   const centerOn = function (target, instant) {
     const pt = anchorOf(target);
@@ -338,6 +358,7 @@ export function mountViewport(svg, vpG, opts) {
   };
   svg.addEventListener("pointerdown", function (e) {
     if (e.button > 0) return;
+    held.add(e.pointerId);
     stop();
     if (!isControl(e.target)) {
       // No native selection on a pan; focus moves by hand, so the keyboard still lands on the map.
@@ -365,12 +386,15 @@ export function mountViewport(svg, vpG, opts) {
   svg.addEventListener("selectstart", function (e) {
     e.preventDefault();
   });
+  // Only a held pointer moves the view: a hover costs nothing (no layout read, no paint).
   svg.addEventListener("pointermove", function (e) {
+    if (!held.has(e.pointerId)) return;
     const p = local(e);
     gest.move(e.pointerId, p.x, p.y);
     paint();
   });
   const release = function (e) {
+    held.delete(e.pointerId);
     const p = local(e);
     const res = gest.up(e.pointerId, p.x, p.y, e.timeStamp);
     paint();
@@ -381,10 +405,16 @@ export function mountViewport(svg, vpG, opts) {
   };
   svg.addEventListener("pointerup", release);
   svg.addEventListener("pointercancel", function (e) {
+    held.delete(e.pointerId);
     gest.up(e.pointerId, 0, 0, e.timeStamp);
     paint();
   });
+  svg.addEventListener("focusin", function (e) {
+    const n = closestNode(e.target);
+    if (n) active = n;
+  });
   svg.addEventListener("wheel", function (e) {
+    if (!e.ctrlKey) return;
     e.preventDefault();
     stop();
     const p = local(e);
@@ -402,19 +432,18 @@ export function mountViewport(svg, vpG, opts) {
     else if (plan.op === "clear") opts.onClear();
     else if (plan.op === "now") centerOn("now");
     else if (plan.op === "start") centerOn("start");
-    else if (plan.op === "walk") walk(plan.step, closestNode(e.target));
+    else if (plan.op === "walk") walk(plan.step, closestNode(e.target) || active);
     else if (plan.op === "pan") {
       const v = gest.view;
       gest.setView({ k: v.k, x: v.x + plan.dx, y: v.y + plan.dy });
       paint();
-    } else moveFocus(e, plan.dir);
+    } else moveFocus(closestNode(e.target) || active, plan.dir);
   });
-  function moveFocus(e, dir) {
-    const cur = closestNode(e.target);
+  function moveFocus(cur, dir) {
     if (!cur) return;
     const items = nodes().map(function (el) {
       const c = centreOf(el);
-      return { key: el.getAttribute("data-wf-item"), cx: c.x, cy: c.y, el: el };
+      return { key: el.getAttribute("data-wf-item") || el.getAttribute("data-wf-fold"), cx: c.x, cy: c.y, el: el };
     });
     const from = items.find(function (n) {
       return n.el === cur;
@@ -440,6 +469,7 @@ export function mountViewport(svg, vpG, opts) {
     centerOn: centerOn,
     walk: walk,
     stop: stop,
+    destroy: destroy,
     subscribe: function (fn) {
       subs.push(fn);
       fn(gest.view);

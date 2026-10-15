@@ -29,9 +29,14 @@ const { flowLayout, layout } = await load("layout.js");
 const cases = JSON.parse(readFileSync(0, "utf8"));
 const out = {};
 for (const c of cases) {
-  const graph = buildGraph(c.snap, {});
+  const build = () => {
+    const g = buildGraph(c.snap, {});
+    if (c.current) g.current = c.current;
+    return g;
+  };
+  const graph = build();
   const flow = flowLayout(graph, c.opts || {});
-  const again = flowLayout(buildGraph(c.snap, {}), c.opts || {});
+  const again = flowLayout(build(), c.opts || {});
   let ms = null;
   if (c.perf) {
     ms = Infinity;
@@ -112,6 +117,8 @@ class WorkflowFlowLayoutTest(unittest.TestCase):
             {"name": "cycle", "snap": load("cycle"), "opts": {"expandAll": True}},
             {"name": "empty", "snap": load("empty")},
             {"name": "folded", "snap": folded, "opts": {"collapseAll": True}},
+            {"name": "one_phase_350", "snap": snapshot(["P1"], [task("P1.%d" % k, "P1") for k in range(1, 351)])},
+            {"name": "phase_now", "snap": group, "opts": {"expandAll": True}, "current": "phase:P2"},
         ]
         cls.out = run(cases)
         cls.again = run(cases)
@@ -219,6 +226,18 @@ class WorkflowFlowLayoutTest(unittest.TestCase):
         self.assertEqual(now["box"], flow["boxes"][now["node"]])
         self.assertEqual(now["flag"]["x"], now["box"]["x"])
         self.assertLess(now["flag"]["y"] + now["flag"]["h"], min(f["y"] for f in flow["frames"]))
+
+    def test_now_on_a_phase_draws_the_flag_over_its_frame(self):
+        flow = self.flow("phase_now")
+        frame = next(f for f in flow["frames"] if f["lane"] == "P2")
+        self.assertEqual("phase:P2", flow["now"]["node"])
+        self.assertEqual({"x": frame["x"], "y": frame["y"], "w": frame["w"], "h": frame["h"]}, flow["now"]["box"])
+
+    def test_start_keeps_the_first_frame_open_and_one_phase_stays_within_300(self):
+        self.assertFalse(self.flow("big")["frames"][0]["collapsed"])
+        flow = self.flow("one_phase_350")
+        self.assertLessEqual(flow["count"], 300)
+        self.assertTrue(flow["frames"][0]["collapsed"])
 
     def test_350_tasks_stay_within_300_nodes(self):
         default = self.flow("fixture_350")

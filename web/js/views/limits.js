@@ -1,287 +1,216 @@
-// Limit rows (WP33): the editor rows, the add presets and their actions. The rows are the snapshot's meters.limits;
-// every change goes through run() in cmd.js, so a refusal reverts and shows a toast, and a change that can be undone
-// gets an Undo toast. Rows read through from autonomy.json or budget.json are shown read-only with their source.
-// The client does no maths on the limits: the slider and stepper only move the value the server will check.
+// Limits, simple (R7.28 A, docs/LIMITS-SIMPLE-SPEC.md). Two blocks on the Tokens screen: the weekly stop (one switch
+// and one percent, for all projects: a global pct row on the week) and the share per project (one number and one
+// daily or weekly choice per project: a project pct row). Both save with limit.set and remove with limit.rm, and
+// nothing else. The server judges the rows (services/limits.py evaluate()): a row warns at 80% and stops at 100%.
+// Caps for tasks, phases, models and whole projects are CLI features and are not edited here.
 
 import { esc } from "../dom.js";
-import { fmtTokens } from "../format.js";
+import { MISSING, fmtPercent } from "../format.js";
 import { copyButton, refSummary } from "../ref.js";
 import { run } from "../cmd.js";
 import { showToast } from "./toast.js";
 
-const WINDOW_WORDS = { day: "Day", week: "Week", total: "Total" };
-const STATE_WORDS = { ok: "ok", warn: "Warning", block: "Stopped", unknown: "unknown" };
+const WEEKLY_MIN = 50;
+const STATE_WORDS = { ok: "ok", warn: "Warning at 80%", block: "Stopped", unknown: "≈ not enough data" };
 const STATE_TONE = { ok: "neutral", warn: "warning", block: "danger", unknown: "neutral" };
-const STORED_SRC = ["config", "limits"];
-const FAIR_DAY = "14.3";
 
-// The three add presets. The daily preset for all projects only appears in global scope.
-export const PRESETS = [
-  { id: "day10", label: "Stay under 10% a day", scopes: ["global", "project"],
-    row: { window: "day", kind: "pct", value: 10, action: "block" } },
-  { id: "week60", label: "Weekly 60%", scopes: ["global", "project"],
-    row: { window: "week", kind: "pct", value: 60, action: "block" } },
-  { id: "dayall", label: "Daily for all projects", scopes: ["global"],
-    row: { window: "day", kind: "pct", value: Number(FAIR_DAY), action: "block" } },
-];
+function snapsOf(vm) {
+  return vm.snapshotList || [];
+}
 
-let addOpen = false;
-let sheetId = null;
+function metersOf(snap) {
+  return snap && Array.isArray(snap.meters) ? snap.meters : [];
+}
 
-// The rows that belong to a scope, as the limits editor lists them.
-export function rowsForScope(scope, rows) {
-  return (rows || []).filter(function (row) {
-    return scope === "global" ? row.scope === "global" : true;
+function projectsOf(vm) {
+  if (vm.projects && vm.projects.length) return vm.projects;
+  return snapsOf(vm).map(function (s) {
+    return { id: s.id, name: s.title || s.id };
   });
 }
 
-// Whether a row can be edited here: a stored row of this scope. Read-through rows (autonomy, budget) and rows of
-// another scope are read-only.
-export function editable(row, scope) {
-  return row.scope === scope && STORED_SRC.indexOf(row.src) >= 0 && (row.kind === "pct" || row.kind === "tok") &&
-    row.action !== null;
+// The project a copy reference names: the project view's own project. The All view names none (no first-project slug).
+function scopePid(vm) {
+  return vm.route && vm.route.name === "project" ? vm.route.id || null : null;
 }
 
-function valueText(row) {
-  if (row.value == null && row.limit == null) return "not set";
-  const v = row.limit;
-  if (row.kind === "tok") return fmtTokens(v);
-  return String(v) + "%";
+function stateKey(row) {
+  return STATE_WORDS[row.state] ? row.state : "unknown";
 }
 
-// The row's name: "Day limit 10% of weekly", "Week limit 500k tokens" or the account's "Weekly stop 72%".
-function titleText(row, est) {
-  if (row.kind === "acct") return "Weekly stop " + est + valueText(row);
-  const unit = row.kind === "tok" ? " tokens" : " of weekly";
-  return (WINDOW_WORDS[row.window] || row.window) + " limit " + est + valueText(row) + unit;
-}
-
-// The preview under an editor: a plain-words reading of the value.
-export function previewText(kind, window, value) {
-  const v = Number(value);
-  if (!Number.isFinite(v) || v <= 0) return "Enter a value above 0.";
-  if (kind === "tok") {
-    const shown = v >= 1000 ? (v / 1000).toFixed(1) + "M" : String(v) + "k";
-    return "≈ " + shown + " tokens; exact if reported.";
-  }
-  const where = window === "week" ? "of your weekly allowance" : "of weekly limit per day";
-  const hint = window === "day" ? " Daily average is about " + FAIR_DAY + "%." : "";
-  return "≈ " + v + "% " + where + "." + hint;
-}
-
-function clampValue(kind, value) {
-  if (kind === "tok") return Math.max(1, Math.round(value));
-  return Math.min(100, Math.max(1, Math.round(value)));
-}
-
-function windowOptions(row, scope) {
-  const opts = ["day", "week"];
-  if (row.kind === "tok" && scope === "project") opts.push("total");
-  return opts;
-}
-
-function selectHtml(id, label, options, current, focus) {
-  return '<label class="lim-field"><span class="lim-label">' + esc(label) + "</span>" +
-    '<select class="lim-select" data-focus="' + esc(focus) + '" data-field="' + esc(id) + '">' +
-    options.map(function (o) {
-      return '<option value="' + esc(o.value) + '"' + (o.value === current ? " selected" : "") + ">" +
-        esc(o.text) + "</option>";
-    }).join("") + "</select></label>";
-}
-
-// One editable row: window, unit, stepper and slider or number field, action, preview, delete.
-function editorHtml(row, scope) {
-  const id = row.id;
-  const isPct = row.kind === "pct";
-  const value = row.limit == null ? 0 : row.limit;
-  const range = isPct
-    ? '<input class="lim-range" type="range" min="1" max="100" step="1" value="' + esc(value) +
-      '" aria-label="Limit for ' + esc(id) + ', percent" data-focus="range-' + esc(id) + '" data-row="' +
-      esc(id) + '">'
-    : '<input class="lim-num" type="number" min="1" step="1" value="' + esc(value) +
-      '" aria-label="Limit for ' + esc(id) + ', thousands of tokens" data-focus="num-' + esc(id) +
-      '" data-row="' + esc(id) + '">';
-  const unitOpts = [{ value: "pct", text: "% of weekly limit" }, { value: "tok", text: "tokens" }];
-  const winOpts = windowOptions(row, scope).map(function (w) {
-    return { value: w, text: WINDOW_WORDS[w] };
-  });
-  return '<div class="lim-edit">' +
-    selectHtml("window", "Window", winOpts, row.window, "win-" + id).replace('data-field="window"',
-      'data-field="window" data-row="' + esc(id) + '"') +
-    selectHtml("unit", "Unit", unitOpts, isPct ? "pct" : "tok", "unit-" + id).replace('data-field="unit"',
-      'data-field="unit" data-row="' + esc(id) + '"') +
-    '<div class="lim-value"><span class="lim-label" aria-hidden="true">' + esc(isPct ? "Limit" : "Tokens (k)") +
-    "</span>" +
-    '<div class="lim-stepper">' +
-    '<button type="button" class="btn btn-small step" data-action="lim-step" data-row="' + esc(id) +
-    '" data-dir="-1" aria-label="Lower limit ' + esc(id) + '" data-focus="dn-' + esc(id) + '">−</button>' +
-    range +
-    '<button type="button" class="btn btn-small step" data-action="lim-step" data-row="' + esc(id) +
-    '" data-dir="1" aria-label="Raise limit ' + esc(id) + '" data-focus="up-' + esc(id) + '">+</button></div></div>' +
-    selectHtml("action", "When reached", [{ value: "block", text: "Stop" }, { value: "warn", text: "Warn" }],
-      row.action, "act-" + id).replace('data-field="action"', 'data-field="action" data-row="' + esc(id) + '"') +
-    '<p class="lim-preview" data-preview-for="' + esc(id) + '">' +
-    esc(previewText(row.kind, row.window, value)) + "</p>" +
-    '<button type="button" class="btn btn-small" data-action="lim-del" data-row="' + esc(id) +
-    '" aria-label="' + esc("Delete limit " + id) + '" data-focus="del-' + esc(id) + '">Delete</button></div>';
-}
-
-function readOnlyHtml(row, scope) {
-  const from = row.src === "autonomy" ? "from weekly stop policy" :
-    row.src === "budget" ? "from project token budget" :
-      row.scope === "global" && scope === "project" ? "from All projects, applies to this project" :
-        "and its action is not in the snapshot yet, so it cannot be edited here";
-  return '<p class="lim-readonly">Read only, ' + esc(from) + ".</p>" +
-    (STORED_SRC.indexOf(row.src) >= 0 && row.scope === scope ?
-      '<button type="button" class="btn btn-small" data-action="lim-del" data-row="' + esc(row.id) +
-      '" aria-label="' + esc("Delete limit " + row.id) + '" data-focus="del-' + esc(row.id) + '">Delete</button>' :
-      "");
-}
-
-// One limit row: a summary line (window, value, unit, state, pace) with the editor or the read-only note.
-export function limitRowHtml(row, scope) {
-  const state = STATE_WORDS[row.state] ? row.state : "unknown";
-  const est = row.est ? "≈ " : "";
-  const sheetOpen = sheetId === row.id;
-  const body = editable(row, scope) ? editorHtml(row, scope) : readOnlyHtml(row, scope);
-  return '<li class="lim-row' + (sheetOpen ? " is-sheet" : "") + '" id="lim-' + esc(row.id) + '" data-state="' +
-    esc(state) + '">' +
-    '<div class="lim-head row-grid"><span class="lim-title rg-t" title="' + esc(titleText(row, est)) + '">' +
-    esc(titleText(row, est)) + "</span>" +
-    '<span class="chip chip-' + esc(STATE_TONE[state]) + '">' + esc(STATE_WORDS[state]) + "</span>" +
-    '<span class="lim-id">' + esc(row.id) + "</span>" +
-    '<button type="button" class="btn btn-small lim-edit-btn" data-action="lim-sheet" data-row="' + esc(row.id) +
-    '" aria-label="' + esc((sheetOpen ? "Done editing" : "Edit") + " limit " + row.id) +
-    '" aria-expanded="' + (sheetOpen ? "true" : "false") + '" aria-controls="lim-' + esc(row.id) +
-    '" data-focus="sheet-' + esc(row.id) + '">' +
-    (sheetOpen ? "Done" : "Edit") + "</button></div>" + body + "</li>";
-}
-
-function presetsHtml(scope) {
-  return '<div class="lim-presets" role="group" aria-label="Add a limit">' +
-    PRESETS.filter(function (p) {
-      return p.scopes.indexOf(scope) >= 0;
-    }).map(function (p) {
-      return '<button type="button" class="btn" data-action="lim-preset" data-preset="' + esc(p.id) +
-        '" data-focus="preset-' + esc(p.id) + '">' + esc(p.label) + "</button>";
-    }).join("") + "</div>";
-}
-
-// The limits editor: the rows, an empty state with the presets, and the add control.
-export function limitsHtml(scope, rows) {
-  const list = rowsForScope(scope, rows);
-  const head = '<div class="lim-bar"><h3 class="lim-h">Limits</h3>' +
-    '<button type="button" class="btn btn-small" data-action="lim-add" data-focus="lim-add">+ Add limit</button>' +
-    copyButton("section", "tokens.limits", "Limits", { project: ctx.pid,
-      sum: refSummary("section", list.length) }) + "</div>";
-  if (!list.length) {
-    return '<div class="lim-block">' + head + presetsHtml(scope) +
-      '<p class="lim-note">No limits; full weekly allowance available.</p></div>';
-  }
-  const add = addOpen ? presetsHtml(scope) : "";
-  return '<div class="lim-block">' + head + add +
-    '<ul class="lim-list">' + list.map(function (row) {
-      return limitRowHtml(row, scope);
-    }).join("") + "</ul>" +
-    '<p class="lim-note">Warn alerts; Stop pauses new work.</p></div>';
-}
-
-// The args for limit.set from a row with some fields replaced.
-function rowArgs(row, scope, change) {
-  const base = { id: row.id, scope: row.scope || scope, window: row.window, kind: row.kind,
-    value: row.limit, action: row.action || "block" };
-  return Object.assign(base, change);
-}
-
-function setRow(args, pid, label) {
-  return run("limit.set", args, { project: pid, label: label });
-}
-
-function valueOf(el) {
-  return Number(el.value);
-}
-
-// Read the editor's current row fields from the DOM for a commit (the row is the snapshot row, see rowArgs).
-function rowById(rows, id) {
-  for (const row of rows || []) {
-    if (row.id === id) return row;
+// The global weekly stop row (a config row: scope global, kind pct, window week), or null when the stop is off.
+function weeklyRow(vm) {
+  for (const snap of snapsOf(vm)) {
+    const hit = metersOf(snap).find(function (r) {
+      return r.scope === "global" && r.kind === "pct" && r.window === "week";
+    });
+    if (hit) return hit;
   }
   return null;
 }
 
-// Actions for the limits editor. Returns true when it handled the action (app.js then re-renders).
-// ctx: {scope, pid, rows} as built by the section, kept in the module between renders.
-let ctx = { scope: "project", pid: null, rows: [] };
-
-export function setLimitContext(next) {
-  ctx = next;
+// The first stored project row that is a daily or weekly percent: the one this screen edits. Other rows are CLI rules.
+function shareRowOf(vm, pid) {
+  const snap = snapsOf(vm).find(function (s) {
+    return s.id === pid;
+  });
+  return metersOf(snap).find(function (r) {
+    return r.scope === "project" && r.kind === "pct" && (r.window === "day" || r.window === "week") &&
+      r.src === "limits";
+  }) || null;
 }
 
-export function limitAction(action, el) {
-  if (action === "lim-add") {
-    addOpen = !addOpen;
-    return true;
-  }
-  if (action === "lim-sheet") {
-    const id = el.getAttribute("data-row");
-    sheetId = sheetId === id ? null : id;
-    return true;
-  }
-  if (action === "lim-preset") {
-    const preset = PRESETS.find(function (p) {
-      return p.id === el.getAttribute("data-preset");
+// A project's own stop (autonomy.json) is read through; it is shown as a note when the global stop does not cover it.
+function ownStopsHtml(vm, globalValue) {
+  const names = projectsOf(vm);
+  return snapsOf(vm).map(function (snap) {
+    const auto = metersOf(snap).find(function (r) {
+      return r.src === "autonomy" && r.kind === "acct";
     });
-    if (!preset) return true;
-    addOpen = false;
-    run("limit.set", Object.assign({ scope: ctx.scope }, preset.row), { project: ctx.pid, label: preset.label +
-      " added" });
-    return true;
-  }
-  if (action === "lim-del") {
-    const id = el.getAttribute("data-row");
-    sheetId = null;
-    run("limit.rm", { id: id }, { project: ctx.pid, label: "Limit " + id + " removed" });
-    return true;
-  }
-  if (action === "lim-step") {
-    const row = rowById(ctx.rows, el.getAttribute("data-row"));
-    if (!row) return true;
-    const dir = Number(el.getAttribute("data-dir")) < 0 ? -1 : 1;
-    const step = row.kind === "tok" ? 100 : 1;
-    const next = clampValue(row.kind, (row.limit || 0) + dir * step);
-    if (next === row.limit) return true;
-    setRow(rowArgs(row, ctx.scope, { value: next }), ctx.pid, "Limit " + row.id + " set");
-    return true;
-  }
-  if (action === "spend-cap") {
-    const field = el.parentNode.querySelector("input");
-    const scope = el.getAttribute("data-scope");
-    const key = el.getAttribute("data-key") || "";
-    const raw = field ? field.value.trim() : "";
-    const value = raw === "" ? null : Number(raw);
-    if (value !== null && (!Number.isFinite(value) || value <= 0)) {
-      showToast({ text: "Enter thousands above 0, or clear.", tone: "danger" });
-      return true;
-    }
-    if (scope === "tasks") {
-      run("task.cap", { id: key, value: value }, { project: ctx.pid, label: "Cap set on " + key });
-    } else {
-      run("budget.set", { scope: scope, key: key, value: value }, { project: ctx.pid,
-        label: "Cap set on " + (key || "project") });
-    }
-    return true;
-  }
-  if (action === "lim-override") {
-    const select = el.parentNode.querySelector("select");
-    const hours = select ? Number(select.value) : 1;
-    run("control.override", { hours: hours }, { project: ctx.pid, label: "Override set for " + hours + " h" });
-    return true;
-  }
-  return false;
+    if (!auto || (globalValue !== null && Number(auto.limit) >= globalValue)) return "";
+    const p = names.find(function (x) {
+      return x.id === snap.id;
+    });
+    return '<p class="page-note">' + esc((p ? p.name : snap.id) + " stops at " + Number(auto.limit) + "% on its own.") +
+      "</p>";
+  }).join("");
 }
 
-// Input and change handlers, attached once to <main> (patch() replaces its children, not the element). The slider
-// and number fields move only the preview while typing; a change commits the value.
+// The weekly stop: one on/off switch and one percent. The form submits on Enter.
+export function weeklyStopHtml(vm) {
+  const row = weeklyRow(vm);
+  const on = row !== null;
+  const pid = scopePid(vm);
+  const shown = on ? Number(row.limit) : 95;
+  const chip = on ? '<span class="chip chip-' + esc(STATE_TONE[stateKey(row)]) + '">' +
+    esc(STATE_WORDS[stateKey(row)]) + "</span>" : "";
+  const toggle = '<button type="button" class="btn" role="switch" aria-checked="' + (on ? "true" : "false") +
+    '" aria-label="' + (on ? "Weekly stop, on" : "Weekly stop, off") + '" data-action="lim-weekly" data-row="' +
+    esc(on ? row.id : "") + '" data-focus="weekly-toggle">' + (on ? "On" : "Off") + "</button>";
+  const copy = copyButton("section", "tokens.weekly", "Weekly stop", { project: pid,
+    sum: refSummary("section", 1) });
+  return '<section class="lim-block" aria-labelledby="lim-weekly-h">' +
+    '<div class="lim-bar"><h3 id="lim-weekly-h" class="lim-h">Weekly stop</h3>' + copy + "</div>" +
+    '<form class="row-grid rg-weekly" data-form="weekly" data-project="' + esc(pid || "") + '" data-row="' +
+    esc(on ? row.id : "") + '" data-on="' + (on ? "true" : "false") + '">' + toggle +
+    '<label class="lim-weekly-input"><span class="lim-weekly-text">Stop agents at</span> ' +
+    '<input class="rule-input" type="number" min="' + WEEKLY_MIN + '" max="100" step="1" ' +
+    'inputmode="numeric" value="' + esc(String(shown)) + '"> %</label>' +
+    '<span class="lim-weekly-text">of my weekly usage</span>' + chip + "</form>" +
+    ownStopsHtml(vm, on ? shown : null) +
+    '<p class="page-note">' + (on ? "Warning at 80%. Agents stop starting jobs at this share of the week." :
+      "Off: no weekly stop for any project.") + "</p>" +
+    "</section>";
+}
+
+function shareOption(value, text, selected) {
+  return '<option value="' + value + '"' + (selected ? " selected" : "") + ">" + text + "</option>";
+}
+
+// One project's share row: name, one number (empty = no limit), daily or weekly, used, state.
+function shareLineHtml(vm, p) {
+  const snap = snapsOf(vm).find(function (s) {
+    return s.id === p.id;
+  });
+  const row = shareRowOf(vm, p.id);
+  const week = snap && snap.weekUse ? snap.weekUse : {};
+  const win = row ? row.window : "week";
+  const used = row ? row.used : week.estPts;
+  const usedText = used == null ? MISSING : "≈ " + fmtPercent(used);
+  const others = metersOf(snap).filter(function (r) {
+    return r.scope === "project" && r.src === "limits" && r !== row;
+  }).length;
+  const chip = row ? '<span class="chip chip-' + esc(STATE_TONE[stateKey(row)]) + '">' +
+    esc(STATE_WORDS[stateKey(row)]) + "</span>" : '<span class="chip chip-neutral">No limit</span>';
+  const numId = "lim-share-" + p.id;
+  const winId = "lim-win-" + p.id;
+  return '<form class="row-grid rg-share" data-form="share" data-project="' + esc(p.id) + '" data-row="' +
+    esc(row ? row.id : "") + '" data-window="' + esc(win) + '" data-name="' + esc(p.name) + '">' +
+    '<span class="rg-t">' + esc(p.name) + (others ? ' <span class="page-note">+ ' + others + " CLI rules</span>" : "") +
+    "</span>" +
+    '<span class="lim-share-ctl"><input id="' + esc(numId) + '" class="rule-input" type="number" min="1" ' +
+    'max="100" step="1" inputmode="numeric" placeholder="no limit" value="' +
+    esc(row ? String(row.limit) : "") + '" aria-label="' +
+    esc("Limit for " + p.name + ", percent; empty for no limit") + '"> %' +
+    '<select id="' + esc(winId) + '" class="lim-select" data-field="window" aria-label="' +
+    esc("Daily or weekly for " + p.name) + '">' +
+    shareOption("day", "daily", win === "day") + shareOption("week", "weekly", win === "week") +
+    "</select></span>" +
+    '<span class="rg-num">' + esc(usedText) + "</span>" +
+    '<span class="rg-state">' + chip + "</span></form>";
+}
+
+// The share per project: one row per registered project. Collapsed when no project has a limit.
+export function shareRowsHtml(vm) {
+  const projects = projectsOf(vm);
+  const anySet = projects.some(function (p) {
+    return shareRowOf(vm, p.id) !== null;
+  });
+  const copy = copyButton("section", "tokens.share", "Share per project", { project: scopePid(vm),
+    sum: refSummary("section", projects.length) });
+  return '<details class="lim-block lim-share-block"' + (anySet ? " open" : "") + ">" +
+    '<summary class="lim-h">Share per project (optional)</summary>' + copy +
+    '<div class="row-grid rg-share rg-head" aria-hidden="true"><span>Project</span><span>May use up to</span>' +
+    "<span>Used</span><span>State</span></div>" +
+    projects.map(function (p) {
+      return shareLineHtml(vm, p);
+    }).join("") + "</details>";
+}
+
+// Save the weekly stop (limit.set, global pct on the week). The value must be a whole percent from 50 to 100.
+function setWeekly(form) {
+  const input = form.querySelector("input");
+  const value = Number(input ? input.value.trim() : "");
+  if (!Number.isInteger(value) || value < WEEKLY_MIN || value > 100) {
+    showToast({ text: "Enter a whole percent from 50 to 100.", tone: "danger" });
+    return;
+  }
+  run("limit.set", { scope: "global", window: "week", kind: "pct", value: value, action: "block" },
+    { project: form.getAttribute("data-project") || null, label: "Weekly stop set to " + value + "%" });
+}
+
+// Save one project's share. An empty number removes the row (no limit). A changed window removes the old row first,
+// because a row is keyed by its window.
+async function setShare(form) {
+  const pid = form.getAttribute("data-project");
+  const id = form.getAttribute("data-row") || "";
+  const was = form.getAttribute("data-window");
+  const name = form.getAttribute("data-name") || pid;
+  const input = form.querySelector("input");
+  const select = form.querySelector("select");
+  const raw = input ? input.value.trim() : "";
+  if (raw === "") {
+    if (id) run("limit.rm", { id: id }, { project: pid, label: name + ": no limit" });
+    return;
+  }
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1 || value > 100) {
+    showToast({ text: "Enter a whole percent from 1 to 100, or leave it empty for no limit.", tone: "danger" });
+    return;
+  }
+  const win = select && select.value === "day" ? "day" : "week";
+  if (id && was !== win) await run("limit.rm", { id: id }, { project: pid, label: name + ": old window removed" });
+  run("limit.set", { scope: "project", window: win, kind: "pct", value: value, action: "block" },
+    { project: pid, label: name + " up to " + value + "% " + (win === "day" ? "a day" : "a week") });
+}
+
+// Actions for this module. Returns true when it handled the action (app.js then re-renders).
+export function limitAction(action, el) {
+  if (action !== "lim-weekly") return false;
+  const form = el.closest ? el.closest("form") : null;
+  if (!form) return true;
+  if (el.getAttribute("aria-checked") === "true") {
+    const id = form.getAttribute("data-row");
+    if (id) run("limit.rm", { id: id }, { project: form.getAttribute("data-project") || null,
+      label: "Weekly stop off" });
+  } else {
+    setWeekly(form);
+  }
+  return true;
+}
+
+// Submit and change handlers, attached once to <main> (patch() replaces its children, not the element). Enter in a
+// number field submits its form; choosing daily or weekly saves the row with the number already there.
 let listening = false;
 
 export function attachLimitListeners() {
@@ -289,40 +218,22 @@ export function attachLimitListeners() {
   const main = document.getElementById("main");
   if (!main) return;
   listening = true;
-  main.addEventListener("input", function (event) {
-    const t = event.target;
-    const id = t && t.getAttribute ? t.getAttribute("data-row") : null;
-    if (!id || (t.type !== "range" && t.type !== "number")) return;
-    const row = rowById(ctx.rows, id);
-    if (!row) return;
-    const preview = main.querySelector('[data-preview-for="' + id + '"]');
-    if (preview) preview.textContent = previewText(row.kind, row.window, valueOf(t));
+  main.addEventListener("submit", function (event) {
+    const form = event.target;
+    const kind = form && form.getAttribute ? form.getAttribute("data-form") : null;
+    if (kind !== "weekly" && kind !== "share") return;
+    event.preventDefault();
+    if (kind === "share") {
+      setShare(form);
+    } else if (form.getAttribute("data-on") === "true") {
+      setWeekly(form);
+    } else {
+      showToast({ text: "Turn the weekly stop on first.", tone: "danger" });
+    }
   });
   main.addEventListener("change", function (event) {
     const t = event.target;
-    const id = t && t.getAttribute ? t.getAttribute("data-row") : null;
-    if (!id) return;
-    const row = rowById(ctx.rows, id);
-    if (!row) return;
-    const field = t.getAttribute("data-field");
-    if (field === "window") {
-      setRow(rowArgs(row, ctx.scope, { window: t.value }), ctx.pid, "Window set");
-    } else if (field === "action") {
-      setRow(rowArgs(row, ctx.scope, { action: t.value }), ctx.pid, t.value === "warn" ? "Set to warn" : "Set to stop");
-    } else if (field === "unit") {
-      const kind = t.value === "tok" ? "tok" : "pct";
-      const value = kind === "tok" ? 100 : 10;
-      const win = kind === "pct" && row.window === "total" ? "week" : row.window;
-      setRow(rowArgs(row, ctx.scope, { kind: kind, value: value, window: win }), ctx.pid, "Unit set");
-    } else if (t.type === "range" || t.type === "number") {
-      const next = valueOf(t);
-      if (!Number.isFinite(next) || next <= 0) {
-        showToast({ text: "Enter a number above 0.", tone: "danger" });
-        return;
-      }
-      const value = clampValue(row.kind, next);
-      if (value === row.limit) return;
-      setRow(rowArgs(row, ctx.scope, { value: value }), ctx.pid, "Limit " + row.id + " set");
-    }
+    const form = t && t.form ? t.form : null;
+    if (t.tagName === "SELECT" && form && form.getAttribute("data-form") === "share") form.requestSubmit();
   });
 }

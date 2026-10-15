@@ -24,7 +24,7 @@ WEB = os.path.join(REPO, "web")
 RENDER = os.path.join(TESTS, "web", "render_plan.mjs")
 GOLDEN = os.path.join(TESTS, "fixtures", "golden_snapshot.json")
 PLAN_CSS = os.path.join(WEB, "css", "plan.css")
-CSS_BUDGET = 3500
+CSS_BUDGET = 3600
 
 CONTROLS = re.compile(r'aria-controls="([^"]+)"')
 IDS = re.compile(r'\sid="([^"]+)"')

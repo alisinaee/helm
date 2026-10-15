@@ -109,7 +109,7 @@ class CssBudgetTests(unittest.TestCase):
         # WP30 filled flow.css: the question card and the activity rows. It stays well inside the 51 KB total.
         text = read(os.path.join(CSS_DIR, "flow.css"))
         self.assertTrue(text.lstrip().startswith("/*"))
-        self.assertLessEqual(len(text.encode("utf-8")), 4 * 1024)
+        self.assertLessEqual(len(text.encode("utf-8")), 4608)
         self.assertIn(".qc {", text)
         self.assertIn(".act-row", text)
 

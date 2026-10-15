@@ -226,7 +226,20 @@ class WorkflowMapTests(unittest.TestCase):
     def test_map_opens_centred_on_now_and_keeps_the_user_view_after(self):
         self.assertIn('api.centerOn("now", true)', self.source)
         self.assertIn("if (opening) openAtNow(api, st.flow);", self.source)
-        self.assertIn("const view = opening ? undefined : st.view;", self.source)
+        self.assertIn("const view = opening ? undefined : store.view;", self.source)
+        # The previous viewport is destroyed before the new one reads the live view.
+        self.assertLess(self.source.index("activeMap.api.destroy()"), self.source.index("const view = opening"))
+
+    def test_map_skips_the_timeline_model_and_builds_the_graph_once_without_filters(self):
+        self.assertIn('const model = view === "map" ? { empty: false', self.source)
+        self.assertIn("const graph = filtered ? kit.model.buildGraph(", self.source)
+
+    def test_fold_taps_toggle_the_frame_through_the_node(self):
+        self.assertIn('const fold = node.getAttribute("data-wf-fold");', self.source)
+
+    def test_timeline_status_classes_go_through_esc(self):
+        self.assertIn("'<g class=\"wf-bar wf-b-' + esc(it.status)", self.source)
+        self.assertIn("'<g class=\"wf-mark wf-m-' + esc(m.status)", self.source)
 
     def test_n_and_s_keys_and_the_arrows_are_wired(self):
         self.assertIn("/^[nNsS]$/.test(e.key)", self.source)

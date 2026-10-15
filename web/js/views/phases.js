@@ -31,7 +31,7 @@ function countText(phase) {
 }
 
 function leftText(phase) {
-  if (phase.onlyDeferred || phase.remainingK == null) return MISSING;
+  if (phase.onlyDeferred || phase.remainingK == null) return "unknown";
   return "~" + fmtTokens(phase.remainingK);
 }
 
