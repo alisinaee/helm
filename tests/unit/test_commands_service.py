@@ -18,7 +18,7 @@ class RegistryTests(CmdCase):
             "git.branch", "git.commit", "git.push", "git.revert", "git.switch",
             "head.accept", "head.bind", "head.convert", "head.forget", "head.log", "head.merge", "head.review", "head.set", "head.split", "head.triage", "head.unbind",
             "issue.close", "issue.status",
-            "issue.link", "issue.new", "limit.rm", "limit.set", "phase.approve", "plan.move", "question.answer",
+            "issue.link", "issue.new", "job.remove", "limit.rm", "limit.set", "phase.approve", "plan.move", "question.answer",
             "question.ask",
             "rules.add", "rules.rm", "rules.sync", "subtask.add", "subtask.toggle", "task.add", "task.backlog", "task.cap", "task.move",
             "task.promote", "task.rename", "task.start", "task.status", "task.stop", "undo", "usage.set"]))

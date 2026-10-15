@@ -25,7 +25,9 @@ from roadmap.http import security
 from roadmap.services import agentguard, commands, control, loader, usage
 from roadmap.services import git as git_service
 from roadmap.services import head as head_service
+from roadmap.services import jobs as job_service
 from roadmap.services import tasks as task_service
+from roadmap.core.parsers import parse_jobs
 from roadmap.store import config as config_store
 from roadmap.store import schema
 
@@ -665,6 +667,36 @@ def project_head(app, req, match):
     return json_reply(200, body)
 
 
+JOBS_PAGE_DEFAULT, JOBS_PAGE_MAX, JOBS_OFFSET_MAX = 10, 200, 1000000
+
+
+def _jobs_page_query(query):
+    """(offset, limit) of GET .../jobs?offset=0&limit=10: offset 0..1000000, limit 1..200. An unknown key gives 400."""
+    pairs = parse_qsl(query or "", keep_blank_values=True)
+    keys = [key for key, _ in pairs]
+    if len(keys) != len(set(keys)) or any(key not in ("offset", "limit") for key in keys):
+        raise RoadmapError("invalid_input", "the query takes offset and limit, once each", EXIT_USAGE)
+    opts = dict(pairs)
+    offset_text = opts.get("offset", "0")
+    limit_text = opts.get("limit", str(JOBS_PAGE_DEFAULT))
+    if not re.fullmatch(r"\d{1,7}", offset_text) or int(offset_text) > JOBS_OFFSET_MAX:
+        raise RoadmapError("invalid_input", "offset must be a whole number from 0 to 1000000", EXIT_USAGE)
+    if not re.fullmatch(r"\d{1,4}", limit_text) or not 1 <= int(limit_text) <= JOBS_PAGE_MAX:
+        raise RoadmapError("invalid_input", "limit must be a whole number from 1 to 200", EXIT_USAGE)
+    return int(offset_text), int(limit_text)
+
+
+def project_jobs(app, req, match):
+    """GET /api/v1/projects/{pid}/jobs?offset=0&limit=10: one page of the finished jobs, newest first, in the snapshot's
+    job shape. Read only: nothing is pruned or removed here."""
+    project = _cmd_project(match.group("pid"))
+    offset, limit = _jobs_page_query(req.query)
+    _, data_dir = task_service.resolve(project)
+    rows, total = job_service.finished_page(data_dir, offset, limit)
+    shaped, _ = parse_jobs(json.dumps({"jobs": rows}), datetime.now().astimezone())
+    return json_reply(200, {"offset": offset, "limit": limit, "total": total, "rows": shaped})
+
+
 # ---------------------------------------------------------------- git (GIT-SPEC step 2, read only)
 
 GIT_LOG_DEFAULT, GIT_LOG_MAX = 10, 100
@@ -783,6 +815,7 @@ ROUTES = (
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/snapshot"), ("GET",), project_snapshot),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/notes(?:/(?P<name>[^/]*))?"), ("GET",), notes),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/head"), ("GET",), project_head),
+    (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/jobs"), ("GET",), project_jobs),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/status"), ("GET",), git_status),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/log"), ("GET",), git_log),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/branches"), ("GET",), git_branches),
