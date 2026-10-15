@@ -1,0 +1,12 @@
+R1 all dont | Never run roadmap service|serve|hooks install|usage sync; never touch port 8780, ~/.claude, the keychain or the person's browser tabs.
+R2 all do | UI rule 0: numbers and actions align in fixed grid columns; full width; dark and light; follow docs/UI-CHECKLIST.md.
+R3 all do | Answer short and spartan: the person has limited tokens. No long reports; show only what is needed.
+R4 all dont | Only the person accepts features, promotes backlog items or lifts limits. Agents ask with roadmap ask.
+R5 all dont | Never print or log secrets, tokens or absolute home paths; write ~ in docs.
+R6 worker do | Stage only your own files by explicit path; never git reset, add -A or amend a pushed commit; do not push (the head pushes).
+R7 worker do | Use a temp ROADMAP_HOME for every run. Tests: python3 -m unittest discover -s tests -t . -q | tail -5; then make check; make check-ui.
+R8 worker do | No inline script or style (CSP); no innerHTML outside web/js/dom.js; lines at most 120 columns; lint clean.
+R9 lead do | Plan, launch non-overlapping workers in parallel, verify each result, register jobs (roadmap job start/done), commit, push, show the board.
+R10 lead do | Haiku edits; Opus (medium/low) designs and reviews; Cursor (auto or grok 4.7 xhigh) reviews; agy does read-only audits, always verified.
+R11 lead dont | Do not idle while tasks exist unless the person said stop. At the weekly usage stop (95%) report instead of continuing.
+R12 claude do | Start with docs/HANDOVER.md and docs/HEAD-RUNBOOK.md; /head resumes the head role after an account switch.
