@@ -19,6 +19,7 @@ from roadmap.core.parsers import (ISSUE_OPEN, error_entry, parse_activity, parse
 SNAPSHOT_SCHEMA_VERSION = 1
 PHASE_WEIGHT = {"done": 1.0, "partial": 0.5}
 ACTIVE = ("todo", "partial")                        # task states counted as "left"
+EXCLUDED = ("deferred", "backlog")                 # states left out of totals, progress, tokens (BACKLOG-SPEC 2)
 RECENT_WINDOW = timedelta(minutes=30)               # finished jobs shown under their task
 RECENT_MAX = 2
 ACTIVITY_SHOWN = 15                                 # log lines on the Overview
@@ -426,18 +427,24 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
 
     for p in phases:
         ts = [t for t in tasks if t["phase"] == p["id"]]
-        live = [t for t in ts if t["state"] != "deferred"]          # deferred never counts
+        live = [t for t in ts if t["state"] not in EXCLUDED]        # deferred and backlog never count
         deferred = [t for t in ts if t["state"] == "deferred"]
+        backlog = [t for t in ts if t["state"] == "backlog"]
         active = [t for t in live if t["state"] in ACTIVE]
         p["total"] = len(live)
         p["done"] = sum(1 for t in live if t["state"] == "done")
         p["deferred"] = len(deferred)
         p["deferred_k"] = cost(deferred)
         p["only_deferred"] = not live and bool(deferred)
+        if backlog:                                                 # additive: only in phases with backlog tasks
+            p["backlog_count"] = len(backlog)
+            p["backlog_tokens_k"] = cost(backlog)
+            if not live:
+                p["only_backlog"] = True
         if live:
             p["progress"] = sum(PHASE_WEIGHT.get(t["state"], 0.0) for t in live) / len(live)
-        elif deferred:
-            p["progress"] = None                                    # shown as "deferred", no percent
+        elif deferred or backlog:
+            p["progress"] = None                                    # shown as "deferred" or "backlog", no percent
         else:
             p["progress"] = 1.0 if p["state"] == "done" else 0.0
         p["remaining_k"] = cost(active)
@@ -459,8 +466,9 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
     # "left" = todo + partial only: deferred tasks and other holds are parked, not left to do
     open_t = [t for t in tasks if t["state"] in ACTIVE]
     deferred_t = [t for t in tasks if t["state"] == "deferred"]
+    backlog_t = [t for t in tasks if t["state"] == "backlog"]
     summary = {
-        "tasks_total": sum(1 for t in tasks if t["state"] != "deferred"),
+        "tasks_total": sum(1 for t in tasks if t["state"] not in EXCLUDED),
         "tasks_left": len(open_t),
         "tokens_left_k": cost(open_t),
         "work_haiku_k": round(sum(t["tokensK"] for t in open_t if t["model"] == "haiku"), 1),
@@ -476,14 +484,17 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
         "autonomy": autonomy,
         "tokens_done_k": cost([t for t in tasks if t["state"] == "done"]),
         "tokens_partial_k": cost([t for t in tasks if t["state"] == "partial"]),
-        "tokens_roadmap_k": cost([t for t in tasks if t["state"] != "deferred"]),
+        "tokens_roadmap_k": cost([t for t in tasks if t["state"] not in EXCLUDED]),
         "jobs_tokens_k": round(sum(j["tokensK"] or 0 for j in jobs), 1),
         "jobs_with_tokens": sum(1 for j in jobs if j["tokensK"]),
     }
+    if backlog_t:                                                   # additive: absent when no backlog task exists
+        summary["backlog_count"] = len(backlog_t)
+        summary["backlog_tokens_k"] = cost(backlog_t)
 
     def project_progress(all_tasks):
-        """Whole-project progress over every non-deferred task: done, partial, todo and the weighted percent."""
-        live_all = [t for t in all_tasks if t["state"] != "deferred"]
+        """Whole-project progress over every task that is not deferred or backlog: done, partial, todo, percent."""
+        live_all = [t for t in all_tasks if t["state"] not in EXCLUDED]
         n = len(live_all)
         done = sum(1 for t in live_all if t["state"] == "done")
         part = sum(1 for t in live_all if t["state"] == "partial")

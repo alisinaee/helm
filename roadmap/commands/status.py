@@ -6,6 +6,7 @@ issues, features, budget, you, next. The ask, queue, issues and budget lines com
 """
 
 import os
+import re
 
 from roadmap.commands import head as head_cmd, research
 from roadmap.services import commands, features, jobs, limits, tasks
@@ -37,6 +38,22 @@ def compose(base, extras):
     ordered = (head + run + gate + [extras["ask"], extras["queue"], extras["issues"]] + plan + [extras["budget"]]
                + meters + you + nxt)
     return _fit(ordered)
+
+
+def fold_backlog(base, doc):
+    """Backlog tasks (BACKLOG-SPEC 3) out of the base summary: the header's task total leaves them out and the header
+    names them ('..., backlog 7'), and the phase line percent leaves them out too. base is returned as it is when the
+    project has no backlog task."""
+    all_tasks = [t for t in doc.get("tasks", []) if isinstance(t, dict)]
+    backlog = [t for t in all_tasks if t.get("status") == "backlog"]
+    if not backlog or not base:
+        return base
+    live = [t for t in all_tasks if t.get("status") != "backlog"]
+    out = list(base)
+    out[0] = re.sub(r"  \d+ tasks: ", "  %d tasks: " % len(live), out[0], count=1) + ", backlog %d" % len(backlog)
+    if len(out) >= 3:
+        out[2] = tasks._phase_line(dict(doc, tasks=live), live)
+    return out
 
 
 def running_line(jobs_list):
@@ -79,6 +96,7 @@ def gate_line(data_dir):
 def _run(args):
     project, data_dir = tasks.resolve(args.project)
     base = tasks.summary(data_dir, jobs.list_jobs(data_dir), name=project["id"])
+    base = fold_backlog(base, tasks.load(data_dir))
     extras = commands.status_extras(data_dir)
     extras["limits"] = limits.status_line(limits.evaluate_rows(project))
     extras["features"] = features.status_line(data_dir)
