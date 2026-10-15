@@ -42,3 +42,6 @@ Weekly stop 95% (docs/autonomy.json in split_net). Usage is not automatic: push 
 ## Usage limits the person set (obey)
 - Weekly stop 95% (docs/autonomy.json). 5-hour stop 90% (set 2026-10-15): never launch or continue work past 90% of the 5-hour usage until the person says so.
 - Usage is not automatic here: ask the person for the current numbers (or read the Enter usage form), push them (`roadmap usage push`), and estimate burn from worker tokens between readings. Before every launch wave check the last reading; when unsure, ask.
+
+## Priority order (person, 2026-10-15)
+1. HEAD section (R7.31, docs/HEAD-SPEC.md H1-H12): highest priority; launch its next free step before anything else. Git/Work/Tokens/UX yield to it, but still run in parallel on disjoint files while workers are free.
