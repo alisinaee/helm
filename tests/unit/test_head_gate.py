@@ -136,5 +136,25 @@ class GateHook(ControlCase):
         self.assertIsNotNone(self.gate())
 
 
+class GateEdges(unittest.TestCase):
+    """Edge cases from docs/reviews/agy-head-testgaps-cli.md that the gate tests did not cover."""
+
+    def test_cursor_and_agy_both_running_add_no_idle_lines(self):
+        running = [{"title": "cursor review", "model": "x"}, {"title": "agy audit", "model": "y"}]
+        items = head_svc.gate([row("H1")], dirty=1, running=running, now=NOW)
+        self.assertEqual(items, ["H1 unanswered 40m: do the thing", "1 uncommitted files"])
+
+    def test_ask_summary_is_cut_to_fifty_characters(self):
+        items = head_svc.gate([row("H1", sum_text="x" * 80)], now=NOW)
+        self.assertEqual(items[0], "H1 unanswered 40m: " + "x" * 50)
+
+    def test_unparseable_timestamp_counts_as_zero_minutes(self):
+        items = head_svc.gate([row("H1", ts="yesterday-ish")], now=NOW)
+        self.assertEqual(items[0], "H1 unanswered 0m: do the thing")
+
+    def test_empty_usage_reading_is_not_a_stop(self):
+        self.assertEqual(len(head_svc.gate([row("H1")], usage={}, now=NOW)), 3)
+
+
 if __name__ == "__main__":
     unittest.main()
