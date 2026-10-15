@@ -54,3 +54,6 @@ Run this loop every turn. The ledger (`roadmap head`) holds the person's asks, s
 4. **Work:** launch the workers for the bound tasks, register the jobs, and tick the asks when their links move (`doing`, then `done` by the fold). The head may set `done` (`roadmap head set H<n> status=done note=".."`).
 5. **Review:** the person confirms each done entry with `roadmap head review`, or reopens it with `roadmap head review H<n> reopen`. Only the person accepts (`head accept`). Ask the person when a review is unclear.
 6. **Save:** before a switch, list the rules and decisions accepted since the last save for HANDOVER section 2b; do not duplicate the ledger in HANDOVER.
+
+## Head AI duty (person, 2026-10-15)
+Every ask, rule, decision or instruction the person gives goes into the Head ledger the same turn (hook or `head log`), is triaged and BOUND to real tasks (`head t ... --bind task:ID`; create the task when none exists), and stays current as jobs run (HEAD-SPEC section 12). The person must always be able to see what is running for each ask and which task serves it.
