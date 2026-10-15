@@ -1314,7 +1314,7 @@
       "id": "R3.7",
       "phase": "R3",
       "title": "Cursor (grok 4.7 xhigh) review of the logging endpoint and core log",
-      "status": "todo",
+      "status": "partial",
       "tokensK": 100,
       "thinking": "low",
       "model": "haiku",
@@ -1324,7 +1324,10 @@
       "note": "after R7.16 steps 2-3",
       "feats": [
         "F22"
-      ]
+      ],
+      "at": {
+        "partial": "2026-10-15T15:45:28+03:30"
+      }
     },
     {
       "id": "R7.21",
@@ -1393,13 +1396,16 @@
       "feats": [
         "F6",
         "F5"
+      ],
+      "refs": [
+        "commit:f6e0128833cd17bae55cae6f27677e88665e5433"
       ]
     },
     {
       "id": "R7.25",
       "phase": "R7",
       "title": "Issues become part of Work/board; Work is interactive: + Add anything (task, issue, idea, question, subtask, comment)",
-      "status": "todo",
+      "status": "partial",
       "tokensK": 300,
       "thinking": "low",
       "model": "haiku",
@@ -1410,6 +1416,12 @@
       "feats": [
         "F7",
         "F6"
+      ],
+      "at": {
+        "partial": "2026-10-15T15:45:28+03:30"
+      },
+      "refs": [
+        "commit:f6e0128833cd17bae55cae6f27677e88665e5433"
       ]
     },
     {
@@ -1959,25 +1971,34 @@
       "id": "R7.62",
       "phase": "R7",
       "title": "Workflow map out of sync / wrong: find why and fix (H121)",
-      "status": "todo",
+      "status": "partial",
       "tokensK": 30,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-15T15:45:28+03:30"
+      }
     },
     {
       "id": "R7.63",
       "phase": "R7",
       "title": "Tokens + top bar: show stale usage clearly with Enter usage action; expire 5h reading after its reset; one source for limit state (H123)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 30,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:50:30+03:30"
+      },
+      "refs": [
+        "commit:4acc30a6779fb16e0be741a5feba8f45c920288e"
+      ]
     },
     {
       "id": "R7.64",
@@ -1998,37 +2019,53 @@
       "id": "R7.65",
       "phase": "R7",
       "title": "UI pattern: action buttons with long labels wrap and overflow (Activity Undo); short labels + nowrap in every view (H126)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 30,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-15T15:45:28+03:30",
+        "done": "2026-10-15T15:48:06+03:30"
+      },
+      "refs": [
+        "commit:3ea1f57d4993fc3fc68cea39e4f5dea3ea521deb"
+      ]
     },
     {
       "id": "R7.67",
       "phase": "R7",
       "title": "Head v2 A1: one limits source + budget guard in job start",
-      "status": "todo",
+      "status": "done",
       "tokensK": 20,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:45:37+03:30"
+      },
+      "refs": [
+        "commit:dcaffd8803fcc5d92b4fcd846fd8196a79bcf7a3"
+      ]
     },
     {
       "id": "R7.68",
       "phase": "R7",
       "title": "Head v2 A2: event-driven status (job start doing, commit refs, asks auto-close)",
-      "status": "todo",
+      "status": "partial",
       "tokensK": 40,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-15T15:45:28+03:30"
+      }
     },
     {
       "id": "R7.69",
@@ -2094,8 +2131,53 @@
       "id": "R7.66",
       "phase": "R7",
       "title": "Head section: clear states (queue, doing, done, failed, needs you, blocked), kind colors, agent questions with answer UI (H127)",
+      "status": "partial",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-15T15:45:28+03:30"
+      }
+    },
+    {
+      "id": "R7.74",
+      "phase": "R7",
+      "title": "Workflow timeline: drag/pan + zoom, readable bars, engine lanes (cursor, opencode), now label, tokens column (H129)",
       "status": "todo",
       "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.75",
+      "phase": "R7",
+      "title": "Git GUI follow-up: a11y label on git.js field, section registry, failing web tests",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:50:40+03:30"
+      },
+      "refs": [
+        "commit:c5446011157a345ff0ebf52721931800a5415a5c"
+      ]
+    },
+    {
+      "id": "R7.76",
+      "phase": "R7",
+      "title": "usage sync: clear error when the keychain has no claude.ai login (desktop app); point to usage push",
+      "status": "todo",
+      "tokensK": 10,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
