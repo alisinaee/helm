@@ -25,7 +25,8 @@ TASKS_FILE = "tasks.json"
 ID_MAX = 99
 DATE_RE = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
 NEXT_LIST = "roadmap feature list"
-CHANGE_KEYS = ("title", "acc", "prio", "phase", "parent", "hold")
+CHANGE_KEYS = ("title", "acc", "prio", "phase", "parent", "hold", "ask")
+MOVE_DIRS = ("up", "down")
 
 
 # ---------------------------------------------------------------- file
@@ -81,10 +82,10 @@ def _find(items, fid):
     raise RoadmapError("not_found", "no feature " + str(fid), EXIT_NOT_FOUND, next=NEXT_LIST)
 
 
-def record_of(fid, title, acc="", prio=2, phase=None, parent=None, hold=False):
+def record_of(fid, title, acc="", prio=2, phase=None, parent=None, hold=False, ask=False):
     """An F record in the shape planfmt.parse_plan gives, so apply_records takes it as it is."""
     return {"kind": "feature", "line": 0, "id": fid, "title": title, "acc": acc, "prio": prio, "phase": phase,
-            "parent": parent, "hold": hold}
+            "parent": parent, "hold": hold, "ask": ask is True}
 
 
 # ---------------------------------------------------------------- the one writer of features.json
@@ -109,8 +110,11 @@ def apply_records(data_dir, recs, dry_run=False):
         entry = {"id": fid, "title": rec["title"], "acc": rec.get("acc") or "", "prio": rec.get("prio", 2),
                  "parent": rec.get("parent"), "phase": rec.get("phase"), "hold": rec.get("hold") is True,
                  "accepted": index[fid].get("accepted") if fid in index else None}
+        if rec.get("ask") is True:
+            entry["ask"] = True   # written only when set, like parent and phase
         if fid in index:
-            if any(index[fid].get(key) != value for key, value in entry.items()):
+            if any(index[fid].get(key) != value for key, value in entry.items()) or \
+                    (index[fid].get("ask") is True and "ask" not in entry):
                 changed.append(fid)
             index[fid].clear()
             index[fid].update(entry)
@@ -133,8 +137,9 @@ def apply_records(data_dir, recs, dry_run=False):
 
 # ---------------------------------------------------------------- feature writes
 
-def add(data_dir, title, acc="", prio=2, phase=None, parent=None):
-    """Create a feature with the next free id. Returns the derived row. Refused at 60 features or past F99."""
+def add(data_dir, title, acc="", prio=2, phase=None, parent=None, ask=False):
+    """Create a feature with the next free id. Returns the derived row. Refused at 60 features or past F99. ask is
+    "the person asked for this"; it never marks acceptance."""
     records.require_dir(data_dir)
     with lock.locked(data_dir):
         doc = load_doc(data_dir)
@@ -144,7 +149,7 @@ def add(data_dir, title, acc="", prio=2, phase=None, parent=None):
         fid = records.next_number("F", doc["features"])
         if int(fid[1:]) > ID_MAX:
             raise records.conflict("feature ids run out after F" + str(ID_MAX), NEXT_LIST)
-        apply_records(data_dir, [record_of(fid, title, acc, prio, phase, parent)])
+        apply_records(data_dir, [record_of(fid, title, acc, prio, phase, parent, ask=ask)])
     return row_of(data_dir, fid)
 
 
@@ -158,13 +163,110 @@ def set_fields(data_dir, fid, changes):
         merged = dict(current)
         merged.update(changes)
         rec = record_of(fid, merged["title"], merged.get("acc") or "", merged.get("prio", 2), merged.get("phase"),
-                        merged.get("parent"), merged.get("hold") is True)
+                        merged.get("parent"), merged.get("hold") is True, merged.get("ask") is True)
         apply_records(data_dir, [rec])
     return prior
 
 
 def _default(key):
-    return {"acc": "", "prio": 2, "hold": False}.get(key)
+    return {"acc": "", "prio": 2, "hold": False, "ask": False}.get(key)
+
+
+# ---------------------------------------------------------------- order and parent (move)
+
+def _ancestors(fid, by_id):
+    """The parent chain of fid, nearest first. Stops at a loop, so a bad file cannot hang it."""
+    out, seen, cur = [], {fid}, by_id[fid].get("parent")
+    while cur in by_id and cur not in seen:
+        out.append(cur)
+        seen.add(cur)
+        cur = by_id[cur].get("parent")
+    return out
+
+
+def _below(fid, items):
+    """(ids of every feature below fid, the depth of the deepest one below fid relative to fid; 0 for a leaf)."""
+    kids = {}
+    for f in items:
+        kids.setdefault(f.get("parent"), []).append(f.get("id"))
+    ids, deepest, stack, seen = [], 0, [(fid, 0)], {fid}
+    while stack:
+        cur, level = stack.pop()
+        for child in kids.get(cur, []):
+            if child not in seen:
+                seen.add(child)
+                ids.append(child)
+                deepest = max(deepest, level + 1)
+                stack.append((child, level + 1))
+    return ids, deepest
+
+
+def _position(items, fid):
+    for index, item in enumerate(items):
+        if item.get("id") == fid:
+            return index
+    raise RoadmapError("not_found", "no feature " + str(fid), EXIT_NOT_FOUND, next=NEXT_LIST)
+
+
+def move_sibling(data_dir, fid, direction):
+    """Swap fid with its neighbour in its own group (same parent, file order is plan order). Returns the inverse
+    args (the opposite direction). Refused when fid is already first or last in its group."""
+    records.require_dir(data_dir)
+    with lock.locked(data_dir):
+        doc = load_doc(data_dir)
+        items = doc["features"]
+        pos = _position(items, fid)
+        group = [i for i, f in enumerate(items) if f.get("parent") == items[pos].get("parent")]
+        k = group.index(pos) + (-1 if direction == "up" else 1)
+        if k < 0 or k >= len(group):
+            edge = "first" if direction == "up" else "last"
+            raise records.conflict(fid + " is already " + edge + " in its group", NEXT_LIST)
+        other = group[k]
+        items[pos], items[other] = items[other], items[pos]
+        doc["updated"] = planfmt.today()
+        save_doc(data_dir, doc)
+    return {"id": fid, "dir": "down" if direction == "up" else "up"}
+
+
+def reparent(data_dir, fid, parent, index=None):
+    """Move fid under parent (None for the top level). With no index it goes after the parent's group, else to the
+    absolute list position index (undo uses that). Refused on an unknown parent, a cycle, or more than the core
+    level limit. Returns the inverse args: the old parent and the old position."""
+    records.require_dir(data_dir)
+    with lock.locked(data_dir):
+        doc = load_doc(data_dir)
+        items = doc["features"]
+        pos = _position(items, fid)
+        current = items[pos]
+        old = {"id": fid, "parent": current.get("parent") or "", "index": pos}
+        by_id = {f.get("id"): f for f in items}
+        if parent is not None:
+            if parent not in by_id:
+                raise RoadmapError("not_found", "no feature " + parent, EXIT_NOT_FOUND, next=NEXT_LIST)
+            if parent == fid or parent in _below(fid, items)[0]:
+                raise records.conflict(fid + " cannot go under " + parent + " (that is a cycle)", NEXT_LIST)
+        below, height = _below(fid, items)
+        new_depth = 0 if parent is None else len(_ancestors(parent, by_id)) + 1
+        if new_depth + height > core.MAX_ANCESTORS:
+            raise records.conflict(fid + " with its sub features would be deeper than " + str(core.MAX_ANCESTORS + 1)
+                                   + " levels (phase, sub plan, item)", NEXT_LIST)
+        rest = items[:pos] + items[pos + 1:]
+        current["parent"] = parent
+        if index is not None:
+            at = min(index, len(rest))
+        elif parent is None:
+            at = len(rest)
+        else:
+            group_ids = set([parent] + _below(parent, rest)[0])
+            at = max(i for i, f in enumerate(rest) if f.get("id") in group_ids) + 1
+        rest.insert(at, current)
+        doc["features"] = rest
+        problems = core.validate(rest)
+        if problems:
+            raise RoadmapError("usage", "; ".join(problems[:3]), EXIT_USAGE, next=NEXT_LIST)
+        doc["updated"] = planfmt.today()
+        save_doc(data_dir, doc)
+    return old
 
 
 def accept(data_dir, fid, on, date=None, confirm=False, now=None):

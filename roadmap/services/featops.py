@@ -1,8 +1,8 @@
 """Feature ops (WP52): the registry entries for the planner's features, run through commands.run like the other ops.
 
-feature.add, feature.set, feature.link, feature.unlink, feature.accept and feature.rm are public. feature.restore is
-internal: undo uses it to put back a removed feature. Each op returns (data, summary, inverse), so commands.run logs
-one activity line and stores the inverse in undo.jsonl.
+feature.add, feature.set, feature.move, feature.link, feature.unlink, feature.accept and feature.rm are public.
+feature.restore is internal: undo uses it to put back a removed feature. Each op returns (data, summary, inverse),
+so commands.run logs one activity line and stores the inverse in undo.jsonl.
 
 feature.accept is for the person only. It runs only with agentguard.person_context: a browser click with the
 same-origin proof, or an interactive terminal (TTY) with no agent marker. Agents, the phone and bare non-TTY CLI shells
@@ -18,6 +18,7 @@ from roadmap.errors import EXIT_CONFLICT, RoadmapError
 from roadmap.services import agentguard, commands, features, records
 
 PRIOS = (1, 2, 3)
+MOVE_DIRS = features.MOVE_DIRS
 ACC_MAX = 160
 TITLE_MAX = 80
 LINK_MAX = 3
@@ -79,11 +80,11 @@ def _title(a):
 
 def _check_add(a):
     return {"title": _title(a), "acc": _acc(a), "prio": _prio(a.get("prio", 2)),
-            "phase": _opt_phase(a), "parent": _opt_parent(a)}
+            "phase": _opt_phase(a), "parent": _opt_parent(a), "ask": commands._opt_bool(a, "ask", False) is True}
 
 
 def _h_add(data_dir, a, now):
-    row = features.add(data_dir, a["title"], a["acc"], a["prio"], a["phase"], a["parent"])
+    row = features.add(data_dir, a["title"], a["acc"], a["prio"], a["phase"], a["parent"], a["ask"])
     inverse = {"op": "feature.rm", "args": {"id": row["id"]}}
     return row, row["id"] + " added: " + row["title"], inverse
 
@@ -102,8 +103,10 @@ def _check_set(a):
         changes["parent"] = _opt_parent(a)
     if "hold" in a:
         changes["hold"] = commands._opt_bool(a, "hold", False)
+    if "ask" in a:
+        changes["ask"] = commands._opt_bool(a, "ask", False) is True
     if not changes:
-        raise commands._usage("feature set needs at least one of title, acc, prio, phase, parent, hold", NEXT_LIST)
+        raise commands._usage("feature set needs at least one of title, acc, prio, phase, parent, hold, ask", NEXT_LIST)
     return {"id": _feat_id(a), "changes": changes}
 
 
@@ -112,6 +115,35 @@ def _h_set(data_dir, a, now):
     summary = a["id"] + " set " + ", ".join(sorted(a["changes"]))
     return {"id": a["id"], "changed": sorted(a["changes"])}, summary, {"op": "feature.set",
                                                                         "args": dict(prior, id=a["id"])}
+
+
+def _check_move(a):
+    fid = _feat_id(a)
+    if "dir" in a:
+        if "parent" in a:
+            raise commands._usage("feature move takes dir or parent, not both", NEXT_LIST)
+        direction = commands._text(a.get("dir"))
+        if direction not in MOVE_DIRS:
+            raise commands._usage("dir must be up or down", NEXT_LIST)
+        return {"id": fid, "dir": direction}
+    if "parent" not in a:
+        raise commands._usage("feature move needs dir (up or down) or parent (a feature id, empty for the top level)",
+                              NEXT_LIST)
+    index = a.get("index")
+    if index is not None and (isinstance(index, bool) or not isinstance(index, int) or index < 0):
+        raise commands._usage("index must be a position of 0 or more", NEXT_LIST)
+    return {"id": fid, "parent": _opt_parent(a), "index": index}
+
+
+def _h_move(data_dir, a, now):
+    if "dir" in a:
+        inverse_args = features.move_sibling(data_dir, a["id"], a["dir"])
+        summary = a["id"] + " moved " + a["dir"]
+    else:
+        inverse_args = features.reparent(data_dir, a["id"], a["parent"], a["index"])
+        summary = a["id"] + " moved under " + (a["parent"] or "the top level")
+    row = features.row_of(data_dir, a["id"])
+    return {"id": a["id"], "label": row.get("label")}, summary, {"op": "feature.move", "args": inverse_args}
 
 
 def _feat_list(a, key="feats"):
@@ -211,6 +243,7 @@ def _register(name, check, handler, public=True):
 
 _register("feature.add", _check_add, _h_add)
 _register("feature.set", _check_set, _h_set)
+_register("feature.move", _check_move, _h_move)
 _register("feature.link", _check_link, _h_link)
 _register("feature.unlink", _check_unlink, _h_unlink)
 _register("feature.accept", _check_accept, _h_accept)

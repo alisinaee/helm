@@ -68,9 +68,10 @@ class OpsAndUndo(FeatureCase):
     def test_parent_is_one_level_only(self):
         self.add("Top")
         self.add("Child", parent="F1")
+        self.add("Grandchild", parent="F2")
         with self.assertRaises(RoadmapError) as ctx:
-            self.add("Grandchild", parent="F2")
-        self.assertIn("one level only", ctx.exception.message)
+            self.add("Fourth level", parent="F3")
+        self.assertIn("4th level", ctx.exception.message)
 
     def test_sixty_features_is_the_most(self):
         recs = [features.record_of("F%d" % n, "feature %d" % n) for n in range(1, 61)]
@@ -263,7 +264,7 @@ class ViewsAndStatus(FeatureCase):
         self.assertLessEqual(size, 15 * 1024, "features key is %d bytes" % size)
         for row in full["features"]["rows"]:
             self.assertNotIn("tasks", row)
-            self.assertEqual("acc" in row, row["state"] != "done", row["id"])
+            self.assertIn("acc", row, row["id"])   # acc stays until the person accepts the feature (spec 6)
 
 
 if __name__ == "__main__":
