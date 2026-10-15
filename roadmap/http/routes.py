@@ -93,11 +93,23 @@ def etag_matches(header, etag):
     return False
 
 
-def snapshot_etag(snap):
-    """A strong ETag over the snapshot content. server_time is left out, so an unchanged project gives a 304."""
-    stable = {key: value for key, value in snap.items() if key != "server_time"}
-    raw = json.dumps(stable, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-    return '"%s"' % hashlib.sha256(raw).hexdigest()[:32]
+VOLATILE_KEYS = frozenset({"server_time", "elapsed_s", "age", "age_min"})
+
+
+def _without_volatile(value):
+    """The value with every clock-driven key (VOLATILE_KEYS) removed at any depth. Those keys stay in the response."""
+    if isinstance(value, dict):
+        return {key: _without_volatile(item) for key, item in value.items() if key not in VOLATILE_KEYS}
+    if isinstance(value, list):
+        return [_without_volatile(item) for item in value]
+    return value
+
+
+def content_etag(obj):
+    """A strong ETag over a JSON body, with the clock-driven keys left out, so a poll with no real change gives a 304
+    even while a running job's elapsed_s or a head row's age moves on."""
+    raw = json.dumps(_without_volatile(obj), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return '"%s"' % hashlib.sha256(raw.encode("utf-8")).hexdigest()[:32]
 
 
 _ABS_PATH = re.compile(r"(?<![\w.~:/])/[^\s\"'`<>()\[\]{}]+")  # URLs (after ':' or '/') are left alone
@@ -136,7 +148,7 @@ def _phone_public(snap):
 def _snapshot_reply(req, snap, headers=(), app=None):
     if app is not None and app.cmd_source == "phone":
         snap = _phone_public(snap)
-    etag = snapshot_etag(snap)
+    etag = content_etag(snap)
     extra = [("ETag", etag)] + list(headers)
     if etag_matches(req.headers.get("If-None-Match"), etag):
         return Reply(304, headers=extra)
@@ -207,7 +219,11 @@ def _summary(entry, snap):
 
 def projects(app, req, match):
     rows = [_summary(entry, loader.load_snapshot(entry["id"])) for entry in config_store.list_projects()]
-    return json_reply(200, {"projects": rows})
+    body = {"projects": rows}
+    etag = content_etag(body)
+    if etag_matches(req.headers.get("If-None-Match"), etag):
+        return Reply(304, headers=[("ETag", etag)])
+    return json_reply(200, body, headers=[("ETag", etag)])
 
 
 def project_snapshot(app, req, match):
