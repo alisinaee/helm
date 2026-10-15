@@ -44,10 +44,13 @@ START HERE in a new chat (any account, same Mac): `cd ~/Works/roadmap-board` and
   stray audit file out of web/css (now docs/reviews/head-css-audit.md).
 - New tasks R7.32-R7.43 (one per package, see `bin/roadmap task list`). Reviews: docs/reviews/cursor-head-p1.md,
   cursor-head-p2.md (13 real sync findings), head-agents-effort-audit.md, p6-gui.md.
-- Running at save (Haiku): j792 R7.40 server sync (routes.py, loader.py, parsers.py), j793 R7.40 client sync
-  (app.js, cmd.js, tests/web/test_sync_refresh.py), j794 R7.41 Agents model/effort (agents.js, components.css,
-  hooks.py, test_agents, test_hooks), R7.43 head layout (head.css, head.js, test_head_layout). Verify each diff
-  (hooks.py: head reads it), run the suite, commit by path, push.
+- Also pushed: 311ad45 + 5040843 (R7.40 sync server/client), ef7685b (R7.41 Agents model/effort), 40e223c (R7.43
+  head layout). Suite: 3138 OK at ef7685b.
+- Running at save: R7.44 Haiku head paging + lazy load (routes.py, services/head.py, head.js, tests test_head_paging*);
+  R7.45 Cursor grok sync ROOT CAUSE (writes docs/reviews/cursor-sync-root.md; then file Haiku fixes from it);
+  R7.46 Haiku ledger audit (writes docs/reviews/head-unhandled.md; then file one task per NOT HANDLED ask and run
+  them). Verify each, full suite, commit by path, push.
+- /head skill now carries a "Standing mandate" (no re-tuning needed in a new chat, H106).
 - Open asks: H52 and H81 need the person (unclear text); H58 needs OpenCode credit; H73 Chrome access untested;
   H84 waits on R7.41. Rules from this chat are in HEAD-RUNBOOK "Usage limits".
 - First message for the new chat: `/head`
