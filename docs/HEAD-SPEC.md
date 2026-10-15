@@ -248,3 +248,12 @@ Problem: the head forgets open asks, goes idle, skips cursor/agy audits, registe
 4. **Ask coverage:** an ask with no link after 15 min is shown red in the GUI and in the gate; the person's Review button is the only way to close.
 5. **Resume:** `/head` skill runs `head claim` + `head brief --gate` first, so a new account has the full list without re-explaining.
 Build as step H12 after H6 (hook) and H5 (CLI); files: roadmap/services/hooks.py (Stop branch), roadmap/commands/head.py, tests/unit/test_head_gate.py.
+
+## 12. Asks connected to real work (the person, 2026-10-15)
+Every ask, rule, decision or instruction the person gives in chat is logged by the head AI (or the capture hook) and must show, live, what is being done about it:
+1. **Bind:** the head triages each new ask in the same turn (`head t <id> --kind K --sum S --bind task:R7.31 ...`); if no task exists it creates one (`plan import` / `head convert`) and binds it. The gate (section 11) flags unbound asks after 15 min.
+2. **Resolved links in the snapshot:** each row carries `links:[{ref,title,status,jobs:[{id,model,state}]}]` (resolved from tasks, issues, jobs), `prog:{done,total}` over the bound tasks, and the folded status (`doing` while any bound task or job runs; `done` only when all bound are done and the head/person confirms).
+3. **GUI row:** closed row shows status chip, progress `2/4`, and the running worker model(s); open row lists every bound task as a line (id, title, status chip, running job + model, link to Work), plus the full message and Review. Filter tab 'Doing' = asks with running work; 'Unbound' = needs the head.
+4. **Back-link:** the Work/Planner task detail shows which asks it serves (`ask:H12` chip via refs.py).
+5. **Head AI rule:** record in /head skill and runbook: log every person message, triage + bind in the same turn, keep status current when jobs start/finish (`head set H12 status=doing` is automatic via the fold).
+Build as step H13 (snapshot links/prog + back-link) then H14 (GUI) after the Cursor redesign spec lands.
