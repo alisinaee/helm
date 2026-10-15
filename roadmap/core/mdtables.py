@@ -8,7 +8,7 @@ import re
 SEP_CELL = re.compile(r"^:?-{3,}:?$")
 CELL_SPLIT = re.compile(r"(?<!\\)\|")
 
-STATUS_MARKS = (("✅", "done"), ("\U0001F7E1", "partial"), ("⏸", "hold"), ("⬜", "todo"))
+STATUS_MARKS = (("✅", "done"), ("\U0001F7E1", "partial"), ("⏸", "hold"), ("⬜", "todo"), ("💡", "backlog"))
 
 
 def split_row(line):
@@ -70,6 +70,8 @@ def classify(text):
     if best:
         return best[1]
     low = text.lower()
+    if "backlog" in low:
+        return "backlog"
     if "hold" in low or "parked" in low:
         return "hold"
     if any(w in low for w in ("passed", "done", "researched", "supported")):

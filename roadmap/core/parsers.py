@@ -8,7 +8,8 @@ import json
 import re
 from datetime import datetime
 
-STATES = ("done", "partial", "todo", "hold")
+STATES = ("done", "partial", "todo", "hold")          # phase states
+TASK_STATES = STATES + ("backlog",)       # a task may be backlog (idea, not committed); a phase never is
 MODELS = ("haiku", "sonnet", "opus", "cursor", "agy")
 JOB_STATUSES = ("running", "done", "failed")
 SUBS_MAX = 12                  # subtasks per task
@@ -122,7 +123,7 @@ def parse_tasks(text, name="tasks.json"):
             model = str(t.get("model", ""))
             check = t.get("check")
             note = t.get("note") if isinstance(t.get("note"), str) else None
-            state = st if st in STATES else "todo"
+            state = st if st in TASK_STATES else "todo"
             # a hold whose note starts with "Deferred" is parked by project rule, not blocked
             if state == "hold" and note and note.startswith("Deferred"):
                 state = "deferred"

@@ -9,7 +9,7 @@ import re
 import shlex
 
 PHASE_STATUSES = ("todo", "partial", "done", "hold")
-TASK_STATUSES = PHASE_STATUSES
+TASK_STATUSES = PHASE_STATUSES + ("backlog",)   # a phase is never backlog (PHASE_STATUSES has no backlog)
 MODELS = ("haiku", "sonnet", "opus", "cursor", "agy", "head")
 THINKING = ("low", "medium", "high")
 CHECKS = ("none", "sonnet", "opus")

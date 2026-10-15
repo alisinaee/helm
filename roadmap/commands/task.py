@@ -9,8 +9,8 @@ import shlex
 import sys
 
 from roadmap.core import planfmt
-from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
-from roadmap.services import commands, tasks
+from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
+from roadmap.services import agentguard, commands, tasks
 
 STATUS_FOR = {"done": "done", "start": "partial", "hold": "hold"}
 ERRORS_SHOWN = 5
@@ -39,7 +39,7 @@ def register(sub, common):
     listing = actions.add_parser("list", parents=[common, project], help="list tasks as plan lines")
     listing.add_argument("--phase", metavar="P", default=None, help="only the tasks of this phase")
     listing.add_argument("--status", metavar="S", default=None,
-                         help="comma list of todo, partial, done, hold")
+                         help="comma list of todo, partial, done, hold, backlog")
     listing.add_argument("--needs-you", action="store_true", help="only tasks that need the user")
     listing.add_argument("--limit", metavar="N", type=int, default=LIST_DEFAULT,
                          help="most tasks to print (default %d)" % LIST_DEFAULT)
@@ -52,6 +52,12 @@ def register(sub, common):
         parser.add_argument("--tokens", metavar="K", default=None, help="tokens used, in thousands (whole number)")
         parser.add_argument("--note", metavar="TEXT", default=None, help="short note; an empty value clears it")
         parser.set_defaults(handler=_change, status_word=name)
+
+    for name, text in (("backlog", "move a task to the backlog (the person only)"),
+                       ("promote", "move a backlog task to todo (the person only)")):
+        parser = actions.add_parser(name, parents=[common, project], help=text)
+        parser.add_argument("id", help="task id, for example P2.4")
+        parser.set_defaults(handler=_backlog_move, backlog_word=name)
 
     bulk = actions.add_parser("set", parents=[common, project],
                               help="bulk patch from stdin, one 'ID key=value ...' line per task")
@@ -138,6 +144,9 @@ def _change(args):
         if refusal is not None:
             raise refusal
     tokens = _tokens_arg(args.tokens)
+    if args.status_word == "start":
+        for tid in args.ids:
+            _refuse_start_of_backlog(tasks.get(data_dir, tid))
     for tid in args.ids:
         payload = {"id": tid, "status": status}
         if tokens is not None:
@@ -164,6 +173,51 @@ def _tokens_arg(value):
     return int(text)
 
 
+def _refuse_start_of_backlog(task):
+    """A backlog task is not committed: starting it is refused for everyone. The person promotes it first."""
+    if task.get("status") == "backlog":
+        raise RoadmapError("conflict", task["id"] + " is backlog", EXIT_CONFLICT,
+                           next="ask the person to promote it (roadmap task promote " + task["id"] + ")")
+
+
+def _backlog_move(args):
+    """task backlog|promote <id>: demote a task to backlog or promote it to todo. Both are the person's (the agent
+    guard refuses an agent shell); a promote of a task that is not in backlog is a no-op error, not a silent write."""
+    project_id, data_dir = _data(args)
+    agentguard.refuse_if_agent("task." + args.backlog_word)
+    task = tasks.get(data_dir, args.id)
+    if args.backlog_word == "promote" and task.get("status") != "backlog":
+        raise RoadmapError("conflict", args.id + " is not backlog (it is " + str(task.get("status")) + ")",
+                           EXIT_CONFLICT, next="roadmap task show " + args.id)
+    new = "todo" if args.backlog_word == "promote" else "backlog"
+    if task.get("status") != new:  # already there: nothing is written
+        records = planfmt.parse_set_text(args.id + " status=" + new)[0]
+        apply_records(data_dir, project_id, records, "roadmap task show " + args.id)
+    if getattr(args, "json", False):
+        return {"id": args.id, "status": new, "was": task.get("status")}
+    if args.backlog_word == "backlog":
+        print("ok %s -> backlog. next: roadmap task promote %s" % (args.id, args.id))
+    else:
+        print("ok %s -> todo. next: roadmap task start %s" % (args.id, args.id))
+    return None
+
+
+def _backlog_guard(records, data_dir):
+    """Bulk set lines that would start a backlog task, or move a task into or out of backlog, are refused before any
+    write. Start is refused for everyone; the backlog moves go through the agent guard (promote is the person's)."""
+    current = {t.get("id"): t for t in tasks.load(data_dir)["tasks"] if isinstance(t, dict)}
+    for rec in records:
+        fields = rec.get("fields") or {}
+        before = current.get(rec.get("id"), {}).get("status")
+        new = fields.get("status")
+        if new is None or before is None:
+            continue
+        if before == "backlog" and new == "partial":
+            _refuse_start_of_backlog({"id": rec["id"], "status": before})
+        if (before == "backlog") != (new == "backlog"):
+            agentguard.refuse_if_agent("task.promote" if before == "backlog" else "task.backlog")
+
+
 def _set(args):
     project_id, data_dir = _data(args)
     if args.after is not None:
@@ -174,6 +228,7 @@ def _set(args):
     next_cmd = "roadmap task set " + source + " --dry-run"
     if errors:
         raise plan_failure(errors, next_cmd)
+    _backlog_guard(records, data_dir)
     diff = apply_records(data_dir, project_id, records, next_cmd, dry_run=args.dry_run)
     return print_diff(diff, getattr(args, "json", False))
 
