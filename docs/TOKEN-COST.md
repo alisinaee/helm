@@ -30,6 +30,19 @@ Tokens are estimated as bytes / 4 per command, rounded up. Bytes are stdout plus
 | `plan import --dry-run` | summary + ≤ 5 error lines | 2 lines | within |
 | `task done` | 1 line per id | 1 line | within |
 
+## Copy reference lookup (R7.12)
+
+Measured with `roadmap ref` on a temp `ROADMAP_HOME` and a temp demo project (one phase, one feature, two tasks). Same method: bytes / 4, rounded up.
+
+| Ref | Output bytes | Est. tokens | Lines |
+|---|---:|---:|---:|
+| `rb:demo/task/R3.2` | 127 | 32 | 4 |
+| `rb:demo/phase/R3` | 94 | 24 | 3 |
+| `rb:demo/feature/F7` | 121 | 31 | 3 |
+| `rb:demo` (project) | 90 | 23 | 4 |
+
+The command line itself (`roadmap ref rb:demo/task/R3.2`) is 30 bytes, about 8 tokens. One ref lookup therefore costs about 40 tokens, not 60: well under the spec's 60 estimate. The paste that starts it is the two-line clipboard text (86 bytes, about 22 tokens).
+
 ## Findings
 
 1. The full cycle costs about 950 tokens. `agent-guide` alone is about 51% of it, so it is the first thing to trim.

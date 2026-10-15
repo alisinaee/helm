@@ -98,6 +98,20 @@ run: j12 sonnet P2.4 14m
 - `--dry-run` prints `would: +P1 +T5 ~T2 =T3 (no write)`, plus up to 10 `~` field diffs (`P2.4 status partial→done`).
 - Unknown id in `task set` or `task done`: `roadmap: no task P9.9. next: roadmap task list --phase P9`.
 
+### Copy references (R7.12)
+
+The Copy button on each row and section puts a board ref and a one-line state on the clipboard. The person pastes it into an agent chat:
+
+```
+rb:roadmap-board/task/R3.2
+task "Planner filters" status=doing feature=F7 orphan=no subs=2/5
+```
+
+- Format: `rb:<project>/<kind>/<id>` (kinds: phase, task, sub, feature, issue, question, job, research, section, view). A project ref is `rb:<project>`. Regex: `^rb:[a-z0-9-]+(/[a-z]+/[A-Za-z0-9._-]+)?$`.
+- `roadmap ref <ref> [--json]` is read only. Plain output is `key: value` lines, at most 10, ending with `next: <full command>`. `--json` prints the same as one object under `data`.
+- Exit codes: 0 found; 2 (usage) a malformed ref or an id the project does not have (`roadmap: unknown ref: ...`); 3 (not found) no registered project with that slug (`next: roadmap project list`).
+- Output has no absolute paths. Use the `next:` line for the full record.
+
 ### Backward compatibility
 
 - The tasks.json schema stays at v1. No migration, and no changes to the web, API or parsers.

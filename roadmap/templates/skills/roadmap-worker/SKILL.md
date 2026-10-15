@@ -10,6 +10,7 @@ description: Use when you work on a task in a project that has a roadmap board. 
 - Every command takes `--json`. Pass `--project ID` only when the folder is not registered.
 - On an error, run the command on the `next:` line, and nothing else.
 - Tokens are thousands: `--tokens 20` means 20K.
+- If the person pastes `rb:...`, run `roadmap ref <ref>` before reading files.
 
 ## 1. Read the board (budget 1k tokens)
 ```
