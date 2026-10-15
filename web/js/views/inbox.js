@@ -33,6 +33,28 @@ export function itemHash(pid, taskId) {
   return projectHash(pid, "work") + "/i/" + encodeURIComponent(taskId);
 }
 
+// The Head screen's entry for one ledger id (H1 ...), for the "Open in Head" links.
+export function headHash(pid, id) {
+  return projectHash(pid, "head") + "?id=" + encodeURIComponent(id);
+}
+
+// The answer key of a Head ask: a reply on it shows as "answered" until the next snapshot.
+export function headAskKey(pid, id) {
+  return "headask:" + pid + ":" + id;
+}
+
+// The Head ledger rows with status needs-you (snap.head.rows), across the scopes, in snapshot order.
+export function headAsks(scopes) {
+  const asks = [];
+  for (const s of scopes) {
+    const rows = s.snap.head && Array.isArray(s.snap.head.rows) ? s.snap.head.rows : [];
+    for (const row of rows) {
+      if (row && row.status === "needs-you") asks.push({ pid: s.id, pname: s.name, snap: s.snap, row: row });
+    }
+  }
+  return asks;
+}
+
 // The Inbox link for the scope in view: the project's Inbox, or All projects' Inbox.
 export function inboxHash(vm) {
   return vm.route.name === "project" ? projectHash(vm.route.id, "inbox") : "#/all/inbox";
@@ -71,7 +93,7 @@ export function collect(scopes) {
       if (item.kind === "task") needs.push({ pid: s.id, pname: s.name, item: item });
     }
   }
-  return { questions: questions, needs: needs };
+  return { questions: questions, needs: needs, asks: headAsks(scopes) };
 }
 
 // The countdown line for a deadline. The text is filled in by tickCountdowns, so a poll does not re-render it.
@@ -152,13 +174,42 @@ function needRowHtml(entry, showProject) {
     (showProject ? " " + chipHtml(entry.pname, "neutral") : "") + "</li>";
 }
 
-// The full Inbox page: question cards (grouped by project in All projects), then the needs-you tasks.
+// One Head ask: its kind, summary, age and the head's note, then the reply form (head.set note) and the Head link.
+// A reply made on this page shows one line until the next snapshot drops it.
+export function headAskCardHtml(entry, now, showProject) {
+  const pid = entry.pid;
+  const row = entry.row;
+  const id = String(row.id);
+  const answered = pendingValue(headAskKey(pid, id), entry.snap.fetchedAt, now);
+  if (answered !== undefined) {
+    return '<article class="qc is-answered" data-pid="' + esc(pid) + '" data-id="' + esc(id) + '">' +
+      '<p class="qc-line">' + esc(id) + " answered: <strong>" + esc(answered) + "</strong></p></article>";
+  }
+  const kind = row.kind ? chipHtml(row.kind, "neutral") : "";
+  const age = typeof row.age === "number" ? '<span class="qc-id">Waiting ' + esc(fmtDuration(row.age * 60)) +
+    "</span>" : "";
+  const note = typeof row.note === "string" && row.note.trim() ? row.note : "The head needs your answer.";
+  return '<article class="qc" data-pid="' + esc(pid) + '" data-id="' + esc(id) + '">' +
+    '<header class="qc-head"><span class="qc-id">' + esc(id) + "</span> " + kind +
+    (showProject ? " " + chipHtml(entry.pname, "neutral") : "") + " " + age + "</header>" +
+    '<h3 class="qc-text">' + esc(row.sum || "") + "</h3>" +
+    '<p class="qc-foot">' + esc(note) + "</p>" +
+    '<form data-op="head.set" data-project="' + esc(pid) + '" data-id="' + esc(id) +
+    '" data-form="inbox-head-ask" aria-label="' + esc("Answer " + id) + '">' +
+    '<label><span class="qc-id">Your answer</span> <input name="note" required placeholder="Type an answer"></label> ' +
+    '<button type="submit" class="btn">Answer</button></form>' +
+    '<p class="qc-foot"><a href="' + esc(headHash(pid, id)) + '" aria-label="' + esc("Open " + id + " in Head") +
+    '">Open in Head</a></p></article>';
+}
+
+// The full Inbox page: question cards (grouped by project in All projects), then the Head asks, then the needs-you
+// tasks.
 export function inboxBody(vm) {
   const now = Date.now();
   const scopes = scopeSnapshots(vm);
   const showProject = vm.route.name !== "project";
   const c = collect(scopes);
-  if (!c.questions.length && !c.needs.length) return emptyHtml("Inbox empty. No actions pending.");
+  if (!c.questions.length && !c.needs.length && !c.asks.length) return emptyHtml("Inbox empty. No actions pending.");
   let html = "";
   for (const s of scopes) {
     const cards = c.questions.filter(function (e) {
@@ -172,6 +223,12 @@ export function inboxBody(vm) {
     }).join("") + "</div>";
   }
   if (!c.questions.length) html += '<p class="placeholder">No open questions.</p>';
+  if (c.asks.length) {
+    html += '<section class="ov-card" aria-labelledby="inbox-asks-h"><h2 class="ov-h" id="inbox-asks-h">' +
+      "Head asks</h2>" + c.asks.map(function (e) {
+        return headAskCardHtml(e, now, showProject);
+      }).join("") + "</section>";
+  }
   if (c.needs.length) {
     html += '<section class="ov-card" aria-labelledby="inbox-needs-h"><h2 class="ov-h" id="inbox-needs-h">' +
       "Needs you</h2><ul class=\"nz-list\">" + c.needs.map(function (e) {
@@ -192,6 +249,11 @@ export function inboxPreviewHtml(vm, limit) {
       '" aria-label="' + esc("View question " + e.q.id) + '">' +
       esc(e.q.id) + "</a> " + esc(e.q.text) + (showProject ? " " + chipHtml(e.pname, "neutral") : "") + "</li>");
   }
+  for (const e of c.asks) {
+    rows.push('<li class="nz-row"><span class="nz-kind">Head ask</span> <a href="' + esc(headHash(e.pid, e.row.id)) +
+      '" aria-label="' + esc("Open " + e.row.id + " in Head") + '">' + esc(e.row.id) + "</a> " +
+      esc(e.row.sum || "") + (showProject ? " " + chipHtml(e.pname, "neutral") : "") + "</li>");
+  }
   for (const e of c.needs) rows.push(needRowHtml(e, showProject));
   if (!rows.length) return '<p class="placeholder">Inbox empty. No actions pending.</p>';
   const more = rows.length > limit
@@ -207,6 +269,27 @@ function focusedCard() {
   const near = active && active.closest ? active.closest(".qc[data-qid]:not(.is-answered)") : null;
   return near || document.querySelector("#main .qc[data-qid]:not(.is-answered)");
 }
+
+// A reply on a Head ask: the form's note goes through cmd.js run() as head.set (the same op as the Head screen's
+// status and note writes), with no status change, so the head still decides what the ask becomes.
+function onAskSubmit(event) {
+  const form = event.target;
+  if (!form || !form.getAttribute || form.getAttribute("data-form") !== "inbox-head-ask") return;
+  event.preventDefault();
+  const pid = form.getAttribute("data-project");
+  const id = form.getAttribute("data-id");
+  const field = form.elements.namedItem("note");
+  const value = field ? String(field.value || "").trim() : "";
+  if (!value) return;
+  run("head.set", { id: id, note: value }, {
+    project: pid,
+    key: headAskKey(pid, id),
+    value: value,
+    label: id + " answered: " + value,
+  });
+}
+
+if (typeof document !== "undefined") document.addEventListener("submit", onAskSubmit);
 
 function onAnswerPage() {
   const section = currentRoute().section;
@@ -266,7 +349,8 @@ export function sectionView(vm) {
   const state = pageState(vm);
   if (state) return state;
   watchCountdowns();
-  const open = collect(scopeSnapshots(vm)).questions.length;
+  const found = collect(scopeSnapshots(vm));
+  const open = found.questions.length + found.asks.length;
   const sectionCopy = copyButton("section", "inbox.questions", "open questions",
     { project: vm.route.id, sum: refSummary("section", { count: open }) });
   return '<div class="page-head"><h2 class="page-title">Inbox</h2>' + sectionCopy + "</div>" + inboxBody(vm);
