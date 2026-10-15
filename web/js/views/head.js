@@ -3,7 +3,9 @@
 // stays at the right edge. A row is toggled by a stretched button that covers the whole row (keyboard: Enter/Space,
 // aria-expanded); the buttons and links in the row sit above it. An open row shows the verbatim text (fetched once
 // per row from the read route with full=H.., cached), the history, and a footer with the status, the bound-to chips
-// and the actions. The screen paints every snapshot head.rows entry (head: {now, prev, counts, rows}). A filter only
+// and the actions. The screen paints the snapshot head.rows first, then pages older rows in from GET
+// .../head?offset&limit (a
+// Load more button, and the list end when it scrolls into view), deduped by id. A filter only
 // selects among those rows. Filters and the deep-linked open row live in the page hash (#head?f=open&id=H12).
 // Every value goes through esc() or textContent; the commands are head.accept, head.set, head.bind, head.split,
 // head.merge and the copy button.
@@ -32,6 +34,7 @@ const FULL_CONCURRENCY = 3;
 const FULL_ID = /^H\d{1,4}$/;
 const SORTS = ["new", "old"];
 const SUM_SHOW = 240;
+const PAGE_SIZE = 50;
 
 // Client state: the verbatim texts fetched so far (key "project\nid"), the requests in flight, the open row ids, and
 // the hash row already opened once (so a re-render does not reopen a row the person closed).
@@ -41,6 +44,9 @@ const openSet = new Set();
 const queue = [];
 let active = 0;
 let seededId = "";
+// Paged rows of the full ledger per project and scope ("open" or "all"): rows, offset, total, counts, loading, error.
+const pages = new Map();
+let observer = null;
 
 function rowsOf(vm) {
   const head = vm && vm.head ? vm.head : {};
@@ -68,6 +74,8 @@ function passes(row, opts) {
 // falls back to those rows; a bigger doneUnacc falls back to done rows that are not accepted.
 function countsOf(head, rows) {
   const c = head.counts || {};
+  // A ledger count (from a paged read) is the whole log, so it is used as it is.
+  if (head.ledger) return { unhandled: c.unhandled || 0, needs: c.needs || 0, doneUnacc: c.doneUnacc || 0 };
   const count = function (test) {
     return rows.filter(test).length;
   };
@@ -543,8 +551,9 @@ export function headHtml(vm, opts) {
     '<ul class="hd-items" aria-label="Logged messages">' + rows.map(function (row) {
       return rowHtml(vm, row, o);
     }).join("") + "</ul></div>" : listHtml(vm, rows, o);
+  const pager = pagerHtml(o.pager);
   return '<section class="hd-screen" data-project="' + esc(o.project || "") + '" aria-labelledby="hd-h">' +
-    top + nowHtml(head) + alertsHtml(counts) + barHtml(vm, o) + body + "</section>";
+    top + nowHtml(head) + alertsHtml(counts) + barHtml(vm, o) + body + pager + "</section>";
 }
 
 function projectOf(el) {
@@ -617,6 +626,89 @@ function loadText(item) {
     pre.textContent = "Could not load the text. Close the row and open it again.";
     pre.setAttribute("data-state", "error");
   });
+}
+
+// The rows of the full ledger beyond the snapshot: the scope of a filter ("all" for All and Done, else "open").
+function scopeOf(f) {
+  return f === "all" || f === "done" ? "all" : "open";
+}
+
+function inScope(row, scope) {
+  return scope === "all" || CLOSED.indexOf(row.status) < 0;
+}
+
+// The snapshot rows first, then the paged rows not already painted (deduped by id).
+function mergeRows(first, extra) {
+  const seen = new Set();
+  const out = [];
+  for (const row of first.concat(extra)) {
+    const key = String(row.id);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(row);
+  }
+  return out;
+}
+
+// "Showing N of TOTAL", a Load more button and the end marker the observer watches. pager: {pid, scope, shown,
+// total, more, error}; total is null until the first page is in.
+function pagerHtml(pager) {
+  if (!pager) return "";
+  const total = pager.total == null ? "…" : String(pager.total);
+  const attrs = ' data-project="' + esc(pager.pid) + '" data-scope="' + esc(pager.scope) + '"';
+  return '<div class="hd-pager">' + '<p class="hd-count" aria-live="polite">Showing ' + esc(String(pager.shown)) +
+    " of " + esc(total) + "</p>" +
+    (pager.error ? '<p class="hd-error" role="alert">' + esc(pager.error) + "</p>" : "") +
+    (pager.more ? '<button type="button" class="btn hd-more" data-action="head-more"' + attrs + ">Load more</button>" +
+      '<span class="hd-end" aria-hidden="true"' + attrs + "></span>" : "") + "</div>";
+}
+
+// Fetches one page of the ledger after the rows already held. A page is requested only once at a time; auto is
+// the observer, which does not retry a failed page (the Load more button does).
+function loadMore(pid, scope, auto) {
+  if (!pid) return;
+  const key = pid + "\n" + scope;
+  let pg = pages.get(key);
+  if (!pg) {
+    pg = { rows: [], offset: 0, total: null, counts: null, loading: false, error: "" };
+    pages.set(key, pg);
+  }
+  if (pg.loading || (auto && pg.error) || (pg.total != null && pg.offset >= pg.total)) return;
+  pg.loading = true;
+  pg.error = "";
+  const url = "/api/v1/projects/" + encodeURIComponent(pid) + "/head?f=" + scope + "&offset=" + pg.offset +
+    "&limit=" + PAGE_SIZE;
+  getJson(url).then(function (res) {
+    const data = res && res.data;
+    if (!res || res.status !== 200 || !data || !Array.isArray(data.rows)) throw new Error("page");
+    pg.rows = pg.rows.concat(data.rows);
+    pg.offset += data.rows.length;
+    pg.total = typeof data.total === "number" ? data.total : pg.offset;
+    if (!data.rows.length) pg.total = pg.offset;
+    pg.counts = data.counts || pg.counts;
+  }).catch(function () {
+    pg.error = "Could not load more rows. Try Load more again.";
+  }).finally(function () {
+    pg.loading = false;
+    document.dispatchEvent(new Event("rb:render"));
+  });
+}
+
+// Watches the end marker of the list: when it scrolls into view the next page loads. Re-armed after each render.
+function observeEnd() {
+  if (typeof document === "undefined" || typeof IntersectionObserver !== "function") return;
+  if (!observer) {
+    observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        loadMore(el.getAttribute("data-project"), el.getAttribute("data-scope"), true);
+      });
+    });
+  }
+  observer.disconnect();
+  const end = document.querySelector("#main .hd-end");
+  if (end) observer.observe(end);
 }
 
 // Loads run a few at a time, so expanding many rows does not send a burst of requests.
@@ -693,7 +785,9 @@ export function attachHeadListeners() {
     const action = btn.getAttribute("data-action");
     const id = btn.getAttribute("data-id");
     const project = projectOf(btn);
-    if (action === "head-toggle") {
+    if (action === "head-more") {
+      loadMore(project, btn.getAttribute("data-scope") || "open", false);
+    } else if (action === "head-toggle") {
       const item = btn.closest(".hd-item");
       if (item) setOpen(item, !item.classList.contains("is-open"));
     } else if (action === "head-expand-all") {
@@ -825,7 +919,28 @@ export function sectionView(vm) {
     project: vm.route.id,
     readOnly: false,
   };
-  const html = headHtml({ head: vm.project.snapshot.head || null }, opts);
-  if (typeof setTimeout === "function") setTimeout(loadOpenRows, 0);
+  // The snapshot head first (first paint), then the paged rows of this scope, merged by id.
+  const snapHead = vm.project.snapshot.head || null;
+  const scope = scopeOf(opts.f);
+  const pg = pages.get(vm.route.id + "\n" + scope) || null;
+  const head = Object.assign({}, snapHead || {}, { rows: mergeRows(rowsOf({ head: snapHead }), pg ? pg.rows : []) });
+  if (pg && pg.counts) {
+    head.counts = pg.counts;
+    head.ledger = true;
+  }
+  const shown = head.rows.filter(function (row) {
+    return inScope(row, scope);
+  }).length;
+  opts.pager = {
+    pid: vm.route.id, scope: scope, shown: shown, total: pg ? pg.total : null, error: pg ? pg.error : "",
+    more: !pg || pg.total == null || pg.offset < pg.total,
+  };
+  const html = headHtml({ head: head }, opts);
+  if (typeof setTimeout === "function") {
+    setTimeout(function () {
+      loadOpenRows();
+      observeEnd();
+    }, 0);
+  }
   return html;
 }

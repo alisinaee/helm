@@ -364,6 +364,43 @@ def rows(data_dir, link_state=None, now=None):
     return head.fold(_records(data_dir), link_state=link_state, now=now)
 
 
+def _newest_key(entry):
+    """Newest-first sort key, the same as the snapshot head key (core/snapshot.py _newest_key): ts as time, then the
+    numeric part of the id, so two entries at one time keep a stable order."""
+    when = head.parse_ts(entry.get("ts"))
+    num = int("".join(ch for ch in str(entry.get("id") or "") if ch.isdigit()) or 0)
+    return (when.timestamp() if when is not None else 0, num)
+
+
+def accepted_ids(records):
+    """The ids whose last status change is the person's done (same rule as the snapshot's _accepted_ids)."""
+    last = {}
+    for rec in records:
+        sets = rec.get("set") if isinstance(rec.get("set"), dict) else {}
+        if rec.get("t") == "u" and "status" in sets:
+            last[rec.get("id")] = (sets["status"], rec.get("by"))
+    return {eid for eid, mark in last.items() if mark == ("done", "person")}
+
+
+def page(data_dir, *, f="open", offset=0, limit=50, link_state=None, now=None):
+    """One page of the full ledger, newest first. f=open takes the open rows, f=all every row. Returns the folded
+    entries of the whole ledger ("entries", for id checks), the scope's "total", the counts over the whole ledger
+    ("counts"), the accepted ids and the rows offset..offset+limit of the scope (folded entries, not yet rows)."""
+    records = _records(data_dir)
+    entries = head.fold(records, link_state=link_state, now=now)
+    accepted = accepted_ids(records)
+    open_rows = [e for e in entries if e["status"] not in head.CLOSED_STATUSES]
+    scope = open_rows if f == "open" else entries
+    ordered = sorted(scope, key=_newest_key, reverse=True)
+    counts = {"open": len(open_rows),
+              "unhandled": sum(1 for e in open_rows if e["status"] in ("new", "understood")),
+              "doing": sum(1 for e in open_rows if e["status"] == "doing"),
+              "needs": sum(1 for e in open_rows if e["status"] == "needs-you"),
+              "doneUnacc": sum(1 for e in entries if e["status"] == "done" and e["id"] not in accepted)}
+    return {"entries": entries, "total": len(ordered), "counts": counts, "accepted": accepted,
+            "rows": ordered[offset:offset + limit]}
+
+
 def text_of(data_dir, eid):
     """The redacted verbatim text of one entry, or None. Reads head-text.jsonl; the last line for an id wins."""
     found = None
