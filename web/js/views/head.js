@@ -123,7 +123,7 @@ function filterHtml(opts) {
   const links = FILTERS.map(function (pair) {
     const cur = pair[0] === active ? ' aria-current="page"' : "";
     return '<a class="hd-filter" href="' + esc(hashOf({ f: pair[0], kind: opts.kind, sid: opts.sid, q: opts.q,
-      sort: opts.sort })) +
+      sort: opts.sort, view: opts.view })) +
       '"' + cur + ">" + esc(pair[1]) + "</a>";
   });
   return links.join("");
@@ -132,7 +132,7 @@ function filterHtml(opts) {
 // The page hash for one filter state. Empty values are left out, so the hash stays short; the default order
 // (sort=new) is left out too.
 export function hashOf(state) {
-  const keys = ["f", "q", "kind", "sid", "sort", "id"];
+  const keys = ["f", "q", "kind", "sid", "sort", "id", "view"];
   const parts = [];
   for (const key of keys) {
     if (state[key] && !(key === "sort" && state[key] === "new")) {
@@ -155,7 +155,8 @@ function barHtml(vm, opts) {
     const label = String(row.acct || row.sid || "");
     if (label && accts.indexOf(label) < 0) accts.push(label);
   }
-  return '<div class="hd-bar" data-f="' + esc(opts.f || "open") + '">' +
+  return '<div class="hd-bar" data-f="' + esc(opts.f || "open") + '" data-view="' +
+    (opts.view === "cards" ? "cards" : "list") + '">' +
     '<label class="hd-search"><span class="hd-lbl">Search</span><input type="search" data-field="q" value="' +
     esc(opts.q || "") + '" placeholder="/ search" aria-label="Search the log"></label>' +
     '<label class="hd-sel"><span class="hd-lbl">Kind</span><select data-field="kind">' +
@@ -166,7 +167,18 @@ function barHtml(vm, opts) {
     '<option value="new"' + (opts.sort === "old" ? "" : " selected") + ">Newest</option>" +
     '<option value="old"' + (opts.sort === "old" ? " selected" : "") + ">Oldest</option></select></label>" +
     '<button type="button" class="btn hd-log" data-action="head-log">+ Log</button>' +
-    '<nav class="hd-filters" aria-label="Filter">' + filterHtml(opts) + "</nav></div>";
+    '<nav class="hd-filters" aria-label="Filter">' + filterHtml(opts) + "</nav>" + viewHtml(opts) + "</div>";
+}
+
+// The Cards | List toggle. The hash keeps view=list or view=cards; the default (no view key) is the list.
+function viewHtml(opts) {
+  const current = opts.view === "cards" ? "cards" : "list";
+  const links = [["list", "List"], ["cards", "Cards"]].map(function (pair) {
+    const cur = pair[0] === current ? ' aria-current="page"' : "";
+    return '<a class="hd-filter hd-view" href="' + esc(hashOf({ f: opts.f || "open", kind: opts.kind, sid: opts.sid,
+      q: opts.q, sort: opts.sort, view: pair[0] })) + '"' + cur + ">" + esc(pair[1]) + "</a>";
+  });
+  return '<nav class="hd-views" aria-label="View">' + links.join("") + "</nav>";
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -449,6 +461,50 @@ function formsHtml(id) {
     '<button type="submit" class="btn">Merge</button></form>';
 }
 
+// The list view: one table row per entry (columns: # Kind Summary State Bound to Age Added Acc Copy). Each entry is a
+// tbody, so the row and its full-width detail row (colspan 9, the same panel as the card) open and close together.
+const LIST_COLS = [["#", "hd-n"], ["Kind", "hd-kind"], ["Summary", "hd-sumc"], ["State", "hd-stc"],
+  ["Bound to", "hd-bnd"], ["Age", "hd-age"], ["Added", "hd-when"], ["Acc", "hd-acc"], ["Copy", "hd-cp"]];
+
+function listRowHtml(vm, row, opts) {
+  const id = String(row.id);
+  const eid = esc(id);
+  const open = (opts.open || []).indexOf(id) >= 0;
+  const pid = opts.project || null;
+  const carried = row.carried ? ' <span class="hd-carried" title="Carried over">↺</span>' : "";
+  const shown = summaryText(row.sum, fullOf(vm, pid, id));
+  const cell = function (cls, html, attrs) {
+    return '<td class="' + cls + '"' + (attrs || "") + ">" + html + "</td>";
+  };
+  const age = cell("hd-age rg-num" + (row.stale ? " hd-stale" : row.amber ? " hd-amber" : ""),
+    esc(ageText(row.age)), row.stale ? ' title="Stale"' : "");
+  const when = cell("hd-when rg-num", esc(whenText(row.ts)), ' title="' + esc(row.ts || "") + '"');
+  const tr = '<tr class="hd-row" data-id="' + eid + '">' +
+    cell("hd-n", '<button type="button" class="hd-hit" data-action="head-toggle" data-id="' + eid +
+      '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="hd-p-' + eid + '" aria-label="' +
+      esc((open ? "Hide " : "Show ") + id) + '">' + eid + carried + "</button>") +
+    cell("hd-kind", '<span class="chip chip-neutral">' + esc(row.kind || "") + "</span>") +
+    cell("hd-sumc", '<span class="hd-sum" data-sum="' + esc(row.sum || "") + '" title="' + esc(shown) + '">' +
+      esc(shown) + "</span>") +
+    cell("hd-stc", statusHtml(row)) +
+    cell("hd-bnd", boundHtml(row.links, pid, BOUND_MAX)) +
+    age + when +
+    cell("hd-acc", row.acc ? '<span aria-label="Accepted" title="Accepted">✓</span>' : "") +
+    cell("hd-cp", copyButton("ask", id, id, { project: pid, sum: row.sum || "" })) + "</tr>";
+  const detail = '<tr class="hd-detail"><td colspan="9">' + panelHtml(vm, row, opts, open) + "</td></tr>";
+  return '<tbody class="hd-item' + (open ? " is-open" : "") + '">' + tr + detail + "</tbody>";
+}
+
+function listHtml(vm, rows, opts) {
+  const head = LIST_COLS.map(function (col) {
+    return '<th scope="col" class="' + col[1] + '">' + esc(col[0]) + "</th>";
+  }).join("");
+  return '<div class="hd-list hd-tbl-wrap"><table class="hd-tbl" aria-label="Logged messages"><thead><tr>' +
+    head + "</tr></thead>" + rows.map(function (row) {
+      return listRowHtml(vm, row, opts);
+    }).join("") + "</table></div>";
+}
+
 function emptyHtml(vm, opts) {
   const none = rowsOf(vm).length === 0;
   if (none) {
@@ -475,10 +531,11 @@ export function headHtml(vm, opts) {
   const top = '<div class="hd-top"><h2 id="hd-h" class="hd-title">Head</h2>' +
     (rows.length ? '<button type="button" class="btn hd-all" data-action="head-expand-all">' +
       (allOpen ? "Collapse all" : "Expand all") + "</button>" : "") + "</div>";
-  const body = rows.length ? '<div class="hd-list">' +
+  const cards = o.view === "cards";
+  const body = !rows.length ? emptyHtml(vm, o) : cards ? '<div class="hd-list">' +
     '<ul class="hd-items" aria-label="Logged messages">' + rows.map(function (row) {
       return rowHtml(vm, row, o);
-    }).join("") + "</ul></div>" : emptyHtml(vm, o);
+    }).join("") + "</ul></div>" : listHtml(vm, rows, o);
   return '<section class="hd-screen" data-project="' + esc(o.project || "") + '" aria-labelledby="hd-h">' +
     top + nowHtml(head) + alertsHtml(counts) + barHtml(vm, o) + body + "</section>";
 }
@@ -617,6 +674,13 @@ export function attachHeadListeners() {
       }
       return;
     }
+    // A click on the list row (not on a button, link or field) opens or closes it, like its # button.
+    const tr = event.target && event.target.closest ? event.target.closest("tr.hd-row") : null;
+    if (tr && !event.target.closest("a, button, input, select, textarea, label, form")) {
+      const entry = tr.closest(".hd-item");
+      if (entry) setOpen(entry, !entry.classList.contains("is-open"));
+      return;
+    }
     const btn = event.target && event.target.closest ? event.target.closest("[data-action]") : null;
     if (!btn) return;
     const action = btn.getAttribute("data-action");
@@ -699,7 +763,7 @@ export function attachHeadListeners() {
 
 function setField(bar, key, value) {
   const f = bar.getAttribute("data-f") || "open";
-  const state = { f: f, q: "", kind: "", sid: "", sort: "" };
+  const state = { f: f, q: "", kind: "", sid: "", sort: "", view: bar.getAttribute("data-view") || "list" };
   for (const el of bar.querySelectorAll("[data-field]")) {
     state[el.getAttribute("data-field")] = el.value || "";
   }
@@ -749,6 +813,7 @@ export function sectionView(vm) {
     kind: pick(params.get("kind"), KINDS, 20),
     sid: sid.length <= 60 ? sid : "",
     sort: pick(params.get("sort"), SORTS, 3) || "new",
+    view: pick(params.get("view"), ["cards", "list"], 5) || "list",
     open: Array.from(openSet),
     project: vm.route.id,
     readOnly: false,

@@ -29,7 +29,7 @@ CSS_DIR = os.path.join(WEB, "css")
 SHELL_TEST = os.path.join(TESTS, "web", "test_shell.py")
 RENDER = os.path.join(TESTS, "web", "render_head.mjs")
 FIXTURE = os.path.join(REPO, "fixtures", "demo", "alpha", "docs", "head.jsonl")
-HEAD_CSS_MAX = 4096  # raised 2026-10-15 for spec 13 (opened blocks, meta line, phone cards)
+HEAD_CSS_MAX = 6144  # raised 2026-10-15 for spec 13 (cards) and again for the List table view (sticky header, phone)
 TRACKS = "20px 60px minmax(0,1fr) 32px"
 ROW_ID = re.compile(r'<div class="row-grid hd-row" data-id="(H\d+)"')
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=|<script', re.IGNORECASE)
@@ -129,6 +129,22 @@ class HeadSource(unittest.TestCase):
             self.assertIn('data-form="' + name + '"', self.src)
             self.assertIn('data-op="head.' + name + '"', self.src)
 
+    def test_list_view_is_a_table_with_the_nine_columns_in_order(self):
+        self.assertIn('<table class="hd-tbl"', self.src)
+        self.assertIn('["#", "hd-n"], ["Kind", "hd-kind"], ["Summary", "hd-sumc"], ["State", "hd-stc"],', self.src)
+        self.assertIn('["Bound to", "hd-bnd"], ["Age", "hd-age"], ["Added", "hd-when"], ["Acc", "hd-acc"],', self.src)
+        self.assertIn('["Copy", "hd-cp"]];', self.src)
+        self.assertIn('<tr class="hd-detail"><td colspan="9">', self.src)
+
+    def test_view_toggle_is_in_the_hash_and_defaults_to_the_list(self):
+        self.assertIn('view: pair[0]', self.src)
+        self.assertIn('const cards = o.view === "cards";', self.src)
+        self.assertIn('pick(params.get("view"), ["cards", "list"], 5) || "list"', self.src)
+
+    def test_row_click_toggles_the_list_row_but_not_its_controls(self):
+        self.assertIn('closest("tr.hd-row")', self.src)
+        self.assertIn('closest("a, button, input, select, textarea, label, form")', self.src)
+
     def test_no_route_or_nav_wiring_in_this_step(self):
         self.assertNotIn("routes.js", self.src)
         self.assertNotIn("icons.svg", self.src)
@@ -164,6 +180,14 @@ class HeadCss(unittest.TestCase):
         css = read(CSS)
         self.assertIn("@media (max-width:599px)", css)
         self.assertRegex(css, r"@media \(max-width:599px\)\{[\s\S]*flex-wrap:wrap")
+
+    def test_list_header_is_sticky_and_the_phone_keeps_summary_and_state_visible(self):
+        css = read(CSS)
+        self.assertRegex(css, r"\.hd-tbl th\{position:sticky;top:0")
+        self.assertIn(".hd-tbl-wrap{max-height:70vh;overflow:auto", css)
+        self.assertRegex(css, r"@media \(max-width:599px\)\{[\s\S]*\.hd-kind\{display:none\}")
+        self.assertRegex(css, r"\.hd-sumc\{left:72px[^}]*\}\.hd-stc\{left:222px\}")
+        self.assertIn("font-variant-numeric:tabular-nums", css)
 
     def test_no_raw_colour_outside_tokens(self):
         self.assertNotRegex(read(CSS), r"#[0-9a-fA-F]{3,6}\b|rgb\(")
@@ -362,6 +386,63 @@ class HeadRender(unittest.TestCase):
         self.assertIn('data-action="head-merge" data-id="H4" data-into="H1"', html)
         self.assertIn("Merge into H1 (dup 0.72)", html)
         self.assertIn('data-action="head-bind-sug" data-id="H4" data-ref="task:R7.31"', html)
+
+    def test_list_is_the_default_and_has_one_tbody_per_entry(self):
+        html = self.out["listDefault"]
+        self.assertIn('<table class="hd-tbl"', html)
+        self.assertEqual(html.count("<tbody class=\"hd-item"), 7)
+        self.assertNotIn('<li class="hd-item', html)
+
+    def test_list_columns_are_in_order_and_newest_first(self):
+        html = self.out["list"]
+        heads = re.findall(r'<th scope="col" class="[^"]+">([^<]+)</th>', html)
+        self.assertEqual(heads, ["#", "Kind", "Summary", "State", "Bound to", "Age", "Added", "Acc", "Copy"])
+        rows = re.findall(r'<tr class="hd-row" data-id="(H\d+)">', html)
+        self.assertEqual(rows, list(reversed(re.findall(r'<tr class="hd-row" data-id="(H\d+)">', self.out["listOldest"]))))
+        self.assertEqual(rows[0], "H6")
+
+    def test_list_cells_are_nine_per_row_with_numbers_right_aligned(self):
+        html = self.out["list"]
+        self.assertEqual(html.count('<tr class="hd-row"'), 7)
+        self.assertEqual(html.count('<td colspan="9">'), 7)
+        self.assertEqual(len(re.findall(r'<td class="hd-(?:n|kind|sumc|stc|bnd|age|when|acc|cp)', html)), 7 * 9)
+        self.assertRegex(html, r'<td class="hd-age rg-num[^"]*"[^>]*>\d+[mhd]</td>')
+        self.assertRegex(html, r'<td class="hd-when rg-num" title="\d{4}-\d{2}-\d{2}T[^"]*">\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{2}:\d{2}</td>')
+
+    def test_list_row_hit_button_and_detail_panel_match_the_card_view(self):
+        html = self.out["listOpen"]
+        self.assertIn('<button type="button" class="hd-hit" data-action="head-toggle" data-id="H1" aria-expanded="true"', html)
+        self.assertIn('<tbody class="hd-item is-open">', html)
+        self.assertIn('<div class="hd-panel" id="hd-p-H1">', html)
+        self.assertIn('id="hd-p-H4" hidden>', html)
+        self.assertIn("&lt;img src=x onerror=alert(1)&gt;", html)
+        self.assertNotIn("<img", html)
+        order = [html.index('<p class="hd-lbl">' + label + "</p>") for label in ("You wrote", "Head replied", "State", "Bound to")]
+        self.assertEqual(order, sorted(order))
+
+    def test_list_summary_wraps_and_the_sum_is_the_cell_text(self):
+        html = self.out["list"]
+        self.assertIn('<span class="hd-sum" data-sum="', html)
+        self.assertIn('<td class="hd-acc"><span aria-label="Accepted"', html)
+
+    def test_list_read_only_and_empty_states(self):
+        self.assertNotIn("head-accept", self.out["listReadOnly"])
+        self.assertNotIn("head-form", self.out["listReadOnly"])
+        self.assertIn("Nothing logged yet.", self.out["listEmpty"])
+        self.assertNotIn("<table", self.out["listEmpty"])
+
+    def test_cards_view_stays_as_it_was(self):
+        self.assertNotIn("<table", self.out["screen"])
+        self.assertIn('<li class="hd-item', self.out["screen"])
+
+    def test_view_toggle_links_and_the_hash_keep_the_view(self):
+        html = self.out["list"]
+        self.assertIn('class="hd-filter hd-view" href="#head?f=all&amp;view=list" aria-current="page">List', html)
+        self.assertIn('href="#head?f=all&amp;view=cards">Cards', html)
+        self.assertIn('data-view="list"', html)
+        self.assertIn('data-view="cards"', self.out["screen"])
+        self.assertEqual(self.out["hashList"], "#head?f=all&view=list")
+        self.assertEqual(self.out["hashCards"], "#head?f=all&view=cards")
 
     def test_hash_keeps_the_filter_state(self):
         self.assertEqual(self.out["hash"], "#head?f=unhandled&q=a%20b&kind=bug")

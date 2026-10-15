@@ -8,7 +8,7 @@ const web = process.argv[2];
 const vm = JSON.parse(readFileSync(process.argv[3], "utf-8"));
 const head = await import(pathToFileURL(web + "/js/views/head.js").href);
 
-const base = { project: "alpha" };
+const base = { project: "alpha", view: "cards" };
 const empty = { head: { now: vm.head.now, prev: [], counts: {}, rows: [] } };
 
 console.log(JSON.stringify({
@@ -25,6 +25,14 @@ console.log(JSON.stringify({
   oldest: head.headHtml(vm, Object.assign({ f: "all", sort: "old" }, base)),
   hashOld: head.hashOf({ f: "all", sort: "old" }),
   hashNew: head.hashOf({ f: "all", sort: "new" }),
+  list: head.headHtml(vm, { f: "all", project: "alpha", view: "list" }),
+  listDefault: head.headHtml(vm, { f: "all", project: "alpha" }),
+  listOpen: head.headHtml(vm, { f: "open", open: ["H1"], project: "alpha", view: "list" }),
+  listReadOnly: head.headHtml(vm, { f: "all", project: "alpha", view: "list", readOnly: true }),
+  listEmpty: head.headHtml(empty, { f: "open", project: "alpha", view: "list" }),
+  listOldest: head.headHtml(vm, { f: "all", sort: "old", project: "alpha", view: "list" }),
+  hashList: head.hashOf({ f: "all", view: "list" }),
+  hashCards: head.hashOf({ f: "all", view: "cards" }),
   shortSum: head.headHtml({ head: Object.assign({}, vm.head, { rows: vm.head.rows.map(function (r) {
     return r.id === "H1" ? Object.assign({}, r, { sum: "<img src=x" }) : r;
   }) }) }, Object.assign({ f: "all" }, base)),
