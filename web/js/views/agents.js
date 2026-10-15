@@ -16,9 +16,12 @@ const ENGINES = { haiku: "Haiku 5.5", sonnet: "Sonnet 5.5", opus: "Opus 5.5", ag
 let ticking = false;
 
 // The exact engine of a job's model string: a bare word maps to its engine name; a more specific cursor name
-// (grok-4.7-xhigh, auto) maps to its model. Unknown strings are shown as they are; no model is a dash.
-export function engineLabel(model) {
+// (grok-4.7-xhigh, auto) maps to its model. A job with a recorded engine model (opencode, cursor) shows the engine
+// and that model, for example "opencode · laguna-s-2.1". Unknown strings are shown as they are; no model is a dash.
+export function engineLabel(model, engineModel) {
   const text = String(model || "").trim().toLowerCase();
+  const exact = String(engineModel || "").trim();
+  if (exact && (text === "opencode" || text === "cursor")) return text + " · " + exact;
   if (!text) return "—";
   if (/grok-4\.7/.test(text)) return "cursor · Grok 4.7";
   if (text === "auto") return "cursor · Auto";
@@ -86,7 +89,7 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     (job.task ? "" : " disabled") + ' aria-label="Stop ' + esc(label) + '">Stop</button>';
   const tokens = job.tokensK == null ? "not yet" : fmtTokens(job.tokensK);
   const row = '<li class="ag-row" data-depth="' + depth + '"><div class="row-grid rg-agent">' +
-    '<span class="rg-chips">' + chipHtml(engineLabel(job.model), "neutral") +
+    '<span class="rg-chips">' + chipHtml(engineLabel(job.model, job.engineModel), "neutral") +
     (job.role ? chipHtml(job.role, "neutral") : "") + badge + "</span>" +
     '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort, job.model)) + "</span>" +
     '<span class="rg-main"><span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
@@ -111,7 +114,8 @@ function finishedHtml(job, pid) {
   const tokens = job.tokensK == null ? "unknown" : fmtTokens(job.tokensK);
   const task = job.task ? '<a href="' + esc(itemHash(pid, job.task)) + '">' + esc(job.task) + "</a>" : "";
   return '<li class="ag-row"><div class="row-grid rg-agent">' +
-    '<span class="rg-chips">' + chipHtml(engineLabel(job.model), "neutral") + chipHtml(word, kind) + "</span>" +
+    '<span class="rg-chips">' + chipHtml(engineLabel(job.model, job.engineModel), "neutral") +
+    chipHtml(word, kind) + "</span>" +
     '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort, job.model)) + "</span>" +
     '<span class="rg-main"><span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span></span>" +
     '<span class="rg-chips">' + task + "</span>" +

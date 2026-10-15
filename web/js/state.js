@@ -186,6 +186,8 @@ function normalizeJob(j, fetchedAt) {
     role: j.role || null,
     // The thinking effort the job was started with (low, medium, high, xhigh or max); null when not recorded.
     effort: j.effort || null,
+    // The real model of the engine (for example laguna-s-2.1); null when not recorded.
+    engineModel: j.engine_model || null,
     fetchedAt: fetchedAt,
   };
 }

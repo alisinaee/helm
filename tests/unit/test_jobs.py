@@ -50,6 +50,14 @@ class JobCommandTests(FixtureCase):
         self.assertEqual(first["effort"], "xhigh")
         self.assertNotIn("effort", second)
 
+    def test_start_records_engine_model_only_when_given(self):
+        run_cli(["job", "start", "x", "opencode", "--engine-model", " laguna-s-2.1 "])
+        run_cli(["job", "start", "y", "opencode"])
+        first, second = self.read_jobs()
+        self.assertEqual(first["engine_model"], "laguna-s-2.1")
+        self.assertNotIn("engine_model", second)
+        self.assertEqual(first["model"], "opencode")
+
     def test_start_bad_effort_is_usage_error(self):
         code, out, _ = run_cli(["job", "start", "x", "opus", "--effort", "turbo", "--json"])
         self.assertEqual(code, 2)

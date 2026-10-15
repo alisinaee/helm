@@ -48,6 +48,8 @@ def synthetic():
             started="2026-10-13T11:59:30Z", elapsed_s=30),
         job("J4", "running", model="agy", task="P2.1", started="2026-10-13T11:50:00Z", elapsed_s=600,
             effort="low"),
+        job("J5", "running", model="opencode", task="P2.2", started="2026-10-13T11:55:00Z", elapsed_s=300,
+            effort="xhigh", engine_model="laguna-s-2.1"),
     ]
     finished = []
     for n in range(12):
@@ -103,7 +105,7 @@ class AgentsResearchTests(unittest.TestCase):
         html = self.out["agentsProject"]
         self.assertIn('<ul class="ag-kids"', html)
         depths = [int(d) for d in TREE_ROW.findall(html)]
-        self.assertEqual(depths.count(0), 2)     # J1 and J4 are the roots
+        self.assertEqual(depths.count(0), 3)     # J1, J4 and J5 are the roots
         self.assertEqual(depths.count(1), 2)     # J2 and J3 are workers under J1
         lead = html.index('<span class="rg-t ag-title" title="job J1">job J1</span>')
         worker = html.index('<span class="rg-t ag-title" title="job J2">job J2</span>')
@@ -126,9 +128,15 @@ class AgentsResearchTests(unittest.TestCase):
         self.assertNotIn(">cursor<", html)
         self.assertNotIn(">agy<", html)
 
+    def test_model_chip_shows_the_engine_model_when_recorded(self):
+        html = self.out["agentsProject"]
+        self.assertIn(">opencode · laguna-s-2.1</span>", html)
+        self.assertNotIn(">opencode</span>", html)
+
     def test_effort_column_shows_the_level_or_the_engine_default(self):
         html = self.out["agentsProject"]
-        self.assertEqual(html.count('<span class="rg-chips ag-effort">'), 14)  # 4 running and 10 finished rows
+        self.assertEqual(html.count('<span class="rg-chips ag-effort">'), 15)  # 5 running and 10 finished rows
+        self.assertIn('<span class="rg-chips ag-effort">xhigh</span>', html)     # opencode, recorded
         self.assertIn('<span class="rg-chips ag-effort">high</span>', html)      # opus, recorded
         self.assertIn('<span class="rg-chips ag-effort">medium</span>', html)    # grok, recorded
         self.assertIn('<span class="rg-chips ag-effort">low</span>', html)       # agy, recorded
@@ -139,7 +147,7 @@ class AgentsResearchTests(unittest.TestCase):
 
     def test_each_row_has_a_stop_button_and_a_task_less_job_has_it_disabled(self):
         html = self.out["agentsProject"]
-        self.assertEqual(html.count('data-action="agent-stop"'), 4)
+        self.assertEqual(html.count('data-action="agent-stop"'), 5)
         self.assertEqual(html.count('data-action="agent-stop" data-project="splitnet" data-task="P1.1"'), 1)
         disabled = re.findall(r'<button [^>]*data-action="agent-stop"[^>]*disabled', html)
         self.assertEqual(len(disabled), 1)
@@ -160,7 +168,7 @@ class AgentsResearchTests(unittest.TestCase):
 
     def test_rows_use_the_shared_fixed_tracks(self):
         html = self.out["agentsProject"]
-        self.assertEqual(html.count('<div class="row-grid rg-agent">'), 14)
+        self.assertEqual(html.count('<div class="row-grid rg-agent">'), 15)
         self.assertNotIn("grid-area", html)
         self.assertNotIn("style=", html)
 

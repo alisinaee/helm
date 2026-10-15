@@ -13,7 +13,7 @@ import re
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.store import atomic, config, lock, schema
 
-MODELS = ("haiku", "sonnet", "opus", "cursor", "agy", "head")
+MODELS = ("haiku", "sonnet", "opus", "cursor", "agy", "opencode", "head")
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 KEEP_FINISHED = 200
 PARENT_ENV = "ROADMAP_PARENT_JOB"
@@ -69,7 +69,7 @@ def known_task_ids(data_dir):
     return {t["id"] for t in tasks if isinstance(t, dict) and isinstance(t.get("id"), str)}
 
 
-def start_job(data_dir, title, model, task=None, parent=None, role=None, environ=None, effort=None):
+def start_job(data_dir, title, model, task=None, parent=None, role=None, environ=None, effort=None, engine_model=None):
     """Record a new running job and return it. The task, when given, must exist in tasks.json (not_found).
     parent is the id of an existing job (the lead); role is lead or worker and needs a parent.
     With no parent given, the parent is $ROADMAP_PARENT_JOB (environ, default os.environ). A worker with no parent
@@ -79,6 +79,7 @@ def start_job(data_dir, title, model, task=None, parent=None, role=None, environ
     clean_model = _clean_model(model)
     clean_task = _clean_task(task, data_dir)
     clean_effort = _clean_effort(effort)
+    clean_engine = "" if engine_model is None else str(engine_model).strip()[:TITLE_MAX]
     with lock.locked(data_dir):
         doc = _read_doc(data_dir)
         clean_parent = _resolve_parent(parent, role, doc["jobs"], environ)
@@ -88,6 +89,8 @@ def start_job(data_dir, title, model, task=None, parent=None, role=None, environ
             job["task"] = clean_task
         if clean_effort:
             job["effort"] = clean_effort
+        if clean_engine:
+            job["engine_model"] = clean_engine
         if clean_parent:
             job["parent"] = clean_parent
             job["role"] = clean_role
