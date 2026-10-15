@@ -23,6 +23,9 @@ from roadmap.store import paths
 BASE_FILES = ("tasks.json", "jobs.json", "autonomy.json", "issues.json", "questions.json", "comments.json",
               "budget.json", "queue.json", "activity.jsonl", "features.json")
 CONFIG_FILE = "roadmap.config.json"
+UNDO_FILE = "undo.jsonl"  # the undo log (services/commands.py UNDO_FILE)
+HEAD_FILES = (head_store.FILE, head_store.TEXT_FILE, head_store.SPOOL_FILE, head_store.GATE_STAMP_FILE,
+              head_store.GATE_PAUSE_FILE, UNDO_FILE)  # the head reads and writes these beside head.jsonl
 LSOF_TIMEOUT_S = 5
 
 
@@ -51,7 +54,8 @@ def _stamp(path):
 
 def revision(data_dir, project_id=None):
     """A 16-hex-character revision of everything one snapshot reads: (path, mtime_ns, size) of each project data file
-    (the base files, roadmap.config.json, the configured extras, head.jsonl and rules.txt), the project's presence
+    (the base files, roadmap.config.json, the configured extras, rules.txt and the head files: head.jsonl,
+    head-text.jsonl, the head spool, head-gate.json, the head-pause flag and undo.jsonl), the project's presence
     file and control file when they apply, and the usage file. A missing file stamps as None, so creating or deleting
     one changes the revision. Only stat calls and one small config read; nothing is parsed or built."""
     stamps = []
@@ -59,7 +63,7 @@ def revision(data_dir, project_id=None):
         names = list(BASE_FILES) + [CONFIG_FILE]
         cfg = _read_project_config(data_dir, [])
         names += [name for name in _extra_names(cfg, []) if name not in names]
-        names += [head_store.FILE, rules.FILE]
+        names += [rules.FILE] + [name for name in HEAD_FILES if name not in names]
         stamps += [_stamp(os.path.join(data_dir, name)) for name in names]
         stamps.append(_stamp(presence.file_for(data_dir)))
     if project_id is not None:
