@@ -155,7 +155,6 @@ class PlanTemplateTree(CmdCase):
     # Known blocker (R7.13 H4): services/tasks.py _apply_features still refuses a sub-feature of a sub-feature
     # ("only one level of sub-features"), so the 3-level template does not import yet. Outside H4's files; remove
     # this decorator when that check moves to the 3-level rule.
-    @unittest.expectedFailure
     def test_the_tree_template_imports_cleanly_in_a_project(self):
         from roadmap.commands.plan import TREE
         path = os.path.join(self.tmp, "tree.txt")
