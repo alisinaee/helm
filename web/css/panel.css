@@ -4,6 +4,7 @@
 .side-tab:hover{background:var(--surface-2);color:var(--text-1)}
 .side-tab[aria-selected="true"]{background:var(--sel);color:var(--text-1)}
 .side-close{flex:none;min-height:var(--h-control)}
+.side-tab:focus-visible,.side-close:focus-visible,.p-row:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .side-body{display:grid;gap:var(--sp-3);align-content:start}
 .side-body > *{min-width:0}
 

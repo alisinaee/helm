@@ -19,11 +19,20 @@ function icon(name) {
 // Counts for the badges. Scope is the project in a project route, else every registered project.
 export function countsFor(vm) {
   const snaps = vm.snapshotList || [];
+  let questions = 0;
   let needYou = 0;
+  let blockers = 0;
   let running = 0;
   let tasksNeedingYou = 0;
   for (const snap of snaps) {
-    needYou += snap.needUser || 0;
+    // The same rows the Inbox page lists: open questions, and the needs-you task rows.
+    questions += (snap.questions || []).length;
+    needYou += (snap.needsYou || []).filter(function (row) {
+      return row.kind === "task";
+    }).length;
+    blockers += (snap.issues || []).filter(function (issue) {
+      return issue.kind === "blocker";
+    }).length;
     running += snap.runningCount || 0;
     tasksNeedingYou += snap.tasks.filter(function (t) {
       return t.needsUser;
@@ -34,13 +43,18 @@ export function countsFor(vm) {
     if (row.state === "block") limitTone = "danger";
     else if (row.state === "warn" && limitTone !== "danger") limitTone = "warning";
   }
-  return { inbox: needYou, work: tasksNeedingYou, agents: running, tokens: limitTone };
+  return { inbox: questions + needYou, work: tasksNeedingYou, agents: running, tokens: limitTone,
+    issues: blockers };
 }
 
 function badgeFor(section, counts) {
   if (section.id === "inbox" && counts.inbox > 0) {
     return '<span class="nav-b" data-tone="neutral">' + esc(counts.inbox) +
-      '<span class="sr-only"> need you</span></span>';
+      '<span class="sr-only"> waiting for you</span></span>';
+  }
+  if (section.id === "issues" && counts.issues > 0) {
+    return '<span class="nav-b" data-tone="danger">' + esc(counts.issues) +
+      '<span class="sr-only">' + (counts.issues === 1 ? " open blocker" : " open blockers") + "</span></span>";
   }
   if (section.id === "work" && counts.work > 0) {
     return '<span class="nav-b" data-tone="danger">' + esc(counts.work) +
