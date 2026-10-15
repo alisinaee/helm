@@ -146,15 +146,23 @@ def _phone_public(snap):
     return out
 
 
-def _snapshot_reply(req, snap, headers=(), app=None):
+def _rev_etag(rev):
+    """The ETag of a snapshot: its revision (loader.revision), quoted."""
+    return '"%s"' % rev
+
+
+def _snapshot_reply(req, pid, headers=(), app=None):
+    """The snapshot of project pid. The revision is checked first: a matching If-None-Match gives 304 without any
+    build. Otherwise the cached build for that revision is served, and its snap["rev"] is the ETag."""
+    pre = _rev_etag(loader.project_revision(pid))
+    if etag_matches(req.headers.get("If-None-Match"), pre):
+        return Reply(304, headers=[("ETag", pre)] + list(headers))
+    snap = loader.load_snapshot(pid)
+    etag = _rev_etag(snap["rev"])
     if app is not None and app.cmd_source == "phone":
         snap = _phone_public(snap)
-    etag = content_etag(snap)
-    extra = [("ETag", etag)] + list(headers)
-    if etag_matches(req.headers.get("If-None-Match"), etag):
-        return Reply(304, headers=extra)
     body = json.dumps(snap, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    return Reply(200, body, headers=extra)
+    return Reply(200, body, headers=[("ETag", etag)] + list(headers))
 
 
 def _now_iso():
@@ -219,16 +227,20 @@ def _summary(entry, snap):
 
 
 def projects(app, req, match):
-    rows = [_summary(entry, loader.load_snapshot(entry["id"])) for entry in config_store.list_projects()]
-    body = {"projects": rows}
-    etag = content_etag(body)
-    if etag_matches(req.headers.get("If-None-Match"), etag):
-        return Reply(304, headers=[("ETag", etag)])
+    """The project list. Each row is built from the same cached snapshot the project's own route serves, so the list
+    and an open section cannot disagree. The ETag is the joined project revisions; a match gives 304 with no build."""
+    entries = config_store.list_projects()
+    pre = "|".join(loader.project_revision(entry["id"]) for entry in entries)
+    if etag_matches(req.headers.get("If-None-Match"), '"%s"' % pre):
+        return Reply(304, headers=[("ETag", '"%s"' % pre)])
+    snaps = [loader.load_snapshot(entry["id"]) for entry in entries]
+    etag = '"%s"' % "|".join(snap["rev"] for snap in snaps)
+    body = {"projects": [_summary(entry, snap) for entry, snap in zip(entries, snaps)]}
     return json_reply(200, body, headers=[("ETag", etag)])
 
 
 def project_snapshot(app, req, match):
-    return _snapshot_reply(req, loader.load_snapshot(match.group("pid")), app=app)
+    return _snapshot_reply(req, match.group("pid"), app=app)
 
 
 def usage_get(app, req, match):
@@ -439,7 +451,7 @@ def legacy_data_json(app, req, match):
     first = entries[0]["id"]
     headers = [("Deprecation", "true"),
                ("Link", '</api/v1/projects/%s/snapshot>; rel="successor-version"' % first)]
-    return _snapshot_reply(req, loader.load_snapshot(first), headers, app=app)
+    return _snapshot_reply(req, first, headers, app=app)
 
 
 # ---------------------------------------------------------------- research notes (read only)
@@ -613,7 +625,7 @@ def project_head(app, req, match):
     project = _cmd_project(match.group("pid"))
     f, n, full = _head_query(req.query)
     _, data_dir = task_service.resolve(project)
-    snap = loader.load_snapshot(project)
+    snap = loader.load_snapshot(project)  # the cached build of the current revision, not a new one
     moment = datetime.now().astimezone()
     link_state = head_link_state(snap["tasks"], snap["jobs"])
     if _head_is_paged(req.query):
