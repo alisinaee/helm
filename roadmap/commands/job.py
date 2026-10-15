@@ -14,12 +14,15 @@ def _full(args):
     return getattr(args, "full", False)
 
 
-def _fit(lines, full, reserve=0):
-    """The lines that fit under OUT_LINES less reserve; past that, one '+N more' line."""
-    room = OUT_LINES - reserve
-    if full or len(lines) <= room:
-        return lines
-    return lines[:room - 1] + ["+%d more (--full)" % (len(lines) - room + 1)]
+def _pick(rows, room):
+    """Compact view: every running job first (never hidden), then the newest finished jobs that fit in room.
+    Returns (jobs to show, how many finished jobs are hidden)."""
+    running = [job for job in rows if job.get("status") == "running"]
+    finished = [job for job in reversed(rows) if job.get("status") != "running"]
+    if len(running) + len(finished) <= room:
+        return running + finished, 0
+    take = max(room - len(running) - 1, 0)
+    return running + finished[:take], len(finished) - take
 
 
 def _project_option():
@@ -146,13 +149,18 @@ def _list(args):
     rows = jobs.list_jobs(data_dir)
     if not getattr(args, "json", False):
         blocked = jobs.engines_line(data_dir)
+        hidden = 0
+        if not _full(args):
+            rows, hidden = _pick(rows, OUT_LINES - (1 if blocked else 0))
         lines = []
         for job in rows:
             task = " [" + job["task"] + "]" if job.get("task") else ""
             note = "  -- " + job["note"] if job.get("note") else ""
             lines.append("%-6s %-8s %-7s%s %s%s" % (job.get("id", "?"), job.get("status", "?"), job.get("model", "?"),
                                                     task, job.get("title", ""), note))
-        for line in _fit(lines or ["no jobs"], _full(args), reserve=1 if blocked else 0):
+        if hidden:
+            lines.append("+%d more (--full)" % hidden)
+        for line in lines or ["no jobs"]:
             print(line)
         if blocked:
             print(blocked)

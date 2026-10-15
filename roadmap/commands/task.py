@@ -151,6 +151,9 @@ def _list(args):
     _, data_dir = _data(args)
     rows = tasks.query(data_dir, phase=args.phase, status=args.status, needs_you=args.needs_you, limit=args.limit)
     if not getattr(args, "json", False):
+        # the newest tasks in file order, not the oldest (the scan is unbounded; --limit counts from the end)
+        rows = tasks.query(data_dir, phase=args.phase, status=args.status, needs_you=args.needs_you,
+                           limit=10 ** 9)[-args.limit:]
         lines = [planfmt.format_task(row) for row in rows] or ["no tasks"]
         for line in _fit(lines, _full(args)):
             print(line)

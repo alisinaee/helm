@@ -74,7 +74,9 @@ class CompactCase(unittest.TestCase):
             code, _, err = _run(["head", "log", "ask number %d" % i, "--kind", "ask"])
             self.assertEqual(code, 0, err)
         for i in range(MANY):
-            code, _, err = _run(["job", "start", "job %d" % i, "opus"])
+            code, out, err = _run(["job", "start", "job %d" % i, "opus"])
+            self.assertEqual(code, 0, err)
+            code, _, err = _run(["job", "done", out.strip()])  # finished, so the job list is not all running
             self.assertEqual(code, 0, err)
         self.task_ids = []
         for i in range(MANY):
@@ -108,6 +110,25 @@ class CompactCase(unittest.TestCase):
         self.assertEqual(len(out.splitlines()), 40)
         _, out, _ = _run(["task", "list", "--limit", "50", "--full"])
         self.assertGreater(len(out.splitlines()), MAX_LINES)
+
+    def test_running_jobs_come_first_and_are_never_hidden(self):
+        for i in range(500):
+            code, out, err = _run(["job", "start", "old %d" % i, "haiku"])
+            self.assertEqual(code, 0, err)
+            _run(["job", "done", out.strip()])
+        running = []
+        for i in range(3):
+            code, out, err = _run(["job", "start", "live %d" % i, "opus"])
+            self.assertEqual(code, 0, err)
+            running.append(out.strip())
+        _, out, _ = _run(["job", "list"])
+        lines = out.splitlines()
+        cols = [line.split() for line in lines if not line.startswith("+")]
+        status = [col[1] for col in cols]
+        self.assertEqual(status, sorted(status, key=lambda s: s != "running"))  # running rows form the prefix
+        self.assertTrue(set(running) <= {col[0] for col in cols})
+        self.assertLessEqual(len(lines), MAX_LINES)
+        self.assertTrue(any("+" in line and "(--full)" in line for line in lines[3:]), out)
 
     def test_capped_output_says_how_to_see_more(self):
         _, out, _ = _run(["git", "log", "-n", "40"])
