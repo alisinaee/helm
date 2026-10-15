@@ -1,8 +1,9 @@
 """Command group job: record Claude jobs and their tokens in the project's jobs.json."""
 
 import argparse
+import sys
 
-from roadmap.errors import RoadmapError
+from roadmap.errors import EXIT_NOT_FOUND, RoadmapError
 from roadmap.services import budget, control, git, jobs
 
 DONE_WORDS = {"done": "done", "fail": "failed"}
@@ -61,7 +62,13 @@ def _data_dir(args):
 
 
 def _start(args):
-    job = jobs.start_job(_data_dir(args), args.title, args.model, args.task, parent=args.parent, role=args.role,
+    data_dir = _data_dir(args)
+    stop, warn = budget.guard(data_dir)
+    if stop:
+        raise RoadmapError("stop", stop, EXIT_NOT_FOUND)  # exit 3: usage is at a stop in docs/autonomy.json
+    if warn:
+        print("warn: " + warn, file=sys.stderr)
+    job = jobs.start_job(data_dir, args.title, args.model, args.task, parent=args.parent, role=args.role,
                           effort=args.effort, engine_model=args.engine_model)
     if not getattr(args, "json", False):
         print(job["id"])
