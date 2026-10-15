@@ -17,7 +17,7 @@ ROW_RENDERERS = {
     "home.js": "row-grid run-row",
     "activity.js": 'class="act-row row-grid"',
     "limits.js": "row-grid rg-share",
-    "inbox.js": "qc-opts row-grid",
+    "inbox.js": "nz-list",  # the answer options are a vertical list (WP30), not a numeric grid
     "issues.js": "iss-top row-grid",
     "projects.js": "p-badges row-grid",
 }

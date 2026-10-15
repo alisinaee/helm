@@ -9,7 +9,7 @@ const synth = JSON.parse(readFileSync(process.argv[3], "utf8"));
 const load = (name) => import(pathToFileURL(web + "/js/" + name).href);
 
 // The render events research.js sends after a request. No page here, so the event goes nowhere.
-globalThis.document = { dispatchEvent() { return true; } };
+globalThis.document = { dispatchEvent() { return true; }, addEventListener() {} };
 const NOTE_TEXT = "# Landscape <b>tools</b>\n\n## Question\n<script>alert(1)</script> & more\n";
 const served = [];
 globalThis.fetch = async (url) => {

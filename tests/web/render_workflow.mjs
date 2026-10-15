@@ -14,7 +14,7 @@ const CASES = ["empty", "running", "blocked", "handoff"];
 const byId = {};
 for (const name of CASES) byId[fixture[name].project.id] = fixture[name];
 const served = [];
-globalThis.document = { dispatchEvent() { return true; } };
+globalThis.document = { dispatchEvent() { return true; }, addEventListener() {} };
 globalThis.fetch = async (url) => {
   const id = decodeURIComponent(String(url).split("/")[4]);
   served.push(id);

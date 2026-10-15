@@ -126,7 +126,8 @@ class GateHook(ControlCase):
 
     def test_no_items_no_block_and_no_stamp(self):
         with mock.patch.object(hooks, "_git_counts", return_value=(0, 0)), \
-                mock.patch.object(hooks.head_svc, "rows", return_value=[]):
+                mock.patch.object(hooks.head_svc, "rows", return_value=[]), \
+                mock.patch.object(hooks, "_idle_text", return_value=""):
             self.assertIsNone(self.gate())
         self.assertFalse(os.path.exists(self.stamp))
 

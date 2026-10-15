@@ -181,6 +181,7 @@ const idIndex = (root, id) => root.all("#" + id)[0] || null;
 const root = new El("html", {});
 const doc = {
   activeElement: null,
+  addEventListener() {},
   createElement(tag) {
     const el = new El(tag, {});
     if (tag === "template") {
@@ -198,7 +199,7 @@ const doc = {
   querySelectorAll(sel) { return selAll(root, sel); },
 };
 globalThis.document = doc;
-globalThis.window = { location: { hash: "#/p/alpha/head?f=all&view=list" } };
+globalThis.window = { location: { hash: "#/p/alpha/head?f=all&view=list" }, addEventListener() {} };
 const queue = [];
 let intervals = [];
 globalThis.setTimeout = (fn) => { queue.push(fn); return 0; };
