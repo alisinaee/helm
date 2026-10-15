@@ -358,3 +358,66 @@
 {"v":1,"t":"u","id":"H123","ts":"2026-10-15T12:36:06Z","by":"head","link":["+task:R7.77"]}
 {"v":1,"t":"e","ts":"2026-10-15T12:36:34Z","src":"hook","sid":"7ae29675","acct":null,"kind":"bug?","sum":"bug , when in head section we will have some need to ask , so there are shoud appear in the inbox…","len":222,"h":"sha1:87219b61d6c0","id":"H138"}
 {"v":1,"t":"u","id":"H138","ts":"2026-10-15T12:37:02Z","by":"head","set":{"kind":"bug","sum":"needs-you Head asks must show in the Inbox"},"link":["+task:R7.81"]}
+{"v":1,"t":"e","ts":"2026-10-15T12:38:11Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"Resume Claude workers now, past the 80% stop","len":44,"h":"sha1:1b619c66795a","id":"H139"}
+{"v":1,"t":"u","id":"H139","ts":"2026-10-15T12:38:18Z","by":"head","set":{"kind":"decision","sum":"person overrides the 5h 80% stop: resume Claude workers"},"link":["+task:R7.36"]}
+{"v":1,"t":"u","id":"H120","ts":"2026-10-15T12:42:31Z","by":"auto","set":{"status":"done"},"note":"auto: R7.60 a46cc9c"}
+{"v":1,"t":"u","id":"H135","ts":"2026-10-15T12:42:31Z","by":"auto","set":{"status":"done"},"note":"auto: R7.79 d900903"}
+{"v":1,"t":"u","id":"H120","ts":"2026-10-15T12:42:35Z","by":"head","set":{"status":"done"},"note":"fixed in 5be4e34 (full history, person-only remove)"}
+{"v":1,"t":"u","id":"H134","ts":"2026-10-15T12:42:36Z","by":"head","set":{"status":"done"},"note":"fixed in f0138ee (Doing = running job)"}
+{"v":1,"t":"u","id":"H135","ts":"2026-10-15T12:42:36Z","by":"head","set":{"status":"done"},"note":"diagram in d900903 docs/ARCHITECTURE.html"}
+{"v":1,"t":"e","ts":"2026-10-15T12:43:42Z","src":"hook","sid":"7ae29675","acct":null,"kind":"rule?","sum":"the head i see is not smart at all in the diagram i see ask opus and cursor 4.7 xhigh to…","len":1155,"h":"sha1:6691161e89a6","id":"H140"}
+{"v":1,"t":"u","id":"H140","ts":"2026-10-15T12:44:07Z","by":"head","set":{"kind":"ask","sum":"TOP PRIORITY: Opus + Cursor grok xhigh jointly research and plan a reliable, light core (watcher ser"},"link":["+task:R7.82"]}
+{"v":1,"t":"u","id":"H129","ts":"2026-10-15T12:46:13Z","by":"head","set":{"status":"done"},"note":"fixed in ad04454 (timeline drag/zoom, readable bars, engine lanes)"}
+{"v":1,"t":"u","id":"H123","ts":"2026-10-15T12:46:14Z","by":"head","set":{"status":"done"},"note":"fixed in 4acc30a and 6144de0 (one freshness rule, band source/age, lower stop shown)"}
+{"v":1,"t":"u","id":"H124","ts":"2026-10-15T12:46:14Z","by":"head","link":["+task:R7.82"]}
+{"v":1,"t":"u","id":"H136","ts":"2026-10-15T12:52:25Z","by":"head","set":{"status":"done"},"note":"fixed in 3cb53d1; live: list node kept 35 s, scroll held, 140/140"}
+{"v":1,"t":"e","ts":"2026-10-15T16:46:16Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"continue the tasks run the service on pane","len":43,"h":"sha1:7dfe1e2fb9ed","id":"H141"}
+{"v":1,"t":"u","id":"H141","ts":"2026-10-15T16:46:40Z","by":"head","set":{"kind":"ask","sum":"continue tasks; dashboard in pane"},"link":["+task:R7.82"]}
+{"v":1,"t":"u","id":"H132","ts":"2026-10-15T16:46:57Z","by":"head","set":{"status":"done"},"note":"fixed in 6144de0 (auto source via hooks, band source/age, lower stop shown)"}
+{"v":1,"t":"u","id":"H133","ts":"2026-10-15T16:46:57Z","by":"head","set":{"status":"done"},"note":"fixed in 9355ccc and 3cb53d1 (All default, 140/140 live)"}
+{"v":1,"t":"e","ts":"2026-10-15T16:49:22Z","src":"hook","sid":"c51fb915","acct":null,"kind":"question?","sum":"i have x28 pro modem how to disable the internet without tunr off the modem ?","len":78,"h":"sha1:f22873e1789c","id":"H142"}
+{"v":1,"t":"e","ts":"2026-10-15T16:50:08Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"go until 95 week","len":16,"h":"sha1:647fb863cc23","id":"H143"}
+{"v":1,"t":"u","id":"H143","ts":"2026-10-15T16:50:14Z","by":"head","set":{"kind":"decision","sum":"weekly stop 95% (was 85%)"},"link":["+task:R7.36"]}
+{"v":1,"t":"e","ts":"2026-10-15T16:52:13Z","src":"hook","sid":"c51fb915","acct":null,"kind":"question?","sum":"see the pane , browser , im in correct place ?","len":46,"h":"sha1:5815a433cdc3","id":"H144"}
+{"v":1,"t":"s","ts":"2026-10-15T16:52:57Z","sid":"c51fb915","model":"Haiku 5.5","ev":"claim"}
+{"v":1,"t":"s","ts":"2026-10-15T16:55:02Z","sid":"7ae29675","model":"Opus 5.5","ev":"claim"}
+{"v":1,"t":"e","ts":"2026-10-15T16:55:02Z","src":"hook","sid":"7ae29675","acct":null,"kind":"question?","sum":"why no running tasks ?","len":22,"h":"sha1:c0de843cfdc0","id":"H145"}
+{"v":1,"t":"e","ts":"2026-10-15T16:56:38Z","src":"hook","sid":"7ae29675","acct":null,"kind":"decision?","sum":"yes i did turn off the vpn , so do other task in this mode you cant use agy or cursor","len":86,"h":"sha1:95bee7ada44e","id":"H146"}
+{"v":1,"t":"u","id":"H145","ts":"2026-10-15T16:57:08Z","by":"head","set":{"kind":"question","sum":"why no running tasks: Wave 0 finished, Cursor failed (VPN off); next batch launched"},"link":["+task:R7.82"]}
+{"v":1,"t":"u","id":"H146","ts":"2026-10-15T16:57:09Z","by":"head","set":{"kind":"decision","sum":"VPN off: no agy/Cursor; Haiku only"},"link":["+task:R7.36"]}
+{"v":1,"t":"u","id":"H119","ts":"2026-10-15T16:57:58Z","by":"head","set":{"status":"needs-you"},"note":"Cursor UI review j857 failed: VPN off (H146); reruns when VPN is on"}
+{"v":1,"t":"u","id":"H124","ts":"2026-10-15T16:57:59Z","by":"head","set":{"status":"done"},"note":"designs in 61e7374 (v2) and cc9afbb (v3); A1-A5 built"}
+{"v":1,"t":"u","id":"H140","ts":"2026-10-15T16:57:59Z","by":"head","set":{"status":"done"},"note":"joint plan cc9afbb (Opus) on Cursor analysis; Wave 0 done cb5b2e6; Wave 1 R7.86 running"}
+{"v":1,"t":"e","ts":"2026-10-15T17:17:45Z","src":"hook","sid":"7ae29675","acct":null,"kind":"question?","sum":"see ?","len":78,"h":"sha1:a2a5767353c9","id":"H147"}
+{"v":1,"t":"u","id":"H147","ts":"2026-10-15T17:17:58Z","by":"head","set":{"kind":"question","sum":"idle root cause: SendMessage follow-ups not registered as jobs; head launches small batches"},"link":["+task:R7.73"]}
+{"v":1,"t":"e","ts":"2026-10-15T17:18:30Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"fix the route cuase to avoid happend this then continue the tasks","len":69,"h":"sha1:fcd3cced53a0","id":"H148"}
+{"v":1,"t":"u","id":"H148","ts":"2026-10-15T17:18:39Z","by":"head","set":{"kind":"ask","sum":"fix idle root cause in the tool, then continue"},"link":["+task:R7.89"]}
+{"v":1,"t":"u","id":"H147","ts":"2026-10-15T17:18:39Z","by":"head","link":["+task:R7.89"]}
+{"v":1,"t":"u","id":"H138","ts":"2026-10-15T17:19:36Z","by":"head","set":{"status":"done"},"note":"fixed in 4d3820c"}
+{"v":1,"t":"u","id":"H141","ts":"2026-10-15T17:19:37Z","by":"head","set":{"status":"done"},"note":"answer: dashboard open in the pane at 127.0.0.1:8780 and tasks continue (R7.86-R7.89)"}
+{"v":1,"t":"u","id":"H144","ts":"2026-10-15T17:19:37Z","by":"head","set":{"status":"done"},"note":"answer: yes, the pane shows the main dashboard http://127.0.0.1:8780/ (one tab)"}
+{"v":1,"t":"u","id":"H142","ts":"2026-10-15T17:19:37Z","by":"head","set":{"status":"declined"},"note":"not a roadmap-board ask (modem question); answered in chat"}
+{"v":1,"t":"e","ts":"2026-10-15T17:19:52Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"hint for ai agents question : its better to be selective question like 4 options or more ( like…","len":176,"h":"sha1:a55c339dec97","id":"H149"}
+{"v":1,"t":"u","id":"H149","ts":"2026-10-15T17:20:11Z","by":"head","set":{"kind":"ask","sum":"agent questions: selectable options (4+) plus free text"},"link":["+task:R7.90"]}
+{"v":1,"t":"u","id":"H148","ts":"2026-10-15T17:22:37Z","by":"auto","set":{"status":"done"},"note":"auto: R7.89 13c828c"}
+{"v":1,"t":"u","id":"H147","ts":"2026-10-15T17:22:45Z","by":"head","set":{"status":"done"},"note":"root cause fixed in 13c828c (follow-ups registered, idle alert)"}
+{"v":1,"t":"u","id":"H148","ts":"2026-10-15T17:22:45Z","by":"head","set":{"status":"done"},"note":"fixed in 13c828c; hooks reinstalled"}
+{"v":1,"t":"u","id":"H149","ts":"2026-10-15T17:26:16Z","by":"head","set":{"status":"done"},"note":"built in fac2f0c"}
+{"v":1,"t":"u","id":"H145","ts":"2026-10-15T17:31:00Z","by":"head","set":{"status":"done"},"note":"answer: Wave 0 done (8a2a4fb a73c922 cb5b2e6); Cursor failed (VPN off); fixed idle in 13c828c"}
+{"v":1,"t":"u","id":"H128","ts":"2026-10-15T17:31:00Z","by":"head","link":["+task:R7.97"]}
+{"v":1,"t":"e","ts":"2026-10-15T17:38:25Z","src":"hook","sid":"7ae29675","acct":null,"kind":"bug?","sum":"Updated 18 min ago, by the head from the app Sync failed: keychain entry has no usable token why…","len":134,"h":"sha1:c4d6feb811d3","id":"H150"}
+{"v":1,"t":"u","id":"H150","ts":"2026-10-15T17:38:40Z","by":"head","set":{"kind":"bug","sum":"Sync shows keychain error on a desktop-app Mac"},"link":["+task:R7.100"]}
+{"v":1,"t":"e","ts":"2026-10-15T17:40:27Z","src":"hook","sid":"7ae29675","acct":null,"kind":"bug?","sum":"one big hint for you talk with opus to change the policy there is big different between the agent…","len":387,"h":"sha1:9c237a68cb44","id":"H151"}
+{"v":1,"t":"u","id":"H151","ts":"2026-10-15T17:40:36Z","by":"head","set":{"kind":"decision","sum":"RULE: human Work items are separate from agent tasks; one Work item binds many agent tasks; applies"},"link":["+task:R7.101"]}
+{"v":1,"t":"u","id":"H128","ts":"2026-10-15T17:41:08Z","by":"head","set":{"status":"done"},"note":"Issues section removed in d00b7ef; issues are Work cards"}
+{"v":1,"t":"e","ts":"2026-10-15T17:42:31Z","src":"hook","sid":"7ae29675","acct":null,"kind":"rule?","sum":"another issue i see : in the head section i see a lot of items as rule , but i dont found them in…","len":393,"h":"sha1:06987b98a3d8","id":"H152"}
+{"v":1,"t":"u","id":"H152","ts":"2026-10-15T17:42:44Z","by":"head","set":{"kind":"rule","sum":"head reviews every rule-kind item and proposes Rules entries; person accepts in one click"},"link":["+task:R7.103"]}
+{"v":1,"t":"e","ts":"2026-10-15T17:44:54Z","src":"hook","sid":"7ae29675","acct":null,"kind":"ask?","sum":"i see the planner section , and this not sync with project you told me u fixed the issue for being…","len":118,"h":"sha1:5bc0e02e8682","id":"H153"}
+{"v":1,"t":"u","id":"H153","ts":"2026-10-15T17:45:07Z","by":"head","set":{"kind":"bug","sum":"Planner section not in sync with the project"},"link":["+task:R7.13"]}
+{"v":1,"t":"u","id":"H150","ts":"2026-10-15T17:46:19Z","by":"head","set":{"status":"done"},"note":"fixed in 90ae7df"}
+{"v":1,"t":"e","ts":"2026-10-15T17:47:03Z","src":"hook","sid":"7ae29675","acct":null,"kind":"preference?","sum":"check the things we have for current project in planner if we did them so update the state , if…","len":207,"h":"sha1:296c99628c70","id":"H154"}
+{"v":1,"t":"u","id":"H154","ts":"2026-10-15T17:47:12Z","by":"head","set":{"kind":"ask","sum":"clean the Planner: update feature states, delete unrelated, sync with workflow"},"link":["+task:R7.106"]}
+{"v":1,"t":"e","ts":"2026-10-15T17:48:16Z","src":"hook","sid":"7ae29675","acct":null,"kind":"bug?","sum":"ui issue : the inbox section scroll , will scroll the appbar and sidebar too , its bug","len":87,"h":"sha1:6c4cb6ebbcd3","id":"H155"}
+{"v":1,"t":"u","id":"H152","ts":"2026-10-15T17:54:53Z","by":"head","set":{"status":"done"},"note":"pipeline c8a155d; 14 proposals RP1-RP14 wait for your accept in the Inbox"}
+{"v":1,"t":"u","id":"H155","ts":"2026-10-15T17:54:53Z","by":"head","set":{"status":"done"},"note":"fixed in 70f1dd7 (main scroll contained)"}
+{"v":1,"t":"u","id":"H154","ts":"2026-10-15T17:58:03Z","by":"head","set":{"status":"needs-you"},"note":"planner cleaned (0 orphans, 26 items, docs/reviews/planner-cleanup.md); please check and accept the 10 waiting features"}

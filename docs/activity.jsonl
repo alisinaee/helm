@@ -315,3 +315,184 @@
 {"id":"A315","at":"2026-10-15T16:06:05+03:30","src":"agent","op":"head.set","sum":"H122 set status, note","undo":true}
 {"id":"A316","at":"2026-10-15T16:06:06+03:30","src":"agent","op":"head.bind","sum":"H123 bound task:R7.77","undo":true}
 {"id":"A317","at":"2026-10-15T16:07:02+03:30","src":"agent","op":"head.triage","sum":"H138 triaged as bug","undo":true}
+{"id":"A318","at":"2026-10-15T16:08:18+03:30","src":"agent","op":"head.triage","sum":"H139 triaged as decision","undo":true}
+{"id":"A319","at":"2026-10-15T16:12:31+03:30","src":"agent","op":"task.status","sum":"R7.78 todo->done","undo":true}
+{"id":"A320","at":"2026-10-15T16:12:31+03:30","src":"agent","op":"task.status","sum":"R7.60 todo->done","undo":true}
+{"id":"A321","at":"2026-10-15T16:12:31+03:30","src":"agent","op":"task.status","sum":"R7.79 todo->done","undo":true}
+{"id":"A322","at":"2026-10-15T16:12:36+03:30","src":"agent","op":"head.set","sum":"H120 set status, note","undo":true}
+{"id":"A323","at":"2026-10-15T16:12:36+03:30","src":"agent","op":"head.set","sum":"H134 set status, note","undo":true}
+{"id":"A324","at":"2026-10-15T16:12:36+03:30","src":"agent","op":"head.set","sum":"H135 set status, note","undo":true}
+{"id":"A325","at":"2026-10-15T16:14:07+03:30","src":"agent","op":"head.triage","sum":"H140 triaged as ask","undo":true}
+{"id":"A326","at":"2026-10-15T16:14:24+03:30","src":"agent","op":"task.status","sum":"R7.77 todo->done","undo":true}
+{"id":"A327","at":"2026-10-15T16:16:14+03:30","src":"agent","op":"head.set","sum":"H129 set status, note","undo":true}
+{"id":"A328","at":"2026-10-15T16:16:14+03:30","src":"agent","op":"head.set","sum":"H123 set status, note","undo":true}
+{"id":"A329","at":"2026-10-15T16:16:14+03:30","src":"agent","op":"head.bind","sum":"H124 bound task:R7.82","undo":true}
+{"id":"A330","at":"2026-10-15T16:22:25+03:30","src":"agent","op":"task.status","sum":"R7.80 todo->done","undo":true}
+{"id":"A331","at":"2026-10-15T16:22:26+03:30","src":"agent","op":"head.set","sum":"H136 set status, note","undo":true}
+{"id":"A332","at":"2026-10-15T20:16:40+03:30","src":"agent","op":"head.triage","sum":"H141 triaged as ask","undo":true}
+{"id":"A333","at":"2026-10-15T20:16:57+03:30","src":"agent","op":"head.set","sum":"H132 set status, note","undo":true}
+{"id":"A334","at":"2026-10-15T20:16:57+03:30","src":"agent","op":"head.set","sum":"H133 set status, note","undo":true}
+{"id":"A335","at":"2026-10-15T20:20:14+03:30","src":"agent","op":"head.triage","sum":"H143 triaged as decision","undo":true}
+{"id":"A336","at":"2026-10-15T20:20:52+03:30","src":"agent","op":"task.status","sum":"R7.83 partial->done","undo":true}
+{"id":"A337","at":"2026-10-15T20:21:14+03:30","src":"agent","op":"task.status","sum":"R7.85 partial->done","undo":true}
+{"id":"A338","at":"2026-10-15T20:25:01+03:30","src":"agent","op":"task.status","sum":"R7.84 partial->done","undo":true}
+{"id":"A339","at":"2026-10-15T20:27:08+03:30","src":"agent","op":"head.triage","sum":"H145 triaged as question","undo":true}
+{"id":"A340","at":"2026-10-15T20:27:09+03:30","src":"agent","op":"head.triage","sum":"H146 triaged as decision","undo":true}
+{"id":"A341","at":"2026-10-15T20:27:58+03:30","src":"agent","op":"head.set","sum":"H119 set status, note","undo":true}
+{"id":"A342","at":"2026-10-15T20:27:59+03:30","src":"agent","op":"head.set","sum":"H124 set status, note","undo":true}
+{"id":"A343","at":"2026-10-15T20:27:59+03:30","src":"agent","op":"head.set","sum":"H140 set status, note","undo":true}
+{"id":"A344","at":"2026-10-15T20:47:44+03:30","src":"agent","op":"task.status","sum":"R7.86 partial->done","undo":true}
+{"id":"A345","at":"2026-10-15T20:47:58+03:30","src":"agent","op":"head.triage","sum":"H147 triaged as question","undo":true}
+{"id":"A346","at":"2026-10-15T20:48:21+03:30","src":"agent","op":"task.status","sum":"R7.71 partial->done","undo":true}
+{"id":"A347","at":"2026-10-15T20:48:39+03:30","src":"agent","op":"head.triage","sum":"H148 triaged as ask","undo":true}
+{"id":"A348","at":"2026-10-15T20:48:39+03:30","src":"agent","op":"head.bind","sum":"H147 bound task:R7.89","undo":true}
+{"id":"A349","at":"2026-10-15T20:49:36+03:30","src":"agent","op":"task.status","sum":"R7.81 partial->done","undo":true}
+{"id":"A350","at":"2026-10-15T20:49:36+03:30","src":"agent","op":"head.set","sum":"H138 set status, note","undo":true}
+{"id":"A351","at":"2026-10-15T20:49:37+03:30","src":"agent","op":"head.set","sum":"H141 set status, note","undo":true}
+{"id":"A352","at":"2026-10-15T20:49:37+03:30","src":"agent","op":"head.set","sum":"H144 set status, note","undo":true}
+{"id":"A353","at":"2026-10-15T20:49:37+03:30","src":"agent","op":"head.set","sum":"H142 set status, note","undo":true}
+{"id":"A354","at":"2026-10-15T20:49:52+03:30","src":"agent","op":"task.status","sum":"R7.87 partial->done","undo":true}
+{"id":"A355","at":"2026-10-15T20:49:52+03:30","src":"agent","op":"task.status","sum":"R7.88 partial->done","undo":true}
+{"id":"A356","at":"2026-10-15T20:50:11+03:30","src":"agent","op":"head.triage","sum":"H149 triaged as ask","undo":true}
+{"id":"A357","at":"2026-10-15T20:52:44+03:30","src":"agent","op":"task.status","sum":"R7.89 done->done","undo":false}
+{"id":"A358","at":"2026-10-15T20:52:45+03:30","src":"agent","op":"head.set","sum":"H147 set status, note","undo":true}
+{"id":"A359","at":"2026-10-15T20:52:45+03:30","src":"agent","op":"head.set","sum":"H148 set status, note","undo":true}
+{"id":"A360","at":"2026-10-15T20:54:17+03:30","src":"agent","op":"task.status","sum":"R7.92 partial->done","undo":true}
+{"id":"A361","at":"2026-10-15T20:55:09+03:30","src":"agent","op":"task.status","sum":"R7.72 partial->done","undo":true}
+{"id":"A362","at":"2026-10-15T20:56:16+03:30","src":"agent","op":"task.status","sum":"R7.90 partial->done","undo":true}
+{"id":"A363","at":"2026-10-15T20:56:16+03:30","src":"agent","op":"head.set","sum":"H149 set status, note","undo":true}
+{"id":"A364","at":"2026-10-15T20:58:08+03:30","src":"agent","op":"task.status","sum":"R7.94 partial->done","undo":true}
+{"id":"A365","at":"2026-10-15T20:58:24+03:30","src":"agent","op":"task.status","sum":"R7.93 partial->done","undo":true}
+{"id":"A366","at":"2026-10-15T21:01:00+03:30","src":"agent","op":"head.set","sum":"H145 set status, note","undo":true}
+{"id":"A367","at":"2026-10-15T21:01:00+03:30","src":"agent","op":"head.bind","sum":"H128 bound task:R7.97","undo":true}
+{"id":"A368","at":"2026-10-15T21:02:26+03:30","src":"agent","op":"task.status","sum":"R7.91 partial->done","undo":true}
+{"id":"A369","at":"2026-10-15T21:02:26+03:30","src":"agent","op":"task.status","sum":"R7.95 partial->done","undo":true}
+{"id":"A370","at":"2026-10-15T21:05:40+03:30","src":"agent","op":"task.status","sum":"R7.96 partial->done","undo":true}
+{"id":"A371","at":"2026-10-15T21:07:36+03:30","src":"agent","op":"task.status","sum":"R7.97 partial->done","undo":true}
+{"id":"A372","at":"2026-10-15T21:08:41+03:30","src":"agent","op":"head.triage","sum":"H150 triaged as bug","undo":true}
+{"id":"A373","at":"2026-10-15T21:09:48+03:30","src":"agent","op":"task.status","sum":"R7.99 partial->done","undo":true}
+{"id":"A374","at":"2026-10-15T21:10:36+03:30","src":"agent","op":"head.triage","sum":"H151 triaged as decision","undo":true}
+{"id":"A375","at":"2026-10-15T21:11:08+03:30","src":"agent","op":"head.set","sum":"H128 set status, note","undo":true}
+{"id":"A376","at":"2026-10-15T21:12:44+03:30","src":"agent","op":"head.triage","sum":"H152 triaged as rule","undo":true}
+{"id":"A377","at":"2026-10-15T21:13:16+03:30","src":"agent","op":"task.status","sum":"R7.101 partial->done","undo":true}
+{"id":"A378","at":"2026-10-15T21:15:06+03:30","src":"agent","op":"task.status","sum":"R7.104 partial->done","undo":true}
+{"id":"A379","at":"2026-10-15T21:15:07+03:30","src":"agent","op":"head.triage","sum":"H153 triaged as bug","undo":true}
+{"id":"A380","at":"2026-10-15T21:16:18+03:30","src":"agent","op":"task.status","sum":"R7.100 partial->done","undo":true}
+{"id":"A381","at":"2026-10-15T21:16:19+03:30","src":"agent","op":"head.set","sum":"H150 set status, note","undo":true}
+{"id":"A382","at":"2026-10-15T21:16:36+03:30","src":"agent","op":"task.status","sum":"R7.102 partial->done","undo":true}
+{"id":"A383","at":"2026-10-15T21:17:12+03:30","src":"agent","op":"head.triage","sum":"H154 triaged as ask","undo":true}
+{"id":"A384","at":"2026-10-15T21:19:56+03:30","src":"agent","op":"task.status","sum":"R7.21 todo->done","undo":true}
+{"id":"A385","at":"2026-10-15T21:19:56+03:30","src":"agent","op":"task.status","sum":"R7.55 todo->done","undo":true}
+{"id":"A386","at":"2026-10-15T21:19:56+03:30","src":"agent","op":"task.status","sum":"R7.76 todo->done","undo":true}
+{"id":"A387","at":"2026-10-15T21:19:56+03:30","src":"agent","op":"task.status","sum":"R7.29 todo->partial","undo":true}
+{"id":"A388","at":"2026-10-15T21:19:56+03:30","src":"agent","op":"task.status","sum":"R7.82 todo->partial","undo":true}
+{"id":"A389","at":"2026-10-15T21:19:56+03:30","src":"agent","op":"task.status","sum":"R7.22 todo->partial","undo":true}
+{"id":"A390","at":"2026-10-15T21:19:56+03:30","src":"agent","op":"task.status","sum":"R7.24 todo->partial","undo":true}
+{"id":"A391","at":"2026-10-15T21:19:56+03:30","src":"agent","op":"task.status","sum":"R7.73 todo->partial","undo":true}
+{"id":"A392","at":"2026-10-15T21:19:56+03:30","src":"agent","op":"feature.add","sum":"F26 added: Core reliability v3: store, supervisor, sync","undo":true}
+{"id":"A393","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F1 to R7.38","undo":true}
+{"id":"A394","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F1 to R7.39","undo":true}
+{"id":"A395","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F1 to R7.41","undo":true}
+{"id":"A396","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F1 to R7.60","undo":true}
+{"id":"A397","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F1 to R7.95","undo":true}
+{"id":"A398","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F2 to R6.24","undo":true}
+{"id":"A399","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F2 to R6.25","undo":true}
+{"id":"A400","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F2 to R6.26","undo":true}
+{"id":"A401","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F2 to R6.27","undo":true}
+{"id":"A402","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F2 to R6.28","undo":true}
+{"id":"A403","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F2 to R6.29","undo":true}
+{"id":"A404","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F2 to R6.30","undo":true}
+{"id":"A405","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F2 to R7.106","undo":true}
+{"id":"A406","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F6 to R7.78","undo":true}
+{"id":"A407","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F6 to R7.97","undo":true}
+{"id":"A408","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F6 to R7.101","undo":true}
+{"id":"A409","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F6 to R7.104","undo":true}
+{"id":"A410","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F6 to R7.105","undo":true}
+{"id":"A411","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F8 to R7.81","undo":true}
+{"id":"A412","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F8 to R7.90","undo":true}
+{"id":"A413","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F10 to R7.63","undo":true}
+{"id":"A414","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F10 to R7.76","undo":true}
+{"id":"A415","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F10 to R7.77","undo":true}
+{"id":"A416","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F10 to R7.100","undo":true}
+{"id":"A417","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F12 to R7.103","undo":true}
+{"id":"A418","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F13 to R6.31","undo":true}
+{"id":"A419","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F13 to R6.32","undo":true}
+{"id":"A420","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F13 to R7.62","undo":true}
+{"id":"A421","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F13 to R7.74","undo":true}
+{"id":"A422","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F19 to R7.42","undo":true}
+{"id":"A423","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F19 to R7.47","undo":true}
+{"id":"A424","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F19 to R7.54","undo":true}
+{"id":"A425","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F19 to R7.56","undo":true}
+{"id":"A426","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F19 to R7.59","undo":true}
+{"id":"A427","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F19 to R7.65","undo":true}
+{"id":"A428","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F22 to R7.35","undo":true}
+{"id":"A429","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F22 to R7.48","undo":true}
+{"id":"A430","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F22 to R7.53","undo":true}
+{"id":"A431","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F22 to R7.55","undo":true}
+{"id":"A432","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F22 to R7.79","undo":true}
+{"id":"A433","at":"2026-10-15T21:20:05+03:30","src":"agent","op":"feature.link","sum":"link F22 to R7.98","undo":true}
+{"id":"A434","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F24 to R7.29","undo":true}
+{"id":"A435","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F24 to R7.75","undo":true}
+{"id":"A436","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.32","undo":true}
+{"id":"A437","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.34","undo":true}
+{"id":"A438","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.36","undo":true}
+{"id":"A439","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.37","undo":true}
+{"id":"A440","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.43","undo":true}
+{"id":"A441","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.44","undo":true}
+{"id":"A442","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.46","undo":true}
+{"id":"A443","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.49","undo":true}
+{"id":"A444","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.64","undo":true}
+{"id":"A445","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.66","undo":true}
+{"id":"A446","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.67","undo":true}
+{"id":"A447","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.68","undo":true}
+{"id":"A448","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.69","undo":true}
+{"id":"A449","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.70","undo":true}
+{"id":"A450","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.71","undo":true}
+{"id":"A451","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.72","undo":true}
+{"id":"A452","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.73","undo":true}
+{"id":"A453","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.80","undo":true}
+{"id":"A454","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.81","undo":true}
+{"id":"A455","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F25 to R7.89","undo":true}
+{"id":"A456","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.33","undo":true}
+{"id":"A457","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.40","undo":true}
+{"id":"A458","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.45","undo":true}
+{"id":"A459","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.50","undo":true}
+{"id":"A460","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.51","undo":true}
+{"id":"A461","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.52","undo":true}
+{"id":"A462","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.57","undo":true}
+{"id":"A463","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.58","undo":true}
+{"id":"A464","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.61","undo":true}
+{"id":"A465","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.82","undo":true}
+{"id":"A466","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.83","undo":true}
+{"id":"A467","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.84","undo":true}
+{"id":"A468","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.85","undo":true}
+{"id":"A469","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.86","undo":true}
+{"id":"A470","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.87","undo":true}
+{"id":"A471","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.88","undo":true}
+{"id":"A472","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.91","undo":true}
+{"id":"A473","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.92","undo":true}
+{"id":"A474","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.93","undo":true}
+{"id":"A475","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.94","undo":true}
+{"id":"A476","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.96","undo":true}
+{"id":"A477","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.99","undo":true}
+{"id":"A478","at":"2026-10-15T21:20:06+03:30","src":"agent","op":"feature.link","sum":"link F26 to R7.102","undo":true}
+{"id":"A479","at":"2026-10-15T21:24:17+03:30","src":"agent","op":"task.status","sum":"R7.103 partial->done","undo":true}
+{"id":"A480","at":"2026-10-15T21:24:17+03:30","src":"agent","op":"task.status","sum":"R7.105 partial->done","undo":true}
+{"id":"A481","at":"2026-10-15T21:24:18+03:30","src":"agent","op":"task.status","sum":"R7.98 done->done","undo":false}
+{"id":"A482","at":"2026-10-15T21:24:45+03:30","src":"agent","op":"rules.propose","sum":"RP1 proposed: Head never idles: start ready tasks now and ac","undo":false}
+{"id":"A483","at":"2026-10-15T21:24:45+03:30","src":"agent","op":"rules.propose","sum":"RP2 proposed: Parallel workers only on disjoint file lists; ","undo":false}
+{"id":"A484","at":"2026-10-15T21:24:46+03:30","src":"agent","op":"rules.propose","sum":"RP3 proposed: Keep replies short and spartan; the person has","undo":false}
+{"id":"A485","at":"2026-10-15T21:24:46+03:30","src":"agent","op":"rules.propose","sum":"RP4 proposed: Start a fresh session at about 70% context; /h","undo":false}
+{"id":"A486","at":"2026-10-15T21:24:46+03:30","src":"agent","op":"rules.propose","sum":"RP5 proposed: Show the real model and effort of every job on","undo":false}
+{"id":"A487","at":"2026-10-15T21:24:46+03:30","src":"agent","op":"rules.propose","sum":"RP6 proposed: Register every job on the dashboard, including","undo":false}
+{"id":"A488","at":"2026-10-15T21:24:46+03:30","src":"agent","op":"rules.propose","sum":"RP7 proposed: Workers never run usage sync, read the keychai","undo":false}
+{"id":"A489","at":"2026-10-15T21:24:46+03:30","src":"agent","op":"rules.propose","sum":"RP8 proposed: UI rule 0: numbers and actions in fixed grid c","undo":false}
+{"id":"A490","at":"2026-10-15T21:24:46+03:30","src":"agent","op":"rules.propose","sum":"RP9 proposed: Head shows every captured item; nothing is hid","undo":false}
+{"id":"A491","at":"2026-10-15T21:24:46+03:30","src":"agent","op":"rules.propose","sum":"RP10 proposed: Every message from the person is captured in ","undo":false}
+{"id":"A492","at":"2026-10-15T21:24:46+03:30","src":"agent","op":"rules.propose","sum":"RP11 proposed: No secrets in Head, the ledger or logs.","undo":false}
+{"id":"A493","at":"2026-10-15T21:24:46+03:30","src":"agent","op":"rules.propose","sum":"RP12 proposed: Work items are human cards (plain words, outc","undo":false}
+{"id":"A494","at":"2026-10-15T21:24:46+03:30","src":"agent","op":"rules.propose","sum":"RP13 proposed: Usage stops: Claude workers stop at 80% of th","undo":false}
+{"id":"A495","at":"2026-10-15T21:24:52+03:30","src":"agent","op":"rules.propose","sum":"RP14 proposed: Model roles: Haiku edits; Opus or Sonnet low/","undo":false}
+{"id":"A496","at":"2026-10-15T21:24:53+03:30","src":"agent","op":"head.set","sum":"H152 set status, note","undo":true}
+{"id":"A497","at":"2026-10-15T21:24:53+03:30","src":"agent","op":"head.set","sum":"H155 set status, note","undo":true}
+{"id":"A498","at":"2026-10-15T21:28:03+03:30","src":"agent","op":"head.set","sum":"H154 set status, note","undo":true}

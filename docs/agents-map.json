@@ -48,5 +48,30 @@
     "task": "R7.101",
     "title": "opus: R7.101 Opus work vs agent task model",
     "model": "opus"
+  },
+  "a8ae5ca13cad06b60": {
+    "task": "R7.102",
+    "title": "haiku: R7.102 fix supervisor review findings",
+    "model": "haiku"
+  },
+  "a34ee8794a7f9d70c": {
+    "task": "R7.103",
+    "title": "haiku: R7.103 rules pipeline from Head",
+    "model": "haiku"
+  },
+  "a0da5c1f8f13b4972": {
+    "task": "R7.104",
+    "title": "haiku: R7.104 work model M2 roll-up",
+    "model": "haiku"
+  },
+  "a2e4694da4134513c": {
+    "task": "R7.105",
+    "title": "haiku: R7.105 work model M1 store v4",
+    "model": "haiku"
+  },
+  "ae5e1ae3d7e5ce69f": {
+    "task": "R7.106",
+    "title": "haiku: R7.106 Planner clean-up",
+    "model": "haiku"
   }
 }

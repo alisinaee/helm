@@ -249,6 +249,16 @@
       "phase": "R7",
       "hold": false,
       "accepted": null
+    },
+    {
+      "id": "F26",
+      "title": "Core reliability v3: store, supervisor, sync",
+      "acc": "One database, nothing lost, work continues, every screen shows the same live state",
+      "prio": 2,
+      "parent": null,
+      "phase": null,
+      "hold": false,
+      "accepted": null
     }
   ],
   "updated": "2026-10-15",

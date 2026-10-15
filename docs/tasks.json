@@ -816,7 +816,10 @@
       "needsUser": false,
       "note": "WP50 | done 2026-10-14, 102k tokens commit 19fb451, 31 tests",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
     },
     {
       "id": "R6.25",
@@ -829,7 +832,10 @@
       "needsUser": false,
       "note": "WP51 | c3070bb, 1fcf076 plan export emits F lines; round-trip tests 2a46b26",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
     },
     {
       "id": "R6.26",
@@ -842,7 +848,10 @@
       "needsUser": false,
       "note": "WP52 | done 2026-10-14 commit 2f2326a (WP52+54 together), 216k tokens, 1398 tests; snapshot features ~15.8 KB for 60 rows (spec said 6 KB): decide to drop acc/tasks from rows; feature accept needs --yes if not done",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
     },
     {
       "id": "R6.27",
@@ -855,7 +864,10 @@
       "needsUser": false,
       "note": "WP53 | 42b408b + 5a5b9ab planner fixes (?f= opens feature, global Pick a project, phone filter/FAB, snapshot ~14 KB for 60 features)",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
     },
     {
       "id": "R6.28",
@@ -868,7 +880,10 @@
       "needsUser": false,
       "note": "WP54 | done 2026-10-14 commit 2f2326a (WP52+54 together), 216k tokens, 1398 tests; snapshot features ~15.8 KB for 60 rows (spec said 6 KB): decide to drop acc/tasks from rows; feature accept needs --yes if not done",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
     },
     {
       "id": "R6.29",
@@ -881,7 +896,10 @@
       "needsUser": false,
       "note": "WP55 | commit fc722cf: Planner route, nav, drawer feature chip + link select, ui_smoke includes planner; gaps: ?f= does not open the feature (planner.js), global scope copy 'Planner belongs to one project'",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
     },
     {
       "id": "R6.30",
@@ -894,7 +912,10 @@
       "needsUser": false,
       "note": "WP56 | commit 99ed112: 22 features seeded, 0 uncovered; sync keeps feats (split-net 73e5bf9); F11b folded into F11",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
     },
     {
       "id": "R6.31",
@@ -907,7 +928,10 @@
       "needsUser": false,
       "note": "WP70 | done, 49k tokens; own SVG engine, nothing vendored",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ]
     },
     {
       "id": "R6.32",
@@ -920,7 +944,10 @@
       "needsUser": false,
       "note": "WP71 | done 2026-10-14 commit a6d4bf0 (graph model+layout, 18 tests, suite 1416 OK)",
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ]
     },
     {
       "id": "R6.33",
@@ -1327,40 +1354,49 @@
       ],
       "at": {
         "partial": "2026-10-15T15:45:28+03:30"
-      }
+      },
+      "refs": [
+        "commit:e6cb5c0f3266989eabfa21b98f437ec97aac6256"
+      ]
     },
     {
       "id": "R7.21",
       "phase": "R7",
       "title": "Finish plan: remaining work to 1.0.0 in waves (Opus advice)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 60,
       "thinking": "medium",
       "model": "opus",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "person: go full power",
+      "note": "planner clean-up: WAVE-PLAN committed 02b8a1b (R7.21)",
       "feats": [
         "F22"
-      ]
+      ],
+      "at": {
+        "done": "2026-10-15T21:19:56+03:30"
+      }
     },
     {
       "id": "R7.22",
       "phase": "R7",
       "title": "Backlog: status, section, CLI, board column (ideas not yet committed)",
-      "status": "todo",
+      "status": "partial",
       "tokensK": 250,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "person request 2026-10-15; spec docs/BACKLOG-SPEC.md",
+      "note": "backlog steps 1-3 committed (e107bdd, 09160f5, 0dfb2f9); board column left",
       "feats": [
         "F5",
         "F6"
-      ]
+      ],
+      "at": {
+        "partial": "2026-10-15T21:19:56+03:30"
+      }
     },
     {
       "id": "R7.23",
@@ -1385,21 +1421,24 @@
       "id": "R7.24",
       "phase": "R7",
       "title": "Work section v2: complete the board like Trello (cards, quick add, drag, filters, swimlanes)",
-      "status": "todo",
+      "status": "partial",
       "tokensK": 400,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "person request 2026-10-15; spec docs/WORK-V2-SPEC.md",
+      "note": "work v2 ops committed f6e0128; swimlanes, filters, quick add UI left",
       "feats": [
         "F6",
         "F5"
       ],
       "refs": [
         "commit:f6e0128833cd17bae55cae6f27677e88665e5433"
-      ]
+      ],
+      "at": {
+        "partial": "2026-10-15T21:19:56+03:30"
+      }
     },
     {
       "id": "R7.25",
@@ -1482,14 +1521,20 @@
       "id": "R7.29",
       "phase": "R7",
       "title": "Git section: status, history, branches, commit/push policy, roadmap git commands",
-      "status": "todo",
+      "status": "partial",
       "tokensK": 600,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "person request 2026-10-15; spec docs/GIT-SPEC.md"
+      "note": "git read, write ops, GUI and policy committed (f9e77ff, b345cde, c56daa5, 294f9d1); commit policy left",
+      "at": {
+        "partial": "2026-10-15T21:19:56+03:30"
+      },
+      "feats": [
+        "F24"
+      ]
     },
     {
       "id": "R7.31",
@@ -1539,7 +1584,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:10:15+03:30"
-      }
+      },
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.33",
@@ -1554,7 +1602,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:25:38+03:30"
-      }
+      },
+      "feats": [
+        "F26"
+      ]
     },
     {
       "id": "R7.34",
@@ -1569,7 +1620,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:10:15+03:30"
-      }
+      },
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.35",
@@ -1584,7 +1638,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:10:15+03:30"
-      }
+      },
+      "feats": [
+        "F22"
+      ]
     },
     {
       "id": "R7.36",
@@ -1599,7 +1656,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:25:38+03:30"
-      }
+      },
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.37",
@@ -1614,7 +1674,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:16:17+03:30"
-      }
+      },
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.38",
@@ -1629,7 +1692,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:10:15+03:30"
-      }
+      },
+      "feats": [
+        "F1"
+      ]
     },
     {
       "id": "R7.39",
@@ -1644,7 +1710,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:10:15+03:30"
-      }
+      },
+      "feats": [
+        "F1"
+      ]
     },
     {
       "id": "R7.40",
@@ -1659,7 +1728,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:18:13+03:30"
-      }
+      },
+      "feats": [
+        "F26"
+      ]
     },
     {
       "id": "R7.41",
@@ -1674,7 +1746,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:23:22+03:30"
-      }
+      },
+      "feats": [
+        "F1"
+      ]
     },
     {
       "id": "R7.42",
@@ -1689,7 +1764,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:15:49+03:30"
-      }
+      },
+      "feats": [
+        "F19"
+      ]
     },
     {
       "id": "R7.43",
@@ -1704,7 +1782,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:23:22+03:30"
-      }
+      },
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.44",
@@ -1719,7 +1800,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:28:36+03:30"
-      }
+      },
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.45",
@@ -1734,7 +1818,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:31:40+03:30"
-      }
+      },
+      "feats": [
+        "F26"
+      ]
     },
     {
       "id": "R7.46",
@@ -1749,7 +1836,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:25:38+03:30"
-      }
+      },
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.47",
@@ -1764,7 +1854,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T15:18:17+03:30"
-      }
+      },
+      "feats": [
+        "F19"
+      ]
     },
     {
       "id": "R7.48",
@@ -1779,7 +1872,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T15:18:17+03:30"
-      }
+      },
+      "feats": [
+        "F22"
+      ]
     },
     {
       "id": "R7.49",
@@ -1794,7 +1890,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:31:23+03:30"
-      }
+      },
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.50",
@@ -1809,7 +1908,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:39:29+03:30"
-      }
+      },
+      "feats": [
+        "F26"
+      ]
     },
     {
       "id": "R7.51",
@@ -1824,7 +1926,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:39:29+03:30"
-      }
+      },
+      "feats": [
+        "F26"
+      ]
     },
     {
       "id": "R7.52",
@@ -1839,7 +1944,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T14:39:29+03:30"
-      }
+      },
+      "feats": [
+        "F26"
+      ]
     },
     {
       "id": "R7.53",
@@ -1854,7 +1962,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T15:32:51+03:30"
-      }
+      },
+      "feats": [
+        "F22"
+      ]
     },
     {
       "id": "R7.54",
@@ -1869,19 +1980,29 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T15:25:56+03:30"
-      }
+      },
+      "feats": [
+        "F19"
+      ]
     },
     {
       "id": "R7.55",
       "phase": "R7",
       "title": "agy audit wave 2: new routes security, API.md drift, README CLI drift",
-      "status": "todo",
+      "status": "done",
       "tokensK": 0,
       "thinking": "high",
       "model": "agy",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "note": "agy audits: routes security, API/README drift in 6ceab3c",
+      "at": {
+        "done": "2026-10-15T21:19:56+03:30"
+      },
+      "feats": [
+        "F22"
+      ]
     },
     {
       "id": "R7.56",
@@ -1896,7 +2017,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T15:41:30+03:30"
-      }
+      },
+      "feats": [
+        "F19"
+      ]
     },
     {
       "id": "R7.57",
@@ -1911,7 +2035,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T15:30:20+03:30"
-      }
+      },
+      "feats": [
+        "F26"
+      ]
     },
     {
       "id": "R7.58",
@@ -1926,7 +2053,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T15:32:16+03:30"
-      }
+      },
+      "feats": [
+        "F26"
+      ]
     },
     {
       "id": "R7.59",
@@ -1938,19 +2068,31 @@
       "model": "cursor",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "feats": [
+        "F19"
+      ]
     },
     {
       "id": "R7.60",
       "phase": "R7",
       "title": "Agents: keep all job history (no auto-prune); person selects and removes history rows (H120)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 40,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "refs": [
+        "commit:a46cc9c82d3918ff247ecfb50153fa5da70158f3"
+      ],
+      "at": {
+        "done": "2026-10-15T16:12:31+03:30"
+      },
+      "feats": [
+        "F1"
+      ]
     },
     {
       "id": "R7.61",
@@ -1965,7 +2107,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T15:33:39+03:30"
-      }
+      },
+      "feats": [
+        "F26"
+      ]
     },
     {
       "id": "R7.62",
@@ -1984,6 +2129,9 @@
       },
       "refs": [
         "commit:ad044549b996e11d055df7c646fd20a3b7731a08"
+      ],
+      "feats": [
+        "F13"
       ]
     },
     {
@@ -2002,6 +2150,9 @@
       },
       "refs": [
         "commit:4acc30a6779fb16e0be741a5feba8f45c920288e"
+      ],
+      "feats": [
+        "F10"
       ]
     },
     {
@@ -2017,7 +2168,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T15:42:26+03:30"
-      }
+      },
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.65",
@@ -2036,6 +2190,9 @@
       },
       "refs": [
         "commit:3ea1f57d4993fc3fc68cea39e4f5dea3ea521deb"
+      ],
+      "feats": [
+        "F19"
       ]
     },
     {
@@ -2054,6 +2211,9 @@
       },
       "refs": [
         "commit:dcaffd8803fcc5d92b4fcd846fd8196a79bcf7a3"
+      ],
+      "feats": [
+        "F25"
       ]
     },
     {
@@ -2073,6 +2233,9 @@
       },
       "refs": [
         "commit:daa315ed10b4385b9bbf98ad55d1f6c02ad30d7e"
+      ],
+      "feats": [
+        "F25"
       ]
     },
     {
@@ -2088,7 +2251,10 @@
       "checkK": 0,
       "at": {
         "done": "2026-10-15T16:02:57+03:30"
-      }
+      },
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.70",
@@ -2106,43 +2272,71 @@
       },
       "refs": [
         "commit:27695618e1bec63779852eddf3ba00246207b725"
+      ],
+      "feats": [
+        "F25"
       ]
     },
     {
       "id": "R7.71",
       "phase": "R7",
       "title": "Head v2 A5: Agent jobs always bound to a task",
-      "status": "todo",
+      "status": "done",
       "tokensK": 15,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:48:21+03:30"
+      },
+      "refs": [
+        "commit:a21a08202951841c3f9b5d10385b450c37f73dba"
+      ],
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.72",
       "phase": "R7",
       "title": "Head v2 A6: compact output contract (<=15 lines)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 20,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:55:09+03:30"
+      },
+      "refs": [
+        "commit:9fe89ce1cb1442a77b6c563550c9e919dd2756ff"
+      ],
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.73",
       "phase": "R7",
       "title": "Head v2 B/C: brief, verify, head next/done, gate prints commands, new skill",
-      "status": "todo",
+      "status": "partial",
       "tokensK": 60,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "note": "autopilot brief/pause/resume committed 41ece44; verify, next/done, skill left",
+      "at": {
+        "partial": "2026-10-15T21:19:56+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.66",
@@ -2158,7 +2352,10 @@
       "at": {
         "partial": "2026-10-15T15:45:28+03:30",
         "done": "2026-10-15T15:53:12+03:30"
-      }
+      },
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.74",
@@ -2176,6 +2373,9 @@
       },
       "refs": [
         "commit:ad044549b996e11d055df7c646fd20a3b7731a08"
+      ],
+      "feats": [
+        "F13"
       ]
     },
     {
@@ -2194,79 +2394,654 @@
       },
       "refs": [
         "commit:c5446011157a345ff0ebf52721931800a5415a5c"
+      ],
+      "feats": [
+        "F24"
       ]
     },
     {
       "id": "R7.76",
       "phase": "R7",
       "title": "usage sync: clear error when the keychain has no claude.ai login (desktop app); point to usage push",
-      "status": "todo",
+      "status": "done",
       "tokensK": 10,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "note": "no keychain login = unavailable message, commit 90ae7df (R7.100 covers)",
+      "at": {
+        "done": "2026-10-15T21:19:56+03:30"
+      },
+      "feats": [
+        "F10"
+      ]
     },
     {
       "id": "R7.77",
       "phase": "R7",
       "title": "Usage band: automatic live usage source (no manual entry), one stop value everywhere (top bar says 95, limit is 85) (H132)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 40,
       "thinking": "medium",
       "model": "opus",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "refs": [
+        "commit:a46cc9c82d3918ff247ecfb50153fa5da70158f3",
+        "commit:6144de0ae396098287a3caaed012b86455220280"
+      ],
+      "at": {
+        "done": "2026-10-15T16:14:24+03:30"
+      },
+      "feats": [
+        "F10"
+      ]
     },
     {
       "id": "R7.78",
       "phase": "R7",
       "title": "Work Doing = tasks with a live job; job end moves task back (done candidate or todo) automatically (H134)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 30,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "refs": [
+        "commit:a46cc9c82d3918ff247ecfb50153fa5da70158f3"
+      ],
+      "at": {
+        "done": "2026-10-15T16:12:31+03:30"
+      },
+      "feats": [
+        "F6"
+      ]
     },
     {
       "id": "R7.79",
       "phase": "R7",
       "title": "Architecture diagram (UI + core service, data flow) as a page + list of core issues to fix (H135)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 30,
       "thinking": "medium",
       "model": "opus",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T16:12:31+03:30"
+      },
+      "refs": [
+        "commit:d900903d9d8b88132b7f80aa6eaf7fc9e30fd7df"
+      ],
+      "feats": [
+        "F22"
+      ]
     },
     {
       "id": "R7.80",
       "phase": "R7",
       "title": "Head list: update rows in place (keyed), no full list replace, render < 50 ms; wheel never stalls (H136)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 30,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T16:22:25+03:30"
+      },
+      "refs": [
+        "commit:3cb53d1036fe88d1f5821e64036331c25e2bc356"
+      ],
+      "feats": [
+        "F25"
+      ]
     },
     {
       "id": "R7.81",
       "phase": "R7",
       "title": "Head asks that need the person appear in the Inbox (needs-you asks as inbox items with answer actions) (H138)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 20,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:49:36+03:30"
+      },
+      "refs": [
+        "commit:4d3820c37f0dca1456f882aef30b5ebaa6e4c7a0"
+      ],
+      "feats": [
+        "F8",
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.82",
+      "phase": "R7",
+      "title": "Head v3: reliable core service (watcher, auto-continue, no duplicates, no conflicts, priorities, best sync, light) — Opus + Cursor grok xhigh joint research and plan (H140, top priority)",
+      "status": "partial",
+      "tokensK": 200,
+      "thinking": "high",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:30248571f34d1a7c91a7c715a338fff791458a08",
+        "commit:e6cb5c0f3266989eabfa21b98f437ec97aac6256",
+        "commit:cc9afbb6a9199a3b1342a1642223ebaa23570082"
+      ],
+      "note": "v3 waves W0-W3, S1 committed; watcher, auto-continue, SSE left",
+      "at": {
+        "partial": "2026-10-15T21:19:56+03:30"
+      },
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.83",
+      "phase": "R7",
+      "title": "v3 W0.H1: snapshot dup as {id, score} so Merge shows",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:20:52+03:30"
+      },
+      "refs": [
+        "commit:8a2a4fb220ef59de47d3fa729dbae71c06fa3461"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.84",
+      "phase": "R7",
+      "title": "v3 W0.H2: job done -> task verify; commit bind -> task done",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:25:01+03:30"
+      },
+      "refs": [
+        "commit:cb5b2e60050afd1fa740a0c7e81cc1223e5780ea"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.85",
+      "phase": "R7",
+      "title": "v3 W0.H3: loader revision stamps head-text, spool, gate, undo",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:21:14+03:30"
+      },
+      "refs": [
+        "commit:a73c922bd9c53626a351a534dfb633403340594d"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.86",
+      "phase": "R7",
+      "title": "v3 Wave 1 P1: roadmap/store/db.py (WAL, schema, txn) + migrate.py (JSON -> db, idempotent)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:47:44+03:30"
+      },
+      "refs": [
+        "commit:4182de84cf7c18d212f717074d54b8308d87af25"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.87",
+      "phase": "R7",
+      "title": "v3 Wave 1 P2: roadmap/store/events.py (append in txn, rev, since-query)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:49:52+03:30"
+      },
+      "refs": [
+        "commit:9319061799f2c03fcb1b6e84ba632b692b16dc43"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.88",
+      "phase": "R7",
+      "title": "v3 Wave 1 P3: roadmap/store/export.py deterministic JSON export",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:49:52+03:30"
+      },
+      "refs": [
+        "commit:9319061799f2c03fcb1b6e84ba632b692b16dc43"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.89",
+      "phase": "R7",
+      "title": "Head: SendMessage follow-ups register as jobs (no hidden work); rule in skill",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:13c828c26083c91cedea4cf121b9c4a87e1baa9b"
+      ],
+      "at": {
+        "done": "2026-10-15T20:52:44+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.90",
+      "phase": "R7",
+      "title": "Agent questions: 2-6 selectable options + always a free-text answer, in Inbox and Head (H149)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:56:16+03:30"
+      },
+      "refs": [
+        "commit:fac2f0cdd4a79771872a215d9b38883b252cef88"
+      ],
+      "feats": [
+        "F8"
+      ]
+    },
+    {
+      "id": "R7.91",
+      "phase": "R7",
+      "title": "v3 Wave 2 W1: jobs on the db behind a backend flag (claim, single-flight, files required)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true,
+      "at": {
+        "done": "2026-10-15T21:02:26+03:30"
+      },
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.92",
+      "phase": "R7",
+      "title": "v3 Wave 2 W3: head on the db behind a backend flag (spool table, ask fingerprint: same text twice -> one Hn)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:54:17+03:30"
+      },
+      "refs": [
+        "commit:3908441bac023d457b36f83500ba1863e1f93418"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.93",
+      "phase": "R7",
+      "title": "v3 Wave 2 W2: commands.run in one db txn with activity + undo (behind switch)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:58:24+03:30"
+      },
+      "refs": [
+        "commit:5a156f462528176cf1c9f80d035fd3c036874b2f"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.94",
+      "phase": "R7",
+      "title": "v3 Wave 2 W4: snapshot built from the db in one read txn, integer rev (behind switch)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:58:08+03:30"
+      },
+      "refs": [
+        "commit:dbbf1cf5ab286aff10347feb2387d5b58210371e"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.95",
+      "phase": "R7",
+      "title": "job list compact: running first, then newest; never hide running jobs",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:02:26+03:30"
+      },
+      "refs": [
+        "commit:7dacc79b59eab8b8cdcd4abc034b6c24b329d562"
+      ],
+      "feats": [
+        "F1"
+      ]
+    },
+    {
+      "id": "R7.96",
+      "phase": "R7",
+      "title": "v3: one db file and one connection helper for tasks, jobs, head (jobs_db, head_db, loader disagree on files); Opus review",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:05:40+03:30"
+      },
+      "refs": [
+        "commit:4028be512e885691ae2964dc2185e2748a87937d"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.97",
+      "phase": "R7",
+      "title": "Work board: issue cards in Work, Kind filter, blocker badge; remove the Issues section from nav (H128, WORK-UNIFIED-SPEC)",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:07:36+03:30"
+      },
+      "refs": [
+        "commit:d00b7ef5f09f24ddc1133cddff33fd12995fcb61"
+      ],
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "R7.98",
+      "phase": "R7",
+      "title": "Full suite green again: 10 failures + 5 setUpClass errors after today commits",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:8fbdb1879c1cb7f683a24d17aef547a30820f428"
+      ],
+      "feats": [
+        "F22"
+      ],
+      "at": {
+        "done": "2026-10-15T21:24:17+03:30"
+      }
+    },
+    {
+      "id": "R7.99",
+      "phase": "R7",
+      "title": "v3 Wave 3 S1: supervisor + leases (reap, expiry, fold, queue order, retry/backoff, single runner); Opus review",
+      "status": "done",
+      "tokensK": 80,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:09:48+03:30"
+      },
+      "refs": [
+        "commit:a59d9f97fbce6faf1141a6f320986be4ff17fb36"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.100",
+      "phase": "R7",
+      "title": "Usage Sync button: no false \"Sync failed\" when this Mac has no keychain login; say the head updates usage, and ask the head for a fresh reading (H150)",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:16:18+03:30"
+      },
+      "refs": [
+        "commit:90ae7df36de2efbfc2a723b1b0e3f874fc8b3b05"
+      ],
+      "feats": [
+        "F10"
+      ]
+    },
+    {
+      "id": "R7.101",
+      "phase": "R7",
+      "title": "Model split: human Work items (Jira-like) vs agent tasks (packages/jobs); one Work item -> many agent tasks; general rule across the product (H151)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:13:16+03:30"
+      },
+      "refs": [
+        "commit:f99f0d315d19c6155ef12f57d07df900e44d0656"
+      ],
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "R7.102",
+      "phase": "R7",
+      "title": "Supervisor: fix Opus review findings (fold after retry, retry only lost/unavailable, leases in one txn and released on finish, dup launches, bad heartbeat, backoff 2/10 min)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:16:36+03:30"
+      },
+      "refs": [
+        "commit:7cd98b1b10fc27e54cf2b8d8890876a9225c3c7c"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.103",
+      "phase": "R7",
+      "title": "Rules pipeline: rule-kind Head items -> head proposes rule (merged/deduped) -> Inbox one-click Accept/Edit/Reject -> Rules section; Head row shows rule state (H152)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F12"
+      ],
+      "at": {
+        "done": "2026-10-15T21:24:17+03:30"
+      },
+      "refs": [
+        "commit:6888288bb6165e5b111ad3a75c8b056f12574237",
+        "commit:b469dbdbdd5eac31f3486466234af532de08e586"
+      ]
+    },
+    {
+      "id": "R7.104",
+      "phase": "R7",
+      "title": "Work model M2: pure Work item status roll-up (core/workstatus.py)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true,
+      "at": {
+        "done": "2026-10-15T21:15:06+03:30"
+      },
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "R7.105",
+      "phase": "R7",
+      "title": "Work model M1: store v4 work_items + agent_tasks with work_id",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true,
+      "feats": [
+        "F6"
+      ],
+      "at": {
+        "done": "2026-10-15T21:24:17+03:30"
+      }
+    },
+    {
+      "id": "R7.106",
+      "phase": "R7",
+      "title": "Planner clean-up: features state from real work, remove unrelated, link orphan tasks, sync with workflow (H154)",
+      "status": "partial",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ],
+      "verify": true
     }
   ],
   "schemaVersion": 1

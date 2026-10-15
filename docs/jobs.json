@@ -4556,9 +4556,10 @@
       "task": "R3.7",
       "effort": "high",
       "engine_model": "grok-4.7-xhigh",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-15T15:41:53+03:30",
-      "ended": null
+      "ended": "2026-10-15T16:29:49+03:30",
+      "tokensK": 0.0
     },
     {
       "id": "j842",
@@ -4692,6 +4693,418 @@
       "started": "2026-10-15T16:04:41+03:30",
       "ended": "2026-10-15T16:07:03+03:30",
       "reason": "stopped: 5h usage 85% past the 80% stop"
+    },
+    {
+      "id": "j856",
+      "title": "opus: R7.82 Opus v3 research and plan",
+      "model": "opus",
+      "task": "R7.82",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-15T16:14:52+03:30",
+      "ended": "2026-10-15T20:16:15+03:30",
+      "refs": [
+        "commit:30248571f34d1a7c91a7c715a338fff791458a08"
+      ]
+    },
+    {
+      "id": "j857",
+      "title": "cursor: R7.59 full UI responsive review",
+      "model": "cursor",
+      "task": "R7.59",
+      "effort": "high",
+      "engine_model": "grok-4.7-xhigh",
+      "status": "failed",
+      "started": "2026-10-15T20:16:40+03:30",
+      "ended": "2026-10-15T20:17:05+03:30",
+      "reason": "exit 1"
+    },
+    {
+      "id": "j858",
+      "title": "opus: R7.82 Opus v3 plan (restart)",
+      "model": "opus",
+      "task": "R7.82",
+      "effort": "medium",
+      "status": "done",
+      "started": "2026-10-15T20:16:44+03:30",
+      "ended": "2026-10-15T20:18:04+03:30"
+    },
+    {
+      "id": "j859",
+      "title": "cursor: R7.82 Cursor review of Opus v3 plan",
+      "model": "cursor",
+      "task": "R7.82",
+      "effort": "high",
+      "engine_model": "grok-4.7-xhigh",
+      "status": "failed",
+      "started": "2026-10-15T20:18:13+03:30",
+      "ended": "2026-10-15T20:18:36+03:30",
+      "refs": [
+        "commit:cc9afbb6a9199a3b1342a1642223ebaa23570082"
+      ],
+      "reason": "exit 1"
+    },
+    {
+      "id": "j860",
+      "title": "haiku: R7.83 v3 W0.H1 dup shape",
+      "model": "haiku",
+      "task": "R7.83",
+      "status": "done",
+      "started": "2026-10-15T20:20:24+03:30",
+      "ended": "2026-10-15T20:20:46+03:30"
+    },
+    {
+      "id": "j861",
+      "title": "haiku: R7.84 v3 W0.H2 task status fold",
+      "model": "haiku",
+      "task": "R7.84",
+      "status": "done",
+      "started": "2026-10-15T20:20:29+03:30",
+      "ended": "2026-10-15T20:22:20+03:30"
+    },
+    {
+      "id": "j862",
+      "title": "haiku: R7.85 v3 W0.H3 loader revision",
+      "model": "haiku",
+      "task": "R7.85",
+      "status": "done",
+      "started": "2026-10-15T20:20:32+03:30",
+      "ended": "2026-10-15T20:21:08+03:30"
+    },
+    {
+      "id": "j863",
+      "title": "haiku: R7.86 v3 store db core",
+      "model": "haiku",
+      "task": "R7.86",
+      "status": "done",
+      "started": "2026-10-15T20:27:14+03:30",
+      "ended": "2026-10-15T20:33:45+03:30"
+    },
+    {
+      "id": "j864",
+      "title": "haiku: R7.81 needs-you asks in Inbox",
+      "model": "haiku",
+      "task": "R7.81",
+      "status": "done",
+      "started": "2026-10-15T20:27:18+03:30",
+      "ended": "2026-10-15T20:35:32+03:30"
+    },
+    {
+      "id": "j865",
+      "title": "haiku: R7.71 head v2 A5 agent jobs bound",
+      "model": "haiku",
+      "task": "R7.71",
+      "status": "done",
+      "started": "2026-10-15T20:27:22+03:30",
+      "ended": "2026-10-15T20:37:38+03:30"
+    },
+    {
+      "id": "j866",
+      "title": "haiku: R7.81 follow-up: nav badge + head note in Inbox",
+      "model": "haiku",
+      "task": "R7.81",
+      "status": "done",
+      "started": "2026-10-15T20:47:58+03:30",
+      "ended": "2026-10-15T20:49:36+03:30",
+      "tokensK": 114.0
+    },
+    {
+      "id": "j867",
+      "title": "haiku: R7.71 follow-up: update old hook tests",
+      "model": "haiku",
+      "task": "R7.71",
+      "status": "done",
+      "started": "2026-10-15T20:47:58+03:30",
+      "ended": "2026-10-15T20:48:21+03:30",
+      "tokensK": 89.0
+    },
+    {
+      "id": "j868",
+      "title": "haiku: R7.87 v3 store events",
+      "model": "haiku",
+      "task": "R7.87",
+      "status": "done",
+      "started": "2026-10-15T20:48:02+03:30",
+      "ended": "2026-10-15T20:49:16+03:30"
+    },
+    {
+      "id": "j869",
+      "title": "haiku: R7.88 v3 store export",
+      "model": "haiku",
+      "task": "R7.88",
+      "status": "done",
+      "started": "2026-10-15T20:48:06+03:30",
+      "ended": "2026-10-15T20:49:20+03:30"
+    },
+    {
+      "id": "j870",
+      "title": "haiku: R7.72 head v2 A6 compact output",
+      "model": "haiku",
+      "task": "R7.72",
+      "status": "done",
+      "started": "2026-10-15T20:48:29+03:30",
+      "ended": "2026-10-15T20:54:38+03:30"
+    },
+    {
+      "id": "j871",
+      "title": "haiku: R7.89 register follow-ups, idle alert",
+      "model": "haiku",
+      "task": "R7.89",
+      "status": "done",
+      "started": "2026-10-15T20:48:44+03:30",
+      "ended": "2026-10-15T20:52:03+03:30"
+    },
+    {
+      "id": "j872",
+      "title": "haiku: R7.90 agent questions options",
+      "model": "haiku",
+      "task": "R7.90",
+      "status": "done",
+      "started": "2026-10-15T20:50:20+03:30",
+      "ended": "2026-10-15T20:54:48+03:30"
+    },
+    {
+      "id": "j873",
+      "title": "haiku: R7.91 v3 W2 jobs on db",
+      "model": "haiku",
+      "task": "R7.91",
+      "status": "done",
+      "started": "2026-10-15T20:50:25+03:30",
+      "ended": "2026-10-15T20:58:39+03:30"
+    },
+    {
+      "id": "j874",
+      "title": "haiku: R7.92 v3 W2 head on db",
+      "model": "haiku",
+      "task": "R7.92",
+      "status": "done",
+      "started": "2026-10-15T20:50:30+03:30",
+      "ended": "2026-10-15T20:54:04+03:30"
+    },
+    {
+      "id": "j875",
+      "title": "haiku: R7.93 v3 W2 commands in one txn",
+      "model": "haiku",
+      "task": "R7.93",
+      "status": "done",
+      "started": "2026-10-15T20:54:30+03:30",
+      "ended": "2026-10-15T20:57:04+03:30"
+    },
+    {
+      "id": "j876",
+      "title": "haiku: R7.94 v3 W4 snapshot from db",
+      "model": "haiku",
+      "task": "R7.94",
+      "status": "done",
+      "started": "2026-10-15T20:54:34+03:30",
+      "ended": "2026-10-15T20:57:52+03:30"
+    },
+    {
+      "id": "j877",
+      "title": "haiku: R7.90 follow-up: parser caps + ask test",
+      "model": "haiku",
+      "task": "R7.90",
+      "status": "done",
+      "started": "2026-10-15T20:55:48+03:30",
+      "ended": "2026-10-15T20:56:16+03:30",
+      "tokensK": 117.0
+    },
+    {
+      "id": "j878",
+      "title": "haiku: R7.95 job list running first",
+      "model": "haiku",
+      "task": "R7.95",
+      "status": "done",
+      "started": "2026-10-15T20:55:52+03:30",
+      "ended": "2026-10-15T20:59:34+03:30"
+    },
+    {
+      "id": "j879",
+      "title": "haiku: R7.93 follow-up: dedupe only with requestId or 10 min window",
+      "model": "haiku",
+      "task": "R7.93",
+      "status": "done",
+      "started": "2026-10-15T20:57:10+03:30",
+      "ended": "2026-10-15T20:58:23+03:30",
+      "tokensK": 98.0
+    },
+    {
+      "id": "j880",
+      "title": "haiku: R7.93 follow-up",
+      "model": "haiku",
+      "task": "R7.93",
+      "status": "done",
+      "started": "2026-10-15T20:57:10+03:30",
+      "ended": "2026-10-15T20:57:54+03:30"
+    },
+    {
+      "id": "j881",
+      "title": "haiku: R7.97 issues into Work board",
+      "model": "haiku",
+      "task": "R7.97",
+      "status": "done",
+      "started": "2026-10-15T21:01:05+03:30",
+      "ended": "2026-10-15T21:07:21+03:30"
+    },
+    {
+      "id": "j882",
+      "title": "haiku: R7.96 one db file for store",
+      "model": "haiku",
+      "task": "R7.96",
+      "status": "done",
+      "started": "2026-10-15T21:01:11+03:30",
+      "ended": "2026-10-15T21:04:20+03:30"
+    },
+    {
+      "id": "j883",
+      "title": "haiku: R7.98 make the full suite green",
+      "model": "haiku",
+      "task": "R7.98",
+      "status": "done",
+      "started": "2026-10-15T21:02:45+03:30",
+      "ended": "2026-10-15T21:09:49+03:30"
+    },
+    {
+      "id": "j884",
+      "title": "haiku: R7.96 follow-up: commands + txn tests on unified db",
+      "model": "haiku",
+      "task": "R7.96",
+      "status": "done",
+      "started": "2026-10-15T21:04:46+03:30",
+      "ended": "2026-10-15T21:05:40+03:30",
+      "tokensK": 101.0
+    },
+    {
+      "id": "j885",
+      "title": "haiku: R7.96 follow-up",
+      "model": "haiku",
+      "task": "R7.96",
+      "status": "done",
+      "started": "2026-10-15T21:04:46+03:30",
+      "ended": "2026-10-15T21:05:21+03:30"
+    },
+    {
+      "id": "j886",
+      "title": "haiku: R7.99 v3 supervisor and leases",
+      "model": "haiku",
+      "task": "R7.99",
+      "status": "done",
+      "started": "2026-10-15T21:06:00+03:30",
+      "ended": "2026-10-15T21:09:22+03:30"
+    },
+    {
+      "id": "j887",
+      "title": "haiku: R7.100 usage sync button truth",
+      "model": "haiku",
+      "task": "R7.100",
+      "status": "done",
+      "started": "2026-10-15T21:08:47+03:30",
+      "ended": "2026-10-15T21:13:49+03:30"
+    },
+    {
+      "id": "j888",
+      "title": "opus: R7.99 Opus review of supervisor",
+      "model": "opus",
+      "task": "R7.99",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-15T21:09:49+03:30",
+      "ended": "2026-10-15T21:10:56+03:30"
+    },
+    {
+      "id": "j889",
+      "title": "haiku: R7.98 follow-up: remaining 9 failures + R7.97 gaps",
+      "model": "haiku",
+      "task": "R7.98",
+      "status": "running",
+      "started": "2026-10-15T21:10:15+03:30",
+      "ended": null,
+      "refs": [
+        "commit:8fbdb1879c1cb7f683a24d17aef547a30820f428"
+      ]
+    },
+    {
+      "id": "j890",
+      "title": "haiku: R7.98 follow-up",
+      "model": "haiku",
+      "task": "R7.98",
+      "status": "done",
+      "started": "2026-10-15T21:10:15+03:30",
+      "ended": "2026-10-15T21:22:39+03:30"
+    },
+    {
+      "id": "j891",
+      "title": "opus: R7.101 Opus work vs agent task model",
+      "model": "opus",
+      "task": "R7.101",
+      "effort": "medium",
+      "status": "done",
+      "started": "2026-10-15T21:10:45+03:30",
+      "ended": "2026-10-15T21:12:56+03:30"
+    },
+    {
+      "id": "j892",
+      "title": "haiku: R7.102 fix supervisor review findings",
+      "model": "haiku",
+      "task": "R7.102",
+      "status": "done",
+      "started": "2026-10-15T21:11:29+03:30",
+      "ended": "2026-10-15T21:16:00+03:30"
+    },
+    {
+      "id": "j893",
+      "title": "haiku: R7.103 rules pipeline from Head",
+      "model": "haiku",
+      "task": "R7.103",
+      "status": "done",
+      "started": "2026-10-15T21:12:57+03:30",
+      "ended": "2026-10-15T21:19:11+03:30"
+    },
+    {
+      "id": "j894",
+      "title": "haiku: R7.104 work model M2 roll-up",
+      "model": "haiku",
+      "task": "R7.104",
+      "status": "done",
+      "started": "2026-10-15T21:13:24+03:30",
+      "ended": "2026-10-15T21:14:44+03:30"
+    },
+    {
+      "id": "j895",
+      "title": "haiku: R7.100 follow-up: old usage tests to new contract",
+      "model": "haiku",
+      "task": "R7.100",
+      "status": "done",
+      "started": "2026-10-15T21:14:20+03:30",
+      "ended": "2026-10-15T21:16:18+03:30",
+      "tokensK": 141.0
+    },
+    {
+      "id": "j896",
+      "title": "haiku: R7.100 follow-up",
+      "model": "haiku",
+      "task": "R7.100",
+      "status": "done",
+      "started": "2026-10-15T21:14:53+03:30",
+      "ended": "2026-10-15T21:15:59+03:30"
+    },
+    {
+      "id": "j897",
+      "title": "haiku: R7.105 work model M1 store v4",
+      "model": "haiku",
+      "task": "R7.105",
+      "status": "done",
+      "started": "2026-10-15T21:16:37+03:30",
+      "ended": "2026-10-15T21:19:49+03:30"
+    },
+    {
+      "id": "j898",
+      "title": "haiku: R7.106 Planner clean-up",
+      "model": "haiku",
+      "task": "R7.106",
+      "status": "done",
+      "started": "2026-10-15T21:17:23+03:30",
+      "ended": "2026-10-15T21:20:47+03:30"
     }
   ]
 }

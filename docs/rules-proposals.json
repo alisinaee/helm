@@ -1,0 +1,162 @@
+{
+  "proposals": [
+    {
+      "id": "RP1",
+      "text": "Head never idles: start ready tasks now and act on work the person already asked for.",
+      "sources": [
+        "H95",
+        "H103",
+        "H59"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:45+03:30"
+    },
+    {
+      "id": "RP2",
+      "text": "Parallel workers only on disjoint file lists; file overlap is the only limit.",
+      "sources": [
+        "H4"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:45+03:30"
+    },
+    {
+      "id": "RP3",
+      "text": "Keep replies short and spartan; the person has few tokens.",
+      "sources": [
+        "H1"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:46+03:30"
+    },
+    {
+      "id": "RP4",
+      "text": "Start a fresh session at about 70% context; /head resumes as head without re-tuning.",
+      "sources": [
+        "H106"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:46+03:30"
+    },
+    {
+      "id": "RP5",
+      "text": "Show the real model and effort of every job on the Agents list.",
+      "sources": [
+        "H46"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:46+03:30"
+    },
+    {
+      "id": "RP6",
+      "text": "Register every job on the dashboard, including follow-ups to running workers.",
+      "sources": [
+        "H147"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:46+03:30"
+    },
+    {
+      "id": "RP7",
+      "text": "Workers never run usage sync, read the keychain, touch the person dashboard tab or port 8780.",
+      "sources": [
+        "H7"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:46+03:30"
+    },
+    {
+      "id": "RP8",
+      "text": "UI rule 0: numbers and actions in fixed grid columns; review the UI after each wave.",
+      "sources": [
+        "H2"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:46+03:30"
+    },
+    {
+      "id": "RP9",
+      "text": "Head shows every captured item; nothing is hidden by limits or lazy loading.",
+      "sources": [
+        "H133"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:46+03:30"
+    },
+    {
+      "id": "RP10",
+      "text": "Every message from the person is captured in Head; the head reviews rule-kind items and proposes rules.",
+      "sources": [
+        "H152"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:46+03:30"
+    },
+    {
+      "id": "RP11",
+      "text": "No secrets in Head, the ledger or logs.",
+      "sources": [
+        "H23"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:46+03:30"
+    },
+    {
+      "id": "RP12",
+      "text": "Work items are human cards (plain words, outcome); agent tasks are machine packages bound to one Work item and never shown as cards.",
+      "sources": [
+        "H151"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:46+03:30"
+    },
+    {
+      "id": "RP13",
+      "text": "Usage stops: Claude workers stop at 80% of the 5-hour window and 95% of the week.",
+      "sources": [
+        "H99",
+        "H143"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:46+03:30"
+    },
+    {
+      "id": "RP14",
+      "text": "Model roles: Haiku edits; Opus or Sonnet low/medium only for hard review and planning; Cursor and agy for reviews and audits; agy output is verified.",
+      "sources": [
+        "H99",
+        "H103"
+      ],
+      "status": "proposed",
+      "by": "agent",
+      "merged_into": null,
+      "ts": "2026-10-15T21:24:52+03:30"
+    }
+  ]
+}
