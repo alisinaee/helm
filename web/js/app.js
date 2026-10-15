@@ -39,6 +39,7 @@ const missingSections = new Set();
 const loadingSections = new Set();
 let timer = null;
 let busy = false;
+let followUp = false;
 let lastOk = null;
 
 function prefsKey(route) {
@@ -277,19 +278,24 @@ async function refresh() {
 }
 
 async function loop() {
-  if (!busy) {
-    busy = true;
-    try {
-      await refresh();
-    } catch (err) {
-      // refresh() handles its own failures; anything else must not stop the loop.
-      store.conn = { ok: false, lastOkAt: store.conn.lastOkAt, error: String(err) };
-    } finally {
-      busy = false;
-    }
+  // A refresh requested while one is in flight (a write, a route change) is queued once, not dropped.
+  if (busy) {
+    followUp = true;
+    return;
+  }
+  busy = true;
+  try {
+    await refresh();
+  } catch (err) {
+    // refresh() handles its own failures; anything else must not stop the loop.
+    store.conn = { ok: false, lastOkAt: store.conn.lastOkAt, error: String(err) };
+  } finally {
+    busy = false;
   }
   render();
-  schedule(document.hidden ? SLOW_MS : FAST_MS);
+  const again = followUp;
+  followUp = false;
+  schedule(again ? 0 : document.hidden ? SLOW_MS : FAST_MS);
 }
 
 function schedule(delay) {
@@ -308,6 +314,10 @@ async function syncUsage() {
     store.usageFetchedAt = now;
     store.usageError = null;
     store.sync = { state: "ok", message: "Usage synced." };
+    render();
+    // The band is updated; the snapshot meters (spend, weekly stop, block) come from the next snapshot.
+    schedule(0);
+    return;
   } catch (err) {
     store.sync = { state: "error", message: "Sync failed: " + err.message };
   }
