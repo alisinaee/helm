@@ -16,7 +16,8 @@ from datetime import datetime, timedelta, timezone
 from roadmap.core import head, planfmt, secrets
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import jobs
-from roadmap.store import atomic, jsonl, lock
+from roadmap.store import atomic, head_db, jsonl, lock
+from roadmap.store import config as store_config
 
 FILE = "head.jsonl"
 TEXT_FILE = "head-text.jsonl"
@@ -60,6 +61,23 @@ def _path(data_dir, name):
 def _ts(now=None):
     moment = now if now is not None else datetime.now(timezone.utc)
     return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def sqlite_db(data_dir):
+    """Path of the head ledger db when the sqlite backend is on (env ROADMAP_STORE=sqlite, or the project entry for
+    this data dir has store: sqlite). None keeps the JSON backend, which is the default."""
+    if os.environ.get("ROADMAP_STORE", "").strip().lower() == "sqlite":
+        return os.path.join(data_dir, "head.db")
+    try:
+        projects = store_config.load().get("projects") or []
+    except RoadmapError:
+        return None
+    here = os.path.realpath(data_dir)
+    for project in projects:
+        if project.get("store") == "sqlite" and os.path.realpath(
+                os.path.join(str(project.get("path", "")), str(project.get("dataDir", "docs")))) == here:
+            return os.path.join(data_dir, "head.db")
+    return None
 
 
 def session_key(session_id):
@@ -290,6 +308,9 @@ def capture(data_dir, text, *, session_id=None, src="hook", acct=None, kind=None
     clean = clean_text(text)
     if not clean.strip():
         raise RoadmapError("usage", "nothing to log: the text is empty", EXIT_USAGE)
+    db_path = sqlite_db(data_dir)
+    if db_path:
+        return head_db.log(db_path, clean, kind or head.guess_kind(clean), make_summary(clean, sum_text), now=now)
     names = clean_assets(assets)
     entry = {
         "v": head.VERSION, "t": "e", "ts": _ts(now), "src": src, "sid": session_key(session_id),
@@ -400,6 +421,9 @@ def update(data_dir, eid, *, by, sets=None, links=(), note=None, now=None, timeo
         if not isinstance(ref, str) or ref[:1] not in ("+", "-") or head.parse_link(ref[1:]) is None:
             raise RoadmapError("usage", "link must be +kind:value or -kind:value, got " + repr(ref), EXIT_USAGE)
     clean_note = secrets.scrub(" ".join(str(note or "").split()))[:NOTE_MAX] or None
+    db_path = sqlite_db(data_dir)
+    if db_path:
+        return head_db.update(db_path, eid, by=by, sets=sets, links=refs, note=clean_note, now=now)
     rec = {"v": head.VERSION, "t": "u", "id": eid, "ts": _ts(now), "by": by}
     if sets:
         rec["set"] = sets
