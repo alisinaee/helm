@@ -7,6 +7,7 @@
 .nav-i,.bnav-i,.nav-collapse{position:relative;display:flex;align-items:center;gap:var(--sp-2);width:100%;min-height:var(--h-row);padding:0 var(--sp-2);border:0;border-radius:var(--r-control);background:none;color:var(--text-2);text-align:left;text-decoration:none;cursor:pointer}
 .nav-i:hover,.bnav-i:hover,.nav-collapse:hover{background:var(--surface-2);color:var(--text-1)}
 .nav-i[aria-current="page"],.bnav-i[aria-current="page"]{background:var(--sel);color:var(--text-1);font-weight:600}
+.nav-i:focus-visible,.bnav-i:focus-visible,.nav-collapse:focus-visible{outline-offset:-2px}
 .ico{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .nav-l{flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .nav-b{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--surface-2);color:var(--text-1);font-size:var(--fs-11);line-height:18px;text-align:center;font-variant-numeric:tabular-nums}
@@ -17,6 +18,7 @@
 .app[data-nav="mini"] .nav-l{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .app[data-nav="mini"] .nav-i,.app[data-nav="mini"] .nav-collapse{justify-content:center;padding:0}
 .app[data-nav="mini"] .nav-b{position:absolute;top:2px;right:4px;width:8px;min-width:8px;height:8px;padding:0;font-size:0}
+.app[data-nav="mini"] .nav-b[data-tone="neutral"]{background:var(--accent)}
 .top{grid-area:top;display:flex;align-items:center;min-width:0;padding:0 var(--sp-4);background:var(--surface-1);border-bottom:1px solid var(--track)}
 .top-row{display:flex;align-items:center;gap:var(--sp-3);width:100%;min-width:0}
 .crumb{display:flex;align-items:center;gap:var(--sp-1);flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;font-size:var(--fs-13);font-weight:400;color:var(--text-2)}
@@ -66,6 +68,8 @@
 .app,.app[data-nav]{grid-template-columns:minmax(0,1fr);grid-template-rows:var(--h-top) minmax(0,1fr);grid-template-areas:"top" "main";padding-bottom:var(--h-bnav)}
 .nav{display:none}
 .bnav{display:block;position:fixed;left:0;right:0;bottom:0;height:var(--h-bnav);z-index:var(--z-over)}
+.app[data-nav="mini"] .bnav-i .nav-l{position:static;width:auto;height:auto;clip:auto;overflow:hidden}
+.bnav-i .ico{stroke-width:2.2}
 .top{padding:0 var(--sp-3);gap:var(--sp-2)}
 .top-meters,.conn,.crumb-part,.crumb-sep{display:none}
 .main{padding:var(--sp-3) var(--sp-4) var(--sp-6)}

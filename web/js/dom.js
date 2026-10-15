@@ -88,11 +88,14 @@ export function emptyHtml(title, actionHtml) {
     (actionHtml ? "<p>" + actionHtml + "</p>" : "") + "</div>";
 }
 
+// The placeholder lines while data loads. The wrapper is a busy region with a spoken "Loading"; the lines are hidden.
 export function skeletonHtml(widths) {
   const list = widths || ["w-60", "w-90", "w-40"];
-  return '<div aria-hidden="true">' + list.map(function (w) {
+  const lines = list.map(function (w) {
     return '<span class="skel ' + esc(w) + '"></span>';
-  }).join("") + "</div>";
+  }).join("");
+  return '<div aria-busy="true"><span class="sr-only">Loading</span><div aria-hidden="true">' + lines +
+    "</div></div>";
 }
 
 // SectionHeader: a disclosure button with a one-line summary, and a body that is hidden when closed.
