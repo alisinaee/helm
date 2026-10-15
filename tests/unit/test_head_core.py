@@ -284,5 +284,65 @@ class DupTests(unittest.TestCase):
         self.assertEqual(one(rows, "H2")["dup"]["id"], "H1")
 
 
+class VerifiedGapTests(unittest.TestCase):
+    """Test gaps confirmed in docs/reviews/agy-head-testgaps-core.md (rows for roadmap/core/head.py)."""
+
+    def test_head_triage_needs_both_kind_and_sum(self):
+        kind_only = one(head.fold([e("H1"), u("H1", by="head", set_={"kind": "bug"})], now=NOW), "H1")
+        sum_only = one(head.fold([e("H1"), u("H1", by="head", set_={"sum": "Export broken"})], now=NOW), "H1")
+        for row in (kind_only, sum_only):
+            self.assertFalse(row["triaged"])
+            self.assertEqual(row["status"], "new")
+
+    def test_duplicate_link_is_not_appended_and_missing_minus_is_ignored(self):
+        recs = [e("H1"), u("H1", link=["+task:R1"]), u("H1", link=["+task:R1"]), u("H1", link=["-task:R99"])]
+        self.assertEqual(one(head.fold(recs, now=NOW), "H1")["links"], ["task:R1"])
+
+    def test_understood_entry_gets_age_amber_and_stale_like_new(self):
+        recs = [e("H1", ts="2026-10-15T09:00:00Z"), u("H1", by="head", set_={"kind": "bug", "sum": "Export broken"})]
+        row = one(head.fold(recs, now=NOW), "H1")
+        self.assertEqual(row["status"], "understood")
+        self.assertEqual(row["age_min"], 180.0)
+        self.assertTrue(row["amber"])
+        self.assertTrue(row["stale"])
+
+    def test_custom_amber_and_stale_thresholds_are_honoured(self):
+        recs = [e("H1", ts="2026-10-15T11:00:00Z")]  # 60 minutes old
+        quiet = one(head.fold(recs, now=NOW, amber_min=90, stale_min=200), "H1")
+        self.assertFalse(quiet["amber"])
+        self.assertFalse(quiet["stale"])
+        loud = one(head.fold(recs, now=NOW, amber_min=30, stale_min=50), "H1")
+        self.assertTrue(loud["amber"])
+        self.assertTrue(loud["stale"])
+
+    def test_open_entry_without_session_record_falls_back_to_its_own_ts(self):
+        before = [e("H1", ts="2026-10-14T08:10:00Z", sid="old"), s("new", "claim", "2026-10-15T09:00:00Z")]
+        self.assertTrue(one(head.fold(before, now=NOW), "H1")["carried"])
+        after = [e("H2", ts="2026-10-15T09:30:00Z", sid="old"), s("new", "claim", "2026-10-15T09:00:00Z")]
+        self.assertFalse(one(head.fold(after, now=NOW), "H2")["carried"])
+
+    def test_recent_closed_entry_is_a_duplicate_candidate(self):
+        recs = [e("H1", ts="2026-10-01T09:00:00Z", text="export csv file button"),
+                u("H1", set_={"status": "done"}),
+                e("H2", ts="2026-10-15T09:00:00Z", text="export csv file button")]
+        rows = head.fold(recs, now=NOW)
+        self.assertEqual(one(rows, "H1")["status"], "done")
+        self.assertEqual(one(rows, "H2")["dup"], {"id": "H1", "score": 1.0})
+
+    def test_best_duplicate_is_the_highest_score_not_the_first(self):
+        recs = [e("H2", text="export csv file button broken"),  # 4 of 6 words shared with H3: 0.67
+                e("H1", text="export csv file button"),          # 4 of 5 shared with H3: 0.8
+                e("H3", text="export csv file button now")]
+        self.assertEqual(one(head.fold(recs, now=NOW), "H3")["dup"]["id"], "H1")
+
+    def test_question_mark_with_no_words_is_an_ask(self):
+        self.assertEqual(head.guess_kind("???"), "ask?")
+
+    def test_parse_link_strips_value_and_rejects_non_strings(self):
+        self.assertEqual(head.parse_link("task:  R7.31 "), ("task", "R7.31"))
+        self.assertIsNone(head.parse_link(None))
+        self.assertIsNone(head.parse_link(123))
+
+
 if __name__ == "__main__":
     unittest.main()

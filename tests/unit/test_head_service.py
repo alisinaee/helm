@@ -11,7 +11,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from unittest import mock
 
-from roadmap.core import head
+from roadmap.core import head, secrets
 from roadmap.errors import RoadmapError
 from roadmap.services import head as svc
 from roadmap.store import lock
@@ -230,6 +230,152 @@ class Hashing(unittest.TestCase):
 
     def test_fold_kind_table_is_reachable(self):
         self.assertEqual(head.guess_kind("this is broken"), "bug?")
+
+
+class VerifiedGapTests(HeadServiceCase):
+    """Test gaps confirmed in docs/reviews/agy-head-testgaps-core.md (rows for roadmap/services/head.py) and the
+    scrub rows of docs/reviews/agy-head-testgaps-ops.md that the head store relies on."""
+
+    def _link(self, name):
+        os.symlink(os.path.join(self.root, name), os.path.join(self.data, name))
+
+    def test_next_id_refuses_when_h9999_is_taken(self):
+        with self.assertRaises(RoadmapError) as raised:
+            svc._next_id([{"t": "e", "id": "H9999"}])
+        self.assertEqual(raised.exception.code, "cap")
+        self.assertEqual(str(raised.exception), "head ids are used up (H9999)")
+
+    def test_spool_append_refuses_a_symlink_and_leaves_the_target(self):
+        target = os.path.join(self.root, "elsewhere.txt")
+        with open(target, "w", encoding="utf-8") as fh:
+            fh.write("keep\n")
+        os.symlink(target, os.path.join(self.data, svc.SPOOL_FILE))
+        with self.assertRaises(RoadmapError) as raised:
+            svc._spool_append(self.data, {"e": {}, "text": "x"})
+        self.assertEqual(raised.exception.code, "invalid_data")
+        with open(target, encoding="utf-8") as fh:
+            self.assertEqual(fh.read(), "keep\n")
+
+    def test_adopt_refuses_a_symlinked_spool(self):
+        target = os.path.join(self.root, "spool-target.jsonl")
+        with open(target, "w", encoding="utf-8") as fh:
+            fh.write("")
+        os.symlink(target, os.path.join(self.data, svc.SPOOL_FILE))
+        with lock.locked(self.data):
+            with self.assertRaises(RoadmapError) as raised:
+                svc._adopt_locked(self.data)
+        self.assertEqual(raised.exception.code, "invalid_data")
+
+    def test_adopt_skips_corrupt_lines_and_keeps_the_valid_payload(self):
+        entry = {"v": 1, "t": "e", "ts": "2026-10-15T12:00:00Z", "src": "hook", "sid": "abcd1234", "acct": None,
+                 "kind": "ask?", "sum": "fix the export", "len": 16, "h": "sha1:0123456789ab"}
+        lines = ["not json", "[1, 2]", json.dumps({"e": "not a dict", "text": "x"}),
+                 json.dumps({"e": entry, "text": "fine text"})]
+        with open(os.path.join(self.data, svc.SPOOL_FILE), "w", encoding="utf-8") as fh:
+            fh.write("\n".join(lines) + "\n")
+        with lock.locked(self.data):
+            adopted = svc._adopt_locked(self.data)
+        self.assertEqual(adopted, 1)
+        self.assertEqual(self.entry_ids(), ["H1"])
+        self.assertEqual(svc.text_of(self.data, "H1"), "fine text")
+
+    def test_capture_stores_a_truncated_from_id(self):
+        out = svc.capture(self.data, "split part one", session_id="s", from_id="H1234567890123", now=NOW)
+        self.assertEqual(self.lines(svc.FILE)[0]["from"], "H12345678901")
+        self.assertEqual(out["status"], "logged")
+
+    def test_capture_uses_explicit_kind_and_summary(self):
+        out = svc.capture(self.data, "Please fix the export button", session_id="s", kind="bug",
+                          sum_text="Export button broken", now=NOW)
+        self.assertEqual((out["kind"], out["sum"]), ("bug", "Export button broken"))
+        rec = self.lines(svc.FILE)[0]
+        self.assertEqual((rec["kind"], rec["sum"]), ("bug", "Export button broken"))
+
+    def test_update_rejects_a_kind_outside_kinds(self):
+        svc.capture(self.data, "one two", session_id="s", now=NOW)
+        with self.assertRaises(RoadmapError) as raised:
+            svc.update(self.data, "H1", by="head", sets={"kind": "nonsense"}, now=NOW)
+        self.assertEqual(raised.exception.code, "usage")
+
+    def test_update_rejects_a_bad_link_ref(self):
+        svc.capture(self.data, "one two", session_id="s", now=NOW)
+        for bad in ("+badkind:1", "+task:"):
+            with self.assertRaises(RoadmapError) as raised:
+                svc.update(self.data, "H1", by="head", links=[bad], now=NOW)
+            self.assertEqual(raised.exception.code, "usage", bad)
+
+    def test_update_note_is_scrubbed_before_it_is_written(self):
+        svc.capture(self.data, "one two", session_id="s", now=NOW)
+        rec = svc.update(self.data, "H1", by="person", note="token=hunter2 for the export", now=NOW)
+        self.assertNotIn("hunter2", rec["note"])
+        self.assertIn("[secret]", rec["note"])
+        self.assertNotIn("hunter2", self.raw(svc.FILE))
+
+    def test_session_drops_boolean_usage_and_keeps_numbers(self):
+        rec = svc.session(self.data, "claim", session_id="s", usage={"h5": True, "wk": 50}, now=NOW)
+        self.assertEqual(rec["usage"], {"wk": 50})
+
+    def test_text_of_is_none_for_unknown_and_latest_line_wins(self):
+        svc.capture(self.data, "first wording here", session_id="s", now=NOW)
+        self.assertIsNone(svc.text_of(self.data, "H77"))
+        with open(os.path.join(self.data, svc.TEXT_FILE), "a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"id": "H1", "text": "newer wording"}) + "\n")
+        self.assertEqual(svc.text_of(self.data, "H1"), "newer wording")
+
+    def test_age_text_units(self):
+        self.assertEqual(svc._age_text(25), "25m")
+        self.assertEqual(svc._age_text(90), "1h")
+        self.assertEqual(svc._age_text(2880), "2d")
+
+    def test_brief_lists_open_asks_oldest_first_and_skips_closed_and_needs_you(self):
+        svc.capture(self.data, "please do beta thing", session_id="s", now=NOW - timedelta(hours=1))
+        svc.capture(self.data, "please do alpha thing", session_id="s", now=NOW - timedelta(hours=3))
+        svc.capture(self.data, "please do gamma thing", session_id="s", now=NOW - timedelta(hours=2))
+        svc.capture(self.data, "please do delta thing", session_id="s", now=NOW - timedelta(hours=4))
+        svc.update(self.data, "H3", by="person", sets={"status": "needs-you"}, now=NOW)
+        svc.update(self.data, "H4", by="person", sets={"status": "done"}, now=NOW)
+        lines = svc.brief(self.data, now=NOW)
+        start = lines.index("open asks, oldest first:")
+        asks = [line.split()[0] for line in lines[start + 1:] if line.startswith("  ")]
+        self.assertEqual(asks, ["H2", "H1"])
+        self.assertTrue(any(line.startswith("  H3 ") for line in lines))
+
+    def test_brief_leaves_out_old_and_declined_decisions(self):
+        svc.capture(self.data, "we decided to go with the table layout", session_id="s",
+                    now=NOW - timedelta(days=10))
+        svc.capture(self.data, "always run the tests before push", session_id="s", now=NOW - timedelta(days=1))
+        svc.capture(self.data, "never commit secrets to git", session_id="s", now=NOW - timedelta(days=1))
+        svc.update(self.data, "H2", by="person", sets={"status": "declined"}, now=NOW)
+        lines = svc.brief(self.data, now=NOW)
+        self.assertIn("decisions and rules, 7 days:", lines)
+        self.assertFalse(any(line.startswith("  H1 ") for line in lines))
+        self.assertFalse(any(line.startswith("  H2 ") for line in lines))
+        self.assertTrue(any(line.startswith("  H3 ") for line in lines))
+
+
+class ScrubVectors(unittest.TestCase):
+    """Scrub rules whose vectors were missing from tests/unit/test_secrets_scrub.py (section 7 of HEAD-SPEC)."""
+
+    def test_slack_and_github_token_prefixes_are_masked(self):
+        for token in ("xoxp-1234567890-abcdefghij", "xoxa-1234567890-abcdefghij", "xoxs-1234567890-abcdefghij"):
+            self.assertEqual(secrets.scrub("slack " + token + " ok"), "slack [secret] ok", token)
+        for prefix in ("gho_", "ghs_", "ghu_", "ghr_"):
+            self.assertEqual(secrets.scrub(prefix + "a" * 20), "[secret]", prefix)
+
+    def test_keyed_assignments_for_passwd_pwd_access_key_and_apikey(self):
+        cases = {
+            "passwd=hunter2 ok": "passwd=[secret] ok",
+            "pwd: abc123 ok": "pwd: [secret] ok",
+            "access_key=abc123 ok": "access_key=[secret] ok",
+            "access-key: xyz789 ok": "access-key: [secret] ok",
+            "apikey=abcdef ok": "apikey=[secret] ok",
+        }
+        for text, want in cases.items():
+            self.assertEqual(secrets.scrub(text), want, text)
+
+    def test_hyphen_grouped_and_13_digit_card_numbers_are_masked(self):
+        self.assertEqual(secrets.scrub("card 4111-1111-1111-1111 ok"), "card [number] ok")
+        self.assertEqual(secrets.scrub("acct 1234567890123 ok"), "acct [number] ok")
 
 
 if __name__ == "__main__":
