@@ -8,8 +8,8 @@ from datetime import datetime, timedelta, timezone
 
 from roadmap.core import head as head_rules
 from roadmap.core import refs
-from roadmap.core.snapshot import (HEAD_BYTES_MAX, HEAD_LINKS_MAX, HEAD_SUM_MAX, build_snapshot, head_link_state,
-                                   head_row)
+from roadmap.core.snapshot import (HEAD_BYTES_MAX, HEAD_LINKS_MAX, HEAD_SUM_MAX, _head_view, build_snapshot,
+                                   head_link_state, head_row)
 
 NOW = datetime(2026, 10, 15, 12, 0, 0, tzinfo=timezone.utc)
 
@@ -89,7 +89,8 @@ class HeadCountsAndRows(unittest.TestCase):
 
     def test_row_shape_strips_the_question_mark_and_counts_minutes(self):
         row = next(r for r in snap(self.records)["head"]["rows"] if r["id"] == "H1")
-        self.assertEqual(row, {"id": "H1", "kind": "bug", "sum": "Fix the broken export", "status": "new", "age": 10})
+        self.assertEqual(row, {"id": "H1", "kind": "bug", "sum": "Fix the broken export", "status": "new", "age": 10,
+                               "ts": stamp(10)})
 
     def test_stale_flag_after_two_hours_unhandled(self):
         head = snap([entry("H9", 200, "Old ask"), entry("H10", 20, "New ask")])["head"]
@@ -108,7 +109,8 @@ class HeadRowShape(unittest.TestCase):
     def test_flags_and_links_are_left_out_when_empty(self):
         folded = {"id": "H7", "kind": "task?", "sum": "x", "status": "bound", "ts": stamp(0), "stale": False,
                   "carried": False, "links": [], "dup": None}
-        self.assertEqual(head_row(folded, NOW), {"id": "H7", "kind": "task", "sum": "x", "status": "bound", "age": 0})
+        self.assertEqual(head_row(folded, NOW), {"id": "H7", "kind": "task", "sum": "x", "status": "bound", "age": 0,
+                                                 "ts": stamp(0)})
 
     def test_links_capped_with_a_more_count_and_summary_cut(self):
         links = ["task:R%d" % i for i in range(5)]
@@ -174,7 +176,8 @@ class HeadAcceptAndAutoFlags(unittest.TestCase):
 
     def test_acc_and_auto_are_left_out_unless_true(self):
         base = {"id": "H7", "kind": "ask", "sum": "x", "status": "done", "ts": stamp(0), "links": []}
-        self.assertEqual(head_row(base, NOW), {"id": "H7", "kind": "ask", "sum": "x", "status": "done", "age": 0})
+        self.assertEqual(head_row(base, NOW), {"id": "H7", "kind": "ask", "sum": "x", "status": "done", "age": 0,
+                                                "ts": stamp(0)})
         self.assertIs(head_row(base, NOW, accepted=True)["acc"], True)
         self.assertNotIn("acc", head_row(base, NOW, accepted=False))
         self.assertNotIn("auto", head_row(dict(base, auto_done=True, status="open"), NOW))
@@ -208,6 +211,63 @@ class RefKindAsk(unittest.TestCase):
         self.assertIn(("age", "20m"), rows[1])
         self.assertEqual(rows[2], [("bound", "task:R7.31")])
         self.assertEqual(next_cmd, "roadmap head list")
+
+
+TASKS = [{"id": "R7.31", "title": "Head section design", "state": "todo"},
+         {"id": "R7.40", "title": "Export button in the map view", "state": "todo"},
+         {"id": "R2.1", "title": "Login page export", "state": "done"}]
+ISSUES = [{"id": "I4", "title": "Export button fails", "status": "open"}]
+
+
+class HeadSuggest(unittest.TestCase):
+    def view(self, records, tasks=TASKS, issues=ISSUES):
+        return _head_view(records, {}, NOW, tasks=tasks, issues=issues)
+
+    def test_unbound_open_row_gets_suggest_from_open_tasks_and_issues(self):
+        row = self.view([entry("H1", 5, "Please check R7.31 soon")])["rows"][0]
+        self.assertEqual(row["suggest"], ["task:R7.31"])
+
+    def test_title_overlap_suggests_open_task_and_issue_not_done_task(self):
+        row = self.view([entry("H1", 5, "Fix the export button")])["rows"][0]
+        self.assertEqual(row["suggest"], ["issue:I4", "task:R7.40"])
+
+    def test_bound_row_gets_no_suggest(self):
+        records = [entry("H1", 5, "Fix the export button"),
+                   update("H1", 4, by="head", sets={"status": "bound"}, links=["+task:R7.31"])]
+        self.assertNotIn("suggest", self.view(records)["rows"][0])
+
+    def test_done_row_gets_no_suggest(self):
+        records = [entry("H1", 5, "Check R7.31"), update("H1", 4, by="person", sets={"status": "done"})]
+        self.assertNotIn("suggest", self.view(records)["rows"][0])
+
+    def test_no_rows_to_suggest_from_means_no_key(self):
+        self.assertNotIn("suggest", self.view([entry("H1", 5, "Check R7.31")], tasks=[], issues=[])["rows"][0])
+
+    def test_row_carries_the_added_timestamp(self):
+        records = [entry("H1", 5, "Check R7.31")]
+        row = _head_view(records, {}, NOW, tasks=TASKS, issues=ISSUES)["rows"][0]
+        self.assertEqual(row["ts"], stamp(5))
+
+    def test_head_row_takes_suggest_argument(self):
+        e = {"id": "H2", "ts": stamp(3), "kind": "ask?", "sum": "x", "status": "new", "links": []}
+        self.assertEqual(head_row(e, NOW, suggest=["task:R7.31"])["suggest"], ["task:R7.31"])
+        self.assertNotIn("suggest", head_row(e, NOW, suggest=None))
+
+    def test_wiring_through_build_snapshot_reads_tasks_json(self):
+        tasks_json = json.dumps({"updated": "2026-10-15", "phases": [{"id": "R7", "title": "P", "state": "todo"}],
+                                 "tasks": [{"id": "R7.31", "title": "Head section design", "phase": "R7",
+                                            "state": "todo"}]})
+        result = build_snapshot({"tasks.json": tasks_json}, {}, NOW,
+                                head_records=[entry("H1", 5, "Check R7.31 please")])
+        self.assertEqual(result["head"]["rows"][0]["suggest"], ["task:R7.31"])
+
+    def test_suggest_keeps_the_block_under_three_kilobytes(self):
+        tasks = [{"id": "R%d.%d" % (i, i), "title": "export map button %d" % i, "state": "todo"} for i in range(1, 60)]
+        records = [entry("H%d" % i, 30 + i, "export map button long summary text %d" % i) for i in range(1, 41)]
+        head_view = self.view(records, tasks=tasks, issues=[])
+        raw = json.dumps(head_view, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        self.assertLessEqual(len(raw), HEAD_BYTES_MAX)
+        self.assertEqual(head_view["counts"]["open"], 40)
 
 
 if __name__ == "__main__":

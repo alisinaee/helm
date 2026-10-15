@@ -171,15 +171,17 @@ def head_link_state(tasks, jobs):
     return state
 
 
-def head_row(entry, moment, accepted=False):
+def head_row(entry, moment, accepted=False, suggest=None):
     """One head row (HEAD-SPEC section 5), also used by the API: the summary cut, age in whole minutes, and the
-    flags left out when empty (stale, carried, acc and auto only when true, links only when some, more and dup only
-    when set). acc: the person's last status change was done (a confirmation or an accept), given by accepted.
-    auto: the fold marked it done from its links, so it waits for the head or the person to confirm."""
+    flags left out when empty (stale, carried, acc and auto only when true, links only when some, more, dup and
+    suggest only when set). acc: the person's last status change was done (a confirmation or an accept), given by
+    accepted. auto: the fold marked it done from its links, so it waits for the head or the person to confirm.
+    suggest: up to two bind refs (task:R7.31) from head.suggest_binds, given only for open unbound rows."""
     ts = head_rules.parse_ts(entry.get("ts"))
     row = {"id": entry["id"], "kind": str(entry.get("kind") or "").rstrip("?"),
            "sum": (entry.get("sum") or "")[:HEAD_SUM_MAX], "status": entry["status"],
-           "age": None if ts is None else max(0, int((moment - ts).total_seconds() // 60))}
+           "age": None if ts is None else max(0, int((moment - ts).total_seconds() // 60)),
+           "ts": entry.get("ts")}
     if entry.get("stale"):
         row["stale"] = True
     if entry.get("carried"):
@@ -195,6 +197,8 @@ def head_row(entry, moment, accepted=False):
             row["more"] = len(links) - HEAD_LINKS_MAX
     if entry.get("dup"):
         row["dup"] = entry["dup"]["id"]
+    if suggest:
+        row["suggest"] = list(suggest)
     return row
 
 
@@ -228,13 +232,22 @@ def _accepted_ids(records):
     return {eid for eid, mark in last.items() if mark == ("done", "person")}
 
 
-def _head_view(records, link_state, moment):
+def _head_view(records, link_state, moment, tasks=(), issues=()):
     """The head key: now, prev, counts and rows (open oldest first, then the newest done). Rows are dropped, done ones
-    first, until the key fits HEAD_BYTES_MAX; the counts stay exact."""
+    first, until the key fits HEAD_BYTES_MAX; the counts stay exact. Open unbound rows get suggest from the open
+    tasks (state todo or partial) and the open issues."""
     entries = head_rules.fold(records, link_state=link_state, now=moment)
     accepted = _accepted_ids(records)
     open_rows = [e for e in entries if e["status"] not in head_rules.CLOSED_STATUSES]
     done_rows = [e for e in entries if e["status"] == "done"]
+    open_tasks = [t for t in tasks if t.get("state") in ACTIVE]
+
+    def row(e):
+        suggest = None
+        if e["status"] not in head_rules.CLOSED_STATUSES and not e["links"]:
+            suggest = head_rules.suggest_binds(e["sum"], open_tasks, issues) or None
+        return head_row(e, moment, e["id"] in accepted, suggest)
+
     current, prev = _head_sessions(records)
     view = {
         "now": current, "prev": prev,
@@ -243,9 +256,8 @@ def _head_view(records, link_state, moment):
                    "doing": sum(1 for e in open_rows if e["status"] == "doing"),
                    "needs": sum(1 for e in open_rows if e["status"] == "needs-you"),
                    "doneUnacc": len(done_rows)},
-        "rows": ([head_row(e, moment, e["id"] in accepted)
-                  for e in sorted(open_rows, key=lambda e: str(e.get("ts") or ""))[:HEAD_OPEN_MAX]]
-                 + [head_row(e, moment, e["id"] in accepted) for e in done_rows[-HEAD_DONE_MAX:]]),
+        "rows": ([row(e) for e in sorted(open_rows, key=lambda e: str(e.get("ts") or ""))[:HEAD_OPEN_MAX]]
+                 + [row(e) for e in done_rows[-HEAD_DONE_MAX:]]),
     }
     rows = view["rows"]
     while rows and len(json.dumps(view, ensure_ascii=False, separators=(",", ":")).encode("utf-8")) > HEAD_BYTES_MAX:
@@ -450,5 +462,5 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
     if folder is not None:
         out["project"]["path"] = str(folder)
     if head_records is not None:
-        out["head"] = _head_view(head_records, head_link_state(tasks, jobs), moment)
+        out["head"] = _head_view(head_records, head_link_state(tasks, jobs), moment, tasks=tasks, issues=issues_open)
     return out

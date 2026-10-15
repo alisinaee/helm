@@ -17,6 +17,9 @@ ACTIVE_LINK_STATES = ("doing", "partial", "running")
 CLOSED_STATUSES = ("done", "declined", "merged")
 DUP_MIN = 0.6
 DUP_WINDOW_DAYS = 30
+BIND_MIN = 0.25
+BIND_MAX = 2
+ID_MENTION = re.compile(r"\b[A-Za-z]{1,3}-?\d+(?:\.\d+)*\b")
 
 # Ordered: the first matching row wins. Matching is case-insensitive.
 KIND_TABLE = (
@@ -124,6 +127,32 @@ def jaccard(a, b):
     if not wa or not wb:
         return 0.0
     return len(wa & wb) / len(wa | wb)
+
+
+def suggest_binds(text, tasks, issues):
+    """Refs ('task:R7.31', 'issue:I4') the text most likely belongs to, best first, at most BIND_MAX.
+
+    An id written in the text (R7.31, I4) that is a known task or issue scores 1.0. Otherwise the score is the
+    Jaccard of the word sets of text and title. Below BIND_MIN nothing is suggested. Pure: a suggestion only.
+    tasks and issues are lists of dicts with 'id' and 'title'; rows without a string id are skipped.
+    """
+    text = " ".join(str(text or "").split())
+    if not text:
+        return []
+    mentioned = {m.group(0).upper() for m in ID_MENTION.finditer(text)}
+    scored = []
+    order = 0
+    for kind, rows in (("task", tasks), ("issue", issues)):
+        for row in rows or []:
+            rid = row.get("id") if isinstance(row, dict) else None
+            if not isinstance(rid, str) or not rid:
+                continue
+            score = 1.0 if rid.upper() in mentioned else jaccard(text, row.get("title"))
+            if score >= BIND_MIN:
+                scored.append((-score, order, "%s:%s" % (kind, rid)))
+            order += 1
+    scored.sort()
+    return [ref for _, _, ref in scored[:BIND_MAX]]
 
 
 def _status(entry, link_state):
