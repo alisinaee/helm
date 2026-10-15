@@ -45,3 +45,12 @@ Weekly stop 95% (docs/autonomy.json in split_net). Usage is not automatic: push 
 
 ## Priority order (person, 2026-10-15)
 1. HEAD section (R7.31, docs/HEAD-SPEC.md H1-H12): highest priority; launch its next free step before anything else. Git/Work/Tokens/UX yield to it, but still run in parallel on disjoint files while workers are free.
+
+## Head ledger (claim, brief, triage, review loop)
+Run this loop every turn. The ledger (`roadmap head`) holds the person's asks, so nothing depends on memory.
+1. **Claim (new chat or account):** `roadmap head claim --model "<model>" --acct <letter>`; it prints the carried-over asks. Then `roadmap head brief` (at most 15 lines).
+2. **Triage:** for each `new` entry, `roadmap head t H<n> <kind> "<sum>" <refs..>` in one call. Use `roadmap head triage` for the list; `split` a message with two asks, `merge` a duplicate.
+3. **Bind:** every open ask gets a link (task, issue, doc, commit, job). An ask with no link after 15 min is red in the GUI and in the gate; bind it or ask the person.
+4. **Work:** launch the workers for the bound tasks, register the jobs, and tick the asks when their links move (`doing`, then `done` by the fold). The head may set `done` (`roadmap head set H<n> status=done note=".."`).
+5. **Review:** the person confirms each done entry with `roadmap head review`, or reopens it with `roadmap head review H<n> reopen`. Only the person accepts (`head accept`). Ask the person when a review is unclear.
+6. **Save:** before a switch, list the rules and decisions accepted since the last save for HANDOVER section 2b; do not duplicate the ledger in HANDOVER.
