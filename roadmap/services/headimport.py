@@ -99,12 +99,23 @@ def parse_doc(path, sections=None):
     return items
 
 
+def _line_sum(text):
+    """The item's first line whole, up to SUM_MAX characters; a longer one is cut at a word boundary with an ellipsis."""
+    line = " ".join(str(text or "").split())
+    if len(line) <= head.SUM_MAX:
+        return line
+    cut = line[:head.SUM_MAX - 1]
+    if " " in cut:
+        cut = cut.rsplit(" ", 1)[0]
+    return cut.rstrip(" ,;:") + "…"
+
+
 def _build(item, now=None):
     """One ledger entry (without id) and its redacted text, from a parsed item."""
     clean = svc.clean_text(item["text"])
     entry = {
         "v": head.VERSION, "t": "e", "ts": svc._ts(now), "src": SRC, "kind": item["kind"],
-        "sum": svc.make_summary(clean), "len": len(clean), "h": svc._digest(clean),
+        "sum": svc.make_summary(clean, _line_sum(clean)), "len": len(clean), "h": svc._digest(clean),
     }
     return entry, clean
 
