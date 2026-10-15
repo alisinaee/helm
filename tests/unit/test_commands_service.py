@@ -12,7 +12,7 @@ from tests.unit.test_cmd_support import CmdCase, at
 class RegistryTests(CmdCase):
     def test_public_ops_are_the_mvp_list(self):
         self.assertEqual(commands.public_ops(), sorted([
-            "budget.set", "comment.add", "control.override", "control.resume", "control.stop",
+            "backlog.add", "budget.set", "comment.add", "control.override", "control.resume", "control.stop",
             "feature.accept", "feature.add", "feature.link", "feature.move", "feature.rm", "feature.set",
             "feature.unlink",
             "git.branch", "git.commit", "git.push", "git.revert", "git.switch",
@@ -20,8 +20,8 @@ class RegistryTests(CmdCase):
             "issue.close",
             "issue.link", "issue.new", "limit.rm", "limit.set", "phase.approve", "plan.move", "question.answer",
             "question.ask",
-            "rules.add", "rules.rm", "rules.sync", "subtask.add", "subtask.toggle", "task.cap", "task.rename",
-            "task.start", "task.status", "task.stop", "undo", "usage.set"]))
+            "rules.add", "rules.rm", "rules.sync", "subtask.add", "subtask.toggle", "task.backlog", "task.cap",
+            "task.promote", "task.rename", "task.start", "task.status", "task.stop", "undo", "usage.set"]))
 
     def test_unknown_op_is_a_usage_error_with_next(self):
         with self.assertRaises(RoadmapError) as ctx:
