@@ -143,8 +143,10 @@ def _build(entry, folder, rev, now, store=None):
 
 
 def _store_path(folder):
-    """The project's SQLite store (head.db beside the data) when the backend switch is on, else None."""
-    return head_store.sqlite_db(folder) if folder is not None else None
+    """The project's one SQLite store (docs/roadmap.db) when the backend switch is on, else None."""
+    if folder is None or head_store.sqlite_db(folder) is None:
+        return None
+    return store_db.db_path(folder)
 
 
 @contextlib.contextmanager

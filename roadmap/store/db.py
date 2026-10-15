@@ -1,17 +1,19 @@
-"""SQLite store (stdlib sqlite3): one file, WAL, one short write transaction per command.
+"""SQLite store (stdlib sqlite3): one file per project (docs/roadmap.db), WAL, one short write transaction per command.
 
-Not wired into the service yet. Tables: meta, phases, tasks, jobs, asks (head entries),
+open_project(data_dir) is the single entry point. Tables: meta, phases, tasks, jobs, asks (head entries),
 events (append-only; rev is the integer generation). Schema version lives in PRAGMA user_version.
 """
 
 import contextlib
 import hashlib
 import json
+import os
 import sqlite3
 import time
 
 SCHEMA_VERSION = 2
 BUSY_TIMEOUT_MS = 5000
+DB_FILE = "roadmap.db"  # the one store file per project, in the data dir (docs/roadmap.db, gitignored)
 
 # version -> statements that take the schema from version-1 to version.
 MIGRATIONS = {
@@ -88,6 +90,17 @@ def txn(conn):
         conn.execute("ROLLBACK")
         raise
     conn.execute("COMMIT")
+
+
+def db_path(data_dir):
+    """Path of the project's one store file: <data_dir>/roadmap.db."""
+    return os.path.join(str(data_dir), DB_FILE)
+
+
+def open_project(data_dir):
+    """The one store connection for a project: WAL, busy_timeout, FKs on, migrations applied. Every module
+    (jobs, head, tasks, loader) opens the project through here, so one txn can cover them all."""
+    return connect(db_path(data_dir))
 
 
 def schema_version(conn):

@@ -7,9 +7,14 @@ db copy is the one that commits or rolls back with the op. restore_file puts a s
 
 import os
 
-from roadmap.store import atomic
+from roadmap.store import atomic, db
 
 TABLE_SQL = "CREATE TABLE IF NOT EXISTS files (name TEXT PRIMARY KEY, data TEXT NOT NULL)"
+
+
+def open_store(data_dir):
+    """The project's one store connection (docs/roadmap.db): the same file jobs and head write to."""
+    return db.open_project(data_dir)
 
 
 def ensure(conn):

@@ -17,7 +17,7 @@ class TxnTests(CmdCase):
         self.addCleanup(patcher.stop)
 
     def db(self):
-        return store_db.connect(os.path.join(self.data, "head.db"))
+        return store_db.open_project(self.data)
 
     def count(self, kind):
         conn = self.db()
@@ -34,7 +34,7 @@ class TxnTests(CmdCase):
         self.switch("")
         reply = self.op("task.status", {"id": "P1.1", "status": "done"})
         self.assertTrue(reply["ok"])
-        self.assertFalse(os.path.exists(os.path.join(self.data, "head.db")))
+        self.assertFalse(os.path.exists(store_db.db_path(self.data)))
         self.assertEqual(len(self.read_lines("activity.jsonl")), 1)
 
     def test_switch_on_commits_data_activity_and_undo_together(self):
@@ -47,7 +47,7 @@ class TxnTests(CmdCase):
 
     def test_injected_failure_after_data_write_rolls_back_everything(self):
         self.switch("sqlite")
-        self.op("task.status", {"id": "P1.3", "status": "done"})  # creates head.db and seeds the mirror
+        self.op("task.status", {"id": "P1.3", "status": "done"})  # creates roadmap.db and seeds the mirror
         before = {name: self.read_text(name) for name in ("tasks.json", "activity.jsonl", "undo.jsonl")}
         real_append = store_events.append
 

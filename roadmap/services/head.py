@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 from roadmap.core import head, planfmt, secrets
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import jobs
+from roadmap.store import db as _store_db
 from roadmap.store import atomic, head_db, jsonl, lock
 from roadmap.store import config as store_config
 
@@ -67,7 +68,7 @@ def sqlite_db(data_dir):
     """Path of the head ledger db when the sqlite backend is on (env ROADMAP_STORE=sqlite, or the project entry for
     this data dir has store: sqlite). None keeps the JSON backend, which is the default."""
     if os.environ.get("ROADMAP_STORE", "").strip().lower() == "sqlite":
-        return os.path.join(data_dir, "head.db")
+        return _store_db.db_path(data_dir)
     try:
         projects = store_config.load().get("projects") or []
     except RoadmapError:
@@ -76,7 +77,7 @@ def sqlite_db(data_dir):
     for project in projects:
         if project.get("store") == "sqlite" and os.path.realpath(
                 os.path.join(str(project.get("path", "")), str(project.get("dataDir", "docs")))) == here:
-            return os.path.join(data_dir, "head.db")
+            return _store_db.db_path(data_dir)
     return None
 
 

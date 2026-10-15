@@ -1,15 +1,17 @@
 """Head ledger on the SQLite store (opt-in backend; JSON head.jsonl stays the default).
 
-Entries live in the asks table (id H<n>, data JSON with text, sum, fp). log() returns the existing entry when the
-same normalised text was logged in the last 24 h, so a repeated message does not create a second Hn. update()
+The file is the project store (docs/roadmap.db, see db.open_project). Entries live in the asks table
+(id H<n>, data JSON with text, sum, fp). log() returns the existing entry when the same normalised text was
+logged in the last 24 h, so a repeated message does not create a second Hn. update()
 appends its change to the events log in the same transaction (head.triage for set fields, head.bind for links).
-Spool rows hold hook captures until a writer takes them. Tables are created here, not in db.py.
+Spool rows hold hook captures until a writer takes them. The spool table is created here, not in db.py.
 """
 
 import contextlib
 import datetime
 import hashlib
 import json
+import os
 import re
 
 from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
@@ -37,7 +39,9 @@ def _stamp(now=None):
 
 @contextlib.contextmanager
 def _conn(db_path):
-    conn = db.connect(db_path)
+    """Open the project store. db_path names the store file (roadmap.db); only its directory is used, so a
+    caller that still passes another file name in the data dir reaches the same store."""
+    conn = db.open_project(os.path.dirname(os.path.abspath(db_path)))
     try:
         with db.txn(conn):
             conn.execute(_SPOOL_DDL)
