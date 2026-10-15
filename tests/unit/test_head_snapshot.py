@@ -5,6 +5,7 @@ rows, no `text` key anywhere in the snapshot, sessions give now and prev, and rb
 import json
 import unittest
 from datetime import datetime, timedelta, timezone
+from unittest import mock
 
 from roadmap.core import head as head_rules
 from roadmap.core import refs
@@ -12,6 +13,7 @@ from roadmap.core.snapshot import (HEAD_BYTES_MAX, HEAD_LINKED_MAX, HEAD_LINKS_M
                                    _head_size, _head_view, build_snapshot, head_link_state, head_row)
 
 NOW = datetime(2026, 10, 15, 12, 0, 0, tzinfo=timezone.utc)
+TRIM_CAP = 3072  # the old cap: forces the newest-first trim in the tests that need rows dropped
 
 
 def stamp(minutes_ago):
@@ -41,6 +43,11 @@ def session(ev, minutes_ago, model, acct, sid="s1s1s1s1", usage=None):
 
 def snap(records, **extra):
     return build_snapshot({}, {}, NOW, head_records=records, **extra)
+
+
+def snap_trimmed(records):
+    with mock.patch("roadmap.core.snapshot.HEAD_BYTES_MAX", TRIM_CAP):
+        return snap(records)
 
 
 def walk_keys(value):
@@ -136,10 +143,10 @@ class HeadSizeAndPrivacy(unittest.TestCase):
         records = [entry("H%d" % i, 30 + i, "Long summary text that keeps going " * 4 + str(i)) for i in range(1, 41)]
         records += [entry("H%d" % (41 + i), 500 + i, "Done " + "word " * 30) for i in range(5)]
         records += [update("H%d" % (41 + i), 1, by="person", sets={"status": "done"}) for i in range(5)]
-        full = snap(records)
+        full = snap_trimmed(records)
         head = full["head"]
         raw = json.dumps(head, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-        self.assertLessEqual(len(raw), HEAD_BYTES_MAX)
+        self.assertLessEqual(len(raw), TRIM_CAP)
         self.assertEqual(head["counts"]["open"], 40)
         self.assertLess(len(head["rows"]), 45)
         self.assertNotIn("text", set(walk_keys(full)))
@@ -155,10 +162,10 @@ class HeadSizeAndPrivacy(unittest.TestCase):
 class HeadTrimKeepsNewest(unittest.TestCase):
     def test_forty_open_rows_keep_the_newest_and_respect_the_cap(self):
         records = [entry("H%d" % i, 40 - i, "Ask number %d about the export" % i) for i in range(1, 41)]
-        full = snap(records)
+        full = snap_trimmed(records)
         head = full["head"]
         raw = json.dumps(head, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-        self.assertLessEqual(len(raw), HEAD_BYTES_MAX)
+        self.assertLessEqual(len(raw), TRIM_CAP)
         self.assertEqual(head["counts"]["open"], 40)
         kept = [row["id"] for row in head["rows"]]
         self.assertTrue(kept, "some rows must be kept")
@@ -168,13 +175,22 @@ class HeadTrimKeepsNewest(unittest.TestCase):
         self.assertNotIn("H1", kept)
         print("kept %d of 40 rows" % len(kept))
 
+    def test_thirty_six_open_rows_keep_the_newest_thirty(self):
+        records = [entry("H%d" % i, 41 - i, "Long ask number %d about the export button and the map view %s"
+                         % (i, "x" * 60)) for i in range(1, 37)]
+        head = snap(records)["head"]
+        raw = json.dumps(head, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        self.assertLessEqual(len(raw), HEAD_BYTES_MAX)
+        kept = [row["id"] for row in head["rows"]]
+        self.assertTrue({"H%d" % i for i in range(7, 37)} <= set(kept))  # the newest 30 are always kept
+
     def test_open_rows_outrank_done_rows_when_trimmed(self):
         records = [entry("H%d" % i, 200 - i, "Done ask %d" % i) for i in range(1, 6)]
         records += [update("H%d" % i, 1, by="person", sets={"status": "done"}) for i in range(1, 6)]
         records += [entry("H%d" % i, 40 - i, "Ask number %d about the export" % i) for i in range(10, 50)]
-        head = snap(records)["head"]
+        head = snap_trimmed(records)["head"]
         raw = json.dumps(head, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-        self.assertLessEqual(len(raw), HEAD_BYTES_MAX)
+        self.assertLessEqual(len(raw), TRIM_CAP)
         self.assertTrue(all(row["status"] != "done" for row in head["rows"]))
 
 
@@ -321,7 +337,7 @@ class HeadLinkedProgAskOf(unittest.TestCase):
                                                 "status": "partial",
                                                 "jobs": [{"id": "j1", "model": "Haiku", "state": "running"}]})
         self.assertEqual(by_ref["task:R1"]["jobs"], [])
-        self.assertEqual(by_ref["issue:I4"], {"ref": "issue:I4", "title": "Blocker", "status": "open", "jobs": []})
+        self.assertEqual(by_ref["issue:I4"], {"ref": "issue:I4", "status": "open", "jobs": []})  # title only on the first
         self.assertEqual(by_ref["job:j1"]["jobs"], [{"id": "j1", "model": "Haiku", "state": "running"}])
         self.assertEqual(row["links"], ["task:R7.31", "task:R1", "issue:I4"])
         self.assertEqual(row["status"], "doing")
