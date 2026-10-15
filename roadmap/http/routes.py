@@ -16,7 +16,8 @@ from urllib.parse import parse_qsl
 
 from roadmap import __version__
 from roadmap.core import head as head_rules
-from roadmap.core.snapshot import SNAPSHOT_SCHEMA_VERSION, head_link_state, head_row
+from roadmap.core.snapshot import (ACTIVE, HEAD_JOB_STATES, SNAPSHOT_SCHEMA_VERSION, _progress, _resolve_links,
+                                   head_link_state, head_row)
 from roadmap.errors import (EXIT_CONFLICT, EXIT_ERROR, EXIT_EXTERNAL, EXIT_INVALID_DATA, EXIT_NOT_FOUND,
                             EXIT_USAGE, RoadmapError)
 from roadmap import log as rlog
@@ -527,8 +528,9 @@ def notes(app, req, match):
 
 HEAD_F = ("open", "all")
 HEAD_N_DEFAULT, HEAD_N_MAX = 100, 200
-HEAD_QUERY_KEYS = ("f", "n", "full")
+HEAD_QUERY_KEYS = ("f", "n", "full", "offset", "limit")
 HEAD_HISTORY_MAX = 20
+HEAD_LIMIT_DEFAULT, HEAD_LIMIT_MAX, HEAD_OFFSET_MAX = 50, 200, 1000000
 
 
 def _head_query(query):
@@ -549,6 +551,34 @@ def _head_query(query):
     if full is not None and not re.fullmatch(r"H\d{1,4}", full):
         raise RoadmapError("invalid_input", "full must be a head id such as H12", EXIT_USAGE)
     return f, int(n_text), full
+
+
+def _head_is_paged(query):
+    """True when the query asks for a page (offset or limit given): the paged read of the full ledger."""
+    keys = [key for key, _ in parse_qsl(query or "", keep_blank_values=True)]
+    return "offset" in keys or "limit" in keys
+
+
+def _head_page_query(query):
+    """(offset, limit) of a paged read: offset 0..1000000 (default 0), limit 1..200 (default 50). Else 400."""
+    opts = dict(parse_qsl(query or "", keep_blank_values=True))
+    offset_text = opts.get("offset", "0")
+    limit_text = opts.get("limit", str(HEAD_LIMIT_DEFAULT))
+    if not re.fullmatch(r"\d{1,7}", offset_text) or int(offset_text) > HEAD_OFFSET_MAX:
+        raise RoadmapError("invalid_input", "offset must be a whole number from 0 to 1000000", EXIT_USAGE)
+    if not re.fullmatch(r"\d{1,4}", limit_text) or not 1 <= int(limit_text) <= HEAD_LIMIT_MAX:
+        raise RoadmapError("invalid_input", "limit must be a whole number from 1 to 200", EXIT_USAGE)
+    return int(offset_text), int(limit_text)
+
+
+def _head_page_row(entry, moment, accepted, open_tasks, index, live_jobs):
+    """One row of a paged read, in the snapshot row shape: suggest, linked and prog as the snapshot head key gives
+    them (issue links are not indexed here, so an issue ref shows no title)."""
+    suggest = None
+    if entry["status"] not in head_rules.CLOSED_STATUSES and not entry["links"]:
+        suggest = head_rules.suggest_binds(entry["sum"], open_tasks, ()) or None
+    return head_row(entry, moment, entry["id"] in accepted, suggest,
+                    linked=_resolve_links(entry, index, live_jobs) or None, prog=_progress(entry, index))
 
 
 def _same_page_read(headers, port):
@@ -585,9 +615,27 @@ def project_head(app, req, match):
     _, data_dir = task_service.resolve(project)
     snap = loader.load_snapshot(project)
     moment = datetime.now().astimezone()
-    entries = head_service.rows(data_dir, link_state=head_link_state(snap["tasks"], snap["jobs"]), now=moment)
-    shown = [e for e in entries if f == "all" or e["status"] not in head_rules.CLOSED_STATUSES]
-    body = {"f": f, "n": n, "total": len(shown), "rows": [head_row(e, moment) for e in shown[-n:]]}
+    link_state = head_link_state(snap["tasks"], snap["jobs"])
+    if _head_is_paged(req.query):
+        offset, limit = _head_page_query(req.query)
+        page = head_service.page(data_dir, f=f, offset=offset, limit=limit, link_state=link_state, now=moment)
+        entries = page["entries"]
+        index = {}
+        for t in snap["tasks"]:
+            if t.get("id"):
+                index["task:" + t["id"]] = {"title": str(t.get("title") or ""), "status": t.get("state")}
+        for j in snap["jobs"]:
+            if j.get("id"):
+                index["job:" + j["id"]] = {"title": str(j.get("title") or ""), "status": j.get("status")}
+        open_tasks = [t for t in snap["tasks"] if t.get("state") in ACTIVE]
+        live_jobs = [j for j in snap["jobs"] if j.get("status") in HEAD_JOB_STATES]
+        rows = [_head_page_row(e, moment, page["accepted"], open_tasks, index, live_jobs) for e in page["rows"]]
+        body = {"f": f, "offset": offset, "limit": limit, "total": page["total"], "counts": page["counts"],
+                "rows": rows}
+    else:
+        entries = head_service.rows(data_dir, link_state=link_state, now=moment)
+        shown = [e for e in entries if f == "all" or e["status"] not in head_rules.CLOSED_STATUSES]
+        body = {"f": f, "n": n, "total": len(shown), "rows": [head_row(e, moment) for e in shown[-n:]]}
     if full is not None:
         if not any(e["id"] == full for e in entries):
             raise RoadmapError("not_found", "no head entry " + full, EXIT_NOT_FOUND)
