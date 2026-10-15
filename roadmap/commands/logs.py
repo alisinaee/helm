@@ -35,7 +35,7 @@ def register(sub, common):
     parser.add_argument("view", nargs="?", choices=VIEWS, default=None,
                         help="summary | marks | status (default: the last WARN and ERROR events)")
     parser.add_argument("--since", default=None, metavar="10m|2h|1d", help="only events newer than this")
-    parser.add_argument("--src", choices=roadmap_log.SOURCES, default=None, help="ui, core or hook")
+    parser.add_argument("--src", choices=sorted(roadmap_log.SOURCES), default=None, help="ui, core or hook")
     parser.add_argument("--ev", default=None, metavar="NAME", help="one event name, for example ui.error")
     parser.add_argument("--ref", default=None, metavar="rb:...", help="one project/kind/id reference")
     parser.add_argument("--session", default=None, metavar="last|SID", help="one session id, or the newest one")
