@@ -29,28 +29,70 @@ export function applyMeters(root) {
   }
 }
 
-// Replace one section's contents. Returns true when the DOM changed. A focused select or text field is left alone
-// until focus moves, so an open dropdown is not closed by a poll.
+// Replace one section's contents. Returns true when the DOM changed. The section is always written (a poll never
+// skips it); a focused control inside it keeps its id (or data-focus key), its value and its selection. When the new
+// markup has no matching control, the section is written and focus is not restored.
 export function patch(sectionId, html) {
   const el = document.getElementById(sectionId);
   if (!el) return false;
   if (lastHtml.get(sectionId) === html) return false;
   const active = document.activeElement;
   const inside = Boolean(active) && el.contains(active);
-  if (inside && (active.tagName === "SELECT" || active.tagName === "INPUT")) return false;
-  const focusKey = inside ? active.getAttribute("data-focus") : null;
+  const keep = inside ? focusState(active) : null;
   el.innerHTML = html;
   lastHtml.set(sectionId, html);
   applyMeters(el);
-  if (focusKey) {
-    for (const candidate of el.querySelectorAll("[data-focus]")) {
-      if (candidate.getAttribute("data-focus") === focusKey) {
-        candidate.focus({ preventScroll: true });
-        break;
-      }
+  if (keep) restoreFocus(el, keep);
+  return true;
+}
+
+const FIELD_TAGS = ["INPUT", "SELECT", "TEXTAREA"];
+
+// The stable key of a control: its id, else its data-focus key. Null when it has neither.
+function keyOf(node) {
+  if (!node || !node.getAttribute) return null;
+  return node.getAttribute("id") || node.getAttribute("data-focus") || null;
+}
+
+// Remember the focused control: its key, tag, value and selection (fields only; selection is read in a try because
+// some input types do not expose it).
+function focusState(node) {
+  const key = keyOf(node);
+  if (!key) return null;
+  const isField = FIELD_TAGS.indexOf(node.tagName) >= 0;
+  const state = { key: key, tag: node.tagName, field: isField, value: null, start: null, end: null };
+  if (isField) {
+    state.value = node.value;
+    try {
+      state.start = node.selectionStart;
+      state.end = node.selectionEnd;
+    } catch (err) {
+      state.start = null;
+      state.end = null;
     }
   }
-  return true;
+  return state;
+}
+
+// Find the new element with the remembered key and put focus, value and selection back on it.
+function restoreFocus(el, state) {
+  let match = null;
+  for (const candidate of el.querySelectorAll("[id], [data-focus]")) {
+    if (keyOf(candidate) === state.key && candidate.tagName === state.tag) {
+      match = candidate;
+      break;
+    }
+  }
+  if (!match) return;
+  if (state.field) {
+    match.value = state.value;
+    try {
+      if (state.start != null && state.end != null) match.setSelectionRange(state.start, state.end);
+    } catch (err) {
+      // Some input types cannot take a selection; the value is still restored.
+    }
+  }
+  match.focus({ preventScroll: true });
 }
 
 // Replace the contents of one element that has no id (patch() needs one). Sets meter widths like patch() does.
