@@ -50,6 +50,11 @@ START HERE in a new chat (any account, same Mac): `cd ~/Works/roadmap-board` and
   R7.45 Cursor grok sync ROOT CAUSE (writes docs/reviews/cursor-sync-root.md; then file Haiku fixes from it);
   R7.46 Haiku ledger audit (writes docs/reviews/head-unhandled.md; then file one task per NOT HANDLED ask and run
   them). Verify each, full suite, commit by path, push.
+- Later pushed: f8e4ab5 + 220bc09 (R7.44/R7.49 head paging, all 109 rows load), 99bd8f3 0f230f6 7cf12c3 (R7.50-52 sync
+  ROOT fix: one revision per project, cached build, 304 keeps state, usage on snapshot, focus-safe patch). Suite 3195 OK;
+  service restarted. Still running: agy R7.47 375px audits (docs/reviews/agy-375-*.md), Cursor R7.48 commit review
+  (docs/reviews/cursor-commits-review.md): file Haiku fixes from them. Untracked tests/unit/test_head_review_fixes.py
+  is old WIP of unknown origin: check before committing.
 - /head skill now carries a "Standing mandate" (no re-tuning needed in a new chat, H106).
 - Open asks: H52 and H81 need the person (unclear text); H58 needs OpenCode credit; H73 Chrome access untested;
   H84 waits on R7.41. Rules from this chat are in HEAD-RUNBOOK "Usage limits".

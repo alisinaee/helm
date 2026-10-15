@@ -1779,37 +1779,46 @@
       "id": "R7.50",
       "phase": "R7",
       "title": "Sync root fix server: one revision per project, cached build, usage on snapshot (cursor-sync-root.md)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 60,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:39:29+03:30"
+      }
     },
     {
       "id": "R7.51",
       "phase": "R7",
       "title": "Sync root fix client: 304 keeps state, one body for all sections, usage from snapshot",
-      "status": "todo",
+      "status": "done",
       "tokensK": 50,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:39:29+03:30"
+      }
     },
     {
       "id": "R7.52",
       "phase": "R7",
       "title": "Sync root fix: dom patch keeps focus but paints; head full cache keyed by rev",
-      "status": "todo",
+      "status": "done",
       "tokensK": 30,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:39:29+03:30"
+      }
     }
   ],
   "schemaVersion": 1
