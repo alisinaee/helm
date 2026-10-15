@@ -29,7 +29,7 @@ CSS_DIR = os.path.join(WEB, "css")
 SHELL_TEST = os.path.join(TESTS, "web", "test_shell.py")
 RENDER = os.path.join(TESTS, "web", "render_head.mjs")
 FIXTURE = os.path.join(REPO, "fixtures", "demo", "alpha", "docs", "head.jsonl")
-HEAD_CSS_MAX = 2560  # raised from 1400 on 2026-10-15 (head.css is 2425 bytes now: whole-row toggle, footer, Added column)
+HEAD_CSS_MAX = 3072  # raised from 1400 on 2026-10-15 (head.css is 2890 bytes: toggle, footer, Added column, badge)
 TRACKS = "18px 56px 76px minmax(0,1fr) 150px 96px 44px 96px 36px 32px 32px"
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=|<script', re.IGNORECASE)
 OPS = re.compile(r'run\(\s*"([a-z.]+)"')
@@ -239,6 +239,16 @@ class HeadRender(unittest.TestCase):
         self.assertIn("&lt;img src=x onerror=alert(1)&gt;", html)
         self.assertNotIn("<img", html)
         self.assertNotIn("<script", html)
+
+    def test_head_badge_names_the_model_first_on_the_now_line(self):
+        html = self.out["screen"]
+        self.assertIn('<p class="hd-now-line"><strong class="hd-badge">Head: Opus 5.5</strong>', html)
+        self.assertIn('<span class="hd-now-rest">acct B', html)
+
+    def test_no_head_claim_says_how_to_claim(self):
+        html = self.out["unclaimed"]
+        self.assertIn('<strong class="hd-badge hd-badge-off">Head: not claimed (run roadmap head claim)</strong>', html)
+        self.assertNotIn("hd-now-rest", html)
 
     def test_alerts_count_unhandled_needs_and_unaccepted_done(self):
         html = self.out["screen"]
