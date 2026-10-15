@@ -148,7 +148,8 @@ class AdminRender(unittest.TestCase):
     def test_rules_render_tabs_rows_and_sync(self):
         html = self.out["project_rules"]
         self.assertIn("Keep replies short.", html)
-        self.assertIn("Budget per task (40k)", html)
+        self.assertIn("Budget per task", html)
+        self.assertIn('<span class="rg-num num">40k</span>', html)
         self.assertIn('data-action="rule-sync"', html)
         self.assertIn("A backup copy", html)
         self.assertIn('maxlength="160"', html)

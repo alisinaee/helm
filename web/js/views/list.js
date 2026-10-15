@@ -163,7 +163,8 @@ function headHtml(ctx, allChecked, shownIds) {
     esc(shownIds.join(",")) + '" data-focus="wk-select-all" aria-label="Select all visible tasks"' +
     (allChecked ? " checked" : "") +
     "></th>";
-  return "<thead><tr>" + all + cells + '<th scope="col" class="wk-c-flags">Flags</th></tr></thead>';
+  return "<thead><tr>" + all + cells + '<th scope="col" class="wk-c-flags">Flags</th>' +
+    '<th scope="col" class="wk-c-ref"><span class="sr-only">Copy reference</span></th></tr></thead>';
 }
 
 function rowHtml(ctx, task, checked) {
@@ -182,15 +183,15 @@ function rowHtml(ctx, task, checked) {
     (checked ? " checked" : "") + "></td>" +
     '<td class="wk-c-id num">' + esc(task.id) + "</td>" +
     '<td class="wk-c-title"><a href="' + esc(taskHref(ctx, task.id)) + '" data-focus="wk-title-' + esc(task.id) +
-    '" title="' + esc(task.title) + '">' + esc(task.title) + "</a>" +
-    taskCopyHtml(ctx.pid, ctx.snap, copyItem(task)) + "</td>" +
+    '" title="' + esc(task.title) + '">' + esc(task.title) + "</a></td>" +
     '<td class="wk-c-phase">' + esc(task.phase) + "</td>" +
     '<td class="wk-c-status">' + esc(STATE_LABEL[task.state] || task.state) + "</td>" +
     '<td class="wk-c-model">' + (task.model ? modelChip(task.model) : "") + "</td>" +
     '<td class="wk-c-est num">' + esc(fmtTokens(task.tokensK)) + "</td>" +
     '<td class="wk-c-spent num">' + esc(fmtTokens(task.spentK)) + "</td>" +
     '<td class="wk-c-cap num">' + esc(task.capK == null ? MISSING : fmtTokens(task.capK)) + "</td>" +
-    '<td class="wk-c-flags">' + flags.join(" ") + "</td></tr>";
+    '<td class="wk-c-flags">' + flags.join(" ") + "</td>" +
+    '<td class="wk-c-ref">' + taskCopyHtml(ctx.pid, ctx.snap, copyItem(task)) + "</td></tr>";
 }
 
 export function listView(ctx) {
@@ -208,7 +209,7 @@ export function listView(ctx) {
     const copy = sectionCopyHtml(ctx.pid, "list." + ctx.group + "." + (group.key || "unassigned"),
       group.label, group.items.length);
     const head = group.label === null ? ""
-      : '<tr class="wk-group-head"><th scope="colgroup" colspan="10">' + esc(group.label) + " · " +
+      : '<tr class="wk-group-head"><th scope="colgroup" colspan="11">' + esc(group.label) + " · " +
         group.items.length + (group.items.length === 1 ? " task" : " tasks") + copy + "</th></tr>";
     const rows = group.items.map(function (t) {
       return rowHtml(ctx, t, sel.has(t.id));
