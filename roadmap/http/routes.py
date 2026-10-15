@@ -535,6 +535,16 @@ def _head_query(query):
     return f, int(n_text), full
 
 
+def _same_page_read(headers, port):
+    """A same-origin page read: Sec-Fetch-Site same-origin, and an Origin only when one is sent (a browser sends no
+    Origin on a same-origin GET, so browser_proof would refuse the page's own text fetch)."""
+    site = headers.get("Sec-Fetch-Site")
+    origin = headers.get("Origin")
+    if site is None or site.strip().lower() != "same-origin":
+        return False
+    return origin is None or origin.strip().lower() in security.origins(port)
+
+
 def _head_history(records, eid):
     """The last lines of one entry's history: when it was logged, and each update (set, link, note). Text is not here."""
     out = []
@@ -567,7 +577,7 @@ def project_head(app, req, match):
             raise RoadmapError("not_found", "no head entry " + full, EXIT_NOT_FOUND)
         body["full"] = {"id": full}
         if app.cmd_source != "phone":
-            if not security.browser_proof(req.headers, app.port):
+            if not _same_page_read(req.headers, app.port):
                 raise RoadmapError("forbidden", "the full text is for this server's own page only", EXIT_ERROR)
             body["full"]["text"] = head_service.text_of(data_dir, full)
             body["full"]["history"] = _head_history(head_service._records(data_dir), full)

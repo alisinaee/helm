@@ -30,7 +30,8 @@ SHELL_TEST = os.path.join(TESTS, "web", "test_shell.py")
 RENDER = os.path.join(TESTS, "web", "render_head.mjs")
 FIXTURE = os.path.join(REPO, "fixtures", "demo", "alpha", "docs", "head.jsonl")
 HEAD_CSS_MAX = 3072  # raised from 1400 on 2026-10-15 (head.css is 2890 bytes: toggle, footer, Added column, badge)
-TRACKS = "18px 56px 76px minmax(0,1fr) 150px 96px 44px 96px 36px 32px 32px"
+TRACKS = "18px 56px 76px minmax(0,1fr) 150px 96px 44px 96px 32px 32px"
+ROW_ID = re.compile(r'<div class="row-grid hd-row" data-id="(H\d+)"')
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=|<script', re.IGNORECASE)
 OPS = re.compile(r'run\(\s*"([a-z.]+)"')
 NOW = datetime(2026, 10, 15, 10, 0, tzinfo=timezone.utc)
@@ -141,10 +142,16 @@ class HeadCss(unittest.TestCase):
                     if name.endswith(".css"))
         self.assertLessEqual(total, cap, "web/css totals %d bytes" % total)
 
-    def test_eleven_fixed_tracks_on_the_shared_grid(self):
+    def test_ten_fixed_tracks_on_the_shared_grid_and_summary_takes_the_rest(self):
         css = read(CSS)
         self.assertIn(".hd-row.row-grid{position:relative;align-items:center;grid-template-columns:" + TRACKS + "}", css)
-        self.assertEqual(len(TRACKS.split(" ")), 11)
+        self.assertEqual(len(TRACKS.split(" ")), 10)
+        self.assertEqual(TRACKS.split(" ")[3], "minmax(0,1fr)")
+
+    def test_summary_wraps_to_two_lines_in_every_row(self):
+        css = read(CSS)
+        self.assertRegex(css, r"\.hd-row \.hd-sum\{[^}]*-webkit-line-clamp:2")
+        self.assertNotIn("is-open .hd-sum", css)
 
     def test_numbers_right_aligned_and_actions_in_fixed_tracks(self):
         css = read(CSS)
@@ -154,7 +161,7 @@ class HeadCss(unittest.TestCase):
     def test_phone_turns_rows_into_cards_and_hides_the_header(self):
         css = read(CSS)
         self.assertIn("@media (max-width:599px)", css)
-        self.assertRegex(css, r"\.hd-head,\.hd-s,\.hd-when\{display:none\}")
+        self.assertRegex(css, r"\.hd-head,\.hd-when\{display:none\}")
         self.assertRegex(css, r"@media \(max-width:599px\)\{[\s\S]*flex-wrap:wrap")
 
     def test_no_raw_colour_outside_tokens(self):
@@ -196,11 +203,35 @@ class HeadRender(unittest.TestCase):
             raise AssertionError("render failed: " + proc.stderr[-800:])
         cls.out = json.loads(proc.stdout)
 
-    def test_each_row_has_eleven_cells_and_the_header_too(self):
+    def test_each_row_has_ten_cells_and_the_header_too(self):
         html = self.out["screen"]
         rows = html.count('<li class="hd-item')
         self.assertEqual(rows, 7)
-        self.assertEqual(html.count('class="hd-c'), 11 * (rows + 1))
+        self.assertEqual(html.count('class="hd-c'), 10 * (rows + 1))
+
+    def test_no_session_column_and_no_dash_in_empty_cells(self):
+        html = self.out["screen"]
+        self.assertNotIn('hd-s"', html)
+        self.assertNotIn(">S</span>", html)
+        self.assertEqual(re.findall(r'<span class="hd-c[^"]*">–</span>', html), [])
+
+    def test_newest_first_by_default_and_oldest_on_request(self):
+        newest = ROW_ID.findall(self.out["screen"])
+        oldest = ROW_ID.findall(self.out["oldest"])
+        self.assertEqual(len(newest), 7)
+        self.assertEqual(newest, list(reversed(oldest)))
+        self.assertEqual(newest[0], "H6")
+        self.assertEqual(oldest[0], "H7")
+
+    def test_summary_falls_back_to_the_text_when_the_stored_sum_is_a_cut(self):
+        html = self.out["shortSum"]
+        self.assertIn("very important feature", html)
+        self.assertIn("&lt;img src=x onerror=alert(1)&gt;", html)
+        self.assertNotIn("<img src=x", html)
+
+    def test_sort_is_kept_in_the_hash_only_when_oldest(self):
+        self.assertEqual(self.out["hashOld"], "#head?f=all&sort=old")
+        self.assertEqual(self.out["hashNew"], "#head?f=all")
 
     def test_header_is_outside_the_list(self):
         html = self.out["screen"]

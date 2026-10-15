@@ -86,6 +86,19 @@ class HeadRoute(ServerCase):
         self.assertEqual([line["by"] for line in full["history"]], ["cli", "head"])
         self.assertEqual(full["history"][1]["note"], "triaged")
 
+    def test_full_accepts_a_browser_same_origin_get_without_origin(self):
+        # A browser sends no Origin on a same-origin GET, only Sec-Fetch-Site: same-origin (the page's own fetch).
+        res = self.get("full=%s" % self.first["id"], headers={"Sec-Fetch-Site": "same-origin"})
+        self.assertEqual(res.status, 200)
+        self.assertEqual(res.json()["full"]["text"], "Please fix the broken export button")
+
+    def test_full_refuses_cross_site_and_foreign_origin_reads(self):
+        cross = self.get("full=%s" % self.first["id"], headers={"Sec-Fetch-Site": "cross-site"})
+        foreign = self.get("full=%s" % self.first["id"],
+                           headers={"Origin": "http://evil.example", "Sec-Fetch-Site": "same-origin"})
+        self.assertEqual((cross.status, foreign.status), (403, 403))
+        self.assertNotIn(b"Please fix", cross.body + foreign.body)
+
     def test_full_unknown_id_gives_404(self):
         res = self.get("full=H999", headers=self.same_origin)
         self.assertEqual(res.status, 404)

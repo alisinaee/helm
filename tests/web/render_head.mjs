@@ -21,4 +21,10 @@ console.log(JSON.stringify({
   unclaimed: head.headHtml({ head: { counts: {}, rows: [] } }, Object.assign({ f: "open" }, base)),
   noMatch: head.headHtml(vm, Object.assign({ f: "open", q: "zzz-none" }, base)),
   hash: head.hashOf({ f: "unhandled", q: "a b", kind: "bug" }),
+  oldest: head.headHtml(vm, Object.assign({ f: "all", sort: "old" }, base)),
+  hashOld: head.hashOf({ f: "all", sort: "old" }),
+  hashNew: head.hashOf({ f: "all", sort: "new" }),
+  shortSum: head.headHtml({ head: Object.assign({}, vm.head, { rows: vm.head.rows.map(function (r) {
+    return r.id === "H1" ? Object.assign({}, r, { sum: "<img src=x" }) : r;
+  }) }) }, Object.assign({ f: "all" }, base)),
 }));

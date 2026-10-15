@@ -30,6 +30,8 @@ const UNHANDLED = ["new", "understood"];
 const BOUND_MAX = 2;
 const FULL_CONCURRENCY = 3;
 const FULL_ID = /^H\d{1,4}$/;
+const SORTS = ["new", "old"];
+const SUM_SHOW = 140;
 
 // Client state: the verbatim texts fetched so far (key "project\nid"), the requests in flight, the open row ids, and
 // the hash row already opened once (so a re-render does not reopen a row the person closed).
@@ -120,18 +122,22 @@ function filterHtml(opts) {
   const active = opts.f || "open";
   const links = FILTERS.map(function (pair) {
     const cur = pair[0] === active ? ' aria-current="page"' : "";
-    return '<a class="hd-filter" href="' + esc(hashOf({ f: pair[0], kind: opts.kind, sid: opts.sid, q: opts.q })) +
+    return '<a class="hd-filter" href="' + esc(hashOf({ f: pair[0], kind: opts.kind, sid: opts.sid, q: opts.q,
+      sort: opts.sort })) +
       '"' + cur + ">" + esc(pair[1]) + "</a>";
   });
   return links.join("");
 }
 
-// The page hash for one filter state. Empty values are left out, so the hash stays short.
+// The page hash for one filter state. Empty values are left out, so the hash stays short; the default order
+// (sort=new) is left out too.
 export function hashOf(state) {
-  const keys = ["f", "q", "kind", "sid", "id"];
+  const keys = ["f", "q", "kind", "sid", "sort", "id"];
   const parts = [];
   for (const key of keys) {
-    if (state[key]) parts.push(key + "=" + encodeURIComponent(String(state[key])));
+    if (state[key] && !(key === "sort" && state[key] === "new")) {
+      parts.push(key + "=" + encodeURIComponent(String(state[key])));
+    }
   }
   return "#head" + (parts.length ? "?" + parts.join("&") : "");
 }
@@ -156,6 +162,9 @@ function barHtml(vm, opts) {
     optionsHtml(KINDS, opts.kind, "all") + "</select></label>" +
     '<label class="hd-sel"><span class="hd-lbl">Session</span><select data-field="sid">' +
     optionsHtml(accts, opts.sid, "all") + "</select></label>" +
+    '<label class="hd-sel"><span class="hd-lbl">Order</span><select data-field="sort">' +
+    '<option value="new"' + (opts.sort === "old" ? "" : " selected") + ">Newest</option>" +
+    '<option value="old"' + (opts.sort === "old" ? " selected" : "") + ">Oldest</option></select></label>" +
     '<button type="button" class="btn hd-log" data-action="head-log">+ Log</button>' +
     '<nav class="hd-filters" aria-label="Filter">' + filterHtml(opts) + "</nav></div>";
 }
@@ -165,7 +174,7 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 // The local date and time of an entry's ts: "15 Oct 14:32" (full: "15 Oct 2026 14:32"), or MISSING without a ts.
 export function whenText(iso, full) {
   const ms = Date.parse(String(iso || ""));
-  if (!isFinite(ms)) return MISSING;
+  if (!isFinite(ms)) return "";
   const d = new Date(ms);
   const pad = function (n) {
     return (n < 10 ? "0" : "") + n;
@@ -175,7 +184,7 @@ export function whenText(iso, full) {
 }
 
 function ageText(minutes) {
-  if (typeof minutes !== "number" || !isFinite(minutes)) return MISSING;
+  if (typeof minutes !== "number" || !isFinite(minutes)) return "";
   if (minutes < 60) return Math.max(0, Math.round(minutes)) + "m";
   if (minutes < 1440) return Math.floor(minutes / 60) + "h";
   return Math.floor(minutes / 1440) + "d";
@@ -232,6 +241,30 @@ function fullOf(vm, pid, id) {
   return fullCache.get((pid || "") + "\n" + id) || null;
 }
 
+// The summary cell: the stored sum, or the first 140 characters of the verbatim text when the stored sum is only a
+// short cut of it (older imports kept one clause).
+function summaryText(sum, full) {
+  const text = full && typeof full.text === "string" ? full.text.split(/\s+/).filter(Boolean).join(" ") : "";
+  const stem = String(sum || "").replace(/…$/, "");
+  if (!text || text.length <= stem.length || text.indexOf(stem) !== 0) return String(sum || "");
+  return text.slice(0, SUM_SHOW) + (text.length > SUM_SHOW ? "…" : "");
+}
+
+// Newest first by default (the entry's ts, then its id number); sort "old" reverses it.
+function sortRows(rows, sort) {
+  const when = function (row) {
+    const ms = Date.parse(String(row.ts || ""));
+    return isFinite(ms) ? ms : 0;
+  };
+  const num = function (row) {
+    return parseInt(String(row.id).replace(/\D/g, ""), 10) || 0;
+  };
+  const sorted = rows.slice().sort(function (a, b) {
+    return (when(a) - when(b)) || (num(a) - num(b));
+  });
+  return sort === "old" ? sorted : sorted.reverse();
+}
+
 // What the text box says: the text, or why there is none (loading, or the phone listener gets no text).
 function textNote(full) {
   if (!full) return "Loading the text…";
@@ -246,7 +279,8 @@ function rowHtml(vm, row, opts) {
   const pid = opts.project || null;
   const acc = row.acc === true;
   const carried = row.carried ? ' <span class="hd-carried" title="Carried over">↺</span>' : "";
-  const accCell = opts.readOnly ? '<span class="hd-c hd-acc-cell">' + (acc ? "✓" : MISSING) + "</span>" :
+  const shown = summaryText(row.sum, fullOf(vm, pid, id));
+  const accCell = opts.readOnly ? '<span class="hd-c hd-acc-cell">' + (acc ? "✓" : "") + "</span>" :
     '<span class="hd-c hd-acc-cell"><button type="button" class="hd-acc" role="checkbox" aria-checked="' +
     (acc ? "true" : "false") + '" aria-label="' + esc("Accepted, " + id) + '" data-action="head-accept" data-id="' +
     eid + '">' + (acc ? "☑" : "☐") + "</button></span>";
@@ -255,16 +289,16 @@ function rowHtml(vm, row, opts) {
     (open ? "true" : "false") + '" aria-controls="hd-p-' + eid + '" aria-label="' +
     esc((open ? "Hide " : "Show ") + id) + '"></button>' +
     '<span class="hd-c hd-chev" aria-hidden="true">▸</span>' +
-    '<span class="hd-c hd-id">' + eid + "</span>" +
+    '<span class="hd-c hd-id">' + eid + carried + "</span>" +
     '<span class="hd-c hd-kind">' + esc(row.kind || "") + "</span>" +
-    '<span class="hd-c hd-sum rg-t" title="' + esc(row.sum || "") + '">' + esc(row.sum || "") + "</span>" +
+    '<span class="hd-c hd-sum rg-t" data-sum="' + esc(row.sum || "") + '" title="' + esc(shown) + '">' +
+    esc(shown) + "</span>" +
     '<span class="hd-c hd-bound">' + boundHtml(row.links, pid, BOUND_MAX) +
       (row.more ? ' <span class="chip chip-neutral">+' + esc(row.more) + "</span>" : "") + "</span>" +
     '<span class="hd-c hd-status">' + statusHtml(row) + "</span>" +
     '<span class="hd-c hd-age rg-num' + (row.stale ? " hd-stale" : row.amber ? " hd-amber" : "") + '"' +
     (row.stale ? ' title="Stale"' : "") + ">" + esc(ageText(row.age)) + "</span>" +
     '<span class="hd-c hd-when rg-num" title="' + esc(row.ts || "") + '">' + esc(whenText(row.ts)) + "</span>" +
-    '<span class="hd-c hd-s">' + esc(row.acct || row.sid || MISSING) + carried + "</span>" +
     accCell +
     '<span class="hd-c hd-copy">' + copyButton("ask", id, id, { project: pid, sum: row.sum || "" }) + "</span>" +
     "</div>";
@@ -347,7 +381,7 @@ function headerHtml() {
   return '<div class="row-grid hd-row hd-head rg-head" aria-hidden="true">' +
     '<span class="hd-c"></span><span class="hd-c">ID</span><span class="hd-c">Kind</span>' +
     '<span class="hd-c">Summary</span><span class="hd-c">Bound to</span><span class="hd-c">Status</span>' +
-    '<span class="hd-c hd-age">Age</span><span class="hd-c hd-when">Added</span><span class="hd-c">S</span>' +
+    '<span class="hd-c hd-age">Age</span><span class="hd-c hd-when">Added</span>' +
     '<span class="hd-c">Acc</span>' +
     '<span class="hd-c">Ref</span></div>';
 }
@@ -367,9 +401,9 @@ export function headHtml(vm, opts) {
   const o = opts || {};
   const head = vm && vm.head ? vm.head : {};
   const all = rowsOf(vm);
-  const rows = all.filter(function (row) {
+  const rows = sortRows(all.filter(function (row) {
     return passes(row, o);
-  });
+  }), o.sort);
   const counts = countsOf(head, all);
   const open = o.open || [];
   const allOpen = rows.length > 0 && rows.every(function (row) {
@@ -428,6 +462,8 @@ function loadText(item) {
     pre.textContent = textNote(entry);
     pre.setAttribute("data-state", entry.text == null ? "none" : "ready");
     if (hist) hist.textContent = (entry.history || []).join(" · ");
+    const sumEl = item.querySelector(".hd-sum");
+    if (sumEl) sumEl.textContent = summaryText(sumEl.getAttribute("data-sum"), entry);
   };
   if (!FULL_ID.test(id) || !pid) {
     pre.textContent = "The full text is only on this computer.";
@@ -583,7 +619,7 @@ export function attachHeadListeners() {
 
 function setField(bar, key, value) {
   const f = bar.getAttribute("data-f") || "open";
-  const state = { f: f, q: "", kind: "", sid: "" };
+  const state = { f: f, q: "", kind: "", sid: "", sort: "" };
   for (const el of bar.querySelectorAll("[data-field]")) {
     state[el.getAttribute("data-field")] = el.value || "";
   }
@@ -632,6 +668,7 @@ export function sectionView(vm) {
     q: text.length <= 200 ? text : "",
     kind: pick(params.get("kind"), KINDS, 20),
     sid: sid.length <= 60 ? sid : "",
+    sort: pick(params.get("sort"), SORTS, 3) || "new",
     open: Array.from(openSet),
     project: vm.route.id,
     readOnly: false,

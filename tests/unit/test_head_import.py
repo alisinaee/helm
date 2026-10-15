@@ -149,6 +149,21 @@ class ImportTests(HeadImportCase):
         results = imp.import_doc(path, "1", data_dir=self.data, now=NOW)
         self.assertLessEqual(len(results[0]["sum"]), 100)
 
+    def test_summary_is_the_whole_first_line_not_the_first_clause(self):
+        path = os.path.join(self.root, "line.md")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write("## 1\n\n- Please fix the broken export button. Then rerun the nightly job\n")
+        results = imp.import_doc(path, "1", now=NOW)
+        self.assertEqual(results[0]["sum"], "Please fix the broken export button. Then rerun the nightly job")
+
+    def test_long_first_line_is_cut_at_a_word_with_an_ellipsis(self):
+        path = os.path.join(self.root, "cut.md")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write("## 1\n\n- " + "word " * 80 + "\n")
+        results = imp.import_doc(path, "1", now=NOW)
+        self.assertTrue(results[0]["sum"].endswith("word…"))
+        self.assertLessEqual(len(results[0]["sum"]), 100)
+
 
 if __name__ == "__main__":
     unittest.main()

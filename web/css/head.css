@@ -6,14 +6,14 @@
 .hd-badge-off{border-color:var(--line)}.hd-badge-off::before{background:var(--line)}
 .hd-now-rest{color:var(--text-3);font-size:var(--fs-12)}
 .hd-top{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center;justify-content:space-between}
-.hd-row.row-grid{position:relative;align-items:center;grid-template-columns:18px 56px 76px minmax(0,1fr) 150px 96px 44px 96px 36px 32px 32px}
+.hd-row.row-grid{position:relative;align-items:center;grid-template-columns:18px 56px 76px minmax(0,1fr) 150px 96px 44px 96px 32px 32px}
 .hd-hit{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;background:none;cursor:pointer;color:inherit}
 .hd-hit:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .hd-row a,.hd-row button:not(.hd-hit){position:relative;z-index:1}
 .hd-c{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hd-chev{display:inline-block;color:var(--text-3);transition:transform .15s}
 .is-open .hd-chev{transform:rotate(90deg)}
-.is-open .hd-sum{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.hd-row .hd-sum{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35;overflow-wrap:anywhere}
 .hd-age,.hd-when{text-align:right;font-variant-numeric:tabular-nums}
 .hd-stale{color:var(--danger)}.hd-amber{color:var(--warning)}
 .hd-outline{background:none;border:1px dashed var(--text-2)}
@@ -27,4 +27,4 @@
 .hd-foot-info{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center;min-width:0}
 .hd-bar,.hd-alerts,.hd-filters,.hd-acts,.hd-form,.hd-links{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
 .hd-form{width:100%}.hd-form input{flex:1 1 140px}
-@media (max-width:599px){.hd-head,.hd-s,.hd-when{display:none}.hd-row.row-grid{display:flex;flex-wrap:wrap;row-gap:var(--sp-1)}.hd-chev,.hd-id{order:0}.hd-kind{order:1}.hd-status{order:2}.hd-age{order:3;margin-left:auto}.hd-sum,.hd-bound{flex:1 1 100%;order:4}.hd-acc-cell,.hd-copy{order:5}.hd-foot{flex-direction:column;align-items:stretch}.hd-panel{padding-left:0}}
+@media (max-width:599px){.hd-head,.hd-when{display:none}.hd-row.row-grid{display:flex;flex-wrap:wrap;row-gap:var(--sp-1)}.hd-chev,.hd-id{order:0}.hd-kind{order:1}.hd-status{order:2}.hd-age{order:3;margin-left:auto}.hd-sum,.hd-bound{flex:1 1 100%;order:4}.hd-acc-cell,.hd-copy{order:5}.hd-foot{flex-direction:column;align-items:stretch}.hd-panel{padding-left:0}}
