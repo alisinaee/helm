@@ -11,7 +11,7 @@ import os
 import sqlite3
 import time
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 BUSY_TIMEOUT_MS = 5000
 DB_FILE = "roadmap.db"  # the one store file per project, in the data dir (docs/roadmap.db, gitignored)
 
@@ -46,6 +46,11 @@ MIGRATIONS = {
         "ALTER TABLE events ADD COLUMN entity_id TEXT",
         "ALTER TABLE events ADD COLUMN idem TEXT",
         "CREATE UNIQUE INDEX IF NOT EXISTS events_idem ON events(idem)",
+    ],
+    3: [
+        "CREATE TABLE IF NOT EXISTS leases (file TEXT PRIMARY KEY, job_id TEXT NOT NULL,"
+        " acquired REAL NOT NULL, expires REAL NOT NULL)",
+        "CREATE INDEX IF NOT EXISTS leases_job ON leases(job_id)",
     ],
 }
 
