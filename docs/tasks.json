@@ -1530,13 +1530,16 @@
       "id": "R7.33",
       "phase": "R7",
       "title": "P2 verify sync findings in cursor-sync-grok",
-      "status": "todo",
+      "status": "done",
       "tokensK": 30,
       "thinking": "low",
       "model": "opencode",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:25:38+03:30"
+      }
     },
     {
       "id": "R7.34",
@@ -1572,13 +1575,16 @@
       "id": "R7.36",
       "phase": "R7",
       "title": "P5 ledger hygiene: triage H51 H59 H67, close H36 H49",
-      "status": "todo",
+      "status": "done",
       "tokensK": 10,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:25:38+03:30"
+      }
     },
     {
       "id": "R7.37",
@@ -1713,10 +1719,37 @@
       "id": "R7.46",
       "phase": "R7",
       "title": "Audit Head ledger: list asks never handled, file tasks for them (H107)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 20,
       "thinking": "low",
       "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:25:38+03:30"
+      }
+    },
+    {
+      "id": "R7.47",
+      "phase": "R7",
+      "title": "agy audit wave: views at 375px, rule 0 alignment, test gaps for today commits (H109)",
+      "status": "todo",
+      "tokensK": 0,
+      "thinking": "high",
+      "model": "agy",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R7.48",
+      "phase": "R7",
+      "title": "Cursor grok review of commits 2b83d5b..a36834f for bugs (H109)",
+      "status": "todo",
+      "tokensK": 0,
+      "thinking": "high",
+      "model": "cursor",
       "needsUser": false,
       "check": "none",
       "checkK": 0
