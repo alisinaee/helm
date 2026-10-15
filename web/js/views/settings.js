@@ -1,8 +1,12 @@
-// Settings (WP33): theme, density, what a phone may change, keyboard help and where the data lives. Theme and density
-// are kept in the UI preferences (state.js); nothing here writes to the project files.
+// Settings (WP33): theme, density, what a phone may change, keyboard help, where the data lives and the debug log
+// (R7.16 step 5a). Theme and density are kept in the UI preferences (state.js); nothing here writes to the project
+// files. The log switch is kept in this browser (log.js); the log status and report are read-only GET requests.
 
 import { esc } from "../dom.js";
+import { csrfToken, getJson } from "../api.js";
+import { setEnabled, status as logStatusNow } from "../log.js";
 import { loadUi, saveTheme, updateUi } from "../state.js";
+import { showToast } from "./toast.js";
 
 const THEMES = [
   { id: "auto", label: "Match system" },
@@ -16,6 +20,18 @@ const DENSITIES = [
 const DENSITY_IDS = DENSITIES.map(function (d) {
   return d.id;
 });
+const LOG_SWITCH = [
+  { id: "on", label: "On" },
+  { id: "off", label: "Off" },
+];
+const LOG_STATUS_URL = "/api/v1/log/status";
+const LOG_REPORT_URL = "/api/v1/log/report?n=30";
+const LOG_STATUS_MS = 5000;
+
+// The last status read from the server ({enabled, bytes, files}), or null when not read yet or not available.
+let serverLog = null;
+let serverLogFailed = false;
+let serverLogAt = 0;
 
 function choiceHtml(name, options, current, action) {
   return '<div class="rule-tabs" role="group" aria-label="' + esc(name) + '">' + options.map(function (o) {
@@ -30,9 +46,70 @@ function applyDensity(value) {
   document.documentElement.setAttribute("data-density", value);
 }
 
+function sizeText(bytes) {
+  const n = Number(bytes) || 0;
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return Math.round(n / 1024) + " KB";
+  return (Math.round(n / (1024 * 1024) * 10) / 10) + " MB";
+}
+
+// The status sentence under the switch. It names the browser switch and what the server holds (sizes only).
+function logLine() {
+  const here = logStatusNow().enabled ? "on" : "off";
+  if (serverLogFailed) return "Recording in this browser: " + here + ". The log status is not available right now.";
+  if (!serverLog) return "Recording in this browser: " + here + ". Checking the log.";
+  const files = Number(serverLog.files) || 0;
+  return "Recording in this browser: " + here + ". Log on this Mac: " + (serverLog.enabled ? "on" : "off") + ", " +
+    sizeText(serverLog.bytes) + " in " + files + (files === 1 ? " file." : " files.");
+}
+
+function setLogLine() {
+  if (typeof document === "undefined") return;
+  const el = document.getElementById("set-log-status");
+  if (el) el.textContent = logLine();
+}
+
+// Read the status at most every 5 s. Only the status line is updated; the page does not re-render.
+async function refreshLogStatus() {
+  serverLogAt = Date.now();
+  try {
+    const res = await getJson(LOG_STATUS_URL);
+    if (res && res.data && typeof res.data === "object") {
+      serverLog = res.data;
+      serverLogFailed = false;
+    } else {
+      serverLogFailed = true;
+    }
+  } catch (err) {
+    serverLogFailed = true;
+  }
+  setLogLine();
+}
+
+function maybeRefreshLogStatus() {
+  if (Date.now() - serverLogAt < LOG_STATUS_MS) return;
+  refreshLogStatus().catch(function () {});
+}
+
+function loggingHtml() {
+  const on = logStatusNow().enabled ? "on" : "off";
+  return '<section class="ov-card" aria-labelledby="set-log"><h3 id="set-log" class="lim-h">Logging</h3>' +
+    '<p class="lim-label">Record what happens in this dashboard (stays on this Mac)</p>' +
+    choiceHtml("Record what happens in this dashboard (stays on this Mac)", LOG_SWITCH, on, "set-log") +
+    '<p class="page-note" id="set-log-status" aria-live="polite">' + esc(logLine()) + "</p>" +
+    '<p class="page-note">It records errors, named actions and slow requests, never form values or passwords; ' +
+    "agents can read it with roadmap logs.</p>" +
+    '<button type="button" class="btn" data-action="log-report" data-focus="log-report" ' +
+    'aria-label="Copy debug report">Copy debug report</button>' +
+    "</section>";
+}
+
 export function sectionView() {
   const ui = loadUi();
   applyDensity(ui.density);
+  // The phone page carries no CSRF value and records nothing, so it has no Logging section.
+  const logging = typeof document !== "undefined" && csrfToken() ? loggingHtml() : "";
+  if (logging) maybeRefreshLogStatus();
   return '<div class="page-head"><h2 class="page-title">Settings</h2>' +
     '<p class="page-note">Browser preferences only; projects keep separate settings.</p></div>' +
     '<section class="ov-card" aria-labelledby="set-look"><h3 id="set-look" class="lim-h">Appearance</h3>' +
@@ -46,13 +123,61 @@ export function sectionView() {
     '<p class="page-note">Press ? for the list of shortcuts.</p>' +
     '<button type="button" class="btn" data-action="help-open" data-focus="help-open">Keyboard shortcuts</button>' +
     "</section>" +
+    logging +
     '<section class="ov-card" aria-labelledby="set-data"><h3 id="set-data" class="lim-h">Data</h3>' +
     '<p class="page-note">Global limits, the usage ledger and the global config live in the roadmap home folder. ' +
     "Each project keeps its rules in docs/rules.txt and its budget in budget.json. Run roadmap doctor to see the " +
     "exact paths.</p></section>";
 }
 
-// Theme and density actions. Returns true when handled (app.js re-renders).
+// Show the report text in a read-only field inside the toast, selected, when the clipboard is not available.
+function reportFallback(text) {
+  const id = showToast({ text: "Select the text and copy it" });
+  const toast = document.querySelector('[data-toast="' + id + '"]');
+  if (!toast) return;
+  const field = document.createElement("textarea");
+  field.readOnly = true;
+  field.value = text;
+  field.rows = 6;
+  field.className = "ref-text";
+  field.setAttribute("aria-label", "Debug report text");
+  toast.appendChild(field);
+  field.focus();
+  field.select();
+}
+
+function copyReportText(text) {
+  const nav = typeof navigator !== "undefined" ? navigator : null;
+  if (!nav || !nav.clipboard || typeof nav.clipboard.writeText !== "function") {
+    reportFallback(text);
+    return;
+  }
+  nav.clipboard.writeText(text).then(function () {
+    showToast({ text: "Copied" });
+  }, function () {
+    reportFallback(text);
+  }).catch(function () {});
+}
+
+// Fetch the plain-text report (same-origin GET) and copy it. A failed fetch shows one sentence and never throws.
+async function copyReport() {
+  let text = "";
+  try {
+    const res = await fetch(LOG_REPORT_URL, {
+      method: "GET",
+      headers: { Accept: "text/plain" },
+      credentials: "same-origin",
+    });
+    if (!res.ok) throw new Error("status " + res.status);
+    text = await res.text();
+  } catch (err) {
+    showToast({ text: "The debug report could not be read. Check that Roadmap is running on this Mac." });
+    return;
+  }
+  copyReportText(text);
+}
+
+// Theme, density, log switch and report actions. Returns true when handled (app.js re-renders).
 export function settingsAction(action, el) {
   if (action === "set-theme") {
     const value = el.getAttribute("data-value");
@@ -71,6 +196,14 @@ export function settingsAction(action, el) {
       ui.density = value;
     });
     applyDensity(value);
+    return true;
+  }
+  if (action === "set-log") {
+    setEnabled(el.getAttribute("data-value") === "on");
+    return true;
+  }
+  if (action === "log-report") {
+    copyReport().catch(function () {});
     return true;
   }
   return false;
