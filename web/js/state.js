@@ -305,6 +305,8 @@ export function normalizeSnapshot(raw, fetchedAt) {
       return { id: String(r.id || ""), scope: String(r.scope || ""), kind: String(r.kind || ""),
         text: String(r.text || ""), value: num(r.value) };
     }) : null,
+    // R7.31 H9: the Head key (now, prev, counts, rows) as the server folds it; null when the snapshot has none.
+    head: raw.head && typeof raw.head === "object" ? raw.head : null,
   };
 }
 
