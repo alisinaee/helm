@@ -18,6 +18,7 @@ import shlex
 import threading
 import unicodedata
 
+from roadmap import log as roadmap_log
 from roadmap.core import parsers, planfmt
 from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import activity, budget, comments, issues, jobs, questions, queue, records, tasks
@@ -592,10 +593,14 @@ def run(op, args, source, data_dir, now=None):
     if args is not None and not isinstance(args, dict):
         raise _usage("args must be an object")
     records.require_dir(data_dir)
-    clean = entry.check(args or {})
-    with context(source, current_project()):
-        before = _newest_id(data_dir)
-        data, summary, inverse = entry.handler(data_dir, clean, now)
+    try:
+        clean = entry.check(args or {})
+        with context(source, current_project()):
+            before = _newest_id(data_dir)
+            data, summary, inverse = entry.handler(data_dir, clean, now)
+    except RoadmapError as exc:
+        _log_write(op, args, exc.code)
+        raise
     if entry.logs:
         line = activity.append(data_dir, source, op, summary, undo=inverse is not None, now=now)
     else:
@@ -604,7 +609,21 @@ def run(op, args, source, data_dir, now=None):
             line = activity.append(data_dir, source, op, summary, undo=inverse is not None, now=now)
     if inverse is not None:
         _remember(data_dir, line["id"], summary, inverse, now)
+    _log_write(op, args, "ok")
     return {"ok": True, "data": data, "activity": line["id"], "undo": inverse is not None}
+
+
+def _log_write(op, args, code):
+    """One core.write line for a write op: the op, the argument keys (never the values) and "ok" or the error code.
+    Fail-open: a failed log line never reaches the op."""
+    try:
+        keys = ",".join(sorted(str(k) for k in args)[:10]) if isinstance(args, dict) else ""
+        ok = code == "ok"
+        roadmap_log.debug_event("core", "INFO" if ok else "WARN", "core.write",
+                                msg=str(op) + (" ok" if ok else " " + str(code)), route="cmd",
+                                data={"op": str(op), "keys": keys[:120], "code": str(code)})
+    except Exception:
+        pass
 
 
 def _newest_line(data_dir):
