@@ -10,9 +10,11 @@ import os
 import socketserver
 import stat
 import time
+import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qsl, urlencode
 
+from roadmap import log as rlog
 from roadmap.errors import EXIT_USAGE, RoadmapError
 from roadmap.http import routes, security
 from roadmap.http.static import StaticFiles, etag_of
@@ -24,6 +26,7 @@ from roadmap.store import paths
 BIND_HOST = "127.0.0.1"
 WEB_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "web")
 DEFAULT_PHONE_PORT = 8766
+SLOW_API_MS = 1000
 access_log = get_logger("http.access")
 error_log = get_logger("http")
 phone_log = get_logger("http.phone")
@@ -72,6 +75,8 @@ class App:
         self._sync = sync or _default_sync
         self.static = static_files
         self.cmd_limiter = security.RateLimiter()
+        self.log_requests = security.RateLimiter(security.LOG_REQ_PER_S, security.LOG_REQ_WINDOW_S)
+        self.log_events = security.EventBudget()
 
     def csrf_token(self):
         """The CSRF value the write guard compares against and the pages carry."""
@@ -175,6 +180,9 @@ class PhoneApp(App):
     def handle(self, req):
         if not security.phone_host_allowed(req.headers.get("Host"), self.port, self._tunnel_host()):
             return routes.error_reply(421, "misdirected_request", "this address is not allowed on the phone listener")
+        if req.path.startswith(security.LOG_PATH):
+            # the debug log is for the local browser only: the phone listener never takes or serves it
+            return routes.error_reply(403, "forbidden", "the debug log is not available on the phone listener")
         is_cmd = req.method == "POST" and req.path == security.CMD_PATH
         if is_cmd and not phone_writes_enabled():
             return routes.error_reply(403, "forbidden", "phone writes are off (set phoneWrites true to allow the "
@@ -222,6 +230,37 @@ def phone_writes_enabled():
         return False
 
 
+def _core_event(ev, lvl, route, data=None):
+    """One core event in the debug log. Fail-open: the log never raises into a request."""
+    try:
+        rlog.debug_event("core", lvl, ev, route=route, data=data)
+    except Exception:
+        pass
+
+
+def _api_event(method, path, status, elapsed_ms):
+    """core.api: only failures (status 500 and up, ERROR) and slow calls (over 1 s, WARN), and only for API paths.
+    The route template is recorded, never the query string or the concrete ids."""
+    if not path.startswith("/api/"):
+        return
+    if status < 500 and elapsed_ms <= SLOW_API_MS:
+        return
+    lvl = "ERROR" if status >= 500 else "WARN"
+    _core_event("core.api", lvl, routes.route_template(path),
+                {"method": method, "status": status, "ms": elapsed_ms})
+
+
+def _exc_event(exc, path):
+    """core.exc: the exception type, its message (capped by the log) and the last 12 frames. No locals."""
+    try:
+        frames = traceback.extract_tb(exc.__traceback__)[-12:]
+        stack = "\n".join("%s:%d %s" % (os.path.basename(f.filename), f.lineno, f.name) for f in frames)
+        rlog.debug_event("core", "ERROR", "core.exc", msg=type(exc).__name__, route=path,
+                         data={"type": type(exc).__name__, "message": str(exc)[:200], "stack": stack})
+    except Exception:
+        pass
+
+
 class _Handler(BaseHTTPRequestHandler):
     server_version = "roadmap-board"
     protocol_version = "HTTP/1.1"
@@ -260,10 +299,12 @@ class _Handler(BaseHTTPRequestHandler):
             reply = routes.error_reply(routes.status_for(exc), exc.code, exc.message)
         except Exception as exc:  # no traceback or secret goes to the client; the type name is enough
             error_log.error("unexpected error handling %s %s: %s", method, path, type(exc).__name__)
+            _exc_event(exc, path)
             reply = routes.error_reply(500, "internal", "unexpected error (" + type(exc).__name__ + ")")
         self._send(reply, head)
         elapsed_ms = int((time.monotonic() - started) * 1000)
         access_log.info("%s %s %d %dms", method, path, reply.status, elapsed_ms)
+        _api_event(method, path, reply.status, elapsed_ms)
 
     def _raw_target(self):
         """The request target exactly as sent. BaseHTTPRequestHandler rewrites a leading '//' in self.path, so the
@@ -320,14 +361,22 @@ class RoadmapServer(ThreadingHTTPServer):
         self.server_name = BIND_HOST
         self.server_port = self.server_address[1]
 
+    def server_close(self):
+        _core_event("core.stop", "INFO", "/", {"port": self.server_address[1]})
+        super().server_close()
+
 
 def make_server(port=0, sync=None, token=None, web_root=None):
     """A bound, not yet running server. Call serve_forever() (or start it in a thread) and shutdown() to stop.
 
     sync replaces the usage sync (tests pass a fake). token defaults to a fresh random CSRF token.
     web_root defaults to the repository's web/ folder. Raises OSError (EADDRINUSE) when the port is busy.
+    The debug log is pointed at the state directory here, so it never drifts from the service's own.
     """
-    return RoadmapServer(port, token or security.new_token(), sync, StaticFiles(web_root or WEB_ROOT))
+    rlog.set_state_dir(paths.state_dir())
+    httpd = RoadmapServer(port, token or security.new_token(), sync, StaticFiles(web_root or WEB_ROOT))
+    _core_event("core.start", "INFO", "/", {"port": httpd.server_address[1]})
+    return httpd
 
 
 class PhoneServer(RoadmapServer):
@@ -343,4 +392,5 @@ def make_phone_server(port=None, token_source=None, tunnel_host=None, web_root=N
     """A bound, not yet running phone listener. port None reads phonePort from config. token_source and tunnel_host
     replace the phone.token file and the saved tunnel host (tests pass fakes). Raises OSError when the port is busy."""
     use_port = configured_phone_port() if port is None else port
+    rlog.set_state_dir(paths.state_dir())
     return PhoneServer(use_port, token_source, tunnel_host, StaticFiles(web_root or WEB_ROOT), limiter)

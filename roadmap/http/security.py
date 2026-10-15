@@ -67,21 +67,28 @@ def origins(port):
     return ("http://127.0.0.1:%d" % port, "http://localhost:%d" % port)
 
 
-def write_request_allowed(headers, token, port):
-    """True for a same-origin write: Sec-Fetch-Site same-origin (or Origin on this server) and the CSRF header.
+def write_refusal(headers, token, port):
+    """None for a same-origin write (Sec-Fetch-Site same-origin or Origin on this server, and the CSRF header). Else
+    the reason code: 'origin' (cross-site, foreign Origin, or neither header) or 'csrf'.
 
-    headers is any mapping with get(). A cross-site Sec-Fetch-Site or a foreign Origin always fails.
-    A request with neither Sec-Fetch-Site nor Origin fails too.
+    headers is any mapping with get(). A request with neither Sec-Fetch-Site nor Origin is refused too.
     """
     sec_fetch_site = headers.get("Sec-Fetch-Site")
     origin = headers.get("Origin")
     if sec_fetch_site is None and origin is None:
-        return False
+        return "origin"
     if sec_fetch_site is not None and sec_fetch_site.strip().lower() != "same-origin":
-        return False
+        return "origin"
     if origin is not None and origin.strip().lower() not in origins(port):
-        return False
-    return safe_equal(headers.get(CSRF_HEADER), token)
+        return "origin"
+    if not safe_equal(headers.get(CSRF_HEADER), token):
+        return "csrf"
+    return None
+
+
+def write_request_allowed(headers, token, port):
+    """True for a same-origin write: see write_refusal."""
+    return write_refusal(headers, token, port) is None
 
 
 def browser_proof(headers, port):
@@ -200,6 +207,41 @@ class RateLimiter:
             if len(self._times) >= self.limit:
                 return False
             self._times.append(now)
+            return True
+
+
+# POST /api/v1/log (R7.16 step 2). The browser sends small batches of debug events; the limits are per process, and
+# the only client is the local page, so one counter serves it. Requests: 20 per second. Events: 200 per minute.
+LOG_PATH = "/api/v1/log"
+LOG_BODY_BYTES = 16 * 1024
+LOG_BATCH_MAX = 50
+LOG_REQ_PER_S = 20
+LOG_REQ_WINDOW_S = 1.0
+LOG_EVENTS_PER_MIN = 200
+LOG_EVENTS_WINDOW_S = 60.0
+
+
+class EventBudget:
+    """At most limit events per window_s seconds (a sliding window, counted per event, not per request). take(n)
+    admits n events when they all fit, records them and returns True; otherwise it records nothing and returns False."""
+
+    def __init__(self, limit=LOG_EVENTS_PER_MIN, window_s=LOG_EVENTS_WINDOW_S, clock=time.monotonic):
+        self.limit = limit
+        self.window_s = window_s
+        self._clock = clock
+        self._batches = collections.deque()
+        self._total = 0
+        self._lock = threading.Lock()
+
+    def take(self, n):
+        with self._lock:
+            now = self._clock()
+            while self._batches and now - self._batches[0][0] >= self.window_s:
+                self._total -= self._batches.popleft()[1]
+            if self._total + n > self.limit:
+                return False
+            self._batches.append((now, n))
+            self._total += n
             return True
 
 
