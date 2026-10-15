@@ -11,7 +11,7 @@
 // head.merge and the copy button.
 
 import { esc } from "../dom.js";
-import { emptyHtml as pageEmpty } from "../dom.js";
+import { emptyHtml as pageEmpty, parseOne, swapNode } from "../dom.js";
 import { fmtPercent } from "../format.js";
 import { copyButton } from "../ref.js";
 import { pendingValue, run } from "../cmd.js";
@@ -594,9 +594,9 @@ function questionsHtml(list) {
     }).join("") + "</section>";
 }
 
-// The whole screen for one view model. opts: {f, q, kind, sid, open (ids of the open rows), project, readOnly,
-// questions (the open agent questions: collect() entries)}.
-export function headHtml(vm, opts) {
+// The screen as ordered pieces (each one root element, or "" when absent). The list piece has build(), which makes its
+// markup only when it is needed; paintScreen() patches the pieces in place, so headHtml() joins them for a string.
+function piecesOf(vm, opts) {
   const o = opts || {};
   const head = vm && vm.head ? vm.head : {};
   const all = rowsOf(vm);
@@ -612,14 +612,36 @@ export function headHtml(vm, opts) {
     (rows.length ? '<button type="button" class="btn hd-all" data-action="head-expand-all">' +
       (allOpen ? "Collapse all" : "Expand all") + "</button>" : "") + "</div>";
   const cards = o.view === "cards";
-  const body = !rows.length ? emptyHtml(vm, o) : cards ? '<div class="hd-list">' +
-    '<ul class="hd-items" aria-label="Logged messages">' + rows.map(function (row) {
-      return rowHtml(vm, row, o);
-    }).join("") + "</ul></div>" : listHtml(vm, rows, o);
-  const pager = pagerHtml(o.pager);
+  const list = {
+    name: "list", kind: rows.length ? (cards ? "cards" : "list") : "empty", rows: rows, vm: vm, opts: o,
+    build: function () {
+      if (!rows.length) return emptyHtml(vm, o);
+      if (!cards) return listHtml(vm, rows, o);
+      return '<div class="hd-list"><ul class="hd-items" aria-label="Logged messages">' + rows.map(function (row) {
+        return rowHtml(vm, row, o);
+      }).join("") + "</ul></div>";
+    },
+  };
+  return [
+    { name: "top", html: top },
+    { name: "questions", html: questionsHtml(o.questions) },
+    { name: "now", html: nowHtml(head) },
+    { name: "alerts", html: alertsHtml(counts) },
+    { name: "bar", html: barHtml(vm, o) },
+    list,
+    { name: "pager", html: pagerHtml(o.pager) },
+  ];
+}
+
+// The whole screen for one view model. opts: {f, q, kind, sid, open (ids of the open rows), project, readOnly,
+// questions (the open agent questions: collect() entries)}.
+export function headHtml(vm, opts) {
+  const o = opts || {};
+  const inner = piecesOf(vm, o).map(function (piece) {
+    return piece.build ? piece.build() : piece.html;
+  }).join("");
   return '<section class="hd-screen" data-project="' + esc(o.project || "") + '" aria-labelledby="hd-h">' +
-    top + questionsHtml(o.questions) + nowHtml(head) + alertsHtml(counts) + barHtml(vm, o) + body + pager +
-    "</section>";
+    inner + "</section>";
 }
 
 function projectOf(el) {
@@ -1027,12 +1049,206 @@ export function sectionView(vm) {
     more: !pg || pg.total == null || pg.offset < pg.total,
   };
   opts.questions = questions;
-  const html = headHtml({ head: head }, opts);
-  if (typeof setTimeout === "function") {
-    setTimeout(function () {
-      loadOpenRows();
-      observeEnd();
-    }, 0);
+  // main gets an empty, stable screen element (so app.js never rewrites the rows); the pieces are painted after it.
+  const key = JSON.stringify([vm.route.id, setRev(vm), opts.f, opts.q, opts.kind, opts.sid, opts.sort, opts.view,
+    opts.open, opts.project, opts.pager, head.rows.length, questions.map(function (e) {
+      return e.pid + ":" + e.q.id;
+    })]);
+  latest = { vm: { head: head }, opts: opts, key: key };
+  if (typeof setTimeout === "function") setTimeout(flushScreen, 0);
+  return '<section class="hd-screen" data-project="' + esc(opts.project || "") + '" aria-labelledby="hd-h"></section>';
+}
+
+// ---- In-place painting (R7.80). The screen element keeps its pieces; a piece is replaced only when its markup
+// changed, and the list keeps its element: its rows are matched by data-id, and only changed rows are rebuilt.
+
+let latest = null;
+let builtFor = null;
+let builtKey = "";
+let pieceEls = new Map();
+let liveItems = new Map();
+let unitKeys = new Map();
+let rowById = new Map();
+let ageTimer = null;
+
+// The key of one row's markup: its data, open state and the view. Its age text is not part of it (refreshAges).
+function unitKeyOf(vm, row, opts) {
+  const id = String(row.id);
+  const pid = opts.project || null;
+  const ra = rowAge(row);
+  return [JSON.stringify(row), opts.view, pid, (opts.open || []).indexOf(id) >= 0, Boolean(fullOf(vm, pid, id)),
+    ra.amber, ra.stale].join("\n");
+}
+
+function childItems(parent) {
+  return Array.from(parent.children || []).filter(function (node) {
+    return node.classList && node.classList.contains("hd-item");
+  });
+}
+
+// The first item at or after node.
+function nextItem(node) {
+  let n = node;
+  while (n && !(n.classList && n.classList.contains("hd-item"))) n = n.nextElementSibling;
+  return n || null;
+}
+
+// Register the live rows of a freshly built list element.
+function indexUnits(listEl, piece) {
+  const parent = listEl.firstElementChild;
+  liveItems = new Map();
+  unitKeys = new Map();
+  if (parent) {
+    for (const item of childItems(parent)) {
+      const row = item.querySelector(".hd-row");
+      liveItems.set(row ? row.getAttribute("data-id") || "" : "", item);
+    }
   }
-  return html;
+  for (const row of piece.rows) unitKeys.set(String(row.id), unitKeyOf(piece.vm, row, piece.opts));
+}
+
+// Bring the live rows in line with the list piece: remove gone rows, replace changed ones, keep the order.
+function reconcileUnits(listEl, piece) {
+  const parent = listEl.firstElementChild;
+  const wanted = new Set(piece.rows.map(function (row) {
+    return String(row.id);
+  }));
+  for (const id of Array.from(liveItems.keys())) {
+    if (wanted.has(id)) continue;
+    parent.removeChild(liveItems.get(id));
+    liveItems.delete(id);
+    unitKeys.delete(id);
+  }
+  let cursor = nextItem(parent.firstElementChild);
+  for (const row of piece.rows) {
+    const id = String(row.id);
+    const key = unitKeyOf(piece.vm, row, piece.opts);
+    let item = liveItems.get(id) || null;
+    if (!item || unitKeys.get(id) !== key) {
+      const fresh = parseOne(piece.kind === "cards" ? rowHtml(piece.vm, row, piece.opts) :
+        listRowHtml(piece.vm, row, piece.opts));
+      if (item) {
+        if (cursor === item) cursor = fresh;
+        swapNode(item, fresh);
+      }
+      item = fresh;
+      liveItems.set(id, item);
+      unitKeys.set(id, key);
+    }
+    if (item === cursor) cursor = nextItem(cursor.nextElementSibling);
+    else parent.insertBefore(item, cursor);
+  }
+}
+
+// The list piece for the screen: the same element while its kind holds (list or cards with rows).
+function listElement(screen, piece, rebuild) {
+  const rec = pieceEls.get("list");
+  if (!rebuild && rec && rec.kind === piece.kind && piece.kind !== "empty") {
+    reconcileUnits(rec.el, piece);
+    return rec.el;
+  }
+  const el = parseOne(piece.build());
+  if (rec && rec.el.parentNode === screen) swapNode(rec.el, el);
+  pieceEls.set("list", { el: el, kind: piece.kind });
+  if (piece.kind !== "empty") indexUnits(el, piece);
+  else {
+    liveItems = new Map();
+    unitKeys = new Map();
+  }
+  return el;
+}
+
+function registerRows(piece) {
+  for (const row of piece.rows) rowById.set(String(row.id), row);
+}
+
+// Fill an empty screen piece by piece (first paint, or the screen element is new).
+function buildAll(screen, pieces) {
+  pieceEls = new Map();
+  liveItems = new Map();
+  unitKeys = new Map();
+  rowById = new Map();
+  while (screen.firstChild) screen.removeChild(screen.firstChild);
+  for (const piece of pieces) {
+    if (piece.name === "list") {
+      registerRows(piece);
+      screen.appendChild(listElement(screen, piece, true));
+    } else if (piece.html) {
+      const el = parseOne(piece.html);
+      pieceEls.set(piece.name, { el: el, html: piece.html });
+      screen.appendChild(el);
+    }
+  }
+  builtFor = screen;
+}
+
+// Patch the pieces of a screen that is already on the page.
+function updatePieces(screen, pieces) {
+  const els = [];
+  const seen = new Set();
+  for (const piece of pieces) {
+    if (piece.name === "list") {
+      registerRows(piece);
+      seen.add("list");
+      els.push(listElement(screen, piece, false));
+      continue;
+    }
+    if (!piece.html) continue;
+    seen.add(piece.name);
+    let rec = pieceEls.get(piece.name);
+    if (!rec) {
+      rec = { el: parseOne(piece.html), html: piece.html };
+      pieceEls.set(piece.name, rec);
+    } else if (rec.html !== piece.html) {
+      rec.el = swapNode(rec.el, parseOne(piece.html));
+      rec.html = piece.html;
+    }
+    els.push(rec.el);
+  }
+  for (const name of Array.from(pieceEls.keys())) {
+    if (seen.has(name)) continue;
+    const rec = pieceEls.get(name);
+    if (rec.el.parentNode === screen) screen.removeChild(rec.el);
+    pieceEls.delete(name);
+  }
+  // Order the pieces as the markup has them.
+  let cursor = screen.firstElementChild;
+  for (const el of els) {
+    if (el === cursor) cursor = cursor.nextElementSibling;
+    else screen.insertBefore(el, cursor);
+  }
+}
+
+// The age labels: only their text (and the stale or amber class) changes; no row is rebuilt.
+function refreshAges() {
+  liveItems.forEach(function (item, id) {
+    const row = rowById.get(id);
+    const age = item.querySelector(".hd-age");
+    if (!row || !age) return;
+    const ra = rowAge(row);
+    const text = ageText(ra.age);
+    if (age.textContent !== text) age.textContent = text;
+    age.classList.toggle("hd-stale", Boolean(ra.stale));
+    age.classList.toggle("hd-amber", Boolean(ra.amber && !ra.stale));
+  });
+}
+
+// Runs after main has the screen element. A repaint happens only when the key or the screen element changed.
+function flushScreen() {
+  const main = document.getElementById("main");
+  const screen = main ? main.firstElementChild : null;
+  if (!screen || !latest) return;
+  if (screen !== builtFor || latest.key !== builtKey) {
+    const pieces = piecesOf(latest.vm, latest.opts);
+    if (screen !== builtFor) buildAll(screen, pieces);
+    else updatePieces(screen, pieces);
+    builtKey = latest.key;
+    refreshAges();
+    if (!ageTimer && typeof setInterval === "function") {
+      ageTimer = setInterval(refreshAges, 60000);
+      if (ageTimer && typeof ageTimer.unref === "function") ageTimer.unref();
+    }
+  }
+  loadOpenRows();
+  observeEnd();
 }

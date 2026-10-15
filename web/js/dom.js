@@ -166,6 +166,22 @@ export function setHtml(el, html) {
   applyMeters(el);
 }
 
+// One element parsed from markup, for a piece or row that is then placed with insertBefore or swapNode.
+export function parseOne(html) {
+  const tpl = document.createElement("template");
+  tpl.innerHTML = html;
+  return tpl.content ? tpl.content.firstElementChild : tpl.firstElementChild;
+}
+
+// Put newEl in place of oldEl. A focused control inside oldEl keeps its focus, value and selection (as in patch()).
+export function swapNode(oldEl, newEl) {
+  const active = document.activeElement;
+  const keep = Boolean(active) && oldEl.contains(active) ? focusState(active) : null;
+  oldEl.parentNode.replaceChild(newEl, oldEl);
+  if (keep) restoreFocus(newEl, keep);
+  return newEl;
+}
+
 export function setHidden(sectionId, hidden) {
   const el = document.getElementById(sectionId);
   if (el) el.hidden = Boolean(hidden);
