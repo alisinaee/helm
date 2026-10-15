@@ -157,7 +157,7 @@ function projectBlock(entry, now, showName) {
     : emptyHtml("No agents running.");
   const done = finishedJobs(snap);
   const past = done.length
-    ? '<ol class="ag-list" aria-label="Last finished jobs">' + done.map(function (job) {
+    ? '<ol class="ag-list" aria-label="Last finished jobs">' + head + done.map(function (job) {
       return finishedHtml(job, entry.id);
     }).join("") + "</ol>"
     : '<p class="ov-sum">No finished jobs yet.</p>';

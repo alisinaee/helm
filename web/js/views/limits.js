@@ -151,7 +151,7 @@ export function shareRowsHtml(vm) {
   return '<details class="lim-block lim-share-block"' + (anySet ? " open" : "") + ">" +
     '<summary class="lim-h">Share per project (optional)</summary>' + copy +
     '<div class="row-grid rg-share rg-head" aria-hidden="true"><span>Project</span><span>May use up to</span>' +
-    "<span>Used</span><span>State</span></div>" +
+    '<span class="rg-num">Used</span><span>State</span></div>' +
     projects.map(function (p) {
       return shareLineHtml(vm, p);
     }).join("") + "</details>";
