@@ -53,6 +53,8 @@ def view_model():
             "age": entry["age_min"], "stale": entry["stale"], "amber": entry["amber"],
             "carried": entry["carried"], "links": entry["links"], "more": 0, "acct": entry["acct"],
             "sid": entry["sid"], "acc": entry["id"] in accepted, "auto": entry["auto_done"],
+            "dup": {"id": "H1", "score": 0.72} if entry["id"] == "H4" else None,
+            "suggest": ["task:R7.31"] if entry["id"] == "H4" else [],
         })
     return {"head": {
         "now": {"model": "Opus 5.5", "acct": "B", "since": "09:02 (1h)", "usage": {"h5": 41, "wk": 63}},
@@ -82,7 +84,8 @@ class HeadSource(unittest.TestCase):
         self.assertIsNone(INLINE.search(self.src))
 
     def test_only_head_ops_and_the_copy_button_write(self):
-        self.assertEqual(sorted(set(OPS.findall(self.src))), ["head.accept", "head.set"])
+        self.assertEqual(sorted(set(OPS.findall(self.src))),
+                         ["head.accept", "head.bind", "head.merge", "head.set", "head.split"])
 
     def test_no_var_or_console_in_the_module(self):
         self.assertIsNone(re.search(r"\bvar\s|\bconsole\.log\b", self.src))
@@ -96,8 +99,13 @@ class HeadSource(unittest.TestCase):
         self.assertIn('data-action="head-reopen"', self.src)
         self.assertIn("Confirm done", self.src)
 
+    def test_bind_split_merge_menu_and_forms_exist(self):
+        for name in ("bind", "split", "merge"):
+            self.assertIn('data-form="' + name + '"', self.src)
+            self.assertIn('data-op="head.' + name + '"', self.src)
+
     def test_no_route_or_nav_wiring_in_this_step(self):
-        self.assertNotIn("routes", self.src)
+        self.assertNotIn("routes.js", self.src)
         self.assertNotIn("icons.svg", self.src)
 
 
@@ -200,7 +208,8 @@ class HeadRender(unittest.TestCase):
 
     def test_row_ids_and_copy_refs_use_the_project(self):
         self.assertIn("rb:alpha/ask/H1", self.out["screen"])
-        self.assertIn('<span class="chip chip-neutral" title="task:R7.31">R7.31</span>', self.out["screen"])
+        self.assertIn('<a class="chip chip-neutral" href="#/p/alpha/work/i/R7.31" title="task:R7.31">R7.31</a>',
+                      self.out["screen"])
         self.assertIn('<span class="hd-c hd-status">', self.out["screen"])
 
     def test_filter_views_show_only_their_rows(self):
@@ -219,6 +228,10 @@ class HeadRender(unittest.TestCase):
         html = self.out["readOnly"]
         self.assertNotIn("head-accept", html)
         self.assertNotIn("head-reopen", html)
+        self.assertNotIn("head-merge", html)
+        self.assertNotIn("head-bind-sug", html)
+        self.assertNotIn("head-form", html)
+        self.assertNotIn('data-form="', html)
         self.assertNotIn('class="hd-c hd-more"', html)
         self.assertIn("rb:alpha/ask/H1", html)
 
@@ -232,6 +245,19 @@ class HeadRender(unittest.TestCase):
         html = self.out["noMatch"]
         self.assertIn("Nothing in this view.", html)
         self.assertIn('href="#head?f=all"', html)
+
+    def test_row_menu_opens_bind_split_and_merge_forms(self):
+        html = self.out["screen"]
+        for name in ("bind", "split", "merge"):
+            self.assertIn('data-action="head-form" data-form="' + name + '" data-id="H1"', html)
+        self.assertIn('<form class="hd-form" data-op="head.split" data-id="H1" data-form="split" hidden>', html)
+        self.assertIn('name="a" required', html)
+
+    def test_dup_and_bind_suggestions_are_buttons_on_the_row_panel(self):
+        html = self.out["screen"]
+        self.assertIn('data-action="head-merge" data-id="H4" data-into="H1"', html)
+        self.assertIn("Merge into H1 (dup 0.72)", html)
+        self.assertIn('data-action="head-bind-sug" data-id="H4" data-ref="task:R7.31"', html)
 
     def test_hash_keeps_the_filter_state(self):
         self.assertEqual(self.out["hash"], "#head?f=unhandled&q=a%20b&kind=bug")

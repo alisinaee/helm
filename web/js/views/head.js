@@ -2,12 +2,14 @@
 // (UI rule 0): the header uses the same tracks, numbers sit right-aligned, the copy and menu buttons stay at the
 // right edge. It renders the snapshot the server folds (head: {now, prev, counts, rows}) and sends nothing by itself.
 // Filters and the open row live in the page hash (#head?f=open&id=H12), so each view is a deep link.
-// Every value goes through esc(); the only commands are head.accept, head.set and the copy button.
+// Every value goes through esc(); the commands are head.accept, head.set, head.bind, head.split, head.merge (the row
+// menu and suggestion buttons, and the forms they open) and the copy button.
 
 import { esc } from "../dom.js";
 import { MISSING, fmtPercent } from "../format.js";
 import { copyButton } from "../ref.js";
 import { run } from "../cmd.js";
+import { buildHash } from "../router.js";
 import { showToast } from "./toast.js";
 
 export const FILTERS = [["open", "Open"], ["unhandled", "Unhandled"], ["doing", "Doing"], ["needs", "Needs you"],
@@ -144,10 +146,30 @@ function ageText(minutes) {
   return Math.floor(minutes / 1440) + "d";
 }
 
-function boundHtml(links) {
+// The section that shows each linked kind; the ref's id is the item selected there. Other kinds stay plain chips.
+const LINK_SECTION = { task: "work", issue: "issues", job: "agents", rule: "rules" };
+const ITEM_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,59}$/;
+
+// The hash a bound-to chip opens: the item in its section (ask: this screen, on that entry), or "" for no link.
+function refHref(ref, pid) {
+  const at = String(ref).indexOf(":");
+  const kind = at > 0 ? String(ref).slice(0, at) : "";
+  const id = at > 0 ? String(ref).slice(at + 1) : "";
+  if (!ITEM_ID.test(id)) return "";
+  if (kind === "ask") return hashOf({ id: id });
+  const section = LINK_SECTION[kind];
+  if (!section) return "";
+  return pid ? buildHash({ name: "project", id: pid, section: section, item: id }) : "#/all/" + section;
+}
+
+function boundHtml(links, pid) {
   const list = Array.isArray(links) ? links : [];
   const chips = list.slice(0, BOUND_MAX).map(function (ref) {
     const label = String(ref).split(":").pop();
+    const href = refHref(ref, pid);
+    if (href) {
+      return '<a class="chip chip-neutral" href="' + esc(href) + '" title="' + esc(ref) + '">' + esc(label) + "</a>";
+    }
     return '<span class="chip chip-neutral" title="' + esc(ref) + '">' + esc(label) + "</span>";
   });
   if (list.length > BOUND_MAX) chips.push('<span class="chip chip-neutral">+' + (list.length - BOUND_MAX) + "</span>");
@@ -178,7 +200,13 @@ function rowHtml(vm, row, opts) {
     '<button type="button" class="btn" data-action="head-set" data-id="' + esc(id) +
     '" data-status="needs-you">Needs you</button>' +
     '<button type="button" class="btn" data-action="head-set" data-id="' + esc(id) +
-    '" data-status="declined">Decline</button></div></details>';
+    '" data-status="declined">Decline</button>' +
+    '<button type="button" class="btn" data-action="head-form" data-form="bind" data-id="' + esc(id) +
+    '">Bind...</button>' +
+    '<button type="button" class="btn" data-action="head-form" data-form="split" data-id="' + esc(id) +
+    '">Split...</button>' +
+    '<button type="button" class="btn" data-action="head-form" data-form="merge" data-id="' + esc(id) +
+    '">Merge...</button></div></details>';
   const row1 = '<div class="row-grid hd-row" data-id="' + esc(id) + '">' +
     '<button type="button" class="hd-c hd-chev" aria-expanded="' + (open ? "true" : "false") +
     '" aria-controls="hd-p-' + esc(id) + '" data-action="head-toggle" data-id="' + esc(id) + '" aria-label="' +
@@ -186,7 +214,7 @@ function rowHtml(vm, row, opts) {
     '<span class="hd-c hd-id">' + esc(id) + "</span>" +
     '<span class="hd-c hd-kind">' + esc(row.kind || "") + "</span>" +
     '<span class="hd-c hd-sum rg-t" title="' + esc(row.sum || "") + '">' + esc(row.sum || "") + "</span>" +
-    '<span class="hd-c hd-bound">' + boundHtml(row.links) + (row.more ? ' <span class="chip chip-neutral">+' +
+    '<span class="hd-c hd-bound">' + boundHtml(row.links, opts.project) +(row.more ? ' <span class="chip chip-neutral">+' +
       esc(row.more) + "</span>" : "") + "</span>" +
     '<span class="hd-c hd-status">' + statusHtml(row) + "</span>" +
     '<span class="hd-c hd-age rg-num' + (row.stale ? " hd-stale" : row.amber ? " hd-amber" : "") + '"' +
@@ -214,11 +242,39 @@ function panelHtml(vm, row, opts, open) {
     actions.push('<button type="button" class="btn" data-action="head-reopen" data-id="' + esc(id) +
       '">Reopen</button>');
   }
+  // Suggestions from the snapshot: a duplicate (row.dup = {id, score}) and up to two bind refs (row.suggest).
+  if (!opts.readOnly && row.dup && row.dup.id) {
+    actions.push('<button type="button" class="btn" data-action="head-merge" data-id="' + esc(id) +
+      '" data-into="' + esc(row.dup.id) + '">Merge into ' + esc(row.dup.id) + " (dup " + esc(row.dup.score) +
+      ")</button>");
+  }
+  if (!opts.readOnly && Array.isArray(row.suggest)) {
+    row.suggest.slice(0, 2).forEach(function (ref) {
+      actions.push('<button type="button" class="btn" data-action="head-bind-sug" data-id="' + esc(id) +
+        '" data-ref="' + esc(ref) + '">Bind ' + esc(ref) + "</button>");
+    });
+  }
   const textHtml = text ? '<pre class="hd-text">' + esc(text) + "</pre>" +
     '<button type="button" class="btn hd-showall" data-action="head-text">Show all</button>' : "";
+  const forms = opts.readOnly ? "" : formsHtml(id);
   return '<div class="hd-panel" id="hd-p-' + esc(id) + '"' + (open ? "" : " hidden") + ">" + textHtml +
     (hist ? '<p class="hd-hist">' + esc(hist) + "</p>" : "") +
-    (actions.length ? '<div class="hd-acts">' + actions.join("") + "</div>" : "") + "</div>";
+    (actions.length ? '<div class="hd-acts">' + actions.join("") + "</div>" : "") + forms + "</div>";
+}
+
+// The Bind, Split and Merge forms. Hidden until the row menu opens one; the submit listener sends them.
+function formsHtml(id) {
+  const eid = esc(id);
+  return '<form class="hd-form" data-op="head.bind" data-id="' + eid + '" data-form="bind" hidden>' +
+    '<label><span class="hd-lbl">Bind to</span><input name="refs" placeholder="task:R7.31" required></label>' +
+    '<button type="submit" class="btn">Bind</button></form>' +
+    '<form class="hd-form" data-op="head.split" data-id="' + eid + '" data-form="split" hidden>' +
+    '<label><span class="hd-lbl">Part 1</span><input name="a" required></label>' +
+    '<label><span class="hd-lbl">Part 2</span><input name="b" required></label>' +
+    '<button type="submit" class="btn">Split</button></form>' +
+    '<form class="hd-form" data-op="head.merge" data-id="' + eid + '" data-form="merge" hidden>' +
+    '<label><span class="hd-lbl">Merge into</span><input name="into" placeholder="H9" required></label>' +
+    '<button type="submit" class="btn">Merge</button></form>';
 }
 
 function headerHtml() {
@@ -302,6 +358,51 @@ export function attachHeadListeners() {
       run("head.set", { id: id, set: { status: status } }, { project: project, label: id + " " + status });
     } else if (action === "head-log") {
       showToast({ text: "Type in the chat. Every message is logged here." });
+    } else if (action === "head-merge") {
+      const into = btn.getAttribute("data-into");
+      run("head.merge", { id: id, into: into }, { project: project, label: id + " merged into " + into });
+    } else if (action === "head-bind-sug") {
+      const ref = btn.getAttribute("data-ref");
+      run("head.bind", { id: id, refs: [ref] }, { project: project, label: "Bound " + id + " to " + ref });
+    } else if (action === "head-form") {
+      // Opens the row and shows one form (a second click on the same menu item hides it).
+      const name = btn.getAttribute("data-form");
+      const panel = document.getElementById("hd-p-" + id);
+      if (!panel) return;
+      if (panel.hidden) {
+        const chev = document.querySelector('[data-action="head-toggle"][data-id="' + id + '"]');
+        if (chev) chev.click();
+      }
+      for (const form of panel.querySelectorAll(".hd-form")) {
+        const show = form.getAttribute("data-form") === name && form.hidden;
+        form.hidden = !show;
+        const input = show ? form.querySelector("input") : null;
+        if (input) input.focus();
+      }
+      const menu = btn.closest ? btn.closest("details") : null;
+      if (menu) menu.open = false;
+    }
+  });
+  main.addEventListener("submit", function (event) {
+    const form = event.target;
+    const op = form && form.getAttribute ? form.getAttribute("data-op") : null;
+    if (!op) return;
+    event.preventDefault();
+    const id = form.getAttribute("data-id");
+    const project = projectOf(form);
+    const field = function (name) {
+      const el = form.elements.namedItem(name);
+      return el ? String(el.value || "").trim() : "";
+    };
+    if (op === "head.bind") {
+      const refs = field("refs").split(",").map(function (ref) {
+        return ref.trim();
+      }).filter(Boolean);
+      run("head.bind", { id: id, refs: refs }, { project: project, label: "Bound " + id });
+    } else if (op === "head.split") {
+      run("head.split", { id: id, sums: [field("a"), field("b")] }, { project: project, label: "Split " + id });
+    } else if (op === "head.merge") {
+      run("head.merge", { id: id, into: field("into") }, { project: project, label: id + " merged" });
     }
   });
   main.addEventListener("change", function (event) {
