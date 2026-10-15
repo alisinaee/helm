@@ -1,19 +1,22 @@
 // Task rows and job chips. A task row is 32 px high with fixed right-aligned columns: tokens, thinking, model,
 // check and needs-you. Titles are cut with an ellipsis; a note is cut at 2 lines with the full text in title.
 // Running jobs show a chip with a live timer (the timer text is filled in by running.js, not by the render).
-// A title is edited in place: double-click it, or focus it and press F2. Enter saves (task.rename, with Undo),
-// Escape or leaving the field cancels. The editor replaces the title text only, so the row grid does not move.
+// A title is edited in place: double-click it, or focus it and press Enter, Space or F2. Enter saves (task.rename,
+// with Undo), Escape cancels. Leaving the field saves a valid title and keeps focus where the user moved it. The editor
+// replaces the title text only, so the row grid does not move.
 
 import { run } from "../cmd.js";
 import { chipHtml, esc } from "../dom.js";
 import { fmtDuration, fmtTokens, MISSING } from "../format.js";
 import { copyButton, refSummary } from "../ref.js";
+import { parseRoute } from "../router.js";
 import { showToast } from "./toast.js";
 
 const MODEL_KINDS = ["haiku", "sonnet", "opus", "cursor", "agy"];
 export const TITLE_MAX = 120;
 // A renamed title shows at once; it lasts until the snapshot that follows the write, or this long at most.
 const RENAME_SHOW_MS = 10000;
+// Keyed by project and task id, so the same id in another project never shows this title.
 const renamed = new Map();
 let editing = null;
 
@@ -87,20 +90,46 @@ function idHtml(task) {
     ' <span class="sr-only">' + esc(STATE_WORD[task.state] || task.state) + "</span></span>";
 }
 
+function renameKey(project, id) {
+  return project + "\n" + id;
+}
+
+// The project of the page on screen (the route), used for the rename key and the write.
+function currentProject() {
+  if (typeof window === "undefined") return "";
+  const route = parseRoute(window.location.hash);
+  return route.name === "project" ? route.id : "";
+}
+
+// Drop every renamed title whose time is up, so the map cannot grow without limit.
+function sweepRenamed(now) {
+  renamed.forEach(function (entry, key) {
+    if (now >= entry.until) renamed.delete(key);
+  });
+}
+
 // The title a row shows: the one the page just wrote (until the next snapshot) or the snapshot's own title.
-function shownTitle(task) {
-  const entry = renamed.get(task.id);
-  return entry && Date.now() < entry.until ? entry.title : task.title;
+// An entry ends when its time is up or when the snapshot already carries the same title.
+function shownTitle(project, task) {
+  const key = renameKey(project, task.id);
+  const entry = renamed.get(key);
+  if (!entry) return task.title;
+  if (Date.now() >= entry.until || entry.title === task.title) {
+    renamed.delete(key);
+    return task.title;
+  }
+  return entry.title;
 }
 
 // copy is the optional copy-reference button (taskCopyHtml); it goes at the end of the title cell.
 function rowHtml(task, cls, cells, jobs, copy) {
   const jobHtml = jobs && jobs.length ? '<span class="job-chips">' + jobs.map(jobChipHtml).join("") + "</span>" : "";
-  const title = shownTitle(task);
+  const project = currentProject();
+  const title = shownTitle(project, task);
   return '<div class="task-row ' + cls + '">' + idHtml(task) +
     '<span class="t-main"><span class="t-title" title="' + esc(title) + '" tabindex="0" role="button" ' +
-    'aria-label="Edit title for ' + esc(task.id) + '" data-tt-id="' +
-    esc(task.id) + '">' + esc(title) + "</span>" +
+    'aria-label="Edit title for ' + esc(task.id) + '" data-tt-id="' + esc(task.id) + '" data-tt-project="' +
+    esc(project) + '">' + esc(title) + "</span>" +
     noteHtml(task) + jobHtml + (copy || "") + "</span>" + cells + "</div>";
 }
 
@@ -149,40 +178,50 @@ export function checkTitle(text) {
   return { title: title };
 }
 
-function setShown(id, title) {
-  renamed.set(id, { title: title, until: Date.now() + RENAME_SHOW_MS });
+function setShown(project, id, title) {
+  const now = Date.now();
+  sweepRenamed(now);
+  renamed.set(renameKey(project, id), { title: title, until: now + RENAME_SHOW_MS });
 }
 
-// Put the title text back in place of the editor, with the given text.
-function endEdit(text) {
+// Put the title text back in place of the editor. Focus returns to the title only after a key (Enter, Escape), so a
+// blur caused by a click on another control keeps that focus.
+function endEdit(text, refocus) {
   const ed = editing;
   editing = null;
   ed.span.textContent = text;
   ed.span.title = text;
   ed.input.replaceWith(ed.span);
-  ed.span.focus({ preventScroll: true });
+  if (refocus) ed.span.focus({ preventScroll: true });
 }
 
-function commitEdit() {
+// Save a valid, changed title; otherwise restore the old one. fromKey is true for Enter and false for a blur.
+function commitEdit(fromKey) {
   const ed = editing;
   const check = checkTitle(ed.input.value);
   if (check.error) {
     showToast({ text: check.error, tone: "danger" });
-    ed.input.focus();
+    if (fromKey) {
+      ed.input.focus();
+    } else {
+      endEdit(ed.prior, false);
+    }
     return;
   }
   const id = ed.id;
+  const project = ed.project;
   const prior = ed.prior;
   const title = check.title;
-  endEdit(title);
+  endEdit(title, fromKey);
   if (title === prior) return;
   run("task.rename", { id: id, title: title }, {
     label: id + " renamed",
+    project: project || undefined,
     apply: function () {
-      setShown(id, title);
+      setShown(project, id, title);
     },
     revert: function () {
-      setShown(id, prior);
+      setShown(project, id, prior);
     },
   });
 }
@@ -191,11 +230,12 @@ function onEditKey(event) {
   if (!editing) return;
   if (event.key === "Enter") {
     event.preventDefault();
-    commitEdit();
+    event.stopPropagation();
+    commitEdit(true);
   } else if (event.key === "Escape") {
     event.preventDefault();
     event.stopPropagation();
-    endEdit(editing.prior);
+    endEdit(editing.prior, true);
   }
 }
 
@@ -207,10 +247,16 @@ function startEdit(span) {
   input.className = "iss-input";
   input.value = span.textContent;
   input.setAttribute("aria-label", "Title of " + span.getAttribute("data-tt-id"));
-  editing = { id: span.getAttribute("data-tt-id"), span: span, input: input, prior: span.textContent };
+  editing = {
+    id: span.getAttribute("data-tt-id"),
+    project: span.getAttribute("data-tt-project") || "",
+    span: span,
+    input: input,
+    prior: span.textContent,
+  };
   input.addEventListener("keydown", onEditKey);
   input.addEventListener("blur", function () {
-    if (editing && editing.input === input) endEdit(editing.prior);
+    if (editing && editing.input === input) commitEdit(false);
   });
   span.replaceWith(input);
   input.focus();
@@ -228,10 +274,13 @@ if (typeof document !== "undefined") {
     event.preventDefault();
     startEdit(span);
   });
+  // The title is a button: Enter, Space and F2 start the edit when the title itself has focus. The target check keeps
+  // the Enter that saves an edit from opening the editor again.
   document.addEventListener("keydown", function (event) {
-    if (event.key !== "F2" || editing) return;
-    const span = titleSpanOf(document.activeElement);
+    if (editing) return;
+    const span = titleSpanOf(event.target);
     if (!span) return;
+    if (event.key !== "F2" && event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     startEdit(span);
   });
