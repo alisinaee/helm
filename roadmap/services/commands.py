@@ -13,17 +13,21 @@ Internal ops (public False) are the inverses that undo runs; run() refuses them 
 
 import contextlib
 import datetime
+import hashlib
+import json
 import re
 import shlex
 import threading
 import unicodedata
+import uuid
 
 from roadmap import log as roadmap_log
 from roadmap.core import parsers, planfmt
 from roadmap.errors import EXIT_CONFLICT, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import activity, budget, comments, issues, jobs, questions, queue, records, tasks
 from roadmap.services import agentguard
-from roadmap.store import jsonl, lock, schema
+from roadmap.services import head as head_svc
+from roadmap.store import db as store_db, events as store_events, jsonl, lock, schema, tasks_db
 
 UNDO_FILE = "undo.jsonl"
 UNDO_KEEP = 500
@@ -819,6 +823,9 @@ def run(op, args, source, data_dir, now=None):
     if args is not None and not isinstance(args, dict):
         raise _usage("args must be an object")
     records.require_dir(data_dir)
+    db_path = head_svc.sqlite_db(data_dir)
+    if db_path is not None:
+        return _run_db(db_path, op, args, source, data_dir, entry, now)
     try:
         clean = entry.check(args or {})
         with context(source, current_project()):
@@ -835,6 +842,92 @@ def run(op, args, source, data_dir, now=None):
             line = activity.append(data_dir, source, op, summary, undo=inverse is not None, now=now)
     if inverse is not None:
         _remember(data_dir, line["id"], summary, inverse, now)
+    _log_write(op, args, "ok")
+    return {"ok": True, "data": data, "activity": line["id"], "undo": inverse is not None}
+
+
+def _db_files(data_dir):
+    """The JSON files one op can write, mirrored in the db when the sqlite switch is on."""
+    return [tasks.tasks_path(data_dir), tasks.features_path(data_dir),
+            records.file_of(data_dir, activity.FILE), records.file_of(data_dir, UNDO_FILE)]
+
+
+DEDUPE_WINDOW = datetime.timedelta(seconds=10)
+
+
+def _idem_key(op, args):
+    """(key, has_request_id): op + sha256 of the args (without the request id) + the client request id if sent."""
+    body = dict(args) if isinstance(args, dict) else {}
+    rid = str(body.pop("requestId", None) or body.pop("request_id", None) or "")
+    raw = json.dumps(body, sort_keys=True, default=str) + "|" + rid
+    return str(op) + ":" + hashlib.sha256(raw.encode("utf-8")).hexdigest(), bool(rid)
+
+
+def _replay_row(conn, key, has_rid):
+    """The first reply stored for this key. With a request id: any age. Without one: only when the newest activity
+    line is the same op+args and was written within DEDUPE_WINDOW (double-click or retry), so a later change in
+    between (done -> todo -> done) is applied."""
+    if has_rid:
+        return conn.execute("SELECT payload FROM events WHERE idem = ?", (key,)).fetchone()
+    row = conn.execute("SELECT ts, payload FROM events WHERE kind = 'activity' ORDER BY rev DESC LIMIT 1").fetchone()
+    if row is None or json.loads(row[1]).get("key") != key:
+        return None
+    try:
+        stamp = datetime.datetime.strptime(row[0], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc)
+    except ValueError:
+        return None
+    age = datetime.datetime.now(datetime.timezone.utc) - stamp
+    return row if datetime.timedelta(0) <= age <= DEDUPE_WINDOW else None
+
+
+def _run_db(db_path, op, args, source, data_dir, entry, now):
+    """Switch on: the data write, the activity line and the undo record commit in one db transaction. The JSON files
+    are mirrored from the db and restored from a snapshot if the op fails. A key already in the db returns the first
+    reply and applies nothing (checked inside the write lock)."""
+    key, has_rid = _idem_key(op, args)
+    conn = store_db.connect(db_path)
+    try:
+        with store_db.txn(conn):
+            tasks_db.ensure(conn)
+            paths = _db_files(data_dir)
+            for path in paths:
+                tasks_db.sync_in(conn, path)
+            row = _replay_row(conn, key, has_rid)
+            if row is not None:
+                first = json.loads(row[-1])
+                return {"ok": True, "data": first.get("data"), "activity": first.get("activity"),
+                        "undo": first.get("undo"), "replayed": True}
+            snapshot = {path: tasks_db.read_file(path) for path in paths}
+            try:
+                clean = entry.check(args or {})
+                with context(source, current_project()):
+                    before = _newest_id(data_dir)
+                    data, summary, inverse = entry.handler(data_dir, clean, now)
+                if entry.logs:
+                    line = activity.append(data_dir, source, op, summary, undo=inverse is not None, now=now)
+                else:
+                    line = _newest_line(data_dir)
+                    if line is None or line["id"] == before:
+                        line = activity.append(data_dir, source, op, summary, undo=inverse is not None, now=now)
+                idem = key if has_rid else key + "#" + uuid.uuid4().hex
+                store_events.append(conn, "activity", "activity", line["id"], idem=idem, payload={
+                    "op": op, "key": key, "activity": line["id"], "sum": line["sum"], "data": data,
+                    "undo": inverse is not None})
+                if inverse is not None:
+                    _remember(data_dir, line["id"], summary, inverse, now)
+                    store_events.append(conn, "undo", "activity", line["id"], idem=idem + ":undo", payload={
+                        "activity": line["id"], "sum": summary, "op": inverse["op"], "args": inverse["args"]})
+                for path in paths:
+                    tasks_db.sync_out(conn, path)
+            except BaseException:
+                for path, text in snapshot.items():
+                    tasks_db.restore_file(path, text)
+                raise
+    except RoadmapError as exc:
+        _log_write(op, args, exc.code)
+        raise
+    finally:
+        conn.close()
     _log_write(op, args, "ok")
     return {"ok": True, "data": data, "activity": line["id"], "undo": inverse is not None}
 
