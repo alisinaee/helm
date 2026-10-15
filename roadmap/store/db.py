@@ -10,7 +10,7 @@ import json
 import sqlite3
 import time
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 BUSY_TIMEOUT_MS = 5000
 
 # version -> statements that take the schema from version-1 to version.
@@ -39,6 +39,11 @@ MIGRATIONS = {
         " BEGIN SELECT RAISE(ABORT, 'events are append-only'); END",
         "CREATE TRIGGER IF NOT EXISTS events_no_delete BEFORE DELETE ON events"
         " BEGIN SELECT RAISE(ABORT, 'events are append-only'); END",
+    ],
+    2: [
+        "ALTER TABLE events ADD COLUMN entity_id TEXT",
+        "ALTER TABLE events ADD COLUMN idem TEXT",
+        "CREATE UNIQUE INDEX IF NOT EXISTS events_idem ON events(idem)",
     ],
 }
 
