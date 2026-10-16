@@ -336,7 +336,6 @@ function questionBody(item, now) {
   const q = e.q;
   const pid = e.pid;
   const blocks = q.block ? chipHtml("Blocks work", "warning") : "";
-  const copy = copyButton("question", q.id, q.id + " " + q.text, { project: pid, sum: refSummary("question", q) });
   const options = answerHtml(pid, Object.assign({}, q, { opts: Array.isArray(q.opts) ? q.opts : [] }));
   let timer = "";
   if (q.askedMs != null && q.timeoutS != null) {
@@ -345,7 +344,7 @@ function questionBody(item, now) {
     timer = '<p class="qc-foot"><span class="qc-timer" data-deadline-ms="' + esc(deadline) + '" data-word="' +
       esc(word) + '">' + esc(countdownText(deadline, word, now)) + "</span></p>";
   }
-  return '<p class="qc-line">' + blocks + " " + copy + "</p>" + timer + options;
+  return (blocks ? '<p class="qc-line">' + blocks + "</p>" : "") + timer + options;
 }
 
 // The expanded Head ask: the summary, the head's note, the age, the reply form (head.set) and the Head link.
@@ -412,9 +411,15 @@ function itemHtml(item, now, open, showProject) {
     '<span class="rg-main ib-main" role="button" tabindex="0" aria-controls="' + bid + '" aria-expanded="' +
     (open ? "true" : "false") + '" data-focus="ib-' + esc(dk) + '" title="' + esc(item.title) + '">' +
     '<span class="rg-t"><span class="qc-id">' + esc(item.id) + "</span> " + esc(item.title) + proj + "</span></span>" +
-    task + '<span class="rg-num qc-foot">' + esc(ageText(item.at, now)) + "</span>" +
+    task + '<span class="rg-num qc-foot">' + esc(ageText(item.at, now)) + "</span>" + copyOf(item) +
     actionHtml(item, bid, open) + '</div><div class="ib-body" id="' + bid + '"' + (open ? "" : " hidden") + ">" +
     body + "</div></li>";
+}
+
+function copyOf(item) {
+  if (item.kind !== "question") return "<span></span>";
+  const q = item.entry.q;
+  return copyButton("question", q.id, q.id + " " + q.text, { project: item.pid, sum: refSummary("question", q) });
 }
 
 function isOld(at, now) {
