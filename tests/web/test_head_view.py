@@ -30,7 +30,7 @@ CSS_DIR = os.path.join(WEB, "css")
 SHELL_TEST = os.path.join(TESTS, "web", "test_shell.py")
 RENDER = os.path.join(TESTS, "web", "render_head.mjs")
 FIXTURE = os.path.join(REPO, "fixtures", "demo", "alpha", "docs", "head.jsonl")
-HEAD_CSS_MAX = 6144  # raised 2026-10-15 for spec 13 (cards) and again for the List table view (sticky header, phone)
+HEAD_CSS_MAX = 7168  # raised 2026-10-15 for spec 13 (cards) and the List table view; again for R10.16 (reply column, questions group)
 TRACKS = "20px 60px minmax(0,1fr) 32px"
 ROW_ID = re.compile(r'<div class="row-grid hd-row" data-id="(H\d+)"')
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=|<script', re.IGNORECASE)
@@ -130,12 +130,13 @@ class HeadSource(unittest.TestCase):
             self.assertIn('data-form="' + name + '"', self.src)
             self.assertIn('data-op="head.' + name + '"', self.src)
 
-    def test_list_view_is_a_table_with_the_nine_columns_in_order(self):
+    def test_list_view_is_a_table_with_the_ten_columns_in_order(self):
         self.assertIn('<table class="hd-tbl"', self.src)
-        self.assertIn('["#", "hd-n"], ["Kind", "hd-kind"], ["Summary", "hd-sumc"], ["State", "hd-stc"],', self.src)
-        self.assertIn('["Bound to", "hd-bnd"], ["Age", "hd-age"], ["Added", "hd-when"], ["Acc", "hd-acc"],', self.src)
+        self.assertIn('["#", "hd-n"], ["Kind", "hd-kind"], ["You wrote", "hd-sumc"], ["Head replied", "hd-rpc"],', self.src)
+        self.assertIn('["State", "hd-stc"], ["Bound to", "hd-bnd"], ["Age", "hd-age"], ["Added", "hd-when"],', self.src)
+        self.assertIn('["Acc", "hd-acc"],', self.src)
         self.assertIn('["Copy", "hd-cp"]];', self.src)
-        self.assertIn('<tr class="hd-detail"><td colspan="9">', self.src)
+        self.assertIn('<tr class="hd-detail"><td colspan="10">', self.src)
 
     def test_view_toggle_is_in_the_hash_and_defaults_to_the_list(self):
         self.assertIn('view: pair[0]', self.src)
@@ -203,7 +204,7 @@ class HeadCss(unittest.TestCase):
         self.assertRegex(css, r"\.hd-n\{width:1%;")
         self.assertRegex(css, r"\.hd-age\{width:56px;min-width:56px;text-align:right;white-space:nowrap")
         self.assertRegex(css, r"\.hd-when\{width:112px;min-width:112px;[^}]*white-space:nowrap")
-        self.assertRegex(css, r"\.hd-sumc\{width:100%")
+        self.assertRegex(css, r"\.hd-sumc,\.hd-rpc\{width:100%")
 
     def test_bound_column_shows_a_dash_and_the_list_drops_the_carried_icon(self):
         js = read(SOURCE)
@@ -417,16 +418,16 @@ class HeadRender(unittest.TestCase):
     def test_list_columns_are_in_order_and_newest_first(self):
         html = self.out["list"]
         heads = re.findall(r'<th scope="col" class="[^"]+">([^<]+)</th>', html)
-        self.assertEqual(heads, ["#", "Kind", "Summary", "State", "Bound to", "Age", "Added", "Acc", "Copy"])
+        self.assertEqual(heads, ["#", "Kind", "You wrote", "Head replied", "State", "Bound to", "Age", "Added", "Acc", "Copy"])
         rows = re.findall(r'<tr class="hd-row" data-id="(H\d+)">', html)
         self.assertEqual(rows, list(reversed(re.findall(r'<tr class="hd-row" data-id="(H\d+)">', self.out["listOldest"]))))
         self.assertEqual(rows[0], "H6")
 
-    def test_list_cells_are_nine_per_row_with_numbers_right_aligned(self):
+    def test_list_cells_are_ten_per_row_with_numbers_right_aligned(self):
         html = self.out["list"]
         self.assertEqual(html.count('<tr class="hd-row"'), 7)
-        self.assertEqual(html.count('<td colspan="9">'), 7)
-        self.assertEqual(len(re.findall(r'<td class="hd-(?:n|kind|sumc|stc|bnd|age|when|acc|cp)', html)), 7 * 9)
+        self.assertEqual(html.count('<td colspan="10">'), 7)
+        self.assertEqual(len(re.findall(r'<td class="hd-(?:n|kind|sumc|rpc|stc|bnd|age|when|acc|cp)', html)), 7 * 10)
         self.assertRegex(html, r'<td class="hd-age rg-num[^"]*"[^>]*>\d+[mhd]</td>')
         self.assertRegex(html, r'<td class="hd-when rg-num" title="\d{4}-\d{2}-\d{2}T[^"]*">\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{2}:\d{2}</td>')
 

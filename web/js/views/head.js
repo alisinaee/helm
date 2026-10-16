@@ -19,7 +19,7 @@ import { pendingValue, run } from "../cmd.js";
 import { getJson } from "../api.js";
 import { buildHash } from "../router.js";
 import { showToast } from "./toast.js";
-import { collect, pageAction, pageState, questionCardHtml, questionKey, watchCountdowns } from "./inbox.js";
+import { collect, pageState, questionCardHtml, questionKey, watchCountdowns } from "./inbox.js";
 
 export const FILTERS = [["open", "Open"], ["queue", "Queue"], ["doing", "Doing"], ["done", "Done"],
   ["failed", "Failed"], ["needs", "Needs you"], ["blocked", "Blocked"], ["closed", "Closed"], ["all", "All"]];
@@ -532,8 +532,15 @@ function formsHtml(id) {
 
 // The list view: one table row per entry (columns: # Kind Summary State Bound to Age Added Acc Copy). Each entry is a
 // tbody, so the row and its full-width detail row (colspan 9, the same panel as the card) open and close together.
-const LIST_COLS = [["#", "hd-n"], ["Kind", "hd-kind"], ["Summary", "hd-sumc"], ["State", "hd-stc"],
-  ["Bound to", "hd-bnd"], ["Age", "hd-age"], ["Added", "hd-when"], ["Acc", "hd-acc"], ["Copy", "hd-cp"]];
+const LIST_COLS = [["#", "hd-n"], ["Kind", "hd-kind"], ["You wrote", "hd-sumc"], ["Head replied", "hd-rpc"],
+  ["State", "hd-stc"], ["Bound to", "hd-bnd"], ["Age", "hd-age"], ["Added", "hd-when"], ["Acc", "hd-acc"],
+  ["Copy", "hd-cp"]];
+
+// The reply cell text: the captured reply, or a short word when the row is not loaded yet or has none.
+function replyText(full) {
+  if (!full) return "Open to load";
+  return full.reply || "No reply yet";
+}
 
 function listRowHtml(vm, row, opts) {
   const id = String(row.id);
@@ -555,13 +562,14 @@ function listRowHtml(vm, row, opts) {
     cell("hd-kind", kindHtml(row.kind) + ruleStateHtml(row)) +
     cell("hd-sumc", '<span class="hd-sum" data-sum="' + esc(row.sum || "") + '" title="' + esc(shown) + '">' +
       esc(shown) + "</span>") +
+    cell("hd-rpc", '<span class="hd-rep">' + esc(replyText(fullOf(vm, pid, id))) + "</span>") +
     cell("hd-stc", statusHtml(row)) +
     cell("hd-bnd", row.links && row.links.length ? boundHtml(row.links, pid, BOUND_MAX) :
       '<span class="hd-none" title="Not bound yet">—</span>') +
     age + when +
     cell("hd-acc", row.acc ? '<span aria-label="Accepted" title="Accepted">✓</span>' : "") +
     cell("hd-cp", copyButton("ask", id, id, { project: pid, sum: row.sum || "" })) + "</tr>";
-  const detail = '<tr class="hd-detail"><td colspan="9">' + panelHtml(vm, row, opts, open) + "</td></tr>";
+  const detail = '<tr class="hd-detail"><td colspan="10">' + panelHtml(vm, row, opts, open) + "</td></tr>";
   return '<tbody class="hd-item' + (open ? " is-open" : "") + '">' + tr + detail + "</tbody>";
 }
 
@@ -585,22 +593,31 @@ function emptyHtml(vm, opts) {
     esc(hashOf({ f: "all" })) + '">Show all</a></div>';
 }
 
-// The agents' open questions at the top of the screen: the Inbox question card (its one-click answers) and a free-text
-// answer. Both send the Inbox's own answer path (inbox.js pageAction, op question.answer). Hidden when there are none.
+// The agents' questions, below the timeline: a collapsed group "Questions (N)", newest first. Each card is the Inbox
+// question card (its option buttons and the one "Other" answer box, which the Inbox answer path handles). A question
+// asked more than 24 hours ago is marked "old". qsOpen keeps the group open or closed across repaints.
+const OLD_QUESTION_MS = 24 * 60 * 60 * 1000;
+let qsOpen = false;
+
+function askedMs(entry) {
+  return typeof entry.q.askedMs === "number" && isFinite(entry.q.askedMs) ? entry.q.askedMs : null;
+}
+
 function questionsHtml(list) {
   if (!list || !list.length) return "";
   const now = Date.now();
-  return '<section class="hd-blk" aria-labelledby="hd-qh"><h3 id="hd-qh" class="hd-lbl">Questions from agents</h3>' +
-    list.map(function (e) {
-      const qid = esc(e.q.id);
-      const pid = esc(e.pid);
+  const sorted = list.slice().sort(function (a, b) {
+    return (askedMs(b) || 0) - (askedMs(a) || 0);
+  });
+  return '<details class="hd-qs" data-role="questions"' + (qsOpen ? " open" : "") + "><summary>Questions (" +
+    sorted.length + ")</summary>" + sorted.map(function (e) {
       const card = questionCardHtml(e, now, false);
       if (pendingValue(questionKey(e.pid, e.q.id), e.snap.fetchedAt, now) !== undefined) return card;
-      return card + '<form class="hd-form" data-op="question.answer" data-project="' + pid + '" data-qid="' + qid +
-        '" aria-label="Answer ' + qid + '"><label><span class="hd-lbl">Your answer</span>' +
-        '<input name="value" required placeholder="Type an answer"></label>' +
-        '<button type="submit" class="btn">Answer</button></form>';
-    }).join("") + "</section>";
+      const at = askedMs(e);
+      const old = at !== null && now - at > OLD_QUESTION_MS;
+      const mark = old ? '<p class="hd-old">old, asked ' + esc(ageText((now - at) / 60000)) + " ago</p>" : "";
+      return '<div class="hd-q' + (old ? " is-old" : "") + '">' + mark + card + "</div>";
+    }).join("") + "</details>";
 }
 
 // The screen as ordered pieces (each one root element, or "" when absent). The list piece has build(), which makes its
@@ -631,14 +648,15 @@ function piecesOf(vm, opts) {
       }).join("") + "</ul></div>";
     },
   };
+  // The timeline first (its title, the alerts, the filter bar, the rows, the pager); then the questions group and the
+  // head's status line.
   return [
-    { name: "top", html: top },
-    { name: "questions", html: questionsHtml(o.questions) },
-    { name: "now", html: nowHtml(head) },
-    { name: "alerts", html: alertsHtml(counts) },
+    { name: "top", html: top + alertsHtml(counts) },
     { name: "bar", html: barHtml(vm, o) },
     list,
     { name: "pager", html: pagerHtml(o.pager) },
+    { name: "questions", html: questionsHtml(o.questions) },
+    { name: "now", html: nowHtml(head) },
   ];
 }
 
@@ -711,6 +729,8 @@ function loadText(item) {
     if (hist) hist.textContent = (entry.history || []).join(" · ");
     const reply = item.querySelector(".hd-reply");
     if (reply) reply.textContent = replyNote(entry);
+    const rep = item.querySelector(".hd-rep");
+    if (rep) rep.textContent = replyText(entry);
     fillAssets(item, entry.assets || []);
     const sumEl = item.querySelector(".hd-sum");
     if (sumEl) sumEl.textContent = summaryText(sumEl.getAttribute("data-sum"), entry);
@@ -953,13 +973,7 @@ export function attachHeadListeners() {
       const el = form.elements.namedItem(name);
       return el ? String(el.value || "").trim() : "";
     };
-    if (op === "question.answer") {
-      // The typed answer goes through the Inbox's answer button path (pageAction reads these attributes).
-      const value = field("value");
-      if (!value) return;
-      form.setAttribute("data-value", value);
-      pageAction("inbox-answer", form);
-    } else if (op === "head.bind") {
+    if (op === "head.bind") {
       const refs = field("refs").split(",").map(function (ref) {
         return ref.trim();
       }).filter(Boolean);
@@ -970,6 +984,11 @@ export function attachHeadListeners() {
       run("head.merge", { id: id, into: field("into") }, { project: project, label: id + " merged" });
     }
   });
+  // The questions group does not publish its toggle; the capture phase sees it and keeps the state for repaints.
+  main.addEventListener("toggle", function (event) {
+    const group = event.target;
+    if (group && group.classList && group.classList.contains("hd-qs")) qsOpen = group.open;
+  }, true);
   main.addEventListener("change", function (event) {
     const el = event.target;
     const bar = el && el.closest ? el.closest(".hd-bar") : null;
