@@ -28,8 +28,12 @@ const TONE = { question: "cursor", ask: "haiku", rule: "opus", decision: "succes
 const RANK = { question: 1, ask: 2, rule: 3, task: 4 };
 let counting = false;
 let filter = "all";
-// The keys of the rows that are expanded; a re-render keeps them open.
-const openSet = new Set();
+// The open state of each row the person toggled, by row key; a re-render keeps it. A question starts open, because its
+// options are answered on the row; every other row starts closed.
+const openState = new Map();
+function isOpen(item) {
+  return openState.has(item.key) ? openState.get(item.key) : item.kind === "question";
+}
 
 // A stored option is "Label", "Label: description" or "Label (recommended): description" (services/questions.py).
 export function optionParts(stored) {
@@ -376,11 +380,12 @@ function ruleBody(item) {
   });
   const from = sources.length ? "From " + sources.join(", ") : "No Head source";
   return '<p class="qc-text">' + esc(row.text || "") + '</p><p class="qc-foot">' + from + "</p>" +
-    '<p><button type="button" data-action="rule-reject" data-project="' + esc(pid) + '" data-id="' + esc(id) +
+    '<p><button type="button" class="btn" data-action="rule-reject" data-project="' + esc(pid) +
+    '" data-id="' + esc(id) +
     '">Reject</button></p><form data-form="inbox-rule-edit" data-project="' + esc(pid) + '" data-id="' + esc(id) +
     '" aria-label="' + esc("Edit and accept " + id) + '"><label><span class="qc-id">Rule text</span> ' +
     '<input name="text" required maxlength="160" value="' + esc(row.text || "") + '"></label> ' +
-    "<button type=\"submit\">Edit and accept</button></form>";
+    '<button type="submit" class="btn btn-primary">Edit and accept</button></form>';
 }
 
 // The expanded needs-you task: its title and the link to it.
@@ -421,7 +426,7 @@ export function inboxBody(vm) {
     return filter === "all" || it.kind === FILTER_KIND[filter];
   });
   const rows = shown.length ? '<ul class="nz-list ib-list">' + shown.map(function (it) {
-    return itemHtml(it, now, openSet.has(it.key));
+    return itemHtml(it, now, isOpen(it));
   }).join("") + "</ul>" : '<p class="placeholder">Nothing in this filter.</p>';
   return summaryHtml(c) + filterHtml(c) + rows;
 }
@@ -522,8 +527,7 @@ function setOpen(item, on) {
   const body = item.querySelector(".ib-body");
   if (body) body.hidden = !on;
   const key = item.getAttribute("data-key");
-  if (on) openSet.add(key);
-  else openSet.delete(key);
+  if (key) openState.set(key, !!on);
 }
 
 // After an answer or an accept: the row is swapped for a one-line confirmation, focus moves to the next row, and the
@@ -531,7 +535,7 @@ function setOpen(item, on) {
 function leaveItem(el, text) {
   const item = el && el.closest ? el.closest(".ib-item") : null;
   if (!item || !item.parentNode) return;
-  openSet.delete(item.getAttribute("data-key"));
+  openState.delete(item.getAttribute("data-key"));
   const next = item.nextElementSibling || item.previousElementSibling;
   const hadFocus = item.contains(document.activeElement);
   const fresh = swapNode(item, parseOne('<li class="qc is-answered ib-item" role="status"><p class="qc-line">' +

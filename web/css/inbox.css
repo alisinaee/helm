@@ -1,0 +1,112 @@
+/* inbox.css (R10.14): the Inbox only. One list in the page's scroll container (.main); every row sits on the same
+   tracks: kind chip | title and project | age | action. Options are a letter chip column and a label column. */
+
+.ib-list { gap: 0; min-width: 0 }
+.ib-item { min-width: 0; border-top: 1px solid var(--line) }
+.ib-item:first-child { border-top: 0 }
+.ib-item.is-answered { border-top: 0 }
+
+.ib-row.row-grid {
+  grid-template-columns: 6.5rem minmax(0, 1fr) 3rem 2.25rem;
+  column-gap: var(--sp-2);
+  row-gap: var(--sp-1);
+  padding: var(--sp-2) 0;
+  align-items: center;
+}
+.ib-row > .ib-kind { min-width: 0; justify-self: start; overflow: hidden }
+.ib-row > .ib-kind .chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis }
+.ib-row > .ib-main {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  min-width: 0;
+  min-height: 2.25rem;
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+  border-radius: var(--r-control);
+}
+.ib-row > .ib-main:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px }
+.ib-row > .ib-main .rg-t { display: block; min-width: 0 }
+.ib-row > :nth-child(3) { justify-self: end; text-align: right; font-variant-numeric: tabular-nums }
+.ib-row > .btn { justify-self: end; width: 2.25rem; min-width: 0; height: 2.25rem; padding: 0 }
+
+/* The body sits under the title column, so the answers line up with the title, not with the chip. */
+.ib-body {
+  display: grid;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: 0 0 var(--sp-3) calc(6.5rem + var(--sp-2));
+}
+.ib-body[hidden] { display: none }
+.ib-body p { margin: 0 }
+.ib-body .qc-text { overflow-wrap: anywhere }
+.ib-body .qc-timer { font-variant-numeric: tabular-nums }
+
+/* Options: one row each, a fixed 28px letter chip, then the full label (no truncation) and its description. */
+.ib-item .ib-body .nz-list { grid-template-columns: minmax(0, 1fr); gap: 6px; min-width: 0 }
+.ib-item .ib-body .qc-opt {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  column-gap: var(--sp-2);
+  align-items: center;
+  width: 100%;
+  min-height: 36px;
+  height: auto;
+  padding-block: 4px;
+  text-align: left;
+  white-space: normal;
+}
+.ib-item .ib-body .qc-label {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  overflow: visible;
+  text-overflow: clip;
+}
+.ib-item .ib-body .qc-label .qc-foot { display: block }
+
+/* Forms (Other, Head reply, rule edit): the label and input wrap; the button keeps its size. */
+.ib-item .ib-body form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+}
+.ib-item .ib-body form label {
+  display: flex;
+  flex: 1 1 12rem;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.ib-item .ib-body form input {
+  flex: 1 1 10rem;
+  min-width: 0;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 var(--sp-2);
+  font: inherit;
+  color: var(--text-1);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+}
+.ib-item .ib-body form .btn { flex: 0 0 auto }
+.ib-item .ib-body .nz-row { display: flex; flex-wrap: wrap }
+
+/* Phone width: the kind chip and the age share the first line with the action; the title takes the full second line. */
+@media (max-width: 599px) {
+  .ib-row.row-grid { grid-template-columns: auto minmax(0, 1fr) auto; padding: var(--sp-2) 0 }
+  .ib-row > .ib-kind { grid-column: 1; grid-row: 1 }
+  .ib-row > :nth-child(3) { grid-column: 2; grid-row: 1; justify-self: end }
+  .ib-row > .btn { grid-column: 3; grid-row: 1; width: 2.75rem; height: 2.75rem }
+  .ib-row > .ib-main { grid-column: 1 / -1; grid-row: 2; min-height: 2.75rem }
+  .ib-body { padding-left: 0 }
+  .ib-item .ib-body .qc-opt { min-height: 44px }
+}
