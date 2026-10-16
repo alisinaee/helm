@@ -12,6 +12,7 @@ export const SECTIONS = [
   { id: "work", label: "Work", icon: "work", module: "./views/work.js", bottom: true },
   { id: "agents", label: "Agents", icon: "agents", module: "./views/agents.js", bottom: false },
   { id: "workflow", label: "Workflow", icon: "workflow", module: "./views/workflow.js", bottom: false },
+  { id: "system", label: "System", icon: "system", module: "./views/system.js", bottom: false },
   { id: "tokens", label: "Tokens", icon: "tokens", module: "./views/tokens.js", bottom: false },
   { id: "rules", label: "Rules", icon: "rules", module: "./views/rules.js", bottom: false },
   { id: "activity", label: "Activity", icon: "activity", module: "./views/activity.js", bottom: false },

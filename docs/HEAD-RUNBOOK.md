@@ -86,3 +86,5 @@ wide logic/hard UI; Opus 5.5 low/med advice only; agy (unlimited) for every read
 Budget this run: stop Claude workers at weekly 10% (start reading 2%). Decisions H182: merge Planner into Work;
 delete Research section; archive all old board tasks and start a fresh plan; Git section uses vendored MIT libs
 (no build step). Full rules: ~/.claude/skills/head/SKILL.md "Planner-only rules".
+
+When a worker adds a module, update docs/system.json (roadmap system check).
