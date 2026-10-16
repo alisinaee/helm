@@ -19,7 +19,7 @@ import time
 from roadmap import log as roadmap_log
 from roadmap.core import head as head_core
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, RoadmapError
-from roadmap.services import control, git, jobs, presence, rules
+from roadmap.services import control, git, jobs, jobtokens, presence, rules
 from roadmap.services import head as head_svc
 from roadmap.services import queue as queue_service
 from roadmap.store import atomic, lock, paths, schema
@@ -345,8 +345,11 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
             elif event == "SubagentStop":
                 agent_id = str(payload.get("agent_id") or "")
                 if agent_id:
-                    closed += _close_some(data_dir, snapshot,
+                    stopped = _close_some(data_dir, snapshot,
                                           lambda e: "done" if e.get("agent") == agent_id else None)
+                    closed += stopped
+                    for job_id in stopped:  # R10.32: measured tokens from the subagent transcript, fail-open
+                        jobtokens.capture_for_agent(data_dir, job_id, payload)
             left = [e for e in snapshot if e.get("job") not in set(closed)]
             closed += _close_some(data_dir, left, _verdict_of(now))
         except RoadmapError as exc:

@@ -160,6 +160,20 @@ def parse_tasks(text, name="tasks.json"):
         return empty, [error_entry(name, exc)]
 
 
+MODEL_WEIGHTS = (("haiku", 1), ("sonnet", 3), ("opus", 5))
+
+
+def weighted_units(tokens):
+    """Cost-weighted units of measured tokens (R10.32): model weight (haiku 1, sonnet 3, opus 5, other 0) x
+    (in 1 + out 5 + cacheWrite 1.25 + cacheRead 0.1). Odd values count as zero."""
+    def num(key):
+        v = tokens.get(key)
+        return v if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0 else 0
+    model = str(tokens.get("model") or "").lower()
+    weight = next((w for name, w in MODEL_WEIGHTS if name in model), 0)
+    return round(weight * (num("in") + 5 * num("out") + 1.25 * num("cacheWrite") + 0.1 * num("cacheRead")), 1)
+
+
 def parse_jobs(text, now, name="jobs.json"):
     """Jobs from jobs.json text. Returns (jobs, errors). Invalid job items are skipped silently."""
     try:
@@ -189,6 +203,10 @@ def parse_jobs(text, now, name="jobs.json"):
             "elapsed_s": max(elapsed, 0.0) if elapsed is not None else None,
             "tokensK": j["tokensK"] if isinstance(j.get("tokensK"), (int, float)) else None,
         }
+        tokens = j.get("tokens")
+        if isinstance(tokens, dict):
+            job["tokens"] = {k: tokens.get(k) for k in ("in", "out", "cacheRead", "cacheWrite", "model")}
+            job["units"] = weighted_units(tokens)
         if "parent" in j:
             job["parent"] = j["parent"] if isinstance(j["parent"], str) and j["parent"] else None
         if "role" in j:

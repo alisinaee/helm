@@ -18,6 +18,7 @@ COMMAND_MODULES = (
     "project",
     "init",
     "job",
+    "tokens",
     "task",
     "backlog",
     "plan",

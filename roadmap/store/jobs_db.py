@@ -148,6 +148,21 @@ def finish(data_dir, job_id, status, note=None, tokens_k=None, reason=None):
     return dict(job)
 
 
+def set_usage(data_dir, job_id, usage, overwrite=False):
+    """Store measured tokens on a job of any status (same rules as jobs.set_job_usage)."""
+    conn = _open(data_dir)
+    try:
+        with db.txn(conn):
+            job = _load(conn, job_id)
+            if job is None or (job.get("tokens") and not overwrite):
+                return False
+            job["tokens"] = dict(usage)
+            _save(conn, job)
+        return True
+    finally:
+        conn.close()
+
+
 def list_jobs(data_dir):
     """Every job record in insertion order (read only, like jobs.list_jobs)."""
     conn = _open(data_dir)
