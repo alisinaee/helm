@@ -83,7 +83,7 @@ Every ask, rule, decision or instruction the person gives goes into the Head led
 ## Planner-only head (person, 2026-10-16, H182; overrides older model rules)
 Head plans and verifies only (no edits, no big reads). Models: Haiku 5.5 default worker; Sonnet 5.5 low/med for
 wide logic/hard UI; Opus 5.5 low/med advice only; agy (unlimited) for every read-only job, verified by Haiku.
-Budget this run: stop Claude workers at weekly 10% (start reading 2%). Decisions H182: merge Planner into Work;
+Budget this run: stop Claude workers at weekly 15% (H202; was 10%, start reading 2%). Decisions H182: merge Planner into Work;
 delete Research section; archive all old board tasks and start a fresh plan; Git section uses vendored MIT libs
 (no build step). Full rules: ~/.claude/skills/head/SKILL.md "Planner-only rules".
 
