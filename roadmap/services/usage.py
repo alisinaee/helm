@@ -2,7 +2,7 @@
 project's autonomy.json, the background loop with backoff, manual push and show.
 
 The service fetches usage by itself (R10.29, docs/USAGE-SOURCES.md), in this order: the OAuth usage endpoint with the
-Claude Code login (refreshed before it expires), Claude Code's own rate_limits (status line / hooks / sidecar), and
+Claude Code login (refreshed only when usageTokenRefresh is true, else an expired login is reported), Claude Code's own rate_limits (status line / hooks / sidecar), and
 last an estimate from the local transcripts, labelled as one. Sources live in services/usage_sources.py.
 
 Python 3 standard library only. The OAuth token is read from the macOS keychain (through `security`, no shell),
@@ -10,6 +10,7 @@ kept in memory and sent to Anthropic HTTPS hosts only. It is never printed, logg
 exception: every failure raises UsageError with a short plain reason.
 """
 
+import functools
 import json
 import os
 import socket
@@ -47,6 +48,7 @@ MAX_USAGE_AGE_MIN = 90            # one freshness rule everywhere: a reading old
 MAX_USAGE_AGE_KEY = "maxUsageAgeMin"  # docs/autonomy.json key that overrides it (minutes)
 KEYCHAIN_BACKOFF_S = 6 * 3600     # after a keychain failure the background loop skips the keychain this long
 MANUAL_KEYCHAIN_GAP_S = 60        # a manual sync may retry a failed keychain read at most this often
+TOKEN_REFRESH_KEY = "usageTokenRefresh"  # usage config key (opt-in, default false): may the service refresh the login
 MIRROR_FIELDS = ("weeklyPercent", "fiveHourPercent", "weeklyResetsAt", "fiveHourResetsAt", "updated", "source")
 VIEW_FIELDS = MIRROR_FIELDS + ("lastError", "syncError", "estimate")
 REAL_FIELDS = ("weeklyPercent", "fiveHourPercent", "weeklyResetsAt", "fiveHourResetsAt", "updated", "source")
@@ -88,21 +90,33 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         raise UsageError("usage endpoint redirected, refusing to follow")
 
 
-def read_keychain_token():
-    """The Claude Code OAuth access token (keychain, else ~/.claude/.credentials.json), refreshed first when it
-    expires within 5 minutes. Runs `security`; no shell."""
+def token_refresh_allowed(cfg):
+    """True only when the usage config says usageTokenRefresh: true. Refresh rotates the login's token pair, so it is
+    opt-in: with it off the service never refreshes and never writes the Claude Code login."""
+    return _usage_setting(cfg, TOKEN_REFRESH_KEY, False) is True
+
+
+def read_keychain_token(allow_refresh=False):
+    """The Claude Code OAuth access token (keychain, else ~/.claude/.credentials.json). With allow_refresh it is
+    refreshed first when it expires within 5 minutes; without it an expired token is code expired. Runs `security`;
+    no shell."""
     try:
-        return usage_sources.access_token()
+        return usage_sources.access_token(allow_refresh=allow_refresh)
     except usage_sources.SourceError as exc:
         raise UsageError(str(exc), exc.code)
 
 
 def _force_refresh():
-    """A new access token after the endpoint refused the current one (HTTP 401)."""
+    """A new access token after the endpoint refused the current one (HTTP 401). Only with usageTokenRefresh on."""
     try:
-        return usage_sources.access_token(force=True)
+        return usage_sources.access_token(force=True, allow_refresh=True)
     except usage_sources.SourceError as exc:
         raise UsageError(str(exc), exc.code)
+
+
+def _no_refresh():
+    """The 401 retry when usageTokenRefresh is off: no refresh, the login is reported expired."""
+    raise UsageError(usage_sources.EXPIRED_REASON, CODE_EXPIRED)
 
 
 def _open(req):
@@ -359,7 +373,8 @@ def _status(record):
     """(status, reason) of the last sync: unavailable (no claude.ai login here), error (a real failure), or None."""
     code = record.get("syncError")
     if code in UNAVAILABLE_CODES:
-        return STATUS_UNAVAILABLE, UNAVAILABLE_REASON
+        return STATUS_UNAVAILABLE, (record.get("lastError") if code == CODE_EXPIRED and record.get("lastError")
+                                    else UNAVAILABLE_REASON)
     return (STATUS_ERROR, record.get("lastError")) if code else (None, None)
 
 
@@ -429,7 +444,8 @@ def _in_future(text, now):
 def sync_once(config=None, get_token=None, fetch=None, background=False, now=None):
     """Read usage once through the source chain and store it (mirrored when enabled):
 
-    1. the OAuth usage endpoint with the Claude Code login (refreshed before it expires, retried once after a 401);
+    1. the OAuth usage endpoint with the Claude Code login (refreshed before it expires and retried once after a 401
+       only when usageTokenRefresh is true; otherwise an expired login is code expired and the sources below run);
     2. a fresh Claude Code rate_limits reading (status line sidecar), when the endpoint gave nothing;
     3. an estimate from the local transcripts, when the last real reading is older than ESTIMATE_AFTER_S.
 
@@ -458,15 +474,21 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
         if not skip:
             _update_store({"manualAttemptAt": moment.isoformat(timespec="seconds")})
     if not skip:
+        allow = token_refresh_allowed(cfg)
+        own_login = get_token is None
         try:
-            reading = collect(get_token=get_token or read_keychain_token, fetch=fetch or http_fetch,
-                              refresh=_force_refresh if get_token is None else None)
+            keychain_token = read_keychain_token if not allow else functools.partial(read_keychain_token,
+                                                                                    allow_refresh=True)
+            reading = collect(get_token=get_token or keychain_token,
+                              fetch=fetch or http_fetch,
+                              refresh=((_force_refresh if allow else _no_refresh) if own_login else None))
         except UsageError as exc:
             retry = None
             if exc.code in KEYCHAIN_CODES:
                 retry = (moment + timedelta(seconds=KEYCHAIN_BACKOFF_S)).isoformat(timespec="seconds")
             if exc.code in UNAVAILABLE_CODES:
-                _update_store({"syncError": exc.code, "lastError": None, "keychainRetryAfter": retry})
+                reason = str(exc) if exc.code == CODE_EXPIRED else None
+                _update_store({"syncError": exc.code, "lastError": reason, "keychainRetryAfter": retry})
             else:
                 _record_error(str(exc), exc.code, retry)
                 oauth_error = exc

@@ -72,29 +72,30 @@ class UsageBandCopyTests(unittest.TestCase):
         self.assertIn("stop 85%", self.out["stop"])
         self.assertIn("stop 95%", self.out["onlyGlobal"])
 
-    def test_unavailable_reads_request_update_not_an_error(self):
+    def test_unavailable_offers_sync_now_not_an_error(self):
         html = self.out["unavail"]
-        self.assertIn("Request update", html)
-        self.assertNotIn("Sync now", html)
+        self.assertIn("Sync now", html)
+        self.assertNotIn("Request update", html)
         self.assertNotIn("is-danger", html)
         self.assertNotIn("Asked the head", html)
 
-    def test_unavailable_old_names_the_desktop_app(self):
+    def test_unavailable_old_names_the_login_step(self):
         html = self.out["unavailOld"]
         self.assertIn("Usage is old.", html)
-        self.assertIn("this mac signs in through the desktop app", html.lower())
+        self.assertIn("no claude code login on this mac", html.lower())
         self.assertNotIn("is-danger", html)
 
-    def test_after_a_tap_unavailable_says_the_head_was_asked(self):
+    def test_after_a_tap_unavailable_shows_the_sync_result(self):
         html = self.out["asked"]
-        self.assertIn("Asked the head for a fresh reading", html)
-        self.assertNotIn("Usage synced.", html)
+        self.assertIn("Usage synced.", html)
+        self.assertIn("Sync now", html)
+        self.assertNotIn("Asked the head", html)
         self.assertNotIn("is-danger", html)
 
-    def test_denied_keychain_keeps_the_hidden_sync(self):
+    def test_denied_keychain_offers_sync_now(self):
         html = self.out["denied"]
+        self.assertIn("Sync now", html)
         self.assertNotIn("Request update", html)
-        self.assertNotIn("Sync now", html)
 
     def test_real_error_stays_red(self):
         html = self.out["netError"]
