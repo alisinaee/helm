@@ -421,7 +421,7 @@ export function buildMap(graph, lay, pid) {
   const vp = el("g", { class: "wfg-vp", transform: "translate(0 0) scale(1)" });
   vp.appendChild(el("g", { class: "wfg-bands" }, bands));
   vp.appendChild(el("g", { class: "wfg-edges" }, edges));
-  // The flag and halo show only while a running job owns Now (graph.live); otherwise Now is not "here".
+  // The flag and halo show only while a running job owns Now (graph.live, current is null otherwise).
   vp.appendChild(el("g", { class: "wfg-nodes" }, nodes.concat(nowMarks(g.live ? flow.now : null))));
   // tabindex 0 puts the canvas itself in the tab order: the one tab stop, so + - 0 Escape work from it. The nodes are
   // tabindex -1 and take focus from the arrow keys (viewport.js), which keeps Tab from walking every node.
