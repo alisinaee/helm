@@ -242,6 +242,25 @@ def finish_job(data_dir, job_id, status, note=None, tokens_k=None, reason=None):
     return dict(job)
 
 
+def set_job_usage(data_dir, job_id, usage, overwrite=False):
+    """Store measured tokens {in, out, cacheRead, cacheWrite, model} on a job of any status (R10.32). Returns True when
+    stored; False when the job is gone or already has them and overwrite is False. Never changes the status."""
+    if store_backend(data_dir) == "sqlite":
+        from roadmap.store import jobs_db
+        return jobs_db.set_usage(data_dir, job_id, usage, overwrite)
+    _require_data_dir(data_dir)
+    with lock.locked(data_dir):
+        doc = _read_doc(data_dir)
+        for job in doc["jobs"]:
+            if isinstance(job, dict) and job.get("id") == job_id:
+                if job.get("tokens") and not overwrite:
+                    return False
+                job["tokens"] = dict(usage)
+                _write_doc(data_dir, doc)
+                return True
+    return False
+
+
 def _mark_verify(data_dir, doc, task_id):
     """H2: when the last running job on a task ends done, a task not yet done gets verify (work finished, needs a
     check). Its status stays as it is; a commit that binds the task makes it done and clears verify."""
