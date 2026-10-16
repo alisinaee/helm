@@ -437,47 +437,45 @@ li:has(> .p-row) { display: grid; grid-template-columns: minmax(0, 1fr) var(--re
 .lane-act > *, .tl-label > .lane-state { justify-self: end }
 .tl-label { --rg: 3rem minmax(0, 1fr) auto; margin: 0; font-size: var(--fs-12); color: var(--text-2) }
 .rg-agent { font-size: var(--fs-13); }
-/* Agents rows: one template for the header, live rows and finished rows (model, effort, job, task, elapsed,
-tokens, stop, copy). The ranges below stay for the phone fallback. From 640px the lengths are fixed so Task
-cannot grow and the two lists share Model, Effort, Elapsed and Tokens. Job is the only flexible track. */
-.row-grid.rg-agent { --rg: minmax(10rem, 13rem) 4.5rem minmax(0, 1fr) minmax(4.5rem, 8rem) 5rem 4.5rem 5rem;
-grid-template-columns: var(--rg) var(--ref-col); align-items: center; }
+/* Agents rows: one grid for header, live and finished rows: lead (dot or checkbox), model, title (1fr), task, effort,
+elapsed, tokens, action. Numbers are right-aligned in fixed tracks. Below 640px a row is two lines. */
+.row-grid.rg-agent { --rg: 1.5rem 7.5rem minmax(0, 1fr) 4.5rem 3rem 4.5rem 4rem 4.25rem;
+grid-template-columns: var(--rg); gap: 0 var(--sp-2); align-items: center; }
 .row-grid.rg-agent > * { min-width: 0; }
-.rg-agent .ag-title { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-overflow: hidden; overflow-wrap: anywhere; width: 100%; }
-.rg-agent > .btn { min-width: 0; padding-inline: var(--sp-1); }
-.rg-agent > .rg-main { flex-direction: column; align-items: stretch; justify-content: center; white-space: normal; }
-.rg-agent > .rg-main > .chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.rg-agent > .rg-chips { flex-wrap: nowrap; overflow: hidden; }
+.rg-agent .chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rg-agent > .rg-main { display: flex; align-items: center; gap: var(--sp-2); overflow: hidden; }
+.rg-agent .ag-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 0 1 auto; min-width: 0; }
+.rg-agent > .rg-main > .chip { flex: none; }
 .rg-agent > .ag-task, .rg-agent > .ag-task > a, .rg-agent > .ag-task > .mt-label {
 display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.rg-agent > .ag-act { display: flex; align-items: center; justify-content: center; }
+.rg-agent > .ag-lead { display: flex; align-items: center; justify-content: center; }
+.rg-agent > .ag-act { display: flex; align-items: center; justify-content: flex-end; gap: 0; }
+.ag-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+.ag-icon { display: grid; place-items: center; width: 1.75rem; height: 1.75rem; padding: 0; background: none;
+border: 0; border-radius: var(--r-card); color: var(--text-2); cursor: pointer; }
+.ag-icon:hover:not(:disabled), .ag-icon:focus-visible { color: var(--text-1); background: var(--track); }
+.ag-icon:disabled { opacity: .35; cursor: default; }
+.ag-icon .ico { width: 14px; height: 14px; }
+.ag-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; }
+.ag-foot-btns { display: flex; gap: var(--sp-2); }
 .row-grid.rg-head { display: none; }
-.rg-agent>.rg-main { contain: inline-size; }
-@media (min-width: 600px) { .row-grid.rg-head { display: grid; } }
-/* Phone (below 640px, so the 600-639px gap is covered): text column, a fixed 5rem number column and the copy column.
-Chips wrap; nested workers indent once only. */
+@media (min-width: 640px) { .row-grid.rg-head { display: grid; } }
 @media (max-width: 639px) {
-.row-grid.rg-agent { grid-template-columns: minmax(0, 1fr) 5rem var(--ref-col); }
+.row-grid.rg-agent { grid-template-columns: 1.5rem auto minmax(0, 1fr) auto auto 1.75rem; row-gap: var(--sp-1); }
 .row-grid.rg-head { display: none; }
-.rg-agent>.rg-chips, .rg-agent>.rg-main { flex-wrap: wrap; overflow: visible; white-space: normal }
-.rg-agent .chip { white-space: normal; max-width: 100% }
-.rg-agent>:nth-child(1) { grid-column: 1 / 3; grid-row: 1 } .rg-agent>:nth-child(2) { grid-column: 1; grid-row: 3 }
-.rg-agent>:nth-child(3) { grid-column: 1 / 3; grid-row: 2 } .rg-agent>:nth-child(4) { grid-column: 1; grid-row: 4 }
-.rg-agent>:nth-child(5) { grid-column: 2; grid-row: 3 } .rg-agent>:nth-child(6) { grid-column: 2; grid-row: 4 }
-.rg-agent>:nth-child(7) { grid-column: 1; grid-row: 5; justify-self: start; width: auto }
-.rg-agent>:nth-child(8) { grid-column: 3; grid-row: 1 / 6 }
+.rg-agent>:nth-child(1) { grid-column: 1; grid-row: 1 } .rg-agent>:nth-child(2) { grid-column: 2; grid-row: 1 }
+.rg-agent>:nth-child(3) { grid-column: 3 / 6; grid-row: 1 } .rg-agent>:nth-child(8) { grid-column: 6; grid-row: 1 }
+.rg-agent>:nth-child(4) { grid-column: 2; grid-row: 2 } .rg-agent>:nth-child(5) { grid-column: 3; grid-row: 2 }
+.rg-agent>:nth-child(6) { grid-column: 4; grid-row: 2 } .rg-agent>:nth-child(7) { grid-column: 5; grid-row: 2 }
+.rg-agent>:nth-child(n+5):nth-child(-n+7)::before { color: var(--text-3); font-size: var(--fs-11) }
+.rg-agent>:nth-child(5)::before { content: "Effort " }
+.rg-agent>:nth-child(6)::before { content: "Elapsed " }
+.rg-agent>:nth-child(7)::before { content: "Tokens " }
+.rg-agent>:nth-child(4)::before { content: "Task "; color: var(--text-3); font-size: var(--fs-11) }
 .ag-kids .ag-kids { padding-left: 0; border-left: 0 }
-.rg-agent>:nth-child(n+2):nth-child(-n+6)::before { color: var(--text-3); font-size: var(--fs-11) }
-.rg-agent>:nth-child(2)::before { content: "Effort " }
-.rg-agent>:nth-child(4)::before { content: "Task " }
-.rg-agent>:nth-child(5)::before { content: "Elapsed " }
-.rg-agent>:nth-child(6)::before { content: "Tokens " }
-.rg-agent>:nth-child(7) .btn { min-height: 44px }
+.ag-icon { width: 2.75rem; height: 2.75rem }
 }
-/* Shared fixed tracks. Model, effort, task, elapsed, tokens and stop are lengths, so a long task id or
-"No task assigned" cannot widen Task and shove Elapsed off the header. Job takes the rest, two lines. */
-@media (min-width: 640px) {.row-grid.rg-agent { --rg: 11.5rem 4.5rem minmax(0, 1fr) 4rem 5rem 4.5rem 5rem;
-grid-template-columns: var(--rg) var(--ref-col); }
 .ag-list > li, .ag-row > .row-grid.rg-agent { width: 100%; min-width: 0; }
 .ag-list .ag-kids { padding-left: 0; border-left: 0; }
 .ag-row[data-depth="1"] > .row-grid .ag-title { padding-left: var(--sp-4); }

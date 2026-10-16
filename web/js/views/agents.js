@@ -144,13 +144,21 @@ function elapsedText(job, now) {
   return fmtDuration(Math.max(0, now - job.startedMs) / 1000);
 }
 
-// The eight cells every Agents row uses, in order: model, effort, job, task, elapsed, tokens, stop or
-// checkbox, copy. The header, a running row and a finished row all go through here so the tracks cannot drift.
-function agentCells(model, effort, job, task, elapsed, tokens, action, copy) {
-  return '<span class="rg-chips ag-model">' + model + "</span>" + effort +
-    '<span class="rg-main">' + job + "</span>" +
-    '<span class="rg-chips ag-task">' + task + "</span>" +
-    elapsed + tokens + action + copy;
+// The eight cells every Agents row uses, in order: lead (live dot or select checkbox), model, title, task, effort,
+// elapsed, tokens, action. The header, a running row and a finished row all go through here so the tracks cannot drift.
+function agentCells(lead, model, title, task, effort, elapsed, tokens, action) {
+  return '<span class="ag-lead">' + lead + "</span>" + '<span class="rg-chips ag-model">' + model + "</span>" +
+    '<span class="rg-main">' + title + "</span>" + '<span class="rg-chips ag-task">' + task + "</span>" +
+    effort + elapsed + tokens + '<span class="ag-act">' + action + "</span>";
+}
+
+const STOP_ICON = '<svg class="ico" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><rect x="4" y="4" ' +
+  'width="8" height="8" rx="1.5" fill="currentColor"/></svg>';
+const SHORT_EFFORT = { medium: "med", default: "–", "not set": "–" };
+
+function shortEffort(effort, model, engineModel) {
+  const word = effortLabel(effort, model, engineModel);
+  return SHORT_EFFORT[word] || word;
 }
 
 // One running job and, nested under it, its workers. pid is the project the job belongs to.
@@ -167,23 +175,25 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     : "";
   const badge = job.task && blocked.indexOf(job.task) !== -1 ? chipHtml("blocked", "danger") : "";
   const label = job.title || job.id;
-  const stop = '<button type="button" class="btn btn-small" data-action="agent-stop" data-project="' + esc(pid) +
+  const stop = '<button type="button" class="ag-icon" data-action="agent-stop" data-project="' + esc(pid) +
     '" data-task="' + esc(job.task || "") + '" data-focus="stop-' + esc(pid) + "-" + esc(job.id) + '"' +
-    (job.task ? "" : " disabled") + ' aria-label="Stop ' + esc(label) + '">Stop</button>';
-  const tokens = job.tokensK == null ? "not yet" : fmtTokens(job.tokensK);
+    (job.task ? "" : " disabled") + ' aria-label="Stop ' + esc(job.task || label) + '" title="Stop">' +
+    STOP_ICON + "</button>";
+  const tokens = job.tokensK == null ? MISSING : fmtTokens(job.tokensK);
   const claimed = job.status === "claimed" ? chipHtml("claimed", "neutral") : "";
   const model = chipHtml(engineLabel(job.model, job.engineModel), "neutral") +
     (job.role ? chipHtml(job.role, "neutral") : "") + claimed + badge;
   const effort = '<span class="rg-chips ag-effort">' +
-    esc(effortLabel(job.effort, job.model, job.engineModel)) + "</span>";
+    esc(shortEffort(job.effort, job.model, job.engineModel)) + "</span>";
   const title = '<span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
     (handed || "");
   const elapsed = '<span class="rg-num num" data-started-ms="' +
     esc(String(job.startedMs == null ? "" : job.startedMs)) + '">' + esc(elapsedText(job, now)) + "</span>";
   const tokenCell = '<span class="rg-num num">' + esc(tokens) + "</span>";
   const row = '<li class="ag-row" data-depth="' + depth + '"><div class="row-grid rg-agent">' +
-    agentCells(model, effort, title, taskHtml, elapsed, tokenCell, stop,
-      copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) })) + "</div>";
+    agentCells('<span class="ag-dot" role="img" aria-label="Running" title="Running"></span>', model, title, taskHtml,
+      effort, elapsed, tokenCell,
+      stop + copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) })) + "</div>";
   if (!children.length) return row + "</li>";
   return row + '<ul class="ag-kids" aria-label="Workers of ' + esc(label) + '">' + children.map(function (child) {
     return agentRowHtml(child, pid, tree, blocked, now, depth + 1);
@@ -196,21 +206,21 @@ function finishedHtml(job, pid) {
   const word = STATUS_WORDS[job.status] || job.status;
   const kind = job.status === "failed" ? "danger" : "success";
   const label = job.title || job.id;
-  const tokens = job.tokensK == null ? "unknown" : fmtTokens(job.tokensK);
+  const tokens = job.tokensK == null ? MISSING : fmtTokens(job.tokensK);
   const task = job.task ? '<a href="' + esc(itemHash(pid, job.task)) + '" title="' + esc(job.task) + '">' +
     esc(job.task) + "</a>" : "";
   const check = '<input type="checkbox" data-agent="select" data-project="' + esc(pid) + '" data-id="' +
     esc(job.id) + '" data-focus="sel-' + esc(pid) + "-" + esc(job.id) + '" aria-label="' + esc("Select " + label) +
     '"' + (picked.has(pid + "\n" + job.id) ? " checked" : "") + ">";
-  const model = chipHtml(engineLabel(job.model, job.engineModel), "neutral") + chipHtml(word, kind);
+  const model = chipHtml(engineLabel(job.model, job.engineModel), "neutral");
   const effort = '<span class="rg-chips ag-effort">' +
-    esc(effortLabel(job.effort, job.model, job.engineModel)) + "</span>";
-  const title = '<span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>";
+    esc(shortEffort(job.effort, job.model, job.engineModel)) + "</span>";
+  const title = '<span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
+    chipHtml(word, kind);
   const elapsed = '<span class="rg-num num">' + esc(fmtDuration(job.elapsedS)) + "</span>";
   const tokenCell = '<span class="rg-num num">' + esc(tokens) + "</span>";
   return '<li class="ag-row"><div class="row-grid rg-agent">' +
-    agentCells(model, effort, title, task, elapsed, tokenCell,
-      '<span class="ag-act">' + check + "</span>",
+    agentCells(check, model, title, task, effort, elapsed, tokenCell,
       copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) })) + "</div></li>";
 }
 
@@ -223,14 +233,14 @@ function historyControls(pid, all, hist) {
   const total = hist.total == null ? all.length : Math.max(hist.total, all.length);
   const more = hist.total == null || all.length < hist.total;
   const attrs = ' data-project="' + esc(pid) + '"';
-  return '<p class="ov-sum" aria-live="polite">Showing ' + esc(String(Math.min(hist.visible, all.length))) +
+  return '<div class="ag-foot"><p class="ov-sum" aria-live="polite">Showing ' + esc(String(Math.min(hist.visible, all.length))) +
     " of " + esc(String(total)) + " · " + esc(String(selected)) + " selected</p>" +
     (hist.error ? '<p class="ov-sum" role="alert">' + esc(hist.error) + "</p>" : "") +
-    '<p class="ov-sum">' +
+    '<span class="ag-foot-btns">' +
     '<button type="button" class="btn btn-small" data-agent="remove"' + attrs + (selected ? "" : " disabled") + ">" +
     "Remove selected</button> " +
     (more ? '<button type="button" class="btn btn-small" data-agent="more"' + attrs +
-      (hist.loading ? " disabled" : "") + ">Load more</button>" : "") + "</p>";
+      (hist.loading ? " disabled" : "") + ">Load more</button>" : "") + "</span></div>";
 }
 
 // One block per project in view: its live tree and its finished jobs.
@@ -240,9 +250,8 @@ function projectBlock(entry, now, showName) {
   const blocked = snap.blocked || [];
   const heading = showName ? '<h3 class="grp-h">' + esc(entry.name) + "</h3>" : "";
   const head = '<li class="ag-row" aria-hidden="true"><div class="row-grid rg-agent rg-head">' +
-    agentCells("Model", '<span class="ag-effort">Effort</span>', "Job", "Task",
-      '<span class="rg-num">Elapsed</span>', '<span class="rg-num">Tokens</span>',
-      "<span></span>", "<span></span>") + "</div></li>";
+    agentCells("", "Model", "Title", "Task", '<span class="ag-effort">Effort</span>',
+      '<span class="rg-num">Elapsed</span>', '<span class="rg-num">Tokens</span>', "") + "</div></li>";
   const live = tree.roots.length
     ? '<ul class="ag-list" aria-label="Running agents">' + head + tree.roots.map(function (job) {
       return agentRowHtml(job, entry.id, tree, blocked, now, 0);
@@ -267,7 +276,7 @@ export function sectionView(vm) {
   const scopes = scopeSnapshots(vm);
   const now = Date.now();
   const showName = vm.route.name !== "project";
-  const note = "Live. Workers sit under the job that started them. Stop asks the project to stop that task.";
+  const note = "Live. Workers sit under the job that started them. The square stops that task.";
   return '<div class="page-head"><h2 class="page-title">Agents</h2><p class="page-note">' + esc(note) + "</p></div>" +
     scopes.map(function (entry) {
       return projectBlock(entry, now, showName);
