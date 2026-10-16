@@ -9,7 +9,8 @@
 // of their neighbours in other columns, ties broken by the previous row and then by id.
 //
 // Edges. Every route is an orthogonal polyline that leaves the source card on its right side and enters the target
-// card on its left side. Edges sharing a side get their own port, spread along it by the other end's row. An edge into the next column is one step: a vertical run in the gap between the two
+// card on its left side. Edges sharing a side get their own port, spread along it by the other end's row.
+// An edge into the next column is one step: a vertical run in the gap between the two
 // columns. Any other edge (skipping columns, same column or backwards) drops to a channel below all cards, so its
 // horizontal runs never cross a card. Vertical runs share a gap and are spaced evenly inside it; channels are
 // spaced by CH_STEP. Self loops, duplicate edges and edges with unknown ends are dropped and reported in `warnings`.
