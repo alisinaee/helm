@@ -15,6 +15,7 @@ from roadmap.store import db, migrate
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 REAL_DOCS = os.path.join(REPO, "docs")
+FIXTURES = os.path.join(REPO, "tests", "fixtures")
 SOURCES = ("tasks.json", "jobs.json", "head.jsonl", "work-map-R7.json")
 
 
@@ -44,11 +45,15 @@ class MigrateWorkTests(unittest.TestCase):
         return migrate.migrate(self.conn, self.docs)
 
     def _r7_ids(self):
-        return {t["id"] for t in self.tasks if t["id"].startswith("R7.")}
+        """The R7 ids the map was built against (a fixture snapshot, so later live rows do not break this test)."""
+        with open(os.path.join(FIXTURES, "r7_work_map_ids.json"), encoding="utf-8") as fh:
+            return set(json.load(fh)["ids"])
 
     def test_every_r7_row_mapped(self):
         self.assertEqual(set(self.map["tasks"]), self._r7_ids())
         self.assertEqual(len(self._r7_ids()), len(self.map["tasks"]))
+        live = {t["id"] for t in self.tasks if t["id"].startswith("R7.")}
+        self.assertLessEqual(self._r7_ids(), live, "map references an R7 row that no longer exists")
         for tid, wid in self.map["tasks"].items():
             self.assertIn(wid, self.map["items"], tid)
         self.assertEqual(len(self.map["items"]), 15)

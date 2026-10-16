@@ -18,11 +18,18 @@ from tests.unit.test_cmd_support import CmdCase
 from tests.unit.test_usage_collector import FAKE_TOKEN, GOOD_REPLY
 
 
+NOW_UTC = datetime.datetime.now(datetime.timezone.utc)
+# A manual weekly reset in the future (+01:00 offset kept as typed); a fixed past date reads as "reset passed".
+MANUAL_WEEKLY_RESET = (NOW_UTC + datetime.timedelta(days=3)).astimezone(
+    datetime.timezone(datetime.timedelta(hours=1))).isoformat(timespec="seconds")
+
+
 def fresh_reply():
-    """GOOD_REPLY with the 5-hour reset three hours ahead of now (a passed reset has no current percent)."""
-    later = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=3)
-    later = later.isoformat(timespec="seconds")
-    return dict(GOOD_REPLY, five_hour=dict(GOOD_REPLY["five_hour"], resets_at=later))
+    """GOOD_REPLY with both resets in the future (a passed reset has no current percent)."""
+    later = (NOW_UTC + datetime.timedelta(hours=3)).isoformat(timespec="seconds")
+    week = (NOW_UTC + datetime.timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return dict(GOOD_REPLY, five_hour=dict(GOOD_REPLY["five_hour"], resets_at=later),
+                seven_day=dict(GOOD_REPLY["seven_day"], resets_at=week))
 from tests.unit.test_usage_store import UsageCase
 
 T0 = datetime.datetime(2026, 10, 15, 9, 0, 0, tzinfo=datetime.timezone.utc)
@@ -179,13 +186,13 @@ class UsageSetTests(CmdCase):
         return uc.stored_record()
 
     def test_stores_a_manual_entry_and_returns_the_view(self):
-        reply = self.set_usage({"weekly": 61, "fiveHour": 12, "weeklyResetsAt": "2026-10-16T08:00:00+01:00"})
+        reply = self.set_usage({"weekly": 61, "fiveHour": 12, "weeklyResetsAt": MANUAL_WEEKLY_RESET})
         self.assertTrue(reply["ok"])
         view = reply["data"]["usage"]
         self.assertEqual(view["weeklyPercent"], 61)
         self.assertEqual(view["fiveHourPercent"], 12)
         self.assertEqual(view["source"], "manual entry")
-        self.assertEqual(view["weeklyResetsAt"], "2026-10-16T08:00:00+01:00")
+        self.assertEqual(view["weeklyResetsAt"], MANUAL_WEEKLY_RESET)
         self.assertIsNone(view["syncError"])
         self.assertIsNone(view["lastError"])
         self.assertIsNotNone(self.stored()["updated"])

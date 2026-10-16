@@ -19,8 +19,11 @@ from tests.unit.test_control_support import ControlCase, write_json
 
 
 class _Req:
-    def __init__(self, if_none_match=None):
+    """A request stand-in: headers plus the raw query string (the snapshot route reads ?since=, R7.x 53952bc)."""
+
+    def __init__(self, if_none_match=None, query=""):
         self.headers = {"If-None-Match": if_none_match} if if_none_match else {}
+        self.query = query
 
 
 class RevisionCase(ControlCase):
