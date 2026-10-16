@@ -413,5 +413,20 @@
     "task": "R10.29",
     "title": "haiku: R10.29 refresh opt-in + tests",
     "model": "haiku"
+  },
+  "ab206dc260a90f115": {
+    "task": "R10.21",
+    "title": "haiku: R10.21 System map A3 API",
+    "model": "haiku"
+  },
+  "add5b156801258cf5": {
+    "task": "R10.26",
+    "title": "haiku: R10.26 System map A8 CLI + seed",
+    "model": "haiku"
+  },
+  "a2bdf9d4b04571e21": {
+    "task": "R10.23",
+    "title": "sonnet: R10.23 System map A5 view (Sonnet)",
+    "model": "sonnet"
   }
 }

@@ -4306,14 +4306,20 @@
       "id": "R10.21",
       "phase": "R10",
       "title": "System map A3: API endpoint + schema",
-      "status": "todo",
+      "status": "done",
       "tokensK": 3,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "routes.py"
+      "note": "routes.py",
+      "refs": [
+        "commit:d208dde434abd4c530af0935b4e8ad7517fcdcdf"
+      ],
+      "at": {
+        "done": "2026-10-16T16:37:44+03:30"
+      }
     },
     {
       "id": "R10.22",
@@ -4338,14 +4344,17 @@
       "id": "R10.23",
       "phase": "R10",
       "title": "System map A5: System view (toolbar, canvas, heat)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 5,
       "thinking": "low",
       "model": "sonnet",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "system.js"
+      "note": "system.js",
+      "refs": [
+        "commit:92f3fe4e97341f5d54aeda2b810133ee0b748fa8"
+      ]
     },
     {
       "id": "R10.24",
@@ -4377,14 +4386,15 @@
       "id": "R10.26",
       "phase": "R10",
       "title": "System map A8: CLI + seed docs/system.json",
-      "status": "todo",
+      "status": "partial",
       "tokensK": 3,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "cli"
+      "note": "cli",
+      "verify": true
     },
     {
       "id": "R10.27",
@@ -4466,14 +4476,17 @@
       "id": "R10.32",
       "phase": "R10",
       "title": "Per-task usage from subagent transcripts on SubagentStop + backfill + weighted % (docs/TOKENS-PER-TASK.md, H209 H210)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 5,
       "thinking": "low",
       "model": "sonnet",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "hooks.py, jobs, tokens"
+      "note": "hooks.py, jobs, tokens",
+      "refs": [
+        "commit:e4e30d72ec68e448583f94473313b8937e233fda"
+      ]
     }
   ],
   "schemaVersion": 1

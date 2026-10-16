@@ -1,7 +1,3 @@
-{"activity":"A131","sum":"H54 set status, note","op":"head.restore","args":{"steps":[{"id":"H54","set":{"status":"open"}}]},"at":"2026-10-15T14:10:36+03:30"}
-{"activity":"A132","sum":"H57 set status, note","op":"head.restore","args":{"steps":[{"id":"H57","set":{"status":"open"}}]},"at":"2026-10-15T14:10:36+03:30"}
-{"activity":"A133","sum":"H60 set status, note","op":"head.restore","args":{"steps":[{"id":"H60","set":{"status":"open"}}]},"at":"2026-10-15T14:10:43+03:30"}
-{"activity":"A134","sum":"H61 set status, note","op":"head.restore","args":{"steps":[{"id":"H61","set":{"status":"open"}}]},"at":"2026-10-15T14:10:43+03:30"}
 {"activity":"A135","sum":"H58 set status, note","op":"head.restore","args":{"steps":[{"id":"H58","set":{"status":"open"}}]},"at":"2026-10-15T14:10:48+03:30"}
 {"activity":"A136","sum":"H62 set status, note","op":"head.restore","args":{"steps":[{"id":"H62","set":{"status":"open"}}]},"at":"2026-10-15T14:10:48+03:30"}
 {"activity":"A137","sum":"H63 set status, note","op":"head.restore","args":{"steps":[{"id":"H63","set":{"status":"open"}}]},"at":"2026-10-15T14:10:54+03:30"}
@@ -498,3 +494,7 @@
 {"activity":"A688","sum":"H204 set status, note","op":"head.restore","args":{"steps":[{"id":"H204","set":{"status":"open"}}]},"at":"2026-10-16T15:49:43+03:30"}
 {"activity":"A689","sum":"H209 triaged as question","op":"head.restore","args":{"steps":[{"id":"H209","set":{"kind":"question","sum":"now you can track usage for each task better yes ?"},"link":["-task:R10.32"]}]},"at":"2026-10-16T15:52:38+03:30"}
 {"activity":"A690","sum":"H210 triaged as review","op":"head.restore","args":{"steps":[{"id":"H210","set":{"kind":"review","sum":"check and investigate to track token usage per task and agent better"},"link":["-task:R10.32","-doc:docs/TOKENS-PER-TASK.md"]}]},"at":"2026-10-16T15:53:49+03:30"}
+{"activity":"A691","sum":"H211 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H211","set":{"kind":"ask","sum":"go for visual task continue"},"link":["-task:R10.21"]}]},"at":"2026-10-16T16:34:12+03:30"}
+{"activity":"A692","sum":"H203 set status, note","op":"head.restore","args":{"steps":[{"id":"H203","set":{"status":"open"}}]},"at":"2026-10-16T16:34:53+03:30"}
+{"activity":"A693","sum":"H206 set status, note","op":"head.restore","args":{"steps":[{"id":"H206","set":{"status":"open"}}]},"at":"2026-10-16T16:34:53+03:30"}
+{"activity":"A694","sum":"H207 set status, note","op":"head.restore","args":{"steps":[{"id":"H207","set":{"status":"open"}}]},"at":"2026-10-16T16:34:53+03:30"}

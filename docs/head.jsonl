@@ -572,3 +572,9 @@
 {"v":1,"t":"u","id":"H209","ts":"2026-10-16T12:22:38Z","by":"head","set":{"kind":"question","sum":"Per-task usage tracking now possible?"},"link":["+task:R10.32"]}
 {"v":1,"t":"e","ts":"2026-10-16T12:23:11Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"review?","sum":"check and investigate to track token usage per task and agent better","len":68,"h":"sha1:370637bae0bd","prio":2,"id":"H210"}
 {"v":1,"t":"u","id":"H210","ts":"2026-10-16T12:23:48Z","by":"head","set":{"kind":"review","sum":"Investigate per-task/agent token tracking"},"link":["+task:R10.32","+doc:docs/TOKENS-PER-TASK.md"]}
+{"v":1,"t":"e","ts":"2026-10-16T13:03:37Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"go for visual task continue","len":28,"h":"sha1:344e38f6c70a","prio":2,"id":"H211"}
+{"v":1,"t":"u","id":"H211","ts":"2026-10-16T13:04:11Z","by":"head","set":{"kind":"ask","sum":"Continue the visual System map (A3, A5-A8)"},"link":["+task:R10.21"]}
+{"v":1,"t":"u","id":"H203","ts":"2026-10-16T13:04:53Z","by":"head","set":{"status":"done"},"note":"df73618 + 25d3049: top bar shows age; usage auto-synced every 2 min (verified 15:49)"}
+{"v":1,"t":"u","id":"H206","ts":"2026-10-16T13:04:53Z","by":"head","set":{"status":"needs-you"},"note":"e16a0f6 Agents titles back, compact grid; head checked live; please confirm"}
+{"v":1,"t":"u","id":"H207","ts":"2026-10-16T13:04:53Z","by":"head","set":{"status":"needs-you"},"note":"a3dce70 map loads, labels fit; arrows absent because R10 tasks have no deps; please confirm"}
+{"v":1,"t":"u","id":"H211","ts":"2026-10-16T13:07:33Z","by":"auto","set":{"status":"done"},"note":"auto: R10.21 d208dde"}

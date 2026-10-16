@@ -6418,6 +6418,52 @@
       "refs": [
         "commit:1fa09f138c597a657234d0f0b5614d4b5b788023"
       ]
+    },
+    {
+      "id": "j1020",
+      "title": "haiku: R10.21 System map A3 API",
+      "model": "haiku",
+      "task": "R10.21",
+      "status": "done",
+      "started": "2026-10-16T16:34:18+03:30",
+      "ended": "2026-10-16T16:37:38+03:30",
+      "refs": [
+        "commit:d208dde434abd4c530af0935b4e8ad7517fcdcdf"
+      ]
+    },
+    {
+      "id": "j1021",
+      "title": "haiku: R10.26 System map A8 CLI + seed",
+      "model": "haiku",
+      "task": "R10.26",
+      "status": "done",
+      "started": "2026-10-16T16:34:26+03:30",
+      "ended": "2026-10-16T16:39:27+03:30"
+    },
+    {
+      "id": "j1022",
+      "title": "sonnet: R10.23 System map A5 view (Sonnet)",
+      "model": "sonnet",
+      "task": "R10.23",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-16T16:34:37+03:30",
+      "ended": "2026-10-16T16:39:16+03:30",
+      "refs": [
+        "commit:92f3fe4e97341f5d54aeda2b810133ee0b748fa8"
+      ]
+    },
+    {
+      "id": "j1023",
+      "title": "sonnet: R10.23 follow-up",
+      "model": "sonnet",
+      "task": "R10.23",
+      "status": "done",
+      "started": "2026-10-16T16:37:44+03:30",
+      "ended": "2026-10-16T16:39:16+03:30",
+      "refs": [
+        "commit:92f3fe4e97341f5d54aeda2b810133ee0b748fa8"
+      ]
     }
   ]
 }
