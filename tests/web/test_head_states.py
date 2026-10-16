@@ -1,7 +1,7 @@
 """R7.66: the Head states and kind chips, and the questions from agents block (web/js/views/head.js).
 
 Static checks read head.js, components.css and tokens.css. The render checks run head.js in node (no DOM): the state
-chips, the filter bar, the kind chips and the questions block with its one-click answers and free-text form.
+chips, the filter bar, the kind chips and the questions group with its one-click answers and one free-text box.
 """
 
 import datetime
@@ -207,24 +207,33 @@ class QuestionsRender(unittest.TestCase):
     def setUpClass(cls):
         cls.out = run_node(demo_vm())
 
-    def test_questions_block_sits_at_the_top_with_one_click_answers(self):
+    def test_questions_group_sits_below_the_timeline_collapsed_with_a_count(self):
         screen = self.out["screen"]
-        self.assertIn("Questions from agents", screen)
-        self.assertLess(screen.index("Questions from agents"), screen.index('class="hd-now"'))
+        self.assertIn('<details class="hd-qs" data-role="questions"><summary>Questions (1)</summary>', screen)
+        self.assertLess(screen.index('<table class="hd-tbl"'), screen.index("Questions (1)"))
+        self.assertLess(screen.index("Questions (1)"), screen.index('class="hd-now"'))
         self.assertIn('data-action="inbox-answer" data-project="alpha" data-qid="Q1" data-value="yes"', screen)
         self.assertIn('data-value="no"', screen)
 
-    def test_free_text_answer_is_a_form_on_the_inbox_answer_path(self):
+    def test_one_free_text_answer_control_per_question(self):
         screen = self.out["screen"]
-        self.assertIn('<form class="hd-form" data-op="question.answer" data-project="alpha" data-qid="Q1"', screen)
-        self.assertIn('<input name="value" required', screen)
+        self.assertIn('aria-label="Other answer for Q1"', screen)
+        self.assertEqual(screen.count('<input name="value" required'), 1)
+        self.assertNotIn("Your answer", screen)
+        self.assertNotIn('data-op="question.answer"', screen)
+
+    def test_questions_older_than_a_day_are_marked_old(self):
+        src = read(HEAD_JS)
+        self.assertIn("OLD_QUESTION_MS = 24 * 60 * 60 * 1000", src)
+        self.assertIn('(old ? " is-old" : "")', src)
+        self.assertIn('old, asked ', src)
 
     def test_no_questions_no_block(self):
         self.assertNotIn("Questions from agents", self.out["noQuestions"])
 
     def test_the_view_answers_through_the_inbox_and_writes_no_question_run(self):
         src = read(HEAD_JS)
-        self.assertIn("pageAction", src)
+        self.assertNotIn("pageAction", src)
         self.assertNotIn('run("question.answer"', src)
 
 
