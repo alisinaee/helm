@@ -35,7 +35,12 @@ const store = createStore();
 const prefsCache = new Map();
 const failedSections = new Set();
 const loadedSections = new Map();
-const missingSections = new Set();
+// A failed section import is not cached: its rejected promise is dropped, the error is kept here for the inline
+// "Could not load" state, and a retry imports again. autoRetried allows one automatic retry per section.
+const importErrors = new Map();
+const importTries = new Map();
+const autoRetried = new Set();
+const AUTO_RETRY_MS = 1000;
 const loadingSections = new Set();
 let timer = null;
 let busy = false;
@@ -79,27 +84,56 @@ function comingSoonHtml(section) {
   return emptyHtml("Coming soon", "<span>" + esc(section.label) + " is not built yet.</span>");
 }
 
+// A section whose import failed: a small inline state with a Retry button (data-action section-retry).
+function importErrorHtml(section) {
+  return '<div class="empty" role="alert"><p>Could not load this section · ' +
+    '<button type="button" class="btn btn-small" data-action="section-retry" data-section="' + esc(section.id) +
+    '">Retry</button></p></div>';
+}
+
 // The section in <main>. A module loads once; until it is in, a skeleton shows and the next render picks it up.
+// A failed import is retried once after AUTO_RETRY_MS, then only by the Retry button.
 function ensureLoaded(section) {
   if (loadingSections.has(section.id)) return;
   loadingSections.add(section.id);
-  loadSection(section).then(function (mod) {
+  // The browser caches a failed module URL for good, so every attempt after the first adds a query to the URL.
+  const tries = (importTries.get(section.id) || 0) + 1;
+  importTries.set(section.id, tries);
+  const target = tries > 1 ? Object.assign({}, section, { module: section.module + "?retry=" + tries }) : section;
+  loadSection(target).then(function (mod) {
+    importErrors.delete(section.id);
     loadedSections.set(section.id, mod);
     // The Planner binds its delegated listeners once, on the <main> element that stays in place across renders.
     if (section.id === "planner" && typeof mod.bind === "function") mod.bind(document.getElementById("main"));
-  }, function () {
-    missingSections.add(section.id);
+  }, function (err) {
+    importErrors.set(section.id, err || new Error("import failed"));
+    if (!autoRetried.has(section.id)) {
+      autoRetried.add(section.id);
+      setTimeout(function () {
+        if (importErrors.has(section.id)) retrySection(section.id);
+      }, AUTO_RETRY_MS);
+    }
   }).then(function () {
     loadingSections.delete(section.id);
     render();
   });
 }
 
+// Retry button and the automatic retry: the error clears, a skeleton shows, and the import runs again.
+function retrySection(sectionId) {
+  const section = sectionById(sectionId);
+  if (!section || !section.module || loadedSections.has(sectionId)) return;
+  importErrors.delete(sectionId);
+  ensureLoaded(section);
+  render();
+}
+
 function mainHtml(vm) {
   const section = sectionById(vm.route.section);
   if (!section) return comingSoonHtml({ label: "This section" });
   if (loadedSections.has(section.id)) return loadedSections.get(section.id).sectionView(vm);
-  if (!section.module || missingSections.has(section.id)) return comingSoonHtml(section);
+  if (!section.module) return comingSoonHtml(section);
+  if (importErrors.has(section.id)) return importErrorHtml(section);
   ensureLoaded(section);
   return '<div aria-busy="true">' + skeletonHtml(["w-60", "w-90"]) + "</div>";
 }
@@ -464,6 +498,8 @@ function onClick(event) {
     // closest() returns the copy button itself, so a row or section toggle does not fire too.
     // No render: copying changes nothing on the page.
     copyRef(el);
+  } else if (action === "section-retry") {
+    retrySection(el.getAttribute("data-section"));
   } else if (action === "inbox-answer" || action === "undo-line" || action === "override" ||
     action === "rule-accept" || action === "rule-reject") {
     pageAction(action, el);
