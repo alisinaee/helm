@@ -32,8 +32,8 @@ class TokensTruthRender(unittest.TestCase):
         cls.out = json.loads(proc.stdout)
 
     def test_stale_top_bar_says_unknown_with_age_and_the_stop(self):
-        self.assertIn("Week unknown · stop 85% · 31 h old", self.out["staleTop"])
-        self.assertNotIn("82%", self.out["staleTop"])
+        self.assertIn("Week unknown · stop 85% · stale 31h", self.out["staleTop"])
+        self.assertIn("chip-warning", self.out["staleTop"])
 
     def test_stale_top_bar_offers_enter_usage_on_the_tokens_screen(self):
         self.assertIn('<a class="btn top-enter" href="#/p/splitnet/tokens"', self.out["staleTop"])
@@ -42,7 +42,7 @@ class TokensTruthRender(unittest.TestCase):
     def test_fresh_top_bar_shows_the_share_and_no_action(self):
         self.assertIn("Week 63% · stop 85%", self.out["freshTop"])
         self.assertNotIn("top-enter", self.out["freshTop"])
-        self.assertNotIn("old", self.out["freshTop"])
+        self.assertNotIn("stale", self.out["freshTop"])
 
     def test_a_half_hour_old_reading_is_still_fresh_under_ninety_minutes(self):
         self.assertIn("Week 63% · stop 85%", self.out["midTop"])

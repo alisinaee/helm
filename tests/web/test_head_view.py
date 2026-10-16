@@ -320,13 +320,13 @@ class HeadRender(unittest.TestCase):
 
     def test_head_badge_names_the_model_first_on_the_now_line(self):
         html = self.out["screen"]
-        self.assertIn('<p class="hd-now-line"><strong class="hd-badge">Head: Opus 5.5</strong>', html)
-        self.assertIn('<span class="hd-now-rest">acct B', html)
+        self.assertIn('class="chip chip-success hd-model"', html)
+        self.assertIn(">Opus 5.5 · since ", html)
+        self.assertIn("acct B", html)
 
     def test_no_head_claim_says_how_to_claim(self):
         html = self.out["unclaimed"]
-        self.assertIn('<strong class="hd-badge hd-badge-off">Head: not claimed (run roadmap head claim)</strong>', html)
-        self.assertNotIn("hd-now-rest", html)
+        self.assertIn('<span class="chip chip-neutral hd-model hd-badge-off">Head: not claimed (run roadmap head claim)</span>', html)
 
     def test_alerts_count_unhandled_needs_and_unaccepted_done(self):
         html = self.out["screen"]

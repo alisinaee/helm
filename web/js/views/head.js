@@ -108,22 +108,32 @@ function countsOf(head, rows) {
   };
 }
 
+// Local HH:MM of an ISO time, or "" when it does not parse.
+function hm(iso) {
+  const ms = Date.parse(String(iso || ""));
+  if (!isFinite(ms)) return "";
+  const d = new Date(ms);
+  return (d.getHours() < 10 ? "0" : "") + d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes();
+}
+
+// The model chip of the header: "Opus 5.5 · since 09:23"; acct, usage and the previous models sit in its tooltip.
 function nowHtml(head) {
   const now = head.now || {};
   const usage = now.usage || {};
-  // The model acting as head, as a badge first on the line; without a claim the line says how to claim one.
-  const badge = now.model ? '<strong class="hd-badge">Head: ' + esc(now.model) + "</strong>" :
-    '<strong class="hd-badge hd-badge-off">Head: not claimed (run roadmap head claim)</strong>';
-  const parts = [now.acct ? "acct " + now.acct : null, now.since ? "since " + now.since : null,
-    usage.h5 != null ? "5h " + fmtPercent(usage.h5) : null, usage.wk != null ? "week " + fmtPercent(usage.wk) : null];
-  const prev = (head.prev || []).slice(0, 3).map(function (p) {
+  if (!now.model) {
+    return '<span class="chip chip-neutral hd-model hd-badge-off">Head: not claimed (run roadmap head claim)</span>';
+  }
+  const at = hm(now.since) || String(now.since || "").slice(0, 16);
+  const tip = [now.acct ? "acct " + now.acct : null, now.since ? "since " + now.since : null,
+    usage.h5 != null ? "5h " + fmtPercent(usage.h5) : null, usage.wk != null ? "week " + fmtPercent(usage.wk) : null]
+    .filter(Boolean).join(" · ");
+  const prev = (head.prev || []).slice(0, 5).map(function (p) {
     return [p.model, p.acct ? "acct " + p.acct : null, p.until ? "until " + p.until : null]
       .filter(Boolean).join(" ");
   });
-  const rest = parts.filter(Boolean).join(" · ");
-  return '<section class="hd-now" aria-label="Head now"><p class="hd-now-line">' + badge +
-    (rest ? ' <span class="hd-now-rest">' + esc(rest) + "</span>" : "") + "</p>" +
-    (prev.length ? '<p class="page-note">prev: ' + esc(prev.join(", ")) + "</p>" : "") + "</section>";
+  const title = [tip].concat(prev.length ? ["Previous: " + prev.join("; ")] : []).filter(Boolean).join("\n");
+  return '<span class="chip chip-success hd-model" tabindex="0" title="' + esc(title) + '">' + esc(now.model) +
+    (at ? " · since " + esc(at) : "") + "</span>";
 }
 
 function alertsHtml(counts) {
@@ -192,7 +202,8 @@ function barHtml(vm, opts) {
     '<option value="new"' + (opts.sort === "old" ? "" : " selected") + ">Newest</option>" +
     '<option value="old"' + (opts.sort === "old" ? " selected" : "") + ">Oldest</option></select></label>" +
     '<button type="button" class="btn hd-log" data-action="head-log">+ Log</button>' +
-    '<nav class="hd-filters" aria-label="Filter">' + filterHtml(opts) + "</nav>" + viewHtml(opts) + "</div>";
+    '<nav class="hd-filters hd-seg" aria-label="Filter">' + filterHtml(opts) + "</nav>" + viewHtml(opts) +
+    countHtml(opts.pager) + "</div>";
 }
 
 // The Cards | List toggle. The hash keeps view=list or view=cards; the default (no view key) is the list.
@@ -203,7 +214,7 @@ function viewHtml(opts) {
     return '<a class="hd-filter hd-view" href="' + esc(hashOf({ f: opts.f || "all", kind: opts.kind, sid: opts.sid,
       q: opts.q, sort: opts.sort, view: pair[0] })) + '"' + cur + ">" + esc(pair[1]) + "</a>";
   });
-  return '<nav class="hd-views" aria-label="View">' + links.join("") + "</nav>";
+  return '<nav class="hd-views hd-seg" aria-label="View">' + links.join("") + "</nav>";
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -602,31 +613,55 @@ function emptyHtml(vm, opts) {
     esc(hashOf({ f: "all" })) + '">Show all</a></div>';
 }
 
-// The agents' questions, below the timeline: a collapsed group "Questions (N)", newest first. Each card is the Inbox
+// The agents' questions, in the Questions tab, newest first. Each card is the Inbox
 // question card (its option buttons and the one "Other" answer box, which the Inbox answer path handles). A question
-// asked more than 24 hours ago is marked "old". qsOpen keeps the group open or closed across repaints.
+// asked more than 24 hours ago is marked "old". tabNow keeps the active tab across repaints.
 const OLD_QUESTION_MS = 24 * 60 * 60 * 1000;
-let qsOpen = false;
+let tabNow = "chat";
+
+// Sets the active tab ("chat" or "q"); the click handler and the tests use it.
+export function setHeadTab(tab) {
+  tabNow = tab === "q" ? "q" : "chat";
+}
 
 function askedMs(entry) {
   return typeof entry.q.askedMs === "number" && isFinite(entry.q.askedMs) ? entry.q.askedMs : null;
 }
 
-function questionsHtml(list) {
-  if (!list || !list.length) return "";
-  const now = Date.now();
-  const sorted = list.slice().sort(function (a, b) {
+function sortedQs(list) {
+  return (list || []).slice().sort(function (a, b) {
     return (askedMs(b) || 0) - (askedMs(a) || 0);
   });
-  return '<details class="hd-qs" data-role="questions"' + (qsOpen ? " open" : "") + "><summary>Questions (" +
-    sorted.length + ")</summary>" + sorted.map(function (e) {
-      const card = questionCardHtml(e, now, false);
-      if (pendingValue(questionKey(e.pid, e.q.id), e.snap.fetchedAt, now) !== undefined) return card;
-      const at = askedMs(e);
-      const old = at !== null && now - at > OLD_QUESTION_MS;
-      const mark = old ? '<p class="hd-old">old, asked ' + esc(ageText((now - at) / 60000)) + " ago</p>" : "";
-      return '<div class="hd-q' + (old ? " is-old" : "") + '">' + mark + card + "</div>";
-    }).join("") + "</details>";
+}
+
+function questionsHtml(list) {
+  const sorted = sortedQs(list);
+  if (!sorted.length) return "";
+  const now = Date.now();
+  return '<div class="hd-qs" data-role="questions" role="tabpanel" aria-label="Questions">' + sorted.map(function (e) {
+    const card = questionCardHtml(e, now, false);
+    if (pendingValue(questionKey(e.pid, e.q.id), e.snap.fetchedAt, now) !== undefined) return card;
+    const at = askedMs(e);
+    const old = at !== null && now - at > OLD_QUESTION_MS;
+    const mark = old ? '<p class="hd-old">old, asked ' + esc(ageText((now - at) / 60000)) + " ago</p>" : "";
+    return '<div class="hd-q' + (old ? " is-old" : "") + '">' + mark + card + "</div>";
+  }).join("") + "</div>";
+}
+
+// The Chat | Questions tabs (Questions only when there are open ones) and, on Chat, the banner that opens them.
+function tabsHtml(chatCount, qCount, tab) {
+  const tabBtn = function (name, label, n, badge) {
+    return '<button type="button" role="tab" class="hd-tab" data-action="head-tab" data-tab="' + name +
+      '" aria-selected="' + (tab === name ? "true" : "false") + '">' + label + ' <span class="hd-tn' +
+      (badge ? " hd-tbadge" : "") + '">' + n + "</span></button>";
+  };
+  const tabs = '<div class="hd-tabs hd-seg" role="tablist" aria-label="Head">' +
+    tabBtn("chat", "Chat", chatCount, false) +
+    (qCount ? tabBtn("q", "Questions", qCount, true) : "") + "</div>";
+  const banner = qCount && tab !== "q" ? '<p class="hd-qban" role="status">' + qCount +
+    (qCount === 1 ? " question waits" : " questions wait") + ' for you · <button type="button" class="btn" ' +
+    'data-action="head-tab" data-tab="q">Open</button></p>' : "";
+  return [tabs, banner];
 }
 
 // The screen as ordered pieces (each one root element, or "" when absent). The list piece has build(), which makes its
@@ -639,12 +674,14 @@ function piecesOf(vm, opts) {
     return passes(row, o);
   }), o.sort);
   const counts = countsOf(head, all);
+  const qn = (o.questions || []).length;
+  const tab = qn && tabNow === "q" ? "q" : "chat";
   const open = o.open || [];
   const allOpen = rows.length > 0 && rows.every(function (row) {
     return open.indexOf(String(row.id)) >= 0;
   });
-  const top = '<div class="hd-top"><h2 id="hd-h" class="hd-title">Head</h2>' +
-    (rows.length ? '<button type="button" class="btn hd-all" data-action="head-expand-all">' +
+  const top = '<div class="hd-top"><h2 id="hd-h" class="hd-title">Head</h2>' + nowHtml(head) +
+    (rows.length && tab !== "q" ? '<button type="button" class="btn hd-all" data-action="head-expand-all">' +
       (allOpen ? "Collapse all" : "Expand all") + "</button>" : "") + "</div>";
   const cards = o.view === "cards";
   const list = {
@@ -657,15 +694,18 @@ function piecesOf(vm, opts) {
       }).join("") + "</ul></div>";
     },
   };
-  // The timeline first (its title, the alerts, the filter bar, the rows, the pager); then the questions group and the
-  // head's status line.
+  // Header, tabs, then the active tab: Chat (filter bar, rows, load more) or Questions.
+  const chat = tab !== "q";
+  const tabsOf = tabsHtml(rows.length, qn, tab);
   return [
-    { name: "top", html: top + alertsHtml(counts) },
-    { name: "bar", html: barHtml(vm, o) },
-    list,
-    { name: "pager", html: pagerHtml(o.pager) },
-    { name: "questions", html: questionsHtml(o.questions) },
-    { name: "now", html: nowHtml(head) },
+    { name: "top", html: top },
+    { name: "tabs", html: tabsOf[0] },
+    { name: "banner", html: tabsOf[1] },
+    { name: "alerts", html: chat ? alertsHtml(counts) : "" },
+    { name: "bar", html: chat ? barHtml(vm, o) : "" },
+    chat ? list : { name: "none", html: "" },
+    { name: "pager", html: chat ? pagerHtml(o.pager) : "" },
+    { name: "questions", html: chat ? "" : questionsHtml(o.questions) },
   ];
 }
 
@@ -798,14 +838,20 @@ function refreshPaged(pid, snapRows) {
   });
 }
 
-// "Showing N of TOTAL", a Load more button and the end marker the observer watches. pager: {pid, scope, shown,
-// total, more, error}; total is null until the first page is in.
-function pagerHtml(pager) {
+// "Showing N of TOTAL" as a muted count at the end of the filter bar. pager: {pid, scope, shown, total, more, error};
+// total is null until the first page is in.
+function countHtml(pager) {
   if (!pager) return "";
   const total = pager.total == null ? "…" : String(pager.total);
+  return '<span class="hd-count" aria-live="polite">Showing ' + esc(String(pager.shown)) +
+    " of " + esc(total) + "</span>";
+}
+
+// The Load more button and the end marker the observer watches, under the list, only while there is more or an error.
+function pagerHtml(pager) {
+  if (!pager || !(pager.more || pager.error)) return "";
   const attrs = ' data-project="' + esc(pager.pid) + '" data-scope="' + esc(pager.scope) + '"';
-  return '<div class="hd-pager">' + '<p class="hd-count" aria-live="polite">Showing ' + esc(String(pager.shown)) +
-    " of " + esc(total) + "</p>" +
+  return '<div class="hd-pager">' +
     (pager.error ? '<p class="hd-error" role="alert">' + esc(pager.error) + "</p>" : "") +
     (pager.more ? '<button type="button" class="btn hd-more" data-action="head-more"' + attrs + ">Load more</button>" +
       '<span class="hd-end" aria-hidden="true"' + attrs + "></span>" : "") + "</div>";
@@ -938,6 +984,9 @@ export function attachHeadListeners() {
     } else if (action === "head-toggle") {
       const item = btn.closest(".hd-item");
       if (item) setOpen(item, !item.classList.contains("is-open"));
+    } else if (action === "head-tab") {
+      tabNow = btn.getAttribute("data-tab") === "q" ? "q" : "chat";
+      document.dispatchEvent(new Event("rb:render"));
     } else if (action === "head-expand-all") {
       const root = btn.closest(".hd-screen");
       const items = root ? Array.from(root.querySelectorAll(".hd-item")) : [];
@@ -1001,11 +1050,6 @@ export function attachHeadListeners() {
       run("head.merge", { id: id, into: field("into") }, { project: project, label: id + " merged" });
     }
   });
-  // The questions group does not publish its toggle; the capture phase sees it and keeps the state for repaints.
-  main.addEventListener("toggle", function (event) {
-    const group = event.target;
-    if (group && group.classList && group.classList.contains("hd-qs")) qsOpen = group.open;
-  }, true);
   main.addEventListener("change", function (event) {
     const el = event.target;
     const bar = el && el.closest ? el.closest(".hd-bar") : null;
@@ -1096,7 +1140,7 @@ export function sectionView(vm) {
   opts.questions = questions;
   // main gets an empty, stable screen element (so app.js never rewrites the rows); the pieces are painted after it.
   const key = JSON.stringify([vm.route.id, setRev(vm), opts.f, opts.q, opts.kind, opts.sid, opts.sort, opts.view,
-    opts.open, opts.project, opts.pager, head.rows.length, questions.map(function (e) {
+    opts.open, opts.project, opts.pager, tabNow, head.rows.length, questions.map(function (e) {
       return e.pid + ":" + e.q.id;
     })]);
   latest = { vm: { head: head }, opts: opts, key: key };

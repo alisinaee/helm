@@ -144,7 +144,7 @@ class TokensSimpleRender(unittest.TestCase):
         self.assertNotIn('data-project="alpha"', self.out["topbarAll"])
 
     def test_top_bar_is_one_weekly_line(self):
-        self.assertIn('<span class="top-meters" title="Weekly usage and the weekly stop">'
+        self.assertIn('<span class="top-meters" title="5-hour unknown · usage is pushed by the head">'
                       "Week 63% · stop 95%</span>", self.out["topbar"])
         self.assertIn("Week 63% · stop 95%", self.out["topbarAll"])
         self.assertNotIn("mini", self.out["topbar"])

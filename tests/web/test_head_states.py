@@ -37,9 +37,11 @@ console.log(JSON.stringify({
   queue: head.headHtml(vm, Object.assign({ f: "queue" }, base)),
   doing: head.headHtml(vm, Object.assign({ f: "doing" }, base)),
   closed: head.headHtml(vm, Object.assign({ f: "closed" }, base)),
+  questionsTab: (head.setHeadTab("q"), head.headHtml(vm, Object.assign({ f: "all" }, base))),
   noQuestions: head.headHtml(vm, { f: "all", project: "alpha", view: "list" }),
   hashFailed: head.hashOf({ f: "failed" }),
 }));
+head.setHeadTab("chat");
 """
 
 
@@ -207,16 +209,20 @@ class QuestionsRender(unittest.TestCase):
     def setUpClass(cls):
         cls.out = run_node(demo_vm())
 
-    def test_questions_group_sits_below_the_timeline_collapsed_with_a_count(self):
+    def test_questions_are_their_own_tab_with_a_badge_and_a_banner(self):
         screen = self.out["screen"]
-        self.assertIn('<details class="hd-qs" data-role="questions"><summary>Questions (1)</summary>', screen)
-        self.assertLess(screen.index('<table class="hd-tbl"'), screen.index("Questions (1)"))
-        self.assertLess(screen.index("Questions (1)"), screen.index('class="hd-now"'))
-        self.assertIn('data-action="inbox-answer" data-project="alpha" data-qid="Q1" data-value="yes"', screen)
-        self.assertIn('data-value="no"', screen)
+        self.assertIn('data-action="head-tab" data-tab="q" aria-selected="false">Questions <span class="hd-tn hd-tbadge">1</span>', screen)
+        self.assertIn('1 question waits for you', screen)
+        self.assertNotIn('<details class="hd-qs"', screen)
+        self.assertNotIn('data-role="questions"', screen)  # the cards show only on the Questions tab
+        src = read(HEAD_JS)
+        self.assertIn('<div class="hd-qs" data-role="questions"', src)
+        self.assertIn('data-action="inbox-answer" data-project="alpha" data-qid="Q1" data-value="yes"',
+                      self.out["questionsTab"])
+        self.assertIn('data-role="questions"', self.out["questionsTab"])
 
     def test_one_free_text_answer_control_per_question(self):
-        screen = self.out["screen"]
+        screen = self.out["questionsTab"]
         self.assertIn('aria-label="Other answer for Q1"', screen)
         self.assertEqual(screen.count('<input name="value" required'), 1)
         self.assertNotIn("Your answer", screen)
