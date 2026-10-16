@@ -26,7 +26,7 @@ class TrackTest(unittest.TestCase):
         css = read(CSS, "components.css")
         self.assertIn(".rg-share { --rg:", css)
         self.assertIn(".rg-weekly { --rg:", css)
-        self.assertIn('<span class="rg-num">Used</span>', read(VIEWS, "limits.js"))
+        self.assertIn('<span class="rg-num" title="Used so far">', read(VIEWS, "limits.js"))
 
     def test_workflow_detail_action_track_fits_the_button(self):
         self.assertRegex(read(CSS, "map.css"), r"\.wf-cols\{--rg:[^;]*4\.5rem auto;")
