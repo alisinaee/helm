@@ -1,5 +1,6 @@
 """R7.100: no claude.ai login in the keychain is unavailable, not an error. A manual sync returns ok with status
-"unavailable", sets no lastError, and writes the request flag the head's Stop gate reads. A real failure stays an error.
+"unavailable", sets no lastError and names the one-time setup step; since R10.29 it no longer asks the head (no
+request flag). A real failure stays an error.
 
 The keychain reader and the endpoint are stubbed: nothing runs `security` and no network connection is opened.
 ROADMAP_HOME and HOME are temp dirs.
@@ -53,7 +54,7 @@ class ManualSyncTests(UnavailableCase):
         result = self.sync()
         self.assertTrue(result["ok"])
         self.assertEqual(result["status"], "unavailable")
-        self.assertEqual(result["reason"], "this Mac signs in through the desktop app; the head updates usage")
+        self.assertIn("claude auth login", result["reason"])
         store = uc._load_store()
         self.assertIsNone(store.get("lastError"))
         self.assertEqual(store["syncError"], uc.CODE_NO_TOKEN)
@@ -65,9 +66,9 @@ class ManualSyncTests(UnavailableCase):
         self.assertEqual(view["status"], "unavailable")
         self.assertIsNone(view["lastError"])
 
-    def test_a_manual_sync_writes_the_request_flag(self):
+    def test_a_manual_sync_no_longer_asks_the_head(self):
         self.sync()
-        self.assertTrue(uc.refresh_requested(self.now))
+        self.assertFalse(uc.refresh_requested(self.now))
 
     def test_a_second_tap_inside_the_gap_is_still_unavailable(self):
         self.sync()
@@ -97,7 +98,7 @@ class RequestFlagTests(UnavailableCase):
         self.assertFalse(uc.refresh_requested(self.now))
 
     def test_a_new_reading_clears_the_request(self):
-        self.sync()
+        atomic.write_json(uc.request_path(), {"at": (self.now - timedelta(minutes=5)).isoformat(timespec="seconds")})
         self.assertTrue(uc.refresh_requested(self.now))
         uc.push(json.dumps({"rateLimits": [{"kind": "five_hour", "percentUsed": 10}]}), CONFIG)
         self.assertFalse(uc.refresh_requested(self.now))
