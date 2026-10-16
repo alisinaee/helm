@@ -23,7 +23,7 @@ const ROW_H = 28;
 const VENDOR = ["/vendor/diff2html.min.js"];
 const detail = new Map(); // sha -> {commit, files} | {error}
 const diffs = new Map(); // sha + path -> {diff, skipped, truncated} | {error}
-const sel = { sha: null, path: null, mode: "side-by-side" };
+const sel = { sha: null, path: null, mode: window.innerWidth < 640 ? "line-by-line" : "side-by-side" };
 let vendorState = "idle"; // idle | loading | ready | failed
 const store = new Map(); // project id -> {status, rows, branches, error}
 const reading = new Set(); // project ids with a read in flight
@@ -201,12 +201,6 @@ function graphSvg(g, width) {
     '" aria-hidden="true">' + parts.join("") + "</svg>";
 }
 
-function colorScheme() {
-  const theme = document.documentElement.getAttribute("data-theme");
-  if (theme === "dark" || theme === "light") return theme;
-  return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-}
-
 function diffHtml() {
   if (!sel.path) return "";
   const got = diffs.get(sel.sha + "\n" + sel.path);
@@ -215,8 +209,7 @@ function diffHtml() {
   if (got.skipped) return emptyHtml("No diff shown.", got.skipped);
   const note = got.truncated ? bannerHtml("warning", "Diff cut.", "The patch is longer than the size cap.") : "";
   if (vendorState === "ready" && window.Diff2Html) {
-    return note + window.Diff2Html.html(got.diff, { drawFileList: false, matching: "lines", outputFormat: sel.mode,
-      colorScheme: colorScheme() });
+    return note + window.Diff2Html.html(got.diff, { drawFileList: false, matching: "lines", outputFormat: sel.mode });
   }
   return note + '<pre class="git-raw">' + esc(got.diff) + "</pre>";
 }
@@ -279,13 +272,19 @@ function onSubmit(event) {
 document.addEventListener("click", onClick);
 document.addEventListener("submit", onSubmit);
 
+// The one-letter status a file row shows: "??" is untracked (U), otherwise the first changed side of XY.
+function statusLetter(code) {
+  if (code === "??") return "U";
+  return String(code).replace(/\./g, "").charAt(0) || "M";
+}
+
 function fileRows(list) {
   return list.map(function (row) {
     const path = typeof row === "string" ? row : row.path;
     const code = typeof row === "string" ? "??" : row.code;
     return '<li class="row-grid git-files"><input type="checkbox" name="path" value="' + esc(path) +
-      '" aria-label="Commit ' + esc(path) + '"><span class="rg-t" title="' + esc(path) + '">' + esc(path) +
-      '</span><span class="rg-num num">' + esc(code) + "</span></li>";
+      '" aria-label="Commit ' + esc(path) + '"><span class="rg-num num" title="' + esc(code) + '">' +
+      esc(statusLetter(code)) + '</span><span class="rg-t" title="' + esc(path) + '">' + esc(path) + "</span></li>";
   }).join("");
 }
 
@@ -314,14 +313,13 @@ function changesHtml(pid, entry) {
   parts.push('<ul class="git-list" aria-label="Changed files">' + fileRows(files) + "</ul>");
   if (!s.detached && !s.in_progress) {
     parts.push('<form class="git-form" data-git="commit" novalidate>' +
-      '<label for="git-msg">Commit message</label><textarea id="git-msg" name="message" rows="2" maxlength="4000">' +
-      "</textarea><label>Task (optional) " +
-      '<input id="git-task" name="task" type="text" maxlength="20" autocomplete="off"></label>' +
+      '<label class="git-cf">Commit message<textarea id="git-msg" name="message" rows="2" maxlength="4000">' +
+      '</textarea></label><label class="git-cf">Task<input id="git-task" name="task" type="text" maxlength="20" ' +
+      'autocomplete="off"></label>' +
       '<button type="submit" class="btn btn-primary" data-focus="git-commit">Commit selected</button></form>');
   }
-  parts.push('<div class="git-form"><button type="button" class="btn" data-git="push" data-focus="git-push">' +
-    "Push</button><p class=\"page-note\">Push runs only when the project's policy allows it. A refusal says why." +
-    "</p></div>");
+  parts.push('<div><button type="button" class="btn" data-git="push" data-focus="git-push">Push</button>' +
+    "<p class=\"page-note\">Push runs only when the project's policy allows it. A refusal says why.</p></div>");
   return parts.join("");
 }
 
@@ -334,7 +332,8 @@ function historyHtml(vm, entry) {
   }, 1)));
   const width = cols * LANE_W;
   const head = '<li class="row-grid git-log rg-head"><span class="rg-t">Graph</span><span class="rg-t">Commit</span>' +
-    '<span class="rg-t">Message</span><span class="rg-t">Author</span><span class="rg-num">Age</span><span></span>' +
+    '<span class="rg-t">Message</span><span class="rg-t git-au">Author</span>' +
+    '<span class="rg-num">Age</span><span></span>' +
     "</li>";
   const rows = entry.rows.map(function (row, i) {
     const when = row.time == null ? { text: "–", title: "" } : relTime(row.time * 1000, vm.now);
@@ -344,7 +343,7 @@ function historyHtml(vm, entry) {
       esc(row.sha) + '">' + esc(row.sha.slice(0, 7)) + '</span><span class="rg-t" title="' +
       esc([row.task, row.job].filter(Boolean).join(" · ")) + '"><button type="button" class="git-pick" ' +
       'data-focus="git-pick-' + esc(row.sha.slice(0, 7)) + '">' + esc((row.task ? row.task + " " : "") +
-      row.subject) + '</button></span><span class="rg-t">' + esc(row.author) +
+      row.subject) + '</button></span><span class="rg-t git-au">' + esc(row.author) +
       '</span><span class="rg-num num" title="' + esc(when.title) + '">' + esc(when.text) + "</span>" +
       copyButton("commit", row.sha, "Copy ref", { project: pid }) + "</li>";
   }).join("");
