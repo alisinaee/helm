@@ -4417,14 +4417,21 @@
       "id": "R10.29",
       "phase": "R10",
       "title": "Usage auto-fetch by the background service like 3rd-party apps (H204)",
-      "status": "partial",
+      "status": "done",
       "tokensK": 8,
       "thinking": "medium",
       "model": "opus",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "roadmap/services/usage*"
+      "note": "roadmap/services/usage*",
+      "refs": [
+        "commit:25d3049e61c81501336f3fed1b2b2b92bd3d8492",
+        "commit:1fa09f138c597a657234d0f0b5614d4b5b788023"
+      ],
+      "at": {
+        "done": "2026-10-16T15:43:28+03:30"
+      }
     },
     {
       "id": "R10.30",
@@ -4454,6 +4461,19 @@
       "refs": [
         "commit:a3dce707d326db9591a25cfda5da0e3ded9b73ee"
       ]
+    },
+    {
+      "id": "R10.32",
+      "phase": "R10",
+      "title": "Per-task usage from subagent transcripts on SubagentStop + backfill + weighted % (docs/TOKENS-PER-TASK.md, H209 H210)",
+      "status": "todo",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "hooks.py, jobs, tokens"
     }
   ],
   "schemaVersion": 1

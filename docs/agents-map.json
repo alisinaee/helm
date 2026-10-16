@@ -408,5 +408,10 @@
     "task": "R7.31",
     "title": "sonnet: R10.31 Workflow map fix (Sonnet)",
     "model": "sonnet"
+  },
+  "a2ca5f7a98815aa8d": {
+    "task": "R10.29",
+    "title": "haiku: R10.29 refresh opt-in + tests",
+    "model": "haiku"
   }
 }

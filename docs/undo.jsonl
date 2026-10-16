@@ -1,8 +1,3 @@
-{"activity":"A126","sum":"R7.38 todo->done","op":"task.status","args":{"id":"R7.38","status":"todo"},"at":"2026-10-15T14:10:15+03:30"}
-{"activity":"A127","sum":"R7.39 todo->done","op":"task.status","args":{"id":"R7.39","status":"todo"},"at":"2026-10-15T14:10:15+03:30"}
-{"activity":"A128","sum":"H53 set status, note","op":"head.restore","args":{"steps":[{"id":"H53","set":{"status":"open"}}]},"at":"2026-10-15T14:10:31+03:30"}
-{"activity":"A129","sum":"H48 set status, note","op":"head.restore","args":{"steps":[{"id":"H48","set":{"status":"open"}}]},"at":"2026-10-15T14:10:31+03:30"}
-{"activity":"A130","sum":"H47 set status, note","op":"head.restore","args":{"steps":[{"id":"H47","set":{"status":"open"}}]},"at":"2026-10-15T14:10:31+03:30"}
 {"activity":"A131","sum":"H54 set status, note","op":"head.restore","args":{"steps":[{"id":"H54","set":{"status":"open"}}]},"at":"2026-10-15T14:10:36+03:30"}
 {"activity":"A132","sum":"H57 set status, note","op":"head.restore","args":{"steps":[{"id":"H57","set":{"status":"open"}}]},"at":"2026-10-15T14:10:36+03:30"}
 {"activity":"A133","sum":"H60 set status, note","op":"head.restore","args":{"steps":[{"id":"H60","set":{"status":"open"}}]},"at":"2026-10-15T14:10:43+03:30"}
@@ -498,3 +493,8 @@
 {"activity":"A682","sum":"H199 set status, note","op":"head.restore","args":{"steps":[{"id":"H199","set":{"status":"open"}}]},"at":"2026-10-16T15:31:18+03:30"}
 {"activity":"A683","sum":"H200 set status, note","op":"head.restore","args":{"steps":[{"id":"H200","set":{"status":"open"}}]},"at":"2026-10-16T15:31:18+03:30"}
 {"activity":"A684","sum":"H201 set status, note","op":"head.restore","args":{"steps":[{"id":"H201","set":{"status":"open"}}]},"at":"2026-10-16T15:32:20+03:30"}
+{"activity":"A686","sum":"H208 triaged as review","op":"head.restore","args":{"steps":[{"id":"H208","set":{"kind":"review","sum":"I ran claude auth login."},"link":["-task:R10.29"]}]},"at":"2026-10-16T15:45:10+03:30"}
+{"activity":"A687","sum":"H208 set status, note","op":"head.restore","args":{"steps":[{"id":"H208","set":{"status":"open"}}]},"at":"2026-10-16T15:49:42+03:30"}
+{"activity":"A688","sum":"H204 set status, note","op":"head.restore","args":{"steps":[{"id":"H204","set":{"status":"open"}}]},"at":"2026-10-16T15:49:43+03:30"}
+{"activity":"A689","sum":"H209 triaged as question","op":"head.restore","args":{"steps":[{"id":"H209","set":{"kind":"question","sum":"now you can track usage for each task better yes ?"},"link":["-task:R10.32"]}]},"at":"2026-10-16T15:52:38+03:30"}
+{"activity":"A690","sum":"H210 triaged as review","op":"head.restore","args":{"steps":[{"id":"H210","set":{"kind":"review","sum":"check and investigate to track token usage per task and agent better"},"link":["-task:R10.32","-doc:docs/TOKENS-PER-TASK.md"]}]},"at":"2026-10-16T15:53:49+03:30"}

@@ -6331,9 +6331,12 @@
       "model": "opus",
       "task": "R10.29",
       "effort": "medium",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T15:25:47+03:30",
-      "ended": null
+      "ended": "2026-10-16T15:40:27+03:30",
+      "refs": [
+        "commit:25d3049e61c81501336f3fed1b2b2b92bd3d8492"
+      ]
     },
     {
       "id": "j1013",
@@ -6403,6 +6406,18 @@
       "status": "done",
       "started": "2026-10-16T15:30:58+03:30",
       "ended": "2026-10-16T15:37:03+03:30"
+    },
+    {
+      "id": "j1019",
+      "title": "haiku: R10.29 refresh opt-in + tests",
+      "model": "haiku",
+      "task": "R10.29",
+      "status": "done",
+      "started": "2026-10-16T15:40:47+03:30",
+      "ended": "2026-10-16T15:43:21+03:30",
+      "refs": [
+        "commit:1fa09f138c597a657234d0f0b5614d4b5b788023"
+      ]
     }
   ]
 }

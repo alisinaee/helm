@@ -1,9 +1,3 @@
-{"id":"A185","at":"2026-10-15T14:21:17+03:30","src":"agent","op":"head.set","sum":"H52 set status, note","undo":true}
-{"id":"A186","at":"2026-10-15T14:21:18+03:30","src":"agent","op":"head.triage","sum":"H78 triaged as question","undo":true}
-{"id":"A187","at":"2026-10-15T14:21:18+03:30","src":"agent","op":"head.bind","sum":"H79 bound task:R7.44","undo":true}
-{"id":"A188","at":"2026-10-15T14:21:18+03:30","src":"agent","op":"head.set","sum":"H80 set status, note","undo":true}
-{"id":"A189","at":"2026-10-15T14:21:18+03:30","src":"agent","op":"head.bind","sum":"H82 bound task:R7.45","undo":true}
-{"id":"A190","at":"2026-10-15T14:23:22+03:30","src":"agent","op":"task.status","sum":"R7.41 todo->done","undo":true}
 {"id":"A191","at":"2026-10-15T14:23:22+03:30","src":"agent","op":"task.status","sum":"R7.43 todo->done","undo":true}
 {"id":"A192","at":"2026-10-15T14:23:23+03:30","src":"agent","op":"head.set","sum":"H84 set status, note","undo":true}
 {"id":"A193","at":"2026-10-15T14:23:40+03:30","src":"agent","op":"head.triage","sum":"H106 triaged as rule","undo":true}
@@ -498,3 +492,9 @@
 {"id":"A682","at":"2026-10-16T15:31:18+03:30","src":"agent","op":"head.set","sum":"H199 set status, note","undo":true}
 {"id":"A683","at":"2026-10-16T15:31:18+03:30","src":"agent","op":"head.set","sum":"H200 set status, note","undo":true}
 {"id":"A684","at":"2026-10-16T15:32:20+03:30","src":"agent","op":"head.set","sum":"H201 set status, note","undo":true}
+{"id":"A685","at":"2026-10-16T15:43:28+03:30","src":"agent","op":"task.status","sum":"R10.29 done->done","undo":false}
+{"id":"A686","at":"2026-10-16T15:45:10+03:30","src":"agent","op":"head.triage","sum":"H208 triaged as review","undo":true}
+{"id":"A687","at":"2026-10-16T15:49:42+03:30","src":"agent","op":"head.set","sum":"H208 set status, note","undo":true}
+{"id":"A688","at":"2026-10-16T15:49:43+03:30","src":"agent","op":"head.set","sum":"H204 set status, note","undo":true}
+{"id":"A689","at":"2026-10-16T15:52:38+03:30","src":"agent","op":"head.triage","sum":"H209 triaged as question","undo":true}
+{"id":"A690","at":"2026-10-16T15:53:49+03:30","src":"agent","op":"head.triage","sum":"H210 triaged as review","undo":true}

@@ -564,3 +564,11 @@
 {"v":1,"t":"u","id":"H199","ts":"2026-10-16T12:01:18Z","by":"head","set":{"status":"needs-you"},"note":"4ad5191: Activity rows one line, icon Undo; please check"}
 {"v":1,"t":"u","id":"H200","ts":"2026-10-16T12:01:18Z","by":"head","set":{"status":"needs-you"},"note":"03ef902 + 3315c70 Inbox redesign; please check"}
 {"v":1,"t":"u","id":"H201","ts":"2026-10-16T12:02:20Z","by":"head","set":{"status":"needs-you"},"note":"df73618 Head header + Chat/Questions tabs; please check"}
+{"v":1,"t":"e","ts":"2026-10-16T12:14:59Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"review?","sum":"I ran claude auth login.","len":66,"h":"sha1:76cdb2062912","prio":0,"id":"H208"}
+{"v":1,"t":"u","id":"H208","ts":"2026-10-16T12:15:09Z","by":"head","set":{"kind":"review","sum":"Person ran claude auth login: verify automatic usage sync"},"link":["+task:R10.29"]}
+{"v":1,"t":"u","id":"H208","ts":"2026-10-16T12:19:42Z","by":"head","set":{"status":"done"},"note":"answer: CLI login ok; service polls Anthropic usage endpoint every 2 min (15:47 manual sync, 15:49 auto)"}
+{"v":1,"t":"u","id":"H204","ts":"2026-10-16T12:19:43Z","by":"head","set":{"status":"done"},"note":"25d3049 + 1fa09f1: service fetches usage itself; verified live 15:49 auto update"}
+{"v":1,"t":"e","ts":"2026-10-16T12:22:31Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"question?","sum":"now you can track usage for each task better yes ?","len":55,"h":"sha1:9dcaf20c3278","prio":0,"id":"H209"}
+{"v":1,"t":"u","id":"H209","ts":"2026-10-16T12:22:38Z","by":"head","set":{"kind":"question","sum":"Per-task usage tracking now possible?"},"link":["+task:R10.32"]}
+{"v":1,"t":"e","ts":"2026-10-16T12:23:11Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"review?","sum":"check and investigate to track token usage per task and agent better","len":68,"h":"sha1:370637bae0bd","prio":2,"id":"H210"}
+{"v":1,"t":"u","id":"H210","ts":"2026-10-16T12:23:48Z","by":"head","set":{"kind":"review","sum":"Investigate per-task/agent token tracking"},"link":["+task:R10.32","+doc:docs/TOKENS-PER-TASK.md"]}
