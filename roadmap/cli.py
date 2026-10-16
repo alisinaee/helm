@@ -49,6 +49,7 @@ COMMAND_MODULES = (
     "version",
     "logs",
     "git",
+    "system",
 )
 
 
