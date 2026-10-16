@@ -1,6 +1,6 @@
 """Flow 5: the HTTP security rules over real sockets. The main listener refuses a foreign Host (421), a write without
 the page's CSRF token (403), a cross-site write (403), a body over 4 KB (413), an unknown op (404) and a burst over the
-rate limit (429). The research notes route refuses traversal. The phone listener is read-only (405) and answers 503
+rate limit (429). The phone listener is read-only (405) and answers 503
 when there is no token. Phone listener is built in-process with make_phone_server on port 0, with fake token sources."""
 
 import json
@@ -13,7 +13,6 @@ from unittest import mock
 from roadmap.http.server import make_phone_server
 from tests.integration.harness import Sandbox, stack
 
-NOTE = "# Landscape\n\nThe short version.\n"
 
 
 class MainListenerSecurityTests(unittest.TestCase):
@@ -64,29 +63,6 @@ class MainListenerSecurityTests(unittest.TestCase):
         self.assertIn(429, statuses)
         self.assertEqual(statuses[:10], [422] * 10)
 
-    def test_notes_refuse_traversal_and_never_follow_a_symlink(self):
-        research = os.path.join(self.sandbox.data_dir, "research")
-        os.makedirs(research)
-        with open(os.path.join(research, "01-landscape.md"), "w", encoding="utf-8") as fh:
-            fh.write(NOTE)
-        secret = os.path.join(self.sandbox.root, "secret.md")
-        with open(secret, "w", encoding="utf-8") as fh:
-            fh.write("# Secret\n")
-        os.symlink(secret, os.path.join(research, "02-link.md"))
-
-        base = "/api/v1/projects/%s/notes" % self.pid
-        status, headers, body = self.server.request("GET", base + "/01-landscape.md")
-        self.assertEqual(status, 200)
-        self.assertIn("text/plain", headers["Content-Type"])
-        self.assertEqual(body.decode("utf-8"), NOTE)
-
-        for path in (base + "/../../../../secret.md", base + "/..%2F..%2Fsecret.md", base + "/%2e%2e%2fsecret.md",
-                     base + "/..", base + "/02-link.md", base + "/..%2F01-landscape.md"):
-            status, _, _ = self.server.request("GET", path)
-            self.assertIn(status, (400, 404), path)
-        status, _, body = self.server.request("GET", base)
-        names = [row["name"] for row in json.loads(body)["notes"]]
-        self.assertEqual(names, ["01-landscape.md"])  # the symlink is not listed as a note
 
 
 class PhoneListenerTests(unittest.TestCase):

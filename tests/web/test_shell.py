@@ -160,7 +160,7 @@ class ShellRenderTests(unittest.TestCase):
 
     def test_nav_has_sections_badges_and_no_inline_markup(self):
         nav = self.out["nav"]
-        for label in ("Overview", "Inbox", "Roadmap", "Work", "Agents", "Tokens", "Rules", "Research",
+        for label in ("Overview", "Inbox", "Roadmap", "Work", "Agents", "Tokens", "Rules",
                       "Activity", "Settings"):
             self.assertIn(">" + label + "</span>", nav, label)
         self.assertNotIn(">Issues</span>", nav)

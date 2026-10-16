@@ -1,5 +1,5 @@
 """Row alignment, part B (R7.5, UI checklist rule 0): the tree and list rows, the Overview phase rows, the
-research notes and the rule rows keep their numbers in right-aligned tracks and their copy buttons in the
+the rule rows keep their numbers in right-aligned tracks and their copy buttons in the
 one fixed last column. The check reads the renderers and the shared CSS; no browser is needed."""
 
 import os
@@ -83,15 +83,7 @@ class OverviewPhaseRowsTest(unittest.TestCase):
         self.assertNotIn(" style=", phases)
 
 
-class ResearchAndRulesRowsTest(unittest.TestCase):
-    def test_research_note_numbers_sit_in_their_own_right_aligned_cells(self):
-        research = read(VIEWS, "research.js")
-        self.assertIn('<span class="ov-sum rg-num">', research)
-        self.assertIn('<span class="note-main">', research)
-        css = read(CSS, "components.css")
-        self.assertIn(".note-row.row-grid > .btn {", css)
-        self.assertIn("grid-template-columns: minmax(0, 1fr) 5.5rem 4.5rem;", css)
-
+class RulesRowsTest(unittest.TestCase):
     def test_rule_budget_has_its_own_track_and_the_row_keeps_the_copy_column(self):
         rules = read(VIEWS, "rules.js")
         self.assertIn("'<span class=\"rg-num num\">' + value + \"</span>\"", rules)

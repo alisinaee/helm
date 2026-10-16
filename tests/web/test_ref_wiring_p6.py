@@ -1,8 +1,8 @@
-"""Copy-reference buttons in the item views (R7.12 P6): issues, inbox, research, rules and projects.
+"""Copy-reference buttons in the item views (R7.12 P6): issues, inbox, rules and projects.
 
-The views are rendered in node from the golden snapshot with a few issues, questions, rules and research notes added
-(tests/web/ref_wiring node script below, run with --input-type=module). The checks: each row (issue, question, research
-note, rule, project) and each section header (issues.open, inbox.questions, research.list, rules.list) carries a
+The views are rendered in node from the golden snapshot with a few issues, questions and rules added
+(tests/web/ref_wiring node script below, run with --input-type=module). The checks: each row (issue, question, rule,
+project) and each section header (issues.open, inbox.questions, rules.list) carries a
 data-action="copy-ref" button with a valid rb: ref and an aria-label; no ref or summary holds an absolute path or "~";
 and no copy button sits inside another button or link. Skipped with a message when node is not installed.
 """
@@ -35,7 +35,6 @@ const load = (name) => import(pathToFileURL(web + "/js/" + name).href);
 const state = await load("state.js");
 const issues = await load("views/issues.js");
 const inbox = await load("views/inbox.js");
-const research = await load("views/research.js");
 const rules = await load("views/rules.js");
 const projects = await load("views/projects.js");
 
@@ -78,16 +77,6 @@ out.inbox = inbox.sectionView(vmOf(route("project", "splitnet", "inbox")));
 out.rules = rules.sectionView(vmOf(route("project", "splitnet", "rules")));
 out.projects = projects.projectsView(vmOf(route("home", null, "overview")));
 
-// The research list loads over the network; answer the request with the notes, then render again.
-globalThis.fetch = async () => new Response(JSON.stringify({ notes: [
-  { name: "landscape.md", title: "Landscape", size: 2048, lines: 40 },
-  { name: "risks.md", title: "Risks", size: 512, lines: 9 },
-] }), { status: 200, headers: { "Content-Type": "application/json" } });
-globalThis.document = { dispatchEvent: () => true };
-research.sectionView(vmOf(route("project", "splitnet", "research")));
-await new Promise((resolve) => setTimeout(resolve, 50));
-out.research = research.sectionView(vmOf(route("project", "splitnet", "research")));
-delete globalThis.document;
 console.log(JSON.stringify(out));
 """
 
@@ -167,13 +156,6 @@ class RefWiringP6Tests(unittest.TestCase):
         self.assertIn("rb:splitnet/section/inbox.questions", refs)
         self.assert_refs_clean("inbox")
 
-    def test_research_note_rows_and_list_section(self):
-        refs = self.refs("research")
-        self.assertIn("rb:splitnet/research/landscape.md", refs)
-        self.assertIn("rb:splitnet/research/risks.md", refs)
-        self.assertIn("rb:splitnet/section/research.list", refs)
-        self.assert_refs_clean("research")
-
     def test_rule_rows_and_section(self):
         refs = self.refs("rules")
         self.assertIn("rb:splitnet/rule/R1", refs)
@@ -188,12 +170,12 @@ class RefWiringP6Tests(unittest.TestCase):
         self.assert_refs_clean("projects")
 
     def test_copy_buttons_have_labels(self):
-        for name in ("issues", "inbox", "research", "rules", "projects"):
+        for name in ("issues", "inbox", "rules", "projects"):
             for match in re.finditer(r"<button[^>]*data-action=\"copy-ref\"[^>]*>", self.out[name]):
                 self.assertIn('aria-label="Copy reference to ', match.group(0), name)
 
     def test_no_copy_button_sits_inside_another_button_or_link(self):
-        for name in ("issues", "inbox", "research", "rules", "projects"):
+        for name in ("issues", "inbox", "rules", "projects"):
             bad, copies = nested_copies(self.out[name])
             self.assertGreater(copies, 0, name)
             self.assertEqual(bad, [], name)
