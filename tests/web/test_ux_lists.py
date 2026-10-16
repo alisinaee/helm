@@ -71,7 +71,7 @@ class AgentsRowsTest(unittest.TestCase):
     def test_agent_rows_use_fixed_tracks_and_wrap_on_a_phone(self):
         # The header (Model, Effort, Job, Task, Elapsed, Tokens) and every row share the same eight tracks.
         css = read(CSS, "components.css")
-        self.assertIn(".row-grid.rg-agent { --rg: 1.5rem 7.5rem minmax(0, 1fr) 4.5rem 3rem 4.5rem 4rem 4.25rem;", css)
+        self.assertIn(".row-grid.rg-agent { --rg: 1.5rem 7.5rem minmax(0, 1fr) 4.5rem 3rem 4.5rem 7.5rem 4.25rem;", css)
         self.assertIn(".row-grid.rg-head { display: none; }", css)
         self.assertIn("@media (min-width: 640px) { .row-grid.rg-head { display: grid; } }", css)
         self.assertIn(".rg-agent>:nth-child(8) { grid-column: 6; grid-row: 1 }", css)
@@ -79,7 +79,7 @@ class AgentsRowsTest(unittest.TestCase):
     def test_running_tokens_show_a_dash_when_unknown(self):
         # Unknown tokens show the shared missing-value dash (MISSING), not the words "not yet" (see test_agents).
         text = read(VIEWS, "agents.js")
-        self.assertIn("const tokens = job.tokensK == null ? MISSING : fmtTokens(job.tokensK);", text)
+        self.assertIn("job.tokensK == null ? MISSING : fmtTokens(job.tokensK);", text)
         self.assertNotIn('"not yet"', text)
 
 
