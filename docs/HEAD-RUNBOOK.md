@@ -26,7 +26,7 @@ jobs.json = `[{"id","title","task":"R7.19","prompt"}]`; prompt follows the templ
 `tools/cursor-review2.sh <out.md> "<read-only review prompt>"` in the background, then register a `cursor` job.
 
 ## Worker prompt must say
-Strict file list; stage only own files by path; temp ROADMAP_HOME; never run `roadmap service|serve|hooks install|usage
+Strict file list; stage only own files by path; NEVER git stash/checkout -- /reset/pop (shared tree holds live board data and other WIP); temp ROADMAP_HOME; never run `roadmap service|serve|hooks install|usage
 sync`; never touch port 8780, ~/.claude, keychain, split_net or the person's browser tabs; no network; no subagents;
 do not push; commit with the Co-Authored-By line; report in 5-6 lines.
 
@@ -77,3 +77,10 @@ Every ask, rule, decision or instruction the person gives goes into the Head led
 
 ## Usage limit override (person, 2026-10-16)
 "rule: no limit" (H164): the person lifted the Claude usage stops (85% weekly, 80% 5h, and the H160 98% weekly stop). Launch Claude Haiku work without waiting for resets; still check get_usage each wave and report readings. Stop only on a session-limit error.
+
+## Planner-only head (person, 2026-10-16, H182; overrides older model rules)
+Head plans and verifies only (no edits, no big reads). Models: Haiku 5.5 default worker; Sonnet 5.5 low/med for
+wide logic/hard UI; Opus 5.5 low/med advice only; agy (unlimited) for every read-only job, verified by Haiku.
+Budget this run: stop Claude workers at weekly 10% (start reading 2%). Decisions H182: merge Planner into Work;
+delete Research section; archive all old board tasks and start a fresh plan; Git section uses vendored MIT libs
+(no build step). Full rules: ~/.claude/skills/head/SKILL.md "Planner-only rules".
