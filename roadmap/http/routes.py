@@ -577,6 +577,12 @@ def project_head(app, req, match):
         open_tasks = [t for t in snap["tasks"] if t.get("state") in ACTIVE]
         live_jobs = [j for j in snap["jobs"] if j.get("status") in HEAD_JOB_STATES]
         rows = [_head_page_row(e, moment, page["accepted"], open_tasks, index, live_jobs) for e in page["rows"]]
+        if app.cmd_source != "phone" and _same_page_read(req.headers, app.port):
+            # The same-origin page only: a short preview of each row's text and reply (R10.2), in one file read.
+            previews = head_service.previews_of(data_dir, [row["id"] for row in rows])
+            for row in rows:
+                row["preview"] = previews[row["id"]]["text"]
+                row["replyPreview"] = previews[row["id"]]["reply"]
         body = {"f": f, "offset": offset, "limit": limit, "total": page["total"], "counts": page["counts"],
                 "rows": rows}
     else:

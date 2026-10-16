@@ -536,10 +536,13 @@ const LIST_COLS = [["#", "hd-n"], ["Kind", "hd-kind"], ["You wrote", "hd-sumc"],
   ["State", "hd-stc"], ["Bound to", "hd-bnd"], ["Age", "hd-age"], ["Added", "hd-when"], ["Acc", "hd-acc"],
   ["Copy", "hd-cp"]];
 
-// The reply cell text: the captured reply, or a short word when the row is not loaded yet or has none.
-function replyText(full) {
-  if (!full) return "Open to load";
-  return full.reply || "No reply yet";
+// The reply cell text: the loaded reply, else the row's reply preview (sent with the rows), else a dash while the row
+// has no preview (the phone listener, and snapshot rows before their page arrives). "No reply yet" when known empty.
+function replyText(full, row) {
+  if (full) return full.reply || "No reply yet";
+  if (row && typeof row.replyPreview === "string") return row.replyPreview;
+  if (row && "replyPreview" in row) return "No reply yet";
+  return "\u2014";
 }
 
 function listRowHtml(vm, row, opts) {
@@ -547,22 +550,28 @@ function listRowHtml(vm, row, opts) {
   const eid = esc(id);
   const open = (opts.open || []).indexOf(id) >= 0;
   const pid = opts.project || null;
-  const shown = summaryText(row.sum, fullOf(vm, pid, id));
+  const full = fullOf(vm, pid, id);
+  const hasText = typeof row.preview === "string";
+  const shown = hasText ? row.preview : summaryText(row.sum, full);
+  const muted = hasText && row.sum && row.sum !== row.preview ? String(row.sum) : "";
+  const reply = replyText(full, row);
   const cell = function (cls, html, attrs) {
     return '<td class="' + cls + '"' + (attrs || "") + ">" + html + "</td>";
   };
   const ra = rowAge(row);
   const age = cell("hd-age rg-num" + (ra.stale ? " hd-stale" : ra.amber ? " hd-amber" : ""),
-    esc(ageText(ra.age)), ra.stale ? ' title="Stale"' : "");
+    esc(ageText(ra.age)), ' title="' + (ra.stale ? "Stale · " : "") + esc(row.ts || "") + '"');
   const when = cell("hd-when rg-num", esc(whenText(row.ts)), ' title="' + esc(row.ts || "") + '"');
   const tr = '<tr class="hd-row" data-id="' + eid + '">' +
     cell("hd-n", '<button type="button" class="hd-hit" data-action="head-toggle" data-id="' + eid +
       '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="hd-p-' + eid + '" aria-label="' +
       esc((open ? "Hide " : "Show ") + id) + '">' + eid + "</button>") +
     cell("hd-kind", kindHtml(row.kind) + ruleStateHtml(row)) +
-    cell("hd-sumc", '<span class="hd-sum" data-sum="' + esc(row.sum || "") + '" title="' + esc(shown) + '">' +
-      esc(shown) + "</span>") +
-    cell("hd-rpc", '<span class="hd-rep">' + esc(replyText(fullOf(vm, pid, id))) + "</span>") +
+    cell("hd-sumc", '<span class="hd-sum"' + (hasText ? ' data-preview="1"' : "") + ' data-sum="' + esc(row.sum || "") +
+      '" title="' + esc(full && full.text ? full.text : shown) + '">' + esc(shown) + "</span>" +
+      (muted ? '<span class="hd-sum2" title="' + esc(muted) + '">' + esc(muted) + "</span>" : "") +
+      '<span class="hd-rep-inline">' + esc(reply) + "</span>") +
+    cell("hd-rpc", '<span class="hd-rep" title="' + esc(reply) + '">' + esc(reply) + "</span>") +
     cell("hd-stc", statusHtml(row)) +
     cell("hd-bnd", row.links && row.links.length ? boundHtml(row.links, pid, BOUND_MAX) :
       '<span class="hd-none" title="Not bound yet">—</span>') +
@@ -729,11 +738,16 @@ function loadText(item) {
     if (hist) hist.textContent = (entry.history || []).join(" · ");
     const reply = item.querySelector(".hd-reply");
     if (reply) reply.textContent = replyNote(entry);
-    const rep = item.querySelector(".hd-rep");
-    if (rep) rep.textContent = replyText(entry);
+    const rowText = replyText(entry);
+    for (const sel of [".hd-rep", ".hd-rep-inline"]) {
+      const el = item.querySelector(sel);
+      if (el) el.textContent = rowText;
+    }
     fillAssets(item, entry.assets || []);
     const sumEl = item.querySelector(".hd-sum");
-    if (sumEl) sumEl.textContent = summaryText(sumEl.getAttribute("data-sum"), entry);
+    if (sumEl && !sumEl.hasAttribute("data-preview")) {
+      sumEl.textContent = summaryText(sumEl.getAttribute("data-sum"), entry);
+    }
   };
   if (!FULL_ID.test(id) || !pid) {
     pre.textContent = "The full text is only on this computer.";
@@ -757,12 +771,15 @@ function inScope(row, scope) {
 // The snapshot rows first, then the paged rows not already painted (deduped by id).
 function mergeRows(first, extra) {
   const seen = new Set();
+  const paged = new Map(extra.map(function (row) { return [String(row.id), row]; }));
   const out = [];
   for (const row of first.concat(extra)) {
     const key = String(row.id);
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push(row);
+    const twin = paged.get(key);
+    const takes = twin && twin !== row && "replyPreview" in twin && !("replyPreview" in row);
+    out.push(takes ? Object.assign({}, row, { preview: twin.preview, replyPreview: twin.replyPreview }) : row);
   }
   return out;
 }
