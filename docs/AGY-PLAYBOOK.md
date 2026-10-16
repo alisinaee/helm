@@ -51,3 +51,8 @@ because the companion's change report cannot tell which of several parallel jobs
 python3 tools/agy-queue.py jobs.json ~/Works/roadmap-board <results> [--after JOBID]
 Use one jobs.json per wave. Ids look like a01... and the results go to <results>/<id>.md.
 The head reads only the DONE lines and the verifier's verdict.
+## Learnt 2026-10-16 (head reset run)
+- Good: codegraph fit research (clear verdict), git libs survey (usable plan), core audit (0 FALSE, 4 PARTIAL after Sonnet verify).
+- Bad: ledger digest over docs/head*.jsonl (big jsonl) timed out at 1h: give agy pre-cut text (<=300 lines).
+- Failures were infra, not prompts: OAuth 401 mid-run and stream EOF; agy-queue now retries them.
+- 9 parallel jobs is too many for the network; keep AGY_MAX<=4.
