@@ -101,6 +101,14 @@ class GitRoutes(ServerCase):
         self.assertEqual(paths["docs/a.txt"]["added"], "1")
         self.assertIsNone(paths["img.bin"]["added"])
 
+    def test_show_works_for_a_browser_get_without_origin_and_refuses_cross_site(self):
+        ok = self.get("show/" + self.sha, headers=SAME_ORIGIN)
+        self.assertEqual(ok.status, 200)
+        for headers in ({"Sec-Fetch-Site": "cross-site"}, {"Sec-Fetch-Site": "same-site"},
+                        {"Sec-Fetch-Site": "same-origin", "Origin": "http://evil.example"}):
+            self.assertEqual(self.get("show/" + self.sha, headers=headers).status, 403)
+        self.assertEqual(self.get("diff/%s?path=docs/a.txt" % self.sha, headers=SAME_ORIGIN).status, 200)
+
     def test_show_bad_or_unknown_commit(self):
         self.assertEqual(self.get("show/zzzz", headers=self.port_origin).status, 400)
         self.assertEqual(self.get("show/" + "a" * 40, headers=self.port_origin).status, 404)

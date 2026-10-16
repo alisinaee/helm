@@ -659,7 +659,7 @@ def _git_same_origin(app, req):
     """Commit detail and diffs: never on the phone listener, and on the main listener only from this server's page."""
     if app.cmd_source == "phone":
         raise RoadmapError("forbidden", "git commit detail and diffs are not on the phone listener", EXIT_ERROR)
-    if not security.browser_proof(req.headers, app.port):
+    if not _same_page_read(req.headers, app.port):
         raise RoadmapError("forbidden", "git commit detail and diffs are for this server's own page only", EXIT_ERROR)
 
 
