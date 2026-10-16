@@ -145,10 +145,7 @@ def _new(args):
     """Init the folder, register it, write the plan template (phase P1, approved false) into a tasks.json that has no
     phases or tasks yet, and with --research create note 01. Safe to run again: existing files, notes and the
     registration are kept."""
-    init = projects.init_project(args.path)
-    entry = _registered_entry(init["path"])
-    if entry is None:
-        entry = projects.add_project(args.path, args.name, config.DEFAULT_DATA_DIR)
+    init, entry = projects.new_project(args.path, args.name)
     plan = _write_plan_template(init["dataDir"])
     note = _first_note(entry["id"], init["dataDir"]) if args.research else None
     if not _wants_json(args):
@@ -160,13 +157,6 @@ def _new(args):
         print("next: read the research, then approve phase P1 with: roadmap phase approve P1")
         return None
     return {"project": entry, "created": init["created"], "kept": init["kept"], "plan": plan, "research": note}
-
-
-def _registered_entry(folder):
-    for entry in config.list_projects():
-        if os.path.abspath(entry["path"]) == folder:
-            return projects.describe(entry)
-    return None
 
 
 def _write_plan_template(data_dir):
