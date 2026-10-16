@@ -1,6 +1,6 @@
-.app{display:grid;grid-template-columns:var(--w-nav) minmax(0,1fr) auto;grid-template-rows:var(--h-top) minmax(0,1fr);grid-template-areas:"nav top side" "nav main side";height:100vh;min-height:0;padding:0}
+.app{display:grid;grid-template-columns:var(--w-nav) minmax(0,1fr) auto;grid-template-rows:var(--h-top) minmax(0,1fr);grid-template-areas:"nav top side" "nav main side";height:100vh;min-height:0;padding:0;overflow-x:clip}
 .app[data-nav="mini"]{grid-template-columns:var(--w-rail) minmax(0,1fr) auto}
-.nav{grid-area:nav;display:flex;flex-direction:column;gap:var(--sp-1);min-width:0;padding:var(--sp-3) var(--sp-2);background:var(--surface-1);border-right:1px solid var(--track);overflow:hidden}
+.nav{grid-area:nav;display:flex;flex-direction:column;gap:var(--sp-1);min-width:0;padding:var(--sp-3) var(--sp-2);background:var(--surface-1);border-right:1px solid var(--track);overflow-x:hidden;overflow-y:auto}
 .nav-list,.nav-foot{display:flex;flex-direction:column;gap:2px}
 .nav-foot{margin-top:auto;padding-top:var(--sp-2);border-top:1px solid var(--track)}
 .nav-i,.bnav-i,.nav-collapse{position:relative;display:flex;align-items:center;gap:var(--sp-2);width:100%;min-height:var(--h-row);padding:0 var(--sp-2);border:0;border-radius:var(--r-control);background:none;color:var(--text-2);text-align:left;text-decoration:none;cursor:pointer}
@@ -25,14 +25,15 @@
 .crumb-proj:hover{background:var(--surface-2)}
 .crumb-sep{color:var(--text-3)}
 .crumb-part{overflow:hidden;text-overflow:ellipsis}
-.top-tools{display:flex;align-items:center;gap:var(--sp-2);flex:none}
+.top-tools{display:flex;align-items:center;gap:var(--sp-2);flex:0 1 auto;min-width:0}
 .pill{display:inline-flex;align-items:center;gap:var(--sp-1);height:var(--h-control);padding:0 var(--sp-2);border:1px solid var(--line);border-radius:999px;font-size:var(--fs-12);white-space:nowrap}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--text-3)}
 .pill.is-run .dot,.conn[data-state="ok"] .dot{background:var(--success)}
 .pill.is-stop .dot{background:var(--warning)}
 .pill.is-blocked .dot,.conn[data-state="down"] .dot{background:var(--danger)}
 .conn{display:inline-flex;align-items:center;gap:var(--sp-1);font-size:var(--fs-11);color:var(--text-2);white-space:nowrap}
-.top-meters{display:flex;align-items:center;gap:var(--sp-2)}
+.top-meters{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:479px){.top-enter{display:none}}
 .mini{display:inline-flex;align-items:center;gap:var(--sp-1);font-size:var(--fs-11);color:var(--text-2);white-space:nowrap}
 .mini .meter{width:56px;height:6px}
 .mini.is-unknown .mini-v,.mini.is-unknown .mini-l{color:var(--unknown)}

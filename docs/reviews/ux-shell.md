@@ -1,0 +1,19 @@
+# UX review: app shell scroll and responsive (R10.5, R10.6)
+
+Screenshots: build/ui-smoke/alpha-{overview,work-board,head,inbox,roadmap}-{500x900,768x1024,1440x900,2560x1080}-dark.png (before, read first; after = the same names after the R10.6 run). Only alpha frames were read.
+Rule sources: UI-CHECKLIST.md rule 5 (no horizontal scroll), rule 0 (one aligned grid), ui-ux-pro-max `--domain ux` searches "scroll container", "responsive breakpoints", "sticky header", "horizontal overflow" (no database match for the exact phrases; rules below come from the shell rule in the task: one vertical scroll container per section, side panels scroll on their own, no page-level horizontal scroll 375-2560, sticky headers inside the scroll container).
+
+| # | issue (element and what is wrong) | width | rule source | fix | P | after |
+|---|---|---|---|---|---|---|
+| 1 | Top bar is wider than its grid cell: Mark, ⌘K, Auto, ? and the panel toggle run past the right edge (`.top-tools` was flex:none) | 641-1199 (seen 768) | checklist 5; shell rule no page-level horizontal scroll | `.top-tools` may shrink (flex 0 1 auto, min-width 0); `.top-meters` text ellipsises | P1 | fits at 768: all buttons visible, panel toggle on the right edge |
+| 2 | Page-level horizontal scrollbar along the bottom of the window (the page is wider than the viewport) | 768 | checklist 5; shell rule | cause is #1; `.app` also gets `overflow-x:clip` so any remaining shell overflow cannot scroll the page | P1 | no bottom bar on overview, inbox, head at 768 |
+| 3 | Second vertical scrollbar on the window edge, next to the one in `.main` (the horizontal bar took 15 px of the 100vh grid, so the page itself overflowed vertically) | 768 | shell rule: one vertical scroll container | cause is #2; fixed with it | P2 | one bar left, the one in `.main` |
+| 4 | Top bar at phone width would be about 30 px too wide (estimate: Running, Stop, Enter usage, Auto, ?, panel and gaps need about 380 px; the bar has about 351 px at 375). Not measured: the smoke run has no 375 frame | 375 (estimated) | checklist 5, shell rule | `.top-enter` hidden below 480 px; the Tokens section keeps the usage form | P1 | not measured (no 375 combo in tools/ui_smoke.py); 500 px keeps the link |
+| 5 | Nav list is `overflow:hidden`, so on a short window the lower sections are cut off and cannot be reached | short heights (not in the smoke frames) | shell rule: side panels scroll on their own | `.nav` scrolls on y (overflow-y auto, x hidden) | P2 | not seen in a frame (no short-height combo); CSS only |
+| 6 | Head table has its own horizontal scrollbar inside the section | 768 | shell rule (section content may scroll inside its own wrapper only) | not touched: head.css is another worker's file | P2 | open, for the Head owner |
+| 7 | No section header is sticky (sticky headers were asked for in the shell rule) | all | shell rule: sticky headers inside the scroll container | no change: `.main` is the one scroll container, so any sticky header added later sticks inside it; no screen asks for one yet | P3 | not changed |
+| 8 | Phone (<= 640 px): the window scrolls, `.main` is not a scroll container | 375-640 | shell rule | kept on purpose (bottom nav is fixed; existing rule) | P3 | not changed |
+
+Totals: P0 0; P1 3 (1, 2, 4; fixed, 4 estimated only); P2 3 (3 and 5 fixed, 6 open for Head); P3 2 (7, 8; no change).
+
+Verification: `python3 -m unittest tests.web.test_shell` OK (17 tests; shell.css 7795 bytes, cap 8192). `python3 tools/ui_smoke.py` ran twice; it does not measure overflow, so the fixes were checked by reading the 500, 768 and 1440 frames. The FAIL lines are section markers (.page-title on head and workflow, .met-row on tokens, .ov-card and "Coming soon" for beta, gamma and one 2560 overview) and the usual dump-not-ready misses; none are about scroll or width.
