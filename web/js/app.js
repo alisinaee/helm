@@ -471,14 +471,12 @@ function onClick(event) {
     render();
   } else if (action === "plan-move" || action === "phase-approve") {
     sectionAction("./views/roadmap.js", action, el);
-  } else if (action === "issue-close") {
-    sectionAction("./views/issues.js", action, el);
   } else if (action === "agent-stop") {
     sectionAction("./views/agents.js", action, el);
   }
 }
 
-// Roadmap and Issues buttons (WP32) are handled by their section modules, which are loaded already when the button
+// Roadmap buttons (WP32) are handled by their section modules, which are loaded already when the button
 // was drawn; the import only fetches the module's exports.
 function sectionAction(path, action, el) {
   import(path).then(function (mod) {

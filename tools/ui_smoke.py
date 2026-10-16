@@ -47,7 +47,7 @@ SCHEME_FLAGS = {
 # Each route checks for one of these class names inside the page: the section's own markup.
 PAGE_MARK = "page-title"
 MARKERS = {"overview": "ov-card", "work/board": "wk-col", "work/list": "wk-table", "work/tree": "wk-tree", "work/planner": "hd-screen",
-           "roadmap": "lane", "issues": "iss-form", "tokens": "met-row"}
+           "roadmap": "lane", "tokens": "met-row"}
 COMING_SOON = "Coming soon"
 ERROR_TEXT = "This section could not be shown."
 # Runs are one at a time: with several Chrome instances at once, the virtual-time budget ends before the page's module

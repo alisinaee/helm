@@ -1,8 +1,8 @@
-"""Copy-reference buttons in the item views (R7.12 P6): issues, inbox, rules and projects.
+"""Copy-reference buttons in the item views (R7.12 P6): inbox, rules and projects.
 
 The views are rendered in node from the golden snapshot with a few issues, questions and rules added
-(tests/web/ref_wiring node script below, run with --input-type=module). The checks: each row (issue, question, rule,
-project) and each section header (issues.open, inbox.questions, rules.list) carries a
+(tests/web/ref_wiring node script below, run with --input-type=module). The checks: each row (question, rule,
+project) and each section header (inbox.questions, rules.list) carries a
 data-action="copy-ref" button with a valid rb: ref and an aria-label; no ref or summary holds an absolute path or "~";
 and no copy button sits inside another button or link. Skipped with a message when node is not installed.
 """
@@ -33,17 +33,12 @@ const web = process.env.WEB;
 const golden = JSON.parse(readFileSync(process.env.GOLDEN, "utf8"));
 const load = (name) => import(pathToFileURL(web + "/js/" + name).href);
 const state = await load("state.js");
-const issues = await load("views/issues.js");
 const inbox = await load("views/inbox.js");
 const rules = await load("views/rules.js");
 const projects = await load("views/projects.js");
 
 const now = Date.parse("2026-10-13T12:00:00Z");
 const extra = {
-  issues: [
-    { id: "I1", kind: "blocker", title: "Missing <fixture>", sev: 1, status: "open", tasks: [] },
-    { id: "I2", kind: "bug", title: "Typo in \"help\"", sev: 3, status: "open", tasks: [] },
-  ],
   questions: [
     { id: "Q1", task: "", text: "Ship now?", opts: ["yes", "no"], def: "yes", block: true, timeoutS: null,
       status: "open", asked: null, answer: null, answered: null },
@@ -72,7 +67,6 @@ const vmOf = (r) => {
 };
 
 const out = {};
-out.issues = issues.sectionView(vmOf(route("project", "splitnet", "issues")));
 out.inbox = inbox.sectionView(vmOf(route("project", "splitnet", "inbox")));
 out.rules = rules.sectionView(vmOf(route("project", "splitnet", "rules")));
 out.projects = projects.projectsView(vmOf(route("home", null, "overview")));
@@ -143,13 +137,6 @@ class RefWiringP6Tests(unittest.TestCase):
             self.assertNotIn("~", ref, name)
         self.assertNotIn("/Users/", self.out[name], name)
 
-    def test_issue_rows_and_open_section(self):
-        refs = self.refs("issues")
-        self.assertIn("rb:splitnet/issue/I1", refs)
-        self.assertIn("rb:splitnet/issue/I2", refs)
-        self.assertIn("rb:splitnet/section/issues.open", refs)
-        self.assert_refs_clean("issues")
-
     def test_inbox_question_row_and_section(self):
         refs = self.refs("inbox")
         self.assertIn("rb:splitnet/question/Q1", refs)
@@ -170,12 +157,12 @@ class RefWiringP6Tests(unittest.TestCase):
         self.assert_refs_clean("projects")
 
     def test_copy_buttons_have_labels(self):
-        for name in ("issues", "inbox", "rules", "projects"):
+        for name in ("inbox", "rules", "projects"):
             for match in re.finditer(r"<button[^>]*data-action=\"copy-ref\"[^>]*>", self.out[name]):
                 self.assertIn('aria-label="Copy reference to ', match.group(0), name)
 
     def test_no_copy_button_sits_inside_another_button_or_link(self):
-        for name in ("issues", "inbox", "rules", "projects"):
+        for name in ("inbox", "rules", "projects"):
             bad, copies = nested_copies(self.out[name])
             self.assertGreater(copies, 0, name)
             self.assertEqual(bad, [], name)
