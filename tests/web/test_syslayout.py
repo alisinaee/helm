@@ -22,7 +22,7 @@ WEB = os.path.join(REPO, "web")
 SYSLAYOUT = os.path.join(WEB, "js", "graph", "syslayout.js")
 NODE = shutil.which("node")
 CARD_W = 200
-CARD_H = 56
+CARD_H = 64
 
 # stdin: {"cases": {name: system}}. stdout: {name: {layout, text, again, shuffled, ms}} (ms is the best of five runs).
 SCRIPT = r"""
@@ -192,8 +192,10 @@ class SystemLayoutTest(unittest.TestCase):
                 for p, q in zip(pts, pts[1:]):
                     self.assertTrue(p[0] == q[0] or p[1] == q[1], (name, r["from"], r["to"]))
                 src, dst = cards[r["from"]], cards[r["to"]]
-                self.assertEqual(pts[0], [src["x"] + CARD_W, src["y"] + CARD_H / 2])
-                self.assertEqual(pts[-1], [dst["x"], dst["y"] + CARD_H / 2])
+                self.assertEqual(pts[0][0], src["x"] + CARD_W)
+                self.assertTrue(src["y"] < pts[0][1] < src["y"] + CARD_H, (name, r["from"]))
+                self.assertEqual(pts[-1][0], dst["x"])
+                self.assertTrue(dst["y"] < pts[-1][1] < dst["y"] + CARD_H, (name, r["to"]))
                 self.assertTrue(r["d"].startswith("M "))
 
     def test_no_route_crosses_a_card(self):
@@ -204,6 +206,19 @@ class SystemLayoutTest(unittest.TestCase):
                 for p, q in zip(pts, pts[1:]):
                     for card in lay["cards"]:
                         self.assertFalse(crosses_inside((p, q), card), (name, r["from"], r["to"], card["id"]))
+
+    def test_ports_and_channels_are_spread(self):
+        for name in ("grid24", "chain"):
+            seen = set()
+            chans = set()
+            for r in self.layout(name)["routes"]:
+                pts = r["points"]
+                for key in ((r["from"], "o", pts[0][1]), (r["to"], "i", pts[-1][1])):
+                    self.assertNotIn(key, seen, (name, key))
+                    seen.add(key)
+                if len(pts) == 6:
+                    self.assertNotIn(pts[2][1], chans)
+                    chans.add(pts[2][1])
 
     def test_deterministic_and_order_independent(self):
         for name in CASES:

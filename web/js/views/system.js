@@ -2,15 +2,17 @@
 // with arrowheads, and a heat bar per card (Off | Commits | Jobs | Work). GET /api/v1/projects/<id>/system gives
 // {components, edges, heat, warnings, sha}; the layout is graph/syslayout.js and pan/zoom is graph/viewport.js. The
 // markup is a string (no inline styles or handlers): geometry is SVG attributes, colour comes from system.css.
-// Selecting a card shows a small inline detail and fires the "system:select" event ({pid, id}) for the side panel (A6).
+// Selecting a card docks the side panel (system-panel.js, Esc or Close shuts it) and fires "system:select" ({pid, id}).
+// The map fits the canvas on first render and on resize until the person zooms or pans.
 
 import { getJson } from "../api.js";
 import { bannerHtml, chipHtml, emptyHtml, esc, patch, skeletonHtml } from "../dom.js";
 import { mountViewport } from "../graph/viewport.js";
 import { CARD_W, systemLayout } from "../graph/syslayout.js";
+import { panelHtml } from "./system-panel.js";
 
 const MODES = [["off", "Off"], ["commits", "Commits"], ["jobs", "Jobs"], ["work", "Work"]];
-const NAME_CHARS = 20;
+const NAME_CHARS = 22;
 const BAR_W = CARD_W - 16;
 const store = new Map(); // project id -> {data, error, status}
 const reading = new Set();
@@ -21,6 +23,8 @@ let mode = "commits";
 let selected = null;
 let view = null;
 let api = null;
+let auto = true;
+let watcher = null;
 
 function num(v) {
   const n = Number(v);
@@ -66,16 +70,20 @@ function cardSvg(card, comp, sys, max) {
   const frac = max > 0 ? Math.min(1, v / max) : 0;
   const name = comp.name || card.name || card.id;
   const sel = selected === card.id;
-  const bar = mode === "off" ? "" : '<rect class="wfg-band" x="8" y="42" width="' + BAR_W + '" height="6" rx="3"/>' +
-    '<rect class="sys-heat" x="8" y="42" width="' + (frac * BAR_W).toFixed(1) + '" height="6" rx="3"/>';
-  return '<g class="sys-card' + (sel ? " sys-sel" : "") + '" data-sys="' + esc(card.id) + '" tabindex="0" ' +
+  const by = card.h - 14;
+  const bar = mode === "off" ? "" : '<rect class="wfg-band" x="8" y="' + by + '" width="' + BAR_W +
+    '" height="6" rx="3"/>' +
+    '<rect class="sys-heat wfg-nowbar" x="8" y="' + by + '" width="' +
+    (frac * BAR_W).toFixed(1) + '" height="6" rx="3"/>';
+  return '<g class="wfg-n sys-card' + (sel ? " sys-sel" : "") + '" data-sys="' + esc(card.id) + '" tabindex="0" ' +
     'role="button" aria-pressed="' + sel + '" transform="translate(' + card.x + " " + card.y + ')">' +
     "<title>" + esc(name) + " (" + esc(card.layer) + ", " + fileCount(comp) + " files, " + v + " " + mode +
     ")</title>" +
     '<rect class="wfg-tab" width="' + card.w + '" height="' + card.h + '" rx="6"/>' +
-    '<text class="wfg-t" x="8" y="18">' + esc(clip(name)) + "</text>" +
-    '<text class="wfg-num" x="' + (card.w - 8) + '" y="18" text-anchor="end">' + fileCount(comp) + "</text>" +
-    '<text class="wfg-num" x="8" y="34">' + esc(card.layer) + "</text>" + bar + "</g>";
+    '<text class="wfg-ph sys-n" x="8" y="22">' + esc(clip(name)) + "</text>" +
+    '<text class="wfg-num" x="8" y="39">' + esc(card.layer) + "</text>" +
+    '<text class="wfg-num" x="' + (card.w - 8) + '" y="39" text-anchor="end">' + fileCount(comp) + " files</text>" +
+    bar + "</g>";
 }
 
 export function canvasSvg(sys) {
@@ -96,15 +104,6 @@ export function canvasSvg(sys) {
     'orient="auto"><path class="wfg-arrow" d="M0 0L8 4L0 8z"/></marker></defs>';
   return '<svg id="sys-svg" class="wfg-svg" role="group" aria-label="System map" tabindex="0" data-w="' + lay.width +
     '" data-h="' + lay.height + '">' + defs + '<g id="sys-vp">' + heads + edges + cards + "</g></svg>";
-}
-
-function detailHtml(sys) {
-  const c = (sys.components || []).find((x) => x && x.id === selected);
-  if (!c) return "";
-  const files = (Array.isArray(c.files) ? c.files : []).slice(0, 5).map((f) => "<li>" + esc(f) + "</li>").join("");
-  const commits = heatOf(sys, c, "commits");
-  return '<div class="sys-detail"><strong>' + esc(c.name || c.id) + "</strong> " + chipHtml(c.layer || "other") +
-    ' <span class="wfg-note">' + commits + " commits</span><ul>" + files + "</ul></div>";
 }
 
 function toolbarHtml(pid) {
@@ -133,7 +132,9 @@ export function bodyHtml(pid, got) {
   if (!Array.isArray(sys.components) || !sys.components.length) {
     return emptyHtml("No structure found. Add docs/system.json to describe the parts.", retryHtml());
   }
-  return toolbarHtml(pid) + warn + '<div class="sys-canvas">' + canvasSvg(sys) + "</div>" + detailHtml(sys);
+  const comp = selected ? sys.components.find((x) => x && x.id === selected) : null;
+  const hit = comp && sys.heat ? sys.heat[comp.id] : null;
+  return toolbarHtml(pid) + warn + '<div class="sys-canvas">' + canvasSvg(sys) + "</div>" + panelHtml(pid, comp, hit);
 }
 
 function sectionHtml(vm) {
@@ -144,6 +145,7 @@ function sectionHtml(vm) {
 
 function select(id) {
   selected = selected === id ? null : id;
+  if (id === null) selected = null;
   if (typeof document !== "undefined" && lastVm) {
     document.dispatchEvent(new CustomEvent("system:select", { detail: { pid: lastVm.route.id, id: selected } }));
     patch("main", sectionHtml(lastVm));
@@ -157,7 +159,7 @@ function mountNow() {
   mounted.add(svg);
   const box = { w: Number(svg.getAttribute("data-w")) || 1, h: Number(svg.getAttribute("data-h")) || 1 };
   api = mountViewport(svg, document.getElementById("sys-vp"), {
-    view: view || { k: 1, x: 16, y: 16 }, box: box, taps: taps, fit: !view,
+    view: view || { k: 1, x: 16, y: 16 }, box: box, taps: taps, fit: false,
     onTap: (el) => {
       const g = el.closest ? el.closest("[data-sys]") : null;
       if (g) select(g.getAttribute("data-sys"));
@@ -166,10 +168,28 @@ function mountNow() {
       view = { k: v.k, x: v.x, y: v.y };
     },
   });
+  if (auto || !view) api.fit();
+  if (watcher) watcher.disconnect();
+  if (typeof ResizeObserver === "function") {
+    watcher = new ResizeObserver(() => {
+      if (auto && api) api.fit();
+    });
+    watcher.observe(svg);
+  }
+  svg.addEventListener("pointerdown", () => {
+    auto = false;
+  });
+  svg.addEventListener("wheel", () => {
+    auto = false;
+  });
 }
 
 function mountSoon() {
   if (typeof setTimeout === "function") setTimeout(mountNow, 0);
+}
+
+function onKey(event) {
+  if (event.key === "Escape" && selected && lastVm) select(null);
 }
 
 function onClick(event) {
@@ -182,6 +202,12 @@ function onClick(event) {
     return;
   }
   const op = t.getAttribute("data-sys-op");
+  if (op === "close") {
+    select(null);
+    return;
+  }
+  if (op === "fit") auto = true;
+  else if (op === "in" || op === "out") auto = false;
   if (op === "retry") {
     store.delete(lastVm.route.id);
     load(lastVm.route.id);
@@ -197,6 +223,7 @@ export function sectionView(vm) {
   if (!bound && typeof document !== "undefined" && document.addEventListener) {
     bound = true;
     document.addEventListener("click", onClick);
+    document.addEventListener("keydown", onKey);
   }
   if (vm.route.name === "project" && !store.has(vm.route.id) && !reading.has(vm.route.id)) load(vm.route.id);
   mountSoon();
