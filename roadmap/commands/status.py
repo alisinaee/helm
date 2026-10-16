@@ -56,13 +56,17 @@ def fold_backlog(base, doc):
     return out
 
 
+RUNNING_STATUSES = ("running", "claimed")
+
+
 def running_line(jobs_list):
-    """One line for more than two running jobs: 'running 4: j1,j2,j3,j4'. None for two or fewer (own lines stay)."""
-    ids = [str(job.get("id")) for job in jobs_list
-           if isinstance(job, dict) and job.get("status") == "running"]
-    if len(ids) <= 2:
+    """The running ids line: 'running 2: j1,j2' for every running or claimed job. The run: lines name only the first two
+    running jobs (status 'running'), so a claimed job, or a third running job, gets this line. None when only one or two
+    running jobs are in flight and none is claimed, since their own run lines already name them."""
+    live = [job for job in jobs_list if isinstance(job, dict) and job.get("status") in RUNNING_STATUSES]
+    if not live or (len(live) <= 2 and all(job.get("status") == "running" for job in live)):
         return None
-    return "running %d: %s" % (len(ids), ",".join(ids))
+    return "running %d: %s" % (len(live), ",".join(str(job.get("id")) for job in live))
 
 
 def _fit(lines):

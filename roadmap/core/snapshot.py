@@ -19,6 +19,7 @@ from roadmap.core.parsers import (ISSUE_OPEN, error_entry, parse_activity, parse
 
 SNAPSHOT_SCHEMA_VERSION = 1
 PHASE_WEIGHT = {"done": 1.0, "partial": 0.5}
+LIVE_JOB_STATUSES = ("running", "claimed")           # job states that are in flight (a claimed job is picked, not yet run)
 ACTIVE = ("todo", "partial")                        # task states counted as "left"
 EXCLUDED = ("deferred", "backlog")                 # states left out of totals, progress, tokens (BACKLOG-SPEC 2)
 RECENT_WINDOW = timedelta(minutes=30)               # finished jobs shown under their task
@@ -39,9 +40,29 @@ HEAD_NOTE_MAX = 200                                  # latest note characters pe
 HEAD_LINKS_MAX = 3                                  # link refs per head row (links); the rest is a count
 HEAD_LINKED_MAX = 6                                 # resolved links per head row (linked), HEAD-SPEC section 12
 HEAD_TITLE_MAX = 60                                 # title characters per resolved link
-HEAD_JOB_STATES = ("running", "queued")             # the only jobs a resolved link lists
+HEAD_JOB_STATES = ("running", "claimed", "queued")             # the only jobs a resolved link lists
 HEAD_PREV_MAX = 3                                   # earlier sessions in the head key
 HEAD_BYTES_MAX = 8192                               # the head key as compact JSON; link titles are dropped once to fit
+
+
+def _parse_jobs_live(text, now):
+    """parse_jobs, but a claimed job is kept. parse_jobs reads only running, done and failed, so a claimed job is parsed
+    as running (its elapsed time comes out the same way) and its status is put back afterwards."""
+    try:
+        data = json.loads(text)
+    except Exception:
+        return parse_jobs(text, now)
+    items = data.get("jobs") if isinstance(data, dict) else None
+    if not isinstance(items, list) or not any(isinstance(j, dict) and j.get("status") == "claimed" for j in items):
+        return parse_jobs(text, now)
+    claimed = {str(j.get("id", "")) for j in items if isinstance(j, dict) and j.get("status") == "claimed"}
+    swapped = [dict(j, status="running") if isinstance(j, dict) and j.get("status") == "claimed" else j
+               for j in items]
+    jobs, errs = parse_jobs(json.dumps({"jobs": swapped}), now)
+    for job in jobs:
+        if job["id"] in claimed:
+            job["status"] = "claimed"
+    return jobs, errs
 
 
 def _missing(name):
@@ -99,7 +120,7 @@ def _round_k(value):
 def _span(job):
     """One job as a compact list: [id, task, model, role, parent, startEpoch, endEpoch|null, status, tokensK]."""
     start = parse_ts(job.get("started"))
-    end = None if job["status"] == "running" else parse_ts(job.get("ended"))
+    end = None if job["status"] in LIVE_JOB_STATUSES else parse_ts(job.get("ended"))
     return [job["id"], job.get("task"), job.get("model") or None, job.get("role"), job.get("parent"),
             int(start.timestamp()), int(end.timestamp()) if end else None, job["status"],
             _round_k(job.get("tokensK"))]
@@ -161,7 +182,7 @@ def _workflow_view(jobs, issues_open, tasks_text, task_ids, moment):
         start = parse_ts(job.get("started"))
         if start is None:
             continue
-        last = parse_ts(job.get("ended")) if job["status"] != "running" else None
+        last = parse_ts(job.get("ended")) if job["status"] not in LIVE_JOB_STATUSES else None
         if (last or start) < cutoff:
             continue
         spans.append((start, _span(job)))
@@ -220,7 +241,9 @@ def head_link_state(tasks, jobs, issues=()):
     for job in jobs:
         if job.get("id"):
             state["job:" + job["id"]] = job["status"] if job.get("status") in HEAD_JOB_LINK else "open"
-        if job.get("status") == "running" and job.get("task"):
+            if job.get("status") == "claimed":
+                state["job:" + job["id"]] = "running"
+        if job.get("status") in LIVE_JOB_STATUSES and job.get("task"):
             state["task:" + job["task"]] = "running"
     for issue in issues:
         if issue.get("id"):
@@ -466,7 +489,7 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
     if jobs_text is None:
         jobs = []
     else:
-        jobs, errs = parse_jobs(jobs_text, moment)
+        jobs, errs = _parse_jobs_live(jobs_text, moment)
         errors.extend(errs)
 
     out = {
@@ -501,9 +524,9 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
 
     def ended_recently(j):
         e = parse_ts(j.get("ended"))
-        return j["status"] != "running" and e is not None and moment - e <= RECENT_WINDOW
+        return j["status"] not in LIVE_JOB_STATUSES and e is not None and moment - e <= RECENT_WINDOW
 
-    running_jobs = [j for j in jobs if j["status"] == "running"]
+    running_jobs = [j for j in jobs if j["status"] in LIVE_JOB_STATUSES]
     recent_jobs = [j for j in jobs if ended_recently(j)]
 
     for p in phases:
