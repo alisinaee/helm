@@ -288,6 +288,14 @@ class PlannerViewTest(unittest.TestCase):
         with open(os.path.join(WEB, "css", "planner.css"), encoding="utf-8") as fh:
             self.assertLessEqual(len(fh.read().encode("utf-8")), 4608)
 
+    def test_item_rows_are_reconciled_into_the_table_not_its_wrapper(self):
+        # The list piece is the .hd-list div; its <table> is the first child. The item tbodies must go into the table
+        # (as head.js reconcileUnits does), or they sit outside it and the columns no longer line up with the head.
+        with open(MODULE, encoding="utf-8") as fh:
+            src = fh.read()
+        self.assertIn("reconcileItems(rec.el.firstElementChild, piece, rec.keys)", src)
+        self.assertNotIn("reconcileItems(rec.el, piece, rec.keys)", src)
+
     def test_lines_stay_within_120_columns(self):
         with open(MODULE, encoding="utf-8") as fh:
             for number, line in enumerate(fh, 1):

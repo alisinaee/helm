@@ -417,7 +417,7 @@ function paint(screen, pieces) {
       rec.html = piece.html;
       rec.keys = new Map();
     }
-    if (piece.items) reconcileItems(rec.el, piece, rec.keys);
+    if (piece.items) reconcileItems(rec.el.firstElementChild, piece, rec.keys);
     order.push(rec.el);
   }
   for (const name of Array.from(painted.els.keys())) {
