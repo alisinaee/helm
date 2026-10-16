@@ -1,6 +1,6 @@
 """UX group C checks (R8.13, R8.14, R8.16, R8.17): the Rules add form shows the budget field only for a budget rule,
 its checks are inline next to the field, an empty group offers an action, Sync reports its counts in a toast; the
-Research onboarding steps link to their sections; the Issues count agrees with its noun and Close says "Close issue".
+Issues count agrees with its noun and Close says "Close issue".
 The Rules render runs in node (skipped when node is not installed), the rest reads the sources.
 """
 
@@ -58,16 +58,6 @@ class RulesSource(unittest.TestCase):
     def test_copy_buttons_are_kept(self):
         self.assertIn("copyButton(\"rule\"", self.src)
         self.assertIn("copyButton(\"section\", \"rules.list\"", self.src)
-
-
-class ResearchSource(unittest.TestCase):
-    def test_steps_link_to_their_sections(self):
-        src = read(os.path.join(VIEWS, "research.js"))
-        self.assertIn('section: "rules"', src)
-        self.assertIn('section: "roadmap"', src)
-        self.assertIn("projectHash(pid, step.section)", src)
-        self.assertIn("then press Reload notes.", src)
-        self.assertNotIn("then reload this page.", src)
 
 
 class IssuesSource(unittest.TestCase):

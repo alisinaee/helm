@@ -1,5 +1,5 @@
 """Checks for the R7.12 polish (P9): the fixed copy column on every row grid, the row-grid fixes in roadmap, rules,
-recent and research, the Tokens refs that name one project, and the rule and project summaries in ref.js.
+recent, the Tokens refs that name one project, and the rule and project summaries in ref.js.
 
 The static checks read the CSS and the view files. The node check imports ref.js and prints refSummary for a rule and
 a project; it is skipped when node is not installed.
@@ -80,15 +80,12 @@ class RowFixTests(unittest.TestCase):
         self.assertIn('<p class="tl-label row-grid">', text)
         self.assertIn('<span class="lane-name rg-t">', text)
 
-    def test_rules_recent_and_research_rows(self):
+    def test_rules_and_recent_rows(self):
         self.assertIn('<li class="rule-row row-grid">', read(VIEWS, "rules.js"))
         self.assertIn('<li class="log-row row-grid"><span class="log-date num rg-num">', read(VIEWS, "recent.js"))
-        research = read(VIEWS, "research.js")
-        self.assertIn('<li class="note-row row-grid">', research)
-        self.assertIn(".note-row {\n  --rg: minmax(0, 1fr);", read(CSS_DIR, "components.css"))
 
     def test_views_have_no_inline_style_or_handlers(self):
-        for name in ("roadmap.js", "research.js", "rules.js", "recent.js", "phases.js", "tokens.js"):
+        for name in ("roadmap.js", "rules.js", "recent.js", "phases.js", "tokens.js"):
             self.assertIsNone(INLINE.search(read(VIEWS, name)), name)
 
 

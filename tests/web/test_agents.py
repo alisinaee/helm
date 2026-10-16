@@ -1,11 +1,9 @@
-"""The Agents and Research views (WP34), rendered in node by tests/web/render_agents.mjs from synthetic snapshots.
+"""The Agents view (WP34), rendered in node by tests/web/render_agents.mjs from synthetic snapshots.
 
 Checks: a worker sits in a nested list under its lead; each running row has a Stop button (disabled when the job has no
 task); the blocked badge and the 'handed to' chip appear; only the last 10 finished jobs are listed; the empty state
-reads 'No agents running.'; the notes list and the plain-text reader escape their data (no markup from a note is ever
-emitted); the onboarding steps tick from the snapshot; every data-action the views emit is handled by app.js; the
-routes register both modules; and flow.css stays within its 4 KB budget. The node checks are skipped when node is not
-installed.
+reads 'No agents running.'; every data-action the views emit is handled by app.js; the routes register the agents
+module; and flow.css stays within its 4 KB budget. The node checks are skipped when node is not installed.
 """
 
 import json
@@ -77,12 +75,12 @@ def render(path):
     return json.loads(proc.stdout)
 
 
-class AgentsResearchTests(unittest.TestCase):
+class AgentsTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         if shutil.which("node") is None:
-            raise unittest.SkipTest("node is not installed; the Agents and Research render checks are skipped")
+            raise unittest.SkipTest("node is not installed; the Agents render checks are skipped")
         cls.tmp = tempfile.mkdtemp(prefix="ag-test-")
         path = os.path.join(cls.tmp, "synthetic.json")
         with open(path, "w", encoding="utf-8") as fh:
@@ -209,56 +207,25 @@ class AgentsResearchTests(unittest.TestCase):
         html = self.out["agentsAll"]
         self.assertIn('<h3 class="grp-h">split-net</h3>', html)
 
-    def test_research_all_projects_asks_for_a_project(self):
-        self.assertIn("Choose a project.", self.out["researchAll"])
-        self.assertIn("#/p/splitnet/research", self.out["researchAll"])
-
-    def test_research_loads_then_lists_notes_with_escaped_titles(self):
-        self.assertIn("Loading the notes.", self.out["researchLoading"])
-        html = self.out["researchList"]
-        self.assertIn('data-action="note-open" data-project="splitnet" data-name="01-landscape.md"', html)
-        self.assertIn("Landscape &lt;b&gt;tools&lt;/b&gt;", html)
-        self.assertNotIn("<b>tools</b>", html)
-        self.assertIn('aria-pressed="false"', html)
-
-    def test_the_reader_shows_note_text_escaped_and_preformatted(self):
-        html = self.out["researchReader"]
-        self.assertIn('<pre class="note-text" tabindex="0">', html)
-        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt; &amp; more", html)
-        self.assertNotIn("<script", html)
-        self.assertIn('aria-pressed="true"', html)
-
-    def test_empty_notes_show_the_steps_for_a_new_project(self):
-        html = self.out["researchQuiet"]
-        self.assertIn("No research notes yet.", html)
-        self.assertIn("roadmap research new landscape", html)
-        self.assertIn("--project quiet", html)
-
-    def test_onboarding_ticks_come_from_the_snapshot(self):
-        self.assertEqual(self.out["checklistSteps"], [True, True, True, True])
-        self.assertIn("Onboarding 4 of 4", self.out["researchList"])
-        self.assertIn("Onboarding 1 of 4", self.out["researchQuiet"])
-
     def test_every_data_action_emitted_is_handled_by_app_js(self):
         app = read_text(os.path.join(WEB, "js", "app.js"))
         emitted = set()
-        for name in ("agentsProject", "agentsIdle", "researchList", "researchReader", "researchQuiet"):
+        for name in ("agentsProject", "agentsIdle"):
             emitted.update(ACTIONS.findall(self.out[name]))
-        self.assertTrue({"agent-stop", "note-open", "note-refresh"} <= emitted)
+        self.assertIn("agent-stop", emitted)
         for action in emitted:
             self.assertIn('"' + action + '"', app, action)
 
     def test_routes_register_both_modules(self):
         routes = read_text(os.path.join(WEB, "js", "routes.js"))
         self.assertIn('module: "./views/agents.js"', routes)
-        self.assertIn('module: "./views/research.js"', routes)
 
     def test_flow_css_stays_within_its_budget(self):
         size = os.path.getsize(os.path.join(WEB, "css", "flow.css"))
         self.assertLessEqual(size, 4608, "flow.css is %d bytes" % size)
 
     def test_the_views_use_no_raw_colours(self):
-        for name in ("agents.js", "research.js"):
+        for name in ("agents.js",):
             text = read_text(os.path.join(WEB, "js", "views", name))
             self.assertIsNone(re.search(r"#[0-9a-fA-F]{3,6}\b", text), name)
 

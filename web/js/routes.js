@@ -15,7 +15,6 @@ export const SECTIONS = [
   { id: "workflow", label: "Workflow", icon: "workflow", module: "./views/workflow.js", bottom: false },
   { id: "tokens", label: "Tokens", icon: "tokens", module: "./views/tokens.js", bottom: false },
   { id: "rules", label: "Rules", icon: "rules", module: "./views/rules.js", bottom: false },
-  { id: "research", label: "Research", icon: "research", module: "./views/research.js", bottom: false },
   { id: "activity", label: "Activity", icon: "activity", module: "./views/activity.js", bottom: false },
   // Git (R7.29 W1.c). The sprite has no branch glyph yet, so it reuses the workflow icon.
   { id: "git", label: "Git", icon: "workflow", module: "./views/git.js", bottom: false },

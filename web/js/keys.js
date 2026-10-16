@@ -37,7 +37,7 @@ export function setSingleKeys(on) {
 
 const CHORD_MS = 1000;
 const CHORD_KEYS = { h: "home", o: "overview", i: "inbox", r: "roadmap", w: "work", u: "issues", a: "agents",
-  t: "tokens", e: "rules", n: "research", v: "activity", ",": "settings" };
+  t: "tokens", e: "rules", v: "activity", ",": "settings" };
 const extra = new Map();
 let chordAt = 0;
 let hooks = {
@@ -173,8 +173,8 @@ export function helpRows() {
     ["z", "Undo the last change"],
     ["m", "Mark a bug here: notes this screen in the debug log (on this Mac only)"],
     ["Esc", "Close this list, or the panel sheet"],
-    ["g then o i r w u a t e n v ,", "Go to a section: Overview, Inbox, Roadmap, Work, Issues, Agents, " +
-      "Tokens, Rules, Research, Activity, Settings"],
+    ["g then o i r w u a t e v ,", "Go to a section: Overview, Inbox, Roadmap, Work, Issues, Agents, " +
+      "Tokens, Rules, Activity, Settings"],
     ["g then h", "Go to All projects"],
   ];
 }

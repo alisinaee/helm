@@ -110,8 +110,8 @@ function helpHtml() {
     ["]", "Show or hide the side panel"],
     ["z", "Undo the newest change"],
     ["Esc", "Close this list, or the panel sheet"],
-    ["g, then o i r w u a t e n v ,", "Go to a section: Overview, Inbox, Roadmap, Work, Issues, Agents, " +
-      "Tokens, Rules, Research, Activity, Settings"],
+    ["g, then o i r w u a t e v ,", "Go to a section: Overview, Inbox, Roadmap, Work, Issues, Agents, " +
+      "Tokens, Rules, Activity, Settings"],
     ["g, then h", "Go to All projects"],
   ];
   return '<dl class="help-rows">' + rows.map(function (row) {
@@ -474,8 +474,6 @@ function onClick(event) {
     sectionAction("./views/issues.js", action, el);
   } else if (action === "agent-stop") {
     sectionAction("./views/agents.js", action, el);
-  } else if (action === "note-open" || action === "note-refresh") {
-    sectionAction("./views/research.js", action, el);
   }
 }
 
