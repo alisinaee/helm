@@ -19,12 +19,12 @@
 .wfg-fold-glyph,.wfg-glyph{font-size:var(--fs-12);fill:var(--unknown)}
 .wfg-fold .wfg-glyph,.wfg-fold-glyph{fill:var(--text-1)}
 .wfg-par{fill:none;stroke:var(--accent);stroke-width:1px;stroke-dasharray:2 3}
-.wfg-e{fill:none;stroke:var(--text-3);stroke-width:1.25px}
+.wfg-e{fill:none;stroke:var(--text-2);stroke-width:1.5px;stroke-linecap:round;opacity:1}
 .wfg-e-dependency{stroke:var(--info);stroke-dasharray:4 4}
-.wfg-e-handoff{stroke:var(--accent);stroke-width:1px}
+.wfg-e-handoff{stroke:var(--accent)}
 .wfg-e-blocker{stroke:var(--danger);stroke-width:2.5px}
 .wfg-e-lead{stroke:var(--success)}
-.wfg-arrow{fill:var(--text-3)}
+.wfg-arrow{fill:var(--text-2)}
 .wfg-arrow-dependency{fill:var(--info)}
 .wfg-arrow-handoff{fill:var(--accent)}
 .wfg-arrow-blocker{fill:var(--danger)}
