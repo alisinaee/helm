@@ -25,6 +25,21 @@ START HERE in a new chat (any account, same Mac): `cd ~/Works/roadmap-board` and
 - **Queue after that (see docs/FINISH-PLAN.md, specs in docs/):** Backlog steps 2-3 then Work v2 + unified Issues (docs/BACKLOG-SPEC, WORK-V2-SPEC, WORK-UNIFIED-SPEC; person wants Issues folded into Work and Work interactive: + Add anything), Tokens C/D/E + a 5-hour stop control (docs/LIMITS-SIMPLE-SPEC), Git section (docs/GIT-SPEC, 7 steps + Cursor grok gate), logging 5b/6 (docs/LOGGING-SPEC), remaining UX R8.x (docs/UX-AUDIT.md; run the UX routine after every wave), R7.30 workflow map 'Open in new tab' with node details in the side panel, panel mail count vs Inbox badge (R8.22), agy/Cursor audits kept busy (agy jobs go through ~/Works/split_net/tools/agy-queue.py; Cursor via tools/cursor-review2.sh with CURSOR_MODEL=grok-4.7-xhigh), cutover R3.2 (person present), tag 1.0.0.
 - **Tool facts learnt:** workers must never amend or reset commits that are pushed (it caused a diverged push once); agy needs the VPN (403 otherwise: rerun); Cursor review runs one at a time; the `rules add` CLI refuses agents (rules.txt was written directly on the person's request).
 
+### Checkpoint 12 (2026-10-16 ~22:45, /head save): all pushed, nothing running; 5h 78%, weekly 14%
+- RENAMED to Helm (R10.34, H220): repo alisinaee/helm, dir ~/Works/helm (old symlink removed), `bin/helm` = `bin/roadmap`,
+  UI wordmark + title "Helm". Kept: Python package `roadmap`, ROADMAP_HOME, project id `roadmap-board`, launchd label
+  com.roadmap-board.agent, ~/.config/roadmap-board. Open Claude Code from ~/Works/helm.
+- Rule H223: NO usage limit for the head (caps ignored; still push get_usage each wave; stop only on session-limit error).
+  Board autonomy stop (docs/autonomy.json 95%) unchanged.
+- Done + pushed this run: R10.30 Tokens limit box (8514dd4), R10.27 web test cleanup (cb9fc27), R10.32 per-job tokens
+  capture/backfill + By task/By model UI (74bed87, 5683760), R10.14 Inbox redo (b59c050, 8f8f361), R10.31 Workflow fit +
+  flow arrows + Cmd-wheel zoom (127b3f4), R10.33 System section rebuilt: C4 context/containers/components, modules,
+  layers, flows, data (796d4bf), R10.34 Helm rename (3896c8c). Full suite 4021 OK.
+- Open: R10.25 System A7 full-screen (maybe covered), R10.32 step 4 (% of limit per task estimate), R10.30 Spend table
+  reset column wraps, make check-ui fails on Tokens and Head sections, R10.27 ledger auto-close bug, needs-you H52, H58.
+- WIP uncommitted: none (only board runtime logs docs/*.jsonl, agy review notes).
+- First message for the new chat (from ~/Works/helm): `/head`
+
 ### Checkpoint 11 (2026-10-16 ~16:10, head reset run H182): paused at 5h 90%, weekly 12% (run cap 15%, H202)
 - Plan: phase R10 on the board (old open tasks on hold). Done + pushed today: R10.3 panel resize, R10.4 Work+Agents UX
   (titles back), R10.5/R10.6 no page scrollbars, R10.7 Planner merged into Work, R10.8 Research deleted, R10.9 Git
