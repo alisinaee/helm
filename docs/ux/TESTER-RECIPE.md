@@ -18,3 +18,11 @@ One section per worker. Test, fix, re-test. Rules come from three sources, cite 
 4. Fix P0-P2 in the section's own files only (shell issues go to the shell owner; list them, do not fix).
 5. Re-run ui_smoke, re-open the images, fill the "after" column (max 2 rounds). Keep CSS caps green.
 6. Commit by path; report issues found/fixed and what is still open.
+
+## The person's taste (hard rules, from H199-H205)
+- Controls are content-sized: never full-width inputs, buttons or option bars. Number inputs ~64px with the unit
+  inline ("[ 15 ] %"). Primary action (Send/Save) sits on the same row as its input.
+- One-line cells: no wrapped dates or ids; right-aligned tabular numbers in fixed columns; ellipsis + tooltip.
+- No repeated titles, no dead vertical space, no stray icons on their own line, no page-level scrollbars.
+- Forms and cards max ~960px wide; tables may use the full width but keep columns tight.
+- Modern minimal (Linear/Vercel): ghost icon buttons (28px, aria-label), compact segmented controls, muted helper text.
