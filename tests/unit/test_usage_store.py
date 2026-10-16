@@ -22,10 +22,17 @@ from tests.unit.test_store_support import HomeCase, mode_of
 from tests.unit.test_usage_collector import FAKE_TOKEN, GOOD_REPLY
 
 
+# Both window resets are set relative to the run time: a passed reset has no current percent (R7.x), so a fixed
+# date in GOOD_REPLY would silently turn every percent into None once it is in the past.
+NOW_UTC = datetime.datetime.now(datetime.timezone.utc)
+SEVEN_DAY_RESET_Z = (NOW_UTC + datetime.timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def fresh_reply():
-    """GOOD_REPLY with the 5-hour reset three hours ahead of now (a passed reset has no current percent)."""
-    later = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=3)).isoformat(timespec="seconds")
-    return dict(GOOD_REPLY, five_hour=dict(GOOD_REPLY["five_hour"], resets_at=later))
+    """GOOD_REPLY with both resets in the future (a passed reset has no current percent)."""
+    later = (NOW_UTC + datetime.timedelta(hours=3)).isoformat(timespec="seconds")
+    return dict(GOOD_REPLY, five_hour=dict(GOOD_REPLY["five_hour"], resets_at=later),
+                seven_day=dict(GOOD_REPLY["seven_day"], resets_at=SEVEN_DAY_RESET_Z))
 
 
 def read_text(path):
@@ -197,10 +204,10 @@ class PushTests(UsageCase):
     def test_push_stores_rate_limits_and_mirrors(self):
         proj = self.project("eta", {"limit": {"stopAtPercent": 65}})
         text = json.dumps({"rateLimits": [{"kind": "seven_day", "percentUsed": 61,
-                                           "resetsAt": "2026-10-16T08:00:00Z"}]})
+                                           "resetsAt": SEVEN_DAY_RESET_Z}]})
         result = uc.push(text, self.config_with([proj]))
         self.assertEqual(result["usage"]["weeklyPercent"], 61)
-        self.assertEqual(result["usage"]["weeklyResetsAt"], "2026-10-16T08:00:00Z")
+        self.assertEqual(result["usage"]["weeklyResetsAt"], SEVEN_DAY_RESET_Z)
         self.assertEqual(result["usage"]["source"], uc.SOURCE_PUSH)
         self.assertIsNone(result["usage"]["fiveHourPercent"])
         self.assertEqual(self.autonomy_of(proj)["usage"]["weeklyPercent"], 61)
@@ -348,7 +355,7 @@ class CliTests(UsageCase):
     def test_push_then_show_json(self):
         code, out, _ = run_cli(["usage", "push", "--json"],
                                '{"rateLimits":[{"kind":"seven_day","percentUsed":61,'
-                               '"resetsAt":"2026-10-16T08:00:00Z"}]}')
+                               '"resetsAt":"' + SEVEN_DAY_RESET_Z + '"}]}')
         self.assertEqual(code, 0)
         self.assertIs(json.loads(out)["ok"], True)
         code, out, _ = run_cli(["usage", "show", "--json"])
