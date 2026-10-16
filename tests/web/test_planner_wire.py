@@ -1,4 +1,4 @@
-"""The Planner is wired into the shell (WP55): a nav entry between Roadmap and Work, the module bound once in app.js,
+"""The Planner is wired into the shell (WP55, R10.7: now a view of Work, no nav entry), the module bound by work.js,
 the Work drawer's feature chips and "Link to feature" picker, and the icon. Reads the files only; no browser needed.
 """
 
@@ -19,20 +19,20 @@ def read(*parts):
 
 
 class PlannerWireTest(unittest.TestCase):
-    def test_registry_puts_planner_between_roadmap_and_work(self):
+    def test_registry_has_no_planner_section_any_more(self):
         routes = read(WEB, "js", "routes.js")
         ids = re.findall(r'\{ id: "([a-z]+)"', routes)
-        self.assertLess(ids.index("roadmap"), ids.index("planner"))
-        self.assertEqual(ids.index("planner"), ids.index("work") - 1)
-        self.assertIn('module: "./views/planner.js"', routes)
+        self.assertNotIn("planner", ids)
+        self.assertIn("work", ids)
+        self.assertNotIn("views/planner.js", routes)
 
-    def test_smoke_section_list_includes_planner_in_registry_order(self):
+    def test_smoke_covers_planner_as_a_work_view(self):
         spec = importlib.util.spec_from_file_location("ui_smoke", SMOKE)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        self.assertIn("planner", module.SECTIONS)
-        self.assertLess(module.SECTIONS.index("roadmap"), module.SECTIONS.index("planner"))
-        self.assertLess(module.SECTIONS.index("planner"), module.SECTIONS.index("work"))
+        self.assertNotIn("planner", module.SECTIONS)
+        self.assertIn("planner", module.WORK_VIEWS)
+        self.assertIn("work/planner", module.MARKERS)
 
     def test_icon_symbol_exists_once(self):
         icons = read(WEB, "icons.svg")
@@ -48,7 +48,7 @@ class PlannerWireTest(unittest.TestCase):
 
     def test_drawer_chip_links_to_planner_feature_and_picker_uses_feature_link(self):
         details = read(WEB, "js", "views", "details.js")
-        self.assertIn('"/planner?f="', details)
+        self.assertIn('"/planner?f="', details)  # the legacy link; routes.js redirects it to Work > Planner
         self.assertIn('data-side="feat-link"', details)
         self.assertIn('run("feature.link", { task: task, feats: [feat] }', details)
 
@@ -59,10 +59,6 @@ class PlannerWireTest(unittest.TestCase):
     def test_snapshot_normalizer_keeps_the_features_block(self):
         state = read(WEB, "js", "state.js")
         self.assertIn("features: raw.features", state)
-
-    def test_nav_entry_uses_planner_icon(self):
-        routes = read(WEB, "js", "routes.js")
-        self.assertIn('icon: "planner"', routes)
 
 
 if __name__ == "__main__":

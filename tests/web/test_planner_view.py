@@ -273,7 +273,7 @@ class PlannerViewTest(unittest.TestCase):
     def test_all_projects_scope_picks_a_project(self):
         html = self.out["noPick"]
         self.assertIn("Pick a project", html)
-        self.assertIn('href="#/p/splitnet/planner"', html)
+        self.assertIn('href="#/p/splitnet/work/planner"', html)
 
     def test_paint_is_in_place_by_id_with_parse_and_swap(self):
         with open(MODULE, encoding="utf-8") as fh:

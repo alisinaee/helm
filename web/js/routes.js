@@ -9,7 +9,6 @@ export const SECTIONS = [
   // (vm.project.snapshot.head). The nav badge and the Overview chip read the same key.
   { id: "head", label: "Head", icon: "head", module: "./views/head.js", bottom: false },
   { id: "roadmap", label: "Roadmap", icon: "roadmap", module: "./views/roadmap.js", bottom: false },
-  { id: "planner", label: "Planner", icon: "planner", module: "./views/planner.js", bottom: false },
   { id: "work", label: "Work", icon: "work", module: "./views/work.js", bottom: true },
   { id: "agents", label: "Agents", icon: "agents", module: "./views/agents.js", bottom: false },
   { id: "workflow", label: "Workflow", icon: "workflow", module: "./views/workflow.js", bottom: false },
@@ -36,6 +35,18 @@ export function legacyIssuesHash(hash) {
   return "#/p/" + m[1] + "/work" + (m[2] ? "/i/" + m[2] : "") + "?f=kind:issue" + (blockers ? ",blocked" : "");
 }
 
+// R10.7: the Planner is a view inside Work. Old "#/p/<id>/planner[?f=F5]" links map to "#/p/<id>/work/planner[?f=F5]"
+// (the focus item rides along); the global "#/all/planner" maps to "#/all/work". Returns the new hash, or null.
+const LEGACY_PLANNER = /^#\/(?:p\/([a-z0-9][a-z0-9-]{0,39})|all)\/planner(?:\/[^?]*)?(?:\?(.*))?$/;
+
+export function legacyPlannerHash(hash) {
+  const m = LEGACY_PLANNER.exec(String(hash || ""));
+  if (!m) return null;
+  const f = new URLSearchParams(m[2] || "").get("f");
+  const focus = f && /^F[1-9][0-9]?$/.test(f) ? "?f=" + f : "";
+  return m[1] ? "#/p/" + m[1] + "/work/planner" + focus : "#/all/work";
+}
+
 // R7.30: "#/full/<pid>/workflow" is the Map alone in its own tab (app.js mounts it). Returns the project id, or null.
 const FULL_ROUTE = /^#\/full\/([a-z0-9][a-z0-9-]{0,39})\/workflow(?:\?.*)?$/;
 
@@ -45,7 +56,7 @@ export function fullRouteOf(hash) {
 }
 
 function redirectLegacyIssues() {
-  const next = legacyIssuesHash(window.location.hash);
+  const next = legacyIssuesHash(window.location.hash) || legacyPlannerHash(window.location.hash);
   if (next) window.location.replace(next);
 }
 

@@ -12,9 +12,11 @@ import { boardView, COLUMNS, filterBarHtml, finePointer, matchesFilters, parseFi
 import { clearSelection, groupBarHtml, GROUPS, listView, nextSort, parseSort, setAllSelected, setSelected } from
   "./list.js";
 import { subtaskToggle, treeView } from "./tree.js";
+import { bind as bindPlanner, screenHtml as plannerScreen } from "./planner.js";
 
-const VIEWS = ["board", "list", "tree"];
-const VIEW_LABEL = { board: "Board", list: "List", tree: "Tree" };
+// R10.7: the Planner is the fourth view of Work. It reads the same snapshot (tasks and features) as the other three.
+const VIEWS = ["board", "list", "tree", "planner"];
+const VIEW_LABEL = { board: "Board", list: "List", tree: "Tree", planner: "Planner" };
 const PREF_PREFIX = "work.";
 const COLUMN_KEYS = COLUMNS.map(function (c) {
   return c.key;
@@ -99,9 +101,12 @@ function featChipHtml(snap, feat) {
 function persist(pid, prefs) {
   const params = new URLSearchParams();
   params.set("v", prefs.view);
-  const tags = splitFeat(prefs.f).rest;
+  // In the Planner view f carries a plan item focus (F5), not a tag filter: the saved filters stay as they were.
+  const keep = prefs.view === "planner" ? savedParams(pid) : null;
+  const tags = keep ? (keep.get("f") || "") : splitFeat(prefs.f).rest;
+  const group = keep ? (keep.get("g") || "") : prefs.g;
   if (tags) params.set("f", tags);
-  if (prefs.g) params.set("g", prefs.g);
+  if (group) params.set("g", group);
   params.set("s", prefs.sRaw || "n:asc");
   params.set("c", prefs.c);
   const text = params.toString();
@@ -128,7 +133,7 @@ function goWork(pid, changes) {
   const prefs = Object.assign(readPrefs(pid, route), changes);
   persist(pid, prefs);
   const hash = buildHash({ name: "project", id: pid, section: "work", view: prefs.view, item: route.item || null,
-    filters: cleanFilters(prefs.f, prefs.g) });
+    filters: prefs.view === "planner" ? {} : cleanFilters(prefs.f, prefs.g) });
   if (window.location.hash === hash) {
     dispatchRender();
   } else {
@@ -149,10 +154,19 @@ function focusLater(selector) {
   }, 0);
 }
 
+function planNote(snap) {
+  const rows = (snap.features && snap.features.rows) || [];
+  return rows.length ? rows.length + (rows.length === 1 ? " plan item" : " plan items") : "No plan yet";
+}
+
 function headHtml(ctx) {
   const total = ctx.all.length;
-  const note = !total ? "No tasks yet" : (ctx.shown.length === total ? total + (total === 1 ? " task" : " tasks")
-    : "Showing " + ctx.shown.length + " of " + total + " tasks");
+  let note = "No tasks yet";
+  if (ctx.view === "planner") note = planNote(ctx.snap);
+  else if (total) {
+    note = ctx.shown.length === total ? total + (total === 1 ? " task" : " tasks")
+      : "Showing " + ctx.shown.length + " of " + total + " tasks";
+  }
   const buttons = VIEWS.map(function (v) {
     return '<button type="button" aria-pressed="' + (ctx.view === v ? "true" : "false") +
       '" data-wk="view" data-view="' + v + '" data-focus="wk-view-' + v + '">' + VIEW_LABEL[v] + "</button>";
@@ -205,6 +219,12 @@ export function sectionView(vm) {
   const pid = route.id;
   const prefs = readPrefs(pid, route);
   persist(pid, prefs);
+  if (prefs.view === "planner") {
+    // The planner paints into its own screen element after this render (planner.js flush) and listens on <main>.
+    if (typeof document !== "undefined") bindPlanner(document.getElementById("main"));
+    const stub = { snap: snap, view: "planner", all: workTasks(snap, vm.now) };
+    return '<div class="wk" data-project="' + esc(pid) + '">' + headHtml(stub) + plannerScreen(vm) + "</div>";
+  }
   const scope = splitFeat(prefs.f);
   const F = parseFilters(scope.rest);
   const all = workTasks(snap, vm.now);
