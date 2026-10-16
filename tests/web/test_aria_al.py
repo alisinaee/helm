@@ -13,7 +13,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 VIEWS = os.path.join(REPO, "web", "js", "views")
 
 EXPECTED = {
-    "activity.js": ['aria-label="\' + esc("Undo " + what)'],
+    "activity.js": ['aria-label="\' + label'],
     "agents.js": ['aria-label="\' + esc("Task " + job.task)'],
     "board.js": [
         'aria-label="\' + esc("Move task " + task.id + " to Todo")',

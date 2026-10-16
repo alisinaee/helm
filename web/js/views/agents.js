@@ -233,7 +233,8 @@ function historyControls(pid, all, hist) {
   const total = hist.total == null ? all.length : Math.max(hist.total, all.length);
   const more = hist.total == null || all.length < hist.total;
   const attrs = ' data-project="' + esc(pid) + '"';
-  return '<div class="ag-foot"><p class="ov-sum" aria-live="polite">Showing ' + esc(String(Math.min(hist.visible, all.length))) +
+  return '<div class="ag-foot"><p class="ov-sum" aria-live="polite">Showing ' +
+    esc(String(Math.min(hist.visible, all.length))) +
     " of " + esc(String(total)) + " · " + esc(String(selected)) + " selected</p>" +
     (hist.error ? '<p class="ov-sum" role="alert">' + esc(hist.error) + "</p>" : "") +
     '<span class="ag-foot-btns">' +

@@ -19,9 +19,9 @@ SKIP = {"tokens.js", "topbar.js", "limits.js", "head.js"}
 ALLOWED = {
     ("board.js", 286): "task state word from a fixed table",
     ("board.js", 346): "task state word from a fixed table",
-    ("git.js", 384): "git tab name from a fixed list",
+    ("git.js", 383): "git tab name from a fixed list",
     ("settings.js", 50): "option label from a fixed list",
-    ("workflow.js", 807): "control text passed by fixed callers",
+    ("workflow.js", 811): "control text passed by fixed callers",
     ("details.js", 394): "the user's own answer option, full text, aria-label names the question",
 }
 
@@ -49,10 +49,11 @@ class ButtonLabelTest(unittest.TestCase):
 
     def test_undo_activity_label_is_short_and_full_text_is_in_title(self):
         text = read(VIEWS, "activity.js")
-        self.assertIn('aria-label="\' + esc("Undo " + what)', text)
-        self.assertIn('title="\' + esc("Undo " + what)', text)
-        self.assertIn('>Undo</button>', text)
-        self.assertNotIn('esc("Undo " + what) + "</button>"', text)
+        self.assertIn('const label = esc("Undo " + what);', text)
+        self.assertIn('aria-label="\' + label', text)
+        self.assertIn('title="\' + label', text)
+        self.assertIn('<svg class="ico" aria-hidden="true"', text)
+        self.assertNotIn('+ "</button>"', text.split("const undo = ", 1)[1].split(";", 1)[0])
 
 
 class ActionColumnCssTest(unittest.TestCase):

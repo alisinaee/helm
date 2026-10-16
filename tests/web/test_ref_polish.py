@@ -61,7 +61,8 @@ class CopyColumnTests(unittest.TestCase):
         self.assertIn(".phase > .phase-body {\n  grid-column: 1 / -1;", self.css)
 
     def test_lists_that_are_not_rows_keep_their_own_tracks(self):
-        self.assertIn(".ib-item .ib-body .nz-list { grid-template-columns: minmax(0, 1fr); gap: 6px", read(CSS_DIR, "inbox.css"))
+        self.assertIn(".ib-item .ib-body .ib-opts { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0 }",
+                      read(CSS_DIR, "inbox.css"))
         self.assertIn(".p-badges{--rg:3.5rem 3.5rem 3.5rem minmax(0,1fr);grid-template-columns:var(--rg);",
                       read(CSS_DIR, "panel.css"))
 
