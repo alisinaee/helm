@@ -1,8 +1,11 @@
 """Command group usage: the global plan-usage store.
 
-show, sync (reads the keychain and the endpoint) and push (JSON on stdin).
+show, sync (runs the source chain: OAuth endpoint, status line sidecar, transcript estimate), push (JSON on stdin)
+and statusline (a Claude Code status line command that stores the rate_limits it is handed; docs/USAGE-SOURCES.md).
 """
 
+import json
+import subprocess
 import sys
 
 from roadmap.errors import EXIT_EXTERNAL, RoadmapError
@@ -18,6 +21,11 @@ def register(sub, common):
     actions.add_parser("sync", parents=[common], help="fetch usage now").set_defaults(handler=handle_sync)
     push = actions.add_parser("push", parents=[common], help="store usage from JSON on stdin")
     push.set_defaults(handler=handle_push)
+    line = actions.add_parser("statusline", parents=[common],
+                              help="Claude Code status line: store its rate_limits, then print a status line")
+    line.add_argument("--then", metavar="CMD", default=None,
+                      help="status line command to run after storing (gets the same JSON on stdin; its output is shown)")
+    line.set_defaults(handler=handle_statusline)
 
 
 def _json_mode(args):
@@ -71,3 +79,42 @@ def handle_push(args):
     result = usage.push(sys.stdin.read(), config_store.load())
     _emit_text(args, result)
     return result
+
+
+STATUSLINE_MAX_BYTES = 1_000_000
+THEN_TIMEOUT_S = 5
+
+
+def _short_line(payload):
+    limits = usage.parse_rate_limits(payload.get("rate_limits") if isinstance(payload, dict) else None)
+    parts = []
+    if limits.get("fiveHourPercent") is not None:
+        parts.append("5h %s%%" % limits["fiveHourPercent"])
+    if limits.get("weeklyPercent") is not None:
+        parts.append("week %s%%" % limits["weeklyPercent"])
+    return " | ".join(parts)
+
+
+def handle_statusline(args):
+    """Claude Code runs this as its status line with the session JSON on stdin. The rate_limits block is stored (at
+    most once a minute); then the wrapped --then command gets the same stdin and its output is printed, or a short
+    usage line when there is none. Never fails: a status line must always print something."""
+    raw = sys.stdin.read(STATUSLINE_MAX_BYTES)
+    try:
+        payload = json.loads(raw) if raw.strip() else {}
+    except ValueError:
+        payload = {}
+    try:
+        usage.auto_update(payload if isinstance(payload, dict) else {}, source=usage.SOURCE_STATUSLINE)
+    except Exception:  # storing is best effort; the status line itself must still show
+        pass
+    if args.then:
+        try:
+            proc = subprocess.run(args.then, shell=True, input=raw, capture_output=True, text=True,
+                                  timeout=THEN_TIMEOUT_S)
+            sys.stdout.write(proc.stdout)
+        except (subprocess.TimeoutExpired, OSError):
+            pass
+        return None
+    print(_short_line(payload))
+    return None

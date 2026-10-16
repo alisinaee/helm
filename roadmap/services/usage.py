@@ -1,8 +1,12 @@
 """Account usage for the dashboard: the Anthropic usage reading, the global usage.json store, the mirror into each
 project's autonomy.json, the background loop with backoff, manual push and show.
 
+The service fetches usage by itself (R10.29, docs/USAGE-SOURCES.md), in this order: the OAuth usage endpoint with the
+Claude Code login (refreshed before it expires), Claude Code's own rate_limits (status line / hooks / sidecar), and
+last an estimate from the local transcripts, labelled as one. Sources live in services/usage_sources.py.
+
 Python 3 standard library only. The OAuth token is read from the macOS keychain (through `security`, no shell),
-kept in memory and sent to one HTTPS host only. It is never printed, logged, written to a file or put in an
+kept in memory and sent to Anthropic HTTPS hosts only. It is never printed, logged, written to a file or put in an
 exception: every failure raises UsageError with a short plain reason.
 """
 
@@ -17,6 +21,7 @@ from datetime import datetime, timedelta, timezone
 from roadmap.errors import EXIT_INVALID_DATA, EXIT_USAGE, RoadmapError
 from roadmap.log import get_logger
 from roadmap.services import ledger
+from roadmap.services import usage_sources
 from roadmap.store import config as config_store
 from roadmap.store import atomic, lock, paths, schema
 
@@ -31,6 +36,9 @@ KEYCHAIN_ITEM_NOT_FOUND = 44  # `security` exit status for errSecItemNotFound
 SOURCE_ENDPOINT = "Anthropic usage endpoint"
 SOURCE_PUSH = "manual push"
 SOURCE_MANUAL = "manual entry"
+SOURCE_ESTIMATE = "estimate from local transcripts"
+ESTIMATE_AFTER_S = 10 * 60        # estimate only when the last real reading is older than this
+ESTIMATE_GAP_S = 60               # and recompute it at most this often
 DEFAULT_INTERVAL_S = 120
 MIN_INTERVAL_S = 30
 BACKOFF_S = 600
@@ -40,20 +48,22 @@ MAX_USAGE_AGE_KEY = "maxUsageAgeMin"  # docs/autonomy.json key that overrides it
 KEYCHAIN_BACKOFF_S = 6 * 3600     # after a keychain failure the background loop skips the keychain this long
 MANUAL_KEYCHAIN_GAP_S = 60        # a manual sync may retry a failed keychain read at most this often
 MIRROR_FIELDS = ("weeklyPercent", "fiveHourPercent", "weeklyResetsAt", "fiveHourResetsAt", "updated", "source")
-VIEW_FIELDS = MIRROR_FIELDS + ("lastError", "syncError")
+VIEW_FIELDS = MIRROR_FIELDS + ("lastError", "syncError", "estimate")
+REAL_FIELDS = ("weeklyPercent", "fiveHourPercent", "weeklyResetsAt", "fiveHourResetsAt", "updated", "source")
 # Stable reason codes for syncError. The keychain ones back off; the others retry on the normal schedule.
 CODE_NO_TOKEN = "no_token"
 CODE_NO_ITEM = "no_item"
 CODE_DENIED = "denied"
+CODE_EXPIRED = "expired"          # the refresh token was refused: the Claude Code login must be renewed once
 CODE_NET = "net"
 CODE_OTHER = "other"
-KEYCHAIN_CODES = (CODE_NO_TOKEN, CODE_NO_ITEM, CODE_DENIED)
-# No claude.ai login in the keychain (desktop app sign-in): not an error. The head pushes the readings instead.
-UNAVAILABLE_CODES = (CODE_NO_TOKEN, CODE_NO_ITEM)
+KEYCHAIN_CODES = (CODE_NO_TOKEN, CODE_NO_ITEM, CODE_DENIED, CODE_EXPIRED)
+# No usable Claude Code login (desktop app sign-in only, or an expired one): not an error. The other sources run.
+UNAVAILABLE_CODES = (CODE_NO_TOKEN, CODE_NO_ITEM, CODE_EXPIRED)
 STATUS_UNAVAILABLE = "unavailable"
 STATUS_ERROR = "error"
-UNAVAILABLE_REASON = "this Mac signs in through the desktop app; the head updates usage"
-REQUEST_FILE = "usage-request.json"   # written by a manual sync that is unavailable; read by the head's Stop gate
+UNAVAILABLE_REASON = "no Claude Code login on this Mac: run `claude auth login` once (docs/USAGE-SOURCES.md)"
+REQUEST_FILE = "usage-request.json"   # legacy head request flag (no longer written: Sync now fetches); still cleared
 REQUEST_MAX_AGE_S = 30 * 60
 RESTORE_FIELDS = ("weeklyPercent", "weeklyResetsAt", "fiveHourPercent", "fiveHourResetsAt", "updated", "source",
                   "lastError", "syncError")
@@ -65,9 +75,10 @@ class UsageError(Exception):
     """A usage read failed. str() is a short plain reason; it never contains the token. code is the stable reason
     code (CODE_* above) that the store keeps as syncError."""
 
-    def __init__(self, message, code=CODE_OTHER):
+    def __init__(self, message, code=CODE_OTHER, status=None):
         super().__init__(message)
         self.code = code
+        self.status = status
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -78,27 +89,20 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def read_keychain_token():
-    """The Claude Code OAuth access token from the keychain. Runs `security`; no shell."""
+    """The Claude Code OAuth access token (keychain, else ~/.claude/.credentials.json), refreshed first when it
+    expires within 5 minutes. Runs `security`; no shell."""
     try:
-        proc = subprocess.run(
-            ["security", "find-generic-password", "-s", KEYCHAIN_SERVICE, "-w"],
-            capture_output=True, text=True, timeout=KEYCHAIN_TIMEOUT_S,
-        )
-    except subprocess.TimeoutExpired:
-        raise UsageError("keychain did not answer in time")
-    except OSError:
-        raise UsageError("keychain tool is not available")
-    if proc.returncode == KEYCHAIN_ITEM_NOT_FOUND:
-        raise UsageError("keychain item not found, sign in to Claude Code first", CODE_NO_ITEM)
-    if proc.returncode != 0:
-        raise UsageError("keychain access denied or failed (exit %d)" % proc.returncode, CODE_DENIED)
+        return usage_sources.access_token()
+    except usage_sources.SourceError as exc:
+        raise UsageError(str(exc), exc.code)
+
+
+def _force_refresh():
+    """A new access token after the endpoint refused the current one (HTTP 401)."""
     try:
-        token = json.loads(proc.stdout)["claudeAiOauth"]["accessToken"]
-    except (ValueError, KeyError, TypeError):
-        raise UsageError("keychain entry has no usable token", CODE_NO_TOKEN)
-    if not isinstance(token, str) or not token.strip():
-        raise UsageError("keychain entry has no usable token", CODE_NO_TOKEN)
-    return token.strip()
+        return usage_sources.access_token(force=True)
+    except usage_sources.SourceError as exc:
+        raise UsageError(str(exc), exc.code)
 
 
 def _open(req):
@@ -121,7 +125,7 @@ def http_fetch(token):
     try:
         raw = _open(req)
     except urllib.error.HTTPError as e:
-        raise UsageError("usage endpoint answered HTTP %d" % e.code)
+        raise UsageError("usage endpoint answered HTTP %d" % e.code, status=e.code)
     except (socket.timeout, TimeoutError):
         raise UsageError("usage endpoint timed out", CODE_NET)
     except urllib.error.URLError as e:
@@ -193,11 +197,17 @@ def parse_usage(payload):
     }
 
 
-def collect(get_token=read_keychain_token, fetch=http_fetch):
-    """One usage reading. Any failure raises UsageError; the token is never part of the message."""
+def collect(get_token=read_keychain_token, fetch=http_fetch, refresh=None):
+    """One usage reading. Any failure raises UsageError; the token is never part of the message. When refresh is
+    given, an HTTP 401 gets one retry with the token it returns."""
     try:
         token = get_token()
-        payload = fetch(token)
+        try:
+            payload = fetch(token)
+        except UsageError as exc:
+            if refresh is None or exc.status != 401:
+                raise
+            payload = fetch(refresh())
     except UsageError:
         raise
     except Exception as e:  # report the type only: a fake or library error may carry the token
@@ -281,13 +291,6 @@ def refresh_requested(now=None):
         return False
     age = _age_s(data.get("at") if isinstance(data, dict) else None, moment)
     return age is not None and 0 <= age < REQUEST_MAX_AGE_S
-
-
-def _write_request(moment):
-    try:
-        atomic.write_json(request_path(), {"at": moment.isoformat(timespec="seconds")})
-    except OSError:
-        log.warning("usage refresh request not written")
 
 
 def _clear_request():
@@ -391,9 +394,15 @@ def mirror_to_projects(cfg, record):
 
 
 def _commit(changes, cfg):
+    """Store a reading. A real one (not an estimate) also becomes lastReal, the base the estimate scales from."""
+    estimated = changes.get("estimate") is True
+    if not estimated:
+        changes["estimate"] = False
     stored = _update_store(changes)
-    _clear_request()  # a new reading answers any refresh the head was asked for
-    _record_ledger(changes, stored)
+    if not estimated:
+        stored = _update_store({"lastReal": {key: stored.get(key) for key in REAL_FIELDS}})
+        _clear_request()  # a new reading answers any refresh the head was asked for
+        _record_ledger(changes, stored)
     mirrors = mirror_to_projects(cfg, stored) if _mirror_enabled(cfg) else []
     return stored, mirrors
 
@@ -418,51 +427,116 @@ def _in_future(text, now):
 
 
 def sync_once(config=None, get_token=None, fetch=None, background=False, now=None):
-    """Read usage once, store it and mirror it when enabled. On failure the stored values stay, lastError and
-    syncError are set, and UsageError is raised with the plain reason. get_token and fetch default to the keychain
-    and the endpoint.
+    """Read usage once through the source chain and store it (mirrored when enabled):
 
-    Keychain backoff: after a keychain failure (no token, no item, denied) the background loop (background=True)
-    skips the keychain until KEYCHAIN_BACKOFF_S has passed, and returns None without touching it. A manual sync
-    (the default) may retry, but no more than once per MANUAL_KEYCHAIN_GAP_S while the last failure was a keychain one.
+    1. the OAuth usage endpoint with the Claude Code login (refreshed before it expires, retried once after a 401);
+    2. a fresh Claude Code rate_limits reading (status line sidecar), when the endpoint gave nothing;
+    3. an estimate from the local transcripts, when the last real reading is older than ESTIMATE_AFTER_S.
+
+    On an endpoint failure the stored values stay and lastError/syncError are set. A real failure (network, HTTP)
+    raises UsageError after the fallbacks had their turn, unless one of them stored a reading. No usable login is not
+    an error: the result has status "unavailable" when no fallback stored anything either.
+
+    Keychain backoff: after a keychain failure (no token, no item, denied, expired) the background loop
+    (background=True) skips the keychain until KEYCHAIN_BACKOFF_S has passed and returns None when no fallback stored
+    anything. A manual sync (the default) may retry, but no more than once per MANUAL_KEYCHAIN_GAP_S while the last
+    failure was a keychain one.
     """
     cfg = _config(config)
     moment = now or datetime.now(timezone.utc)
     store = _load_store()
-    if background and _in_future(store.get("keychainRetryAfter"), moment):
-        return None
+    skip = background and _in_future(store.get("keychainRetryAfter"), moment)
+    oauth_error = None
     if not background:
         if store.get("syncError") in KEYCHAIN_CODES:
             age = _age_s(store.get("manualAttemptAt"), moment)
             if age is not None and age < MANUAL_KEYCHAIN_GAP_S:
-                if store.get("syncError") in UNAVAILABLE_CODES:
-                    return _unavailable(cfg, moment, background)
-                raise UsageError("the keychain was checked a moment ago, try again in a minute",
-                                 store.get("syncError"))
-        _update_store({"manualAttemptAt": moment.isoformat(timespec="seconds")})
+                skip = True
+                if store.get("syncError") not in UNAVAILABLE_CODES:
+                    oauth_error = UsageError("the keychain was checked a moment ago, try again in a minute",
+                                             store.get("syncError"))
+        if not skip:
+            _update_store({"manualAttemptAt": moment.isoformat(timespec="seconds")})
+    if not skip:
+        try:
+            reading = collect(get_token=get_token or read_keychain_token, fetch=fetch or http_fetch,
+                              refresh=_force_refresh if get_token is None else None)
+        except UsageError as exc:
+            retry = None
+            if exc.code in KEYCHAIN_CODES:
+                retry = (moment + timedelta(seconds=KEYCHAIN_BACKOFF_S)).isoformat(timespec="seconds")
+            if exc.code in UNAVAILABLE_CODES:
+                _update_store({"syncError": exc.code, "lastError": None, "keychainRetryAfter": retry})
+            else:
+                _record_error(str(exc), exc.code, retry)
+                oauth_error = exc
+        else:
+            changes = dict(usage_record(reading, SOURCE_ENDPOINT), lastError=None, syncError=None,
+                           keychainRetryAfter=None)
+            stored, mirrors = _commit(changes, cfg)
+            result = _result(stored, cfg, mirrors)
+            _control_after_write()
+            return result
+    fallback = _fallbacks(cfg, moment)
+    if fallback is not None:
+        return fallback
+    if oauth_error is not None:
+        raise oauth_error
+    if skip and background:
+        return None
+    return _unavailable(cfg)
+
+
+def _fallbacks(cfg, moment):
+    """The sources after the endpoint: a fresh status line sidecar reading, then the transcript estimate. Returns
+    the sync result when one stored a reading, else None. Never raises."""
     try:
-        reading = collect(get_token=get_token or read_keychain_token, fetch=fetch or http_fetch)
-    except UsageError as exc:
-        retry = None
-        if exc.code in KEYCHAIN_CODES:
-            retry = (moment + timedelta(seconds=KEYCHAIN_BACKOFF_S)).isoformat(timespec="seconds")
-        if exc.code in UNAVAILABLE_CODES:
-            _update_store({"syncError": exc.code, "lastError": None, "keychainRetryAfter": retry})
-            return _unavailable(cfg, moment, background)
-        _record_error(str(exc), exc.code, retry)
-        raise
-    changes = dict(usage_record(reading, SOURCE_ENDPOINT), lastError=None, syncError=None, keychainRetryAfter=None)
+        source = auto_update(None, moment.astimezone().replace(microsecond=0), cfg)
+        if source:
+            return dict(_result(_load_store(), cfg, []), status=None, reason=None)
+    except Exception as exc:  # a fallback must never break the sync
+        log.warning("usage sidecar skipped: %s", type(exc).__name__)
+    try:
+        return estimate_once(cfg, moment)
+    except Exception as exc:
+        log.warning("usage estimate skipped: %s", type(exc).__name__)
+        return None
+
+
+def estimate_once(cfg, moment, roots=None):
+    """Store an estimate from the local transcripts when the last real reading is old. Returns the sync result, or
+    None when there is no base reading, it is still fresh, or the transcripts give nothing."""
+    store = _load_store()
+    last = store.get("lastReal")
+    if not isinstance(last, dict):
+        return None
+    age = _age_s(last.get("updated"), moment)
+    if age is None or age < ESTIMATE_AFTER_S:
+        return None
+    if store.get("estimate") is True:
+        since = _age_s(store.get("updated"), moment)
+        if since is not None and 0 <= since < ESTIMATE_GAP_S:
+            return dict(_result(store, cfg, []), status="estimate", reason=None)
+    cal = store.get("estimateCal") if isinstance(store.get("estimateCal"), dict) else {}
+    if store.get("estimateCalFor") != last.get("updated"):
+        at = _moment(last.get("updated"))
+        events = usage_sources.usage_events(at - usage_sources.ONE_WEEK - usage_sources.FIVE_HOURS, roots)
+        fresh = usage_sources.calibration(last, events)
+        cal = dict(cal, **fresh)
+        _update_store({"estimateCal": cal, "estimateCalFor": last.get("updated")})
+    changes = usage_sources.estimate(last, cal, moment, roots)
+    if not changes:
+        return None
+    changes.update({"updated": moment.astimezone().isoformat(timespec="seconds"), "source": SOURCE_ESTIMATE,
+                    "estimate": True})
     stored, mirrors = _commit(changes, cfg)
-    result = _result(stored, cfg, mirrors)
     _control_after_write()
-    return result
+    return dict(_result(stored, cfg, mirrors), status="estimate", reason=None)
 
 
-def _unavailable(cfg, moment, background):
-    """The keychain has no claude.ai login: not an error, so lastError is not set. A manual sync asks the head for a
-    fresh reading by writing the request flag. Returns the sync result with status "unavailable"."""
-    if not background:
-        _write_request(moment)
+def _unavailable(cfg):
+    """No usable Claude Code login and no fallback reading: not an error, so lastError is not set. Returns the sync
+    result with status "unavailable" and the one-time setup step as the reason."""
     stored = _load_store()
     return {"ok": True, "status": STATUS_UNAVAILABLE, "reason": UNAVAILABLE_REASON,
             "usage": view(stored, max_age_s(cfg)), "mirrors": []}
@@ -601,19 +675,23 @@ def read_sidecar(path=None, now=None):
     return parse_rate_limits(data), moment
 
 
-def auto_update(payload=None, now=None, config=None, sidecar=None):
+def auto_update(payload=None, now=None, config=None, sidecar=None, source=SOURCE_HOOK):
     """Store usage from a hook payload's rate_limits block, else from the status line sidecar. At most once per
     AUTO_GAP_S (counted from the stored reading); a reading not newer than the stored one is skipped. Returns the source stored, or None. Never raises
     for a missing or bad reading."""
     now = (now or datetime.now().astimezone()).replace(microsecond=0)
     block = payload.get("rate_limits") if isinstance(payload, dict) else None
-    changes, moment, source = parse_rate_limits(block), now, SOURCE_HOOK
+    changes, moment = parse_rate_limits(block), now
     if not changes:
         changes, moment = read_sidecar(sidecar, now)
         source = SOURCE_STATUSLINE
     if not changes:
         return None  # nothing to store: no lock is taken, so a hook with no reading costs one small file read
-    stored = _moment(_load_store().get("updated"))
+    store = _load_store()
+    base = store.get("updated")
+    if store.get("estimate") is True:  # a real reading always replaces an estimate
+        base = (store.get("lastReal") or {}).get("updated") if isinstance(store.get("lastReal"), dict) else None
+    stored = _moment(base)
     if stored is not None and (moment <= stored or (now - stored).total_seconds() < AUTO_GAP_S):
         return None
     _store_manual(changes, _config(config), source, moment)

@@ -1,8 +1,8 @@
 // UsageBand: the weekly and five-hour plan meters, reset countdowns, the stale marker, the Sync now button and the
 // manual "Enter usage" form. The band is global: it is shown on Home and on every project. Usage arrives without a
-// manual step (R7.77): Claude Code hooks store the rate limits they see, and the head pushes the app's numbers. When
-// the keychain has no claude.ai login (syncError no_token or no_item: the desktop app signs in) the button reads
-// Request update and asks the head for a reading; a denied keychain hides Sync now and the band names the source.
+// manual step: the service fetches it (R10.29, docs/USAGE-SOURCES.md) from the OAuth endpoint, Claude Code's status
+// line, or an estimate from the local transcripts. Sync now always runs that fetch for real; the band names the
+// source and the age. With no usable Claude Code login (no_token, no_item, expired) it names the one-time setup.
 // The form stays folded as a fallback; it opens when the reading is old. Writes go through cmd.js run("usage.set").
 
 import { bannerHtml, esc, meterHtml, skeletonHtml } from "../dom.js";
@@ -10,13 +10,12 @@ import { fmtAge, fmtPercent, fmtResets } from "../format.js";
 import { copyButton, refSummary } from "../ref.js";
 import { run } from "../cmd.js";
 
-const NO_AUTO_SYNC = ["no_token", "no_item", "denied"];
-const UNAVAILABLE_CODES = ["no_token", "no_item"];
+const NO_AUTO_SYNC = ["no_token", "no_item", "denied", "expired"];
+const UNAVAILABLE_CODES = ["no_token", "no_item", "expired"];
 const PERCENT = /^\d{1,3}(\.\d{1,2})?$/;
 const OLD_TITLE = "Usage is old.";
-const OLD_DETAIL = "It updates by itself when the head reads it from the app or a Claude Code session reports it.";
-const UNAVAILABLE_DETAIL = "This Mac signs in through the desktop app; the head updates usage.";
-const ASKED = "Asked the head for a fresh reading";
+const OLD_DETAIL = "It updates by itself when the service can read it; see docs/USAGE-SOURCES.md.";
+const UNAVAILABLE_DETAIL = "No Claude Code login on this Mac: run claude auth login once (docs/USAGE-SOURCES.md).";
 
 // The typed values survive a redraw; the message is the last validation problem.
 let entryDraft = { weekly: "", fiveHour: "" };
@@ -30,8 +29,8 @@ function toneFor(pct) {
   return "accent";
 }
 
-function meterBlock(label, pct, resetsAt, now) {
-  const text = fmtPercent(pct);
+function meterBlock(label, pct, resetsAt, now, approx) {
+  const text = (approx && pct != null ? "~" : "") + fmtPercent(pct);
   return '<div class="band-meter">' +
     '<div class="band-head"><span class="band-label">' + esc(label) + "</span>" +
     '<span class="band-value">' + esc(text) + "</span></div>" +
@@ -43,7 +42,7 @@ function noAutoSync(u) {
   return NO_AUTO_SYNC.indexOf(u.syncError) !== -1;
 }
 
-// No claude.ai login in the keychain: not an error. The button asks the head for a reading instead.
+// No usable Claude Code login: not an error. The other sources still run; the band names the setup step.
 function unavailable(u) {
   return u.status === "unavailable" || UNAVAILABLE_CODES.indexOf(u.syncError) !== -1;
 }
@@ -65,15 +64,15 @@ function statusLine(u) {
 
 function syncLine(sync, u) {
   if (!sync || !sync.message) return "";
-  if (unavailable(u) && sync.state !== "error") return '<p class="band-status">' + esc(ASKED) + "</p>";
   const tone = sync.state === "error" ? " is-danger" : "";
   return '<p class="band-status' + tone + '">' + esc(sync.message) + "</p>";
 }
 
-// Where the reading came from, in words: the head's push from the app, a Claude Code hook or status line, a value
-// typed by hand, or one the endpoint synced.
+// Where the reading came from, in words: an estimate from the transcripts, the head's push from the app, a Claude
+// Code hook or status line, a value typed by hand, or one the endpoint synced.
 export function sourceWord(source) {
   const s = String(source || "").toLowerCase();
+  if (/estimate/.test(s)) return "estimated from local transcripts";
   if (/push/.test(s)) return "by the head from the app";
   if (/claude code/.test(s)) return "from Claude Code";
   if (/manual|entered/.test(s)) return "entered by you";
@@ -162,18 +161,16 @@ export function usageView(vm) {
     return '<div class="band' + compact + '">' + skeletonHtml(["w-60", "w-40"]) + "</div>";
   }
   const syncing = u.sync && u.sync.state === "running";
+  const approx = /estimate/i.test(String(u.source || ""));
   const body = u.loaded ? (
-    meterBlock("Week", u.weeklyPercent, u.weeklyResetsAt, vm.now) +
-    meterBlock("5 hours", u.fiveHourPercent, u.fiveHourResetsAt, vm.now)
+    meterBlock("Week", u.weeklyPercent, u.weeklyResetsAt, vm.now, approx) +
+    meterBlock("5 hours", u.fiveHourPercent, u.fiveHourResetsAt, vm.now, approx)
   ) : bannerHtml("danger", "Could not load account usage.", u.error || "");
   const source = sourceWord(u.source);
   const updatedHtml = u.loaded && u.ageNow != null ? '<span class="band-sub">Updated ' +
     esc(fmtAge(u.ageNow)) + (source ? ", " + esc(source) : "") + "</span>" : "";
-  const asks = unavailable(u);
-  const syncButton = noAutoSync(u) && !asks ? "" :
-    '<button type="button" class="btn" data-action="sync-usage" data-focus="sync"' +
-    (syncing ? " disabled" : "") + ">" + (asks ? (syncing ? "Requesting" : "Request update") :
-    (syncing ? "Syncing" : "Sync now")) + "</button>";
+  const syncButton = '<button type="button" class="btn" data-action="sync-usage" data-focus="sync"' +
+    (syncing ? " disabled" : "") + ">" + (syncing ? "Syncing" : "Sync now") + "</button>";
   const pid = vm.route && vm.route.name === "project" ? vm.route.id : (vm.projects && vm.projects[0]
     ? vm.projects[0].id : "");
   const copy = copyButton("section", "usage.band", "Usage", { project: pid,
