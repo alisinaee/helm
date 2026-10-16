@@ -182,6 +182,8 @@ def _prior(row, keys):
             values[key] = row["sum"] or ""
         elif key == "into":
             values[key] = row["into"]
+        elif key == "prio":
+            values[key] = row["prio"]
     return values
 
 
@@ -294,11 +296,24 @@ def _h_triage(data_dir, a, now):
     return {"id": a["id"], "kind": a["kind"], "sum": a["sum"], "linked": added}, summary, inverse
 
 
+PRIO_WORDS = ("P0", "P1", "P2", "P3")
+
+
+def _prio_arg(a, key="prio"):
+    """P0..P3 as the int 0..3, or None when empty. Anything else is a usage error."""
+    value = commands._text(a.get(key)).upper()
+    if value == "":
+        return None
+    if value not in PRIO_WORDS:
+        raise commands._usage(key + " must be one of " + "|".join(PRIO_WORDS), NEXT_LIST)
+    return PRIO_WORDS.index(value)
+
+
 def _check_set(a):
     clean = {"id": _hid(a), "status": _status_arg(a), "kind": _kind_arg(a), "sum": _sum_arg(a),
-             "note": commands._text(a.get("note")) or None}
-    if clean["status"] is None and clean["kind"] is None and clean["sum"] is None and clean["note"] is None:
-        raise commands._usage("head set needs at least one of status, kind, sum, note", NEXT_LIST)
+             "prio": _prio_arg(a), "note": commands._text(a.get("note")) or None}
+    if all(clean[key] is None for key in ("status", "kind", "sum", "prio", "note")):
+        raise commands._usage("head set needs at least one of status, kind, sum, prio, note", NEXT_LIST)
     return clean
 
 
@@ -307,7 +322,7 @@ def _h_set(data_dir, a, now):
     _guard_status(data_dir, a["id"], a["status"])
     if a["status"] is not None:
         _check_real_bind(a["status"], row["links"], a["id"])
-    sets = {key: a[key] for key in ("status", "kind", "sum") if a[key] is not None}
+    sets = {key: a[key] for key in ("status", "kind", "sum", "prio") if a[key] is not None}
     store.update(data_dir, a["id"], by=_by(), sets=sets or None, note=a["note"], now=now)
     inverse = _undo([_step(a["id"], _prior(row, sets))]) if sets else None
     changed = sorted(sets) + (["note"] if a["note"] else [])
@@ -354,7 +369,9 @@ def _h_split(data_dir, a, now):
     kind = _prior(row, ["kind"]).get("kind")
     new = []
     for summary in a["sums"]:
-        got = store.capture(data_dir, text, src=_src(), kind=kind, sum_text=summary, from_id=a["id"], now=now)
+        # a split copies the verbatim text on purpose: it is not a repeat, so it never bumps the original's priority
+        got = store.capture(data_dir, text, src=_src(), kind=kind, sum_text=summary, from_id=a["id"], now=now,
+                            repeat_bump=False)
         new.append(got["id"])
     _guard_status(data_dir, a["id"], "merged")
     prior = _prior(row, ["status"])

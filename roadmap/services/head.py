@@ -33,7 +33,7 @@ NOTE_MAX = 160
 BRIEF_MAX_LINES = 15
 SOURCES = ("hook", "cli", "gui", "import")
 BY = ("head", "person", "auto")
-SET_KEYS = ("status", "kind", "sum", "into")
+SET_KEYS = ("status", "kind", "sum", "into", "prio")
 KINDS = ("ask", "decision", "rule", "bug", "preference", "question", "review", "info")
 SESSION_EVENTS = ("claim", "start", "end")
 MAX_LINKS = head.MAX_LINKS
@@ -235,6 +235,7 @@ def _spooled_entry(e, text, nonce):
         "sid": str(sid)[:8] if isinstance(sid, str) and sid else None, "acct": _short(e.get("acct"), 8),
         "kind": kind, "sum": make_summary(text, e.get("sum") if isinstance(e.get("sum"), str) else None),
         "len": len(text), "h": _digest(text),
+        "prio": e["prio"] if head.valid_prio(e.get("prio")) else head.guess_prio(text),
     }
     if isinstance(e.get("from"), str):
         entry["from"] = e["from"][:12]
@@ -297,8 +298,27 @@ def _adopt_locked(data_dir, deadline=None):
     return adopted
 
 
+def _bump_repeat_locked(data_dir, digest, now):
+    """A repeat of an entry's verbatim text (same digest) raises the newest such entry one priority level (bump_prio),
+    as an auto update, and logs no new entry. Returns the capture result, or None when the text is new. The caller
+    holds the lock."""
+    records = _records(data_dir)
+    match = None
+    for rec in records:
+        if rec.get("t") == "e" and rec.get("h") == digest:
+            match = rec.get("id")
+    if match is None:
+        return None
+    row = next((r for r in head.fold(records, now=now) if r["id"] == match), None)
+    prio = head.bump_prio(row["prio"] if row else head.PRIO_DEFAULT)
+    rec = {"v": head.VERSION, "t": "u", "id": match, "ts": _ts(now), "by": "auto", "set": {"prio": prio}}
+    jsonl.append_line(_path(data_dir, FILE), rec)
+    return {"id": match, "status": "bumped", "kind": row["kind"] if row else None,
+            "sum": row["sum"] if row else "", "len": None, "prio": prio}
+
+
 def capture(data_dir, text, *, session_id=None, src="hook", acct=None, kind=None, sum_text=None,
-            from_id=None, assets=None, now=None, timeout=None):
+            from_id=None, assets=None, now=None, timeout=None, repeat_bump=True):
     """Log one message verbatim (redacted) with its heuristic kind and summary, and its attachment names (assets).
 
     Returns {"id", "status": "logged" | "spooled", "kind", "sum", "len"}. The id is assigned under the lock.
@@ -316,15 +336,19 @@ def capture(data_dir, text, *, session_id=None, src="hook", acct=None, kind=None
     entry = {
         "v": head.VERSION, "t": "e", "ts": _ts(now), "src": src, "sid": session_key(session_id),
         "acct": _short(acct, 8), "kind": (kind or head.guess_kind(clean)), "sum": make_summary(clean, sum_text),
-        "len": len(clean), "h": _digest(clean),
+        "len": len(clean), "h": _digest(clean), "prio": head.guess_prio(clean),
     }
     if from_id:
         entry["from"] = str(from_id)[:12]
     try:
         with lock.locked(data_dir, timeout):
             _adopt_locked(data_dir, _deadline(timeout))
+            repeat = _bump_repeat_locked(data_dir, entry["h"], now) if repeat_bump else None
+            if repeat is not None:
+                return repeat
             line = _append_entry_locked(data_dir, entry, clean, names)
-        return {"id": line["id"], "status": "logged", "kind": line["kind"], "sum": line["sum"], "len": line["len"]}
+        return {"id": line["id"], "status": "logged", "kind": line["kind"], "sum": line["sum"], "len": line["len"],
+                "prio": line["prio"]}
     except RoadmapError as exc:
         if exc.code != "locked":
             raise
@@ -413,6 +437,8 @@ def update(data_dir, eid, *, by, sets=None, links=(), note=None, now=None, timeo
         raise RoadmapError("usage", "status must be one of " + "|".join(head.MANUAL_STATUSES), EXIT_USAGE)
     if "kind" in sets and sets["kind"] not in KINDS:
         raise RoadmapError("usage", "kind must be one of " + "|".join(KINDS), EXIT_USAGE)
+    if "prio" in sets and not head.valid_prio(sets["prio"]):
+        raise RoadmapError("usage", "prio must be one of 0|1|2|3 (P0-P3)", EXIT_USAGE)
     if "sum" in sets:
         sets["sum"] = make_summary("", sets["sum"])
     refs = list(links or ())
