@@ -52,6 +52,7 @@ console.log(JSON.stringify({
   roleButtons: (html.match(/role="button" tabindex="0"/g) || []).length,
   collapsed: (html.match(/class="rg-main ib-main"[^>]*aria-expanded="false"/g) || []).length,
   bodiesHidden: (html.match(/class="ib-body" id="[^"]+" hidden>/g) || []).length,
+  questionsOpen: (html.match(/class="rg-main ib-main"[^>]*aria-expanded="true"/g) || []).length,
   rowHasProject: row.indexOf('<span class="qc-foot">Alpha</span>') >= 0,
   rowHasAge: /rg-num qc-foot">2m</.test(row),
   rowHasAction: row.indexOf('class="btn ib-expand"') >= 0,
@@ -89,8 +90,9 @@ class InboxRedesignRender(unittest.TestCase):
     def test_each_row_is_one_grid_row_with_a_keyboard_hit(self):
         self.assertEqual(self.got["rowGrid"], 5)
         self.assertEqual(self.got["roleButtons"], 5)
-        self.assertEqual(self.got["collapsed"], 5)
-        self.assertEqual(self.got["bodiesHidden"], 5)
+        self.assertEqual(self.got["collapsed"], 3)
+        self.assertEqual(self.got["bodiesHidden"], 3)
+        self.assertEqual(self.got["questionsOpen"], 2)
         self.assertTrue(self.got["rowHasProject"])
         self.assertTrue(self.got["rowHasAge"])
         self.assertTrue(self.got["rowHasAction"])
