@@ -67,6 +67,10 @@ class GitSource(unittest.TestCase):
         self.assertIsNone(INLINE.search(self.src))
         self.assertNotIn("innerHTML", self.src)
 
+    def test_history_author_column_hides_on_phones(self):
+        self.assertIn('class="rg-t git-au"', self.src)
+        self.assertIn(".git-au{display:none}", read(CSS))
+
     def test_no_long_lines(self):
         self.assertTrue(all(len(line) <= 120 for line in self.src.split("\n")))
 
@@ -117,6 +121,9 @@ class GitRender(unittest.TestCase):
         self.assertIn("ahead 2", html)
         self.assertIn('name="path" value="web/a.js"', html)
         self.assertIn('name="path" value="notes/new.txt"', html)
+        self.assertIn('<span class="rg-num num" title="M.">M</span>', html)
+        self.assertIn('<span class="rg-num num" title="??">U</span>', html)
+        self.assertIn('class="git-cf"', html)
         self.assertIn('data-git="commit"', html)
         self.assertIn('id="git-msg"', html)
         self.assertIn("Commit selected", html)
