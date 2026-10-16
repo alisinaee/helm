@@ -40,6 +40,11 @@
       "id": "R9",
       "name": "Sonnet leftovers (queued 2026-10-16)",
       "status": "partial"
+    },
+    {
+      "id": "R10",
+      "name": "Head reset 2026-10-16 (H182)",
+      "status": "partial"
     }
   ],
   "tasks": [
@@ -718,7 +723,7 @@
       "id": "R6.18",
       "phase": "R6",
       "title": "`project new --research` + live job progress tokens + stale-usage pill",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 30,
       "thinking": "medium",
       "model": "haiku",
@@ -730,13 +735,16 @@
         "F4",
         "F10",
         "F16"
-      ]
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R6.19",
       "phase": "R6",
       "title": "command palette (Cmd-K)",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 40,
       "thinking": "medium",
       "model": "cursor",
@@ -747,7 +755,10 @@
       "feats": [
         "F6",
         "F21"
-      ]
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R6.20",
@@ -785,7 +796,7 @@
       "id": "R6.22",
       "phase": "R6",
       "title": "roadmap-board UI: Workflow section (timeline, map, table)",
-      "status": "partial",
+      "status": "hold",
       "tokensK": 115,
       "thinking": "medium",
       "model": "haiku",
@@ -795,7 +806,10 @@
       "checkK": 0,
       "feats": [
         "F13"
-      ]
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R6.23",
@@ -1054,7 +1068,7 @@
       "id": "R7.5",
       "phase": "R7",
       "title": "Row alignment (rule 0): tokens/phases done; tree/list/overview squeeze left",
-      "status": "partial",
+      "status": "hold",
       "tokensK": 281,
       "thinking": "low",
       "model": "haiku",
@@ -1063,7 +1077,10 @@
       "checkK": 0,
       "feats": [
         "F19"
-      ]
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R7.6",
@@ -1100,7 +1117,7 @@
       "id": "R7.12",
       "phase": "R7",
       "title": "Copy reference icon on rows and sections + roadmap ref command (docs/skills step left)",
-      "status": "partial",
+      "status": "hold",
       "tokensK": 1150,
       "thinking": "low",
       "model": "haiku",
@@ -1110,13 +1127,16 @@
       "note": "person request 2026-10-14: paste a unique ref to the agent; spec docs/R7.12-SPEC.md",
       "feats": [
         "F23"
-      ]
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R7.13",
       "phase": "R7",
       "title": "Planner v2: project structure and plan tree (design done, waits for decisions)",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 40,
       "thinking": "low",
       "model": "haiku",
@@ -1126,7 +1146,10 @@
       "note": "person request 2026-10-14; spec docs/PLANNER-V2-SPEC.md",
       "feats": [
         "F2"
-      ]
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R7.14",
@@ -1148,7 +1171,7 @@
       "id": "R7.16",
       "phase": "R7",
       "title": "Full UI and core event log + roadmap logs + Mark bug button",
-      "status": "partial",
+      "status": "hold",
       "tokensK": 60,
       "thinking": "low",
       "model": "haiku",
@@ -1158,7 +1181,10 @@
       "note": "person request 2026-10-15; spec docs/LOGGING-SPEC.md",
       "feats": [
         "F22"
-      ]
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R7.17",
@@ -1333,7 +1359,7 @@
       "id": "R3.6",
       "phase": "R3",
       "title": "Cursor (grok 4.7 xhigh) review of the web code: graph, refs, views, log client",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 120,
       "thinking": "low",
       "model": "haiku",
@@ -1343,7 +1369,10 @@
       "note": "person: go full power; cursor grok xhigh allowed",
       "feats": [
         "F22"
-      ]
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R3.7",
@@ -1391,7 +1420,7 @@
       "id": "R7.22",
       "phase": "R7",
       "title": "Backlog: status, section, CLI, board column (ideas not yet committed)",
-      "status": "partial",
+      "status": "hold",
       "tokensK": 250,
       "thinking": "low",
       "model": "haiku",
@@ -1404,7 +1433,8 @@
         "F6"
       ],
       "at": {
-        "partial": "2026-10-15T21:19:56+03:30"
+        "partial": "2026-10-15T21:19:56+03:30",
+        "hold": "2026-10-16T13:08:41+03:30"
       }
     },
     {
@@ -1430,7 +1460,7 @@
       "id": "R7.24",
       "phase": "R7",
       "title": "Work section v2: complete the board like Trello (cards, quick add, drag, filters, swimlanes)",
-      "status": "partial",
+      "status": "hold",
       "tokensK": 400,
       "thinking": "low",
       "model": "haiku",
@@ -1446,14 +1476,15 @@
         "commit:f6e0128833cd17bae55cae6f27677e88665e5433"
       ],
       "at": {
-        "partial": "2026-10-15T21:19:56+03:30"
+        "partial": "2026-10-15T21:19:56+03:30",
+        "hold": "2026-10-16T13:08:41+03:30"
       }
     },
     {
       "id": "R7.25",
       "phase": "R7",
       "title": "Issues become part of Work/board; Work is interactive: + Add anything (task, issue, idea, question, subtask, comment)",
-      "status": "partial",
+      "status": "hold",
       "tokensK": 300,
       "thinking": "low",
       "model": "haiku",
@@ -1466,7 +1497,8 @@
         "F6"
       ],
       "at": {
-        "partial": "2026-10-15T15:45:28+03:30"
+        "partial": "2026-10-15T15:45:28+03:30",
+        "hold": "2026-10-16T13:08:41+03:30"
       },
       "refs": [
         "commit:f6e0128833cd17bae55cae6f27677e88665e5433"
@@ -1476,7 +1508,7 @@
       "id": "R7.26",
       "phase": "R7",
       "title": "UX audit with ui-ux-pro-max across all sections + recurring UX routine",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 80,
       "thinking": "medium",
       "model": "opus",
@@ -1486,7 +1518,10 @@
       "note": "person request 2026-10-15",
       "feats": [
         "F19"
-      ]
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R7.27",
@@ -1530,7 +1565,7 @@
       "id": "R7.29",
       "phase": "R7",
       "title": "Git section: status, history, branches, commit/push policy, roadmap git commands",
-      "status": "partial",
+      "status": "hold",
       "tokensK": 600,
       "thinking": "low",
       "model": "haiku",
@@ -1539,7 +1574,8 @@
       "checkK": 0,
       "note": "git read, write ops, GUI and policy committed (f9e77ff, b345cde, c56daa5, 294f9d1); commit policy left",
       "at": {
-        "partial": "2026-10-15T21:19:56+03:30"
+        "partial": "2026-10-15T21:19:56+03:30",
+        "hold": "2026-10-16T13:08:41+03:30"
       },
       "feats": [
         "F24"
@@ -2078,7 +2114,7 @@
       "id": "R7.59",
       "phase": "R7",
       "title": "Cursor grok xhigh: full UI and responsive review of every section; file each issue as a task (H119)",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 0,
       "thinking": "high",
       "model": "cursor",
@@ -2087,7 +2123,10 @@
       "checkK": 0,
       "feats": [
         "F19"
-      ]
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R7.60",
@@ -2339,7 +2378,7 @@
       "id": "R7.73",
       "phase": "R7",
       "title": "Head v2 B/C: brief, verify, head next/done, gate prints commands, new skill",
-      "status": "partial",
+      "status": "hold",
       "tokensK": 60,
       "thinking": "low",
       "model": "haiku",
@@ -2348,7 +2387,8 @@
       "checkK": 0,
       "note": "autopilot brief/pause/resume committed 41ece44; verify, next/done, skill left",
       "at": {
-        "partial": "2026-10-15T21:19:56+03:30"
+        "partial": "2026-10-15T21:19:56+03:30",
+        "hold": "2026-10-16T13:08:41+03:30"
       },
       "feats": [
         "F25"
@@ -2545,7 +2585,7 @@
       "id": "R7.82",
       "phase": "R7",
       "title": "Head v3: reliable core service (watcher, auto-continue, no duplicates, no conflicts, priorities, best sync, light) — Opus + Cursor grok xhigh joint research and plan (H140, top priority)",
-      "status": "partial",
+      "status": "hold",
       "tokensK": 200,
       "thinking": "high",
       "model": "opus",
@@ -2559,7 +2599,8 @@
       ],
       "note": "v3 waves W0-W3, S1 committed; watcher, auto-continue, SSE left",
       "at": {
-        "partial": "2026-10-15T21:19:56+03:30"
+        "partial": "2026-10-15T21:19:56+03:30",
+        "hold": "2026-10-16T13:08:41+03:30"
       },
       "feats": [
         "F26"
@@ -3167,7 +3208,8 @@
         "done": "2026-10-15T22:22:36+03:30"
       },
       "refs": [
-        "commit:52f26537c7c584242f3c61f31ceff6bc371da018"
+        "commit:52f26537c7c584242f3c61f31ceff6bc371da018",
+        "commit:efa232ca169d77142478b57392c1b15c5fb0a8d7"
       ]
     },
     {
@@ -3248,25 +3290,31 @@
       "id": "R9.5",
       "phase": "R9",
       "title": "Work M6: all agent tasks done moves Work to Review (Q5)",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.20",
       "phase": "R9",
       "title": "P column on Head, Work and Overview (Q20)",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.24",
@@ -3323,13 +3371,16 @@
       "id": "R9.23",
       "phase": "R9",
       "title": "Work M8-M10 UI: no agent cards, grouped Agents and Workflow (Q23)",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.30",
@@ -3380,268 +3431,329 @@
       "checkK": 0,
       "note": "Collapse Stop/Enter usage/Auto/? into an overflow menu below 480px; keep toggle inside 375",
       "refs": [
-        "commit:1d18d84dd2def503bb43652a20fafe868d42786f"
+        "commit:1d18d84dd2def503bb43652a20fafe868d42786f",
+        "commit:1afb7ef3a116777d0cb81a9c5c5427ad5e1b1874"
       ]
     },
     {
       "id": "R9.41",
       "phase": "R9",
       "title": "375 Rules: rule text column collapses to zero width",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Stack rule text full width above actions on narrow screens; min width on text column"
+      "note": "Stack rule text full width above actions on narrow screens; min width on text column",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.42",
       "phase": "R9",
       "title": "1440 Rules: red Offline panel on brief reconnect; console errors and a 403",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Quiet reconnecting state with backoff; find the 403 source and name it in the log"
+      "note": "Quiet reconnecting state with backoff; find the 403 source and name it in the log",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.43",
       "phase": "R9",
       "title": "375 Workflow: table columns squeezed to 1-2 characters, Open clipped",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Under 480px show a card list instead of the table; set min column widths"
+      "note": "Under 480px show a card list instead of the table; set min column widths",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.44",
       "phase": "R9",
       "title": "1440 Workflow: blank Loading state with no text or timeout",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Spinner with text, timeout and retry; render Table while Map loads"
+      "note": "Spinner with text, timeout and retry; render Table while Map loads",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.45",
       "phase": "R9",
       "title": "1440 Workflow Map: right side empty, labels cut, 41 items hidden by default",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Fit map to frame on load; full label on hover; show all items or say why not"
+      "note": "Fit map to frame on load; full label on hover; show all items or say why not",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.46",
       "phase": "R9",
       "title": "Work: persisted Issue filter hides every card; Issues route redirects silently",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Active-filter line with a visible reset; drop persisted filter on navigation or make Issues a real route"
+      "note": "Active-filter line with a visible reset; drop persisted filter on navigation or make Issues a real route",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.47",
       "phase": "R9",
       "title": "1440 Work: filter chips take a third of the page; board columns too narrow",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Collapse filters into one toolbar row or popover; widen columns"
+      "note": "Collapse filters into one toolbar row or popover; widen columns",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.48",
       "phase": "R9",
       "title": "375 Planner: Accept column clipped; Unlink placement inconsistent",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Sticky ID/Title with sideways scroll; Unlink in the same grid column on every row"
+      "note": "Sticky ID/Title with sideways scroll; Unlink in the same grid column on every row",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.49",
       "phase": "R9",
       "title": "1440 Planner: orphan Assign buttons not in a fixed column, no headers (rule 0)",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Fixed grid ID | title | Assign with a header row"
+      "note": "Fixed grid ID | title | Assign with a header row",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.50",
       "phase": "R9",
       "title": "1440 Planner: linked-task list cut off at box bottom",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Let list grow or scroll inside the box with bottom padding"
+      "note": "Let list grow or scroll inside the box with bottom padding",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.51",
       "phase": "R9",
       "title": "1440 Head: summary cut mid-word; unclear state labels done? and rule to review",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Cut at word boundary with full text on hover; clearer state labels"
+      "note": "Cut at word boundary with full text on hover; clearer state labels",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.52",
       "phase": "R9",
       "title": "375 Head: Kind and Bound-to columns hidden with no toggle",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Show kind as a badge inside the summary cell on narrow widths"
+      "note": "Show kind as a badge inside the summary cell on narrow widths",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.53",
       "phase": "R9",
       "title": "375 Roadmap: Approve floats mid-card; open count wraps inconsistently",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Fixed lane header grid: title | progress | open | Approve | copy"
+      "note": "Fixed lane header grid: title | progress | open | Approve | copy",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.54",
       "phase": "R9",
       "title": "1440 Roadmap: status legend is one dense glyph line",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Collapsible Legend with one entry per row"
+      "note": "Collapsible Legend with one entry per row",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.55",
       "phase": "R9",
       "title": "375 Tokens: Spend table loses project name",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Stack each project as a card with the name on its own line"
+      "note": "Stack each project as a card with the name on its own line",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.56",
       "phase": "R9",
       "title": "1440 Tokens: % wraps in Weekly stop field; Week meter shows bare dash",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Keep field and % on one line; show unknown text in the Week meter"
+      "note": "Keep field and % on one line; show unknown text in the Week meter",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.57",
       "phase": "R9",
       "title": "1440 Agents: Job truncated, Tokens not yet/unknown unexplained, checkbox misaligned",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Wider Job column with hover; legend for not yet and unknown; align checkbox"
+      "note": "Wider Job column with hover; legend for not yet and unknown; align checkbox",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.58",
       "phase": "R9",
       "title": "Activity: no-op rows read done->done; Undo shown inconsistently",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Hide no-op transitions or label re-confirmed; Undo only where it works"
+      "note": "Hide no-op transitions or label re-confirmed; Undo only where it works",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.59",
       "phase": "R9",
       "title": "1440 Settings: keyboard chip for section jumps unreadable",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "One line per shortcut, e.g. g o Overview, g i Inbox"
+      "note": "One line per shortcut, e.g. g o Overview, g i Inbox",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.60",
       "phase": "R9",
       "title": "375 Inbox: summaries cut to about 3 characters",
-      "status": "todo",
+      "status": "hold",
       "tokensK": 10,
       "thinking": "medium",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "Summary on its own full-width line under the ID row"
+      "note": "Summary on its own full-width line under the ID row",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
     },
     {
       "id": "R9.61",
@@ -3656,8 +3768,402 @@
       "checkK": 0,
       "note": "Shrink empty state to content height or show notes above it",
       "refs": [
-        "commit:1d18d84dd2def503bb43652a20fafe868d42786f"
+        "commit:1d18d84dd2def503bb43652a20fafe868d42786f",
+        "commit:1afb7ef3a116777d0cb81a9c5c5427ad5e1b1874"
       ]
+    },
+    {
+      "id": "R9.62",
+      "phase": "R9",
+      "title": "Phone 375: top bar overflows, page scrolls sideways on every section",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Let .top-tools wrap or scroll inside its box; keep top bar and .side-tabs within 375 px (docs/reviews/ui-ux-tester-v2.md #1)",
+      "refs": [
+        "commit:d39843a50879f62f02f17a960301b0b0c0cf5190"
+      ]
+    },
+    {
+      "id": "R9.63",
+      "phase": "R9",
+      "title": "Roadmap phase cards: action column moves across cards",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Fixed grid track or equal card widths so the action cell sits at one offset on every card row (4 of 20 rows off) (#2)",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.64",
+      "phase": "R9",
+      "title": "Overview phase count column is 222px for 19px text",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Narrow .ph-count track to about 56px, right-aligned (#3)",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.65",
+      "phase": "R9",
+      "title": "Agents effort column is 191px for 26-42px text",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Fixed .ag-effort track of about 72px at desktop and phone (#4, #8)",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.66",
+      "phase": "R9",
+      "title": "Tokens title column 437px holds 51-95px text",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Shrink the .rg-t track or give the space to the numbers (#5)",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.67",
+      "phase": "R9",
+      "title": "Tokens spend row and limit bar overflow card at 375",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Reduce inner padding or wrap .tk-spend at phone width so scrollWidth fits 311px (#6)",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.68",
+      "phase": "R9",
+      "title": "Agents phone rows show no field labels (header collapses to 0px)",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Show a label per field in stacked rows at 375 (#7)",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.69",
+      "phase": "R9",
+      "title": "Workflow phone icons clipped (93px SVG in 64px box)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Give the SVG its own size or let it scroll inside its box (#9)",
+      "refs": [
+        "commit:d39843a50879f62f02f17a960301b0b0c0cf5190"
+      ]
+    },
+    {
+      "id": "R9.70",
+      "phase": "R9",
+      "title": "Inbox question options: letter and label overlap, boxes full width, Other row cramped (H179)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:adc97a66abaf5165c96c6250f8260a8c368d392a"
+      ],
+      "at": {
+        "done": "2026-10-16T12:17:56+03:30"
+      }
+    },
+    {
+      "id": "R10.1",
+      "phase": "R10",
+      "title": "Audits: project map, ledger digest, git libs, core service",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "agy",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "docs/reviews/agy-*",
+      "refs": [
+        "commit:5bb7a20b64510b3b63aa8e5ba8efc1564e284c31"
+      ]
+    },
+    {
+      "id": "R10.2",
+      "phase": "R10",
+      "title": "UI/UX full audit per section from screenshots",
+      "status": "partial",
+      "tokensK": 8,
+      "thinking": "low",
+      "model": "agy",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "docs/reviews/ux-*"
+    },
+    {
+      "id": "R10.3",
+      "phase": "R10",
+      "title": "Resizable left/right side panels with mouse drag",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web/js/views/panel.js, nav.js, css",
+      "refs": [
+        "commit:3b518eeaa856957d69298ad23eb591505c488585",
+        "commit:d256037506bfebf63113d61a5b865e14a3fa06d5"
+      ],
+      "at": {
+        "done": "2026-10-16T13:34:23+03:30"
+      }
+    },
+    {
+      "id": "R10.4",
+      "phase": "R10",
+      "title": "Tables and lists aligned on grid columns in every section",
+      "status": "todo",
+      "tokensK": 8,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web/js/views, css"
+    },
+    {
+      "id": "R10.5",
+      "phase": "R10",
+      "title": "Scroll behaviour: one scroll container per section, sticky headers",
+      "status": "todo",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web/css"
+    },
+    {
+      "id": "R10.6",
+      "phase": "R10",
+      "title": "Responsive 375-2560: no horizontal page scroll",
+      "status": "todo",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web/css"
+    },
+    {
+      "id": "R10.7",
+      "phase": "R10",
+      "title": "Merge Planner into Work (one section, planner as view)",
+      "status": "partial",
+      "tokensK": 8,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "planner.js, work.js",
+      "verify": true
+    },
+    {
+      "id": "R10.8",
+      "phase": "R10",
+      "title": "Delete Research section (view, routes, tests, nav)",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "research.js",
+      "refs": [
+        "commit:270d82ff48c054ec77e95c95af298243f32a5430"
+      ],
+      "at": {
+        "done": "2026-10-16T13:07:52+03:30"
+      }
+    },
+    {
+      "id": "R10.9",
+      "phase": "R10",
+      "title": "Git section rebuilt on vendored MIT libs (graph + diff)",
+      "status": "partial",
+      "tokensK": 8,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "git.js, web/vendor"
+    },
+    {
+      "id": "R10.10",
+      "phase": "R10",
+      "title": "Core sync root causes (jobs/tasks/work/head not in sync)",
+      "status": "partial",
+      "tokensK": 8,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "roadmap/",
+      "verify": true
+    },
+    {
+      "id": "R10.11",
+      "phase": "R10",
+      "title": "Init flow: /head on a new project starts service, registers, empty state",
+      "status": "todo",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "bin, skill"
+    },
+    {
+      "id": "R10.12",
+      "phase": "R10",
+      "title": "Archive old open board tasks, keep done history",
+      "status": "done",
+      "tokensK": 2,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "docs/tasks.json",
+      "at": {
+        "done": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R10.13",
+      "phase": "R10",
+      "title": "Modernize old sections (minimal design) per R10.2 findings",
+      "status": "todo",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web"
+    },
+    {
+      "id": "R10.14",
+      "phase": "R10",
+      "title": "Panel: smart use of space; Inbox section fixes (H169,H170,H178)",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "inbox.js, panel.js",
+      "refs": [
+        "commit:9fb649a7e57741f255bf76cdf49ac4f1393b8c6b"
+      ],
+      "at": {
+        "done": "2026-10-16T13:14:56+03:30"
+      }
+    },
+    {
+      "id": "R10.16",
+      "phase": "R10",
+      "title": "Head section shows the chat: person messages and AI replies (H187)",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "roadmap/services/head*.py, hooks.py, head.js",
+      "refs": [
+        "commit:a58e165a751d4c59e14df8faab6133694399422a"
+      ],
+      "at": {
+        "done": "2026-10-16T13:44:00+03:30"
+      }
+    },
+    {
+      "id": "R10.15",
+      "phase": "R10",
+      "title": "Green baseline: fix failing usage/migrate/sync tests",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "roadmap/services/usage*, tests/unit",
+      "refs": [
+        "commit:efa232ca169d77142478b57392c1b15c5fb0a8d7"
+      ],
+      "at": {
+        "done": "2026-10-16T13:37:35+03:30"
+      }
     }
   ],
   "schemaVersion": 1

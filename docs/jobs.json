@@ -5199,6 +5199,682 @@
       "status": "done",
       "started": "2026-10-15T22:24:10+03:30",
       "ended": "2026-10-15T22:28:55+03:30"
+    },
+    {
+      "id": "j909",
+      "title": "cursor: grok 4.7 xhigh: workflow You-are-here sync root cause",
+      "model": "cursor",
+      "task": "R7.31",
+      "effort": "xhigh",
+      "engine_model": "grok-4.7-xhigh",
+      "status": "done",
+      "started": "2026-10-16T11:16:27+03:30",
+      "ended": "2026-10-16T11:24:55+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j910",
+      "title": "haiku: R7.113 B-1 You-are-here follows live jobs",
+      "model": "haiku",
+      "task": "R7.113",
+      "status": "done",
+      "started": "2026-10-16T11:17:01+03:30",
+      "ended": "2026-10-16T11:18:50+03:30",
+      "refs": [
+        "commit:61d5cbfa2f0eec6d434cda816789cfecdb474f0c"
+      ]
+    },
+    {
+      "id": "j911",
+      "title": "sonnet: Sonnet low review of leftover Head tasks",
+      "model": "sonnet",
+      "task": "R7.31",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-16T11:19:07+03:30",
+      "ended": "2026-10-16T11:20:07+03:30"
+    },
+    {
+      "id": "j912",
+      "title": "haiku: Queue Q1 supervisor tick in serve",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T11:20:15+03:30",
+      "ended": "2026-10-16T11:27:53+03:30"
+    },
+    {
+      "id": "j913",
+      "title": "haiku: Queue Q2 top bar weekly stop",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T11:20:16+03:30",
+      "ended": "2026-10-16T11:21:42+03:30"
+    },
+    {
+      "id": "j914",
+      "title": "haiku: Queue Q3 priority P0-P3",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T11:20:17+03:30",
+      "ended": "2026-10-16T11:21:28+03:30"
+    },
+    {
+      "id": "j915",
+      "title": "haiku: Queue Q6 snapshot work progress",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T11:20:18+03:30",
+      "ended": "2026-10-16T11:22:20+03:30"
+    },
+    {
+      "id": "j916",
+      "title": "haiku: Queue Q7 task fingerprint dedupe",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T11:20:19+03:30",
+      "ended": "2026-10-16T11:36:16+03:30"
+    },
+    {
+      "id": "j917",
+      "title": "haiku: Queue Q8 idempotency key",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T11:20:20+03:30",
+      "ended": "2026-10-16T11:24:49+03:30"
+    },
+    {
+      "id": "j918",
+      "title": "haiku: Q1 supervisor tick in serve",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T11:20:25+03:30",
+      "ended": "2026-10-16T11:27:57+03:30",
+      "tokensK": 96.0
+    },
+    {
+      "id": "j919",
+      "title": "haiku: Q2 top bar weekly stop",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T11:20:25+03:30",
+      "ended": "2026-10-16T11:21:44+03:30",
+      "tokensK": 80.0
+    },
+    {
+      "id": "j920",
+      "title": "haiku: Q3 priority P0-P3",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T11:20:25+03:30",
+      "ended": "2026-10-16T11:21:32+03:30",
+      "tokensK": 91.0
+    },
+    {
+      "id": "j921",
+      "title": "haiku: Q6 snapshot work progress",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T11:20:25+03:30",
+      "ended": "2026-10-16T11:22:22+03:30",
+      "tokensK": 107.0
+    },
+    {
+      "id": "j922",
+      "title": "haiku: Q7 task fingerprint dedupe",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T11:20:26+03:30",
+      "ended": "2026-10-16T11:36:42+03:30",
+      "tokensK": 87.0
+    },
+    {
+      "id": "j923",
+      "title": "haiku: Q8 idempotency key",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T11:20:26+03:30",
+      "ended": "2026-10-16T11:24:51+03:30",
+      "tokensK": 95.0
+    },
+    {
+      "id": "j924",
+      "title": "haiku: R9.4 Work CLI and head next",
+      "model": "haiku",
+      "task": "R9.4",
+      "status": "done",
+      "started": "2026-10-16T11:48:17+03:30",
+      "ended": "2026-10-16T11:52:08+03:30",
+      "refs": [
+        "commit:0989ae364c9b92b93ba1dc4074b10eedc37a4e51"
+      ]
+    },
+    {
+      "id": "j925",
+      "title": "haiku: R9.24 unapproved-phase gate",
+      "model": "haiku",
+      "task": "R9.24",
+      "status": "done",
+      "started": "2026-10-16T11:48:18+03:30",
+      "ended": "2026-10-16T11:49:14+03:30"
+    },
+    {
+      "id": "j926",
+      "title": "haiku: R9.3 head set prio and bump",
+      "model": "haiku",
+      "task": "R9.3",
+      "status": "done",
+      "started": "2026-10-16T11:48:20+03:30",
+      "ended": "2026-10-16T11:51:26+03:30"
+    },
+    {
+      "id": "j927",
+      "title": "haiku: R9.19 sync push stream",
+      "model": "haiku",
+      "task": "R9.19",
+      "status": "done",
+      "started": "2026-10-16T11:48:22+03:30",
+      "ended": "2026-10-16T11:50:41+03:30"
+    },
+    {
+      "id": "j928",
+      "title": "cursor: grok 4.7 xhigh: root cause of 8 usage test failures",
+      "model": "cursor",
+      "task": "R7.31",
+      "effort": "xhigh",
+      "engine_model": "grok-4.7-xhigh",
+      "status": "done",
+      "started": "2026-10-16T11:49:43+03:30",
+      "ended": "2026-10-16T12:03:35+03:30",
+      "tokensK": 0.0
+    },
+    {
+      "id": "j929",
+      "title": "agy: agy: task.start gate bypass audit",
+      "model": "agy",
+      "task": "R9.24",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-16T11:49:43+03:30",
+      "ended": "2026-10-16T11:52:57+03:30"
+    },
+    {
+      "id": "j930",
+      "title": "agy: agy: supervisor fold retried-job bug verify",
+      "model": "agy",
+      "task": "R7.99",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-16T11:49:45+03:30",
+      "ended": "2026-10-16T11:55:41+03:30"
+    },
+    {
+      "id": "j931",
+      "title": "cursor grok 4.7 xhigh: Agents panel layout fix (agent mode)",
+      "model": "cursor",
+      "task": "R7.31",
+      "effort": "xhigh",
+      "engine_model": "grok-4.7-xhigh",
+      "status": "running",
+      "started": "2026-10-16T11:53:21+03:30",
+      "ended": null
+    },
+    {
+      "id": "j932",
+      "title": "haiku: R9.30 inbox choice answers",
+      "model": "haiku",
+      "task": "R9.30",
+      "status": "done",
+      "started": "2026-10-16T11:59:56+03:30",
+      "ended": "2026-10-16T12:00:58+03:30",
+      "refs": [
+        "commit:9bb53f942f5ddb3ec004600637179e85795356d4"
+      ],
+      "tokensK": 71.0
+    },
+    {
+      "id": "j933",
+      "title": "haiku: R9.31 head asks with options",
+      "model": "haiku",
+      "task": "R9.31",
+      "status": "done",
+      "started": "2026-10-16T11:59:56+03:30",
+      "ended": "2026-10-16T12:03:08+03:30",
+      "refs": [
+        "commit:defce22b2e750531278b856c104e5c1950379659"
+      ],
+      "tokensK": 98.0
+    },
+    {
+      "id": "j934",
+      "title": "haiku: R9.30 Inbox choice answers",
+      "model": "haiku",
+      "task": "R9.30",
+      "status": "done",
+      "started": "2026-10-16T12:00:00+03:30",
+      "ended": "2026-10-16T12:00:56+03:30",
+      "refs": [
+        "commit:9bb53f942f5ddb3ec004600637179e85795356d4"
+      ]
+    },
+    {
+      "id": "j935",
+      "title": "haiku: R9.31 head asks with options",
+      "model": "haiku",
+      "task": "R9.31",
+      "status": "done",
+      "started": "2026-10-16T12:01:02+03:30",
+      "ended": "2026-10-16T12:13:34+03:30",
+      "refs": [
+        "commit:defce22b2e750531278b856c104e5c1950379659"
+      ],
+      "tokensK": 0.0
+    },
+    {
+      "id": "j936",
+      "title": "haiku: R9.31 head asks with options",
+      "model": "haiku",
+      "task": "R9.31",
+      "status": "done",
+      "started": "2026-10-16T12:01:06+03:30",
+      "ended": "2026-10-16T12:03:06+03:30",
+      "refs": [
+        "commit:defce22b2e750531278b856c104e5c1950379659"
+      ]
+    },
+    {
+      "id": "j937",
+      "title": "haiku: Inbox tasks: check against code and do leftovers",
+      "model": "haiku",
+      "task": "R3.2",
+      "status": "done",
+      "started": "2026-10-16T12:01:12+03:30",
+      "ended": "2026-10-16T12:11:46+03:30"
+    },
+    {
+      "id": "j938",
+      "title": "haiku: Planner crash/hang fix and Planner tasks",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T12:04:56+03:30",
+      "ended": "2026-10-16T12:07:49+03:30"
+    },
+    {
+      "id": "j939",
+      "title": "haiku: Planner crash/hang fix and Planner tasks",
+      "model": "haiku",
+      "task": "R6.23",
+      "status": "done",
+      "started": "2026-10-16T12:04:58+03:30",
+      "ended": "2026-10-16T12:07:51+03:30",
+      "tokensK": 107.0
+    },
+    {
+      "id": "j940",
+      "title": "haiku: UI/UX tester: see every section and file issues",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T12:07:01+03:30",
+      "ended": "2026-10-16T12:10:19+03:30"
+    },
+    {
+      "id": "j941",
+      "title": "haiku: UI/UX tester v2: measure alignment, real data, rules",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-16T12:09:14+03:30",
+      "ended": "2026-10-16T12:12:52+03:30"
+    },
+    {
+      "id": "j942",
+      "title": "haiku: R9.70 Inbox option buttons layout",
+      "model": "haiku",
+      "task": "R9.70",
+      "status": "done",
+      "started": "2026-10-16T12:15:42+03:30",
+      "ended": "2026-10-16T12:17:56+03:30",
+      "refs": [
+        "commit:adc97a66abaf5165c96c6250f8260a8c368d392a"
+      ],
+      "tokensK": 90.0
+    },
+    {
+      "id": "j943",
+      "title": "haiku: R9.70 Inbox option buttons layout",
+      "model": "haiku",
+      "task": "R9.70",
+      "status": "done",
+      "started": "2026-10-16T12:15:48+03:30",
+      "ended": "2026-10-16T12:17:53+03:30",
+      "refs": [
+        "commit:adc97a66abaf5165c96c6250f8260a8c368d392a"
+      ]
+    },
+    {
+      "id": "j944",
+      "title": "agy: a1 head plan audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-16T12:52:01+03:30",
+      "ended": "2026-10-16T12:52:24+03:30"
+    },
+    {
+      "id": "j945",
+      "title": "agy: a2 head plan audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-16T12:52:01+03:30",
+      "ended": "2026-10-16T12:52:24+03:30"
+    },
+    {
+      "id": "j946",
+      "title": "agy: a3 head plan audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-16T12:52:01+03:30",
+      "ended": "2026-10-16T12:52:24+03:30"
+    },
+    {
+      "id": "j947",
+      "title": "agy: a4 head plan audit",
+      "model": "agy",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-16T12:52:01+03:30",
+      "ended": "2026-10-16T12:52:24+03:30"
+    },
+    {
+      "id": "j948",
+      "title": "agy: project map",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-16T12:52:04+03:30",
+      "ended": "2026-10-16T13:13:11+03:30"
+    },
+    {
+      "id": "j949",
+      "title": "agy: head ledger digest",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "running",
+      "started": "2026-10-16T12:52:06+03:30",
+      "ended": null
+    },
+    {
+      "id": "j950",
+      "title": "agy: git OSS libs research",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-16T12:52:08+03:30",
+      "ended": "2026-10-16T13:21:41+03:30"
+    },
+    {
+      "id": "j951",
+      "title": "agy: core service audit",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-16T12:52:10+03:30",
+      "ended": "2026-10-16T13:40:43+03:30"
+    },
+    {
+      "id": "j952",
+      "title": "agy: UI/UX audit overview activity agents roadmap",
+      "model": "agy",
+      "task": "R10.2",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-16T12:54:17+03:30",
+      "ended": "2026-10-16T13:35:54+03:30"
+    },
+    {
+      "id": "j953",
+      "title": "agy: UI/UX audit work-board work-list work-tree planner head",
+      "model": "agy",
+      "task": "R10.2",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-16T12:54:19+03:30",
+      "ended": "2026-10-16T13:13:56+03:30"
+    },
+    {
+      "id": "j954",
+      "title": "agy: UI/UX audit inbox rules settings tokens",
+      "model": "agy",
+      "task": "R10.2",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-16T12:54:21+03:30",
+      "ended": "2026-10-16T13:13:46+03:30"
+    },
+    {
+      "id": "j955",
+      "title": "agy: UI/UX audit git workflow",
+      "model": "agy",
+      "task": "R10.2",
+      "effort": "high",
+      "status": "running",
+      "started": "2026-10-16T12:54:23+03:30",
+      "ended": null
+    },
+    {
+      "id": "j956",
+      "title": "agy: UI/UX global shell audit",
+      "model": "agy",
+      "task": "R10.2",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-16T12:54:25+03:30",
+      "ended": "2026-10-16T13:28:14+03:30"
+    },
+    {
+      "id": "j957",
+      "title": "haiku: R10.8 delete Research section",
+      "model": "haiku",
+      "task": "R10.8",
+      "status": "done",
+      "started": "2026-10-16T12:54:26+03:30",
+      "ended": "2026-10-16T13:06:53+03:30",
+      "refs": [
+        "commit:270d82ff48c054ec77e95c95af298243f32a5430"
+      ]
+    },
+    {
+      "id": "j958",
+      "title": "haiku: R10.14 Inbox section fixes",
+      "model": "haiku",
+      "task": "R10.14",
+      "status": "done",
+      "started": "2026-10-16T13:09:10+03:30",
+      "ended": "2026-10-16T13:13:55+03:30",
+      "refs": [
+        "commit:9fb649a7e57741f255bf76cdf49ac4f1393b8c6b"
+      ]
+    },
+    {
+      "id": "j959",
+      "title": "agy: project map",
+      "model": "agy",
+      "task": "R7.31",
+      "effort": "high",
+      "status": "running",
+      "started": "2026-10-16T13:15:12+03:30",
+      "ended": null
+    },
+    {
+      "id": "j960",
+      "title": "agy: UI/UX audit work-board work-list work-tree planner head",
+      "model": "agy",
+      "task": "R10.2",
+      "effort": "high",
+      "status": "running",
+      "started": "2026-10-16T13:15:14+03:30",
+      "ended": null
+    },
+    {
+      "id": "j961",
+      "title": "agy: UI/UX audit inbox rules settings tokens",
+      "model": "agy",
+      "task": "R10.2",
+      "effort": "high",
+      "status": "running",
+      "started": "2026-10-16T13:15:16+03:30",
+      "ended": null
+    },
+    {
+      "id": "j962",
+      "title": "agy: codegraph fit research",
+      "model": "agy",
+      "task": "R10.1",
+      "effort": "high",
+      "status": "done",
+      "started": "2026-10-16T13:16:03+03:30",
+      "ended": "2026-10-16T13:38:09+03:30"
+    },
+    {
+      "id": "j963",
+      "title": "sonnet: R10.3 resizable side panels",
+      "model": "sonnet",
+      "task": "R10.3",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-16T13:31:28+03:30",
+      "ended": "2026-10-16T13:34:07+03:30",
+      "refs": [
+        "commit:3b518eeaa856957d69298ad23eb591505c488585",
+        "commit:d256037506bfebf63113d61a5b865e14a3fa06d5"
+      ]
+    },
+    {
+      "id": "j964",
+      "title": "sonnet: R10.7 merge Planner into Work",
+      "model": "sonnet",
+      "task": "R10.7",
+      "effort": "medium",
+      "status": "done",
+      "started": "2026-10-16T13:31:36+03:30",
+      "ended": "2026-10-16T13:39:30+03:30"
+    },
+    {
+      "id": "j965",
+      "title": "haiku: R10.16 Head section chat capture",
+      "model": "haiku",
+      "task": "R10.16",
+      "status": "done",
+      "started": "2026-10-16T13:31:44+03:30",
+      "ended": "2026-10-16T13:35:08+03:30"
+    },
+    {
+      "id": "j966",
+      "title": "haiku: R10.15 green test baseline",
+      "model": "haiku",
+      "task": "R10.15",
+      "status": "done",
+      "started": "2026-10-16T13:32:23+03:30",
+      "ended": "2026-10-16T13:36:29+03:30",
+      "refs": [
+        "commit:efa232ca169d77142478b57392c1b15c5fb0a8d7"
+      ]
+    },
+    {
+      "id": "j967",
+      "title": "haiku: R10.16 fix Stop-hook reply overwrite",
+      "model": "haiku",
+      "task": "R10.16",
+      "status": "done",
+      "started": "2026-10-16T13:36:10+03:30",
+      "ended": "2026-10-16T13:43:49+03:30",
+      "refs": [
+        "commit:a58e165a751d4c59e14df8faab6133694399422a"
+      ]
+    },
+    {
+      "id": "j968",
+      "title": "sonnet: R10.7 follow-up",
+      "model": "sonnet",
+      "task": "R10.7",
+      "status": "done",
+      "started": "2026-10-16T13:37:26+03:30",
+      "ended": "2026-10-16T13:39:30+03:30"
+    },
+    {
+      "id": "j969",
+      "title": "haiku: R10.15 follow-up",
+      "model": "haiku",
+      "task": "R10.15",
+      "status": "done",
+      "started": "2026-10-16T13:37:32+03:30",
+      "ended": "2026-10-16T13:37:37+03:30"
+    },
+    {
+      "id": "j970",
+      "title": "sonnet: R10.9 Git section on OSS libs",
+      "model": "sonnet",
+      "task": "R10.9",
+      "effort": "low",
+      "status": "running",
+      "started": "2026-10-16T13:38:04+03:30",
+      "ended": null
+    },
+    {
+      "id": "j971",
+      "title": "sonnet: R10.10 verify core audit, plan fixes",
+      "model": "sonnet",
+      "task": "R10.10",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-16T13:38:20+03:30",
+      "ended": "2026-10-16T13:40:42+03:30"
+    },
+    {
+      "id": "j972",
+      "title": "haiku: R10.10 C1 no phantom db",
+      "model": "haiku",
+      "task": "R10.10",
+      "status": "running",
+      "started": "2026-10-16T13:40:57+03:30",
+      "ended": null
+    },
+    {
+      "id": "j973",
+      "title": "haiku: R10.10 C2 work.json in loader",
+      "model": "haiku",
+      "task": "R10.10",
+      "status": "running",
+      "started": "2026-10-16T13:41:01+03:30",
+      "ended": null
+    },
+    {
+      "id": "j974",
+      "title": "haiku: R10.10 C5 running visibility",
+      "model": "haiku",
+      "task": "R10.10",
+      "status": "running",
+      "started": "2026-10-16T13:41:04+03:30",
+      "ended": null
     }
   ]
 }

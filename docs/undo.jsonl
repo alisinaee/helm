@@ -1,78 +1,3 @@
-{"activity":"A2","sum":"F23 added: Copy reference id on every section and row","op":"feature.rm","args":{"id":"F23"},"at":"2026-10-14T13:16:43+03:30"}
-{"activity":"A3","sum":"link F23 to R7.12","op":"feature.unlink","args":{"task":"R7.12","feats":["F23"]},"at":"2026-10-14T13:16:50+03:30"}
-{"activity":"A4","sum":"link F2 to R7.13","op":"feature.unlink","args":{"task":"R7.13","feats":["F2"]},"at":"2026-10-14T13:20:38+03:30"}
-{"activity":"A5","sum":"link F13 to R7.14","op":"feature.unlink","args":{"task":"R7.14","feats":["F13"]},"at":"2026-10-14T13:24:17+03:30"}
-{"activity":"A6","sum":"link F19 to R7.17","op":"feature.unlink","args":{"task":"R7.17","feats":["F19"]},"at":"2026-10-15T08:13:59+03:30"}
-{"activity":"A7","sum":"link F22 to R7.16","op":"feature.unlink","args":{"task":"R7.16","feats":["F22"]},"at":"2026-10-15T08:13:59+03:30"}
-{"activity":"A9","sum":"link F11 to R7.20","op":"feature.unlink","args":{"task":"R7.20","feats":["F11"]},"at":"2026-10-15T08:16:13+03:30"}
-{"activity":"A14","sum":"link F22 to R7.8","op":"feature.unlink","args":{"task":"R7.8","feats":["F22"]},"at":"2026-10-15T08:16:13+03:30"}
-{"activity":"A15","sum":"link F22 to R7.18","op":"feature.unlink","args":{"task":"R7.18","feats":["F22"]},"at":"2026-10-15T08:16:13+03:30"}
-{"activity":"A16","sum":"link F22 to R7.19","op":"feature.unlink","args":{"task":"R7.19","feats":["F22"]},"at":"2026-10-15T08:16:13+03:30"}
-{"activity":"A17","sum":"link F22 to R3.3","op":"feature.unlink","args":{"task":"R3.3","feats":["F22"]},"at":"2026-10-15T08:16:13+03:30"}
-{"activity":"A18","sum":"link F22 to R3.4","op":"feature.unlink","args":{"task":"R3.4","feats":["F22"]},"at":"2026-10-15T08:16:13+03:30"}
-{"activity":"A19","sum":"link F22 to R3.5","op":"feature.unlink","args":{"task":"R3.5","feats":["F22"]},"at":"2026-10-15T08:16:13+03:30"}
-{"activity":"A22","sum":"link F19 to R7.7","op":"feature.unlink","args":{"task":"R7.7","feats":["F19"]},"at":"2026-10-15T08:16:13+03:30"}
-{"activity":"A23","sum":"link F19 to R7.9","op":"feature.unlink","args":{"task":"R7.9","feats":["F19"]},"at":"2026-10-15T08:16:13+03:30"}
-{"activity":"A25","sum":"link F14 to R7.11","op":"feature.unlink","args":{"task":"R7.11","feats":["F14"]},"at":"2026-10-15T08:16:13+03:30"}
-{"activity":"A26","sum":"link F6 to R7.3","op":"feature.unlink","args":{"task":"R7.3","feats":["F6"]},"at":"2026-10-15T08:16:13+03:30"}
-{"activity":"A28","sum":"link F2 to R7.10","op":"feature.unlink","args":{"task":"R7.10","feats":["F2"]},"at":"2026-10-15T08:16:13+03:30"}
-{"activity":"A30","sum":"R7.17 partial->done","op":"task.status","args":{"id":"R7.17","status":"partial"},"at":"2026-10-15T08:19:05+03:30"}
-{"activity":"A31","sum":"link F22 to R3.6","op":"feature.unlink","args":{"task":"R3.6","feats":["F22"]},"at":"2026-10-15T08:20:58+03:30"}
-{"activity":"A32","sum":"link F22 to R3.7","op":"feature.unlink","args":{"task":"R3.7","feats":["F22"]},"at":"2026-10-15T08:20:58+03:30"}
-{"activity":"A33","sum":"link F22 to R7.21","op":"feature.unlink","args":{"task":"R7.21","feats":["F22"]},"at":"2026-10-15T08:22:34+03:30"}
-{"activity":"A34","sum":"link F5 to R7.22","op":"feature.unlink","args":{"task":"R7.22","feats":["F5"]},"at":"2026-10-15T08:23:14+03:30"}
-{"activity":"A35","sum":"link F6 to R7.22","op":"feature.unlink","args":{"task":"R7.22","feats":["F6"]},"at":"2026-10-15T08:23:14+03:30"}
-{"activity":"A36","sum":"link F18 to R7.23","op":"feature.unlink","args":{"task":"R7.23","feats":["F18"]},"at":"2026-10-15T08:26:57+03:30"}
-{"activity":"A37","sum":"link F6 to R7.24","op":"feature.unlink","args":{"task":"R7.24","feats":["F6"]},"at":"2026-10-15T08:30:38+03:30"}
-{"activity":"A38","sum":"link F5 to R7.24","op":"feature.unlink","args":{"task":"R7.24","feats":["F5"]},"at":"2026-10-15T08:30:38+03:30"}
-{"activity":"A39","sum":"link F7 to R7.25","op":"feature.unlink","args":{"task":"R7.25","feats":["F7"]},"at":"2026-10-15T08:33:34+03:30"}
-{"activity":"A40","sum":"link F6 to R7.25","op":"feature.unlink","args":{"task":"R7.25","feats":["F6"]},"at":"2026-10-15T08:33:34+03:30"}
-{"activity":"A41","sum":"R7.23 todo->done","op":"task.status","args":{"id":"R7.23","status":"todo"},"at":"2026-10-15T08:34:36+03:30"}
-{"activity":"A42","sum":"link F19 to R7.26","op":"feature.unlink","args":{"task":"R7.26","feats":["F19"]},"at":"2026-10-15T08:37:27+03:30"}
-{"activity":"A43","sum":"link F10 to R7.27","op":"feature.unlink","args":{"task":"R7.27","feats":["F10"]},"at":"2026-10-15T08:38:16+03:30"}
-{"activity":"A44","sum":"link F10 to R7.28","op":"feature.unlink","args":{"task":"R7.28","feats":["F10"]},"at":"2026-10-15T08:38:38+03:30"}
-{"activity":"A45","sum":"F24 added: Git sync and history: auto commit, push, history, branches","op":"feature.rm","args":{"id":"F24"},"at":"2026-10-15T08:41:17+03:30"}
-{"activity":"A46","sum":"link F13 to R7.30","op":"feature.unlink","args":{"task":"R7.30","feats":["F13"]},"at":"2026-10-15T08:47:09+03:30"}
-{"activity":"A47","sum":"R7.27 todo->done","op":"task.status","args":{"id":"R7.27","status":"todo"},"at":"2026-10-15T08:47:21+03:30"}
-{"activity":"A48","sum":"F25 added: Head section: ledger of the person's asks, bound to tasks, with status","op":"feature.rm","args":{"id":"F25"},"at":"2026-10-15T08:54:35+03:30"}
-{"activity":"A49","sum":"link F25 to R7.31","op":"feature.unlink","args":{"task":"R7.31","feats":["F25"]},"at":"2026-10-15T08:54:35+03:30"}
-{"activity":"A50","sum":"moved R7.31 before R7.30","op":"plan.move","args":{"id":"R7.31","after":"R7.30"},"at":"2026-10-15T09:04:56+03:30"}
-{"activity":"A51","sum":"R7.31 todo->partial","op":"task.status","args":{"id":"R7.31","status":"todo"},"at":"2026-10-15T09:18:31+03:30"}
-{"activity":"A52","sum":"H18 bound task:R7.31","op":"head.restore","args":{"steps":[{"id":"H18","link":["-task:R7.31"]}]},"at":"2026-10-15T10:00:12+03:30"}
-{"activity":"A53","sum":"H19 bound task:R7.31","op":"head.restore","args":{"steps":[{"id":"H19","link":["-task:R7.31"]}]},"at":"2026-10-15T10:00:12+03:30"}
-{"activity":"A54","sum":"H20 bound task:R7.31","op":"head.restore","args":{"steps":[{"id":"H20","link":["-task:R7.31"]}]},"at":"2026-10-15T10:00:12+03:30"}
-{"activity":"A55","sum":"H21 bound task:R7.31","op":"head.restore","args":{"steps":[{"id":"H21","link":["-task:R7.31"]}]},"at":"2026-10-15T10:00:12+03:30"}
-{"activity":"A56","sum":"H22 bound task:R7.31","op":"head.restore","args":{"steps":[{"id":"H22","link":["-task:R7.31"]}]},"at":"2026-10-15T10:00:12+03:30"}
-{"activity":"A57","sum":"H23 bound task:R7.31","op":"head.restore","args":{"steps":[{"id":"H23","link":["-task:R7.31"]}]},"at":"2026-10-15T10:00:12+03:30"}
-{"activity":"A58","sum":"H15 bound task:R7.29","op":"head.restore","args":{"steps":[{"id":"H15","link":["-task:R7.29"]}]},"at":"2026-10-15T10:00:12+03:30"}
-{"activity":"A59","sum":"H1 bound task:R7.31","op":"head.restore","args":{"steps":[{"id":"H1","link":["-task:R7.31"]}]},"at":"2026-10-15T10:00:12+03:30"}
-{"activity":"A60","sum":"H1 unbound task:R7.31","op":"head.restore","args":{"steps":[{"id":"H1","link":["+task:R7.31"]}]},"at":"2026-10-15T10:00:15+03:30"}
-{"activity":"A61","sum":"H24 decision logged","op":"head.restore","args":{"steps":[{"id":"H24","set":{"status":"declined"}}]},"at":"2026-10-15T10:01:14+03:30"}
-{"activity":"A64","sum":"H27 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H27","set":{"kind":"ask","sum":"ui for head need to have opnoint to see as list with columns , not this card base only ui"},"link":["-task:R7.31"]}]},"at":"2026-10-15T10:19:01+03:30"}
-{"activity":"A65","sum":"H28 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H28","set":{"kind":"rule","sum":"i dont see the effort use for each one fix"},"link":["-task:R7.31"]}]},"at":"2026-10-15T10:20:32+03:30"}
-{"activity":"A66","sum":"H27 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H27","set":{"kind":"ask","sum":"Head: list view with columns, not cards"}}]},"at":"2026-10-15T10:22:19+03:30"}
-{"activity":"A67","sum":"H27 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H27","set":{"kind":"ask","sum":"Head: list view with columns, not cards"}}]},"at":"2026-10-15T10:22:19+03:30"}
-{"activity":"A68","sum":"H28 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H28","set":{"kind":"rule","sum":"Agents list: always show the Effort column for every job"}}]},"at":"2026-10-15T10:22:19+03:30"}
-{"activity":"A69","sum":"H31 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H31","set":{"kind":"ask","sum":"test it : this is the test text message i want to see if this appear in the head section or not…"},"link":["-task:R7.31"]}]},"at":"2026-10-15T10:24:32+03:30"}
-{"activity":"A70","sum":"H35 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H35","set":{"kind":"bug","sum":"run more agy cusrsor taks to complete the head section and fix bugs"},"link":["-task:R7.31"]}]},"at":"2026-10-15T10:27:35+03:30"}
-{"activity":"A71","sum":"H25 triaged as info","op":"head.restore","args":{"steps":[{"id":"H25","set":{"kind":"ask","sum":"<bash-input>cd ~/Works/roadmap-board && bin/roadmap hooks install…"}}]},"at":"2026-10-15T10:27:44+03:30"}
-{"activity":"A72","sum":"H26 triaged as info","op":"head.restore","args":{"steps":[{"id":"H26","set":{"kind":"ask","sum":"<bash-input>bin/roadmap head forget H24</bash-input><bash-stdout>ok H24 verbatim forgotten."}}]},"at":"2026-10-15T10:27:44+03:30"}
-{"activity":"A73","sum":"H33 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H33","set":{"kind":"ask","sum":"i meand dead space in blow the list shoudl take full space"},"link":["-task:R7.31"]}]},"at":"2026-10-15T10:27:44+03:30"}
-{"activity":"A74","sum":"H36 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H36","set":{"kind":"ask","sum":"laso more haiku task run"},"link":["-task:R7.31"]}]},"at":"2026-10-15T10:27:55+03:30"}
-{"activity":"A75","sum":"H27 set status","op":"head.restore","args":{"steps":[{"id":"H27","set":{"status":"open"}}]},"at":"2026-10-15T10:38:07+03:30"}
-{"activity":"A76","sum":"H31 set status","op":"head.restore","args":{"steps":[{"id":"H31","set":{"status":"open"}}]},"at":"2026-10-15T10:38:07+03:30"}
-{"activity":"A77","sum":"H33 set status","op":"head.restore","args":{"steps":[{"id":"H33","set":{"status":"open"}}]},"at":"2026-10-15T10:38:07+03:30"}
-{"activity":"A78","sum":"H25 set status","op":"head.restore","args":{"steps":[{"id":"H25","set":{"status":"open"}}]},"at":"2026-10-15T10:38:07+03:30"}
-{"activity":"A79","sum":"H26 set status","op":"head.restore","args":{"steps":[{"id":"H26","set":{"status":"open"}}]},"at":"2026-10-15T10:38:07+03:30"}
-{"activity":"A80","sum":"H37 set status","op":"head.restore","args":{"steps":[{"id":"H37","set":{"status":"open"}}]},"at":"2026-10-15T10:38:12+03:30"}
-{"activity":"A81","sum":"H38 set status","op":"head.restore","args":{"steps":[{"id":"H38","set":{"status":"open"}}]},"at":"2026-10-15T10:38:12+03:30"}
-{"activity":"A82","sum":"H39 set status","op":"head.restore","args":{"steps":[{"id":"H39","set":{"status":"open"}}]},"at":"2026-10-15T10:38:12+03:30"}
-{"activity":"A83","sum":"H40 set status","op":"head.restore","args":{"steps":[{"id":"H40","set":{"status":"open"}}]},"at":"2026-10-15T10:38:29+03:30"}
-{"activity":"A84","sum":"H41 set status","op":"head.restore","args":{"steps":[{"id":"H41","set":{"status":"open"}}]},"at":"2026-10-15T10:48:47+03:30"}
-{"activity":"A85","sum":"H42 set status","op":"head.restore","args":{"steps":[{"id":"H42","set":{"status":"open"}}]},"at":"2026-10-15T10:48:47+03:30"}
-{"activity":"A86","sum":"H43 set status","op":"head.restore","args":{"steps":[{"id":"H43","set":{"status":"open"}}]},"at":"2026-10-15T10:48:47+03:30"}
-{"activity":"A87","sum":"H44 set status","op":"head.restore","args":{"steps":[{"id":"H44","set":{"status":"open"}}]},"at":"2026-10-15T10:48:47+03:30"}
-{"activity":"A88","sum":"H45 set status","op":"head.restore","args":{"steps":[{"id":"H45","set":{"status":"open"}}]},"at":"2026-10-15T10:48:47+03:30"}
 {"activity":"A89","sum":"H46 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H46","set":{"kind":"rule","sum":"why i dont see the model used for open code ?"},"link":["-task:R7.31"]}]},"at":"2026-10-15T10:49:30+03:30"}
 {"activity":"A90","sum":"H47 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H47","set":{"kind":"ask","sum":"i think my mac can handle atleast 50 parall task so you need run more task if possilbe"},"link":["-task:R7.31"]}]},"at":"2026-10-15T10:51:18+03:30"}
 {"activity":"A91","sum":"H48 triaged as review","op":"head.restore","args":{"steps":[{"id":"H48","set":{"kind":"review","sum":"use cursor 4.7 xhigh to ask why our proejct managemt not sync?"},"link":["-task:R7.31"]}]},"at":"2026-10-15T10:54:09+03:30"}
@@ -488,3 +413,88 @@
 {"activity":"A521","sum":"R7.30 todo->done","op":"task.status","args":{"id":"R7.30","status":"todo"},"at":"2026-10-15T22:22:36+03:30"}
 {"activity":"A522","sum":"H159 bound task:R7.115","op":"head.restore","args":{"steps":[{"id":"H159","link":["-task:R7.115"]}]},"at":"2026-10-15T22:24:06+03:30"}
 {"activity":"A523","sum":"R7.115 partial->done","op":"task.status","args":{"id":"R7.115","status":"partial"},"at":"2026-10-15T22:29:22+03:30"}
+{"activity":"A528","sum":"H168 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H168","set":{"kind":"ask","sum":"i did told you sonnet need to add the tasks and you have to start them"},"link":["-task:R9.4"]}]},"at":"2026-10-16T11:48:29+03:30"}
+{"activity":"A529","sum":"R9.24 partial->done","op":"task.status","args":{"id":"R9.24","status":"partial"},"at":"2026-10-16T11:49:17+03:30"}
+{"activity":"A530","sum":"R9.19 partial->done","op":"task.status","args":{"id":"R9.19","status":"partial"},"at":"2026-10-16T11:50:48+03:30"}
+{"activity":"A531","sum":"R9.3 partial->done","op":"task.status","args":{"id":"R9.3","status":"partial"},"at":"2026-10-16T11:51:28+03:30"}
+{"activity":"A541","sum":"H171 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H171","set":{"kind":"rule","sum":"how about the task : dont need raw anser form the user , as much as possible ask user selective…"},"link":["-task:R9.30"]}]},"at":"2026-10-16T11:59:56+03:30"}
+{"activity":"A543","sum":"R3.2 partial->done","op":"task.status","args":{"id":"R3.2","status":"partial"},"at":"2026-10-16T12:02:25+03:30"}
+{"activity":"A545","sum":"H173 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H173","set":{"kind":"review","sum":"when i open the \"planner\" panel crash and hang , check and fix the issue gather up all the tasks…"},"link":["-task:R6.23"]}]},"at":"2026-10-16T12:04:59+03:30"}
+{"activity":"A554","sum":"H179 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H179","set":{"kind":"ask","sum":"its very bad , and not usable ui ux"},"link":["-task:R9.70"]}]},"at":"2026-10-16T12:15:43+03:30"}
+{"activity":"A556","sum":"H182 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H182","set":{"kind":"bug","sum":"tasks planner rules : * base on chart , you are allow to use opus 5.5 low or med , sonnet 5.5 low…"},"link":["-task:R7.31","-doc:docs/HEAD-RUNBOOK.md"]}]},"at":"2026-10-16T12:52:52+03:30"}
+{"activity":"A557","sum":"H165 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H165","set":{"kind":"review","sum":"ask sonnet low 5.5 to review the left over thnigs and queue things in the head section , and run…","status":"open"},"link":["-task:R10.1"]}]},"at":"2026-10-16T12:53:35+03:30"}
+{"activity":"A558","sum":"H166 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H166","set":{"kind":"rule","sum":"i dont see any running task why ?","status":"open"},"link":["-task:R10.1"]}]},"at":"2026-10-16T12:53:35+03:30"}
+{"activity":"A559","sum":"H167 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H167","set":{"kind":"question","sum":"the last sonnet task ?","status":"open"},"link":["-task:R10.1"]}]},"at":"2026-10-16T12:53:36+03:30"}
+{"activity":"A560","sum":"H175 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H175","set":{"kind":"bug","sum":"i see current haiku are test some sectionthat are empty and it did not i think take care of ui ux…","status":"open"},"link":["-task:R10.1"]}]},"at":"2026-10-16T12:53:37+03:30"}
+{"activity":"A561","sum":"H177 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H177","set":{"kind":"ask","sum":"if haiku task is finish wrokin with pane , tell me , so i will answer the question with pane","status":"open"},"link":["-task:R10.1"]}]},"at":"2026-10-16T12:53:37+03:30"}
+{"activity":"A562","sum":"H180 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H180","set":{"kind":"question","sum":"cursor finsh the job ?","status":"open"},"link":["-task:R10.1"]}]},"at":"2026-10-16T12:53:38+03:30"}
+{"activity":"A563","sum":"H181 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H181","set":{"kind":"rule","sum":"dont run new things , let that finsh the job , dont run new task","status":"open"},"link":["-task:R10.1"]}]},"at":"2026-10-16T12:53:38+03:30"}
+{"activity":"A564","sum":"H169 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H169","set":{"kind":"ask","sum":"in the panel we have issue on ui , not smart use of the space in the pace we have list or table…"},"link":["-task:R10.14"]}]},"at":"2026-10-16T12:53:39+03:30"}
+{"activity":"A565","sum":"H170 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H170","set":{"kind":"ask","sum":"can you find all the task i told u about the inbox section ?"},"link":["-task:R10.14"]}]},"at":"2026-10-16T12:53:40+03:30"}
+{"activity":"A566","sum":"H172 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H172","set":{"kind":"review","sum":"gather all the tasks for this inbox section give it to haiku to first check them all base on codes…"},"link":["-task:R10.14"]}]},"at":"2026-10-16T12:53:40+03:30"}
+{"activity":"A567","sum":"H176 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H176","set":{"kind":"question","sum":"are these on the inbox section ?"},"link":["-task:R10.14"]}]},"at":"2026-10-16T12:53:41+03:30"}
+{"activity":"A568","sum":"H178 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H178","set":{"kind":"rule","sum":"i dont see ur question here and the ui ux for this section is shit"},"link":["-task:R10.14"]}]},"at":"2026-10-16T12:53:41+03:30"}
+{"activity":"A569","sum":"H174 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H174","set":{"kind":"ask","sum":"you need setup a ui ux haiku tester , to work with new tab pane ( headless if possible ) to see (…"},"link":["-task:R10.2"]}]},"at":"2026-10-16T12:53:42+03:30"}
+{"activity":"A570","sum":"H162 set status, note","op":"head.restore","args":{"steps":[{"id":"H162","set":{"status":"open"}}]},"at":"2026-10-16T12:53:49+03:30"}
+{"activity":"A571","sum":"H163 set status, note","op":"head.restore","args":{"steps":[{"id":"H163","set":{"status":"open"}}]},"at":"2026-10-16T12:53:49+03:30"}
+{"activity":"A573","sum":"R6.18 todo->hold","op":"task.status","args":{"id":"R6.18","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A574","sum":"R6.19 todo->hold","op":"task.status","args":{"id":"R6.19","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A575","sum":"R6.22 partial->hold","op":"task.status","args":{"id":"R6.22","status":"partial"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A576","sum":"R7.5 partial->hold","op":"task.status","args":{"id":"R7.5","status":"partial"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A577","sum":"R7.12 partial->hold","op":"task.status","args":{"id":"R7.12","status":"partial"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A578","sum":"R7.13 todo->hold","op":"task.status","args":{"id":"R7.13","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A579","sum":"R7.16 partial->hold","op":"task.status","args":{"id":"R7.16","status":"partial"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A580","sum":"R3.6 todo->hold","op":"task.status","args":{"id":"R3.6","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A581","sum":"R7.22 partial->hold","op":"task.status","args":{"id":"R7.22","status":"partial"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A582","sum":"R7.24 partial->hold","op":"task.status","args":{"id":"R7.24","status":"partial"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A583","sum":"R7.25 partial->hold","op":"task.status","args":{"id":"R7.25","status":"partial"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A584","sum":"R7.26 todo->hold","op":"task.status","args":{"id":"R7.26","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A585","sum":"R7.29 partial->hold","op":"task.status","args":{"id":"R7.29","status":"partial"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A586","sum":"R7.59 todo->hold","op":"task.status","args":{"id":"R7.59","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A587","sum":"R7.73 partial->hold","op":"task.status","args":{"id":"R7.73","status":"partial"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A588","sum":"R7.82 partial->hold","op":"task.status","args":{"id":"R7.82","status":"partial"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A589","sum":"R9.5 todo->hold","op":"task.status","args":{"id":"R9.5","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A590","sum":"R9.20 todo->hold","op":"task.status","args":{"id":"R9.20","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A591","sum":"R9.23 todo->hold","op":"task.status","args":{"id":"R9.23","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A592","sum":"R9.41 todo->hold","op":"task.status","args":{"id":"R9.41","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A593","sum":"R9.42 todo->hold","op":"task.status","args":{"id":"R9.42","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A594","sum":"R9.43 todo->hold","op":"task.status","args":{"id":"R9.43","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A595","sum":"R9.44 todo->hold","op":"task.status","args":{"id":"R9.44","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A596","sum":"R9.45 todo->hold","op":"task.status","args":{"id":"R9.45","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A597","sum":"R9.46 todo->hold","op":"task.status","args":{"id":"R9.46","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A598","sum":"R9.47 todo->hold","op":"task.status","args":{"id":"R9.47","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A599","sum":"R9.48 todo->hold","op":"task.status","args":{"id":"R9.48","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A600","sum":"R9.49 todo->hold","op":"task.status","args":{"id":"R9.49","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A601","sum":"R9.50 todo->hold","op":"task.status","args":{"id":"R9.50","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A602","sum":"R9.51 todo->hold","op":"task.status","args":{"id":"R9.51","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A603","sum":"R9.52 todo->hold","op":"task.status","args":{"id":"R9.52","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A604","sum":"R9.53 todo->hold","op":"task.status","args":{"id":"R9.53","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A605","sum":"R9.54 todo->hold","op":"task.status","args":{"id":"R9.54","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A606","sum":"R9.55 todo->hold","op":"task.status","args":{"id":"R9.55","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A607","sum":"R9.56 todo->hold","op":"task.status","args":{"id":"R9.56","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A608","sum":"R9.57 todo->hold","op":"task.status","args":{"id":"R9.57","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A609","sum":"R9.58 todo->hold","op":"task.status","args":{"id":"R9.58","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A610","sum":"R9.59 todo->hold","op":"task.status","args":{"id":"R9.59","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A611","sum":"R9.60 todo->hold","op":"task.status","args":{"id":"R9.60","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A612","sum":"R9.63 todo->hold","op":"task.status","args":{"id":"R9.63","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A613","sum":"R9.64 todo->hold","op":"task.status","args":{"id":"R9.64","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A614","sum":"R9.65 todo->hold","op":"task.status","args":{"id":"R9.65","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A615","sum":"R9.66 todo->hold","op":"task.status","args":{"id":"R9.66","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A616","sum":"R9.67 todo->hold","op":"task.status","args":{"id":"R9.67","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A617","sum":"R9.68 todo->hold","op":"task.status","args":{"id":"R9.68","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A618","sum":"R10.12 todo->done","op":"task.status","args":{"id":"R10.12","status":"todo"},"at":"2026-10-16T13:08:41+03:30"}
+{"activity":"A619","sum":"H173 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H173","set":{"kind":"bug","sum":"Planner panel crashes and hangs: reproduce, fix root cause, then do Planner leftovers"},"link":["-task:R10.7"]}]},"at":"2026-10-16T13:08:59+03:30"}
+{"activity":"A621","sum":"H183 triaged as review","op":"head.restore","args":{"steps":[{"id":"H183","set":{"kind":"review","sum":"why agy task faild ?"},"link":["-task:R10.1"]}]},"at":"2026-10-16T13:15:07+03:30"}
+{"activity":"A622","sum":"H184 triaged as review","op":"head.restore","args":{"steps":[{"id":"H184","set":{"kind":"review","sum":"check is codegraph skill usefull for our poject to reduce the tokens ?"},"link":["-task:R10.1"]}]},"at":"2026-10-16T13:16:05+03:30"}
+{"activity":"A623","sum":"H185 triaged as question","op":"head.restore","args":{"steps":[{"id":"H185","set":{"kind":"question","sum":"can u fix the agy issue or need me to do ?"},"link":["-task:R10.1"]}]},"at":"2026-10-16T13:16:46+03:30"}
+{"activity":"A624","sum":"Q2 answered Yes","op":"question.reopen","args":{"id":"Q2"},"at":"2026-10-16T13:28:53+03:30"}
+{"activity":"A625","sum":"H186 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H186","set":{"kind":"ask","sum":"u can run more sub tasks if possible and use haiku to speed up the project"},"link":["-task:R10.1"]}]},"at":"2026-10-16T13:28:59+03:30"}
+{"activity":"A626","sum":"Q8 answered Later","op":"question.reopen","args":{"id":"Q8"},"at":"2026-10-16T13:29:29+03:30"}
+{"activity":"A627","sum":"H187 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H187","set":{"kind":"rule","sum":"why i dont see our talk and chat in head section ?"},"link":["-task:R10.16"]}]},"at":"2026-10-16T13:31:15+03:30"}
+{"activity":"A628","sum":"H186 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H186","set":{"kind":"ask","sum":"Run more parallel Haiku workers"}}]},"at":"2026-10-16T13:31:15+03:30"}
+{"activity":"A629","sum":"H179 set status, note","op":"head.restore","args":{"steps":[{"id":"H179","set":{"status":"open"}}]},"at":"2026-10-16T13:32:00+03:30"}
+{"activity":"A630","sum":"H185 set status, note","op":"head.restore","args":{"steps":[{"id":"H185","set":{"status":"open"}}]},"at":"2026-10-16T13:32:01+03:30"}
+{"activity":"A631","sum":"H186 set status, note","op":"head.restore","args":{"steps":[{"id":"H186","set":{"status":"open"}}]},"at":"2026-10-16T13:32:01+03:30"}
+{"activity":"A634","sum":"H184 set status, note","op":"head.restore","args":{"steps":[{"id":"H184","set":{"status":"open"}}]},"at":"2026-10-16T13:38:32+03:30"}
+{"activity":"A635","sum":"H183 set status, note","op":"head.restore","args":{"steps":[{"id":"H183","set":{"status":"open"}}]},"at":"2026-10-16T13:38:33+03:30"}
+{"activity":"A637","sum":"H187 set status, note","op":"head.restore","args":{"steps":[{"id":"H187","set":{"status":"open"}}]},"at":"2026-10-16T13:44:15+03:30"}

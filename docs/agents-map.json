@@ -123,5 +123,160 @@
     "task": "R7.115",
     "title": "haiku: R7.115 Timeline UI/UX fixes",
     "model": "haiku"
+  },
+  "a36f2e1fa3cbafeb9": {
+    "task": "R7.113",
+    "title": "haiku: R7.113 B-1 You-are-here follows live jobs",
+    "model": "haiku"
+  },
+  "aae990aea923cf320": {
+    "task": "R7.31",
+    "title": "sonnet: Sonnet low review of leftover Head tasks",
+    "model": "sonnet"
+  },
+  "a9daf5ed1ee0e55f9": {
+    "task": "R7.31",
+    "title": "haiku: Queue Q1 supervisor tick in serve",
+    "model": "haiku"
+  },
+  "a66e891fd1a5aa780": {
+    "task": "R7.31",
+    "title": "haiku: Queue Q2 top bar weekly stop",
+    "model": "haiku"
+  },
+  "ab0a5893a07095e17": {
+    "task": "R7.31",
+    "title": "haiku: Queue Q3 priority P0-P3",
+    "model": "haiku"
+  },
+  "a28d7369a8a10b264": {
+    "task": "R7.31",
+    "title": "haiku: Queue Q6 snapshot work progress",
+    "model": "haiku"
+  },
+  "a19acfa38b1e31153": {
+    "task": "R7.31",
+    "title": "haiku: Queue Q7 task fingerprint dedupe",
+    "model": "haiku"
+  },
+  "ae3829aafbf1ea83c": {
+    "task": "R7.31",
+    "title": "haiku: Queue Q8 idempotency key",
+    "model": "haiku"
+  },
+  "a89f6b60efa13aaec": {
+    "task": "R9.4",
+    "title": "haiku: R9.4 Work CLI and head next",
+    "model": "haiku"
+  },
+  "aebd945b64b9230c3": {
+    "task": "R9.24",
+    "title": "haiku: R9.24 unapproved-phase gate",
+    "model": "haiku"
+  },
+  "ac68969780954da41": {
+    "task": "R9.3",
+    "title": "haiku: R9.3 head set prio and bump",
+    "model": "haiku"
+  },
+  "adc5f669d2efeb456": {
+    "task": "R9.19",
+    "title": "haiku: R9.19 sync push stream",
+    "model": "haiku"
+  },
+  "a0685b635c48c2f03": {
+    "task": "R9.30",
+    "title": "haiku: R9.30 Inbox choice answers",
+    "model": "haiku"
+  },
+  "adb3634ad4971bce4": {
+    "task": "R9.31",
+    "title": "haiku: R9.31 head asks with options",
+    "model": "haiku"
+  },
+  "a47ff355d821a9493": {
+    "task": "R3.2",
+    "title": "haiku: Inbox tasks: check against code and do leftovers",
+    "model": "haiku"
+  },
+  "aa8abd270b7378e83": {
+    "task": "R7.31",
+    "title": "haiku: Planner crash/hang fix and Planner tasks",
+    "model": "haiku"
+  },
+  "af84a46a3e68fcf2a": {
+    "task": "R7.31",
+    "title": "haiku: UI/UX tester: see every section and file issues",
+    "model": "haiku"
+  },
+  "ad092fcea45fd9589": {
+    "task": "R7.31",
+    "title": "haiku: UI/UX tester v2: measure alignment, real data, rules",
+    "model": "haiku"
+  },
+  "afecfa15aabeb1aae": {
+    "task": "R9.70",
+    "title": "haiku: R9.70 Inbox option buttons layout",
+    "model": "haiku"
+  },
+  "af3bfd3dd92cf796c": {
+    "task": "R10.8",
+    "title": "haiku: R10.8 delete Research section",
+    "model": "haiku"
+  },
+  "a378f1c4268adbe0b": {
+    "task": "R10.14",
+    "title": "haiku: R10.14 Inbox section fixes",
+    "model": "haiku"
+  },
+  "a8a07044c7dbf8541": {
+    "task": "R10.3",
+    "title": "sonnet: R10.3 resizable side panels",
+    "model": "sonnet"
+  },
+  "aa0aa69287033f6d1": {
+    "task": "R10.7",
+    "title": "sonnet: R10.7 merge Planner into Work",
+    "model": "sonnet"
+  },
+  "ad583c74953df6008": {
+    "task": "R10.16",
+    "title": "haiku: R10.16 Head section chat capture",
+    "model": "haiku"
+  },
+  "a8477e51bfc9cf389": {
+    "task": "R10.15",
+    "title": "haiku: R10.15 green test baseline",
+    "model": "haiku"
+  },
+  "ab35fc313d788f378": {
+    "task": "R10.16",
+    "title": "haiku: R10.16 fix Stop-hook reply overwrite",
+    "model": "haiku"
+  },
+  "a876f60780a626c4a": {
+    "task": "R10.9",
+    "title": "sonnet: R10.9 Git section on OSS libs",
+    "model": "sonnet"
+  },
+  "ac9268ba50bceea3d": {
+    "task": "R10.10",
+    "title": "sonnet: R10.10 verify core audit, plan fixes",
+    "model": "sonnet"
+  },
+  "ae947451e197d00d1": {
+    "task": "R10.10",
+    "title": "haiku: R10.10 C1 no phantom db",
+    "model": "haiku"
+  },
+  "a33903a4528e80da8": {
+    "task": "R10.10",
+    "title": "haiku: R10.10 C2 work.json in loader",
+    "model": "haiku"
+  },
+  "adfc090d30117377d": {
+    "task": "R10.10",
+    "title": "haiku: R10.10 C5 running visibility",
+    "model": "haiku"
   }
 }

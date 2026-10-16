@@ -1,3 +1,5 @@
+# Project rules. One rule per line: R3 haiku budget 60 | text
+# Scopes: all, lead, worker, haiku, sonnet, opus, phase:X, task:X, claude. Kinds: do, dont, budget N, done.
 R1 all dont | Never run roadmap service|serve|hooks install|usage sync; never touch port 8780, ~/.claude, the keychain or the person's browser tabs.
 R2 all do | UI rule 0: numbers and actions align in fixed grid columns; full width; dark and light; follow docs/UI-CHECKLIST.md.
 R3 all do | Answer short and spartan: the person has limited tokens. No long reports; show only what is needed.
@@ -10,3 +12,7 @@ R9 lead do | Plan, launch non-overlapping workers in parallel, verify each resul
 R10 lead do | Haiku edits; Opus (medium/low) designs and reviews; Cursor (auto or grok 4.7 xhigh) reviews; agy does read-only audits, always verified.
 R11 lead dont | Do not idle while tasks exist unless the person said stop. At the weekly usage stop (95%) report instead of continuing.
 R12 claude do | Start with docs/HANDOVER.md and docs/HEAD-RUNBOOK.md; /head resumes the head role after an account switch.
+R13 all do | Head never idles: start ready tasks now and act on work the person already asked for.
+R14 all do | Parallel workers only on disjoint file lists; file overlap is the only limit.
+R15 all do | Keep replies short and spartan; the person has few tokens.
+R16 all do | Start a fresh session at about 70% context; /head resumes as head without re-tuning.

@@ -8,10 +8,11 @@
         "H103",
         "H59"
       ],
-      "status": "proposed",
+      "status": "accepted",
       "by": "agent",
       "merged_into": null,
-      "ts": "2026-10-15T21:24:45+03:30"
+      "ts": "2026-10-15T21:24:45+03:30",
+      "rule": "R13"
     },
     {
       "id": "RP2",
@@ -19,10 +20,11 @@
       "sources": [
         "H4"
       ],
-      "status": "proposed",
+      "status": "accepted",
       "by": "agent",
       "merged_into": null,
-      "ts": "2026-10-15T21:24:45+03:30"
+      "ts": "2026-10-15T21:24:45+03:30",
+      "rule": "R14"
     },
     {
       "id": "RP3",
@@ -30,10 +32,11 @@
       "sources": [
         "H1"
       ],
-      "status": "proposed",
+      "status": "accepted",
       "by": "agent",
       "merged_into": null,
-      "ts": "2026-10-15T21:24:46+03:30"
+      "ts": "2026-10-15T21:24:46+03:30",
+      "rule": "R15"
     },
     {
       "id": "RP4",
@@ -41,10 +44,11 @@
       "sources": [
         "H106"
       ],
-      "status": "proposed",
+      "status": "accepted",
       "by": "agent",
       "merged_into": null,
-      "ts": "2026-10-15T21:24:46+03:30"
+      "ts": "2026-10-15T21:24:46+03:30",
+      "rule": "R16"
     },
     {
       "id": "RP5",

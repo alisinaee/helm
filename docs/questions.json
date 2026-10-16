@@ -1,0 +1,136 @@
+{
+  "questions": [
+    {
+      "id": "Q1",
+      "task": "R7.31",
+      "text": "H52: what did you mean by 'they did face issue'? (restate in your own words)",
+      "opts": [
+        "A",
+        "B",
+        "C"
+      ],
+      "def": null,
+      "block": false,
+      "timeoutS": null,
+      "status": "open",
+      "answer": null,
+      "asked": "2026-10-16T12:14:56+03:30",
+      "answered": null
+    },
+    {
+      "id": "Q2",
+      "task": "R7.31",
+      "text": "H58: run the OpenCode model and effort check after credit top-up?",
+      "opts": [
+        "Yes",
+        "Later"
+      ],
+      "def": null,
+      "block": false,
+      "timeoutS": null,
+      "status": "answered",
+      "answer": "Yes",
+      "asked": "2026-10-16T12:14:56+03:30",
+      "answered": "2026-10-16T13:28:53+03:30"
+    },
+    {
+      "id": "Q3",
+      "task": "R7.31",
+      "text": "H81: which update do you mean?",
+      "opts": [
+        "Agents list",
+        "Head screen",
+        "Something else"
+      ],
+      "def": null,
+      "block": false,
+      "timeoutS": null,
+      "status": "open",
+      "answer": null,
+      "asked": "2026-10-16T12:14:56+03:30",
+      "answered": null
+    },
+    {
+      "id": "Q4",
+      "task": "R7.31",
+      "text": "H88: is the usage reading current (weekly 98%, 5h 3%)?",
+      "opts": [
+        "Yes",
+        "No, I will enter new numbers"
+      ],
+      "def": null,
+      "block": false,
+      "timeoutS": null,
+      "status": "open",
+      "answer": null,
+      "asked": "2026-10-16T12:14:56+03:30",
+      "answered": null
+    },
+    {
+      "id": "Q5",
+      "task": "R7.31",
+      "text": "H119: rerun the Cursor full-UI review with the VPN on?",
+      "opts": [
+        "Yes",
+        "No"
+      ],
+      "def": null,
+      "block": false,
+      "timeoutS": null,
+      "status": "open",
+      "answer": null,
+      "asked": "2026-10-16T12:14:57+03:30",
+      "answered": null
+    },
+    {
+      "id": "Q6",
+      "task": "R7.106",
+      "text": "H154: accept the 10 waiting Planner features?",
+      "opts": [
+        "Accept all",
+        "Review one by one",
+        "Not yet"
+      ],
+      "def": null,
+      "block": false,
+      "timeoutS": null,
+      "status": "open",
+      "answer": null,
+      "asked": "2026-10-16T12:14:57+03:30",
+      "answered": null
+    },
+    {
+      "id": "Q7",
+      "task": "R7.31",
+      "text": "Drop the 5h 80 percent usage stop still in docs/autonomy.json?",
+      "opts": [
+        "Yes",
+        "Keep it"
+      ],
+      "def": null,
+      "block": false,
+      "timeoutS": null,
+      "status": "open",
+      "answer": null,
+      "asked": "2026-10-16T12:14:57+03:30",
+      "answered": null
+    },
+    {
+      "id": "Q8",
+      "task": "R3.2",
+      "text": "R3.2: is the 1.0.0 cutover ready, with you present?",
+      "opts": [
+        "Now",
+        "Later"
+      ],
+      "def": null,
+      "block": false,
+      "timeoutS": null,
+      "status": "answered",
+      "answer": "Later",
+      "asked": "2026-10-16T12:14:57+03:30",
+      "answered": "2026-10-16T13:29:29+03:30"
+    }
+  ],
+  "schemaVersion": 1
+}
