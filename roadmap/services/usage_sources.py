@@ -2,9 +2,10 @@
 the sources and has no store of its own.
 
 1. Claude Code OAuth login: the "Claude Code-credentials" keychain item (macOS) or ~/.claude/.credentials.json
-   (Linux, or $CLAUDE_CONFIG_DIR). The access token is refreshed with its refresh token shortly before it expires
-   (or after a 401) and the new pair is written back to the same place, the way Claude Code does it, so the login
-   Claude Code keeps never goes stale and never gets out of step with ours.
+   (Linux, or $CLAUDE_CONFIG_DIR). Only when usage config sets usageTokenRefresh: true (opt-in, default off) is the
+   access token refreshed with its refresh token shortly before it expires (or after a 401) and the new pair written
+   back to the same place. Refresh tokens rotate, so an unsynced second refresher can break the Claude Code login;
+   with the flag off this module never refreshes and never writes, and an expired token is reported as expired.
 2. Claude Code's own rate_limits block (status line command `roadmap usage statusline`, hook payloads, the
    token-optimizer sidecar): handled by usage.auto_update.
 3. Estimate from the local Claude Code transcripts (~/.claude/projects/**/*.jsonl, read only): the tokens in each
@@ -44,6 +45,7 @@ CODE_DENIED = "denied"
 CODE_EXPIRED = "expired"
 CODE_NET = "net"
 CODE_OTHER = "other"
+EXPIRED_REASON = ("Claude Code login token expired: use Claude Code once (it refreshes itself), then Sync now")
 
 
 class SourceError(Exception):
@@ -146,12 +148,21 @@ def load_credentials():
     return oauth, raw, place
 
 
-def _expires_soon(oauth, now_s):
+def _expires_at_s(oauth):
     value = oauth.get("expiresAt")
     if isinstance(value, bool) or not isinstance(value, (int, float)):
-        return False
-    seconds = value / 1000 if value > 1e11 else value
-    return seconds - now_s < REFRESH_MARGIN_S
+        return None
+    return value / 1000 if value > 1e11 else value
+
+
+def _expires_soon(oauth, now_s):
+    seconds = _expires_at_s(oauth)
+    return seconds is not None and seconds - now_s < REFRESH_MARGIN_S
+
+
+def _expired(oauth, now_s):
+    seconds = _expires_at_s(oauth)
+    return seconds is not None and seconds <= now_s
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -224,10 +235,16 @@ def _write_back(place, text):
         _keychain_write(text)
 
 
-def access_token(force=False, now_s=None, post=None, write=None):
-    """A usable Claude Code access token, refreshed first when it expires within 5 minutes (or force is set)."""
+def access_token(force=False, now_s=None, post=None, write=None, allow_refresh=False):
+    """A usable Claude Code access token. With allow_refresh (usageTokenRefresh: true) it is refreshed first when it
+    expires within 5 minutes (or force is set). Without it nothing is refreshed or written: an expired token (or a
+    forced one, after a 401) raises SourceError code expired, and the caller falls back to the other sources."""
     now_s = time.time() if now_s is None else now_s
     oauth, raw, place = load_credentials()
+    if not allow_refresh:
+        if force or _expired(oauth, now_s):
+            raise SourceError(EXPIRED_REASON, CODE_EXPIRED)
+        return oauth["accessToken"].strip()
     if force or _expires_soon(oauth, now_s):
         # Read again right before the refresh: Claude Code may have refreshed it a moment ago.
         oauth, raw, place = load_credentials()

@@ -1,5 +1,5 @@
-"""Checks for the usage band (R7.27, R7.77, R7.100): no claude.ai login (no_token, no_item) is unavailable with a
-Request update button and no red error; a denied keychain gives the plain-words message and no Sync now button; the
+"""Checks for the usage band (R7.27, R7.77, R7.100): no Claude Code login (no_token, no_item) is unavailable with a
+Sync now button and no red error; a denied keychain gives the plain-words message and a Sync now button; the
 manual "Enter usage" form, the one-line "Updated ... , source" note.
 
 Node renders web/js/views/usage.js with fake view models (no DOM). The checks: net and other errors keep Sync now;
@@ -21,8 +21,8 @@ WEB = os.path.join(REPO, "web")
 
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=', re.IGNORECASE)
 NO_AUTO_TITLE = "Usage is old."
-NO_AUTO_DETAIL = "It updates by itself when the head reads it from the app or a Claude Code session reports it."
-UNAVAILABLE_DETAIL = "This Mac signs in through the desktop app; the head updates usage."
+NO_AUTO_DETAIL = "It updates by itself when the service can read it; see docs/USAGE-SOURCES.md."
+UNAVAILABLE_DETAIL = "No Claude Code login on this Mac: run claude auth login once (docs/USAGE-SOURCES.md)."
 
 SCRIPT = """
 const usage = await import(process.argv[1]);
@@ -73,15 +73,16 @@ class UsageEntryTests(unittest.TestCase):
             self.assertNotIn("is-danger", self.html[key], key)
             self.assertNotIn("keychain entry has no usable token", self.html[key], key)
 
-    def test_no_login_offers_request_update_not_sync_now(self):
+    def test_no_login_offers_sync_now(self):
         for key in ("noToken", "noItem"):
             self.assertIn('data-action="sync-usage"', self.html[key], key)
-            self.assertIn("Request update", self.html[key], key)
-            self.assertNotIn("Sync now", self.html[key], key)
+            self.assertIn("Sync now", self.html[key], key)
+            self.assertNotIn("Request update", self.html[key], key)
 
-    def test_denied_hides_sync_now(self):
-        self.assertNotIn('data-action="sync-usage"', self.html["denied"])
-        self.assertNotIn("Sync now", self.html["denied"])
+    def test_denied_offers_sync_now(self):
+        self.assertIn('data-action="sync-usage"', self.html["denied"])
+        self.assertIn("Sync now", self.html["denied"])
+        self.assertNotIn("Request update", self.html["denied"])
 
     def test_net_and_other_errors_keep_sync_now(self):
         for key in ("net", "other", "plainOld"):

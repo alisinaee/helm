@@ -61,7 +61,7 @@ class RefreshTests(HomeCase):
 
     def test_an_expiring_token_is_refreshed_and_written_back(self):
         with mock.patch.object(us.subprocess, "run", keychain(creds((NOW_S + 60) * 1000))):
-            self.assertEqual(us.access_token(now_s=NOW_S, post=self.post, write=self.write), NEW)
+            self.assertEqual(us.access_token(now_s=NOW_S, post=self.post, write=self.write, allow_refresh=True), NEW)
         url, body = self.posts[0]
         self.assertTrue(url.startswith("https://platform.claude.com/"))
         self.assertEqual(body["grant_type"], "refresh_token")
@@ -79,7 +79,7 @@ class RefreshTests(HomeCase):
             raise us.SourceError("token refresh answered HTTP 400", us.CODE_EXPIRED)
         with mock.patch.object(us.subprocess, "run", keychain(creds(0))):
             with self.assertRaises(us.SourceError) as cm:
-                us.access_token(now_s=NOW_S, post=refuse, write=self.write)
+                us.access_token(now_s=NOW_S, post=refuse, write=self.write, allow_refresh=True)
         self.assertEqual(cm.exception.code, us.CODE_EXPIRED)
         for secret in (OLD, REFRESH):
             self.assertNotIn(secret, str(cm.exception))
@@ -91,7 +91,7 @@ class RefreshTests(HomeCase):
                 raise us.SourceError("token endpoint not reachable", us.CODE_NET)
             return {"access_token": NEW}
         with mock.patch.object(us.subprocess, "run", keychain(creds(0))):
-            self.assertEqual(us.access_token(now_s=NOW_S, post=flaky, write=self.write), NEW)
+            self.assertEqual(us.access_token(now_s=NOW_S, post=flaky, write=self.write, allow_refresh=True), NEW)
         self.assertEqual(json.loads(self.written[0][1])["claudeAiOauth"]["refreshToken"], REFRESH)
 
     def test_desktop_only_item_is_no_token(self):
@@ -108,7 +108,7 @@ class RefreshTests(HomeCase):
             handle.write(creds(0))
         missing = subprocess.CompletedProcess(args=[], returncode=44, stdout="", stderr="")
         with mock.patch.object(us.subprocess, "run", return_value=missing):
-            self.assertEqual(us.access_token(now_s=NOW_S, post=self.post), NEW)
+            self.assertEqual(us.access_token(now_s=NOW_S, post=self.post, allow_refresh=True), NEW)
         self.assertEqual(stat.S_IMODE(os.stat(path).st_mode), 0o600)
         with open(path, encoding="utf-8") as handle:
             self.assertEqual(json.load(handle)["claudeAiOauth"]["accessToken"], NEW)
@@ -246,6 +246,75 @@ class StatuslineTests(HomeCase):
         with mock.patch("sys.stdin", io.StringIO("not json")), mock.patch("sys.stdout", out):
             usage_cmd.handle_statusline(argparse.Namespace(then=None))
         self.assertEqual(out.getvalue(), "\n")
+
+
+CFG_OFF = {"projects": []}
+CFG_ON = {"projects": [], "usage": {"usageTokenRefresh": True}}
+
+
+class TokenRefreshOptInTests(HomeCase):
+    """usageTokenRefresh is opt-in (default off). Off: an expired login is reported, never refreshed, never written.
+    On: the existing refresh path runs and writes the rotated pair back."""
+
+    def setUp(self):
+        super().setUp()
+        os.environ["CLAUDE_CONFIG_DIR"] = os.path.join(self.tmp, "cfg")
+        self.addCleanup(os.environ.pop, "CLAUDE_CONFIG_DIR", None)
+        patcher = mock.patch.object(uc, "_control_after_write")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.post = mock.Mock(return_value={"access_token": NEW, "refresh_token": "sk-ant-ort01-ROTATED",
+                                            "expires_in": 3600})
+        self.keychain_write = mock.patch.object(us, "_keychain_write").start()
+        self.file_write = mock.patch.object(us, "_file_write").start()
+        self.addCleanup(mock.patch.stopall)
+
+    def sync(self, cfg, expires_ms, fetch):
+        with mock.patch.object(us.subprocess, "run", keychain(creds(expires_ms))), \
+                mock.patch.object(us, "_post_json", self.post):
+            return uc.sync_once(cfg, fetch=fetch, now=datetime(2030, 1, 1, tzinfo=timezone.utc))
+
+    def test_flag_off_expired_login_is_not_refreshed_or_written(self):
+        def never(token):
+            raise AssertionError("the endpoint must not be called with an expired login")
+        result = self.sync(CFG_OFF, 0, never)
+        self.assertEqual(result["status"], "unavailable")
+        self.post.assert_not_called()
+        self.keychain_write.assert_not_called()
+        self.file_write.assert_not_called()
+        store = uc._load_store()
+        self.assertEqual(store["syncError"], uc.CODE_EXPIRED)
+        self.assertEqual(store["lastError"], us.EXPIRED_REASON)
+        self.assertIn("then Sync now", store["lastError"])
+
+    def test_flag_off_401_is_not_refreshed_or_written(self):
+        def refused(token):
+            raise uc.UsageError("usage endpoint answered HTTP 401", status=401)
+        future = (NOW_S + 3600) * 1000
+        with mock.patch.object(us.subprocess, "run", keychain(creds(future))), \
+                mock.patch.object(us, "_post_json", self.post):
+            uc.sync_once(CFG_OFF, fetch=refused, now=datetime.fromtimestamp(NOW_S, tz=timezone.utc))
+        self.post.assert_not_called()
+        self.keychain_write.assert_not_called()
+        self.file_write.assert_not_called()
+        self.assertEqual(uc._load_store()["syncError"], uc.CODE_EXPIRED)
+
+    def test_flag_on_refreshes_and_writes_back(self):
+        def ok(token):
+            return {"five_hour": {"utilization": 5}, "seven_day": {"utilization": 9}}
+        result = self.sync(CFG_ON, 0, ok)
+        self.assertEqual(result["usage"]["weeklyPercent"], 9)
+        self.post.assert_called_once()
+        self.keychain_write.assert_called_once()
+        saved = json.loads(self.keychain_write.call_args[0][0])
+        self.assertEqual(saved["claudeAiOauth"]["accessToken"], NEW)
+
+    def test_flag_must_be_exactly_true(self):
+        for value in ("true", 1, None):
+            cfg = {"projects": [], "usage": {"usageTokenRefresh": value}}
+            self.assertFalse(uc.token_refresh_allowed(cfg), value)
+        self.assertFalse(uc.token_refresh_allowed(CFG_OFF))
+        self.assertTrue(uc.token_refresh_allowed(CFG_ON))
 
 
 if __name__ == "__main__":

@@ -13,10 +13,9 @@ usage by itself. **Sync now** runs the same chain at once. The band shows the so
 
 ## 1. OAuth endpoint (what CodexBar, Claude HUD, Usagebar do)
 Token: keychain item `Claude Code-credentials` -> `claudeAiOauth` (macOS), else `~/.claude/.credentials.json`
-(Linux, or `$CLAUDE_CONFIG_DIR`). The service refreshes the token 5 min before it expires (and once after a 401)
-at `https://platform.claude.com/v1/oauth/token` (fallback `console.anthropic.com`) with Claude Code's public
-client id, then writes the new pair back to the same place (keychain via `security -i`, hex on stdin; file 0600),
-so Claude Code and the dashboard share one live login. Tokens are never logged, printed or sent elsewhere.
+(Linux, or `$CLAUDE_CONFIG_DIR`). at `https://platform.claude.com/v1/oauth/token` (fallback `console.anthropic.com`) with Claude Code's public
+client id, then writes the new pair back to the same place (keychain via `security -i`, hex on stdin; file 0600).
+This only happens when `usageTokenRefresh` is true (see below); otherwise an expired token is reported as expired. Tokens are never logged, printed or sent elsewhere.
 
 On this Mac the item holds only `mcpOAuth` (desktop-app sign-in). **Do once:**
 
@@ -25,7 +24,12 @@ claude auth login        # or: run `claude`, then /login; pick the Claude subscr
 ```
 
 Then click **Sync now** (the background loop rechecks the keychain at most every 6 h after a miss).
-If a refresh is ever refused (status `expired`), run `claude auth login` again.
+If the login has expired (status `expired`), use Claude Code once (it refreshes itself), then **Sync now**.
+
+**Token refresh is opt-in (`"usageTokenRefresh": true` in the usage config; default off).** Refresh tokens rotate:
+if the service and Claude Code refresh at about the same time, one side gets a dead refresh token and the Claude
+Code login breaks. With the flag off the service never refreshes and never writes the keychain or credentials file.
+Turn it on only if you accept that risk.
 
 ## 2. Status line (live numbers from every CLI session)
 Claude Code hands `rate_limits.five_hour/seven_day.used_percentage` to its status line command (Pro/Max, after
