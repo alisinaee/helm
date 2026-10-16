@@ -84,6 +84,16 @@ def add_project(path, name=None, data_dir=config.DEFAULT_DATA_DIR):
     return describe(config.add_project(display, folder, None, data_dir))
 
 
+def new_project(path, name=None):
+    """Init the folder and register it when it is not registered yet. Safe to repeat.
+    Returns (init result, registered entry)."""
+    init = init_project(path)
+    for entry in config.list_projects():
+        if os.path.abspath(entry["path"]) == init["path"]:
+            return init, describe(entry)
+    return init, add_project(path, name, config.DEFAULT_DATA_DIR)
+
+
 def describe(entry):
     """A registry entry plus where its data lives and whether its folder still exists."""
     out = dict(entry)

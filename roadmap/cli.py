@@ -16,6 +16,7 @@ COMMAND_MODULES = (
     "tick",
     "service",
     "project",
+    "init",
     "job",
     "task",
     "backlog",

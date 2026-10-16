@@ -25,6 +25,10 @@ Put `~/.local/bin` on your `PATH` if it is not there yet (add `export PATH="$HOM
 as `ok`, `warn` or `fail`, with the fix for each problem, and it is safe to run at any time.
 Keep the clone where it is: the launchd agent and the hooks in your projects point at this folder.
 
+## Quick start
+
+Run `roadmap init` in your project folder (registers it, installs the hooks, starts the service; safe to repeat), then start Claude Code and run `/head`. `--no-service` skips the service.
+
 ## First run
 
 1. Register your project. A project is any folder with a `docs/` folder inside it:
