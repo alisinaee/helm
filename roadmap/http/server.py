@@ -9,6 +9,7 @@ routing or the log.
 import os
 import socketserver
 import stat
+import threading
 import time
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -19,7 +20,7 @@ from roadmap.errors import EXIT_USAGE, RoadmapError
 from roadmap.http import routes, security
 from roadmap.http.static import StaticFiles, etag_of
 from roadmap.log import get_logger
-from roadmap.services import usage
+from roadmap.services import jobs, supervisor, usage
 from roadmap.store import config as config_store
 from roadmap.store import paths
 
@@ -27,13 +28,38 @@ BIND_HOST = "127.0.0.1"
 WEB_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "web")
 DEFAULT_PHONE_PORT = 8766
 SLOW_API_MS = 1000
+SUPERVISOR_INTERVAL_S = 30.0
 access_log = get_logger("http.access")
 error_log = get_logger("http")
 phone_log = get_logger("http.phone")
+supervisor_log = get_logger("supervisor")
 
 
 def _default_sync():
     usage.sync_once()
+
+
+def supervisor_pass(now=None):
+    """One supervisor tick for every registered project whose data folder exists. Returns the reports. The lock inside
+    supervisor.tick keeps two passes (serve here, or roadmap tick) from working at once."""
+    reports = []
+    for project in config_store.list_projects():
+        data_dir = jobs.data_dir_of(project)
+        if os.path.isdir(data_dir):
+            reports.append(supervisor.tick(data_dir, now=now))
+    return reports
+
+
+def supervisor_loop(stop):
+    """Run supervisor_pass now and then every SUPERVISOR_INTERVAL_S until stop is set. A failed pass is logged and the
+    loop goes on; the next pass retries whatever was left."""
+    while True:
+        try:
+            supervisor_pass()
+        except Exception:  # keep the thread alive; the failure is in the log
+            supervisor_log.warning("supervisor pass failed", exc_info=True)
+        if stop.wait(SUPERVISOR_INTERVAL_S):
+            return
 
 
 class Request:
@@ -352,9 +378,22 @@ class RoadmapServer(ThreadingHTTPServer):
 
     daemon_threads = True
 
-    def __init__(self, port, token, sync, static_files):
+    def __init__(self, port, token, sync, static_files, supervise=False):
         super().__init__((BIND_HOST, int(port)), _Handler)
         self.app = App(self.server_address[1], token, sync, static_files)
+        self._supervise = supervise
+        self._supervisor_stop = threading.Event()
+
+    def serve_forever(self, poll_interval=0.5):
+        """Serve; when supervise is set, also run the supervisor loop in a daemon thread until shutdown()."""
+        if self._supervise:
+            threading.Thread(target=supervisor_loop, args=(self._supervisor_stop,), name="supervisor",
+                             daemon=True).start()
+        super().serve_forever(poll_interval)
+
+    def shutdown(self):
+        self._supervisor_stop.set()
+        super().shutdown()
 
     def server_bind(self):
         # skip HTTPServer.server_bind: it resolves the host name, which may touch the network
@@ -367,15 +406,17 @@ class RoadmapServer(ThreadingHTTPServer):
         super().server_close()
 
 
-def make_server(port=0, sync=None, token=None, web_root=None):
+def make_server(port=0, sync=None, token=None, web_root=None, supervise=True):
     """A bound, not yet running server. Call serve_forever() (or start it in a thread) and shutdown() to stop.
 
     sync replaces the usage sync (tests pass a fake). token defaults to a fresh random CSRF token.
-    web_root defaults to the repository's web/ folder. Raises OSError (EADDRINUSE) when the port is busy.
+    web_root defaults to the repository's web/ folder. supervise (default on) runs the supervisor loop while serving.
+    Raises OSError (EADDRINUSE) when the port is busy.
     The debug log is pointed at the state directory here, so it never drifts from the service's own.
     """
     rlog.set_state_dir(paths.state_dir())
-    httpd = RoadmapServer(port, token or security.new_token(), sync, StaticFiles(web_root or WEB_ROOT))
+    httpd = RoadmapServer(port, token or security.new_token(), sync, StaticFiles(web_root or WEB_ROOT),
+                          supervise=supervise)
     _core_event("core.start", "INFO", "/", {"port": httpd.server_address[1]})
     return httpd
 
