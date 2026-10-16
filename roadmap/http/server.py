@@ -428,6 +428,7 @@ class PhoneServer(RoadmapServer):
     def __init__(self, port, token_source=None, tunnel_host=None, static_files=None, limiter=None):
         ThreadingHTTPServer.__init__(self, (BIND_HOST, int(port)), _Handler)
         self._supervise = False  # the phone listener never runs the supervisor (the main listener does)
+        self._supervisor_stop = threading.Event()
         self.app = PhoneApp(self.server_address[1], token_source, tunnel_host, static_files, limiter)
 
 
