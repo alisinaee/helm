@@ -1,4 +1,5 @@
-.app{display:grid;grid-template-columns:var(--w-nav) minmax(0,1fr) auto;grid-template-rows:var(--h-top) minmax(0,1fr);grid-template-areas:"nav top side" "nav main side";height:100vh;min-height:0;padding:0;overflow-x:clip}
+.app{display:grid;grid-template-columns:var(--w-nav) minmax(0,1fr) auto;grid-template-rows:var(--h-top) minmax(0,1fr);grid-template-areas:"nav top side" "nav main side";height:100vh;height:100dvh;min-height:0;padding:0;overflow:hidden}
+@media (min-width:641px){:is(html,body):has(#app:not([hidden])){height:100%;overflow:hidden}}
 .app[data-nav="mini"]{grid-template-columns:var(--w-rail) minmax(0,1fr) auto}
 .nav{grid-area:nav;display:flex;flex-direction:column;gap:var(--sp-1);min-width:0;padding:var(--sp-3) var(--sp-2);background:var(--surface-1);border-right:1px solid var(--track);overflow-x:hidden;overflow-y:auto}
 .nav-list,.nav-foot{display:flex;flex-direction:column;gap:2px}
@@ -39,7 +40,7 @@
 .mini.is-unknown .mini-v,.mini.is-unknown .mini-l{color:var(--unknown)}
 .main{grid-area:main;min-width:0;min-height:0;padding:var(--sp-4) var(--sp-6) var(--sp-8);overflow:hidden auto;overscroll-behavior:contain}
 .side{grid-area:side;display:flex;flex-direction:column;width:var(--w-side);min-width:0;overflow:hidden;background:var(--surface-1);border-left:1px solid var(--track)}
-.app[data-panel="closed"] .side{width:0;visibility:hidden;border-left:0}
+.app[data-panel="closed"] .side{display:none}
 .side-tabs{display:flex;gap:var(--sp-1);padding:var(--sp-2);border-bottom:1px solid var(--track)}
 .side-body{flex:1 1 auto;min-height:0;padding:var(--sp-4);overflow:auto}
 .bnav{display:none;position:relative;background:var(--surface-1);border-top:1px solid var(--track)}
