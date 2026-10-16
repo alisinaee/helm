@@ -95,6 +95,10 @@ def valid_rel_path(project, path):
     text = str(path or "")
     if not text or "\0" in text or "\n" in text or "\r" in text or text.startswith("-") or os.path.isabs(text):
         raise RoadmapError("usage", "path '" + text[:200] + "' must be a plain relative path", EXIT_USAGE)
+    # Pathspec magic (':(glob)', ':!', ':/') and glob characters would match other files; a file name needs neither.
+    if text.startswith(":") or any(ch in text for ch in "*?[]"):
+        raise RoadmapError("usage", "path '" + text[:200] + "' must be a literal file path, not a glob or pathspec",
+                           EXIT_USAGE)
     norm = os.path.normpath(text)
     if norm in (".", "") or norm.startswith("..") or ".." in norm.split(os.sep):
         raise RoadmapError("usage", "path '" + text[:200] + "' must stay inside the project", EXIT_USAGE)

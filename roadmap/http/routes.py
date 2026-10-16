@@ -726,9 +726,12 @@ def git_diff(app, req, match):
     if git_service.is_secret_path(rel):
         return _git_reply(app, {"path": rel, "skipped": git_service.diff_skip_reason(rel, 0), "diff": None})
     root = git_service.repo_root(project_path)
-    numstat = git_service.run(root, ["show", "--numstat", "--no-renames", "--format=", sha, "--", rel])
+    # --literal-pathspecs: the path is one file name, never a glob or magic pathspec (git's own argv guard)
+    numstat = git_service.run(root, ["--literal-pathspecs", "show", "--numstat", "--no-renames", "--format=", sha,
+                                     "--", rel])
     binary = any(line.startswith("-\t-\t") for line in numstat.splitlines())
-    raw = git_service.run(root, ["show", "--no-color", "--no-ext-diff", "--no-renames", "--format=", sha, "--", rel])
+    raw = git_service.run(root, ["--literal-pathspecs", "show", "--no-color", "--no-ext-diff", "--no-renames",
+                                 "--format=", sha, "--", rel])
     data = raw.encode("utf-8")
     # numstat reports a binary file with '-'; the NUL stands in for it so the size rule words it the same way
     reason = git_service.diff_skip_reason(rel, len(data), b"\0" if binary else data)

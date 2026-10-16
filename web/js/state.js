@@ -269,7 +269,8 @@ export function normalizeSnapshot(raw, fetchedAt) {
       return normalizeJob(j, fetchedAt);
     }),
     running: jobs.filter(function (j) {
-      return j.status === "running";
+      // claimed = picked by the supervisor, not yet started; the snapshot counts it as running (running_count)
+      return j.status === "running" || j.status === "claimed";
     }).map(function (j) {
       return normalizeJob(j, fetchedAt);
     }),

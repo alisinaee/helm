@@ -31,7 +31,9 @@ function savedParams(pid) {
 function readPrefs(pid, route) {
   const saved = savedParams(pid);
   const filters = route.filters || {};
-  const f = filters.f || saved.get("f") || "";
+  // In the Planner, route f is a plan item focus (F5), not a tag filter: the tag filter stays the saved one.
+  const onPlanner = route.view === "planner";
+  const f = (onPlanner ? "" : filters.f) || saved.get("f") || "";
   const g = filters.g || saved.get("g") || "";
   const view = VIEWS.indexOf(route.view) >= 0 ? route.view : (VIEWS.indexOf(saved.get("v")) >= 0
     ? saved.get("v") : "board");

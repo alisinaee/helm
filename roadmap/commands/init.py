@@ -44,7 +44,7 @@ def _init(args):
     hooks = hooks_install.install(entry["id"], False)
     service = None if args.no_service else _service()
     port = config.load().get("port", 8780)
-    url = "http://localhost:%s/#%s" % (port, entry["id"])
+    url = "http://localhost:%s/#/p/%s/overview" % (port, entry["id"])
     result = {"id": entry["id"], "path": entry["path"], "url": url, "port": port, "created": init["created"],
               "hooksChanged": hooks["changed"], "service": service}
     if getattr(args, "json", False):

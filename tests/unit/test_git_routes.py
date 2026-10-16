@@ -124,6 +124,13 @@ class GitRoutes(ServerCase):
         self.assertTrue(binary["skipped"].startswith("binary"))
         self.assertIsNone(binary["diff"])
 
+    def test_diff_refuses_globs_and_pathspec_magic(self):
+        # a glob such as '*env*' or ':(glob)**/.env' could name a secret file without naming it
+        for query in ("path=*", "path=*env*", "path=%3A%28glob%29**%2F.env", "path=%3A%2F", "path=a%5B1%5D.txt"):
+            with self.subTest(query=query):
+                res = self.get("diff/%s?%s" % (self.sha, query), headers=self.port_origin)
+                self.assertEqual(res.status, 400)
+
     def test_diff_refuses_paths_outside_the_project(self):
         for query in ("path=../x", "path=/etc/passwd", "path=-x", ""):
             with self.subTest(query=query):
