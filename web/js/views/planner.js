@@ -131,7 +131,8 @@ function taskLi(feat, task, ctx) {
   const href = projectHash(ctx.state.project, "work") + "/i/" + encodeURIComponent(task.id);
   const blocked = (ctx.blocked || []).indexOf(task.id) >= 0 ? chipHtml("blocked", "warning") : "";
   return '<li class="hd-link"><a class="chip chip-neutral" href="' + esc(href) + '">' + tid + "</a>" +
-    chipHtml(STATE_WORD[task.state] || task.state, taskTone(task.state)) + blocked +
+    '<span class="wk-st">' + chipHtml(STATE_WORD[task.state] || task.state, taskTone(task.state)) + blocked +
+    "</span>" +
     '<span class="hd-lbl" title="' + esc(task.title) + '">' + esc(task.title) + "</span>" +
     '<button type="button" class="btn btn-small" data-pl="unlink" data-task="' + tid + '" data-id="' +
     esc(feat.id) + '" aria-label="Unlink ' + tid + " from " + esc(feat.id) + '">Unlink</button></li>';
@@ -253,7 +254,8 @@ function orphansHtml(snap, features, tree, state) {
   for (const t of snap.tasks || []) tasks[t.id] = t;
   const items = orphans.map(function (id) {
     const t = tasks[id];
-    return '<li class="hd-link"><span class="chip chip-neutral">' + esc(id) + '</span><span class="hd-lbl">' +
+    return '<li class="hd-link"><span class="chip chip-neutral">' + esc(id) + '</span>' +
+    '<span class="wk-st"></span><span class="hd-lbl">' +
       esc(t ? t.title : "") + '</span><button type="button" class="btn btn-small" data-pl="assign-open" data-task="' +
       esc(id) + '" aria-haspopup="true" data-focus="pl-assign:' +
       esc(id) + '" aria-label="Assign ' + esc(id) + ' to a plan item">Assign</button></li>';
@@ -274,7 +276,7 @@ function filterHtml(state, shownCount, total) {
 }
 
 function topHtml() {
-  return '<div class="hd-top"><h2 id="pl-h" class="hd-title">Plan</h2>' +
+  return '<div class="hd-top"><h2 id="pl-h" class="hd-title sr-only">Plan</h2>' +
     '<button type="button" class="btn btn-primary" data-pl="add" data-id="" data-focus="pl-add">' +
     "<span>+ Plan phase</span></button></div>";
 }

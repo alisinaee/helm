@@ -26,3 +26,6 @@
 .rc { flex-basis: 100% }
 .rc-move .btn-small, .lane-toggle, .plan-views a, .iss-filters a, .iss-input { min-height: 2.75rem }
 }
+/* Work > Planner: linked and orphan rows on the Board/List/Tree grid */
+.wk .hd-link{width:100%;display:grid;grid-template-columns:4.5rem 6rem minmax(0,1fr) 6.5rem;column-gap:var(--sp-2);align-items:center}
+.wk .hd-link>.btn{width:100%}
