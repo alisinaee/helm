@@ -96,8 +96,17 @@ export function bindingStopRow(rows) {
   return blocking.reduce(function (a, b) { return b.limit < a.limit ? b : a; });
 }
 
+// The limit rows of a snapshot's meters: the snapshot carries {limits, today, week}, a plain list is taken as is.
+// Null when there are no meters at all (unknown).
+function limitRows(meters) {
+  if (Array.isArray(meters)) return meters;
+  if (meters && Array.isArray(meters.limits)) return meters.limits;
+  return null;
+}
+
 // The weekly stop from the meter rows: "stop 85%", "stop off", or unknown when the snapshot has no meters at all.
-function stopText(rows) {
+function stopText(meters) {
+  const rows = limitRows(meters);
   if (rows === null) return "stop unknown";
   const row = bindingStopRow(rows);
   return row ? "stop " + fmtPercent(row.limit) : "stop off";
