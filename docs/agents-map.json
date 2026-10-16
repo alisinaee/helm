@@ -313,5 +313,10 @@
     "task": "R10.22",
     "title": "haiku: R10.22 System map A4 layout",
     "model": "haiku"
+  },
+  "a8e79596db0c47be4": {
+    "task": "R10.10",
+    "title": "haiku: R10.10 fix Cursor review P1s",
+    "model": "haiku"
   }
 }

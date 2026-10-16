@@ -4276,14 +4276,20 @@
       "id": "R10.22",
       "phase": "R10",
       "title": "System map A4: layered layout",
-      "status": "partial",
+      "status": "done",
       "tokensK": 3,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "web/js/graph/syslayout.js"
+      "note": "web/js/graph/syslayout.js",
+      "refs": [
+        "commit:b25c4857583e3d96eb8b50bf60e9e0721b002e2c"
+      ],
+      "at": {
+        "done": "2026-10-16T14:31:30+03:30"
+      }
     },
     {
       "id": "R10.23",

@@ -6021,9 +6021,9 @@
       "title": "cursor: R10 wave review (today's commits)",
       "model": "cursor",
       "task": "R10.10",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T14:06:03+03:30",
-      "ended": null
+      "ended": "2026-10-16T14:28:26+03:30"
     },
     {
       "id": "j987",
@@ -6031,9 +6031,9 @@
       "model": "cursor",
       "task": "R10.10",
       "engine_model": "grok-4.7-xhigh",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T14:06:03+03:30",
-      "ended": null
+      "ended": "2026-10-16T14:29:00+03:30"
     },
     {
       "id": "j988",
@@ -6052,8 +6052,20 @@
       "title": "haiku: R10.22 System map A4 layout",
       "model": "haiku",
       "task": "R10.22",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T14:10:21+03:30",
+      "ended": "2026-10-16T14:31:21+03:30",
+      "refs": [
+        "commit:b25c4857583e3d96eb8b50bf60e9e0721b002e2c"
+      ]
+    },
+    {
+      "id": "j990",
+      "title": "haiku: R10.10 fix Cursor review P1s",
+      "model": "haiku",
+      "task": "R10.10",
+      "status": "running",
+      "started": "2026-10-16T14:29:12+03:30",
       "ended": null
     }
   ]
