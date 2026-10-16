@@ -1,6 +1,5 @@
-.wf-page,.wf{display:grid;gap:var(--sp-2);min-width:0}
+.wf-page,.wf{display:flex;flex-direction:column;gap:var(--sp-2);min-width:0}
 .wf-controls{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
-.wf-page :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .wf-scroll{overflow-x:auto;max-width:100%;min-width:0}
 .wf-grid{display:grid;grid-template-columns:9rem max-content 8.5rem;width:max-content}
 .wf-tl{touch-action:none;user-select:none}
@@ -33,9 +32,6 @@
 .wf-edge{fill:none;stroke:var(--text-2);stroke-width:1.5px}
 .wf-e-block{stroke:var(--danger);stroke-dasharray:6 3}
 .wf-arrow{fill:var(--text-2)}
-.wf-m-doing path{fill:var(--accent)}
-.wf-m-done path{fill:var(--success)}
-.wf-m-blocked path{fill:var(--danger)}
 .wf-hatch-bg{fill:var(--surface-2)}
 .wf-hatch-line{stroke:var(--danger);stroke-width:2px}
 .wf-sw{width:8px;height:8px;border-radius:50%;flex:none;background:var(--unknown)}
@@ -61,3 +57,5 @@
 .wf-edge-key{width:22px;border-top:2px solid var(--text-2)}
 .wf-edge-key.wf-e-block{border-top:2px dashed var(--danger)}
 @media (max-width:767px){.wf-table{min-width:0}.wf-table .btn{min-height:44px;min-width:44px}}
+.wf-page{height:100%}.wf{flex:1;min-height:0}.wf>.wf-scroll{flex:1;min-height:0;overflow:auto}.wf-table th{position:sticky;top:0;z-index:1;background:var(--surface-1)}
+@media (min-width:768px){.main:has(>.wf-page){padding-bottom:var(--sp-3)}.wf .wfg-stage{display:flex;flex:1;min-height:0}.wf .wfg-host{flex:1;min-width:0;min-height:0}.wf .wfg-svg{height:100%}}

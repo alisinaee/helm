@@ -1,4 +1,4 @@
-/* flow.css: Overview, Inbox, Activity, question card. Tokens only. */
+/* flow.css */
 .page-head { display: grid; gap: var(--sp-1); margin-bottom: var(--sp-3) }
 .page-title { margin: 0; font-size: var(--fs-17) }
 .page-note, .ov-sum, .ov-more { margin: 0; color: var(--text-3); font-size: var(--fs-12) }
@@ -14,7 +14,7 @@
 .ov { grid-template-columns: minmax(0, 1fr) minmax(0, 340px); align-items: start }
 }
 .qc { display: grid; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); background: var(--surface-1);
-  border: 1px solid var(--track); border-radius: var(--r-card); min-width: 0; }
+border: 1px solid var(--track); border-radius: var(--r-card); min-width: 0; }
 .qc.is-blocking { border-color: var(--warning) }
 .qc.is-answered { padding: var(--sp-2) var(--sp-4); background: var(--surface-2) }
 .qc-head { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); align-items: center; font-size: var(--fs-12) }
@@ -22,25 +22,23 @@
 .qc-task { color: var(--accent) }
 .qc-text { margin: 0; font-size: var(--fs-15); font-weight: 600; color: var(--text-1); overflow-wrap: anywhere }
 .qc-line { margin: 0; color: var(--text-2) }
-/* Option row: 28px key chip, then the label on one line. */
 .qc .nz-list { grid-template-columns: minmax(0, 1fr); gap: 6px }
 .qc .nz-list .qc-opt { display: flex; align-items: center; gap: var(--sp-2); width: 100%; min-height: 36px; height: auto;
-  margin: 0; padding: 0 var(--sp-3) 0 4px; text-align: left; white-space: nowrap; overflow: hidden }
+margin: 0; padding: 0 var(--sp-3) 0 4px; text-align: left; white-space: nowrap; overflow: hidden }
 .qc .nz-list .qc-opt:hover { border-color: var(--accent) }
 .qc-key { display: inline-grid; place-items: center; flex: 0 0 28px; width: 28px; height: 28px;
-  font: var(--fs-12) var(--font-mono); color: var(--text-3); border: 1px solid var(--line); border-radius: var(--r-control) }
+font: var(--fs-12) var(--font-mono); color: var(--text-3); border: 1px solid var(--line); border-radius: var(--r-control) }
 .qc-opt.btn-primary .qc-key { color: var(--on-accent); border-color: currentColor }
 .qc-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .qc-def { font-size: var(--fs-11); opacity: 0.85 }
 .qc-foot { margin: 0; color: var(--text-3); font-size: var(--fs-12) }
 .nz-list, .mt-list, .act-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2) }
 .nz-row { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); align-items: center; min-width: 0;
-  overflow-wrap: anywhere; font-size: var(--fs-13); color: var(--text-1) }
-/* Other row: one line, baseline aligned. */
+overflow-wrap: anywhere; font-size: var(--fs-13); color: var(--text-1) }
 .qc .nz-row { flex-wrap: nowrap; align-items: baseline }
 .qc .nz-row label { display: flex; flex: 1; min-width: 0; align-items: baseline; gap: 6px }
 .qc .nz-row input { flex: 1; min-width: 0; min-height: 36px; padding: 0 var(--sp-2); font: inherit; color: var(--text-1);
-  background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-control) }
+background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-control) }
 .nz-slot { display: grid; grid-template-columns: minmax(0, 1fr) var(--ref-col); align-items: center }
 .nz-txt { min-width: 0; overflow-wrap: anywhere }
 .nz-kind { font-size: var(--fs-11); color: var(--text-3) }
@@ -64,7 +62,6 @@
 .ag-title { font-weight: 600; color: var(--text-1) }
 .nz-list .btn { display: grid; width: 100%; text-align: left }
 @media (max-width: 599px) { .ag-row .btn, .nz-list .btn { min-height: 44px } }
-/* Workflow detail on a phone. */
 @media (max-width: 767px) {
 .row-grid.wf-cols{grid-template-columns:minmax(0,1fr) 4.5rem 4.5rem 6.5rem}
 .wf-cols>:nth-child(1){grid-column:1/-1}.wf-cols>:nth-child(2){grid-column:1;grid-row:2}
