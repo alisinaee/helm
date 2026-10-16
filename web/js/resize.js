@@ -4,7 +4,10 @@ const STEP = 16;
 const MIN_W = 768;
 const SPECS = {
   nav: { cssVar: "--w-nav", def: 232, min: 56, max: function () { return 360; }, label: "Resize navigation", sign: 1 },
-  side: { cssVar: "--w-side", def: 320, min: 280, max: function () { return Math.min(720, Math.round(window.innerWidth * 0.6)); }, label: "Resize side panel", sign: -1 },
+  side: {
+    cssVar: "--w-side", def: 320, min: 280, label: "Resize side panel", sign: -1,
+    max: function () { return Math.min(720, Math.round(window.innerWidth * 0.6)); },
+  },
 };
 
 function clamp(spec, v) {

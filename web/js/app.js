@@ -19,6 +19,7 @@ import { limitAction } from "./views/limits.js";
 import { ruleAction } from "./views/rules.js";
 import { settingsAction } from "./views/settings.js";
 import { initPanel, panelView } from "./views/panel.js";
+import { initResize } from "./resize.js";
 import { topbarView } from "./views/topbar.js";
 import { dismissToast, setToastHold, setToastListener, toastsHtml, undoToast } from "./views/toast.js";
 import { copyRef } from "./ref.js";
@@ -543,6 +544,7 @@ function boot() {
   });
   initKeys();
   initPanel({ render: render });
+  initResize();
   document.addEventListener("click", onClick);
   document.addEventListener("change", onChange);
   document.addEventListener("rb:render", render);
