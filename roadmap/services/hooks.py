@@ -752,7 +752,8 @@ def _turn_reply(path):
 
 def _head_reply_capture(payload, data_dir, now, clock, started):
     """Store the reply of the turn on the newest entry of this session (HEAD-SPEC section 13), when that entry was
-    logged at or after the turn's prompt. Off unless the project captures. Fail-open: a busy lock or a problem goes to
+    logged at or after the turn's prompt and has no reply yet (the first Stop after the prompt wins). Off unless the
+    project captures. Fail-open: a busy lock or a problem goes to
     the log and the Stop hook carries on."""
     try:
         if not _head_on(data_dir):
@@ -764,6 +765,10 @@ def _head_reply_capture(payload, data_dir, now, clock, started):
         entry = head_svc.latest_hook_entry(data_dir, payload.get("session_id"))
         logged_at = head_core.parse_ts(entry.get("ts")) if entry else None
         if prompt_at is None or logged_at is None or logged_at < prompt_at - datetime.timedelta(seconds=REPLY_SLACK_S):
+            return
+        if head_svc.details_of(data_dir, entry["id"])["reply"] is not None:
+            # The person's answer is already stored: a later Stop of this session (a background turn such as a task
+            # notification, which has no new prompt) must not overwrite it.
             return
         budget = max(0.0, (PRE_TIMEOUT_S - (clock() - started)) * 0.5)
         head_svc.set_reply(data_dir, entry["id"], reply, timeout=budget)

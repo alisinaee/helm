@@ -464,6 +464,21 @@ class ReplyCaptureTests(HeadHookCase):
         self.stop()
         self.assertEqual(self.reply_of(eid), "Fixed it at the end.")
 
+    def test_a_background_stop_keeps_the_answer_to_the_prompt(self):
+        prompt = "please fix the broken export button on the board"
+        self.prompt(prompt)
+        eid = self.entries()[-1]["id"]
+        self.write_transcript(self.turn(prompt, "Fixed the export button."))
+        self.stop()
+        # a task notification ends a turn with no new person prompt: its reply must not replace the answer
+        self.write_transcript(self.turn(prompt, "Fixed the export button.") + [
+            _line("user", "<task-notification>build done</task-notification>", "2026-10-15T09:31:00.000Z",
+                  meta=True),
+            _line("assistant", [{"type": "text", "text": "Background build finished."}],
+                  "2026-10-15T09:31:01.000Z")])
+        self.stop()
+        self.assertEqual(self.reply_of(eid), "Fixed the export button.")
+
     def test_no_reply_is_read_when_capture_is_off(self):
         self.set_config(headCapture=False)
         self.write_transcript(self.turn("please fix the broken export button on the board", "Fixed."))
