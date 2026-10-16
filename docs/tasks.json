@@ -4213,6 +4213,129 @@
       "at": {
         "done": "2026-10-16T14:05:34+03:30"
       }
+    },
+    {
+      "id": "R10.18",
+      "phase": "R10",
+      "title": "Agents panel layout + CSS under one budget constant",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web/css, agents.js"
+    },
+    {
+      "id": "R10.19",
+      "phase": "R10",
+      "title": "System map A1: system.json load/validate + auto baseline",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "docs/SYSTEM-DESIGN-SECTION.md",
+      "refs": [
+        "commit:17840b91e5c78eb5e8cc7f84e361e2d731402514"
+      ],
+      "at": {
+        "done": "2026-10-16T14:19:18+03:30"
+      }
+    },
+    {
+      "id": "R10.20",
+      "phase": "R10",
+      "title": "System map A2: heat from git log + jobs + work",
+      "status": "todo",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "systemheat.py"
+    },
+    {
+      "id": "R10.21",
+      "phase": "R10",
+      "title": "System map A3: API endpoint + schema",
+      "status": "todo",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "routes.py"
+    },
+    {
+      "id": "R10.22",
+      "phase": "R10",
+      "title": "System map A4: layered layout",
+      "status": "partial",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web/js/graph/syslayout.js"
+    },
+    {
+      "id": "R10.23",
+      "phase": "R10",
+      "title": "System map A5: System view (toolbar, canvas, heat)",
+      "status": "todo",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "system.js"
+    },
+    {
+      "id": "R10.24",
+      "phase": "R10",
+      "title": "System map A6: side panel content",
+      "status": "todo",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "system-panel.js"
+    },
+    {
+      "id": "R10.25",
+      "phase": "R10",
+      "title": "System map A7: full-screen route",
+      "status": "todo",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "fullmap.js"
+    },
+    {
+      "id": "R10.26",
+      "phase": "R10",
+      "title": "System map A8: CLI + seed docs/system.json",
+      "status": "todo",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "cli"
     }
   ],
   "schemaVersion": 1

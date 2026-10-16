@@ -5730,9 +5730,9 @@
       "model": "agy",
       "task": "R10.2",
       "effort": "high",
-      "status": "running",
+      "status": "failed",
       "started": "2026-10-16T13:15:14+03:30",
-      "ended": null
+      "ended": "2026-10-16T14:13:53+03:30"
     },
     {
       "id": "j961",
@@ -6000,9 +6000,9 @@
       "title": "haiku: R10.18 finish Agents panel WIP, CSS caps",
       "model": "haiku",
       "task": "R7.31",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T13:59:30+03:30",
-      "ended": null
+      "ended": "2026-10-16T14:09:10+03:30"
     },
     {
       "id": "j985",
@@ -6015,6 +6015,46 @@
       "refs": [
         "commit:8b54f2ce02811000ab39f065ff4b81558cbe58cf"
       ]
+    },
+    {
+      "id": "j986",
+      "title": "cursor: R10 wave review (today's commits)",
+      "model": "cursor",
+      "task": "R10.10",
+      "status": "running",
+      "started": "2026-10-16T14:06:03+03:30",
+      "ended": null
+    },
+    {
+      "id": "j987",
+      "title": "Cursor grok-4.7-xhigh: Review the commits from today on main: git log --since=2026-10-16 --on",
+      "model": "cursor",
+      "task": "R10.10",
+      "engine_model": "grok-4.7-xhigh",
+      "status": "running",
+      "started": "2026-10-16T14:06:03+03:30",
+      "ended": null
+    },
+    {
+      "id": "j988",
+      "title": "haiku: R10.19 System map A1 service",
+      "model": "haiku",
+      "task": "R10.19",
+      "status": "done",
+      "started": "2026-10-16T14:10:17+03:30",
+      "ended": "2026-10-16T14:17:06+03:30",
+      "refs": [
+        "commit:17840b91e5c78eb5e8cc7f84e361e2d731402514"
+      ]
+    },
+    {
+      "id": "j989",
+      "title": "haiku: R10.22 System map A4 layout",
+      "model": "haiku",
+      "task": "R10.22",
+      "status": "running",
+      "started": "2026-10-16T14:10:21+03:30",
+      "ended": null
     }
   ]
 }

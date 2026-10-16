@@ -518,3 +518,7 @@
 {"v":1,"t":"u","id":"H190","ts":"2026-10-16T10:35:34Z","by":"head","set":{"kind":"ask","sum":"Short progress list"},"link":["+task:R10.1"]}
 {"v":1,"t":"u","id":"H188","ts":"2026-10-16T10:35:49Z","by":"head","set":{"status":"done"},"note":"answer: agy content mostly right after verify, infra flaky (5/11 failed); policy in AGY-PLAYBOOK"}
 {"v":1,"t":"u","id":"H190","ts":"2026-10-16T10:35:49Z","by":"head","set":{"status":"done"},"note":"answer: progress list given in chat: 11 R10 tasks done, 3 running, UX wave next"}
+{"v":1,"t":"e","ts":"2026-10-16T10:39:39Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"question?","sum":"how about the feature i asked in the head section : the visaul map ( project arch , idk design…","len":145,"h":"sha1:474fd47345f8","prio":2,"id":"H191"}
+{"v":1,"t":"u","id":"H191","ts":"2026-10-16T10:40:10Z","by":"head","set":{"kind":"question","sum":"Visual system/architecture map: spec ready, now R10.19-R10.26"},"link":["+task:R10.19"]}
+{"v":1,"t":"e","ts":"2026-10-16T10:41:31Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"first finish current job","len":27,"h":"sha1:24d9ec4508d5","prio":0,"id":"H192"}
+{"v":1,"t":"u","id":"H192","ts":"2026-10-16T10:41:36Z","by":"head","set":{"kind":"rule","sum":"Finish current jobs before launching new ones"},"link":["+task:R10.1"]}

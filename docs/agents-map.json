@@ -303,5 +303,15 @@
     "task": "R10.15",
     "title": "haiku: R10.15 head tests green",
     "model": "haiku"
+  },
+  "af9ced290c3930fd8": {
+    "task": "R10.19",
+    "title": "haiku: R10.19 System map A1 service",
+    "model": "haiku"
+  },
+  "a5a77acc7fc8efe25": {
+    "task": "R10.22",
+    "title": "haiku: R10.22 System map A4 layout",
+    "model": "haiku"
   }
 }
