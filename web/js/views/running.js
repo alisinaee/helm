@@ -44,7 +44,8 @@ function jobCopyHtml(job, pid) {
 function runItemHtml(job, pid) {
   return '<div class="row-grid run-item"><span class="rg-chips"><span class="rdot" aria-hidden="true"></span>' +
     '<span class="run-id">' + esc(job.id) + "</span>" +
-    (job.task ? chipHtml(job.task, "neutral") : "") + modelChip(job.model) + "</span>" +
+    (job.task ? chipHtml(job.task, "neutral") : "") + modelChip(job.model) +
+    (job.status === "claimed" ? chipHtml("claimed", "neutral") : "") + "</span>" +
     '<p class="run-title rg-t" title="' + esc(job.title) + '">' + esc(job.title) + "</p>" +
     '<span class="rg-num">' + timerHtml(job) + "</span>" + jobCopyHtml(job, pid) + "</div>";
 }

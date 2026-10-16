@@ -171,8 +171,9 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     '" data-task="' + esc(job.task || "") + '" data-focus="stop-' + esc(pid) + "-" + esc(job.id) + '"' +
     (job.task ? "" : " disabled") + ' aria-label="Stop ' + esc(label) + '">Stop</button>';
   const tokens = job.tokensK == null ? "not yet" : fmtTokens(job.tokensK);
+  const claimed = job.status === "claimed" ? chipHtml("claimed", "neutral") : "";
   const model = chipHtml(engineLabel(job.model, job.engineModel), "neutral") +
-    (job.role ? chipHtml(job.role, "neutral") : "") + badge;
+    (job.role ? chipHtml(job.role, "neutral") : "") + claimed + badge;
   const effort = '<span class="rg-chips ag-effort">' +
     esc(effortLabel(job.effort, job.model, job.engineModel)) + "</span>";
   const title = '<span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
