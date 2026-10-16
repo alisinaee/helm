@@ -38,7 +38,7 @@ class SystemViewTest(unittest.TestCase):
     def test_loading_then_cards(self):
         self.assertIn("aria-busy", self.out["okLoading"])
         html = self.out["ok"]
-        self.assertEqual(html.count('class="sys-card'), 3)
+        self.assertEqual(html.count('wfg-n sys-card'), 3)
         self.assertIn('data-sys="api"', html)
         self.assertIn("Open full screen", html)
         self.assertIn("#/full/ok/system", html)
@@ -60,7 +60,7 @@ class SystemViewTest(unittest.TestCase):
         for label in ("Off", "Commits", "Jobs", "Work"):
             self.assertIn(">%s</button>" % label, html)
         self.assertIn('data-sys-heat="commits" aria-pressed="true"', html)
-        self.assertIn('class="sys-heat"', html)
+        self.assertIn('class="sys-heat wfg-nowbar"', html)
 
     def test_missing_api_and_errors_have_retry(self):
         self.assertIn("System map needs the API", self.out["missing"])

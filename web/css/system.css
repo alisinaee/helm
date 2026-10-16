@@ -1,1 +1,1 @@
-.sys-card{cursor:pointer}.sys-sel .wfg-tab{stroke:var(--accent);stroke-width:2px}.sys-heat{fill:var(--warning)}
+.sys-sel .wfg-tab{stroke:var(--accent)}.sys-n{font-size:13px}.sys-panel{position:fixed;top:0;right:0;bottom:0;width:min(360px,100vw);background:var(--surface-1);border-left:1px solid var(--track)}

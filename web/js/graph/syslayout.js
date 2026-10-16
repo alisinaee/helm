@@ -9,21 +9,22 @@
 // of their neighbours in other columns, ties broken by the previous row and then by id.
 //
 // Edges. Every route is an orthogonal polyline that leaves the source card on its right side and enters the target
-// card on its left side. An edge into the next column is one step: a vertical run in the gap between the two
+// card on its left side. Edges sharing a side get their own port, spread along it by the other end's row. An edge into the next column is one step: a vertical run in the gap between the two
 // columns. Any other edge (skipping columns, same column or backwards) drops to a channel below all cards, so its
 // horizontal runs never cross a card. Vertical runs share a gap and are spaced evenly inside it; channels are
 // spaced by CH_STEP. Self loops, duplicate edges and edges with unknown ends are dropped and reported in `warnings`.
 
 export const CARD_W = 200;
-export const CARD_H = 56;
-export const ROW_GAP = 28;
-export const COL_GAP = 48;
+export const CARD_H = 64;
+export const ROW_GAP = 40;
+export const COL_GAP = 72;
 export const MARGIN = 16;
 export const HEAD_H = 32;
 
 const SWEEPS = 4;
 const CH_PAD = 16;
-const CH_STEP = 6;
+const CH_STEP = 10;
+const PORT_PAD = 10;
 const OTHER = "other";
 
 function cmp(a, b) {
@@ -184,11 +185,29 @@ export function systemLayout(system) {
     gapRuns.get(gap).push(run);
   };
   let channelCount = 0;
+  // Ports: the edges leaving (or entering) one card are ordered by the other end's centre and spread along the side.
+  const port = new Map();
+  const spread = (key, ids, card, otherOf) => {
+    const sorted = ids.slice().sort((p, q) => otherOf(p) - otherOf(q) || p - q);
+    sorted.forEach((i, k) => {
+      port.set(key + i, round1(card.y + PORT_PAD + ((k + 0.5) * (CARD_H - 2 * PORT_PAD)) / sorted.length));
+    });
+  };
+  cards.forEach((c) => {
+    const out = [];
+    const inn = [];
+    links.forEach((l, i) => {
+      if (l.from === c.id) out.push(i);
+      if (l.to === c.id) inn.push(i);
+    });
+    spread("o", out, c, (i) => byId.get(links[i].to).y);
+    spread("i", inn, c, (i) => byId.get(links[i].from).y);
+  });
   const plans = links.map((l, i) => {
     const a = byId.get(l.from);
     const b = byId.get(l.to);
-    const ay = a.y + CARD_H / 2;
-    const by = b.y + CARD_H / 2;
+    const ay = port.get("o" + i);
+    const by = port.get("i" + i);
     if (b.col === a.col + 1) {
       const run = { i, y1: ay, y2: by, x: 0 };
       addRun(a.col + 1, run);
