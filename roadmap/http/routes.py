@@ -153,11 +153,21 @@ def _rev_etag(rev):
     return '"%s"' % rev
 
 
+def _since_rev(query):
+    """The revision named by ?since= in a query string, quotes stripped, or None when the query has no since."""
+    for key, value in parse_qsl(query or "", keep_blank_values=True):
+        if key == "since":
+            return value.strip().strip('"')
+    return None
+
+
 def _snapshot_reply(req, pid, headers=(), app=None):
-    """The snapshot of project pid. The revision is checked first: a matching If-None-Match gives 304 without any
-    build. Otherwise the cached build for that revision is served, and its snap["rev"] is the ETag."""
-    pre = _rev_etag(loader.project_revision(pid))
-    if etag_matches(req.headers.get("If-None-Match"), pre):
+    """The snapshot of project pid. The revision is checked first: a matching If-None-Match, or ?since=<rev> equal to
+    the current revision, gives 304 (unchanged) without any build. Otherwise the cached build for that revision is
+    served, and its snap["rev"] is the ETag."""
+    current = loader.project_revision(pid)
+    pre = _rev_etag(current)
+    if etag_matches(req.headers.get("If-None-Match"), pre) or _since_rev(req.query) == current:
         return Reply(304, headers=[("ETag", pre)] + list(headers))
     snap = loader.load_snapshot(pid)
     etag = _rev_etag(snap["rev"])
