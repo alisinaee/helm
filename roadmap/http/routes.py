@@ -25,6 +25,8 @@ from roadmap.services import agentguard, commands, control, loader, usage
 from roadmap.services import git as git_service
 from roadmap.services import head as head_service
 from roadmap.services import jobs as job_service
+from roadmap.services import system as system_service
+from roadmap.services import systemheat
 from roadmap.services import tasks as task_service
 from roadmap.core.parsers import parse_jobs
 from roadmap.store import config as config_store
@@ -747,6 +749,42 @@ def git_diff(app, req, match):
     return _git_reply(app, {"path": rel, "skipped": None, "diff": text, "truncated": truncated})
 
 
+def _system_etag(path, data_dir, sha):
+    """The ETag of the system map: the HEAD sha plus the mtimes of docs/system.json and jobs.json (heat moves with the
+    jobs). A missing file counts as 0. Quoted, as the other ETags here are."""
+    stamps = []
+    for name in (os.path.join(path, "docs", system_service.SYSTEM_FILE), os.path.join(data_dir, job_service.JOBS_FILE)):
+        try:
+            stamps.append(os.stat(name).st_mtime_ns)
+        except OSError:
+            stamps.append(0)
+    return '"%s-%d-%d"' % (sha or "nosha", stamps[0], stamps[1])
+
+
+def project_system(app, req, match):
+    """GET /api/v1/projects/{pid}/system: the System map of one registered project. Components (with fileCount and
+    heat), edges, layers, the heat by component id, warnings and the HEAD sha. Read only; the paths come from the
+    registered folder and docs/system.json is confined to it. ETag = sha + system.json and jobs.json mtimes: a
+    matching If-None-Match gives 304 before any heat is read. Same-origin page only (403 otherwise)."""
+    _git_query(req.query, ())
+    _git_same_origin(app, req)
+    pid, path = _git_project(match)
+    _, data_dir = task_service.resolve(pid)
+    mapped = system_service.load(path)
+    sha = mapped["sha"]
+    etag = _system_etag(path, data_dir, sha)
+    if etag_matches(req.headers.get("If-None-Match"), etag):
+        return Reply(304, headers=[("ETag", etag)])
+    running, open_work, open_issues = systemheat.collect(data_dir)
+    heat = systemheat.build(path, mapped["components"], sha=sha, jobs=running, work=open_work, issues=open_issues)
+    components = [dict(comp, heat=heat["heat"].get(comp["id"])) for comp in mapped["components"]]
+    body = {"source": mapped["source"], "warnings": mapped["warnings"] + heat["warnings"],
+            "layers": mapped["layers"], "components": components, "edges": mapped["edges"],
+            "heat": heat["heat"], "summary": heat["summary"], "fileCount": mapped["fileCount"],
+            "truncated": mapped["truncated"], "sha": sha}
+    return json_reply(200, body, headers=[("ETag", etag)])
+
+
 # ---------------------------------------------------------------- table
 
 _PID = r"[a-z0-9][a-z0-9-]{0,39}"
@@ -762,6 +800,7 @@ ROUTES = (
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/branches"), ("GET",), git_branches),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/show/(?P<sha>[^/]*)"), ("GET",), git_show),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/diff/(?P<sha>[^/]*)"), ("GET",), git_diff),
+    (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/system"), ("GET",), project_system),
     (re.compile(r"/api/v1/usage"), ("GET",), usage_get),
     (re.compile(r"/api/v1/usage/sync"), ("POST",), usage_sync),
     (re.compile(r"/api/v1/cmd"), ("POST",), cmd),

@@ -25,6 +25,7 @@ marked `...`.
 | GET | `/api/v1/projects/{id}/notes` | the project's research notes: `{notes: [{name, title, size, lines}]}` (read only) |
 | GET | `/api/v1/projects/{id}/notes/{name}` | one research note as plain text, UTF-8 (read only) |
 | GET | `/api/v1/projects/{id}/head` | the head ledger rows: `{entries: [...]}`; `f`, `n`, `full=H<id>` (see below) |
+| GET | `/api/v1/projects/{id}/system` | the System map: `{source, warnings, layers, components, edges, heat, sha}`. `ETag`; `304` on a matching `If-None-Match` (see below) |
 | GET | `/api/v1/usage` | the stored plan usage |
 | POST | `/api/v1/usage/sync` | reads the plan usage now, then returns the `/api/v1/usage` object |
 | POST | `/api/v1/cmd` | runs one command-registry op: body `{op, args, project?}`, reply `{ok, data, activity, undo}` (see below) |
@@ -162,6 +163,27 @@ other reads. On the phone listener the reply has no `text` and no `history`.
 ```json
 {"entries": [{"id": "H15", "kind": "ask", "sum": "Head section design", "status": "doing", "age": "2h",
               "stale": false, "carried": false, "links": ["task:R7.31", "feature:F25"], "more": 0, "dup": null}]}
+```
+
+### GET /api/v1/projects/{id}/system
+
+The System map (SYSTEM-DESIGN A3), read only. Reply: `{source: "file|baseline|merged", warnings, layers, components,
+edges, heat, summary, fileCount, truncated, sha}`. Each component has `id`, `name`, `layer`, `kind`, `files`, `entry`,
+`entries`, `language`, `fileCount` and `heat: {commits30, lastAt, openWork, runningJobs, bugs}`; `heat` at the top
+is the same heat keyed by component id. `sha` is the HEAD commit (null outside git). `docs/system.json` is read only
+inside the project folder (a symlink is refused with a warning). `ETag` is the sha plus the mtimes of `docs/system.json`
+and `jobs.json`; a matching `If-None-Match` gives `304` with no body. Same-origin guard as the git reads: the page's
+own GET (`Sec-Fetch-Site: same-origin`) only, otherwise `403`. Never on the phone listener.
+
+```json
+{"source": "baseline", "warnings": [], "layers": ["code", "cli", "tests", "docs", "config"],
+ "components": [{"id": "roadmap", "name": "roadmap", "layer": "code", "kind": "module", "files": [],
+                 "entry": "roadmap/__main__.py", "entries": ["roadmap/__main__.py"], "language": "Python",
+                 "fileCount": 120, "heat": {"commits30": 4, "lastAt": "2026-10-15T09:12:00Z", "openWork": 1,
+                                             "runningJobs": 0, "bugs": 0}}],
+ "edges": [], "heat": {"roadmap": {"commits30": 4, "lastAt": "2026-10-15T09:12:00Z", "openWork": 1,
+                                   "runningJobs": 0, "bugs": 0}},
+ "summary": {}, "fileCount": 120, "truncated": false, "sha": "e4e30d7..."}
 ```
 
 ### GET /api/v1/projects/{id}/notes and /notes/{name}
