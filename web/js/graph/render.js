@@ -154,10 +154,10 @@ function taskNode(n, p, pid) {
     el("title", null, [txt(n.title || n.label || n.id)]),
     el("rect", Object.assign({ class: "wfg-box", rx: 6, fill: st === "blocked" ? "url(#wfg-hatch)" : null },
       boxAttrs(p))),
-    el("text", { class: "wfg-glyph", x: x + 10, y: y + 17 }, [txt(glyphOf(st))]),
-    el("text", { class: "wfg-id", x: x + 26, y: y + 17 }, [txt(n.task || "")]),
-    el("text", { class: "wfg-t", x: x + 10, y: y + 31 }, [txt(lines[0])]),
-    lines[1] ? el("text", { class: "wfg-t", x: x + 10, y: y + 44 }, [txt(lines[1])]) : null,
+    el("text", { class: "wfg-glyph", x: x + 10, y: y + 13 }, [txt(glyphOf(st))]),
+    el("text", { class: "wfg-id", x: x + 26, y: y + 13 }, [txt(n.task || "")]),
+    el("text", { class: "wfg-t", x: x + 10, y: y + 26 }, [txt(lines[0])]),
+    lines[1] ? el("text", { class: "wfg-t", x: x + 10, y: y + 38 }, [txt(lines[1])]) : null,
     el("g", { class: "wfg-ref" }),
   ]);
 }
@@ -184,6 +184,7 @@ function issueNode(n, p, pid) {
   return el("g", { class: "wfg-n wfg-issue wfg-s-blocked", tabindex: -1, role: "button", "aria-label": nodeLabel(n),
     "data-wf-item": n.id, "data-wf-task": n.task || "", "data-wf-pid": pid, "data-cx": x + w / 2,
     "data-cy": y + h / 2 }, [
+    el("title", null, [txt(n.label || n.id)]),
     el("path", { class: "wfg-box", d: d }),
     el("text", { class: "wfg-t", x: x + w / 2, y: y + h / 2 + 4, "text-anchor": "middle" }, [txt(clip(n.label, 22))]),
   ]);
@@ -194,7 +195,7 @@ function queueNode(n, p, pid) {
     "data-wf-item": n.id, "data-wf-task": "", "data-wf-pid": pid, "data-cx": p.x + p.w / 2,
     "data-cy": p.y + p.h / 2 }, [
     el("rect", Object.assign({ rx: 10 }, boxAttrs(p))),
-    el("text", { class: "wfg-t", x: p.x + p.w / 2, y: p.y + p.h / 2 + 4, "text-anchor": "middle" }, [txt(n.label)]),
+    el("text", { class: "wfg-t", x: p.x + p.w / 2, y: p.y + p.h / 2, "text-anchor": "middle", "dominant-baseline": "central" }, [txt(clip(n.label, 24))]),
   ]);
 }
 
@@ -203,6 +204,7 @@ function collapseNode(n, p, pid) {
   return el("g", { class: "wfg-n wfg-task wfg-s-done", tabindex: -1, role: "button", "aria-label": n.label,
     "data-wf-item": n.id, "data-wf-task": "", "data-wf-pid": pid, "data-cx": p.x + p.w / 2,
     "data-cy": p.y + p.h / 2 }, [
+    el("title", null, [txt(n.label || n.id)]),
     el("rect", Object.assign({ class: "wfg-box", rx: 6 }, boxAttrs(p))),
     el("text", { class: "wfg-glyph", x: p.x + 10, y: p.y + 18 }, [txt(glyphOf("done"))]),
     el("text", { class: "wfg-t", x: p.x + 26, y: p.y + 26 }, [txt(clip(n.label, 22))]),
@@ -300,8 +302,8 @@ function edgeNode(e, d, lead) {
 }
 
 function markerFor(type) {
-  return el("marker", { id: "wfg-arrow-" + type, viewBox: "0 0 8 8", refX: 7, refY: 4, markerWidth: 7,
-    markerHeight: 7, orient: "auto" }, [el("path", { class: "wfg-arrow wfg-arrow-" + type, d: "M0 0L8 4L0 8z" })]);
+  return el("marker", { id: "wfg-arrow-" + type, viewBox: "0 0 8 8", refX: 7, refY: 4, markerWidth: 9,
+    markerHeight: 9, markerUnits: "userSpaceOnUse", orient: "auto" }, [el("path", { class: "wfg-arrow wfg-arrow-" + type, d: "M0 0L8 4L0 8z" })]);
 }
 
 function nodeFor(n, p, pid) {

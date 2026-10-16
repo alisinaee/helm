@@ -109,6 +109,11 @@ class GitRoutes(ServerCase):
             self.assertEqual(self.get("show/" + self.sha, headers=headers).status, 403)
         self.assertEqual(self.get("diff/%s?path=docs/a.txt" % self.sha, headers=SAME_ORIGIN).status, 200)
 
+    def test_workflow_reads_work_for_a_browser_get_without_origin(self):
+        """The Workflow view's two reads (snapshot, git log) answer a same-origin browser GET (no Origin header)."""
+        for path in ("/api/v1/projects/gitrepo/snapshot", "/api/v1/projects/gitrepo/git/log?n=100"):
+            self.assertEqual(self.request("GET", path, headers=SAME_ORIGIN).status, 200)
+
     def test_show_bad_or_unknown_commit(self):
         self.assertEqual(self.get("show/zzzz", headers=self.port_origin).status, 400)
         self.assertEqual(self.get("show/" + "a" * 40, headers=self.port_origin).status, 404)

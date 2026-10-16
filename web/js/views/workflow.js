@@ -146,6 +146,7 @@ function fetchSnapshot(pid) {
   cache.set(pid, entry);
   if (entry.pending || now - entry.at < FRESH_MS) return;
   entry.pending = true;
+  const before = (entry.stamp || "") + "|" + (entry.error ? entry.error.message : "");
   getJson("/api/v1/projects/" + encodeURIComponent(pid) + "/snapshot").then(function (res) {
     entry.raw = res.data || {};
     entry.stamp = stampOf(entry.raw);
@@ -155,6 +156,9 @@ function fetchSnapshot(pid) {
   }).then(function () {
     entry.at = Date.now();
     entry.pending = false;
+    // Never leave the skeleton up: a settled fetch that changed what the view shows re-renders it once.
+    const after = (entry.stamp || "") + "|" + (entry.error ? entry.error.message : "");
+    if (after !== before && typeof window !== "undefined") window.dispatchEvent(new Event("hashchange"));
   });
 }
 
