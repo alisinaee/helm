@@ -37,6 +37,11 @@ START HERE in a new chat (any account, same Mac): `cd ~/Works/roadmap-board` and
 - Rules from this run: ~/.claude/skills/head/SKILL.md "Planner-only rules" (H182, H189 agy policy, H193 Cursor OFF,
   H196 UX recipe docs/ux/TESTER-RECIPE.md + taste rules, H197 agy <=20 min, H200 UI redesign = Sonnet with spec).
 - Person to check (needs-you): H173 Planner crash, H195, H198-H201 UI fixes. Person to run: `bin/roadmap limits set 15`.
+- Update 16:40 (weekly 14%, cap 15% reached; stop Claude workers): usage now auto-syncs from Anthropic (person ran
+  `claude auth login`; token refresh opt-in only). System map A1-A6 + A8 live in a new "System" nav section
+  (14 components, layers, heat, side panel). Next: R10.33 map fit/wrap (fitted map is too flat: 9 columns),
+  R10.25 A7 full screen, R10.30 Tokens redesign, R10.32 per-task tokens (docs/TOKENS-PER-TASK.md), R10.27 ledger
+  auto-close bug, test cleanup (~13 web failures: aria, buttons, question options, refs, sections, agents lint).
 - First message for the new chat: `/head`
 
 ### Checkpoint 2026-10-15 (/head save, chat near limit)
