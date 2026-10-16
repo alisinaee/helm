@@ -467,6 +467,12 @@ Chips wrap; nested workers indent once only. */
 .rg-agent>:nth-child(7) { grid-column: 1; grid-row: 5; justify-self: start; width: auto }
 .rg-agent>:nth-child(8) { grid-column: 3; grid-row: 1 / 6 }
 .ag-kids .ag-kids { padding-left: 0; border-left: 0 }
+.rg-agent>:nth-child(n+2):nth-child(-n+6)::before { color: var(--text-3); font-size: var(--fs-11) }
+.rg-agent>:nth-child(2)::before { content: "Effort " }
+.rg-agent>:nth-child(4)::before { content: "Task " }
+.rg-agent>:nth-child(5)::before { content: "Elapsed " }
+.rg-agent>:nth-child(6)::before { content: "Tokens " }
+.rg-agent>:nth-child(7) .btn { min-height: 44px }
 }
 /* Shared fixed tracks. Model, effort, task, elapsed, tokens and stop are lengths, so a long task id or
 "No task assigned" cannot widen Task and shove Elapsed off the header. Job takes the rest, two lines. */
@@ -480,7 +486,10 @@ grid-template-columns: var(--rg) var(--ref-col); }
 .rg-agent > :nth-child(1) .chip { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .rg-agent > :nth-child(4), .rg-agent > :nth-child(4) > a, .rg-agent > :nth-child(4) > .mt-label {
 display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.rg-agent > span:nth-child(7) { display: flex; align-items: center; justify-content: center; }}
+.rg-agent > span:nth-child(7) { display: flex; align-items: center; justify-content: center; }
+.rg-agent > :nth-child(-n+4) { justify-self: start; text-align: left }
+.rg-agent > :nth-child(5), .rg-agent > :nth-child(6) { justify-self: end; text-align: right }
+.rg-agent > :nth-child(7) { justify-self: center }}
 .rg-fin { --rg: 4.5rem minmax(0, 1fr) 4rem }
 .run-item {--rg: 10rem minmax(0, 1fr) 4.5rem;min-height: var(--h-row);padding: var(--sp-1) 0;border-top: 1px solid var(--track)}
 .run-id {font-weight: 600;font-variant-numeric: tabular-nums}

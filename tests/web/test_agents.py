@@ -199,6 +199,18 @@ class AgentsTests(unittest.TestCase):
         self.assertNotIn("grid-area", html)
         self.assertNotIn("style=", html)
 
+    def test_claimed_jobs_show_a_claimed_chip_in_both_lists(self):
+        for name in ("agents.js", "running.js"):
+            text = read_text(os.path.join(WEB, "js", "views", name))
+            self.assertIn('"claimed"', text, name)
+        self.assertIn('"claimed", "neutral"', read_text(os.path.join(WEB, "js", "views", "agents.js")))
+
+    def test_phone_rows_label_effort_task_elapsed_and_tokens(self):
+        css = read_text(os.path.join(WEB, "css", "components.css"))
+        self.assertIn('content: "Effort "', css)
+        self.assertIn('content: "Elapsed "', css)
+        self.assertIn('content: "Tokens "', css)
+
     def test_empty_state_reads_as_the_spec_says(self):
         self.assertIn("No agents running.", self.out["agentsIdle"])
         self.assertIn("No finished jobs yet.", self.out["agentsIdle"])
