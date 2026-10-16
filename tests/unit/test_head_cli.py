@@ -379,8 +379,10 @@ class HeadCliGaps(HeadCliCase):
         self.assertEqual(lines[-1], "ok claim Sonnet 5.5, 1 carried. next: roadmap head brief")
 
     def test_triage_list_shows_a_duplicate_suggestion(self):
+        # An exact repeat now bumps the first entry's priority and logs nothing (R7 repeat bump), so the
+        # duplicate suggestion needs a near-duplicate: same words, different text.
         self.log("make the map open in a new tab")
-        self.log("make the map open in a new tab")
+        self.log("make the map open in a new tab please")
         _, out, _ = _run(["head", "triage"])
         self.assertIn(" dup H1 ", out)
 
