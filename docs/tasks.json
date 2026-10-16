@@ -3947,7 +3947,9 @@
       "checkK": 0,
       "note": "docs/reviews/ux-*",
       "refs": [
-        "commit:ecf9aca12bc4f00648d87ca934ba91311fea0528"
+        "commit:ecf9aca12bc4f00648d87ca934ba91311fea0528",
+        "commit:530dcb53162d28c9963588777b26516a0d158d3f",
+        "commit:c7a4faf9a7cdeb69dc3337a9e99d8e08f9360f8b"
       ]
     },
     {
@@ -3974,14 +3976,17 @@
       "id": "R10.4",
       "phase": "R10",
       "title": "Tables and lists aligned on grid columns in every section",
-      "status": "todo",
+      "status": "done",
       "tokensK": 8,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "web/js/views, css"
+      "note": "web/js/views, css",
+      "refs": [
+        "commit:83267e78a3aba715152dad739ff4af382ef9c3ec"
+      ]
     },
     {
       "id": "R10.5",

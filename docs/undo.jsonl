@@ -1,6 +1,3 @@
-{"activity":"A106","sum":"H89 triaged as review","op":"head.restore","args":{"steps":[{"id":"H89","set":{"kind":"review","sum":"start the tasks first ask opus low 5.5 to review the project , the head feature , the things i…"},"link":["-task:R7.31"]}]},"at":"2026-10-15T13:53:03+03:30"}
-{"activity":"A108","sum":"H51 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H51","set":{"kind":"ask","sum":"i have unlimit agy usage , so you can run if need as max effort"},"link":["-task:R7.36"]}]},"at":"2026-10-15T13:55:04+03:30"}
-{"activity":"A109","sum":"H59 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H59","set":{"kind":"rule","sum":"Head: always check the Agents list and launch more work when needed to speed the project"},"link":["-task:R7.36"]}]},"at":"2026-10-15T13:55:04+03:30"}
 {"activity":"A110","sum":"H67 triaged as decision","op":"head.restore","args":{"steps":[{"id":"H67","set":{"kind":"decision","sum":"go with that"},"link":["-task:R7.36"]}]},"at":"2026-10-15T13:55:04+03:30"}
 {"activity":"A111","sum":"H36 set status, note","op":"head.restore","args":{"steps":[{"id":"H36","set":{"status":"open"}}]},"at":"2026-10-15T13:55:04+03:30"}
 {"activity":"A112","sum":"H49 set status, note","op":"head.restore","args":{"steps":[{"id":"H49","set":{"status":"open"}}]},"at":"2026-10-15T13:55:04+03:30"}
@@ -498,3 +495,6 @@
 {"activity":"A659","sum":"H196 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H196","set":{"kind":"ask","sum":"use good skill for ui ux ( base on the ui kit we use , or web search the best ones fit our case )…"},"link":["-task:R10.2"]}]},"at":"2026-10-16T14:41:31+03:30"}
 {"activity":"A660","sum":"H197 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H197","set":{"kind":"ask","sum":"i think the agy in current use waste our times"},"link":["-task:R10.1"]}]},"at":"2026-10-16T14:42:39+03:30"}
 {"activity":"A662","sum":"R10.5 todo->partial","op":"task.status","args":{"id":"R10.5","status":"todo"},"at":"2026-10-16T14:56:00+03:30"}
+{"activity":"A663","sum":"H196 set status, note","op":"head.restore","args":{"steps":[{"id":"H196","set":{"status":"done"}}]},"at":"2026-10-16T14:56:47+03:30"}
+{"activity":"A664","sum":"H194 set status, note","op":"head.restore","args":{"steps":[{"id":"H194","set":{"status":"open"}}]},"at":"2026-10-16T15:06:27+03:30"}
+{"activity":"A665","sum":"H195 set status, note","op":"head.restore","args":{"steps":[{"id":"H195","set":{"status":"open"}}]},"at":"2026-10-16T15:06:27+03:30"}

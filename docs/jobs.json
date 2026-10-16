@@ -6102,7 +6102,9 @@
       "started": "2026-10-16T14:41:35+03:30",
       "ended": null,
       "refs": [
-        "commit:ecf9aca12bc4f00648d87ca934ba91311fea0528"
+        "commit:ecf9aca12bc4f00648d87ca934ba91311fea0528",
+        "commit:530dcb53162d28c9963588777b26516a0d158d3f",
+        "commit:c7a4faf9a7cdeb69dc3337a9e99d8e08f9360f8b"
       ]
     },
     {
@@ -6122,9 +6124,13 @@
       "title": "haiku: R10.2 Head UX tester + fix",
       "model": "haiku",
       "task": "R10.2",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T14:47:41+03:30",
-      "ended": null
+      "ended": "2026-10-16T15:01:36+03:30",
+      "refs": [
+        "commit:530dcb53162d28c9963588777b26516a0d158d3f",
+        "commit:c7a4faf9a7cdeb69dc3337a9e99d8e08f9360f8b"
+      ]
     },
     {
       "id": "j996",
@@ -6137,6 +6143,48 @@
       "refs": [
         "commit:7664df75568703b3aed8581e4c6040023abc4fce"
       ]
+    },
+    {
+      "id": "j997",
+      "title": "haiku: R10.4 Work UX tester + fix",
+      "model": "haiku",
+      "task": "R10.4",
+      "status": "running",
+      "started": "2026-10-16T15:02:07+03:30",
+      "ended": null,
+      "refs": [
+        "commit:83267e78a3aba715152dad739ff4af382ef9c3ec"
+      ]
+    },
+    {
+      "id": "j998",
+      "title": "haiku: R10.4 Agents UX tester + fix",
+      "model": "haiku",
+      "task": "R10.4",
+      "status": "done",
+      "started": "2026-10-16T15:02:12+03:30",
+      "ended": "2026-10-16T15:05:58+03:30",
+      "refs": [
+        "commit:83267e78a3aba715152dad739ff4af382ef9c3ec"
+      ]
+    },
+    {
+      "id": "j999",
+      "title": "haiku: R10.15 last 2 failing web tests",
+      "model": "haiku",
+      "task": "R10.15",
+      "status": "running",
+      "started": "2026-10-16T15:02:17+03:30",
+      "ended": null
+    },
+    {
+      "id": "j1000",
+      "title": "haiku: R10.4 follow-up",
+      "model": "haiku",
+      "task": "R10.4",
+      "status": "running",
+      "started": "2026-10-16T15:06:09+03:30",
+      "ended": null
     }
   ]
 }

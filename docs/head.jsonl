@@ -536,3 +536,6 @@
 {"v":1,"t":"u","id":"H197","ts":"2026-10-16T11:12:39Z","by":"head","set":{"kind":"rule","sum":"agy wastes time on long jobs: stopped stuck audits; agy only for jobs under 20 min, else Haiku"},"link":["+task:R10.1"]}
 {"v":1,"t":"u","id":"H174","ts":"2026-10-16T11:17:14Z","by":"auto","set":{"status":"done"},"note":"auto: R10.2 ecf9aca"}
 {"v":1,"t":"u","id":"H196","ts":"2026-10-16T11:17:14Z","by":"auto","set":{"status":"done"},"note":"auto: R10.2 ecf9aca"}
+{"v":1,"t":"u","id":"H196","ts":"2026-10-16T11:26:47Z","by":"head","set":{"status":"done"},"note":"answer: recipe docs/ux/TESTER-RECIPE.md binds ui-ux-pro-max + Vercel guidelines to Haiku testers"}
+{"v":1,"t":"u","id":"H194","ts":"2026-10-16T11:36:27Z","by":"head","set":{"status":"done"},"note":"975cb0b + c7a4faf: chat first, real words, reply preview; head checked live"}
+{"v":1,"t":"u","id":"H195","ts":"2026-10-16T11:36:27Z","by":"head","set":{"status":"needs-you"},"note":"ecf9aca Inbox + c7a4faf Head UX passes done (recipe testers); please look and reopen if still bad"}
