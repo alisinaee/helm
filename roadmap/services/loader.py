@@ -26,7 +26,7 @@ from roadmap.store import paths
 from roadmap.store.migrate import JOB_CORE, PHASE_CORE, TASK_CORE
 
 BASE_FILES = ("tasks.json", "jobs.json", "autonomy.json", "issues.json", "questions.json", "comments.json",
-              "budget.json", "queue.json", "activity.jsonl", "features.json")
+              "budget.json", "queue.json", "activity.jsonl", "features.json", "work.json")
 CONFIG_FILE = "roadmap.config.json"
 UNDO_FILE = "undo.jsonl"  # the undo log (services/commands.py UNDO_FILE)
 HEAD_FILES = (head_store.FILE, head_store.TEXT_FILE, head_store.SPOOL_FILE, head_store.GATE_STAMP_FILE,
