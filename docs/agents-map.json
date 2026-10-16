@@ -288,5 +288,20 @@
     "task": "R10.13",
     "title": "haiku: R10.13 remove dead Issues view",
     "model": "haiku"
+  },
+  "a08a679dd8bcc43bb": {
+    "task": "R10.17",
+    "title": "haiku: R10.17 static asset cache-busting",
+    "model": "haiku"
+  },
+  "a432769ba202360cd": {
+    "task": "R7.31",
+    "title": "haiku: R10.18 finish Agents panel WIP, CSS caps",
+    "model": "haiku"
+  },
+  "ab4c1d2dbce5217d0": {
+    "task": "R10.15",
+    "title": "haiku: R10.15 head tests green",
+    "model": "haiku"
   }
 }

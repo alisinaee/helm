@@ -510,3 +510,11 @@
 {"v":1,"t":"u","id":"H183","ts":"2026-10-16T10:08:33Z","by":"head","set":{"status":"done"},"note":"answer: queue fix committed in split_net as 7c3f8ad; it retries agy 401/403"}
 {"v":1,"t":"u","id":"H187","ts":"2026-10-16T10:14:15Z","by":"head","set":{"status":"done"},"note":"a58e165 R10.16: replies no longer overwritten; API/view show chat (verified in-process)"}
 {"v":1,"t":"u","id":"H173","ts":"2026-10-16T10:18:44Z","by":"head","set":{"status":"needs-you"},"note":"d94d09e Planner merged into Work and hardened; crash not reproduced, person please confirm"}
+{"v":1,"t":"e","ts":"2026-10-16T10:33:00Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"question?","sum":"are agy result ok and reliable ?","len":41,"h":"sha1:3312dd451502","prio":2,"id":"H188"}
+{"v":1,"t":"u","id":"H188","ts":"2026-10-16T10:33:05Z","by":"head","set":{"kind":"question","sum":"Are agy results reliable"},"link":["+task:R10.1"]}
+{"v":1,"t":"e","ts":"2026-10-16T10:33:47Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"good policy , remeber that as head","len":34,"h":"sha1:a059c651ed53","prio":2,"id":"H189"}
+{"v":1,"t":"u","id":"H189","ts":"2026-10-16T10:33:56Z","by":"head","set":{"kind":"rule","sum":"agy policy approved; saved in head skill + memory"},"link":["+task:R10.1"]}
+{"v":1,"t":"e","ts":"2026-10-16T10:34:37Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"give me short update about the task i told u as list , short and simple , to know the progress","len":94,"h":"sha1:cbe086f8feea","prio":2,"id":"H190"}
+{"v":1,"t":"u","id":"H190","ts":"2026-10-16T10:35:34Z","by":"head","set":{"kind":"ask","sum":"Short progress list"},"link":["+task:R10.1"]}
+{"v":1,"t":"u","id":"H188","ts":"2026-10-16T10:35:49Z","by":"head","set":{"status":"done"},"note":"answer: agy content mostly right after verify, infra flaky (5/11 failed); policy in AGY-PLAYBOOK"}
+{"v":1,"t":"u","id":"H190","ts":"2026-10-16T10:35:49Z","by":"head","set":{"status":"done"},"note":"answer: progress list given in chat: 11 R10 tasks done, 3 running, UX wave next"}

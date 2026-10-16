@@ -5426,9 +5426,9 @@
       "task": "R7.31",
       "effort": "xhigh",
       "engine_model": "grok-4.7-xhigh",
-      "status": "running",
+      "status": "failed",
       "started": "2026-10-16T11:53:21+03:30",
-      "ended": null
+      "ended": "2026-10-16T13:59:18+03:30"
     },
     {
       "id": "j932",
@@ -5937,36 +5937,84 @@
       "model": "sonnet",
       "task": "R10.11",
       "effort": "low",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T13:50:57+03:30",
-      "ended": null
+      "ended": "2026-10-16T13:58:57+03:30",
+      "refs": [
+        "commit:0b5ae1e63e0b11b34eafb0c22ec00620492098cb"
+      ]
     },
     {
       "id": "j980",
       "title": "haiku: R10.13 remove dead Issues view",
       "model": "haiku",
       "task": "R10.13",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T13:52:53+03:30",
-      "ended": null
+      "ended": "2026-10-16T14:01:22+03:30",
+      "refs": [
+        "commit:e675a2710e49b5180cb567c6342c580625d8bdf7"
+      ]
     },
     {
       "id": "j981",
       "title": "sonnet: R10.9 follow-up commit detail fails live",
       "model": "sonnet",
       "task": "R10.9",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T13:55:08+03:30",
-      "ended": null
+      "ended": "2026-10-16T13:56:29+03:30",
+      "refs": [
+        "commit:f2028191f15059f81652561df0d065d897f97601",
+        "commit:0a17a01d64b241d6fc22a95b3f19eceab7a7234a"
+      ],
+      "tokensK": 128.0
     },
     {
       "id": "j982",
       "title": "sonnet: R10.9 follow-up",
       "model": "sonnet",
       "task": "R10.9",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T13:55:16+03:30",
+      "ended": "2026-10-16T13:56:18+03:30",
+      "refs": [
+        "commit:f2028191f15059f81652561df0d065d897f97601",
+        "commit:0a17a01d64b241d6fc22a95b3f19eceab7a7234a"
+      ]
+    },
+    {
+      "id": "j983",
+      "title": "haiku: R10.17 static asset cache-busting",
+      "model": "haiku",
+      "task": "R10.17",
+      "status": "done",
+      "started": "2026-10-16T13:58:45+03:30",
+      "ended": "2026-10-16T14:05:23+03:30",
+      "refs": [
+        "commit:1a35494510c0885b5b255a2dd2feb289d6555a93"
+      ]
+    },
+    {
+      "id": "j984",
+      "title": "haiku: R10.18 finish Agents panel WIP, CSS caps",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "running",
+      "started": "2026-10-16T13:59:30+03:30",
       "ended": null
+    },
+    {
+      "id": "j985",
+      "title": "haiku: R10.15 head tests green",
+      "model": "haiku",
+      "task": "R10.15",
+      "status": "done",
+      "started": "2026-10-16T13:59:36+03:30",
+      "ended": "2026-10-16T14:01:30+03:30",
+      "refs": [
+        "commit:8b54f2ce02811000ab39f065ff4b81558cbe58cf"
+      ]
     }
   ]
 }

@@ -4057,7 +4057,9 @@
       "checkK": 0,
       "note": "git.js, web/vendor",
       "refs": [
-        "commit:81ca110028947ed4b50014636ce4e49880ab63ca"
+        "commit:81ca110028947ed4b50014636ce4e49880ab63ca",
+        "commit:f2028191f15059f81652561df0d065d897f97601",
+        "commit:0a17a01d64b241d6fc22a95b3f19eceab7a7234a"
       ],
       "at": {
         "done": "2026-10-16T13:53:41+03:30"
@@ -4085,14 +4087,20 @@
       "id": "R10.11",
       "phase": "R10",
       "title": "Init flow: /head on a new project starts service, registers, empty state",
-      "status": "partial",
+      "status": "done",
       "tokensK": 5,
       "thinking": "low",
       "model": "sonnet",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "bin, skill"
+      "note": "bin, skill",
+      "refs": [
+        "commit:0b5ae1e63e0b11b34eafb0c22ec00620492098cb"
+      ],
+      "at": {
+        "done": "2026-10-16T13:59:13+03:30"
+      }
     },
     {
       "id": "R10.12",
@@ -4114,14 +4122,20 @@
       "id": "R10.13",
       "phase": "R10",
       "title": "Modernize old sections (minimal design) per R10.2 findings",
-      "status": "partial",
+      "status": "done",
       "tokensK": 5,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "web"
+      "note": "web",
+      "refs": [
+        "commit:e675a2710e49b5180cb567c6342c580625d8bdf7"
+      ],
+      "at": {
+        "done": "2026-10-16T14:01:34+03:30"
+      }
     },
     {
       "id": "R10.14",
@@ -4174,10 +4188,30 @@
       "checkK": 0,
       "note": "roadmap/services/usage*, tests/unit",
       "refs": [
-        "commit:efa232ca169d77142478b57392c1b15c5fb0a8d7"
+        "commit:efa232ca169d77142478b57392c1b15c5fb0a8d7",
+        "commit:8b54f2ce02811000ab39f065ff4b81558cbe58cf"
       ],
       "at": {
         "done": "2026-10-16T13:37:35+03:30"
+      }
+    },
+    {
+      "id": "R10.17",
+      "phase": "R10",
+      "title": "Static assets never stale after a service restart (cache-busting / no-cache)",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "roadmap/http/static*, web/index.html",
+      "refs": [
+        "commit:1a35494510c0885b5b255a2dd2feb289d6555a93"
+      ],
+      "at": {
+        "done": "2026-10-16T14:05:34+03:30"
       }
     }
   ],
