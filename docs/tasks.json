@@ -4010,7 +4010,7 @@
       "id": "R10.7",
       "phase": "R10",
       "title": "Merge Planner into Work (one section, planner as view)",
-      "status": "partial",
+      "status": "done",
       "tokensK": 8,
       "thinking": "medium",
       "model": "sonnet",
@@ -4018,7 +4018,12 @@
       "check": "none",
       "checkK": 0,
       "note": "planner.js, work.js",
-      "verify": true
+      "refs": [
+        "commit:d94d09ee438eb524e87a09eec0bc7117795f369c"
+      ],
+      "at": {
+        "done": "2026-10-16T13:48:43+03:30"
+      }
     },
     {
       "id": "R10.8",
@@ -4043,20 +4048,26 @@
       "id": "R10.9",
       "phase": "R10",
       "title": "Git section rebuilt on vendored MIT libs (graph + diff)",
-      "status": "partial",
+      "status": "done",
       "tokensK": 8,
       "thinking": "low",
       "model": "sonnet",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "git.js, web/vendor"
+      "note": "git.js, web/vendor",
+      "refs": [
+        "commit:81ca110028947ed4b50014636ce4e49880ab63ca"
+      ],
+      "at": {
+        "done": "2026-10-16T13:53:41+03:30"
+      }
     },
     {
       "id": "R10.10",
       "phase": "R10",
       "title": "Core sync root causes (jobs/tasks/work/head not in sync)",
-      "status": "partial",
+      "status": "done",
       "tokensK": 8,
       "thinking": "medium",
       "model": "sonnet",
@@ -4064,13 +4075,17 @@
       "check": "none",
       "checkK": 0,
       "note": "roadmap/",
-      "verify": true
+      "refs": [
+        "commit:96994fb5b69ea2a07dc69c77dd5fa31d993c167e",
+        "commit:84e7108aef1bf6a3402ab3fa51f23bae9ddd48b7",
+        "commit:b5ff4e890a1976a69abda378814b15c6a6bed508"
+      ]
     },
     {
       "id": "R10.11",
       "phase": "R10",
       "title": "Init flow: /head on a new project starts service, registers, empty state",
-      "status": "todo",
+      "status": "partial",
       "tokensK": 5,
       "thinking": "low",
       "model": "sonnet",
@@ -4099,7 +4114,7 @@
       "id": "R10.13",
       "phase": "R10",
       "title": "Modernize old sections (minimal design) per R10.2 findings",
-      "status": "todo",
+      "status": "partial",
       "tokensK": 5,
       "thinking": "low",
       "model": "haiku",

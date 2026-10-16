@@ -5616,9 +5616,9 @@
       "model": "agy",
       "task": "R7.31",
       "effort": "high",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T12:52:06+03:30",
-      "ended": null
+      "ended": "2026-10-16T13:52:07+03:30"
     },
     {
       "id": "j950",
@@ -5676,9 +5676,9 @@
       "model": "agy",
       "task": "R10.2",
       "effort": "high",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T12:54:23+03:30",
-      "ended": null
+      "ended": "2026-10-16T13:54:24+03:30"
     },
     {
       "id": "j956",
@@ -5720,9 +5720,9 @@
       "model": "agy",
       "task": "R7.31",
       "effort": "high",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T13:15:12+03:30",
-      "ended": null
+      "ended": "2026-10-16T13:49:16+03:30"
     },
     {
       "id": "j960",
@@ -5835,9 +5835,12 @@
       "model": "sonnet",
       "task": "R10.9",
       "effort": "low",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T13:38:04+03:30",
-      "ended": null
+      "ended": "2026-10-16T13:53:05+03:30",
+      "refs": [
+        "commit:81ca110028947ed4b50014636ce4e49880ab63ca"
+      ]
     },
     {
       "id": "j971",
@@ -5854,26 +5857,115 @@
       "title": "haiku: R10.10 C1 no phantom db",
       "model": "haiku",
       "task": "R10.10",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T13:40:57+03:30",
-      "ended": null
+      "ended": "2026-10-16T13:44:31+03:30"
     },
     {
       "id": "j973",
       "title": "haiku: R10.10 C2 work.json in loader",
       "model": "haiku",
       "task": "R10.10",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T13:41:01+03:30",
-      "ended": null
+      "ended": "2026-10-16T13:46:13+03:30",
+      "refs": [
+        "commit:96994fb5b69ea2a07dc69c77dd5fa31d993c167e"
+      ]
     },
     {
       "id": "j974",
       "title": "haiku: R10.10 C5 running visibility",
       "model": "haiku",
       "task": "R10.10",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T13:41:04+03:30",
+      "ended": "2026-10-16T13:51:44+03:30",
+      "refs": [
+        "commit:96994fb5b69ea2a07dc69c77dd5fa31d993c167e",
+        "commit:84e7108aef1bf6a3402ab3fa51f23bae9ddd48b7",
+        "commit:b5ff4e890a1976a69abda378814b15c6a6bed508"
+      ]
+    },
+    {
+      "id": "j975",
+      "title": "haiku: R10.10 follow-up",
+      "model": "haiku",
+      "task": "R10.10",
+      "status": "done",
+      "started": "2026-10-16T13:44:42+03:30",
+      "ended": "2026-10-16T13:49:49+03:30",
+      "refs": [
+        "commit:96994fb5b69ea2a07dc69c77dd5fa31d993c167e"
+      ]
+    },
+    {
+      "id": "j976",
+      "title": "agy: UI/UX audit overview activity agents roadmap",
+      "model": "agy",
+      "task": "R10.2",
+      "effort": "high",
+      "status": "running",
+      "started": "2026-10-16T13:49:15+03:30",
+      "ended": null
+    },
+    {
+      "id": "j977",
+      "title": "agy: UI/UX global shell audit",
+      "model": "agy",
+      "task": "R10.2",
+      "effort": "high",
+      "status": "running",
+      "started": "2026-10-16T13:49:17+03:30",
+      "ended": null
+    },
+    {
+      "id": "j978",
+      "title": "haiku: R10.10 follow-up",
+      "model": "haiku",
+      "task": "R10.10",
+      "status": "done",
+      "started": "2026-10-16T13:49:54+03:30",
+      "ended": "2026-10-16T13:50:33+03:30",
+      "refs": [
+        "commit:84e7108aef1bf6a3402ab3fa51f23bae9ddd48b7"
+      ]
+    },
+    {
+      "id": "j979",
+      "title": "sonnet: R10.11 roadmap init command",
+      "model": "sonnet",
+      "task": "R10.11",
+      "effort": "low",
+      "status": "running",
+      "started": "2026-10-16T13:50:57+03:30",
+      "ended": null
+    },
+    {
+      "id": "j980",
+      "title": "haiku: R10.13 remove dead Issues view",
+      "model": "haiku",
+      "task": "R10.13",
+      "status": "running",
+      "started": "2026-10-16T13:52:53+03:30",
+      "ended": null
+    },
+    {
+      "id": "j981",
+      "title": "sonnet: R10.9 follow-up commit detail fails live",
+      "model": "sonnet",
+      "task": "R10.9",
+      "status": "running",
+      "started": "2026-10-16T13:55:08+03:30",
+      "ended": null
+    },
+    {
+      "id": "j982",
+      "title": "sonnet: R10.9 follow-up",
+      "model": "sonnet",
+      "task": "R10.9",
+      "status": "running",
+      "started": "2026-10-16T13:55:16+03:30",
       "ended": null
     }
   ]

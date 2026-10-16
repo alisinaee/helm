@@ -278,5 +278,15 @@
     "task": "R10.10",
     "title": "haiku: R10.10 C5 running visibility",
     "model": "haiku"
+  },
+  "a4e53e740d8b8ae74": {
+    "task": "R10.11",
+    "title": "sonnet: R10.11 roadmap init command",
+    "model": "sonnet"
+  },
+  "ab4643ce6e4bd838f": {
+    "task": "R10.13",
+    "title": "haiku: R10.13 remove dead Issues view",
+    "model": "haiku"
   }
 }

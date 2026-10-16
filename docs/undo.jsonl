@@ -1,4 +1,3 @@
-{"activity":"A89","sum":"H46 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H46","set":{"kind":"rule","sum":"why i dont see the model used for open code ?"},"link":["-task:R7.31"]}]},"at":"2026-10-15T10:49:30+03:30"}
 {"activity":"A90","sum":"H47 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H47","set":{"kind":"ask","sum":"i think my mac can handle atleast 50 parall task so you need run more task if possilbe"},"link":["-task:R7.31"]}]},"at":"2026-10-15T10:51:18+03:30"}
 {"activity":"A91","sum":"H48 triaged as review","op":"head.restore","args":{"steps":[{"id":"H48","set":{"kind":"review","sum":"use cursor 4.7 xhigh to ask why our proejct managemt not sync?"},"link":["-task:R7.31"]}]},"at":"2026-10-15T10:54:09+03:30"}
 {"activity":"A92","sum":"H49 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H49","set":{"kind":"ask","sum":"can we run more paralle tasks or not ?"},"link":["-task:R7.31"]}]},"at":"2026-10-15T10:55:15+03:30"}
@@ -498,3 +497,4 @@
 {"activity":"A634","sum":"H184 set status, note","op":"head.restore","args":{"steps":[{"id":"H184","set":{"status":"open"}}]},"at":"2026-10-16T13:38:32+03:30"}
 {"activity":"A635","sum":"H183 set status, note","op":"head.restore","args":{"steps":[{"id":"H183","set":{"status":"open"}}]},"at":"2026-10-16T13:38:33+03:30"}
 {"activity":"A637","sum":"H187 set status, note","op":"head.restore","args":{"steps":[{"id":"H187","set":{"status":"open"}}]},"at":"2026-10-16T13:44:15+03:30"}
+{"activity":"A639","sum":"H173 set status, note","op":"head.restore","args":{"steps":[{"id":"H173","set":{"status":"open"}}]},"at":"2026-10-16T13:48:44+03:30"}

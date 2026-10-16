@@ -509,3 +509,4 @@
 {"v":1,"t":"u","id":"H184","ts":"2026-10-16T10:08:32Z","by":"head","set":{"status":"done"},"note":"answer: codegraph verdict skip (docs/reviews/agy-codegraph.md); agy 401 was auth not VPN"}
 {"v":1,"t":"u","id":"H183","ts":"2026-10-16T10:08:33Z","by":"head","set":{"status":"done"},"note":"answer: queue fix committed in split_net as 7c3f8ad; it retries agy 401/403"}
 {"v":1,"t":"u","id":"H187","ts":"2026-10-16T10:14:15Z","by":"head","set":{"status":"done"},"note":"a58e165 R10.16: replies no longer overwritten; API/view show chat (verified in-process)"}
+{"v":1,"t":"u","id":"H173","ts":"2026-10-16T10:18:44Z","by":"head","set":{"status":"needs-you"},"note":"d94d09e Planner merged into Work and hardened; crash not reproduced, person please confirm"}
