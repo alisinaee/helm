@@ -3985,8 +3985,13 @@
       "checkK": 0,
       "note": "web/js/views, css",
       "refs": [
-        "commit:83267e78a3aba715152dad739ff4af382ef9c3ec"
-      ]
+        "commit:83267e78a3aba715152dad739ff4af382ef9c3ec",
+        "commit:85de6eb4404f72475b81b8c703d1975a392c4109",
+        "commit:fe677557267968301d43ac4992a7dcb12f26a3c4"
+      ],
+      "at": {
+        "done": "2026-10-16T15:10:38+03:30"
+      }
     },
     {
       "id": "R10.5",
@@ -4208,7 +4213,8 @@
       "note": "roadmap/services/usage*, tests/unit",
       "refs": [
         "commit:efa232ca169d77142478b57392c1b15c5fb0a8d7",
-        "commit:8b54f2ce02811000ab39f065ff4b81558cbe58cf"
+        "commit:8b54f2ce02811000ab39f065ff4b81558cbe58cf",
+        "commit:7c53ab47612a12e9abd817b05eac0ee7e57f8ee2"
       ],
       "at": {
         "done": "2026-10-16T13:37:35+03:30"

@@ -6098,9 +6098,9 @@
       "model": "agy",
       "task": "R10.2",
       "effort": "high",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T14:41:35+03:30",
-      "ended": null,
+      "ended": "2026-10-16T15:10:15+03:30",
       "refs": [
         "commit:ecf9aca12bc4f00648d87ca934ba91311fea0528",
         "commit:530dcb53162d28c9963588777b26516a0d158d3f",
@@ -6149,11 +6149,12 @@
       "title": "haiku: R10.4 Work UX tester + fix",
       "model": "haiku",
       "task": "R10.4",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T15:02:07+03:30",
-      "ended": null,
+      "ended": "2026-10-16T15:10:31+03:30",
       "refs": [
-        "commit:83267e78a3aba715152dad739ff4af382ef9c3ec"
+        "commit:83267e78a3aba715152dad739ff4af382ef9c3ec",
+        "commit:85de6eb4404f72475b81b8c703d1975a392c4109"
       ]
     },
     {
@@ -6173,18 +6174,49 @@
       "title": "haiku: R10.15 last 2 failing web tests",
       "model": "haiku",
       "task": "R10.15",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T15:02:17+03:30",
-      "ended": null
+      "ended": "2026-10-16T15:09:11+03:30",
+      "refs": [
+        "commit:7c53ab47612a12e9abd817b05eac0ee7e57f8ee2"
+      ]
     },
     {
       "id": "j1000",
       "title": "haiku: R10.4 follow-up",
       "model": "haiku",
       "task": "R10.4",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T15:06:09+03:30",
-      "ended": null
+      "ended": "2026-10-16T15:10:31+03:30",
+      "refs": [
+        "commit:85de6eb4404f72475b81b8c703d1975a392c4109"
+      ]
+    },
+    {
+      "id": "j1001",
+      "title": "haiku: R10.4 follow-up 6 failing row/token tests",
+      "model": "haiku",
+      "task": "R10.4",
+      "status": "done",
+      "started": "2026-10-16T15:13:20+03:30",
+      "ended": "2026-10-16T15:18:21+03:30",
+      "refs": [
+        "commit:fe677557267968301d43ac4992a7dcb12f26a3c4"
+      ],
+      "tokensK": 191.0
+    },
+    {
+      "id": "j1002",
+      "title": "haiku: R10.4 follow-up",
+      "model": "haiku",
+      "task": "R10.4",
+      "status": "done",
+      "started": "2026-10-16T15:13:24+03:30",
+      "ended": "2026-10-16T15:18:14+03:30",
+      "refs": [
+        "commit:fe677557267968301d43ac4992a7dcb12f26a3c4"
+      ]
     }
   ]
 }
