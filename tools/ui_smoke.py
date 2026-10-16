@@ -50,6 +50,8 @@ MARKERS = {"overview": "ov-card", "work/board": "wk-col", "work/list": "wk-table
            "roadmap": "lane", "tokens": "met-row"}
 COMING_SOON = "Coming soon"
 ERROR_TEXT = "This section could not be shown."
+# A dump counts as ready only when the section's marker is in the page. The wait is bounded: at most ATTEMPTS
+# Chrome runs per route, and a page that never shows its marker is reported as missing from the last dump.
 # Runs are one at a time: with several Chrome instances at once, the virtual-time budget ends before the page's module
 # graph is fetched, and most dumps show the placeholder shell. Even alone, about one dump in twelve misses the graph,
 # so a dump that is not ready is taken again, up to ATTEMPTS times; the last try is the one checked.
@@ -273,8 +275,10 @@ def dump_ready(chrome, url, combo, work, screenshot, ready):
     return scan
 
 
-def app_ready(scan):
-    return bool(scan.text_of("nav"))
+def app_ready(scan, marker=None):
+    """The nav is drawn and the section's own marker is in the page. A loading or skeleton state has no marker, so
+    a dump taken during a section import is not done yet and is taken again (see ATTEMPTS)."""
+    return bool(scan.text_of("nav")) and scan.has("." + (marker or PAGE_MARK))
 
 
 def run_one(chrome, base, route, combo, work):
@@ -285,7 +289,8 @@ def run_one(chrome, base, route, combo, work):
     if shot_name:
         screenshot = os.path.join(OUT_DIR, "%s-%s.png" % (shot_name, tag))
     try:
-        scan = dump_ready(chrome, base + "/#/" + path, combo, work, screenshot, app_ready)
+        scan = dump_ready(chrome, base + "/#/" + path, combo, work, screenshot,
+                          lambda found: app_ready(found, marker))
         return check_route(scan, "%s %s" % (label, tag), marker), screenshot
     except SmokeError as exc:
         return ["%s %s: %s" % (label, tag, exc)], None
