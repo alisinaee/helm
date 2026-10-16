@@ -861,8 +861,10 @@ def public_ops():
     return sorted(name for name, op in OPS.items() if op.public)
 
 
-def run(op, args, source, data_dir, now=None):
-    """Validate, write, log and reply. Returns {ok, data, activity, undo}. Errors raise RoadmapError with a next."""
+def run(op, args, source, data_dir, now=None, request_key=None):
+    """Validate, write, log and reply. Returns {ok, data, activity, undo}. Errors raise RoadmapError with a next.
+    request_key (the Idempotency-Key header) replays the first reply for the same key and body and conflicts on a
+    changed body. The replay is kept in the sqlite store, so without ROADMAP_STORE=sqlite the key is not stored."""
     if source not in activity.SOURCES:
         raise _usage("source '" + str(source) + "' is not valid (allowed: " + "|".join(activity.SOURCES) + ")")
     _load_ops()
@@ -874,7 +876,7 @@ def run(op, args, source, data_dir, now=None):
     records.require_dir(data_dir)
     db_path = head_svc.sqlite_db(data_dir)
     if db_path is not None:
-        return _run_db(db_path, op, args, source, data_dir, entry, now)
+        return _run_db(db_path, op, args, source, data_dir, entry, now, request_key)
     try:
         clean = entry.check(args or {})
         with context(source, current_project()):
@@ -904,19 +906,36 @@ def _db_files(data_dir):
 DEDUPE_WINDOW = datetime.timedelta(seconds=10)
 
 
-def _idem_key(op, args):
-    """(key, has_request_id): op + sha256 of the args (without the request id) + the client request id if sent."""
+def _idem_key(op, args, request_key=None):
+    """(key, fingerprint, request_id, has_request_id). request_id is the Idempotency-Key header (request_key) or else
+    the body requestId. fingerprint = op + sha256 of the args without the request id: the same key with another
+    fingerprint is a conflict. key = op + sha256 of the args and the request id (the older replay key)."""
     body = dict(args) if isinstance(args, dict) else {}
     rid = str(body.pop("requestId", None) or body.pop("request_id", None) or "")
-    raw = json.dumps(body, sort_keys=True, default=str) + "|" + rid
-    return str(op) + ":" + hashlib.sha256(raw.encode("utf-8")).hexdigest(), bool(rid)
+    rid = str(request_key) if request_key else rid
+    plain = json.dumps(body, sort_keys=True, default=str)
+    fingerprint = str(op) + ":" + hashlib.sha256(plain.encode("utf-8")).hexdigest()
+    key = str(op) + ":" + hashlib.sha256((plain + "|" + rid).encode("utf-8")).hexdigest()
+    return key, fingerprint, rid, bool(rid)
 
 
-def _replay_row(conn, key, has_rid):
-    """The first reply stored for this key. With a request id: any age. Without one: only when the newest activity
-    line is the same op+args and was written within DEDUPE_WINDOW (double-click or retry), so a later change in
-    between (done -> todo -> done) is applied."""
+def _rid_idem(rid):
+    """The events.idem of a request id: one row per key, so a second request with the same key finds it."""
+    return "req:" + rid
+
+
+def _replay_row(conn, key, has_rid, rid="", fingerprint=""):
+    """The first reply stored for this request. With a request id: any age; the same key with another op or body is a
+    409 conflict, not a second write. Without one: only when the newest activity line is the same op+args and was
+    written within DEDUPE_WINDOW (double-click or retry), so a later change in between (done -> todo -> done) is
+    applied."""
     if has_rid:
+        row = conn.execute("SELECT payload FROM events WHERE idem = ?", (_rid_idem(rid),)).fetchone()
+        if row is not None:
+            if json.loads(row[-1]).get("fp") != fingerprint:
+                raise RoadmapError("conflict", "this Idempotency-Key was already used for a different request; "
+                                   "send a new key", EXIT_CONFLICT)
+            return row
         return conn.execute("SELECT payload FROM events WHERE idem = ?", (key,)).fetchone()
     row = conn.execute("SELECT ts, payload FROM events WHERE kind = 'activity' ORDER BY rev DESC LIMIT 1").fetchone()
     if row is None or json.loads(row[1]).get("key") != key:
@@ -929,11 +948,11 @@ def _replay_row(conn, key, has_rid):
     return row if datetime.timedelta(0) <= age <= DEDUPE_WINDOW else None
 
 
-def _run_db(db_path, op, args, source, data_dir, entry, now):
+def _run_db(db_path, op, args, source, data_dir, entry, now, request_key=None):
     """Switch on: the data write, the activity line and the undo record commit in one db transaction. The JSON files
     are mirrored from the db and restored from a snapshot if the op fails. A key already in the db returns the first
-    reply and applies nothing (checked inside the write lock)."""
-    key, has_rid = _idem_key(op, args)
+    reply and applies nothing (checked inside the write lock); the same key with another op or body is a conflict."""
+    key, fingerprint, rid, has_rid = _idem_key(op, args, request_key)
     conn = store_db.open_project(data_dir)
     try:
         with store_db.txn(conn):
@@ -941,7 +960,7 @@ def _run_db(db_path, op, args, source, data_dir, entry, now):
             paths = _db_files(data_dir)
             for path in paths:
                 tasks_db.sync_in(conn, path)
-            row = _replay_row(conn, key, has_rid)
+            row = _replay_row(conn, key, has_rid, rid, fingerprint)
             if row is not None:
                 first = json.loads(row[-1])
                 return {"ok": True, "data": first.get("data"), "activity": first.get("activity"),
@@ -958,10 +977,10 @@ def _run_db(db_path, op, args, source, data_dir, entry, now):
                     line = _newest_line(data_dir)
                     if line is None or line["id"] == before:
                         line = activity.append(data_dir, source, op, summary, undo=inverse is not None, now=now)
-                idem = key if has_rid else key + "#" + uuid.uuid4().hex
+                idem = _rid_idem(rid) if has_rid else key + "#" + uuid.uuid4().hex
                 store_events.append(conn, "activity", "activity", line["id"], idem=idem, payload={
-                    "op": op, "key": key, "activity": line["id"], "sum": line["sum"], "data": data,
-                    "undo": inverse is not None})
+                    "op": op, "key": key, "fp": fingerprint, "activity": line["id"], "sum": line["sum"],
+                    "data": data, "undo": inverse is not None})
                 if inverse is not None:
                     _remember(data_dir, line["id"], summary, inverse, now)
                     store_events.append(conn, "undo", "activity", line["id"], idem=idem + ":undo", payload={
