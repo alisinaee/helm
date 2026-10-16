@@ -28,11 +28,11 @@ class PhoneRowsTest(unittest.TestCase):
 
     def test_agent_rows_use_a_phone_layout_below_640px(self):
         css = read(CSS, "components.css")
-        start = css.index(".row-grid.rg-agent { grid-template-columns: minmax(0, 1fr) 5rem")
+        start = css.index("@media (max-width: 639px) {\n.row-grid.rg-agent {")
         block = css[start:start + 1200]
         self.assertIn(".row-grid.rg-head { display: none; }", block)
-        self.assertIn(".rg-agent>:nth-child(8) { grid-column: 3; grid-row: 1 / 6 }", block)
-        self.assertIn(".rg-agent>.rg-chips, .rg-agent>.rg-main { flex-wrap: wrap", block)
+        self.assertIn(".rg-agent>:nth-child(8) { grid-column: 6; grid-row: 1 }", block)
+        self.assertIn('content: "Elapsed "', block)
 
     def test_nested_workers_indent_once_on_a_phone(self):
         self.assertIn(".ag-kids .ag-kids { padding-left: 0; border-left: 0 }", read(CSS, "components.css"))

@@ -13,3 +13,4 @@ Rules: UI-CHECKLIST rule 0 (grid columns), web-interface-guidelines (tabular num
 | 6 | Shared CSS total (web/css) over CSS_TOTAL_MAX once work.css and plan.css grew in parallel | none | CSS caps | not fixed here (other workers' files); Agents adds about 0.6 KB | P1 | open, for the head |
 
 Open: #2 (confirm), #6 (CSS total cap needs a trim in work.css or plan.css).
+| 7 | Job title not visible in the wide grid (Job track sat after Effort; huge gap) | live 2000px | title is the main column | Grid: lead, Model 7.5rem, Title 1fr, Task, Effort, Elapsed, Tokens, action; icon Stop; dot/Done chip in title cell | P0 | fixed (H206) |

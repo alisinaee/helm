@@ -137,11 +137,10 @@ class AgentsTests(unittest.TestCase):
         self.assertEqual(html.count('<span class="rg-chips ag-effort">'), 15)  # 5 running and 10 finished rows
         self.assertIn('<span class="rg-chips ag-effort">xhigh</span>', html)     # opencode, recorded
         self.assertIn('<span class="rg-chips ag-effort">high</span>', html)      # opus, recorded
-        self.assertIn('<span class="rg-chips ag-effort">medium</span>', html)    # grok, recorded
+        self.assertIn('<span class="rg-chips ag-effort">med</span>', html)    # grok, recorded
         self.assertIn('<span class="rg-chips ag-effort">low</span>', html)       # agy, recorded
-        self.assertEqual(html.count('<span class="rg-chips ag-effort">default</span>'), 10)  # haiku, not recorded
-        self.assertEqual(html.count('<span class="rg-chips ag-effort">not set</span>'), 1)   # cursor, not recorded
-        self.assertNotIn('ag-effort">\u2014', html)
+        # haiku (10), cursor (1) and the task-less agents show a short dash when no level is recorded
+        self.assertEqual(html.count('<span class="rg-chips ag-effort">\u2013</span>'), 11)
         self.assertIn('<span class="ag-effort">Effort</span>', html)
 
     def test_head_opencode_and_cursor_effort_come_from_the_engine_name(self):
@@ -157,8 +156,7 @@ class AgentsTests(unittest.TestCase):
         self.assertIn(">cursor · grok-4.7</span>", html)
         self.assertIn(">opencode · laguna-s-2.1</span>", html)
         self.assertIn('<span class="rg-chips ag-effort">xhigh</span>', html)   # cursor, from its engine model
-        self.assertIn('<span class="rg-chips ag-effort">default</span>', html)  # head is Opus
-        self.assertIn('<span class="rg-chips ag-effort">not set</span>', html)  # opencode, not recorded
+        self.assertEqual(html.count('<span class="rg-chips ag-effort">\u2013</span>'), 2)  # head and opencode
         self.assertNotIn(">head<", html)
         self.assertNotIn(">Cursor", html)
 
@@ -191,7 +189,17 @@ class AgentsTests(unittest.TestCase):
         self.assertIn('class="ag-list" aria-label="Last finished jobs"', html)
         self.assertNotIn("ag-noeffort", html)
         self.assertIn('<span class="ag-effort">Effort</span>', html)
-        self.assertIn("-webkit-line-clamp: 2;", read_text(os.path.join(WEB, "css", "components.css")))
+        self.assertIn("text-overflow: ellipsis", read_text(os.path.join(WEB, "css", "components.css")))
+
+    def test_title_column_and_icon_actions(self):
+        html = self.out["agentsProject"]
+        self.assertEqual(html.count('class="ag-lead"'), 15 + 2)   # rows plus the two headers
+        self.assertIn('<span class="rg-main">Title</span>', html)
+        self.assertIn('aria-label="Stop P1.1"', html)
+        self.assertIn('class="ag-dot"', html)
+        self.assertNotIn(">Stop</button>", html)
+        self.assertNotIn("not yet", html)
+        self.assertIn('<div class="ag-foot">', html)
 
     def test_rows_use_the_shared_fixed_tracks(self):
         html = self.out["agentsProject"]
