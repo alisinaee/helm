@@ -3,7 +3,7 @@
 // renders on every pass; the section in <main> is a module loaded on first visit (routes.js), and a section that
 // fails renders its own error without taking the shell down. Writes go through cmd.js, the one write path.
 
-import { getJson, postJson } from "./api.js";
+import { getJson, postJson, sinceUrl } from "./api.js";
 import { bannerHtml, emptyHtml, esc, patch, setHidden, skeletonHtml } from "./dom.js";
 import { buildViewModel, createStore, isSheetWidth, loadPrefs, loadTheme, loadUi, nextTheme, normalizeSnapshot,
   panelIsOpen, saveTheme, savePrefs, sectionOpenState, updateUi } from "./state.js";
@@ -39,6 +39,9 @@ const loadingSections = new Set();
 let timer = null;
 let busy = false;
 let followUp = false;
+// A pass that found nothing new skips the render, but at least this often one renders anyway (clock-driven labels).
+const SKIP_RENDER_MAX_MS = 10000;
+let lastRenderAt = 0;
 let lastOk = null;
 
 function prefsKey(route) {
@@ -272,29 +275,44 @@ function idsToRead(route) {
   return ids;
 }
 
+// One refresh pass. Resolves to true when something on the page may have changed (a new reply, an error, a
+// connection change) and false when every read answered unchanged: the caller then skips the render.
 async function refresh() {
   const route = currentRoute();
   const now = Date.now();
+  let changed = false;
+  const wasOk = store.conn.ok;
   try {
     const res = await getJson("/api/v1/projects");
+    if (res.changed) changed = true;
     store.projects = res.data.projects || [];
     store.projectsError = null;
     store.conn = { ok: true, lastOkAt: now, error: null };
   } catch (err) {
+    changed = true;
     store.projectsError = err;
     store.conn = { ok: false, lastOkAt: store.conn.lastOkAt, error: err.message };
   }
+  if (!wasOk || !store.conn.ok) changed = true;
   announce(store.conn.ok);
   await Promise.all(idsToRead(route).map(async function (id) {
     try {
-      const res = await getJson("/api/v1/projects/" + encodeURIComponent(id) + "/snapshot");
+      // ?since=<stored rev>: the server answers 304 (unchanged, no body) when the stored snapshot is current.
+      const url = sinceUrl("/api/v1/projects/" + encodeURIComponent(id) + "/snapshot", storedRev(id));
+      const res = await getJson(url);
       // 304: the stored body is still current. Keep it and its fetch time; nothing is re-normalized.
-      if (res.changed) store.snapshots[id] = normalizeSnapshot(res.data, now);
+      if (res.changed) {
+        store.snapshots[id] = normalizeSnapshot(res.data, now);
+        changed = true;
+      }
+      if (store.snapshotErrors[id]) changed = true;
       delete store.snapshotErrors[id];
     } catch (err) {
+      changed = true;
       store.snapshotErrors[id] = err;
     }
   }));
+  return changed;
 }
 
 async function loop() {
@@ -304,15 +322,21 @@ async function loop() {
     return;
   }
   busy = true;
+  let changed = true;
   try {
-    await refresh();
+    changed = await refresh();
   } catch (err) {
     // refresh() handles its own failures; anything else must not stop the loop.
     store.conn = { ok: false, lastOkAt: store.conn.lastOkAt, error: String(err) };
   } finally {
     busy = false;
   }
-  render();
+  // Nothing new from the server: keep the page as it is. A render still runs at least every SKIP_RENDER_MAX_MS.
+  const due = Date.now() - lastRenderAt >= SKIP_RENDER_MAX_MS;
+  if (changed || followUp || due) {
+    render();
+    lastRenderAt = Date.now();
+  }
   const again = followUp;
   followUp = false;
   schedule(again ? 0 : document.hidden ? SLOW_MS : FAST_MS);

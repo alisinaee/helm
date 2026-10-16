@@ -45,8 +45,17 @@ export function csrfToken() {
   return "";
 }
 
+// The URL with ?since=<rev> added: the server answers 304 when the revision still matches (no body). A null or empty
+// rev gives the URL unchanged.
+export function sinceUrl(url, rev) {
+  if (!rev) return url;
+  return url + (url.indexOf("?") >= 0 ? "&" : "?") + "since=" + encodeURIComponent(rev);
+}
+
 // GET a JSON resource. Resolves to {status, data, etag, changed}. A 304 resolves with the body kept from the last 200
-// and changed:false, so the caller keeps what it stored (no re-normalize, no new fetch time).
+// and changed:false, so the caller keeps what it stored (no re-normalize, no new fetch time). A 304 with no kept body
+// (a since= request whose URL was never fetched here) resolves with data:null and changed:false, so the caller
+// keeps its own stored copy.
 export async function getJson(url) {
   const cached = etagCache.get(url);
   const headers = { Accept: "application/json" };
@@ -60,8 +69,9 @@ export async function getJson(url) {
     throw new ApiError(0, "network", "Could not reach the server. Retrying.");
   }
   noteRequest("GET", url, response.status, started);
-  if (response.status === 304 && cached) {
-    return { status: 304, data: cached.data, etag: cached.etag, changed: false };
+  if (response.status === 304) {
+    if (cached) return { status: 304, data: cached.data, etag: cached.etag, changed: false };
+    return { status: 304, data: null, etag: null, changed: false };
   }
   if (!response.ok) throw failure(response.status, await readJson(response));
   const data = await readJson(response);
