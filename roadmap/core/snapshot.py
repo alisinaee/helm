@@ -281,6 +281,8 @@ def head_row(entry, moment, accepted=False, suggest=None, linked=None, prog=None
         row["acc"] = True
     if entry.get("auto_done") and entry["status"] == "done":
         row["auto"] = True
+    if entry.get("opts"):
+        row["opts"] = list(entry["opts"])
     links = entry.get("links") or []
     if links:
         row["links"] = links[:HEAD_LINKS_MAX]

@@ -33,7 +33,8 @@ NOTE_MAX = 160
 BRIEF_MAX_LINES = 15
 SOURCES = ("hook", "cli", "gui", "import")
 BY = ("head", "person", "auto")
-SET_KEYS = ("status", "kind", "sum", "into", "prio")
+SET_KEYS = ("status", "kind", "sum", "into", "prio", "opts")
+OPTS_MIN, OPTS_MAX, OPT_MAX = 2, 6, 80  # a head ask may carry 2..6 answer choices (R9.31); [] clears them
 KINDS = ("ask", "decision", "rule", "bug", "preference", "question", "review", "info")
 SESSION_EVENTS = ("claim", "start", "end")
 MAX_LINKS = head.MAX_LINKS
@@ -421,6 +422,24 @@ def check_umbrella_binds(data_dir, eid, adds=(), removes=(), now=None):
                            EXIT_USAGE, next="roadmap head convert " + eid)
 
 
+def clean_opts(value):
+    """Answer choices as a list of 0 or 2..6 distinct non-empty strings of at most 80 characters. [] clears them.
+    Anything else is a usage error (R9.31)."""
+    if not isinstance(value, (list, tuple)):
+        raise RoadmapError("usage", "opts must be a list of 2 to 6 choices", EXIT_USAGE)
+    out = []
+    for item in value:
+        text = " ".join(str(item if item is not None else "").split())[:OPT_MAX]
+        if not text:
+            raise RoadmapError("usage", "an option must not be empty", EXIT_USAGE)
+        if text not in out:
+            out.append(text)
+    if out and not OPTS_MIN <= len(out) <= OPTS_MAX:
+        raise RoadmapError("usage", "give 2 to 6 options (one given)" if len(out) == 1
+                           else "give 2 to 6 options, got " + str(len(out)), EXIT_USAGE)
+    return out
+
+
 def update(data_dir, eid, *, by, sets=None, links=(), note=None, now=None, timeout=None):
     """Append one update record: set fields, +/- link refs and an optional note. The entry must exist.
     Agents cannot change ts, src or text: only SET_KEYS are accepted. Returns the record written."""
@@ -439,6 +458,8 @@ def update(data_dir, eid, *, by, sets=None, links=(), note=None, now=None, timeo
         raise RoadmapError("usage", "kind must be one of " + "|".join(KINDS), EXIT_USAGE)
     if "prio" in sets and not head.valid_prio(sets["prio"]):
         raise RoadmapError("usage", "prio must be one of 0|1|2|3 (P0-P3)", EXIT_USAGE)
+    if "opts" in sets:
+        sets["opts"] = clean_opts(sets["opts"])
     if "sum" in sets:
         sets["sum"] = make_summary("", sets["sum"])
     refs = list(links or ())
