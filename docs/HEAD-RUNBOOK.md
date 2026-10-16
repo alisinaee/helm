@@ -31,7 +31,7 @@ sync`; never touch port 8780, ~/.claude, keychain, split_net or the person's bro
 do not push; commit with the Co-Authored-By line; report in 5-6 lines.
 
 ## Limits
-Weekly stop 85% (H111; docs/autonomy.json). Usage is not automatic: push it by hand (HANDOVER section 0, 6).
+No usage stop (H164, 2026-10-16: "rule: no limit"; see Usage limit override below). Usage is not automatic: push it by hand (HANDOVER section 0, 6).
 
 ## UX routine (after every wave; the person asked for it)
 1. `make check-ui` (own headless Chrome) for fresh screenshots in build/ui-smoke; look at 1440 and 375, dark and light, for every section.
@@ -47,7 +47,7 @@ Weekly stop 85% (H111; docs/autonomy.json). Usage is not automatic: push it by h
 - MODEL RULE (H151, 2026-10-15, general): Work items are human-level (Jira/Trello cards, plain words, outcome).
   Agent tasks are machine packages (files, model, done-check, jobs). One Work item binds many agent tasks; agent
   tasks never show as Work cards; Head asks bind to Work items. Design: docs/WORK-MODEL.md (R7.101).
-- Weekly stop 98% (H160, 2026-10-15 night; was 95%). 5-hour stop 80% (H99, 2026-10-15, replaces 90%).
+- Usage stops lifted (H164, 2026-10-16): no weekly or 5-hour stop. Earlier values (H99 80% 5h, H160 98% weekly) are superseded. RP13 (80% and 95%) is superseded by this rule.
 - Models (H99, H101): head runs on Opus. Haiku 5.5 for edits; Opus or Sonnet 5.5 low/medium only for critical review,
   hard issues and planning advice; Cursor (auto or grok-4.7) and agy without limit. Run as many parallel subagents as
   files allow, watch them, never idle.
@@ -76,4 +76,4 @@ Run this loop every turn. The ledger (`roadmap head`) holds the person's asks, s
 Every ask, rule, decision or instruction the person gives goes into the Head ledger the same turn (hook or `head log`), is triaged and BOUND to real tasks (`head t ... --bind task:ID`; create the task when none exists), and stays current as jobs run (HEAD-SPEC section 12). The person must always be able to see what is running for each ask and which task serves it.
 
 ## Usage limit override (person, 2026-10-16)
-"rule: no limit": the person lifted the Claude usage stops (85% weekly, 80% 5h). Launch Claude Haiku work without waiting for resets; still check get_usage each wave and report readings. Stop only on a session-limit error.
+"rule: no limit" (H164): the person lifted the Claude usage stops (85% weekly, 80% 5h, and the H160 98% weekly stop). Launch Claude Haiku work without waiting for resets; still check get_usage each wave and report readings. Stop only on a session-limit error.
