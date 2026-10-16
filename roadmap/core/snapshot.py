@@ -12,6 +12,7 @@ from roadmap.core import features as feature_rules
 from roadmap.core import head as head_rules
 from roadmap.core.extras import parse_extras
 from roadmap.core import refs as ref_rules
+from roadmap.core import workstatus
 from roadmap.core.parsers import (ISSUE_OPEN, error_entry, parse_activity, parse_autonomy, parse_budget,
                                   parse_comments, parse_issues, parse_jobs, parse_questions, parse_queue, parse_tasks,
                                   parse_ts)
@@ -178,6 +179,37 @@ def _issues_closed(issues_all):
     closed.sort(key=lambda i: i.get("closed") or i.get("created") or "", reverse=True)
     return [{"id": i["id"], "title": i["title"], "kind": i["kind"], "closed": i.get("closed")}
             for i in closed[:ISSUES_CLOSED_MAX]]
+
+
+def _work_view(work_text, tasks, errors):
+    """The work key (WORK-MODEL section 2, M7): one row per Work item in work.json order, {id, title, kind, status,
+    prio, badges, progress: {done, total}}. Status and progress roll up from the agent tasks linked to the item
+    (work.json links: task id -> work id). A linked task missing from tasks.json counts as cancelled. None when
+    work.json is missing; the key is left out then (additive)."""
+    if work_text is None:
+        return None
+    try:
+        doc = json.loads(work_text)
+        items, links = doc["items"], doc.get("links") or {}
+        if not isinstance(items, list) or not isinstance(links, dict):
+            raise ValueError("work.json has no items list")
+    except (ValueError, KeyError, TypeError) as exc:
+        errors.append(error_entry("work.json", exc))
+        return None
+    state_of = {t["id"]: t["state"] for t in tasks}
+    rows = []
+    for item in items:
+        linked = sorted(tid for tid, wid in links.items() if wid == item.get("id"))
+        done_ids = [tid for tid in linked if state_of.get(tid) == "done"]
+        pending = item.get("reopenDone") is not None and done_ids == sorted(item["reopenDone"])
+        stored = {"Backlog": "backlog", "Won't do": "wontfix"}.get(item.get("status"), "")
+        result = workstatus.rollup({"state": stored, "reopened": pending},
+                                   [{"state": state_of.get(tid, "cancelled")} for tid in linked],
+                                   person_accepted=item.get("accepted") is not None)
+        rows.append({"id": item.get("id"), "title": item.get("title"), "kind": item.get("kind"),
+                     "status": result["status"], "prio": "P%d" % int(item.get("prio", 2)),
+                     "badges": result["badges"], "progress": result["progress"]})
+    return rows
 
 
 def head_link_state(tasks, jobs, issues=()):
@@ -612,6 +644,9 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
     closed = _issues_closed(issues_all)
     if closed:
         out["issuesClosed"] = closed
+    work = _work_view(files.get("work.json"), tasks, errors)
+    if work is not None:
+        out["work"] = work
     if meters is not None:
         out["meters"] = meters
     if rules is not None:
