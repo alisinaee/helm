@@ -182,10 +182,13 @@ function answerHtml(pid, q) {
   const list = buttons
     ? '<div class="nz-list ib-opts" role="group" aria-label="' + esc("Answers for " + q.id) + '">' + buttons + "</div>"
     : "";
-  return list + '<form class="nz-row" data-form="inbox-question-answer" data-project="' + esc(pid) +
+  return '<div class="ib-ans">' + list + '<form class="nz-row" data-form="inbox-question-answer"' +
+    ' data-project="' + esc(pid) +
     '" data-qid="' + esc(q.id) + '" aria-label="' + esc("Other answer for " + q.id) + '">' +
-    '<label><span class="qc-foot">Other</span> <input name="value" required placeholder="Type an answer"></label>' +
-    '<button type="submit" class="btn btn-small btn-primary">Send</button></form>';
+    '<input name="value" required autocomplete="off" placeholder="Other answer" aria-label="' +
+    esc("Other answer for " + q.id) + '">' +
+    '<button type="submit" class="btn btn-small" disabled aria-label="' + esc("Send answer for " + q.id) +
+    '">Send</button></form></div>';
 }
 
 // One question card, as Head shows it (Head's own question list). A card answered in this page shows one line until
@@ -498,6 +501,16 @@ function onAskSubmit(event) {
 }
 
 if (typeof document !== "undefined") document.addEventListener("submit", onAskSubmit);
+
+// Send stays disabled until the Other box has text (R10.14).
+function onAnswerInput(event) {
+  const input = event.target;
+  const form = input && input.form;
+  if (!form || input.name !== "value" || form.getAttribute("data-form") !== "inbox-question-answer") return;
+  const send = form.querySelector('button[type="submit"]');
+  if (send) send.disabled = !input.value.trim();
+}
+if (typeof document !== "undefined") document.addEventListener("input", onAnswerInput);
 
 // The "Other…" box of a question row: free text goes through the same question.answer op as an option button.
 function onQuestionTextSubmit(event, form) {
