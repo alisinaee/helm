@@ -1,0 +1,9 @@
+.rz{display:none;position:fixed;top:0;bottom:0;width:6px;z-index:calc(var(--z-over) + 2);cursor:col-resize;touch-action:none;background:transparent}
+.rz:hover,.rz:focus-visible,.rz-drag{background:var(--accent,currentColor);opacity:.5}
+.rz:focus-visible{outline:none}
+@media (min-width:1200px){
+.rz-nav{left:calc(var(--w-nav) - 3px)}
+.app[data-nav="full"] .rz-nav{display:block}
+.rz-side{right:calc(var(--w-side) - 3px)}
+.app[data-panel="open"] .rz-side{display:block}
+}
