@@ -22,6 +22,9 @@ WEB = os.path.join(REPO, "web")
 MODULE = os.path.join(WEB, "js", "views", "planner.js")
 HEAD_CSS = os.path.join(WEB, "css", "head.css")
 sys.path.insert(0, os.path.join(REPO, "tools"))
+sys.path.insert(0, REPO)
+
+from tests.web.test_head_view import HEAD_CSS_MAX  # noqa: E402
 
 ITEM = re.compile(r'<tbody class="hd-item[^"]*" id="pl-feat-([^"]+)"')
 CONTROLS = re.compile(r'aria-controls="([^"]+)"')
@@ -284,7 +287,7 @@ class PlannerViewTest(unittest.TestCase):
         self.assertNotIn("<style", src)
 
     def test_no_new_css_and_head_css_stays_within_its_budget(self):
-        self.assertLessEqual(os.path.getsize(HEAD_CSS), 6144)
+        self.assertLessEqual(os.path.getsize(HEAD_CSS), HEAD_CSS_MAX)
         with open(os.path.join(WEB, "css", "planner.css"), encoding="utf-8") as fh:
             self.assertLessEqual(len(fh.read().encode("utf-8")), 4608)
 
