@@ -4181,7 +4181,9 @@
       "refs": [
         "commit:9fb649a7e57741f255bf76cdf49ac4f1393b8c6b",
         "commit:03ef9026712dcdfaffe523c580e5df6b55b00a23",
-        "commit:3315c701ebadbe6eeb37180062c69f61cd31726d"
+        "commit:3315c701ebadbe6eeb37180062c69f61cd31726d",
+        "commit:b59c0503f1ebd756878b982a7d4587dfe4f7b56d",
+        "commit:8f8f361fff5538a050122adcbbc372589cc4f28a"
       ],
       "at": {
         "done": "2026-10-16T13:14:56+03:30",
@@ -4413,14 +4415,17 @@
       "id": "R10.27",
       "phase": "R10",
       "title": "Ledger: binding a new ask to an already-done task must not auto-close it (H194,H200,H201 closed at once)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 3,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "roadmap/services/head.py fold"
+      "note": "roadmap/services/head.py fold",
+      "refs": [
+        "commit:cb9fc27b4dda5dac11a5c2ea977038bd7ca88236"
+      ]
     },
     {
       "id": "R10.28",
@@ -4460,14 +4465,18 @@
       "id": "R10.30",
       "phase": "R10",
       "title": "Tokens page redesign: compact stop control, aligned spend table (H205)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 5,
       "thinking": "low",
       "model": "sonnet",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "limits.js, usage.js"
+      "note": "limits.js, usage.js",
+      "refs": [
+        "commit:8514dd4f122bda7d248b767aaae6a2c970a62a45",
+        "commit:bc35a95cd801f8f143386d4450f1d9fb0b975344"
+      ]
     },
     {
       "id": "R10.31",
@@ -4482,7 +4491,8 @@
       "checkK": 0,
       "note": "workflow.js, graph/*",
       "refs": [
-        "commit:a3dce707d326db9591a25cfda5da0e3ded9b73ee"
+        "commit:a3dce707d326db9591a25cfda5da0e3ded9b73ee",
+        "commit:127b3f494901eaaad4d9669dacd9bec18a4da6a5"
       ]
     },
     {
@@ -4498,21 +4508,42 @@
       "checkK": 0,
       "note": "hooks.py, jobs, tokens",
       "refs": [
-        "commit:e4e30d72ec68e448583f94473313b8937e233fda"
+        "commit:e4e30d72ec68e448583f94473313b8937e233fda",
+        "commit:74bed8724934514b02bc993cb5900124456a18dd",
+        "commit:922a437cf7da6c1ae245be3809d9e205a30b396a",
+        "commit:568376077e35438e8340ddb3fe97ff2adbce5a35"
       ]
     },
     {
       "id": "R10.33",
       "phase": "R10",
       "title": "System map: fit on first render; wrap 9 layer columns into a 2-3 row grid so cards stay readable when fitted; untangle ui->api edges",
-      "status": "todo",
+      "status": "done",
       "tokensK": 5,
       "thinking": "low",
       "model": "sonnet",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "system.js, syslayout.js"
+      "note": "system.js, syslayout.js",
+      "refs": [
+        "commit:796d4bf93240b6b1ed15bd519fae51017925b091"
+      ]
+    },
+    {
+      "id": "R10.34",
+      "phase": "R10",
+      "title": "helm is good do the task for change all things to our new bran name \"Helm\" aslo i want to see that…",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:3896c8c9ba8c46defc5d8a933f51324ff758ee93"
+      ]
     }
   ],
   "schemaVersion": 1
