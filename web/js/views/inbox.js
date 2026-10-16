@@ -153,7 +153,7 @@ export function watchCountdowns() {
 function optionHtml(pid, q, part, index) {
   const isDefault = part.label === q.def;
   const key = index < KEY_MAX ? '<span class="qc-key" aria-hidden="true">' + String.fromCharCode(97 + index) +
-    "</span> " : "";
+    "</span>" : "";
   const desc = part.desc ? ' <span class="qc-foot">' + esc(part.desc) + "</span>" : "";
   const rec = part.recommended ? ' <span class="qc-def">recommended</span>' : "";
   const dflt = isDefault ? ' <span class="qc-def">default</span>' : "";
@@ -161,7 +161,7 @@ function optionHtml(pid, q, part, index) {
     '" data-action="inbox-answer" data-project="' + esc(pid) + '" data-qid="' + esc(q.id) +
     '" data-value="' + esc(part.label) + '" aria-label="' + esc("Choose " + part.label + " for " + q.id) +
     '" data-focus="ans-' + esc(pid) + "-" + esc(q.id) + "-" + index + '">' +
-    key + esc(part.label) + rec + dflt + desc + "</button>";
+    key + '<span class="qc-label">' + esc(part.label) + rec + dflt + desc + "</span></button>";
 }
 
 // The options as a vertical list (one button per row), then the free-text box that every question has.
@@ -180,8 +180,8 @@ function answerHtml(pid, q) {
     : "";
   return list + '<form class="nz-row" data-form="inbox-question-answer" data-project="' + esc(pid) +
     '" data-qid="' + esc(q.id) + '" aria-label="' + esc("Other answer for " + q.id) + '">' +
-    '<label><span class="qc-id">Other…</span> <input name="value" required placeholder="Type an answer"></label> ' +
-    '<button type="submit" class="btn">Send</button></form>';
+    '<label><span class="qc-id">Other</span> <input name="value" required placeholder="Type an answer"></label>' +
+    '<button type="submit" class="btn btn-small">Send</button></form>';
 }
 
 // One question card, as Head shows it (Head's own question list). A card answered in this page shows one line until
