@@ -428,5 +428,10 @@
     "task": "R10.23",
     "title": "sonnet: R10.23 System map A5 view (Sonnet)",
     "model": "sonnet"
+  },
+  "a75dce6f258f6a4fe": {
+    "task": "R10.24",
+    "title": "sonnet: R10.24 System map A6 + layout polish",
+    "model": "sonnet"
   }
 }

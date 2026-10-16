@@ -4354,20 +4354,30 @@
       "note": "system.js",
       "refs": [
         "commit:92f3fe4e97341f5d54aeda2b810133ee0b748fa8"
-      ]
+      ],
+      "at": {
+        "done": "2026-10-16T16:39:43+03:30"
+      }
     },
     {
       "id": "R10.24",
       "phase": "R10",
       "title": "System map A6: side panel content",
-      "status": "todo",
+      "status": "done",
       "tokensK": 3,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "system-panel.js"
+      "note": "system-panel.js",
+      "refs": [
+        "commit:5df85baa31d1e1b354eeb0de52114531ac500560",
+        "commit:0e62089e425f9ad5663c480687c722e9257a3931"
+      ],
+      "at": {
+        "done": "2026-10-16T16:48:27+03:30"
+      }
     },
     {
       "id": "R10.25",
@@ -4386,7 +4396,7 @@
       "id": "R10.26",
       "phase": "R10",
       "title": "System map A8: CLI + seed docs/system.json",
-      "status": "partial",
+      "status": "done",
       "tokensK": 3,
       "thinking": "low",
       "model": "haiku",
@@ -4394,7 +4404,10 @@
       "check": "none",
       "checkK": 0,
       "note": "cli",
-      "verify": true
+      "verify": true,
+      "at": {
+        "done": "2026-10-16T16:39:43+03:30"
+      }
     },
     {
       "id": "R10.27",
@@ -4487,6 +4500,19 @@
       "refs": [
         "commit:e4e30d72ec68e448583f94473313b8937e233fda"
       ]
+    },
+    {
+      "id": "R10.33",
+      "phase": "R10",
+      "title": "System map: fit on first render; wrap 9 layer columns into a 2-3 row grid so cards stay readable when fitted; untangle ui->api edges",
+      "status": "todo",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "system.js, syslayout.js"
     }
   ],
   "schemaVersion": 1

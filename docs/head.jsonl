@@ -578,3 +578,4 @@
 {"v":1,"t":"u","id":"H206","ts":"2026-10-16T13:04:53Z","by":"head","set":{"status":"needs-you"},"note":"e16a0f6 Agents titles back, compact grid; head checked live; please confirm"}
 {"v":1,"t":"u","id":"H207","ts":"2026-10-16T13:04:53Z","by":"head","set":{"status":"needs-you"},"note":"a3dce70 map loads, labels fit; arrows absent because R10 tasks have no deps; please confirm"}
 {"v":1,"t":"u","id":"H211","ts":"2026-10-16T13:07:33Z","by":"auto","set":{"status":"done"},"note":"auto: R10.21 d208dde"}
+{"v":1,"t":"u","id":"H191","ts":"2026-10-16T13:19:05Z","by":"head","set":{"status":"needs-you"},"note":"System map live (A1-A6, A8; 5df85ba); fit/wrap polish queued R10.33; please look"}
