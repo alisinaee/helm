@@ -282,6 +282,9 @@ def cmd(app, req, match):
     args = parsed.get("args") if parsed.get("args") is not None else {}
     if not isinstance(args, dict):
         return _invalid("args must be an object")
+    request_key = req.headers.get("Idempotency-Key")
+    if request_key is not None and not _IDEM_KEY_RE.fullmatch(request_key):
+        return _invalid("Idempotency-Key must be 1 to 128 visible ASCII characters")
     if not isinstance(op, str) or op not in commands.public_ops():
         return error_reply(404, "unknown_op", "no op named '%s' (see docs/API.md)" % str(op)[:60])
     if not app.op_allowed(op):
@@ -294,13 +297,16 @@ def cmd(app, req, match):
     source, proven = _cmd_source(app, req)
     try:
         with agentguard.browser_proven(proven), commands.context(source, project):
-            reply = commands.run(op, args, source, data_dir)
+            reply = commands.run(op, args, source, data_dir, request_key=request_key)
     except RoadmapError as exc:
         if exc.code == "usage":
             return _invalid(exc.message)
         raise
     control.after_write(project)
     return json_reply(200, reply)
+
+
+_IDEM_KEY_RE = re.compile(r"[\x21-\x7e]{1,128}")
 
 
 LOG_UI_LEVELS = ("DEBUG", "INFO", "WARN", "ERROR")
