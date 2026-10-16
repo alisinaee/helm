@@ -437,9 +437,8 @@ li:has(> .p-row) { display: grid; grid-template-columns: minmax(0, 1fr) var(--re
 .lane-act > *, .tl-label > .lane-state { justify-self: end }
 .tl-label { --rg: 3rem minmax(0, 1fr) auto; margin: 0; font-size: var(--fs-12); color: var(--text-2) }
 .rg-agent { font-size: var(--fs-13); }
-/* Agents rows: one grid for header, live and finished rows: lead (dot or checkbox), model, title (1fr), task, effort,
-elapsed, tokens, action. Numbers are right-aligned in fixed tracks. Below 640px a row is two lines. */
-.row-grid.rg-agent { --rg: 1.5rem 7.5rem minmax(0, 1fr) 4.5rem 3rem 4.5rem 4rem 4.25rem;
+/* Agents rows: one grid for header, live and finished rows; numbers right-aligned; two lines below 640px. */
+.row-grid.rg-agent { --rg: 1.5rem 7.5rem minmax(0, 1fr) 4.5rem 3rem 4.5rem 7.5rem 4.25rem;
 grid-template-columns: var(--rg); gap: 0 var(--sp-2); align-items: center; }
 .row-grid.rg-agent > * { min-width: 0; }
 .rg-agent > .rg-chips { flex-wrap: nowrap; overflow: hidden; }
@@ -610,3 +609,5 @@ display: none;
 display: none;
 }
 }
+
+.tk-by{--rg:minmax(0,1fr) 3.5rem 6rem 6rem}
