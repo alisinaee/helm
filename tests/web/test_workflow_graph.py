@@ -262,27 +262,42 @@ class WorkflowModelTest(unittest.TestCase):
         self.assertEqual([("dependency", "task:P1.1", "task:P2.1")],
                          [(e["type"], e["from"], e["to"]) for e in g["edges"]])
 
-    def test_current_point_all_done_is_end(self):
+    def test_current_point_all_done_is_none(self):
         g = model(snap([task("P1.1", "done"), task("P1.2", "done")]))["graph"]
-        self.assertEqual("end", g["current"])
+        self.assertIsNone(g["current"])
+        self.assertFalse(g["live"])
         self.assertEqual(0, g["end"]["left"])
 
-    def test_current_point_none_done_is_start(self):
+    def test_current_point_none_done_is_none(self):
         g = model(snap([task("P1.1", "todo"), task("P1.2", "todo")]))["graph"]
-        self.assertEqual("start", g["current"])
+        self.assertIsNone(g["current"])
         self.assertEqual("2 left", g["end"]["label"])
 
-    def test_current_point_is_first_open_task_skipping_deferred(self):
+    def test_no_running_job_means_no_current_even_with_open_tasks(self):
         g = model(snap([task("P1.1", "done"), task("P1.2", "defer"), task("P1.3", "todo")]))["graph"]
-        self.assertEqual("task:P1.3", g["current"])
+        self.assertIsNone(g["current"])
+        self.assertFalse(g["live"])
 
     def test_current_point_is_the_task_with_a_running_job_not_a_partial_one(self):
         running = [["J1", "P1.2", "haiku", "worker", None, 1791979000, None, "running", None]]
         tasks = [task("P1.1", "todo"), task("P1.2", "partial"), task("P1.3", "todo")]
-        self.assertEqual("start", model(snap(tasks))["graph"]["current"])
+        self.assertIsNone(model(snap(tasks))["graph"]["current"])
         self.assertEqual("task:P1.2", model(snap(tasks, spans=running))["graph"]["current"])
         tasks = [task("P1.1", "done"), task("P1.2", "todo"), task("P1.3", "doing")]
-        self.assertEqual("task:P1.2", model(snap(tasks))["graph"]["current"])
+        self.assertIsNone(model(snap(tasks))["graph"]["current"])
+
+    def test_one_running_job_makes_its_task_current(self):
+        running = [["J1", "P1.2", "haiku", "worker", None, 1791979000, None, "running", None]]
+        tasks = [task("P1.1", "doing"), task("P1.2", "doing"), task("P1.3", "todo")]
+        g = model(snap(tasks, spans=running))["graph"]
+        self.assertEqual("task:P1.2", g["current"])
+        self.assertTrue(g["live"])
+
+    def test_no_running_job_is_no_current(self):
+        tasks = [task("P1.1", "doing"), task("P1.2", "partial")]
+        g = model(snap(tasks))["graph"]
+        self.assertIsNone(g["current"])
+        self.assertFalse(g["live"])
 
     def test_parallel_group_holds_active_tasks_of_one_phase(self):
         spans = [["J1", "P1.3", "haiku", "worker", None, 1791979000, None, "running", None]]
@@ -306,9 +321,9 @@ class WorkflowModelTest(unittest.TestCase):
 
     def test_now_skips_a_held_task_after_a_done_one(self):
         g = model(snap([task("P1.1", "done"), task("P1.2", "hold"), task("P1.3", "todo")]))["graph"]
-        self.assertEqual("task:P1.3", g["current"])
+        self.assertIsNone(g["current"])
         blocked = model(snap([task("P1.1", "done"), task("P1.2", "block")]))["graph"]
-        self.assertEqual("end", blocked["current"])
+        self.assertIsNone(blocked["current"])
         self.assertEqual("0 left", blocked["end"]["label"])
 
     def test_left_counts_todo_and_doing_only(self):
@@ -318,22 +333,22 @@ class WorkflowModelTest(unittest.TestCase):
 
     def test_deferred_only_work_keeps_now_on_the_last_real_task(self):
         g = model(snap([task("P1.1", "done"), task("P1.2", "defer")]))["graph"]
-        self.assertEqual("task:P1.1", g["current"])
+        self.assertIsNone(g["current"])
         self.assertEqual("0 left", g["end"]["label"])
 
     def test_now_is_computed_on_the_tasks_left_after_the_filters(self):
         tasks = [task("P1.0", "done"), task("P1.1", "doing"), task("P1.2", "todo")]
-        g = model(snap(tasks), filters={"status": ["todo"]})["graph"]
-        self.assertEqual("task:P1.2", g["current"])
-        self.assertIn("task:P1.2", [n["id"] for n in g["nodes"]])
-        self.assertEqual("task:P1.2", model(snap(tasks))["graph"]["current"])
         spans = [["J1", "P1.1", "haiku", "worker", None, 1791979000, None, "running", None]]
+        g = model(snap(tasks, spans=spans), filters={"status": ["todo"]})["graph"]
+        self.assertIsNone(g["current"])
+        self.assertIsNone(model(snap(tasks))["graph"]["current"])
         self.assertEqual("task:P1.1", model(snap(tasks, spans=spans))["graph"]["current"])
 
     def test_a_now_task_folded_by_the_cap_points_at_its_phase(self):
         phases = [{"id": "P1", "title": "One", "approved": True}, {"id": "P2", "title": "Two", "approved": True}]
         tasks = [task("P1.1", "done")] + [task("P2.%d" % k, "defer", phase="P2") for k in range(1, 305)]
-        g = model(snap(tasks, phases=phases))["graph"]
+        spans = [["J1", "P1.1", "haiku", "worker", None, 1791979000, None, "running", None]]
+        g = model(snap(tasks, phases=phases, spans=spans))["graph"]
         self.assertEqual("phase:P1", g["current"])
         self.assertNotIn("task:P1.1", [n["id"] for n in g["nodes"]])
 

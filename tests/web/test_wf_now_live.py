@@ -50,7 +50,7 @@ class LiveNowTest(unittest.TestCase):
         tasks = [task("P1.1", "done"), task("P1.2", "partial"), task("P1.3", "todo")]
         got = run(snap(tasks))
         self.assertFalse(got["live"])
-        self.assertEqual("task:P1.3", got["current"])
+        self.assertIsNone(got["current"])
 
     def test_running_job_owner_is_here_even_when_partial_tasks_exist(self):
         tasks = [task("P1.1", "partial"), task("P1.2", "partial"), task("P1.3", "todo")]
@@ -66,7 +66,16 @@ class LiveNowTest(unittest.TestCase):
         self.assertFalse(run(snap([]))["live"])
         got = run(snap([task("P1.1", "doing")]))
         self.assertFalse(got["live"])
-        self.assertEqual("start", got["current"])
+        self.assertIsNone(got["current"])
+
+    def test_no_running_job_gives_null_current(self):
+        got = run(snap([task("P1.1", "done"), task("P1.2", "todo")]))
+        self.assertEqual({"current": None, "live": False}, got)
+
+    def test_one_running_job_gives_its_task(self):
+        tasks = [task("P1.1", "partial"), task("P1.2", "todo")]
+        got = run(snap(tasks, spans=[running("J1", "P1.1", 1791979000)]))
+        self.assertEqual({"current": "task:P1.1", "live": True}, got)
 
 
 class LiveNowSourceTest(unittest.TestCase):
