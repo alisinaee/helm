@@ -8,6 +8,7 @@ web/css folder stays under the 72 KB cap.
 import os
 import re
 import unittest
+from tests.web.test_shell import CSS_TOTAL_MAX
 
 TESTS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.dirname(TESTS)
@@ -15,7 +16,7 @@ CSS_DIR = os.path.join(REPO, "web", "css")
 HEAD_CSS = os.path.join(CSS_DIR, "head.css")
 HEAD_JS = os.path.join(REPO, "web", "js", "views", "head.js")
 INLINE = re.compile(r"""\sstyle\s*=""", re.IGNORECASE)
-CAP = 72 * 1024
+CAP = CSS_TOTAL_MAX
 
 
 def read(path):

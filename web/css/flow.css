@@ -60,8 +60,6 @@
 .ag-kids { padding-left: var(--sp-3); border-left: 2px solid var(--track) }
 .ag-title { font-weight: 600; color: var(--text-1) }
 .nz-list .btn { display: grid; width: 100%; text-align: left }
-.note-text { margin: 0; padding: var(--sp-3); max-height: 60vh; overflow: auto; white-space: pre-wrap;
-  overflow-wrap: anywhere; font: var(--fs-12) / 1.5 var(--font-mono); background: var(--surface-2); border-radius: var(--r-card) }
 @media (max-width: 599px) { .ag-row .btn, .nz-list .btn { min-height: 44px } }
 /* Workflow detail strip on a phone (R7.56): text rows, then the number cells and the action column. */
 @media (max-width: 767px) {

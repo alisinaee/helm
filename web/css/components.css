@@ -437,13 +437,20 @@ li:has(> .p-row) { display: grid; grid-template-columns: minmax(0, 1fr) var(--re
 .lane-act > *, .tl-label > .lane-state { justify-self: end }
 .tl-label { --rg: 3rem minmax(0, 1fr) auto; margin: 0; font-size: var(--fs-12); color: var(--text-2) }
 .rg-agent { font-size: var(--fs-13); }
-/* Agents rows: fixed tracks, the same for the header, live rows and finished rows (model, effort, job, task, elapsed,
-tokens, stop, copy). On a phone the cells wrap into two columns and the header is hidden. */
+/* Agents rows: one template for the header, live rows and finished rows (model, effort, job, task, elapsed,
+tokens, stop, copy). The ranges below stay for the phone fallback. From 640px the lengths are fixed so Task
+cannot grow and the two lists share Model, Effort, Elapsed and Tokens. Job is the only flexible track. */
 .row-grid.rg-agent { --rg: minmax(10rem, 13rem) 4.5rem minmax(0, 1fr) minmax(4.5rem, 8rem) 5rem 4.5rem 5rem;
 grid-template-columns: var(--rg) var(--ref-col); align-items: center; }
+.row-grid.rg-agent > * { min-width: 0; }
 .rg-agent .ag-title { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-overflow: hidden; overflow-wrap: anywhere; }
+overflow: hidden; overflow-wrap: anywhere; width: 100%; }
 .rg-agent > .btn { min-width: 0; padding-inline: var(--sp-1); }
+.rg-agent > .rg-main { flex-direction: column; align-items: stretch; justify-content: center; white-space: normal; }
+.rg-agent > .rg-main > .chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.rg-agent > .ag-task, .rg-agent > .ag-task > a, .rg-agent > .ag-task > .mt-label {
+display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.rg-agent > .ag-act { display: flex; align-items: center; justify-content: center; }
 .row-grid.rg-head { display: none; }
 .rg-agent>.rg-main { contain: inline-size; }
 @media (min-width: 600px) { .row-grid.rg-head { display: grid; } }
@@ -461,9 +468,20 @@ Chips wrap; nested workers indent once only. */
 .rg-agent>:nth-child(8) { grid-column: 3; grid-row: 1 / 6 }
 .ag-kids .ag-kids { padding-left: 0; border-left: 0 }
 }
+/* Shared fixed tracks. Model, effort, task, elapsed, tokens and stop are lengths, so a long task id or
+"No task assigned" cannot widen Task and shove Elapsed off the header. Job takes the rest, two lines. */
+@media (min-width: 640px) {.row-grid.rg-agent { --rg: 11.5rem 4.5rem minmax(0, 1fr) 4rem 5rem 4.5rem 5rem;
+grid-template-columns: var(--rg) var(--ref-col); }
+.ag-list > li, .ag-row > .row-grid.rg-agent { width: 100%; min-width: 0; }
+.ag-list .ag-kids { padding-left: 0; border-left: 0; }
+.ag-row[data-depth="1"] > .row-grid .ag-title { padding-left: var(--sp-4); }
+.ag-row[data-depth="2"] > .row-grid .ag-title { padding-left: var(--sp-6); }
+.ag-row[data-depth="3"] > .row-grid .ag-title { padding-left: var(--sp-8); }
+.rg-agent > :nth-child(1) .chip { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.rg-agent > :nth-child(4), .rg-agent > :nth-child(4) > a, .rg-agent > :nth-child(4) > .mt-label {
+display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.rg-agent > span:nth-child(7) { display: flex; align-items: center; justify-content: center; }}
 .rg-fin { --rg: 4.5rem minmax(0, 1fr) 4rem }
-.iss-top { --rg: 5.5rem 4.5rem minmax(0, 1fr) }
-.lim-head { --rg: minmax(0, 1fr) 5.5rem 4.5rem 3.25rem }
 .run-item {--rg: 10rem minmax(0, 1fr) 4.5rem;min-height: var(--h-row);padding: var(--sp-1) 0;border-top: 1px solid var(--track)}
 .run-id {font-weight: 600;font-variant-numeric: tabular-nums}
 .fin-list,
@@ -506,11 +524,7 @@ padding: 0 var(--sp-4) var(--sp-2);
 font-size: var(--fs-12)
 }
 .log-row {--rg: 48px minmax(0, 1fr);overflow-wrap: anywhere}
-.note-row {
-  --rg: minmax(0, 1fr);
-}
 .note-row.row-grid > .btn { display: grid; grid-template-columns: minmax(0, 1fr) 5.5rem 4.5rem; column-gap: var(--sp-2); align-items: center; width: 100%; text-align: left; }
-.note-main { display: flex; gap: var(--sp-2); min-width: 0 }
 .log-date {color: var(--text-2)}
 .needs-list .task-row {grid-template-columns: 56px minmax(0, 1fr) auto auto;row-gap: 2px;padding-left: var(--sp-4);font-size: var(--fs-12)}
 .needs-list .task-row .t-main {grid-column: 2 / -1;grid-row: 1}

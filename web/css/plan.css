@@ -1,6 +1,5 @@
 .lanes, .lane-cards, .tl, .iss-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); min-width: 0 }
 .lane, .iss-form { display: grid; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); background: var(--surface-1); border-radius: var(--r-card); min-width: 0 }
-.iss-filters { margin-top: var(--sp-3) }
 .lane-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-1) var(--sp-2); min-width: 0; }
 .lane-act { --rg: 6.5rem; }
 .rc-move { display: grid; }
@@ -22,16 +21,7 @@
 .tl-spent { height: 100%; max-width: 100%; background: var(--accent) }
 .plan-views a, .iss-filters a { display: inline-flex; align-items: center; min-height: var(--h-control); padding: 0 var(--sp-3); border: 1px solid var(--line); border-radius: var(--r-control); color: var(--text-1); text-decoration: none }
 .plan-views a[aria-current="page"], .iss-filters a[aria-current="true"] { background: var(--sel); border-color: var(--accent); font-weight: 600 }
-.iss-fld { display: grid; gap: var(--sp-1); margin: 0; min-width: 0 }
-.iss-label, .iss-help, .iss-err, .iss-links, .iss-status { margin: 0; font-size: var(--fs-12); color: var(--text-2) }
-.iss-help { color: var(--text-3) }
-.iss-err { color: var(--danger) }
 .iss-input { width: 100%; min-width: 0; min-height: var(--h-control); padding: 0 var(--sp-2); font: inherit; color: var(--text-1); background: var(--surface-0); border: 1px solid var(--line); border-radius: var(--r-control) }
-.iss-check { display: flex; gap: var(--sp-2); align-items: flex-start }
-.iss { display: grid; gap: var(--sp-1); padding: var(--sp-2) var(--sp-3); background: var(--surface-1); border-left: 3px solid var(--line); border-radius: var(--r-control); min-width: 0 }
-.iss-title { margin: 0; font-size: var(--fs-13); overflow-wrap: anywhere }
-.iss-title a { color: var(--text-1) }
-.iss-act { margin: 0; }
 @media (max-width: 599px) {
 .rc { flex-basis: 100% }
 .rc-move .btn-small, .lane-toggle, .plan-views a, .iss-filters a, .iss-input { min-height: 2.75rem }
