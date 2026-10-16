@@ -3938,14 +3938,17 @@
       "id": "R10.2",
       "phase": "R10",
       "title": "UI/UX full audit per section from screenshots",
-      "status": "partial",
+      "status": "done",
       "tokensK": 8,
       "thinking": "low",
       "model": "agy",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "docs/reviews/ux-*"
+      "note": "docs/reviews/ux-*",
+      "refs": [
+        "commit:ecf9aca12bc4f00648d87ca934ba91311fea0528"
+      ]
     },
     {
       "id": "R10.3",
@@ -3984,27 +3987,36 @@
       "id": "R10.5",
       "phase": "R10",
       "title": "Scroll behaviour: one scroll container per section, sticky headers",
-      "status": "todo",
+      "status": "partial",
       "tokensK": 5,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "web/css"
+      "note": "web/css",
+      "at": {
+        "partial": "2026-10-16T14:56:00+03:30"
+      }
     },
     {
       "id": "R10.6",
       "phase": "R10",
       "title": "Responsive 375-2560: no horizontal page scroll",
-      "status": "todo",
+      "status": "done",
       "tokensK": 5,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "web/css"
+      "note": "web/css",
+      "refs": [
+        "commit:7664df75568703b3aed8581e4c6040023abc4fce"
+      ],
+      "at": {
+        "done": "2026-10-16T14:56:00+03:30"
+      }
     },
     {
       "id": "R10.7",
@@ -4169,10 +4181,12 @@
       "checkK": 0,
       "note": "roadmap/services/head*.py, hooks.py, head.js",
       "refs": [
-        "commit:a58e165a751d4c59e14df8faab6133694399422a"
+        "commit:a58e165a751d4c59e14df8faab6133694399422a",
+        "commit:975cb0bb32c56e10c719dc42de8731886a619c6b"
       ],
       "at": {
-        "done": "2026-10-16T13:44:00+03:30"
+        "done": "2026-10-16T13:44:00+03:30",
+        "partial": "2026-10-16T14:38:28+03:30"
       }
     },
     {

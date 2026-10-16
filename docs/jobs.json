@@ -5740,9 +5740,9 @@
       "model": "agy",
       "task": "R10.2",
       "effort": "high",
-      "status": "running",
+      "status": "failed",
       "started": "2026-10-16T13:15:16+03:30",
-      "ended": null
+      "ended": "2026-10-16T14:42:38+03:30"
     },
     {
       "id": "j962",
@@ -5905,9 +5905,9 @@
       "model": "agy",
       "task": "R10.2",
       "effort": "high",
-      "status": "running",
+      "status": "failed",
       "started": "2026-10-16T13:49:15+03:30",
-      "ended": null
+      "ended": "2026-10-16T14:42:38+03:30"
     },
     {
       "id": "j977",
@@ -5915,9 +5915,9 @@
       "model": "agy",
       "task": "R10.2",
       "effort": "high",
-      "status": "running",
+      "status": "failed",
       "started": "2026-10-16T13:49:17+03:30",
-      "ended": null
+      "ended": "2026-10-16T14:42:38+03:30"
     },
     {
       "id": "j978",
@@ -6064,9 +6064,79 @@
       "title": "haiku: R10.10 fix Cursor review P1s",
       "model": "haiku",
       "task": "R10.10",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-16T14:29:12+03:30",
+      "ended": "2026-10-16T14:38:29+03:30"
+    },
+    {
+      "id": "j991",
+      "title": "haiku: R10.16 Head view: chat first",
+      "model": "haiku",
+      "task": "R10.16",
+      "status": "done",
+      "started": "2026-10-16T14:38:40+03:30",
+      "ended": "2026-10-16T14:42:47+03:30",
+      "refs": [
+        "commit:975cb0bb32c56e10c719dc42de8731886a619c6b"
+      ]
+    },
+    {
+      "id": "j992",
+      "title": "haiku: R10.2 Inbox UX tester + fix",
+      "model": "haiku",
+      "task": "R10.2",
+      "status": "done",
+      "started": "2026-10-16T14:41:17+03:30",
+      "ended": "2026-10-16T14:47:17+03:30",
+      "refs": [
+        "commit:ecf9aca12bc4f00648d87ca934ba91311fea0528"
+      ]
+    },
+    {
+      "id": "j993",
+      "title": "agy: best UI/UX review skill research",
+      "model": "agy",
+      "task": "R10.2",
+      "effort": "high",
+      "status": "running",
+      "started": "2026-10-16T14:41:35+03:30",
+      "ended": null,
+      "refs": [
+        "commit:ecf9aca12bc4f00648d87ca934ba91311fea0528"
+      ]
+    },
+    {
+      "id": "j994",
+      "title": "haiku: R10.2 follow-up",
+      "model": "haiku",
+      "task": "R10.2",
+      "status": "done",
+      "started": "2026-10-16T14:41:41+03:30",
+      "ended": "2026-10-16T14:47:17+03:30",
+      "refs": [
+        "commit:ecf9aca12bc4f00648d87ca934ba91311fea0528"
+      ]
+    },
+    {
+      "id": "j995",
+      "title": "haiku: R10.2 Head UX tester + fix",
+      "model": "haiku",
+      "task": "R10.2",
+      "status": "running",
+      "started": "2026-10-16T14:47:41+03:30",
       "ended": null
+    },
+    {
+      "id": "j996",
+      "title": "haiku: R10.6 shell UX tester + fix",
+      "model": "haiku",
+      "task": "R10.6",
+      "status": "done",
+      "started": "2026-10-16T14:47:48+03:30",
+      "ended": "2026-10-16T14:55:42+03:30",
+      "refs": [
+        "commit:7664df75568703b3aed8581e4c6040023abc4fce"
+      ]
     }
   ]
 }

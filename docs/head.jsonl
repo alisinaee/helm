@@ -522,3 +522,17 @@
 {"v":1,"t":"u","id":"H191","ts":"2026-10-16T10:40:10Z","by":"head","set":{"kind":"question","sum":"Visual system/architecture map: spec ready, now R10.19-R10.26"},"link":["+task:R10.19"]}
 {"v":1,"t":"e","ts":"2026-10-16T10:41:31Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"first finish current job","len":27,"h":"sha1:24d9ec4508d5","prio":0,"id":"H192"}
 {"v":1,"t":"u","id":"H192","ts":"2026-10-16T10:41:36Z","by":"head","set":{"kind":"rule","sum":"Finish current jobs before launching new ones"},"link":["+task:R10.1"]}
+{"v":1,"t":"e","ts":"2026-10-16T11:07:13Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"rule?","sum":"becarefull about cursor usage , its near to 99% of total limits , better to dont use that any more","len":98,"h":"sha1:9c9a00b7e258","prio":2,"id":"H193"}
+{"v":1,"t":"u","id":"H193","ts":"2026-10-16T11:07:38Z","by":"head","set":{"kind":"rule","sum":"Cursor near 99% of its limit: do not launch Cursor jobs"},"link":["+task:R10.1"]}
+{"v":1,"t":"e","ts":"2026-10-16T11:07:53Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"is head should be now correct or in queue for fix ?","len":72,"h":"sha1:de2e5254bd25","prio":0,"id":"H194"}
+{"v":1,"t":"u","id":"H194","ts":"2026-10-16T11:08:27Z","by":"head","set":{"kind":"bug","sum":"Head section wrong: stale agent questions on top, double answer inputs, today's chat not visible"},"link":["+task:R10.16"]}
+{"v":1,"t":"u","id":"H88","ts":"2026-10-16T11:08:27Z","by":"head","set":{"status":"declined"},"note":"answer: obsolete, usage is now read live with get_usage every wave (2026-10-16)"}
+{"v":1,"t":"u","id":"H119","ts":"2026-10-16T11:08:28Z","by":"head","set":{"status":"declined"},"note":"answer: obsolete, Cursor is off near its limit per H193 (2026-10-16)"}
+{"v":1,"t":"e","ts":"2026-10-16T11:09:46Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"review?","sum":"did you check the ui ux task ?","len":103,"h":"sha1:85c580f824c4","prio":2,"id":"H195"}
+{"v":1,"t":"u","id":"H195","ts":"2026-10-16T11:09:52Z","by":"head","set":{"kind":"review","sum":"UI/UX still bad (Head, Inbox): run real UX tester with screenshots"},"link":["+task:R10.2"]}
+{"v":1,"t":"e","ts":"2026-10-16T11:11:17Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"use good skill for ui ux ( base on the ui kit we use , or web search the best ones fit our case )…","len":171,"h":"sha1:5221706400bc","prio":2,"id":"H196"}
+{"v":1,"t":"u","id":"H196","ts":"2026-10-16T11:11:31Z","by":"head","set":{"kind":"ask","sum":"Bind a strong UI/UX skill to Haiku testers (research best fit)"},"link":["+task:R10.2"]}
+{"v":1,"t":"e","ts":"2026-10-16T11:12:26Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"i think the agy in current use waste our times","len":51,"h":"sha1:858f9b56ed09","prio":2,"id":"H197"}
+{"v":1,"t":"u","id":"H197","ts":"2026-10-16T11:12:39Z","by":"head","set":{"kind":"rule","sum":"agy wastes time on long jobs: stopped stuck audits; agy only for jobs under 20 min, else Haiku"},"link":["+task:R10.1"]}
+{"v":1,"t":"u","id":"H174","ts":"2026-10-16T11:17:14Z","by":"auto","set":{"status":"done"},"note":"auto: R10.2 ecf9aca"}
+{"v":1,"t":"u","id":"H196","ts":"2026-10-16T11:17:14Z","by":"auto","set":{"status":"done"},"note":"auto: R10.2 ecf9aca"}

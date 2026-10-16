@@ -318,5 +318,25 @@
     "task": "R10.10",
     "title": "haiku: R10.10 fix Cursor review P1s",
     "model": "haiku"
+  },
+  "a5ca30802db2c118b": {
+    "task": "R10.16",
+    "title": "haiku: R10.16 Head view: chat first",
+    "model": "haiku"
+  },
+  "afb515d02f410e771": {
+    "task": "R10.2",
+    "title": "haiku: R10.2 Inbox UX tester + fix",
+    "model": "haiku"
+  },
+  "a34812239ca19a9af": {
+    "task": "R10.2",
+    "title": "haiku: R10.2 Head UX tester + fix",
+    "model": "haiku"
+  },
+  "a0661e4fb78b6e94c": {
+    "task": "R10.6",
+    "title": "haiku: R10.6 shell UX tester + fix",
+    "model": "haiku"
   }
 }

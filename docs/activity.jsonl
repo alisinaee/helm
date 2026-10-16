@@ -1,13 +1,3 @@
-{"id":"A153","at":"2026-10-15T14:11:22+03:30","src":"agent","op":"head.set","sum":"H87 set status, note","undo":true}
-{"id":"A154","at":"2026-10-15T14:11:22+03:30","src":"agent","op":"head.set","sum":"H88 set status, note","undo":true}
-{"id":"A155","at":"2026-10-15T14:11:22+03:30","src":"agent","op":"head.set","sum":"H90 set status, note","undo":true}
-{"id":"A156","at":"2026-10-15T14:11:22+03:30","src":"agent","op":"head.set","sum":"H91 set status, note","undo":true}
-{"id":"A157","at":"2026-10-15T14:11:23+03:30","src":"agent","op":"head.set","sum":"H92 set status, note","undo":true}
-{"id":"A158","at":"2026-10-15T14:11:23+03:30","src":"agent","op":"head.set","sum":"H93 set status, note","undo":true}
-{"id":"A159","at":"2026-10-15T14:11:23+03:30","src":"agent","op":"head.set","sum":"H96 set status, note","undo":true}
-{"id":"A160","at":"2026-10-15T14:11:23+03:30","src":"agent","op":"head.set","sum":"H97 set status, note","undo":true}
-{"id":"A161","at":"2026-10-15T14:11:23+03:30","src":"agent","op":"head.set","sum":"H98 set status, note","undo":true}
-{"id":"A162","at":"2026-10-15T14:11:28+03:30","src":"agent","op":"head.set","sum":"H76 set status, note","undo":true}
 {"id":"A163","at":"2026-10-15T14:11:28+03:30","src":"agent","op":"head.set","sum":"H77 set status, note","undo":true}
 {"id":"A164","at":"2026-10-15T14:15:07+03:30","src":"agent","op":"head.set","sum":"H85 set status, note","undo":true}
 {"id":"A165","at":"2026-10-15T14:15:07+03:30","src":"agent","op":"head.set","sum":"H87 set status, note","undo":true}
@@ -498,3 +488,13 @@
 {"id":"A650","at":"2026-10-16T14:11:36+03:30","src":"agent","op":"head.triage","sum":"H192 triaged as rule","undo":true}
 {"id":"A651","at":"2026-10-16T14:19:18+03:30","src":"agent","op":"task.status","sum":"R10.19 done->done","undo":false}
 {"id":"A652","at":"2026-10-16T14:31:30+03:30","src":"agent","op":"task.status","sum":"R10.22 done->done","undo":false}
+{"id":"A653","at":"2026-10-16T14:37:38+03:30","src":"agent","op":"head.triage","sum":"H193 triaged as rule","undo":true}
+{"id":"A654","at":"2026-10-16T14:38:27+03:30","src":"agent","op":"head.triage","sum":"H194 triaged as bug","undo":true}
+{"id":"A655","at":"2026-10-16T14:38:27+03:30","src":"agent","op":"head.set","sum":"H88 set status, note","undo":true}
+{"id":"A656","at":"2026-10-16T14:38:28+03:30","src":"agent","op":"head.set","sum":"H119 set status, note","undo":true}
+{"id":"A657","at":"2026-10-16T14:38:28+03:30","src":"agent","op":"task.status","sum":"R10.16 done->partial","undo":true}
+{"id":"A658","at":"2026-10-16T14:39:53+03:30","src":"agent","op":"head.triage","sum":"H195 triaged as review","undo":true}
+{"id":"A659","at":"2026-10-16T14:41:31+03:30","src":"agent","op":"head.triage","sum":"H196 triaged as ask","undo":true}
+{"id":"A660","at":"2026-10-16T14:42:39+03:30","src":"agent","op":"head.triage","sum":"H197 triaged as rule","undo":true}
+{"id":"A661","at":"2026-10-16T14:56:00+03:30","src":"agent","op":"task.status","sum":"R10.6 done->done","undo":false}
+{"id":"A662","at":"2026-10-16T14:56:00+03:30","src":"agent","op":"task.status","sum":"R10.5 todo->partial","undo":true}
