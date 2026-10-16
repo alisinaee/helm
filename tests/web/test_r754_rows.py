@@ -4,6 +4,7 @@
 import os
 import re
 import unittest
+from tests.web.test_shell import CSS_TOTAL_MAX
 
 TESTS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.dirname(TESTS)
@@ -86,7 +87,7 @@ class OrphanCssTest(unittest.TestCase):
         for name in os.listdir(CSS):
             if name.endswith(".css"):
                 total += os.path.getsize(os.path.join(CSS, name))
-        self.assertLessEqual(total, 72 * 1024)
+        self.assertLessEqual(total, CSS_TOTAL_MAX)
 
     def test_no_inline_style_in_changed_views(self):
         for name in ("agents.js", "tokens.js", "limits.js", "workflow.js", "work.js", "overview.js"):

@@ -1,6 +1,5 @@
 /* admin.css (WP33): Tokens, Rules, Settings. Tokens only. Phone: limit rows open as a sheet. */
 .lim-h { margin: 0; font-size: var(--fs-15) }
-.lim-h2 { margin: var(--sp-3) 0 var(--sp-1); font-size: var(--fs-13); color: var(--text-2) }
 .lim-bar, .lim-presets, .rule-tabs, .lim-edit, .tk-override, .spend-row, .met-head {
   display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center }
 .lim-edit, .tk-override { align-items: flex-end }
@@ -21,8 +20,6 @@
 .rule-err { margin: 0; font-size: var(--fs-12); color: var(--danger); }
 .lim-range { width: min(16rem, 60vw); accent-color: var(--accent) }
 .lim-value, .rules-form, .lim-stepper { display: grid; gap: var(--sp-2) }
-.lim-preview { margin: 0; font-size: var(--fs-12); color: var(--text-2) }
-.lim-edit-btn { display: none; }
 .met { display: grid; gap: var(--sp-2); min-width: 0 }
 .mtick { position: absolute; right: 0; top: 0; bottom: 0; width: 2px; background: var(--text-1) }
 .met[data-state="unknown"] .meter-fill { background: var(--unknown) }
@@ -32,7 +29,6 @@
 .acc details { margin-top: var(--sp-1); font-size: var(--fs-12); color: var(--text-2) }
 :root[data-density="compact"] .lim-row, :root[data-density="compact"] .rule-row { padding: var(--sp-1) 0 }
 @media (max-width: 599px) {
-.lim-edit-btn { display: inline-flex; min-width: 44px; min-height: 44px }
 .lim-row:not(.is-sheet) .lim-edit, .lim-row:not(.is-sheet) .lim-readonly { display: none; }
 .lim-row.is-sheet { position: fixed; left: 0; right: 0; bottom: var(--h-bnav); z-index: var(--z-over);
   max-height: 70vh; overflow: auto; padding: var(--sp-4); background: var(--surface-1);

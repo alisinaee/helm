@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from tests.web.test_shell import FLOW_CSS_MAX
 
 TESTS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.dirname(TESTS)
@@ -222,7 +223,7 @@ class AgentsTests(unittest.TestCase):
 
     def test_flow_css_stays_within_its_budget(self):
         size = os.path.getsize(os.path.join(WEB, "css", "flow.css"))
-        self.assertLessEqual(size, 4608, "flow.css is %d bytes" % size)
+        self.assertLessEqual(size, FLOW_CSS_MAX, "flow.css is %d bytes" % size)
 
     def test_the_views_use_no_raw_colours(self):
         for name in ("agents.js",):

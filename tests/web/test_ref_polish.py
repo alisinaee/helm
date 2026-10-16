@@ -11,6 +11,7 @@ import re
 import shutil
 import subprocess
 import unittest
+from tests.web.test_shell import CSS_TOTAL_MAX
 
 TESTS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.dirname(TESTS)
@@ -68,7 +69,7 @@ class CopyColumnTests(unittest.TestCase):
         total = 0
         for name in os.listdir(CSS_DIR):
             total += os.path.getsize(os.path.join(CSS_DIR, name))
-        self.assertLessEqual(total, 72 * 1024)
+        self.assertLessEqual(total, CSS_TOTAL_MAX)
 
 
 class RowFixTests(unittest.TestCase):

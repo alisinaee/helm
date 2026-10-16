@@ -15,6 +15,7 @@ import re
 import shutil
 import subprocess
 import unittest
+from tests.web.test_shell import CSS_TOTAL_MAX
 
 TESTS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.dirname(TESTS)
@@ -22,7 +23,6 @@ WEB = os.path.join(REPO, "web")
 RENDER = os.path.join(TESTS, "web", "render_workflow.mjs")
 FIXTURE = os.path.join(TESTS, "fixtures", "workflow_snapshot.json")
 MAP_CSS_MAX = 4.5 * 1024
-CSS_TOTAL_MAX = 72 * 1024  # raised with the R7.12 copy column (see test_shell.py)
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=', re.IGNORECASE)
 OPEN_TAG = re.compile(r"<(g|rect|path|a|button)\b[^>]*data-wf-item=[^>]*>")
 

@@ -144,13 +144,22 @@ function elapsedText(job, now) {
   return fmtDuration(Math.max(0, now - job.startedMs) / 1000);
 }
 
+// The eight cells every Agents row uses, in order: model, effort, job, task, elapsed, tokens, stop or
+// checkbox, copy. The header, a running row and a finished row all go through here so the tracks cannot drift.
+function agentCells(model, effort, job, task, elapsed, tokens, action, copy) {
+  return '<span class="rg-chips ag-model">' + model + "</span>" + effort +
+    '<span class="rg-main">' + job + "</span>" +
+    '<span class="rg-chips ag-task">' + task + "</span>" +
+    elapsed + tokens + action + copy;
+}
+
 // One running job and, nested under it, its workers. pid is the project the job belongs to.
 export function agentRowHtml(job, pid, tree, blocked, now, depth) {
   const children = tree.kids.get(job.id) || [];
   const taskHtml = job.task
-    ? '<a href="' + esc(itemHash(pid, job.task)) + '" aria-label="' + esc("Task " + job.task) + '">' +
-      esc(job.task) + "</a>"
-    : '<span class="mt-label">No task assigned</span>';
+    ? '<a href="' + esc(itemHash(pid, job.task)) + '" title="' + esc(job.task) +
+      '" aria-label="' + esc("Task " + job.task) + '">' + esc(job.task) + "</a>"
+    : '<span class="mt-label" title="No task assigned">No task assigned</span>';
   const handed = children.length
     ? chipHtml("Delegated to " + children.map(function (c) {
       return c.role || engineLabel(c.model, c.engineModel);
@@ -162,17 +171,18 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     '" data-task="' + esc(job.task || "") + '" data-focus="stop-' + esc(pid) + "-" + esc(job.id) + '"' +
     (job.task ? "" : " disabled") + ' aria-label="Stop ' + esc(label) + '">Stop</button>';
   const tokens = job.tokensK == null ? "not yet" : fmtTokens(job.tokensK);
+  const model = chipHtml(engineLabel(job.model, job.engineModel), "neutral") +
+    (job.role ? chipHtml(job.role, "neutral") : "") + badge;
+  const effort = '<span class="rg-chips ag-effort">' +
+    esc(effortLabel(job.effort, job.model, job.engineModel)) + "</span>";
+  const title = '<span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
+    (handed || "");
+  const elapsed = '<span class="rg-num num" data-started-ms="' +
+    esc(String(job.startedMs == null ? "" : job.startedMs)) + '">' + esc(elapsedText(job, now)) + "</span>";
+  const tokenCell = '<span class="rg-num num">' + esc(tokens) + "</span>";
   const row = '<li class="ag-row" data-depth="' + depth + '"><div class="row-grid rg-agent">' +
-    '<span class="rg-chips">' + chipHtml(engineLabel(job.model, job.engineModel), "neutral") +
-    (job.role ? chipHtml(job.role, "neutral") : "") + badge + "</span>" +
-    '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort, job.model, job.engineModel)) + "</span>" +
-    '<span class="rg-main"><span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
-    (handed ? " " + handed : "") + "</span>" +
-    '<span class="rg-chips">' + taskHtml + "</span>" +
-    '<span class="rg-num num" data-started-ms="' + esc(String(job.startedMs == null ? "" : job.startedMs)) + '">' +
-    esc(elapsedText(job, now)) + "</span>" +
-    '<span class="rg-num num">' + esc(tokens) + "</span>" + stop +
-    copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) }) + "</div>";
+    agentCells(model, effort, title, taskHtml, elapsed, tokenCell, stop,
+      copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) })) + "</div>";
   if (!children.length) return row + "</li>";
   return row + '<ul class="ag-kids" aria-label="Workers of ' + esc(label) + '">' + children.map(function (child) {
     return agentRowHtml(child, pid, tree, blocked, now, depth + 1);
@@ -186,19 +196,21 @@ function finishedHtml(job, pid) {
   const kind = job.status === "failed" ? "danger" : "success";
   const label = job.title || job.id;
   const tokens = job.tokensK == null ? "unknown" : fmtTokens(job.tokensK);
-  const task = job.task ? '<a href="' + esc(itemHash(pid, job.task)) + '">' + esc(job.task) + "</a>" : "";
+  const task = job.task ? '<a href="' + esc(itemHash(pid, job.task)) + '" title="' + esc(job.task) + '">' +
+    esc(job.task) + "</a>" : "";
   const check = '<input type="checkbox" data-agent="select" data-project="' + esc(pid) + '" data-id="' +
     esc(job.id) + '" data-focus="sel-' + esc(pid) + "-" + esc(job.id) + '" aria-label="' + esc("Select " + label) +
     '"' + (picked.has(pid + "\n" + job.id) ? " checked" : "") + ">";
+  const model = chipHtml(engineLabel(job.model, job.engineModel), "neutral") + chipHtml(word, kind);
+  const effort = '<span class="rg-chips ag-effort">' +
+    esc(effortLabel(job.effort, job.model, job.engineModel)) + "</span>";
+  const title = '<span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>";
+  const elapsed = '<span class="rg-num num">' + esc(fmtDuration(job.elapsedS)) + "</span>";
+  const tokenCell = '<span class="rg-num num">' + esc(tokens) + "</span>";
   return '<li class="ag-row"><div class="row-grid rg-agent">' +
-    '<span class="rg-chips">' + chipHtml(engineLabel(job.model, job.engineModel), "neutral") +
-    chipHtml(word, kind) + "</span>" +
-    '<span class="rg-chips ag-effort">' + esc(effortLabel(job.effort, job.model, job.engineModel)) + "</span>" +
-    '<span class="rg-main"><span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span></span>" +
-    '<span class="rg-chips">' + task + "</span>" +
-    '<span class="rg-num num">' + esc(fmtDuration(job.elapsedS)) + "</span>" +
-    '<span class="rg-num num">' + esc(tokens) + "</span><span>" + check + "</span>" +
-    copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) }) + "</div></li>";
+    agentCells(model, effort, title, task, elapsed, tokenCell,
+      '<span class="ag-act">' + check + "</span>",
+      copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) })) + "</div></li>";
 }
 
 // The count line and the controls under the finished list: Remove selected (its count of picked rows of this project)
@@ -226,11 +238,10 @@ function projectBlock(entry, now, showName) {
   const tree = agentTree(snap);
   const blocked = snap.blocked || [];
   const heading = showName ? '<h3 class="grp-h">' + esc(entry.name) + "</h3>" : "";
-  const head = '<li class="row-grid rg-agent rg-head" aria-hidden="true">' +
-    '<span>Model</span><span class="ag-effort">Effort</span>' +
-    '<span>Job</span><span>Task</span><span class="rg-num">Elapsed</span><span class="rg-num">Tokens</span>' +
-    "<span></span><span></span>" +
-    "</li>";
+  const head = '<li class="ag-row" aria-hidden="true"><div class="row-grid rg-agent rg-head">' +
+    agentCells("Model", '<span class="ag-effort">Effort</span>', "Job", "Task",
+      '<span class="rg-num">Elapsed</span>', '<span class="rg-num">Tokens</span>',
+      "<span></span>", "<span></span>") + "</div></li>";
   const live = tree.roots.length
     ? '<ul class="ag-list" aria-label="Running agents">' + head + tree.roots.map(function (job) {
       return agentRowHtml(job, entry.id, tree, blocked, now, 0);

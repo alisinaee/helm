@@ -17,6 +17,7 @@ import re
 import shutil
 import subprocess
 import unittest
+from tests.web.test_shell import CSS_TOTAL_MAX
 
 TESTS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.dirname(TESTS)
@@ -27,7 +28,6 @@ RENDER = os.path.join(TESTS, "web", "render_diagram.mjs")
 FIXTURES = os.path.join(TESTS, "fixtures", "graph")
 GRAPH_CSS = os.path.join(WEB, "css", "graph.css")
 GRAPH_CSS_MAX = 6 * 1024
-CSS_TOTAL_MAX = 72 * 1024  # raised with the R7.12 copy column (see test_shell.py)
 FORBIDDEN = [
     (re.compile(r"\sstyle\s*="), "style attribute"),
     (re.compile(r"\son[a-z]{3,}\s*="), "inline handler"),
