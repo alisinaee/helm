@@ -1,8 +1,8 @@
 // Workflow diagram viewport (WP72, WP70-B, R7.14 D). The gesture state machine is pure (pointer and wheel input in,
 // view out), so the node tests can drive it with synthetic events. mountViewport() binds it to one SVG with Pointer
 // Events and pointer capture: one pointer pans, two pinch-zoom, and a pointer that moves 6 px or less is a tap
-// (select). Two taps within 300 ms and 24 px zoom 2x. Ctrl+wheel (a trackpad pinch) zooms at the cursor; a plain
-// wheel scrolls the page. The view is { k, x, y } in screen pixels;
+// (select). Two taps within 300 ms and 24 px zoom 2x. Ctrl or Cmd+wheel (a trackpad pinch) zooms at the cursor; a plain
+// wheel pans. The view is { k, x, y } in screen pixels;
 // the viewport <g> gets transform="translate(x y) scale(k)" as an attribute, and every change is pushed to subscribers
 // (the minimap reads it there). Keys: + and - zoom, 0 fits, Escape clears, N centres on Now, S on Start (eased, or
 // instant under reduced motion), Left and Right walk the path order node by node, Up and Down move to the nearest node
@@ -414,11 +414,14 @@ export function mountViewport(svg, vpG, opts) {
     if (n) active = n;
   });
   svg.addEventListener("wheel", function (e) {
-    if (!e.ctrlKey) return;
     e.preventDefault();
     stop();
     const p = local(e);
-    gest.wheel(e.deltaY, p.x, p.y);
+    if (e.ctrlKey || e.metaKey) gest.wheel(e.deltaY, p.x, p.y);
+    else {
+      const v = gest.view;
+      gest.setView({ k: v.k, x: v.x - (e.deltaX || 0), y: v.y - (e.deltaY || 0) });
+    }
     paint();
   }, { passive: false });
   svg.addEventListener("keydown", function (e) {

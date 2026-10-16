@@ -1098,7 +1098,7 @@ function legendHtml(view, kinds, hasNow) {
     keyItem(dot("wf-k-queued"), "Todo"), keyItem(dot("wf-k-blocked"), "Blocked")];
   let extra = [];
   if (view === "map") {
-    const names = [["dependency", "Dependency", "wfg-e wfg-e-dependency"],
+    const names = [["sequence", "Flow", "wfg-e wfg-e-sequence"], ["dependency", "Dependency", "wfg-e wfg-e-dependency"],
       ["handoff", "Handoff", "wfg-e wfg-e-handoff"], ["blocker", "Blocker", "wfg-e wfg-e-blocker"]];
     extra = names.filter(function (n) {
       return kinds && kinds.has(n[0]);

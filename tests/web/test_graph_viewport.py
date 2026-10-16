@@ -236,6 +236,8 @@ SCRIPT = r"""
   const wv0 = JSON.stringify(wh.ctl.view());
   wh.svg.fire("wheel", { deltaY: -100, clientX: 0, clientY: 0, ctrlKey: false, preventDefault() { wpd += 1; } });
   out.wheelPlain = { prevented: wpd, unchanged: JSON.stringify(wh.ctl.view()) === wv0 };
+  wh.svg.fire("wheel", { deltaY: -100, clientX: 0, clientY: 0, metaKey: true, preventDefault() { wpd += 1; } });
+  out.wheelMeta = { zoomed: wh.ctl.view().k > 1 };
   wh.svg.fire("wheel", { deltaY: -100, clientX: 0, clientY: 0, ctrlKey: true, preventDefault() { wpd += 1; } });
   out.wheelCtrl = { prevented: wpd, zoomed: wh.ctl.view().k > 1 };
 
@@ -375,9 +377,10 @@ class ViewportNodeTests(unittest.TestCase):
         self.assertEqual(self.out["destroy"]["cancelled"], 1)
         self.assertTrue(self.out["destroy"]["silent"])
 
-    def test_wheel_without_ctrl_scrolls_the_page(self):
-        self.assertEqual(self.out["wheelPlain"], {"prevented": 0, "unchanged": True})
-        self.assertEqual(self.out["wheelCtrl"], {"prevented": 1, "zoomed": True})
+    def test_plain_wheel_pans_and_ctrl_or_cmd_wheel_zooms(self):
+        self.assertEqual(self.out["wheelPlain"], {"prevented": 1, "unchanged": False})
+        self.assertEqual(self.out["wheelCtrl"], {"prevented": 3, "zoomed": True})
+        self.assertTrue(self.out["wheelMeta"]["zoomed"])
 
     def test_hover_does_not_read_the_layout(self):
         self.assertEqual(self.out["hover"]["rects"], 0)

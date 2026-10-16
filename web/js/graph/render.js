@@ -400,8 +400,9 @@ export function buildMap(graph, lay, pid) {
   const before = function (id) {
     return curIdx >= 0 && idx.has(id) && idx.get(id) <= curIdx;
   };
-  // Only handoff, dependency and blocker edges are drawn (WORKFLOW-DIAGRAM-SPEC); sequence edges only steer the layout.
-  (g.edges || []).forEach(function (e) {
+  // Sequence (flow) edges draw first so handoff, dependency and blocker edges sit on top; a phase with no task
+  // dependencies still shows its flow, and the last task of a phase points at the first of the next.
+  (g.sequence || []).concat(g.edges || []).forEach(function (e) {
     if (!e || seenEdge.has(e.id)) return;
     seenEdge.add(e.id);
     const d = roundPath(routes[e.id]);

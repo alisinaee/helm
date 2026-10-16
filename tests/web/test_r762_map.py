@@ -27,9 +27,9 @@ def read_text(*parts):
 
 class MapSourceTests(unittest.TestCase):
 
-    def test_only_spec_edges_are_drawn(self):
+    def test_flow_edges_are_drawn_with_the_spec_edges(self):
         render_js = read_text("web", "js", "graph", "render.js")
-        self.assertNotIn("concat(g.sequence", render_js)
+        self.assertIn("(g.sequence || []).concat(g.edges", render_js)
         self.assertNotIn('"Sequence"', read_text("web", "js", "views", "workflow.js"))
 
     def test_legend_names_the_four_spec_statuses(self):
