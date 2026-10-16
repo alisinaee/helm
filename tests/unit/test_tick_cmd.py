@@ -1,6 +1,7 @@
 """The tick command (one supervisor pass with serve down), the serve-side supervisor pass, and the lock shared by both."""
 
 import json
+import os
 import shutil
 import threading
 import time
@@ -25,9 +26,23 @@ def hold_lock(data_dir, owner="other-pass", until=None):
         conn.close()
 
 
+def use_sqlite_store(case):
+    """These fixtures are SQLite projects; without ROADMAP_STORE=sqlite an unregistered folder counts as JSON."""
+    saved = os.environ.get("ROADMAP_STORE")
+    os.environ["ROADMAP_STORE"] = "sqlite"
+
+    def restore():
+        if saved is None:
+            os.environ.pop("ROADMAP_STORE", None)
+        else:
+            os.environ["ROADMAP_STORE"] = saved
+    case.addCleanup(restore)
+
+
 class TickCommandTests(ProjectCase):
     def setUp(self):
         super().setUp()
+        use_sqlite_store(self)
         self.init_and_add()
 
     def tick_json(self):
@@ -78,6 +93,7 @@ class TickCommandTests(ProjectCase):
 class ServePassTests(ProjectCase):
     def setUp(self):
         super().setUp()
+        use_sqlite_store(self)
         self.init_and_add()
 
     def test_serve_pass_ticks_registered_projects_and_respects_the_lock(self):
@@ -109,6 +125,7 @@ class ServePassTests(ProjectCase):
 class ServeThreadTests(ProjectCase):
     def setUp(self):
         super().setUp()
+        use_sqlite_store(self)
         self.init_and_add()
 
     def test_serving_runs_the_supervisor_thread_until_shutdown(self):

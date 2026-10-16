@@ -22,10 +22,20 @@ class SupervisorCase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp(prefix="supervisor-test-")
         self.addCleanup(shutil.rmtree, self.tmp, True)
+        saved = os.environ.get("ROADMAP_STORE")
+        os.environ["ROADMAP_STORE"] = "sqlite"
+        self.addCleanup(self._restore_store, saved)
         self.data = os.path.join(self.tmp, "docs")
         os.makedirs(self.data)
         self.conn = db.open_project(self.data)
         self.addCleanup(self.conn.close)
+
+    @staticmethod
+    def _restore_store(saved):
+        if saved is None:
+            os.environ.pop("ROADMAP_STORE", None)
+        else:
+            os.environ["ROADMAP_STORE"] = saved
 
     def add_job(self, jid, status, task=None, files=(), **extra):
         job = {"id": jid, "title": jid, "model": "m", "status": status, "task": task, "started": None,

@@ -22,7 +22,7 @@ import math
 import time
 import uuid
 
-from roadmap.services import jobs, leases
+from roadmap.services import head, jobs, leases
 from roadmap.store import db, events, jobs_db
 
 HEARTBEAT_TTL_S = 180.0
@@ -267,10 +267,20 @@ def _drop_lock(conn, owner):
         conn.execute("DELETE FROM meta WHERE key = ?", (LOCK_KEY,))
 
 
+def _tick_json(data_dir, now=None):
+    """The pass for a JSON-store project: only the ask fold runs, through the JSON path (head.fold_asks), so no
+    SQLite file is created. Reap and retry act on the SQLite job store and have no JSON counterpart yet."""
+    closed = head.fold_asks(data_dir, now=now)
+    return {"ran": True, "reaped": [], "expired_leases": [], "queued": [], "needs_you": [], "done_tasks": [],
+            "closed_asks": closed}
+
+
 def tick(data_dir, now=None):
     """One supervisor pass. Returns {"ran": False, "reason": ...} when another pass holds the lock, else
     {"ran": True, "reaped", "expired_leases", "queued", "needs_you", "done_tasks", "closed_asks"} with lists of ids.
     An error in the pass propagates after the lock is released."""
+    if head.sqlite_db(data_dir) is None:  # JSON store: never create or read docs/roadmap.db for this project
+        return _tick_json(data_dir, now)
     now_s = _now(now)
     owner = uuid.uuid4().hex
     conn = db.open_project(data_dir)
