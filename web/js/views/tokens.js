@@ -8,6 +8,7 @@ import { bannerHtml, esc } from "../dom.js";
 import { MISSING, fmtPercent, fmtResets, fmtTokens } from "../format.js";
 import { copyButton, refSummary } from "../ref.js";
 import { pageState } from "./inbox.js";
+import { tokensByHtml } from "./tokens_by.js";
 import { oldText, shareRowsHtml, weekKnown, weeklyStopHtml } from "./limits.js";
 import { usageView } from "./usage.js";
 
@@ -103,5 +104,6 @@ export function sectionView(vm) {
   const spend = sectionCard("tk-spend", "Spend", copyButton("section", "tokens.spend", "Spend",
     { project: refPid, sum: refSummary("section", snaps.length) }), spendTableHtml(vm, snaps));
   const accuracy = '<p class="page-note">Percentages are estimates; token counts are exact.</p>';
-  return head + notice + usage + stop + share + limit + spend + accuracy;
+  const by = '<section class="ov-card" aria-label="Tokens by task and model">' + tokensByHtml(vm) + "</section>";
+  return head + notice + usage + stop + share + limit + spend + by + accuracy;
 }

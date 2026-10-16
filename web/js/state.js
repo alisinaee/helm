@@ -177,6 +177,8 @@ function normalizeJob(j, fetchedAt) {
     status: j.status || "",
     elapsedS: num(j.elapsed_s),
     tokensK: num(j.tokensK),
+    tokens: j.tokens && typeof j.tokens === "object" ? j.tokens : null,
+    units: typeof j.units === "number" ? j.units : null,
     note: j.note || "",
     startedMs: Number.isNaN(started) ? null : started,
     endedMs: Number.isNaN(ended) ? null : ended,

@@ -10,6 +10,7 @@ import { getJson } from "../api.js";
 import { run } from "../cmd.js";
 import { chipHtml, emptyHtml, esc } from "../dom.js";
 import { MISSING, fmtDuration, fmtTokens } from "../format.js";
+import { fmtCount } from "./tokens_by.js";
 import { copyButton, refSummary } from "../ref.js";
 import { itemHash, pageState, scopeSnapshots } from "./inbox.js";
 
@@ -107,6 +108,8 @@ function shapeRow(j) {
     task: j.task || null,
     elapsedS: typeof j.elapsed_s === "number" ? j.elapsed_s : null,
     tokensK: typeof j.tokensK === "number" ? j.tokensK : null,
+    tokens: j.tokens && typeof j.tokens === "object" ? j.tokens : null,
+    units: typeof j.units === "number" ? j.units : null,
     startedMs: isNaN(started) ? null : started,
     endedMs: isNaN(ended) ? null : ended,
     parent: j.parent || null,
@@ -179,7 +182,7 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     '" data-task="' + esc(job.task || "") + '" data-focus="stop-' + esc(pid) + "-" + esc(job.id) + '"' +
     (job.task ? "" : " disabled") + ' aria-label="Stop ' + esc(job.task || label) + '" title="Stop">' +
     STOP_ICON + "</button>";
-  const tokens = job.tokensK == null ? MISSING : fmtTokens(job.tokensK);
+  const tokens = tokenText(job);
   const claimed = job.status === "claimed" ? chipHtml("claimed", "neutral") : "";
   const model = chipHtml(engineLabel(job.model, job.engineModel), "neutral") +
     (job.role ? chipHtml(job.role, "neutral") : "") + claimed + badge;
@@ -189,7 +192,7 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     (handed || "");
   const elapsed = '<span class="rg-num num" data-started-ms="' +
     esc(String(job.startedMs == null ? "" : job.startedMs)) + '">' + esc(elapsedText(job, now)) + "</span>";
-  const tokenCell = '<span class="rg-num num">' + esc(tokens) + "</span>";
+  const tokenCell = '<span class="rg-num num" title="Out tokens · weighted units">' + esc(tokens) + "</span>";
   const row = '<li class="ag-row" data-depth="' + depth + '"><div class="row-grid rg-agent">' +
     agentCells('<span class="ag-dot" role="img" aria-label="Running" title="Running"></span>', model, title, taskHtml,
       effort, elapsed, tokenCell,
@@ -200,13 +203,23 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
   }).join("") + "</ul></li>";
 }
 
+// The tokens cell: "8.1k · 120k" (out tokens · weighted units) when measured, "agy · 0 Claude" for an agy job,
+// else the older tokensK estimate, else a dash.
+function tokenText(job) {
+  if (job.tokens && typeof job.tokens.out === "number" && typeof job.units === "number") {
+    return fmtCount(job.tokens.out) + " · " + fmtCount(job.units);
+  }
+  if (String(job.model || "").toLowerCase() === "agy") return "agy · 0 Claude";
+  return job.tokensK == null ? MISSING : fmtTokens(job.tokensK);
+}
+
 // A finished job on the same tracks as the running rows: model and status, title, task, elapsed, tokens, the row's
 // select checkbox (in the Stop cell, which a finished row has no use for), and the copy-reference button.
 function finishedHtml(job, pid) {
   const word = STATUS_WORDS[job.status] || job.status;
   const kind = job.status === "failed" ? "danger" : "success";
   const label = job.title || job.id;
-  const tokens = job.tokensK == null ? MISSING : fmtTokens(job.tokensK);
+  const tokens = tokenText(job);
   const task = job.task ? '<a href="' + esc(itemHash(pid, job.task)) + '" title="' + esc(job.task) + '">' +
     esc(job.task) + "</a>" : "";
   const check = '<input type="checkbox" data-agent="select" data-project="' + esc(pid) + '" data-id="' +
@@ -218,7 +231,7 @@ function finishedHtml(job, pid) {
   const title = '<span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
     chipHtml(word, kind);
   const elapsed = '<span class="rg-num num">' + esc(fmtDuration(job.elapsedS)) + "</span>";
-  const tokenCell = '<span class="rg-num num">' + esc(tokens) + "</span>";
+  const tokenCell = '<span class="rg-num num" title="Out tokens · weighted units">' + esc(tokens) + "</span>";
   return '<li class="ag-row"><div class="row-grid rg-agent">' +
     agentCells(check, model, title, task, effort, elapsed, tokenCell,
       copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) })) + "</div></li>";
