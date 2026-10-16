@@ -1,1 +1,1 @@
-.sys-sel .wfg-tab{stroke:var(--accent)}.sys-n{font-size:13px}.sys-panel{position:fixed;top:0;right:0;bottom:0;width:min(360px,100vw);background:var(--surface-1);border-left:1px solid var(--track)}
+.sys-panel{position:fixed;top:var(--h-top);right:0;bottom:0;z-index:5;width:min(400px,100vw);overflow:auto;padding:var(--sp-3);background:var(--surface-1);border-left:1px solid var(--track)}.sys-panel h3{margin:var(--sp-2) 0 0;font-size:var(--fs-12)}.sys-panel .row-grid{min-height:0;padding:2px 0}.sys-panel .btn{text-align:left}

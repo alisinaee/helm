@@ -1,4 +1,6 @@
-"""The System map side panel (R10.24, A6): web/js/views/system-panel.js renders the facts and routed links."""
+"""The System views side panel (R10.33): web/js/views/system-panel.js renders the facts of the selected node from
+arch.details: aligned rows (row-grid) for facts, depends on / used by (buttons that select the node), files with
+lines and commits, recent commits and jobs; module and store kinds; escaping; empty input gives nothing."""
 
 import json
 import os
@@ -13,10 +15,20 @@ NODE = shutil.which("node")
 SCRIPT = r"""
 const { pathToFileURL } = await import("node:url");
 const m = await import(pathToFileURL(process.argv[1] + "/js/views/system-panel.js").href);
-const comp = { id: "api", name: "HTTP <API>", layer: "api", notes: "Routes.", entry: "r/s.py", fileCount: 12,
-  files: ["roadmap/http/**"], heat: { commits30: 3 } };
-console.log(JSON.stringify({ full: m.panelHtml("my pid", comp, { commits30: 5, lastAt: "2026-10-01T10:00:00Z",
-  runningJobs: 1, openWork: 2, bugs: 1 }), none: m.panelHtml("p", null, null), bare: m.panelHtml("p", { id: "x" }, null) }));
+const comp = { kind: "component", title: "HTTP <API>", layer: "api", language: "Python", notes: "Routes.",
+  entries: ["r/s.py"], fileCount: 12, lines: 1600, commits30: 5, heat: { runningJobs: 1, openWork: 2 },
+  globs: ["roadmap/http/**"], dependsOn: [{ id: "c:core", label: "Core", count: 8, note: "uses log" }],
+  usedBy: [{ id: "c:web", label: "Web", count: 0, note: "GET snapshot" }],
+  files: [{ path: "roadmap/http/routes.py", lines: 1200, commits: 4 }],
+  commits: [{ sha: "abc1234", subject: "R1: fix <x>", at: 1790000000 }],
+  jobs: [{ id: "j1", task: "R1", model: "opus", status: "running", title: "fix" }] };
+const mod = { kind: "module", title: "web/js", fileCount: 3, lines: 90, files: [{ path: "web/js/a.js", lines: 30,
+  commits: 0 }], dependsOn: [], usedBy: [], packages: ["react"], component: { id: "c:web", label: "Web" } };
+const st = { kind: "store", title: "jobs.json", tracked: ["docs/jobs.json"], tables: [],
+  readers: [{ path: "roadmap/services/jobs.py", mode: "reads, writes" }] };
+console.log(JSON.stringify({ full: m.panelHtml("my pid", "c:api", comp), mod: m.panelHtml("p", "m:web/js", mod),
+  store: m.panelHtml("p", "s:jobs", st), none: m.panelHtml("p", null, null), missing: m.panelHtml("p", "x", null),
+  human: [m.human(999), m.human(1600), m.human(-1)] }));
 """
 
 
@@ -30,30 +42,43 @@ class SystemPanelTest(unittest.TestCase):
             raise AssertionError(proc.stderr)
         cls.out = json.loads(proc.stdout)
 
-    def test_facts(self):
+    def test_component_facts_in_aligned_rows(self):
         html = self.out["full"]
-        for text in ("HTTP &lt;API&gt;", "Routes.", "r/s.py", "roadmap/http/**", "2026-10-01", "Open Work", "Bugs"):
+        for text in ("HTTP &lt;API&gt;", "Routes.", "r/s.py", "roadmap/http/**", "Commits (30 days)", "Open Work",
+                     "roadmap/http/routes.py", "abc1234", "R1: fix &lt;x&gt;", "opus", "running"):
             self.assertIn(text, html)
         self.assertNotIn("<API>", html)
-        self.assertRegex(html, r"Commits \(30 days\)</dt><dd>5</dd>")
-        self.assertRegex(html, r"Running jobs</dt><dd>1</dd>")
+        self.assertIn('class="row-grid fin-row"', html)
+        self.assertRegex(html, r'Commits \(30 days\)</span><span class="rg-num" title="5">5</span>')
+        self.assertRegex(html, r'Lines</span><span class="rg-num" title="1.6k">1.6k</span>')
 
-    def test_links_route_to_work_and_git(self):
+    def test_related_nodes_are_buttons_that_select(self):
         html = self.out["full"]
-        self.assertIn('href="#/p/my%20pid/work"', html)
+        self.assertIn('data-sys-go="c:core"', html)
+        self.assertIn('data-sys-go="c:web"', html)
+        self.assertIn("Depends on", html)
+        self.assertIn("Used by", html)
         self.assertIn('href="#/p/my%20pid/git"', html)
+
+    def test_module_and_store(self):
+        self.assertIn("Packages", self.out["mod"])
+        self.assertIn("react", self.out["mod"])
+        self.assertIn('data-sys-go="c:web"', self.out["mod"])
+        self.assertIn("Module (folder)", self.out["mod"])
+        self.assertIn("Read and written by", self.out["store"])
+        self.assertIn("docs/jobs.json", self.out["store"])
 
     def test_close_and_empty(self):
         self.assertIn('data-sys-op="close"', self.out["full"])
         self.assertEqual(self.out["none"], "")
-        self.assertIn("none", self.out["bare"])
+        self.assertEqual(self.out["missing"], "")
+        self.assertEqual(self.out["human"], ["999", "1.6k", "0"])
 
     def test_wired_into_view(self):
         with open(os.path.join(WEB, "js", "views", "system.js"), encoding="utf-8") as f:
             src = f.read()
         self.assertIn("system-panel.js", src)
         self.assertRegex(src, r'"Escape"')
-        self.assertIn("api.fit()", src)
         with open(os.path.join(WEB, "js", "views", "system-panel.js"), encoding="utf-8") as f:
             panel = f.read()
         self.assertIsNone(re.search(r"\sstyle\s*=|innerHTML|<script", panel))

@@ -1,54 +1,70 @@
-// System (R10.23, A5 of docs/SYSTEM-DESIGN-SECTION.md): one card per component, one column per layer, orthogonal edges
-// with arrowheads, and a heat bar per card (Off | Commits | Jobs | Work). GET /api/v1/projects/<id>/system gives
-// {components, edges, heat, warnings, sha}; the layout is graph/syslayout.js and pan/zoom is graph/viewport.js. The
-// markup is a string (no inline styles or handlers): geometry is SVG attributes, colour comes from system.css.
-// Selecting a card docks the side panel (system-panel.js, Esc or Close shuts it) and fires "system:select" ({pid, id}).
-// The map fits the canvas on first render and on resize until the person zooms or pans.
+// System (R10.33, docs/SYSTEM-VIEWS-SPEC.md): the selected project drawn the way engineers draw it. One switcher picks
+// a view: Context, Containers, Components (the C4 levels), Modules (folders by dependency tier), Layers, Flows
+// (sequence diagrams) and Data (stores and who reads or writes them). GET /api/v1/projects/<id>/system gives
+// arch: {views, flows, details, stats}; graph/syslayout.js places it and graph/viewport.js pans and zooms
+// (Cmd/Ctrl+wheel zooms at the cursor). The markup is a string with no inline styles or handlers: geometry and colour
+// are SVG attributes (colours are token vars, so light and dark follow the theme). A tap on a node opens the side
+// panel (system-panel.js) and dims what is not connected to it; Esc or Close shuts it.
 
 import { getJson } from "../api.js";
 import { bannerHtml, chipHtml, emptyHtml, esc, patch, skeletonHtml } from "../dom.js";
 import { mountViewport } from "../graph/viewport.js";
-import { CARD_W, systemLayout } from "../graph/syslayout.js";
-import { panelHtml } from "./system-panel.js";
+import { LABEL_MAX, layeredLayout, matrixLayout, MX_COL, MX_HEAD, MX_LEFT, MX_ROW, sequenceLayout, weak } from
+  "../graph/syslayout.js";
+import { human, panelHtml } from "./system-panel.js";
 
-const MODES = [["off", "Off"], ["commits", "Commits"], ["jobs", "Jobs"], ["work", "Work"]];
-const NAME_CHARS = 22;
-const BAR_W = CARD_W - 16;
-const store = new Map(); // project id -> {data, error, status}
+export const VIEWS = [
+  ["context", "Context", "Who uses the system and which outside systems it talks to (C4 level 1)."],
+  ["containers", "Containers", "The parts that run separately and how they talk to each other (C4 level 2)."],
+  ["components", "Components", "The building blocks inside each container; arrows are calls and imports (C4 level 3)."],
+  ["modules", "Modules", "Every source folder by dependency tier: entry points on top, foundations at the bottom."],
+  ["layers", "Layers", "Components in their layers. Red arrows point up a layer: a layering violation or a cycle."],
+  ["flows", "Flows", "Step by step: who calls whom for one action, as a sequence diagram."],
+  ["data", "Data", "Where state lives and which components read or write it."],
+];
+const TONES = ["--accent", "--info", "--success", "--warning", "--m-opus", "--m-haiku", "--m-cursor", "--defer",
+  "--m-agy", "--m-sonnet"];
+const EDGE = { call: "--text-2", import: "--text-3", data: "--info", event: "--accent", violation: "--danger",
+  cycle: "--danger" };
+const MATRIX_EDGES = 16;
+const PAD = 12;
+const store = new Map();
 const reading = new Set();
 const mounted = new WeakSet();
 const taps = { last: null };
 let lastVm = null;
-let mode = "commits";
+let current = readPref("rb.sys.view", "components");
+let flowId = null;
 let selected = null;
 let view = null;
 let api = null;
 let auto = true;
 let watcher = null;
 
-function num(v) {
-  const n = Number(v);
-  return Number.isFinite(n) && n > 0 ? n : 0;
+function readPref(key, dflt) {
+  try {
+    const v = globalThis.localStorage && globalThis.localStorage.getItem(key);
+    return VIEWS.some((x) => x[0] === v) ? v : dflt;
+  } catch (err) {
+    return dflt;
+  }
 }
 
-// The heat of one component for the mode: the API's heat map first, then a heat object on the component itself.
-export function heatOf(sys, c, m) {
-  const top = sys.heat && typeof sys.heat === "object" ? sys.heat[c.id] : null;
-  const own = c.heat && typeof c.heat === "object" ? c.heat : {};
-  const h = Object.assign({}, own, top && typeof top === "object" ? top : {});
-  if (m === "commits") return num(h.commits !== undefined ? h.commits : h.commits30);
-  if (m === "jobs") return num(h.jobs !== undefined ? h.jobs : h.runningJobs);
-  if (m === "work") return num(h.work !== undefined ? h.work : h.openWork);
-  return 0;
+function writePref(key, value) {
+  try {
+    if (globalThis.localStorage) globalThis.localStorage.setItem(key, value);
+  } catch (err) {
+    // Private mode or blocked storage: the choice lasts for this page only.
+  }
 }
 
-function fileCount(c) {
-  if (Number.isFinite(Number(c.fileCount))) return Number(c.fileCount);
-  return Array.isArray(c.files) ? c.files.length : 0;
+function v(name) {
+  return "var(" + name + ")";
 }
 
-function clip(s) {
-  return s.length > NAME_CHARS ? s.slice(0, NAME_CHARS - 1) + "…" : s;
+function clip(s, n) {
+  const t = String(s || "");
+  return t.length > n ? t.slice(0, n - 1) + "…" : t;
 }
 
 function load(pid) {
@@ -61,60 +77,265 @@ function load(pid) {
       status: (err && err.status) || 0 });
   }).then(function () {
     reading.delete(pid);
-    if (lastVm) patch("main", sectionHtml(lastVm));
+    if (lastVm) redraw();
   });
 }
 
-function cardSvg(card, comp, sys, max) {
-  const v = heatOf(sys, comp, mode);
-  const frac = max > 0 ? Math.min(1, v / max) : 0;
-  const name = comp.name || card.name || card.id;
-  const sel = selected === card.id;
-  const by = card.h - 14;
-  const bar = mode === "off" ? "" : '<rect class="wfg-band" x="8" y="' + by + '" width="' + BAR_W +
-    '" height="6" rx="3"/>' +
-    '<rect class="sys-heat wfg-nowbar" x="8" y="' + by + '" width="' +
-    (frac * BAR_W).toFixed(1) + '" height="6" rx="3"/>';
-  return '<g class="wfg-n sys-card' + (sel ? " sys-sel" : "") + '" data-sys="' + esc(card.id) + '" tabindex="0" ' +
-    'role="button" aria-pressed="' + sel + '" transform="translate(' + card.x + " " + card.y + ')">' +
-    "<title>" + esc(name) + " (" + esc(card.layer) + ", " + fileCount(comp) + " files, " + v + " " + mode +
-    ")</title>" +
-    '<rect class="wfg-tab" width="' + card.w + '" height="' + card.h + '" rx="6"/>' +
-    '<text class="wfg-ph sys-n" x="8" y="22">' + esc(clip(name)) + "</text>" +
-    '<text class="wfg-num" x="8" y="39">' + esc(card.layer) + "</text>" +
-    '<text class="wfg-num" x="' + (card.w - 8) + '" y="39" text-anchor="end">' + fileCount(comp) + " files</text>" +
-    bar + "</g>";
+function markers() {
+  const kinds = { n: "--text-2", m: "--text-3", d: "--info", e: "--accent", x: "--danger" };
+  return "<defs>" + Object.keys(kinds).map((k) => '<marker id="sys-a-' + k + '" viewBox="0 0 10 10" refX="9" ' +
+    'refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse">' +
+    '<path d="M0 0L10 5L0 10z" fill="' + v(kinds[k]) + '"/></marker>').join("") + "</defs>";
 }
 
-export function canvasSvg(sys) {
-  const comps = Array.isArray(sys.components) ? sys.components.filter((c) => c && typeof c.id === "string") : [];
-  const byId = {};
-  comps.forEach((c) => {
-    byId[c.id] = c;
+function markerOf(kind) {
+  if (kind === "data") return "d";
+  if (kind === "event") return "e";
+  if (kind === "violation" || kind === "cycle") return "x";
+  if (kind === "import") return "m";
+  return "n";
+}
+
+// Who is linked to the selection: the node itself and its direct neighbours (others are dimmed).
+function nearSet(edges) {
+  if (!selected) return null;
+  const near = new Set([selected]);
+  edges.forEach((e) => {
+    if (e.from === selected) near.add(e.to);
+    if (e.to === selected) near.add(e.from);
   });
-  const lay = systemLayout({ layers: sys.layers, components: comps, edges: sys.edges });
-  const max = Math.max(0, ...comps.map((c) => heatOf(sys, c, mode)));
-  const edges = lay.routes.map((r) => '<path class="wfg-e' + (r.kind === "data" ? " wfg-e-dependency" : "") +
-    '" d="' + esc(r.d) +
-    '" data-from="' + esc(r.from) + '" data-to="' + esc(r.to) + '" marker-end="url(#sys-arrow)"/>').join("");
-  const heads = lay.columns.map((c) => '<text class="wfg-num" x="' + (c.x + 4) + '" y="12">' + esc(c.layer) +
-    "</text>").join("");
-  const cards = lay.cards.map((c) => cardSvg(c, byId[c.id] || {}, sys, max)).join("");
-  const defs = '<defs><marker id="sys-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" ' +
-    'orient="auto"><path class="wfg-arrow" d="M0 0L8 4L0 8z"/></marker></defs>';
-  return '<svg id="sys-svg" class="wfg-svg" role="group" aria-label="System map" tabindex="0" data-w="' + lay.width +
-    '" data-h="' + lay.height + '">' + defs + '<g id="sys-vp">' + heads + edges + cards + "</g></svg>";
+  return near;
 }
 
-function toolbarHtml(pid) {
-  const seg = MODES.map((m) => '<button type="button" class="btn btn-small" data-sys-heat="' + m[0] +
-    '" aria-pressed="' + (mode === m[0]) + '">' + m[1] + "</button>").join("");
+function nodeSvg(n, near, act) {
+  const sel = selected === n.id;
+  const dim = near && !near.has(n.id);
+  const tone = v(TONES[(Number(n.tone) || 0) % TONES.length]);
+  const w = n.w;
+  const h = n.h;
+  const stroke = sel ? v("--focus") : n.kind === "system" ? v("--accent") : v("--line");
+  const sw = sel ? 2 : n.kind === "system" ? 1.5 : 1;
+  let shape;
+  let tx = 14;
+  if (n.kind === "person") {
+    shape = '<rect width="' + w + '" height="' + h + '" rx="' + h / 2 + '" fill="' + v("--surface-2") + '" stroke="' +
+      stroke + '" stroke-width="' + sw + '"/><circle cx="24" cy="18" r="6" fill="none" stroke="' + v("--text-2") +
+      '" stroke-width="1.5"/><path d="M14 36a10 9 0 0 1 20 0" fill="none" stroke="' + v("--text-2") +
+      '" stroke-width="1.5"/>';
+    tx = 44;
+  } else if (n.kind === "store") {
+    const e = 7;
+    shape = '<path d="M0 ' + e + "a" + w / 2 + " " + e + " 0 0 1 " + w + " 0v" + (h - 2 * e) + "a" + w / 2 + " " + e +
+      " 0 0 1 " + -w + " 0z" + '" fill="' + v("--surface-2") + '" stroke="' + stroke + '" stroke-width="' + sw +
+      '"/><path d="M0 ' + e + "a" + w / 2 + " " + e + " 0 0 0 " + w + ' 0" fill="none" stroke="' + stroke +
+      '" stroke-width="' + sw + '"/>';
+  } else if (n.kind === "external") {
+    shape = '<rect width="' + w + '" height="' + h + '" rx="6" fill="' + v("--surface-1") + '" stroke="' +
+      (sel ? stroke : v("--text-3")) + '" stroke-width="' + sw + '" stroke-dasharray="5 3"/>';
+  } else if (n.kind === "system") {
+    shape = '<rect width="' + w + '" height="' + h + '" rx="8" fill="' + v("--sel") + '" stroke="' + stroke +
+      '" stroke-width="' + sw + '"/>';
+  } else {
+    shape = '<rect width="' + w + '" height="' + h + '" rx="6" fill="' + v("--surface-2") + '" stroke="' + stroke +
+      '" stroke-width="' + sw + '" stroke-opacity="' + (sel ? 1 : 0.55) + '"/><rect x="0.5" y="6" width="4" height="' +
+      (h - 12) + '" rx="2" fill="' + tone + '"/>';
+  }
+  const ty = n.kind === "store" ? 25 : 21;
+  const room = Math.floor((w - tx - 8) / 7);
+  const a = act || {};
+  const bar = a.max > 0 && a.commits > 0 ? '<rect x="' + tx + '" y="' + (h - 6) + '" width="' +
+    Math.max(3, ((w - tx - 10) * a.commits) / a.max).toFixed(1) + '" height="2.5" rx="1" fill="' + v("--accent") +
+    '" fill-opacity=".7"/>' : "";
+  const run = a.running ? '<circle cx="' + (w - 10) + '" cy="10" r="4" fill="' + v("--success") + '"><title>' +
+    a.running + " job(s) running</title></circle>" : "";
+  const tip = n.label + (n.sub ? "\n" + n.sub : "") + (a.commits ? "\n" + a.commits + " commits in 30 days" : "");
+  return '<g class="wfg-n' + (dim ? " wfg-dim" : "") + '" data-sys="' + esc(n.id) + '" data-wf-item="' + esc(n.id) +
+    '" tabindex="-1" role="button" aria-pressed="' + sel + '" aria-label="' + esc(n.label) + '" transform="translate(' +
+    n.x + " " + n.y + ')"><title>' + esc(tip) + "</title>" + shape +
+    '<text x="' + tx + '" y="' + ty + '" font-size="13" font-weight="600" fill="' + v("--text-1") + '">' +
+    esc(clip(n.label, room)) + '</text><text x="' + tx + '" y="' + (ty + 16) + '" font-size="11" fill="' +
+    v("--text-2") + '">' + esc(clip(n.sub, room + 4)) + "</text>" + bar + run + "</g>";
+}
+
+function edgeSvg(e, near) {
+  const dim = near && !(near.has(e.from) && near.has(e.to) && (e.from === selected || e.to === selected));
+  const color = v(EDGE[e.kind] || "--text-2");
+  const width = (e.kind === "import" ? 1.1 : 1.4) + Math.min(1.6, Math.log2((e.count || 0) + 1) * 0.25);
+  const dash = e.kind === "violation" || e.kind === "cycle" ? ' stroke-dasharray="6 4"' : e.kind === "event" ?
+    ' stroke-dasharray="2 3"' : "";
+  const faint = weak(e) ? ' stroke-opacity=".5"' : "";
+  return '<path class="sys-e' + (dim ? " wfg-dim" : "") + '" d="' + esc(e.d) + '" fill="none" stroke="' + color +
+    '" stroke-width="' + width.toFixed(2) + '"' + dash + faint + ' marker-end="url(#sys-a-' + markerOf(e.kind) + ')" ' +
+    'data-from="' + esc(e.from) + '" data-to="' + esc(e.to) + '"><title>' + esc(e.label + (e.count ? " (" + e.count +
+    " imports)" : "")) + "</title></path>";
+}
+
+function labelSvg(e, near) {
+  if (e.lx === null || !e.label) return "";
+  const dim = near && !(e.from === selected || e.to === selected);
+  return '<g class="sys-l' + (dim ? " wfg-dim" : "") + '"><rect x="' + (e.lx - e.lw / 2) + '" y="' + (e.ly - 8) +
+    '" width="' + e.lw + '" height="16" rx="3" fill="' + v("--surface-1") + '" stroke="' + v("--track") +
+    '"/><text x="' + e.lx + '" y="' + (e.ly + 4) + '" font-size="11" text-anchor="middle" fill="' +
+    v(e.kind === "violation" || e.kind === "cycle" ? "--danger" : "--text-2") + '">' +
+    esc(clip(e.label, LABEL_MAX)) + "</text></g>";
+}
+
+function activity(details) {
+  const out = {};
+  let max = 0;
+  Object.keys(details || {}).forEach((id) => {
+    const d = details[id];
+    if (d && d.kind === "component") {
+      const commits = Number(d.commits30) || 0;
+      out[id] = { commits: commits, running: (d.heat && Number(d.heat.runningJobs)) || 0 };
+      max = Math.max(max, commits);
+    }
+  });
+  Object.keys(out).forEach((id) => {
+    out[id].max = max;
+  });
+  return out;
+}
+
+function svgWrap(inner, w, h, label) {
+  return '<svg id="sys-svg" class="wfg-svg" role="group" aria-label="' + esc(label) + '" tabindex="0" data-w="' +
+    Math.ceil(w) + '" data-h="' + Math.ceil(h) + '">' + markers() + '<g id="sys-vp">' + inner + "</g></svg>";
+}
+
+// Width over height of the canvas (the last one drawn, else the window less the bars), for the band columns.
+function canvasAspect() {
+  const svg = typeof document !== "undefined" && document.getElementById ? document.getElementById("sys-svg") : null;
+  const r = svg && svg.getBoundingClientRect ? svg.getBoundingClientRect() : null;
+  if (r && r.width > 0 && r.height > 0) return r.width / r.height;
+  const w = globalThis.innerWidth || 0;
+  const h = globalThis.innerHeight || 0;
+  return w > 0 && h > 240 ? w / (h - 190) : 1.8;
+}
+
+export function graphSvg(g, details, label) {
+  const lay = layeredLayout(g, { aspect: canvasAspect() });
+  const near = nearSet(lay.edges);
+  const act = activity(details);
+  const shift = PAD - lay.top;
+  const bands = lay.groups.map((b) => '<g><rect x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h +
+    '" rx="8" fill="' + v("--surface-2") + '" fill-opacity=".35" stroke="' + v("--track") + '"/><text x="' +
+    (b.x + 10) + '" y="' + (b.y + 16) + '" font-size="11" font-weight="600" fill="' + v("--text-3") + '">' +
+    esc(b.label) + "</text></g>").join("");
+  const edges = lay.edges.map((e) => edgeSvg(e, near)).join("");
+  const nodes = lay.nodes.map((n) => nodeSvg(n, near, act[n.id])).join("");
+  const labels = lay.edges.map((e) => labelSvg(e, near)).join("");
+  return svgWrap('<g transform="translate(0 ' + shift + ')">' + bands + edges + nodes + labels + "</g>", lay.width,
+    lay.height + shift + PAD, label);
+}
+
+export function flowSvg(flow) {
+  const lay = sequenceLayout(flow);
+  const heads = lay.heads.map((p) => {
+    const sel = selected === p.id;
+    return '<g class="wfg-n" data-sys="' + esc(p.id) + '" data-wf-item="' + esc(p.id) + '" tabindex="-1" ' +
+      'role="button" aria-pressed="' + sel + '" aria-label="' + esc(p.label) + '"><title>' + esc(p.label) +
+      '</title><line x1="' + p.cx + '" y1="' + p.h + '" x2="' + p.cx + '" y2="' + lay.height + '" stroke="' +
+      v("--line") + '" stroke-opacity=".6" stroke-dasharray="4 4"/><rect x="' + p.x + '" y="0" width="' + p.w +
+      '" height="' + p.h + '" rx="6" fill="' + v(p.id === "p:user" ? "--sel" : "--surface-2") + '" stroke="' +
+      v(sel ? "--focus" : "--line") + '" stroke-width="' + (sel ? 2 : 1) + '"/><text x="' + p.cx + '" y="25" ' +
+      'font-size="13" font-weight="600" text-anchor="middle" fill="' + v("--text-1") + '">' + esc(clip(p.label, 22)) +
+      "</text></g>";
+  }).join("");
+  const rows = lay.rows.map((r) => '<g><path d="' + r.d + '" fill="none" stroke="' + v(r.reply ? "--text-3" :
+    "--text-2") + '" stroke-width="1.4"' + (r.reply ? ' stroke-dasharray="5 4"' : "") + ' marker-end="url(#sys-a-' +
+    (r.reply ? "m" : "n") + ')"/><text x="' + r.lx + '" y="' + r.ly + '" font-size="12" text-anchor="' + r.anchor +
+    '" fill="' + v("--text-1") + '" paint-order="stroke" stroke="' + v("--surface-1") + '" stroke-width="4">' +
+    '<tspan fill="' + v("--text-3") + '">' + r.n + ".</tspan> " + esc(clip(r.label, 34)) + "</text></g>").join("");
+  return svgWrap('<g transform="translate(0 ' + PAD + ')">' + heads + rows + "</g>", lay.width, lay.height + 2 * PAD,
+    "Sequence diagram " + (flow.name || ""));
+}
+
+export function matrixSvg(g) {
+  const lay = matrixLayout(g);
+  const rows = lay.rows.map((r, i) => '<g class="wfg-n" data-sys="' + esc(r.id) + '" data-wf-item="' + esc(r.id) +
+    '" tabindex="-1" role="button" aria-label="' + esc(r.label) + '">' + (i % 2 ? "" : '<rect x="0" y="' + r.y +
+    '" width="' + lay.width + '" height="' + MX_ROW + '" fill="' + v("--surface-2") + '" fill-opacity=".5"/>') +
+    '<text x="8" y="' + (r.y + 19) + '" font-size="12" font-weight="' + (selected === r.id ? 700 : 600) + '" fill="' +
+    v(selected === r.id ? "--accent" : "--text-1") + '">' + esc(clip(r.label, 26)) + "</text></g>").join("");
+  const cols = lay.cols.map((c) => '<g class="wfg-n" data-sys="' + esc(c.id) + '" data-wf-item="' + esc(c.id) +
+    '" tabindex="-1" role="button" aria-label="' + esc(c.label) + '"><title>' + esc(c.label + " · " + (c.sub || "")) +
+    '</title><line x1="' + c.x + '" y1="' + (MX_HEAD - 6) + '" x2="' + c.x + '" y2="' + lay.height + '" stroke="' +
+    v("--track") + '"/><text transform="translate(' + (c.x + MX_COL / 2 + 4) + " " + (MX_HEAD - 8) +
+    ') rotate(-55)" font-size="11" fill="' + v(selected === c.id ? "--accent" : "--text-2") + '">' +
+    esc(clip(c.label, 22)) + "</text></g>").join("");
+  const cells = lay.cells.map((c) => '<circle cx="' + c.x + '" cy="' + c.y + '" r="6" fill="' +
+    (c.write ? v("--info") : "none") + '" stroke="' + v("--info") + '" stroke-width="1.6"><title>' +
+    esc(c.label) + "</title></circle>").join("");
+  const key = '<text x="8" y="' + (MX_HEAD - 30) + '" font-size="11" fill="' + v("--text-3") + '">Code \\ store</text>';
+  return svgWrap('<g transform="translate(' + PAD + " " + PAD + ')">' + key + cols + rows + cells + "</g>",
+    Math.max(MX_LEFT, lay.width) + 2 * PAD, lay.height + 2 * PAD, "Data access matrix");
+}
+
+function legendHtml(kinds, extra) {
+  const swatch = (k, label) => '<span class="wfg-chip"><svg width="22" height="8" aria-hidden="true">' +
+    '<path d="M1 4H15" stroke="' + v(EDGE[k]) + '" stroke-width="1.6"' +
+    (k === "violation" ? ' stroke-dasharray="4 2"' : k === "event" ? ' stroke-dasharray="2 2"' : "") +
+    '/><path d="M14 0L21 4L14 8z" fill="' + v(EDGE[k]) + '"/></svg> ' +
+    esc(label) + "</span>";
+  const names = { call: "calls", import: "imports (derived)", data: "reads / writes", event: "event",
+    violation: "up a layer / cycle" };
+  return Object.keys(names).filter((k) => kinds.has(k) || (k === "violation" && kinds.has("cycle")))
+    .map((k) => swatch(k, names[k])).join("") + (extra || "");
+}
+
+function viewOf(arch, id) {
+  return arch && arch.views && arch.views[id] ? arch.views[id] : { groups: [], nodes: [], edges: [] };
+}
+
+function stage(pid, arch) {
+  const mode = VIEWS.find((x) => x[0] === current) || VIEWS[2];
+  let svg = "";
+  let legend = "";
+  let flowBar = "";
+  let note = mode[2];
+  if (current === "flows") {
+    const flows = Array.isArray(arch.flows) ? arch.flows : [];
+    if (!flows.length) return { html: emptyHtml("No flows found. Add \"flows\" to docs/system.json."), note: note };
+    const flow = flows.find((f) => f.id === flowId) || flows[0];
+    flowId = flow.id;
+    flowBar = '<span class="wfg-chips" role="group" aria-label="Flow">' + flows.map((f) => '<button type="button" ' +
+      'class="btn btn-small" data-sys-flow="' + esc(f.id) + '" aria-pressed="' + (f.id === flow.id) + '">' +
+      esc(f.name) + "</button>").join("") + "</span>";
+    note = (flow.notes || note) + (flow.derived ? " (derived from imports)" : "");
+    svg = flowSvg(flow);
+    legend = legendHtml(new Set(["call"])) + '<span class="wfg-chip">- - reply</span>';
+  } else {
+    const g = viewOf(arch, current);
+    if (!g.nodes.length) {
+      const msg = "Nothing to draw here: no py, js or ts source found. Try Context or Data.";
+      return { html: emptyHtml(msg), note: note };
+    }
+    const kinds = new Set(g.edges.map((e) => e.kind));
+    if (current === "data" && g.edges.length > MATRIX_EDGES) {
+      svg = matrixSvg(g);
+      note = "Which component touches which store. Filled: written near where the code names it; ring: read or named.";
+      legend = "";
+    } else {
+      svg = graphSvg(g, arch.details, mode[1] + " view");
+      legend = legendHtml(kinds);
+    }
+  }
+  const d = selected && arch.details ? arch.details[selected] : null;
+  return { html: flowBar ? flowBar : "", svg: svg, legend: legend, note: note, panel: panelHtml(pid, selected, d) };
+}
+
+function toolbarHtml(arch) {
+  const seg = VIEWS.map((m) => '<button type="button" class="btn btn-small" data-sys-view="' + m[0] +
+    '" aria-pressed="' + (current === m[0]) + '" title="' + esc(m[2]) + '">' + m[1] + "</button>").join("");
   const op = (name, label, text) => '<button type="button" class="btn btn-small" data-sys-op="' + name +
     '" aria-label="' + label + '">' + text + "</button>";
-  return '<div class="wfg-bar" role="toolbar" aria-label="System map controls"><span class="wfg-chips" role="group" ' +
-    'aria-label="Heat">' + seg + "</span>" + op("out", "Zoom out", "−") + op("in", "Zoom in", "+") +
-    op("fit", "Fit to screen", "Fit") + '<a class="btn btn-small" href="#/full/' + esc(pid) +
-    '/system" target="_blank" rel="noopener">Open full screen</a></div>';
+  const s = arch.stats || {};
+  const count = s.sourceFiles ? '<span class="wfg-count">' + s.sourceFiles + " source files · " + human(s.lines) +
+    " lines · " + (s.imports || 0) + " imports</span>" : "";
+  return '<div class="wfg-bar" role="toolbar" aria-label="System views"><span class="wfg-chips" role="group" ' +
+    'aria-label="View">' + seg + '</span><span class="wfg-chips" role="group" aria-label="Zoom">' +
+    op("out", "Zoom out", "−") + op("in", "Zoom in", "+") + op("fit", "Fit to screen", "Fit") +
+    op("sys", "Show the system summary", "Summary") + "</span>" + count + "</div>";
 }
 
 function retryHtml() {
@@ -128,60 +349,111 @@ export function bodyHtml(pid, got) {
     return bannerHtml("warning", "System map could not be read.", got.error) + "<p>" + retryHtml() + "</p>";
   }
   const sys = got.data || {};
-  const warn = (Array.isArray(sys.warnings) ? sys.warnings : []).map((w) => chipHtml(String(w), "warning")).join("");
-  if (!Array.isArray(sys.components) || !sys.components.length) {
-    return emptyHtml("No structure found. Add docs/system.json to describe the parts.", retryHtml());
+  const warn = (Array.isArray(sys.warnings) ? sys.warnings : []).slice(0, 3).map((w) => chipHtml(String(w), "warning"))
+    .join("");
+  const arch = sys.arch;
+  if (!arch || !arch.views) {
+    return emptyHtml("No structure found. Restart the service to load the system views, or add docs/system.json.",
+      retryHtml());
   }
-  const comp = selected ? sys.components.find((x) => x && x.id === selected) : null;
-  const hit = comp && sys.heat ? sys.heat[comp.id] : null;
-  return toolbarHtml(pid) + warn + '<div class="sys-canvas">' + canvasSvg(sys) + "</div>" + panelHtml(pid, comp, hit);
+  const st = stage(pid, arch);
+  const note = current === "flows" ? '<span class="wfg-note">' + esc(st.note) + "</span>" : "";
+  return toolbarHtml(arch) + '<div class="wfg-bar">' + (st.html && !st.svg ? "" : st.html) + note +
+    '<span class="wfg-chips">' + (st.legend || "") +
+    "</span>" + warn + "</div>" + (st.svg ? '<div class="wfg-stage sys-canvas">' + st.svg + "</div>" : st.html) +
+    (st.panel || "");
 }
 
 function sectionHtml(vm) {
-  if (vm.route.name !== "project") return emptyHtml("Pick a project to see its system map.");
+  if (vm.route.name !== "project") {
+    return '<div class="page-head"><h2 class="page-title">System</h2></div>' +
+      emptyHtml("Pick a project to see its system views.");
+  }
   const pid = vm.route.id;
-  return '<div class="sys">' + bodyHtml(pid, store.get(pid)) + "</div>";
+  const mode = VIEWS.find((x) => x[0] === current) || VIEWS[2];
+  return '<div class="sys"><div class="page-head"><h2 class="page-title">System</h2><p class="page-note">' +
+    esc(mode[0] === "flows" ? "Sequence diagrams of key flows." : mode[2]) + "</p></div>" +
+    bodyHtml(pid, store.get(pid)) + "</div>";
 }
 
+function redraw() {
+  if (!lastVm) return;
+  patch("main", sectionHtml(lastVm));
+  mountSoon();
+}
+
+function arch() {
+  const got = lastVm ? store.get(lastVm.route.id) : null;
+  return got && got.data && got.data.arch ? got.data.arch : null;
+}
+
+// Selects a node; when it is not drawn in this view, the first view that has it is shown.
 function select(id) {
-  selected = selected === id ? null : id;
-  if (id === null) selected = null;
+  selected = id && selected !== id ? id : null;
+  const a = arch();
+  if (selected && selected !== "sys" && a && current !== "flows" &&
+    !viewOf(a, current).nodes.some((n) => n.id === selected)) {
+    const other = ["components", "modules", "containers", "data", "context", "layers"].find((k) =>
+      viewOf(a, k).nodes.some((n) => n.id === selected));
+    if (other) setView(other);
+  }
   if (typeof document !== "undefined" && lastVm) {
     document.dispatchEvent(new CustomEvent("system:select", { detail: { pid: lastVm.route.id, id: selected } }));
-    patch("main", sectionHtml(lastVm));
-    mountSoon();
   }
+  redraw();
+}
+
+function setView(id) {
+  current = id;
+  writePref("rb.sys.view", id);
+  auto = true;
+  view = null;
+}
+
+// The opening view: the whole drawing when it fits at 60 % or more (never above 100 %), else 60 % from the top left.
+export function openingView(box, size) {
+  const fit = Math.min((size.w - 2 * PAD) / Math.max(1, box.w), (size.h - 2 * PAD) / Math.max(1, box.h));
+  const k = Math.max(0.6, Math.min(1, fit));
+  const x = box.w * k <= size.w - 2 * PAD ? (size.w - box.w * k) / 2 : PAD;
+  const y = box.h * k <= size.h - 2 * PAD ? (size.h - box.h * k) / 2 : PAD;
+  return { k: k, x: x, y: y };
 }
 
 function mountNow() {
-  const svg = document.getElementById("sys-svg");
+  const svg = typeof document !== "undefined" ? document.getElementById("sys-svg") : null;
   if (!svg || mounted.has(svg)) return;
   mounted.add(svg);
   const box = { w: Number(svg.getAttribute("data-w")) || 1, h: Number(svg.getAttribute("data-h")) || 1 };
+  const r = svg.getBoundingClientRect();
+  const size = { w: r.width || box.w, h: r.height || box.h };
   api = mountViewport(svg, document.getElementById("sys-vp"), {
-    view: view || { k: 1, x: 16, y: 16 }, box: box, taps: taps, fit: false,
-    onTap: (el) => {
-      const g = el.closest ? el.closest("[data-sys]") : null;
-      if (g) select(g.getAttribute("data-sys"));
+    view: auto || !view ? openingView(box, size) : view, box: box, taps: taps, fit: false,
+    onTap: (el) => select(el.getAttribute("data-sys")),
+    onClear: () => {
+      if (selected) select(null);
     },
-    onView: (v) => {
-      view = { k: v.k, x: v.x, y: v.y };
+    onView: (nv) => {
+      view = { k: nv.k, x: nv.x, y: nv.y };
     },
   });
-  if (auto || !view) api.fit();
   if (watcher) watcher.disconnect();
   if (typeof ResizeObserver === "function") {
+    let last = size.w + "x" + size.h;
     watcher = new ResizeObserver(() => {
-      if (auto && api) api.fit();
+      const rr = svg.getBoundingClientRect();
+      const now = rr.width + "x" + rr.height;
+      if (now === last || !auto || !svg.isConnected) return;
+      last = now;
+      mounted.delete(svg);
+      redraw();
     });
     watcher.observe(svg);
   }
-  svg.addEventListener("pointerdown", () => {
+  const manual = () => {
     auto = false;
-  });
-  svg.addEventListener("wheel", () => {
-    auto = false;
-  });
+  };
+  svg.addEventListener("pointerdown", manual);
+  svg.addEventListener("wheel", manual);
 }
 
 function mountSoon() {
@@ -189,36 +461,66 @@ function mountSoon() {
 }
 
 function onKey(event) {
-  if (event.key === "Escape" && selected && lastVm) select(null);
+  if (!lastVm) return;
+  const t = event.target;
+  if ((event.key === "Enter" || event.key === " ") && t && t.getAttribute && t.getAttribute("data-sys")) {
+    event.preventDefault();
+    select(t.getAttribute("data-sys"));
+  } else if (event.key === "Escape" && selected) select(null);
 }
 
 function onClick(event) {
-  const t = event.target && event.target.closest ? event.target.closest("[data-sys-heat],[data-sys-op]") : null;
+  const t = event.target && event.target.closest ?
+    event.target.closest("[data-sys-view],[data-sys-op],[data-sys-flow],[data-sys-go]") : null;
   if (!t || !lastVm) return;
-  if (t.hasAttribute("data-sys-heat")) {
-    mode = t.getAttribute("data-sys-heat");
-    patch("main", sectionHtml(lastVm));
-    mountSoon();
+  if (t.hasAttribute("data-sys-view")) {
+    setView(t.getAttribute("data-sys-view"));
+    const a = arch();
+    if (selected && selected !== "sys" && a && !viewOf(a, current).nodes.some((n) => n.id === selected)) {
+      selected = null;
+    }
+    redraw();
+    return;
+  }
+  if (t.hasAttribute("data-sys-flow")) {
+    flowId = t.getAttribute("data-sys-flow");
+    auto = true;
+    redraw();
+    return;
+  }
+  if (t.hasAttribute("data-sys-go")) {
+    event.preventDefault();
+    selected = null;
+    select(t.getAttribute("data-sys-go"));
     return;
   }
   const op = t.getAttribute("data-sys-op");
-  if (op === "close") {
-    select(null);
-    return;
-  }
-  if (op === "fit") auto = true;
-  else if (op === "in" || op === "out") auto = false;
-  if (op === "retry") {
+  if (op === "close") select(null);
+  else if (op === "sys") {
+    selected = null;
+    select("sys");
+  } else if (op === "retry") {
     store.delete(lastVm.route.id);
     load(lastVm.route.id);
-    patch("main", sectionHtml(lastVm));
-  } else if (api && op === "fit") api.fit();
-  else if (api && op === "in") api.zoom(1.25);
-  else if (api && op === "out") api.zoom(0.8);
+    redraw();
+  } else if (op === "fit") {
+    auto = true;
+    view = null;
+    redraw();
+  } else if (api && (op === "in" || op === "out")) {
+    auto = false;
+    api.zoom(op === "in" ? 1.25 : 0.8);
+  }
 }
 
 let bound = false;
 export function sectionView(vm) {
+  if (lastVm && lastVm.route.id !== vm.route.id) {
+    selected = null;
+    flowId = null;
+    auto = true;
+    view = null;
+  }
   lastVm = vm;
   if (!bound && typeof document !== "undefined" && document.addEventListener) {
     bound = true;
