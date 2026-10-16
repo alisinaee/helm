@@ -78,6 +78,8 @@ Every ask, rule, decision or instruction the person gives goes into the Head led
 ## Usage limit override (person, 2026-10-16)
 "rule: no limit" (H164): the person lifted the Claude usage stops (85% weekly, 80% 5h, and the H160 98% weekly stop). Launch Claude Haiku work without waiting for resets; still check get_usage each wave and report readings. Stop only on a session-limit error.
 
+## Cursor OFF (H193, 2026-10-16): near 99% limit, launch no Cursor jobs; ignore "cursor idle" hints.
+
 ## Planner-only head (person, 2026-10-16, H182; overrides older model rules)
 Head plans and verifies only (no edits, no big reads). Models: Haiku 5.5 default worker; Sonnet 5.5 low/med for
 wide logic/hard UI; Opus 5.5 low/med advice only; agy (unlimited) for every read-only job, verified by Haiku.
