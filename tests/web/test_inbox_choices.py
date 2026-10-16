@@ -42,7 +42,11 @@ const keys = [...withOpts.matchAll(/qc-key" aria-hidden="true">([a-z])</g)].map(
 const values = [...withOpts.matchAll(/data-value="([^"]*)"/g)].map(function (m) { return m[1]; });
 console.log(JSON.stringify({ keys: keys, values: values, otherBox: withOpts.indexOf('name="value"') >= 0,
   noOptButtons: (noOpts.match(/qc-opt/g) || []).length, noOptBox: noOpts.indexOf('name="value"') >= 0,
-  noOptList: noOpts.indexOf("nz-list") >= 0 }));
+  noOptList: noOpts.indexOf("nz-list") >= 0,
+  chipAndLabel: /<button[^>]*qc-opt[^>]*><span class="qc-key" aria-hidden="true">a<\/span><span class="qc-label">SQLite/
+    .test(withOpts),
+  otherRow: /<span class="qc-id">Other<\/span> <input name="value"[^>]*><\/label><button type="submit" class="btn btn-small">Send</
+    .test(withOpts) }));
 """
 
 
@@ -66,6 +70,12 @@ class InboxChoicesRender(unittest.TestCase):
     def test_other_text_box_kept(self):
         self.assertTrue(self.got["otherBox"])
 
+    def test_option_row_has_letter_chip_and_label_as_separate_elements(self):
+        self.assertTrue(self.got["chipAndLabel"])
+
+    def test_other_row_is_label_input_send(self):
+        self.assertTrue(self.got["otherRow"])
+
     def test_no_options_shows_only_text_box(self):
         self.assertEqual(self.got["noOptButtons"], 0)
         self.assertFalse(self.got["noOptList"])
@@ -86,6 +96,12 @@ class InboxChoicesStatic(unittest.TestCase):
 
     def test_other_form_kept(self):
         self.assertIn('data-form="inbox-question-answer"', self.src)
+
+    def test_option_css_is_one_row_with_a_28px_chip(self):
+        css = read(os.path.join(WEB, "css", "flow.css"))
+        self.assertRegex(css, r"\.qc-key \{[^}]*width: 28px")
+        self.assertRegex(css, r"\.qc \.nz-list \.qc-opt \{[^}]*min-height: 36px")
+        self.assertRegex(css, r"\.qc-label \{[^}]*white-space: nowrap")
 
     def test_no_inline_styles_or_handlers(self):
         self.assertIsNone(INLINE.search(self.src))
