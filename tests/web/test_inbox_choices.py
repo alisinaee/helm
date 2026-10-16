@@ -45,7 +45,7 @@ console.log(JSON.stringify({ keys: keys, values: values, otherBox: withOpts.inde
   noOptList: noOpts.indexOf("nz-list") >= 0,
   chipAndLabel: /<button[^>]*qc-opt[^>]*><span class="qc-key" aria-hidden="true">a<\/span><span class="qc-label">SQLite/
     .test(withOpts),
-  otherRow: /<input name="value"[^>]*placeholder="Other answer"[^>]*><button type="submit" class="btn btn-small" disabled[^>]*>Send</
+  otherRow: /<input name="value"[^>]*placeholder="Or type an answer"[^>]*><button type="submit" class="btn btn-small ib-send" disabled[^>]*>Send</
     .test(withOpts) }));
 """
 

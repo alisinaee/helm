@@ -182,12 +182,12 @@ function answerHtml(pid, q) {
   const list = buttons
     ? '<div class="nz-list ib-opts" role="group" aria-label="' + esc("Answers for " + q.id) + '">' + buttons + "</div>"
     : "";
-  return '<div class="ib-ans">' + list + '<form class="nz-row" data-form="inbox-question-answer"' +
+  return '<div class="ib-ans">' + list + '<form class="nz-row ib-form" data-form="inbox-question-answer"' +
     ' data-project="' + esc(pid) +
     '" data-qid="' + esc(q.id) + '" aria-label="' + esc("Other answer for " + q.id) + '">' +
-    '<input name="value" required autocomplete="off" placeholder="Other answer" aria-label="' +
+    '<input name="value" required autocomplete="off" placeholder="Or type an answer" aria-label="' +
     esc("Other answer for " + q.id) + '">' +
-    '<button type="submit" class="btn btn-small" disabled aria-label="' + esc("Send answer for " + q.id) +
+    '<button type="submit" class="btn btn-small ib-send" disabled aria-label="' + esc("Send answer for " + q.id) +
     '">Send</button></form></div>';
 }
 
@@ -344,31 +344,38 @@ function questionBody(item, now) {
   if (q.askedMs != null && q.timeoutS != null) {
     const deadline = q.askedMs + q.timeoutS * 1000;
     const word = q.def ? "Defaults to " + q.def + " in " : "Times out in ";
-    timer = '<p class="qc-foot"><span class="qc-timer" data-deadline-ms="' + esc(deadline) + '" data-word="' +
-      esc(word) + '">' + esc(countdownText(deadline, word, now)) + "</span></p>";
+    timer = '<span class="qc-timer" data-deadline-ms="' + esc(deadline) + '" data-word="' + esc(word) + '">' +
+      esc(countdownText(deadline, word, now)) + "</span>";
   }
-  return (blocks ? '<p class="qc-line">' + blocks + "</p>" : "") + timer + options;
+  return (blocks || timer ? '<p class="qc-foot ib-st">' + blocks + timer + "</p>" : "") + options;
 }
 
-// The expanded Head ask: the summary, the head's note, the age, the reply form (head.set) and the Head link.
+// A note that starts with a commit hash shows the hash as a ref chip, then the rest of the note.
+function noteHtml(note) {
+  const m = /^([0-9a-f]{7,40})\b[\s:,-]*/.exec(note);
+  return m ? '<code class="chip ib-ref">' + esc(m[1]) + "</code>" + esc(note.slice(m[0].length)) : esc(note);
+}
+
+// The expanded Head ask: one status line (age, the head's note) and one form line: the reply box (head.set), Answer,
+// and Open in Head. The row title above already shows the full summary, so it is not repeated.
 function askBody(item) {
   const e = item.entry;
   const row = e.row;
   const pid = e.pid;
   const id = String(row.id);
-  const age = typeof row.age === "number" ? '<span class="qc-id">Waiting ' + esc(fmtDuration(row.age * 60)) +
-    "</span> " : "";
-  const note = typeof row.note === "string" && row.note.trim() ? row.note : "The head needs your answer.";
-  return '<p class="qc-text">' + esc(row.sum || "") + '</p><p class="qc-foot">' + age + esc(note) + "</p>" +
-    '<form data-op="head.set" data-project="' + esc(pid) + '" data-id="' + esc(id) +
+  const age = typeof row.age === "number" ? "<span>Waiting " + esc(fmtDuration(row.age * 60)) + "</span>" : "";
+  const note = typeof row.note === "string" && row.note.trim() ? row.note.trim() : "The head needs your answer.";
+  return '<p class="qc-foot ib-st">' + age + "<span>" + noteHtml(note) + "</span></p>" +
+    '<form class="ib-form" data-op="head.set" data-project="' + esc(pid) + '" data-id="' + esc(id) +
     '" data-form="inbox-head-ask" aria-label="' + esc("Answer " + id) + '">' +
-    '<label><span class="qc-id">Your answer</span> <input name="note" required placeholder="Type an answer"></label> ' +
-    '<button type="submit" class="btn">Answer</button></form>' +
-    '<p class="qc-foot"><a href="' + esc(headHash(pid, id)) + '" aria-label="' + esc("Open " + id + " in Head") +
-    '">Open in Head</a></p>';
+    '<input name="note" required autocomplete="off" placeholder="Your answer" aria-label="' +
+    esc("Your answer to " + id) + '"><button type="submit" class="btn btn-primary">Answer</button>' +
+    '<a class="btn btn-ghost ib-link" href="' + esc(headHash(pid, id)) + '" aria-label="' +
+    esc("Open " + id + " in Head") + '">Open in Head</a></form>';
 }
 
-// The expanded rule proposal: its text, the Head ids it came from, Reject, and the edit form (rules.accept).
+// The expanded rule proposal: the Head ids it came from, then one form line: the rule text (rules.accept), Edit and
+// accept, and Reject.
 function ruleBody(item) {
   const e = item.entry;
   const row = e.row;
@@ -378,20 +385,18 @@ function ruleBody(item) {
     return '<a href="' + esc(headHash(pid, src)) + '">' + esc(src) + "</a>";
   });
   const from = sources.length ? "From " + sources.join(", ") : "No Head source";
-  return '<p class="qc-text">' + esc(row.text || "") + '</p><p class="qc-foot">' + from + "</p>" +
-    '<p><button type="button" class="btn" data-action="rule-reject" data-project="' + esc(pid) +
-    '" data-id="' + esc(id) +
-    '">Reject</button></p><form data-form="inbox-rule-edit" data-project="' + esc(pid) + '" data-id="' + esc(id) +
-    '" aria-label="' + esc("Edit and accept " + id) + '"><label><span class="qc-id">Rule text</span> ' +
-    '<input name="text" required maxlength="160" value="' + esc(row.text || "") + '"></label> ' +
-    '<button type="submit" class="btn btn-primary">Edit and accept</button></form>';
+  return '<p class="qc-foot ib-st">' + from + '</p><form class="ib-form" data-form="inbox-rule-edit" data-project="' +
+    esc(pid) + '" data-id="' + esc(id) + '" aria-label="' + esc("Edit and accept " + id) + '">' +
+    '<input name="text" required maxlength="160" autocomplete="off" aria-label="' + esc("Rule text for " + id) +
+    '" value="' + esc(row.text || "") + '"><button type="submit" class="btn btn-primary">Edit and accept</button>' +
+    '<button type="button" class="btn btn-ghost ib-link" data-action="rule-reject" data-project="' + esc(pid) +
+    '" data-id="' + esc(id) + '">Reject</button></form>';
 }
 
-// The expanded needs-you task: its title and the link to it.
+// The expanded needs-you task: the link to it (the row title already shows the full title).
 function taskBody(item) {
-  return '<p class="qc-text">' + esc(item.title) + '</p><p class="qc-foot"><a href="' +
-    esc(itemHash(item.pid, item.id)) + '" aria-label="' + esc("View task " + item.id) + '">View task ' +
-    esc(item.id) + "</a></p>";
+  return '<p class="qc-foot ib-st"><a class="btn btn-ghost ib-link" href="' + esc(itemHash(item.pid, item.id)) +
+    '" aria-label="' + esc("View task " + item.id) + '">View task ' + esc(item.id) + "</a></p>";
 }
 
 // One row and its expanded body. The row is a list item: the chip, a one-line title with the project, the age, and the
@@ -438,7 +443,7 @@ export function inboxBody(vm) {
   const shown = items.filter(function (it) {
     return filter === "all" || it.kind === FILTER_KIND[filter];
   });
-  const rows = shown.length ? '<ul class="nz-list ib-list">' + shown.map(function (it) {
+  const rows = shown.length ? '<ul class="ib-list">' + shown.map(function (it) {
     return itemHtml(it, now, isOpen(it), vm.route.name !== "project");
   }).join("") + "</ul>" : '<p class="placeholder">Nothing in this filter.</p>';
   return summaryHtml(c) + filterHtml(c) + rows;
