@@ -100,7 +100,8 @@ class ServiceSwitchTest(HeadDbCase):
         with mock.patch.dict(os.environ, {}, clear=False):
             os.environ.pop("ROADMAP_STORE", None)
             one = store.capture(self.data_dir, "same text", now=NOW)
-            two = store.capture(self.data_dir, "same text", now=NOW)
+            two = store.capture(self.data_dir, "another text", now=NOW)
+        # Distinct texts: an exact repeat on the JSON backend bumps priority and logs nothing (repeat bump).
         self.assertNotEqual(one["id"], two["id"])
         self.assertFalse(os.path.exists(self.db_path))
         with open(os.path.join(self.data_dir, store.FILE), encoding="utf-8") as fh:

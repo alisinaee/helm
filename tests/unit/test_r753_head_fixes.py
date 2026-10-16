@@ -38,7 +38,7 @@ class UmbrellaBindGuards(unittest.TestCase):
     def test_set_to_needs_you_allowed_with_a_real_task_bound(self):
         with mock.patch.object(headops, "_row", return_value=_row("done", ["task:R7.31", "task:R7.40"])):
             headops._h_set("/tmp/unused", {"id": "H5", "status": "needs-you", "kind": None, "sum": None,
-                                           "note": None}, None)
+                                           "prio": None, "note": None}, None)
         self.store_update.assert_called_once()
 
     def test_review_reopen_refused_when_only_bound_to_umbrella(self):
