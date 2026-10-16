@@ -195,7 +195,8 @@ function queueNode(n, p, pid) {
     "data-wf-item": n.id, "data-wf-task": "", "data-wf-pid": pid, "data-cx": p.x + p.w / 2,
     "data-cy": p.y + p.h / 2 }, [
     el("rect", Object.assign({ rx: 10 }, boxAttrs(p))),
-    el("text", { class: "wfg-t", x: p.x + p.w / 2, y: p.y + p.h / 2, "text-anchor": "middle", "dominant-baseline": "central" }, [txt(clip(n.label, 24))]),
+    el("text", { class: "wfg-t", x: p.x + p.w / 2, y: p.y + p.h / 2, "text-anchor": "middle",
+      "dominant-baseline": "central" }, [txt(clip(n.label, 24))]),
   ]);
 }
 
@@ -303,7 +304,9 @@ function edgeNode(e, d, lead) {
 
 function markerFor(type) {
   return el("marker", { id: "wfg-arrow-" + type, viewBox: "0 0 8 8", refX: 7, refY: 4, markerWidth: 9,
-    markerHeight: 9, markerUnits: "userSpaceOnUse", orient: "auto" }, [el("path", { class: "wfg-arrow wfg-arrow-" + type, d: "M0 0L8 4L0 8z" })]);
+    markerHeight: 9, markerUnits: "userSpaceOnUse", orient: "auto" }, [
+    el("path", { class: "wfg-arrow wfg-arrow-" + type, d: "M0 0L8 4L0 8z" }),
+  ]);
 }
 
 function nodeFor(n, p, pid) {

@@ -43,7 +43,7 @@ console.log(JSON.stringify({
   firstIsRecommended: labels[0] === "SQLite",
   buttons: (html.match(/class="btn qc-opt/g) || []).length,
   keys: (html.match(/qc-key" aria-hidden="true">([a-f])</g) || []).length,
-  listVertical: html.indexOf('class="nz-list" role="group"') >= 0,
+  listVertical: html.indexOf('class="nz-list ib-opts" role="group"') >= 0,
   otherForm: html.indexOf('data-form="inbox-question-answer"') >= 0,
   otherInput: html.indexOf('name="value"') >= 0,
   descShown: html.indexOf("simplest") >= 0 && html.indexOf("scale later") >= 0,

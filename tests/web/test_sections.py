@@ -233,9 +233,10 @@ class SectionStaticTests(unittest.TestCase):
 
     def test_answer_keys_are_bound_once_on_import(self):
         text = read(os.path.join(WEB, "js", "views", "inbox.js"))
-        self.assertEqual(text.count("bindKey("), 3)
+        self.assertEqual(text.count("bindKey("), 4)
         self.assertIn('bindKey("j", moveFocus(1));', text)
         self.assertIn("bindKey(String(n), onDigit(n - 1))", text)
+        self.assertIn("bindKey(String.fromCharCode(97 + n), onLetter(n))", text)
 
 
 if __name__ == "__main__":
