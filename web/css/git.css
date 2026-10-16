@@ -1,6 +1,29 @@
 .git-list{list-style:none;margin:0;padding:0}
 .git-files{--rg:1.75rem minmax(0,1fr) 3rem}
-.git-log{--rg:4.5rem minmax(0,1fr) 4.5rem}
+.git-log{--rg:6.5rem 4.5rem minmax(0,1fr) minmax(4rem,8rem) 4.5rem;cursor:pointer}
+.git-log.rg-head{cursor:default}
+.git-log[aria-current=true]{background:var(--sel)}
+.git-log:hover{background:var(--surface-1)}
 .git-br{--rg:minmax(0,1fr) 4.5rem 4.5rem}
 .git-form{display:grid;gap:var(--sp-2)}
 .git-form input,.git-form textarea{width:100%}
+.git-gcell{display:block;height:28px;overflow:hidden}
+.git-graph{display:block}
+.gl{fill:none;stroke-width:2}
+.gd{stroke:var(--surface-0);stroke-width:1.5}
+.gl-0{stroke:var(--accent)}.gl-1{stroke:var(--success)}.gl-2{stroke:var(--warning)}.gl-3{stroke:var(--danger)}
+.gl-4{stroke:var(--info)}.gl-5{stroke:var(--defer)}.gl-6{stroke:var(--m-opus)}.gl-7{stroke:var(--m-cursor)}
+.gd.gl-0{fill:var(--accent)}.gd.gl-1{fill:var(--success)}.gd.gl-2{fill:var(--warning)}.gd.gl-3{fill:var(--danger)}
+.gd.gl-4{fill:var(--info)}.gd.gl-5{fill:var(--defer)}.gd.gl-6{fill:var(--m-opus)}.gd.gl-7{fill:var(--m-cursor)}
+.git-pick{all:unset;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.git-pick:focus-visible{outline:2px solid var(--focus)}
+.git-hist{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-4);align-items:start}
+.git-detail{min-width:0;display:grid;gap:var(--sp-2)}
+.git-head{font-weight:600}
+.git-file{--rg:minmax(0,1fr) 3.5rem 3.5rem;cursor:pointer}
+.git-file[aria-current=true]{background:var(--sel)}
+.git-file .ok{color:var(--success)}.git-file .bad{color:var(--danger)}
+.git-modes{justify-self:start}
+.git-raw{margin:0;overflow:auto;max-height:60vh;font:var(--fs-12) var(--font-mono)}
+.git-detail .d2h-wrapper{overflow:auto;max-height:70vh}
+@media (min-width:1100px){.git-hist{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}}

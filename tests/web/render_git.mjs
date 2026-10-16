@@ -32,8 +32,8 @@ const ALPHA = {
     n: 30,
     rows: [
       { sha: "1a2b3c4d5e6f", author: "roadmap-board", time: NOW - 3600, subject: "api: retry", task: "R7.61",
-        job: null },
-      { sha: "9f8e7d6c5b4a", author: "roadmap-board", time: null, subject: "tokens: simple", task: null, job: "j12" },
+        job: null, parents: ["9f8e7d6c5b4a"] },
+      { sha: "9f8e7d6c5b4a", author: "roadmap-board", time: null, subject: "tokens: simple", task: null, job: "j12", parents: [] },
     ],
   },
   branches: {
