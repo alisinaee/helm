@@ -13,6 +13,7 @@ from roadmap.errors import EXIT_ERROR, EXIT_OK, EXIT_USAGE, RoadmapError
 
 COMMAND_MODULES = (
     "serve",
+    "tick",
     "service",
     "project",
     "job",
