@@ -21,3 +21,14 @@ Rule sources: UI-CHECKLIST.md rule number, or ui-ux-pro-max `--domain ux` search
 Totals: P0 0; P1 3 (1 and 2 fixed; 6 open, shell top bar); P2 3 (3 and 4 fixed; 7 open, shell); P3 6 (5, 8-12, none blocking). Open shell items 6 and 7 are for the shell owner, not this pass.
 
 Verification: `python3 tools/ui_smoke.py` ran; the inbox frames are clean. The 26 failures are overview and tokens markers for beta and gamma ("Coming soon", missing .ov-card and .met-row), not Inbox routes.
+
+## R10.14 / H200 redesign (compact rows, inline options)
+
+Before (2000px live page, H200): options were full-width ~1700px buttons, Send a full-width bar, Other input full width; each question repeated id and title 3 times (header row, sub-row, H3); grey filter blocks, wide empty gutter, big collapse box.
+
+After (code, not yet screenshotted: `ui_smoke.py` was running for another worker, so alpha-inbox-1440 and -500 are still to be inspected):
+- One grid row per item: kind chip 84px | id + title (one time, ellipsis; wraps when open) | task chip | age (tabular-nums, right) | 28px ghost chevron. The sub-row and body H3/id are gone.
+- Body indented under the title column: options are content-sized pills (letter key + label) that wrap inline; default is shown by accent border and the word "default". Other input (max 480px) and a small primary Send share one row.
+- Content column max 960px; filters are a compact segmented control with counts; the summary is one muted small line; items older than 24h are muted.
+- Keys: a, b, c pick an option of the focused open question (1 to 6 unchanged); focus-visible rings; 44px targets only under 600px.
+- CSS: inbox.css 6.4 KB to about 4.3 KB, shared total under the cap.
