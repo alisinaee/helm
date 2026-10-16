@@ -74,3 +74,6 @@ Run this loop every turn. The ledger (`roadmap head`) holds the person's asks, s
 
 ## Head AI duty (person, 2026-10-15)
 Every ask, rule, decision or instruction the person gives goes into the Head ledger the same turn (hook or `head log`), is triaged and BOUND to real tasks (`head t ... --bind task:ID`; create the task when none exists), and stays current as jobs run (HEAD-SPEC section 12). The person must always be able to see what is running for each ask and which task serves it.
+
+## Usage limit override (person, 2026-10-16)
+"rule: no limit": the person lifted the Claude usage stops (85% weekly, 80% 5h). Launch Claude Haiku work without waiting for resets; still check get_usage each wave and report readings. Stop only on a session-limit error.
