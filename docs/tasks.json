@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-15",
+  "updated": "2026-10-16",
   "phases": [
     {
       "id": "R1",
@@ -34,6 +34,11 @@
     {
       "id": "R7",
       "name": "Remaining work",
+      "status": "partial"
+    },
+    {
+      "id": "R9",
+      "name": "Sonnet leftovers (queued 2026-10-16)",
       "status": "partial"
     }
   ],
@@ -251,7 +256,7 @@
       "id": "R3.2",
       "phase": "R3",
       "title": "roadmap-board WP14: Gate R1 review, release 1.0.0, split-net cutover",
-      "status": "todo",
+      "status": "done",
       "tokensK": 60,
       "thinking": "medium",
       "model": "haiku",
@@ -262,7 +267,10 @@
       "feats": [
         "F17",
         "F22"
-      ]
+      ],
+      "at": {
+        "done": "2026-10-16T12:02:25+03:30"
+      }
     },
     {
       "id": "R4.1",
@@ -3177,7 +3185,8 @@
         "done": "2026-10-15T22:09:52+03:30"
       },
       "refs": [
-        "commit:57496b93b2106e063ace452038f59851a368dd44"
+        "commit:57496b93b2106e063ace452038f59851a368dd44",
+        "commit:61d5cbfa2f0eec6d434cda816789cfecdb474f0c"
       ]
     },
     {
@@ -3214,6 +3223,440 @@
       },
       "refs": [
         "commit:cbc3f7e83fb6e7b05b523ef408b5fc733e3e820a"
+      ]
+    },
+    {
+      "id": "R9.4",
+      "phase": "R9",
+      "title": "Work CLI roadmap work and head next (Q4)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-16T11:48:29+03:30",
+        "done": "2026-10-16T11:52:10+03:30"
+      },
+      "refs": [
+        "commit:0989ae364c9b92b93ba1dc4074b10eedc37a4e51"
+      ]
+    },
+    {
+      "id": "R9.5",
+      "phase": "R9",
+      "title": "Work M6: all agent tasks done moves Work to Review (Q5)",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R9.20",
+      "phase": "R9",
+      "title": "P column on Head, Work and Overview (Q20)",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R9.24",
+      "phase": "R9",
+      "title": "Handover leftovers: unapproved-phase gate in task status (Q24)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-16T11:48:29+03:30",
+        "done": "2026-10-16T11:49:17+03:30"
+      },
+      "verify": true
+    },
+    {
+      "id": "R9.19",
+      "phase": "R9",
+      "title": "Sync push: SSE stream plus snapshot since, client patching (Q19)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-16T11:48:29+03:30",
+        "done": "2026-10-16T11:50:48+03:30"
+      },
+      "verify": true
+    },
+    {
+      "id": "R9.3",
+      "phase": "R9",
+      "title": "head set prio and repeat-capture bump (Q3 remainder)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-16T11:48:29+03:30",
+        "done": "2026-10-16T11:51:28+03:30"
+      },
+      "verify": true
+    },
+    {
+      "id": "R9.23",
+      "phase": "R9",
+      "title": "Work M8-M10 UI: no agent cards, grouped Agents and Workflow (Q23)",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R9.30",
+      "phase": "R9",
+      "title": "Inbox: answer by choice (a/b/c buttons) with free-text fallback, like agent questions (H171)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:9bb53f942f5ddb3ec004600637179e85795356d4"
+      ],
+      "at": {
+        "done": "2026-10-16T12:00:58+03:30"
+      }
+    },
+    {
+      "id": "R9.31",
+      "phase": "R9",
+      "title": "Head asks carry options: head t/ask accepts --opt a,b,c and the Inbox renders them (H171)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:defce22b2e750531278b856c104e5c1950379659"
+      ],
+      "at": {
+        "done": "2026-10-16T12:03:08+03:30"
+      }
+    },
+    {
+      "id": "R9.40",
+      "phase": "R9",
+      "title": "375: top bar clipped, side-panel toggle off-screen",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Collapse Stop/Enter usage/Auto/? into an overflow menu below 480px; keep toggle inside 375",
+      "refs": [
+        "commit:1d18d84dd2def503bb43652a20fafe868d42786f"
+      ]
+    },
+    {
+      "id": "R9.41",
+      "phase": "R9",
+      "title": "375 Rules: rule text column collapses to zero width",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Stack rule text full width above actions on narrow screens; min width on text column"
+    },
+    {
+      "id": "R9.42",
+      "phase": "R9",
+      "title": "1440 Rules: red Offline panel on brief reconnect; console errors and a 403",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Quiet reconnecting state with backoff; find the 403 source and name it in the log"
+    },
+    {
+      "id": "R9.43",
+      "phase": "R9",
+      "title": "375 Workflow: table columns squeezed to 1-2 characters, Open clipped",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Under 480px show a card list instead of the table; set min column widths"
+    },
+    {
+      "id": "R9.44",
+      "phase": "R9",
+      "title": "1440 Workflow: blank Loading state with no text or timeout",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Spinner with text, timeout and retry; render Table while Map loads"
+    },
+    {
+      "id": "R9.45",
+      "phase": "R9",
+      "title": "1440 Workflow Map: right side empty, labels cut, 41 items hidden by default",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Fit map to frame on load; full label on hover; show all items or say why not"
+    },
+    {
+      "id": "R9.46",
+      "phase": "R9",
+      "title": "Work: persisted Issue filter hides every card; Issues route redirects silently",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Active-filter line with a visible reset; drop persisted filter on navigation or make Issues a real route"
+    },
+    {
+      "id": "R9.47",
+      "phase": "R9",
+      "title": "1440 Work: filter chips take a third of the page; board columns too narrow",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Collapse filters into one toolbar row or popover; widen columns"
+    },
+    {
+      "id": "R9.48",
+      "phase": "R9",
+      "title": "375 Planner: Accept column clipped; Unlink placement inconsistent",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Sticky ID/Title with sideways scroll; Unlink in the same grid column on every row"
+    },
+    {
+      "id": "R9.49",
+      "phase": "R9",
+      "title": "1440 Planner: orphan Assign buttons not in a fixed column, no headers (rule 0)",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Fixed grid ID | title | Assign with a header row"
+    },
+    {
+      "id": "R9.50",
+      "phase": "R9",
+      "title": "1440 Planner: linked-task list cut off at box bottom",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Let list grow or scroll inside the box with bottom padding"
+    },
+    {
+      "id": "R9.51",
+      "phase": "R9",
+      "title": "1440 Head: summary cut mid-word; unclear state labels done? and rule to review",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Cut at word boundary with full text on hover; clearer state labels"
+    },
+    {
+      "id": "R9.52",
+      "phase": "R9",
+      "title": "375 Head: Kind and Bound-to columns hidden with no toggle",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Show kind as a badge inside the summary cell on narrow widths"
+    },
+    {
+      "id": "R9.53",
+      "phase": "R9",
+      "title": "375 Roadmap: Approve floats mid-card; open count wraps inconsistently",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Fixed lane header grid: title | progress | open | Approve | copy"
+    },
+    {
+      "id": "R9.54",
+      "phase": "R9",
+      "title": "1440 Roadmap: status legend is one dense glyph line",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Collapsible Legend with one entry per row"
+    },
+    {
+      "id": "R9.55",
+      "phase": "R9",
+      "title": "375 Tokens: Spend table loses project name",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Stack each project as a card with the name on its own line"
+    },
+    {
+      "id": "R9.56",
+      "phase": "R9",
+      "title": "1440 Tokens: % wraps in Weekly stop field; Week meter shows bare dash",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Keep field and % on one line; show unknown text in the Week meter"
+    },
+    {
+      "id": "R9.57",
+      "phase": "R9",
+      "title": "1440 Agents: Job truncated, Tokens not yet/unknown unexplained, checkbox misaligned",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Wider Job column with hover; legend for not yet and unknown; align checkbox"
+    },
+    {
+      "id": "R9.58",
+      "phase": "R9",
+      "title": "Activity: no-op rows read done->done; Undo shown inconsistently",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Hide no-op transitions or label re-confirmed; Undo only where it works"
+    },
+    {
+      "id": "R9.59",
+      "phase": "R9",
+      "title": "1440 Settings: keyboard chip for section jumps unreadable",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "One line per shortcut, e.g. g o Overview, g i Inbox"
+    },
+    {
+      "id": "R9.60",
+      "phase": "R9",
+      "title": "375 Inbox: summaries cut to about 3 characters",
+      "status": "todo",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Summary on its own full-width line under the ID row"
+    },
+    {
+      "id": "R9.61",
+      "phase": "R9",
+      "title": "1440 Research: empty lower half, oversized empty Notes card",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Shrink empty state to content height or show notes above it",
+      "refs": [
+        "commit:1d18d84dd2def503bb43652a20fafe868d42786f"
       ]
     }
   ],
