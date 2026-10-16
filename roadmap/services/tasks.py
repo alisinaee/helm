@@ -7,6 +7,7 @@ live in roadmap.core.planfmt; this module only does the file work and the rules 
 
 import copy
 import datetime
+import hashlib
 import os
 import re
 
@@ -333,6 +334,10 @@ def _apply_records(doc, records, replace_phase, fdoc):
                                                   "(allowed: " + "|".join(planfmt.MODELS) + " / "
                                                   + "|".join(planfmt.THINKING) + ")"), None))
             else:
+                twin = fingerprint_twin(doc["tasks"], pid, rec["title"])
+                if twin is not None:  # same title in the same phase: reuse the existing task, create nothing
+                    input_ids.add(twin["id"])
+                    continue
                 tasks[tid] = _new_task(rec)
                 doc["tasks"].append(tasks[tid])
         else:
@@ -875,6 +880,24 @@ def _require_dir(data_dir):
 
 def _index(items):
     return {item["id"]: item for item in items if isinstance(item, dict) and isinstance(item.get("id"), str)}
+
+
+_PUNCT = re.compile(r"[^\w\s]")
+
+
+def title_fingerprint(phase, title):
+    """sha1 of the phase plus the normalised title (lowercase, punctuation stripped, whitespace collapsed)."""
+    norm = " ".join(_PUNCT.sub("", str(title or "").lower()).split())
+    return hashlib.sha1((str(phase) + "\n" + norm).encode("utf-8")).hexdigest()
+
+
+def fingerprint_twin(task_list, phase, title):
+    """The first task in task_list with the same phase and title fingerprint, or None."""
+    fp = title_fingerprint(phase, title)
+    for task in task_list:
+        if isinstance(task, dict) and _phase_of(task) == phase and title_fingerprint(phase, task.get("title")) == fp:
+            return task
+    return None
 
 
 def _phase_of(task):
