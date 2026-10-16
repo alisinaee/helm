@@ -184,6 +184,8 @@ def _prior(row, keys):
             values[key] = row["into"]
         elif key == "prio":
             values[key] = row["prio"]
+        elif key == "opts":
+            values[key] = list(row.get("opts") or [])
     return values
 
 
@@ -273,8 +275,14 @@ def _check_triage(a):
     kind = _kind_arg(a)
     if kind is None:
         raise commands._usage("triage needs a kind (allowed: " + "|".join(store.KINDS) + ")", NEXT_LIST)
+    opts = None
+    if a.get("opts") is not None:  # --opt given: 2..6 answer choices (R9.31); an empty list clears them
+        try:
+            opts = store.clean_opts(a.get("opts"))
+        except RoadmapError as err:
+            raise commands._usage(err.message, NEXT_LIST)
     return {"id": _hid(a), "kind": kind, "sum": _sum_arg(a, required=True), "refs": _ref_list(a.get("refs")),
-            "status": _status_arg(a)}
+            "status": _status_arg(a), "opts": opts}
 
 
 def _h_triage(data_dir, a, now):
@@ -283,6 +291,8 @@ def _h_triage(data_dir, a, now):
     sets = {"kind": a["kind"], "sum": a["sum"]}
     if a["status"]:
         sets["status"] = a["status"]
+    if a["opts"] is not None:
+        sets["opts"] = a["opts"]
     added = [ref for ref in a["refs"] if ref not in row["links"]]
     if len(row["links"]) + len(added) > head.MAX_LINKS:
         raise commands._usage(a["id"] + " would hold more than " + str(head.MAX_LINKS) + " links", NEXT_LIST)

@@ -72,6 +72,8 @@ def register(sub, common):
     triage.add_argument("sum", metavar="SUM")
     triage.add_argument("refs", nargs="*", metavar="REF")
     triage.add_argument("--status", default=None, metavar="S", help="merged, declined, needs-you, done or open")
+    triage.add_argument("--opt", dest="opts", action="append", default=None, metavar="TEXT",
+                        help="an answer choice, repeat for 2 to 6 (the Inbox shows them as a, b, c)")
     triage.set_defaults(handler=_triage_one)
 
     listing = add("list", "one line per entry: id, kind, status, age, links, summary")
@@ -332,7 +334,7 @@ def _guard_head_write(args, eid, status=None, note=None, adds=(), removes=(), no
 def _triage_one(args):
     _guard_head_write(args, args.id, status=args.status, adds=args.refs or [])
     reply = _write(args, "head.triage", {"id": args.id, "kind": args.kind, "sum": args.sum, "refs": args.refs,
-                                         "status": args.status})
+                                         "status": args.status, "opts": args.opts})
     project, data_dir = tasks.resolve(args.project)
     rows, _, _ = _state(project, data_dir)
     row = _find(rows, args.id)

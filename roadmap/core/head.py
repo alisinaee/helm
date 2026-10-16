@@ -247,7 +247,7 @@ def fold(records, link_state=None, now=None, amber_min=30, stale_min=120):
             entries[eid] = {
                 "id": eid, "ts": rec.get("ts"), "src": rec.get("src"), "sid": rec.get("sid"),
                 "acct": rec.get("acct"), "kind": rec.get("kind"), "sum": rec.get("sum") or "",
-                "from": rec.get("from"), "links": [], "manual": None, "triaged": False, "into": None,
+                "from": rec.get("from"), "links": [], "manual": None, "triaged": False, "into": None, "opts": [],
                 "prio": rec["prio"] if valid_prio(rec.get("prio")) else guess_prio(rec.get("sum")),
             }
             order.append(eid)
@@ -301,6 +301,8 @@ def _apply_update(entry, rec):
         entry["sum"] = sets["sum"]
     if "into" in sets:
         entry["into"] = sets["into"]
+    if isinstance(sets.get("opts"), list):  # R9.31: records before opts have none, so the default stays []
+        entry["opts"] = [item for item in sets["opts"] if isinstance(item, str)][:6]
     if "prio" in sets and valid_prio(sets["prio"]):
         entry["prio"] = sets["prio"]
     if rec.get("by") == "head" and "kind" in sets and "sum" in sets:
