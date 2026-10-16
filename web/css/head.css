@@ -50,7 +50,13 @@
 .hd-tbl .hd-hit{display:inline;position:static;width:auto;height:auto;padding:0;margin:0;border:0;background:none;color:inherit;font:inherit;font-variant-numeric:tabular-nums;cursor:pointer}
 .hd-n{width:1%;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 
-.hd-sumc,.hd-rpc{width:100%;min-width:150px}
+.hd-sumc{width:55%;min-width:150px}.hd-rpc{width:30%;min-width:120px}
+.hd-sum2{display:block;margin-top:2px;color:var(--text-3);font-size:var(--fs-12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd-rep-inline{display:none}
+.hd-stc>.chip,.hd-kind>.chip:first-child{display:inline-flex;justify-content:center;min-width:76px}
+.hd-bar>label{display:inline-flex;align-items:center;gap:var(--sp-1)}
+@media (max-width:1599px){.hd-when{display:none}}
+@media (max-width:599px){.hd-rpc{display:none}.hd-rep-inline{display:block;color:var(--text-2)}}
 .hd-tbl .hd-sum,.hd-tbl .hd-rep{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;overflow-wrap:anywhere}
 .hd-rep{color:var(--text-2)}
 .hd-qs{margin-top:var(--sp-3)}.hd-qs>summary{cursor:pointer;font-weight:600;padding:var(--sp-2) 0}

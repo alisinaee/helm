@@ -599,6 +599,39 @@ def details_of(data_dir, eid):
     return out
 
 
+PREVIEW_TEXT, PREVIEW_REPLY = 120, 100  # the first characters of the text and the reply in a list row (R10.2)
+
+
+def _preview(value, limit):
+    """The first limit characters of a text, whitespace collapsed, with an ellipsis when cut; None when empty."""
+    text = " ".join(str(value or "").split())
+    if not text:
+        return None
+    return text if len(text) <= limit else text[:limit - 1].rstrip() + "…"
+
+
+def previews_of(data_dir, ids):
+    """{id: {"text", "reply"}} for the ids given: the short previews of each entry's text and reply, read from
+    head-text.jsonl in one pass (the last line for each key wins). None where there is no text or reply."""
+    want = set(ids)
+    out = {eid: {"text": None, "reply": None} for eid in want}
+    if not want:
+        return out
+    objs, _ = jsonl.read_objects(_path(data_dir, TEXT_FILE))
+    raw = {eid: {"text": None, "reply": None} for eid in want}
+    for obj in objs:
+        eid = obj.get("id")
+        if eid not in want:
+            continue
+        for key in ("text", "reply"):
+            if isinstance(obj.get(key), str):
+                raw[eid][key] = obj[key]
+    for eid in want:
+        out[eid] = {"text": _preview(raw[eid]["text"], PREVIEW_TEXT),
+                    "reply": _preview(raw[eid]["reply"], PREVIEW_REPLY)}
+    return out
+
+
 def set_reply(data_dir, eid, reply, *, timeout=None):
     """Store the head's reply to one entry (HEAD-SPEC section 13): one line in head-text.jsonl, redacted and cut to
     TEXT_MAX by clean_text. The last reply line for an id wins. Empty reply raises usage, an unknown id not_found.
