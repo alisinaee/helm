@@ -145,6 +145,8 @@ def register(sub, common):
     untriaged.add_argument("--full", action="store_true", help="print past the 15-line cap")
     untriaged.set_defaults(handler=_triage_list)
 
+    add("next", "the head ops that can run now, one runnable command per line").set_defaults(handler=_runnable)
+
     review = add("review", "the person's review: no id lists the done entries, H15 confirm or H15 reopen decides")
     review.add_argument("id", nargs="?", default=None, metavar="H15")
     review.add_argument("decision", nargs="?", default=None, metavar="confirm|reopen", choices=("confirm", "reopen"))
@@ -608,4 +610,22 @@ def _review_list(args):
     for line in _fit(lines, _full(args), reserve=1):
         print(line)
     _next("roadmap head review %s confirm|reopen" % waiting[0]["id"] if waiting else NEXT)
+    return None
+
+
+def _runnable(args):
+    """head next: the ok line, then one runnable command per line: confirm each done entry the person has not
+    confirmed, show each untriaged entry, and always the brief. Placeholders (<kind>) never appear here."""
+    project, data_dir = tasks.resolve(args.project)
+    rows, _, _ = _state(project, data_dir)
+    waiting = _awaiting(data_dir, rows)
+    untriaged = [r for r in rows if r["status"] in UNHANDLED and not r["triaged"]]
+    ops = ["roadmap head review %s confirm" % r["id"] for r in waiting]
+    ops += ["roadmap head show %s" % r["id"] for r in untriaged]
+    ops.append(BRIEF)
+    if _json(args):
+        return {"ops": ops}
+    print("ok %d runnable. next: %s" % (len(ops), ops[0]))
+    for line in _fit(ops, _full(args), reserve=1):
+        print(line)
     return None
