@@ -152,7 +152,8 @@ export function watchCountdowns() {
 // One option button: its key (1 to 6), label, description, and badges. The recommended option is listed first.
 function optionHtml(pid, q, part, index) {
   const isDefault = part.label === q.def;
-  const key = index < KEY_MAX ? '<span class="qc-key" aria-hidden="true">' + (index + 1) + "</span> " : "";
+  const key = index < KEY_MAX ? '<span class="qc-key" aria-hidden="true">' + String.fromCharCode(97 + index) +
+    "</span> " : "";
   const desc = part.desc ? ' <span class="qc-foot">' + esc(part.desc) + "</span>" : "";
   const rec = part.recommended ? ' <span class="qc-def">recommended</span>' : "";
   const dflt = isDefault ? ' <span class="qc-def">default</span>' : "";
