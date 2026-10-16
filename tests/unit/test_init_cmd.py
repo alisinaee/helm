@@ -52,6 +52,13 @@ class InitTests(HomeCase):
         self.assertEqual(self.read(os.path.join(docs, "tasks.json")), before)
         self.assertEqual((self.install.call_count, self.start.call_count), (1, 1))
 
+    def test_printed_url_is_the_project_route(self):
+        code, out = self.run_init()
+        self.assertEqual(code, 0, out)
+        url = json.loads(out)["data"]["url"]
+        self.assertTrue(url.startswith("http://localhost:"), url)
+        self.assertTrue(url.endswith("/#/p/fresh/overview"), url)
+
     def test_no_service(self):
         code, out = self.run_init("--no-service")
         self.assertEqual(code, 0, out)

@@ -66,6 +66,14 @@ class ValidationTests(unittest.TestCase):
             with self.assertRaises(RoadmapError, msg=repr(bad)):
                 git.valid_rel_path(root, bad)
 
+    def test_glob_and_pathspec_magic_are_refused(self):
+        root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, root, True)
+        for bad in ["*", "*.env", ".env*", "a?.txt", "a[1].txt", ":(glob)**/.env", ":(glob)*", ":!a.txt", ":/"]:
+            with self.assertRaises(RoadmapError, msg=repr(bad)):
+                git.valid_rel_path(root, bad)
+        self.assertEqual(git.valid_rel_path(root, "docs/plain-name.txt"), os.path.join("docs", "plain-name.txt"))
+
     def test_symlink_inside_project_cannot_point_out(self):
         root = os.path.realpath(tempfile.mkdtemp())
         outside = os.path.realpath(tempfile.mkdtemp())
