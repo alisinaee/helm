@@ -505,7 +505,7 @@ export function buildViewModel(store, route, prefs, now) {
     projectsError: store.projectsError,
     project: null,
     home: null,
-    title: "roadmap-board",
+    title: "Helm",
   };
   const rows = store.projects;
   if (Array.isArray(rows)) {
@@ -537,7 +537,7 @@ export function buildViewModel(store, route, prefs, now) {
         return Object.assign({}, job, { elapsedNow: runningElapsed(job, now) });
       }) : [],
     };
-    if (vm.project.name) vm.title = vm.project.name + " · roadmap-board";
+    if (vm.project.name) vm.title = vm.project.name + " · Helm";
   } else {
     const running = [];
     for (const id of Object.keys(store.snapshots)) {

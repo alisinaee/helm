@@ -1,5 +1,7 @@
 # Head runbook (how the head works here; read after HANDOVER.md)
 
+Product renamed to Helm (2026-10-16): repo alisinaee/helm, dir ~/Works/helm; use `bin/helm` or `bin/roadmap` (same). Project id stays `roadmap-board`.
+
 The head plans, launches workers in parallel, verifies, registers, commits, pushes. It never idles while tasks exist
 (unless the person said stop). Answers stay short.
 
@@ -39,7 +41,8 @@ No usage stop (H164, 2026-10-16: "rule: no limit"; see Usage limit override belo
 3. Opus (medium) or Cursor with the screenshots writes findings; agy only for text-only view audits (aria, strings, rows) verified by Haiku.
 4. File each finding as a task (`plan import` T lines, phase R8 'UX'), link to a feature, then run them as Haiku packages. See docs/UX-AUDIT.md.
 
-## Usage limits the person set (obey)
+## Usage limits: NONE for the head since 2026-10-16 (H223): ignore the caps below, keep pushing readings; stop only on a session-limit error
+(old caps kept for history)
 - Usage source (2026-10-15): `roadmap usage sync` cannot work here: the keychain entry "Claude Code-credentials"
   holds only mcpOAuth (no claudeAiOauth) because the person signs in through the desktop app. The head reads the
   live numbers with the `get_usage` tool every turn and pipes them into `roadmap usage push`

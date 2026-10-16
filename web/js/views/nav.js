@@ -94,7 +94,8 @@ export function navView(vm) {
   const list = SECTIONS.map(function (s) {
     return linkHtml(vm, s, counts);
   }).join("");
-  return '<div class="nav-list">' + list + "</div>" +
+  return '<p class="nav-brand" title="Helm">' + (mini ? "H" : "Helm") + "</p>" +
+    '<div class="nav-list">' + list + "</div>" +
     '<div class="nav-foot">' + linkHtml(vm, SETTINGS, counts) +
     '<button type="button" class="nav-collapse" data-action="nav-mini" aria-label="' +
     (mini ? "Expand menu" : "Collapse menu") + '">' + icon("collapse") +

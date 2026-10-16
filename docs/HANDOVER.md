@@ -1,10 +1,13 @@
 # HANDOVER: everything the person said and decided about roadmap-board (2026-10-14)
 
-Read this first in a new chat (new Claude account is fine: everything is in this repo). Repo: https://github.com/alisinaee/roadmap-board (public) at ~/Works/roadmap-board. Sibling project: split-net (https://github.com/alisinaee/split-net, ~/Works/split_net, per-app VPN routing on macOS): its tools drive this project's job registration. The person's email is not needed.
+Read this first in a new chat (new Claude account is fine: everything is in this repo). Repo: https://github.com/alisinaee/helm (public) at ~/Works/helm. Sibling project: split-net (https://github.com/alisinaee/split-net, ~/Works/split_net, per-app VPN routing on macOS): its tools drive this project's job registration. The person's email is not needed.
 
 Pointers: head procedure in docs/HEAD-RUNBOOK.md; next work to 1.0.0 in docs/NEXT-WAVE.md.
 
-## 0. State right now (2026-10-15, written by `/head save` before an account switch)
+## 0. State right now
+Renamed to Helm 2026-10-16 (repo alisinaee/helm, dir ~/Works/helm). Python package `roadmap`, ROADMAP_HOME, project id `roadmap-board` and state folders are unchanged; `bin/helm` is an alias of `bin/roadmap`.
+
+(state below) (2026-10-15, written by `/head save` before an account switch)
 START HERE in a new chat (any account, same Mac): `cd ~/Works/roadmap-board` and send exactly `/head` (skill ~/.claude/skills/head). Nothing needs re-explaining: read this file, docs/HEAD-RUNBOOK.md, docs/FINISH-PLAN.md, docs/HEAD-SECTION-REQUEST.md.
 - **Board:** roadmap-board is its own AUTHORITATIVE project (docs/AUTHORITATIVE stops split-net's sync): 92 tasks (74 done, 4 partial, 14 todo), features F1-F25. Register jobs with `bin/roadmap job start|done` (task id from docs/tasks.json), new work with `bin/roadmap plan import` + `bin/roadmap feature link` (see HEAD-RUNBOOK). split-net is registered as a separate read-only project (no hooks changed; old dashboard 8765 untouched). Both projects have 12 rules in docs/rules.txt (split-net's file is uncommitted in ITS repo).
 - **Service:** launchd agent on 127.0.0.1:8780 (`bin/roadmap service restart` loads new code; the static file list is built at startup so NEW web files 404 until restart). The person's browser pane tab 'seed' is shared: workers must open their own tab with tabs_create, never preview_start.

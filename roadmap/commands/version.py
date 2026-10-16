@@ -5,12 +5,12 @@ from roadmap import __version__
 
 def register(sub, common):
     """Add the version command to the root subparsers."""
-    parser = sub.add_parser("version", parents=[common], help="print the roadmap version")
+    parser = sub.add_parser("version", parents=[common], help="print the Helm version")
     parser.set_defaults(handler=handle)
 
 
 def handle(args):
     """Return the version data; print it in plain mode."""
     if not getattr(args, "json", False):
-        print("roadmap " + __version__)
+        print("Helm " + __version__)
     return {"version": __version__}

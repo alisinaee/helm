@@ -39,7 +39,7 @@ class CliTests(unittest.TestCase):
     def test_version_plain_text(self):
         code, out, _ = run(["version"])
         self.assertEqual(code, 0)
-        self.assertEqual(out, "roadmap " + __version__ + "\n")
+        self.assertEqual(out, "Helm " + __version__ + "\n")
 
     def test_stub_handler_raises_not_implemented(self):
         from roadmap.errors import RoadmapError, stub

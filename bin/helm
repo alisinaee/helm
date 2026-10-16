@@ -1,0 +1,9 @@
+#!/bin/sh
+# Helm CLI: identical to bin/roadmap (same args). Follows its own symlinks to find bin/roadmap.
+self=$0
+while [ -L "$self" ]; do
+    dir=$(cd "$(dirname "$self")" && pwd)
+    self=$(readlink "$self")
+    case $self in /*) ;; *) self=$dir/$self ;; esac
+done
+exec "$(cd "$(dirname "$self")" && pwd)/roadmap" "$@"

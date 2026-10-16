@@ -7,7 +7,7 @@ The guide stays at 40 lines or fewer (GUIDE_MAX_LINES); docs/AGENT-INTERFACE.md 
 GUIDE_MAX_LINES = 40
 
 _LINES = (
-    "Agent guide for roadmap-board: how an agent records work on a project board",
+    "Agent guide for Helm: how an agent records work on a project board",
     "",
     "Rules",
     "- Never open or edit docs/tasks.json or docs/jobs.json. Use the commands below.",

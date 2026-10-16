@@ -72,7 +72,7 @@ def build_parser():
     )
     root = _Parser(
         prog="roadmap",
-        description="roadmap-board: a live roadmap dashboard and job tracker for Claude Code projects.",
+        description="Helm: a live roadmap dashboard and job tracker for Claude Code projects.",
         parents=[common],
     )
     sub = root.add_subparsers(dest="command", metavar="COMMAND", required=True)

@@ -1,6 +1,6 @@
-# roadmap-board
+# Helm
 
-roadmap-board is a live dashboard and job tracker for projects that you build with Claude Code.
+Helm (formerly roadmap-board) is a live dashboard and job tracker for projects that you build with Claude Code. The command is `roadmap`; `bin/helm` is an identical alias. Repo: github.com/alisinaee/helm. State folders and the `roadmap` package keep their old names.
 It reads each project's `docs/tasks.json`, shows the phases and the tasks left, and lists the jobs Claude is running now.
 It also shows your plan usage and your token limits, with rules that agents follow.
 The page is served on your Mac only, at `http://127.0.0.1:8780/`, and nothing leaves the machine except the usage check and the phone tunnel, which you start yourself.
@@ -12,8 +12,8 @@ It is Python 3.9 or newer with the standard library only: nothing to pip install
 You need a Mac, Python 3.9 or newer (`python3 --version`), and Git.
 
 ```sh
-git clone <this repo> ~/Works/roadmap-board
-cd ~/Works/roadmap-board
+git clone <this repo> ~/Works/helm
+cd ~/Works/helm
 make check                               # lint and unit tests; it must pass before you use it
 bin/roadmap service install              # the background agent that serves the page on 127.0.0.1:8780
 mkdir -p ~/.local/bin
@@ -249,7 +249,7 @@ and opens an ssh tunnel to `localhost.run` for a public address. `roadmap phone 
 `roadmap phone status` shows whether the tunnel runs, and `roadmap phone stop` closes it and deletes the token.
 
 Before the first `phone start`, add the tunnel host key once, by hand: run `ssh-keyscan localhost.run`, check the
-key yourself, and append its lines to the `known_hosts` file in roadmap-board's state folder. roadmap never fetches
+key yourself, and append its lines to the `known_hosts` file in Helm's state folder. roadmap never fetches
 the key itself, and `phone start` exits 6 until the key is there. See [docs/SECURITY.md](docs/SECURITY.md).
 
 ## Troubleshooting
@@ -283,7 +283,7 @@ If a job or a task is refused, the message names the id. `job start` with an unk
 says `task 'X' is not in tasks.json`. Add the task to the file, or leave the task argument out.
 
 If the page shows a banner for a file, the file is the problem, not the server. Run `roadmap project check <id>`
-and fix the file it names. A file written by a newer roadmap-board is never overwritten: update roadmap-board
+and fix the file it names. A file written by a newer Helm is never overwritten: update Helm
 first.
 
 ### Exit codes
@@ -295,7 +295,7 @@ first.
 | 2 | usage: unknown command or bad arguments |
 | 3 | not found (project, job, task or file) |
 | 4 | conflict (port busy, already registered, job already finished, lock held) |
-| 5 | invalid data file (bad JSON, or a file written by a newer roadmap-board) |
+| 5 | invalid data file (bad JSON, or a file written by a newer Helm) |
 | 6 | external failure (keychain, network, launchctl) |
 | 10 | `roadmap doctor` found a failed check |
 
@@ -304,7 +304,7 @@ first.
 Older projects carry a copy of the dashboard in `tools/roadmap-web/`. The copy is replaced by this command, and
 the data files stay where they are.
 
-1. Install roadmap-board as above, and run `make check`.
+1. Install Helm as above, and run `make check`.
 2. Keep `docs/tasks.json`, `docs/jobs.json` and `docs/autonomy.json` as they are. `project init` keeps them.
 3. Turn `docs/roadmap.config.json` into the new format, if the project has one. The old keys map like this:
 
@@ -330,7 +330,7 @@ the data files stay where they are.
 6. When the page shows the project and the hooks work, delete `tools/roadmap-web/` from the project yourself,
    and remove the old hook lines by hand if `--replace-legacy` did not find them.
 
-Nothing in roadmap-board deletes the old copy for you.
+Nothing in Helm deletes the old copy for you.
 
 ## Uninstall
 
@@ -343,7 +343,7 @@ rm ~/.local/bin/roadmap
 
 `service uninstall` removes the launchd plist and unloads the agent. `hooks uninstall` removes only roadmap's
 entries from the project's settings. `project remove` unregisters the folder and keeps its files.
-Your project's `docs/` files are never deleted by roadmap-board.
+Your project's `docs/` files are never deleted by Helm.
 
 To remove roadmap's own state, delete these folders by hand. Nothing else on your Mac is touched:
 
