@@ -33,6 +33,15 @@ KIND_TABLE = (
     ("preference", r"\bi (like|prefer)\b|\bi want\b.*\bto be\b"),
     ("review", r"\breview\b|\baudit\b|\bcheck\b"),
 )
+# Priority P0..P3 (HEAD-V3-PLAN section 4), set here at capture, never by model prose. Ordered: the first row that
+# matches wins; no match gives PRIO_DEFAULT (P2). Matching is case-insensitive, whole words only.
+PRIO_DEFAULT = 2
+PRIO_LEVELS = (0, 1, 2, 3)
+PRIO_TABLE = (
+    (0, r"\burgent\b|\basap\b|\bnow\b|\bblocker\b|\bbroken\b|\bfirst\b|\btop priority\b"),
+    (1, r"\btoday\b|\bthis session\b|\bnext\b"),
+    (3, r"\blater\b|\bsomeday\b|\bbacklog\b|\bnice to have\b|\bmaybe\b"),
+)
 IMPERATIVE_START = frozenset((
     "add", "fix", "make", "run", "show", "change", "update", "build", "write", "tell", "move",
     "remove", "delete", "create", "list", "set", "use", "keep", "put", "send", "split", "rename",
@@ -118,6 +127,27 @@ def guess_kind(text):
     if text.endswith("?") and words and words[0] not in IMPERATIVE_START:
         return "question?"
     return "ask?"
+
+
+def valid_prio(value):
+    """True for 0..3 as an int (a bool is not a priority)."""
+    return not isinstance(value, bool) and isinstance(value, int) and value in PRIO_LEVELS
+
+
+def guess_prio(text):
+    """Priority 0..3 from the phrase table; PRIO_DEFAULT (P2) when no phrase matches."""
+    lowered = " ".join(str(text or "").split()).lower()
+    for level, pattern in PRIO_TABLE:
+        if re.search(pattern, lowered):
+            return level
+    return PRIO_DEFAULT
+
+
+def bump_prio(prio):
+    """A repeat of the same message raises the priority one level (P2 -> P1, P1 -> P0, P0 stays P0)."""
+    if not valid_prio(prio):
+        raise ValueError("prio must be 0, 1, 2 or 3")
+    return max(PRIO_LEVELS[0], prio - 1)
 
 
 def word_set(text):
@@ -218,6 +248,7 @@ def fold(records, link_state=None, now=None, amber_min=30, stale_min=120):
                 "id": eid, "ts": rec.get("ts"), "src": rec.get("src"), "sid": rec.get("sid"),
                 "acct": rec.get("acct"), "kind": rec.get("kind"), "sum": rec.get("sum") or "",
                 "from": rec.get("from"), "links": [], "manual": None, "triaged": False, "into": None,
+                "prio": rec["prio"] if valid_prio(rec.get("prio")) else guess_prio(rec.get("sum")),
             }
             order.append(eid)
         elif kind == "u":
@@ -270,6 +301,8 @@ def _apply_update(entry, rec):
         entry["sum"] = sets["sum"]
     if "into" in sets:
         entry["into"] = sets["into"]
+    if "prio" in sets and valid_prio(sets["prio"]):
+        entry["prio"] = sets["prio"]
     if rec.get("by") == "head" and "kind" in sets and "sum" in sets:
         entry["triaged"] = True
     for ref in rec.get("link") or []:
