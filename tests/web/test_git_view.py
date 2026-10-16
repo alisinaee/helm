@@ -52,12 +52,12 @@ class GitSource(unittest.TestCase):
     def test_only_read_routes_and_the_two_allowed_writes(self):
         self.assertEqual(sorted(set(OPS.findall(self.src))), ["git.commit", "git.push"])
         self.assertIn('"/api/v1/projects/" + encodeURIComponent(pid) + "/git/"', self.src)
-        for path in ('base + "status"', 'base + "log?n=30"', 'base + "branches"'):
+        for path in ('base + "status"', 'base + "log?n=100"', 'base + "branches"'):
             self.assertIn(path, self.src)
 
     def test_only_the_four_controls_exist(self):
         # Discard, reset, merge, rebase and force push are named only in the help line, never as a control.
-        self.assertEqual(sorted(set(DATA_GIT.findall(self.src))), ["commit", "push", "refresh", "tab"])
+        self.assertEqual(sorted(set(DATA_GIT.findall(self.src))), ["commit", "file", "mode", "pick", "push", "refresh", "tab"])
 
     def test_commit_never_takes_everything(self):
         self.assertNotIn("git add", self.src)
@@ -78,10 +78,17 @@ class GitSource(unittest.TestCase):
         self.assertIn('postJson("/api/v1/cmd", { op: op, args: args, project: pid })', self.src)
 
 
+class GitLayout(unittest.TestCase):
+    def test_vendor_licenses_and_lazy_load(self):
+        lic = read(os.path.join(WEB, "vendor", "LICENSES.md"))
+        self.assertIn("diff2html", lic)
+        self.assertNotIn("vendor/", read(INDEX))
+
+
 class GitStylesheet(unittest.TestCase):
     def test_stylesheet_is_small_and_has_no_colours(self):
         text = read(CSS)
-        self.assertLessEqual(len(text.encode("utf-8")), 1024)
+        self.assertLessEqual(len(text.encode("utf-8")), 2048)
         self.assertIsNone(HEX.search(text))
         self.assertNotIn("style=", text)
 
@@ -115,6 +122,11 @@ class GitRender(unittest.TestCase):
         self.assertIn("Commit selected", html)
         self.assertIn('data-git="push"', html)
         self.assertIn('aria-pressed="true" data-focus="git-tab-changes"', html)
+
+    def test_history_draws_a_lane_graph_per_row(self):
+        html = self.out["history"]
+        self.assertIn('class="git-graph"', html)
+        self.assertIn('data-git="pick" data-sha="1a2b3c4d5e6f"', html)
 
     def test_not_a_repo_is_an_empty_state_with_the_hint(self):
         html = self.out["notRepo"]

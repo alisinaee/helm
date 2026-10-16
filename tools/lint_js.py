@@ -27,7 +27,7 @@ def run(repo=REPO):
     issues = []
     files = []
     for dirpath, dirnames, filenames in os.walk(os.path.join(repo, "web")):
-        dirnames.sort()
+        dirnames[:] = sorted(d for d in dirnames if d != "vendor")  # third-party minified libraries
         files.extend(os.path.join(dirpath, name) for name in sorted(filenames) if name.endswith(".js"))
     node = shutil.which("node")
     for path in files:

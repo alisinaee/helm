@@ -36,7 +36,7 @@ def walk(folder, suffixes):
     """Every file under folder with one of the suffixes, sorted, as absolute paths."""
     found = []
     for dirpath, dirnames, filenames in os.walk(folder):
-        dirnames.sort()
+        dirnames[:] = sorted(d for d in dirnames if d != "vendor")  # third-party libraries keep their own style
         for name in sorted(filenames):
             if os.path.splitext(name)[1] in suffixes:
                 found.append(os.path.join(dirpath, name))

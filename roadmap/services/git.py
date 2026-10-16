@@ -33,7 +33,7 @@ DIFF_RESPONSE_BYTES = 1024 * 1024
 BIG_FILE_BYTES = 1024 * 1024
 LOG_MAX = 100
 # Fields end in NUL. Git never writes NUL inside a commit, so a message cannot shift or forge a row.
-LOG_FORMAT = "%H%x00%an%x00%at%x00%s%x00%B%x00"
+LOG_FORMAT = "%H%x00%P%x00%an%x00%at%x00%s%x00%B%x00"
 
 REF_OK = re.compile(r"[A-Za-z0-9._/-]{1,100}")
 SHA_OK = re.compile(r"[0-9a-fA-F]{7,40}")
@@ -254,7 +254,7 @@ def read_log(project, limit=10):
     except (TypeError, ValueError):
         raise RoadmapError("usage", "limit must be a whole number", EXIT_USAGE)
     root = repo_root(project)
-    rc, out, err = _git(root, ["log", "-n", str(count), "--format=" + LOG_FORMAT], READ_TIMEOUT_S)
+    rc, out, err = _git(root, ["log", "--topo-order", "-n", str(count), "--format=" + LOG_FORMAT], READ_TIMEOUT_S)
     if rc != 0 and "does not have any commits" in err:
         return []
     _raise_for(rc, err)
@@ -334,18 +334,21 @@ def _entry(result, xy, path, origin=None):
 
 
 def parse_log(text):
-    """Parse the records written by read_log (LOG_FORMAT). Each row: sha, author, time (unix), subject, task, job.
+    """Parse the records written by read_log (LOG_FORMAT). Each row: sha, parents (list), author, time
+    (unix), subject, task, job.
     Fields are NUL-ended, so a message cannot start a new row. Author and subject are redacted."""
     tokens = text.split("\0")
     rows = []
-    for start in range(0, len(tokens) - 4, 5):
-        sha, author, at, subject, body = tokens[start:start + 5]
+    for start in range(0, len(tokens) - 5, 6):
+        sha, parents, author, at, subject, body = tokens[start:start + 6]
         sha = sha.strip()  # the newline git writes between records sits before every sha after the first
         if not sha:
             continue
         task = TASK_TRAILER.search(body)
         job = JOB_TRAILER.search(body)
-        rows.append({"sha": sha, "author": redact(author), "time": int(at) if at.isdecimal() else None,
+        kept = [p for p in parents.split() if SHA_OK.fullmatch(p)]
+        rows.append({"sha": sha, "parents": kept, "author": redact(author),
+                     "time": int(at) if at.isdecimal() else None,
                      "subject": redact(subject), "task": task.group(1) if task else None,
                      "job": job.group(1) if job else None})
     return rows

@@ -67,6 +67,8 @@ class GitRoutes(ServerCase):
         self.assertEqual(body["rows"][0]["task"], "R7.12")
         self.assertEqual(body["rows"][0]["job"], "j12")
         self.assertEqual(body["rows"][0]["subject"], "second")
+        self.assertEqual(len(body["rows"][0]["parents"]), 1)
+        self.assertEqual(self.get("log?n=5").json()["rows"][-1]["parents"], [])
 
     def test_log_bad_n_gives_400(self):
         for query in ("n=0", "n=101", "n=ten", "x=1", "n=1&n=2"):
