@@ -12,6 +12,7 @@ import { showToast } from "./toast.js";
 
 const WEEKLY_MIN = 50;
 const STATE_WORDS = { ok: "ok", warn: "Warning at 80%", block: "Stopped", unknown: "≈ not enough data" };
+const STATE_SHORT = { ok: "ok", warn: "Warn 80%", block: "Stopped", unknown: "No data" };
 const STATE_TONE = { ok: "neutral", warn: "warning", block: "danger", unknown: "neutral" };
 
 function snapsOf(vm) {
@@ -112,18 +113,15 @@ export function weeklyStopHtml(vm) {
     esc(on ? row.id : "") + '" data-focus="weekly-toggle">' + (on ? "On" : "Off") + "</button>";
   const copy = copyButton("section", "tokens.weekly", "Weekly stop", { project: pid,
     sum: refSummary("section", 1) });
+  const state = on ? chip : '<span class="chip chip-neutral">Off</span>';
   return '<section class="lim-block" aria-labelledby="lim-weekly-h">' +
     '<div class="lim-bar"><h3 id="lim-weekly-h" class="lim-h">Weekly stop</h3>' + copy + "</div>" +
     '<form class="row-grid rg-weekly" data-form="weekly" data-project="' + esc(pid || "") + '" data-row="' +
     esc(on ? row.id : "") + '" data-on="' + (on ? "true" : "false") + '">' + toggle +
-    '<label class="lim-weekly-input"><span class="lim-weekly-text">Stop agents at</span> ' +
-    '<input class="rule-input" type="number" min="' + WEEKLY_MIN + '" max="100" step="1" ' +
-    'inputmode="numeric" value="' + esc(String(shown)) + '"> %</label>' +
-    '<span class="lim-weekly-text">of my weekly usage</span>' + chip + "</form>" +
-    ownStopsHtml(vm, on ? shown : null) +
-    '<p class="page-note">' + (on ? "Warning at 80% of the stop." : "Off: no weekly stop for any project.") +
-      "</p>" +
-    "</section>";
+    '<label class="rg-main">Stop agents at <input class="lim-text" type="text" size="3" maxlength="3" ' +
+    'inputmode="numeric" pattern="[0-9]*" value="' + esc(String(shown)) + '" aria-label="Weekly stop percent, ' +
+    WEEKLY_MIN + ' to 100"> % of my weekly usage</label>' + state + "</form>" +
+    ownStopsHtml(vm, on ? shown : null) + "</section>";
 }
 
 function shareOption(value, text, selected) {
@@ -143,23 +141,24 @@ function shareLineHtml(vm, p) {
   const others = metersOf(snap).filter(function (r) {
     return r.scope === "project" && r.src === "limits" && r !== row;
   }).length;
-  const chip = row ? '<span class="chip chip-' + esc(STATE_TONE[stateKey(row)]) + '">' +
-    esc(STATE_WORDS[stateKey(row)]) + "</span>" : '<span class="chip chip-neutral">No limit</span>';
+  const chip = row ? '<span class="chip chip-' + esc(STATE_TONE[stateKey(row)]) + '" title="' +
+    esc(STATE_WORDS[stateKey(row)]) + '">' + esc(STATE_SHORT[stateKey(row)]) + "</span>" :
+    '<span class="chip chip-neutral">No limit</span>';
   const numId = "lim-share-" + p.id;
   const winId = "lim-win-" + p.id;
   return '<form class="row-grid rg-share" data-form="share" data-project="' + esc(p.id) + '" data-row="' +
     esc(row ? row.id : "") + '" data-window="' + esc(win) + '" data-name="' + esc(p.name) + '">' +
     '<span class="rg-t">' + esc(p.name) + (others ? ' <span class="page-note">+ ' + others + " CLI rules</span>" : "") +
     "</span>" +
-    '<span class="lim-share-ctl"><input id="' + esc(numId) + '" class="rule-input" type="number" min="1" ' +
-    'max="100" step="1" inputmode="numeric" placeholder="no limit" value="' +
+    '<span class="rg-main"><input id="' + esc(numId) + '" class="lim-text" type="text" size="3" maxlength="3" ' +
+    'pattern="[0-9]*" inputmode="numeric" placeholder="none" value="' +
     esc(row ? String(row.limit) : "") + '" aria-label="' +
     esc("Limit for " + p.name + ", percent; empty for no limit") + '"> %' +
     '<select id="' + esc(winId) + '" class="lim-select" data-field="window" aria-label="' +
     esc("Daily or weekly for " + p.name) + '">' +
     shareOption("day", "daily", win === "day") + shareOption("week", "weekly", win === "week") +
     "</select></span>" +
-    '<span class="rg-num">' + esc(usedText) + "</span>" +
+    '<span class="rg-num" title="Used so far">' + esc(usedText) + "</span>" +
     '<span class="rg-state">' + chip + "</span></form>";
 }
 
@@ -172,9 +171,7 @@ export function shareRowsHtml(vm) {
   const copy = copyButton("section", "tokens.share", "Share per project", { project: scopePid(vm),
     sum: refSummary("section", projects.length) });
   return '<details class="lim-block lim-share-block"' + (anySet ? " open" : "") + ">" +
-    '<summary class="lim-h">Share per project (optional)</summary>' + copy +
-    '<div class="row-grid rg-share rg-head" aria-hidden="true"><span>Project</span><span>May use up to</span>' +
-    '<span class="rg-num">Used</span><span>State</span></div>' +
+    '<summary class="lim-h">Share per project (optional): name, limit % per day or week, used, state</summary>' + copy +
     projects.map(function (p) {
       return shareLineHtml(vm, p);
     }).join("") + "</details>";

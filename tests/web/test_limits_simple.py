@@ -76,7 +76,8 @@ class LimitsSimpleRender(unittest.TestCase):
         self.assertIn('value="95"', html)
         self.assertIn("Stop agents at", html)
         self.assertIn("of my weekly usage", html)
-        self.assertIn('min="50" max="100"', html)
+        self.assertIn('maxlength="3"', html)
+        self.assertNotIn("rule-input", html)
 
     def test_weekly_stop_off_shows_the_default_and_no_remove_id(self):
         html = self.out["weeklyOff"]
@@ -108,7 +109,9 @@ class LimitsSimpleRender(unittest.TestCase):
         self.assertIn('data-window="day"', html)
         self.assertIn('<option value="day" selected>daily</option>', html)
         self.assertIn('<option value="week">weekly</option>', html)
-        self.assertIn('placeholder="no limit"', html)
+        self.assertIn('placeholder="none"', html)
+        self.assertNotIn("rule-input", html)
+        self.assertNotIn("rg-head", html)
 
     def test_share_row_names_its_inputs_and_shows_state_in_words(self):
         html = self.out["share"]
