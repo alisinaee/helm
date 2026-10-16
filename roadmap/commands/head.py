@@ -35,7 +35,7 @@ SHOW_MAX = 14                 # the show output in lines, header and text includ
 TEXT_SHOW_MAX = 200           # verbatim characters on the show line
 LIST_DEFAULT = 13             # rows head list prints without --full
 JSON_LIST_DEFAULT = 20        # rows head list --json returns when --n is not given (unchanged)
-SET_FIELDS = ("status", "kind", "sum", "note")
+SET_FIELDS = ("status", "kind", "sum", "note", "prio")
 UNHANDLED = ("new", "understood")
 LIST_FILTERS = ("open", "unhandled", "doing", "needs", "done", "all")
 
@@ -95,7 +95,7 @@ def register(sub, common):
     setter = add("set", "change fields: head set H15 status=declined note=\"..\" (a done close needs a commit sha, "
                         "job id or answer: note)")
     setter.add_argument("id", metavar="H15")
-    setter.add_argument("words", nargs="+", metavar="KEY=VALUE", help="status, kind, sum or note")
+    setter.add_argument("words", nargs="+", metavar="KEY=VALUE", help="status, kind, sum, note or prio (P0-P3)")
     setter.set_defaults(handler=_set)
 
     bind = add("bind", "add links to an entry")
@@ -341,7 +341,7 @@ def _triage_one(args):
 
 
 def _set(args):
-    payload = {"id": args.id, "status": None, "kind": None, "sum": None, "note": None}
+    payload = {"id": args.id, "status": None, "kind": None, "sum": None, "note": None, "prio": None}
     for word in args.words:
         key, sep, value = word.partition("=")
         if not sep or key not in SET_FIELDS:
