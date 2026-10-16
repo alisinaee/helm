@@ -10,7 +10,7 @@ import { SECTIONS, SETTINGS, sectionById } from "../routes.js";
 import { sectionHash } from "../router.js";
 import { panelIsOpen } from "../state.js";
 import { showToast } from "./toast.js";
-import { oldText, weekKnown, weeklyStopRow } from "./limits.js";
+import { weekKnown, weeklyStopRow } from "./limits.js";
 
 const THEME_LABEL = { auto: "Auto", dark: "Dark", light: "Light" };
 const MARK_LABEL = "I am seeing a bug here";
@@ -84,16 +84,17 @@ function controlHtml(vm) {
     esc(c.id) + '" data-focus="control"' + offline + ">Stop</button>";
 }
 
-// The stop that binds first: the lowest blocking weekly stop, the project's own (autonomy.json, an acct row) or the
-// global percent on the week. Both block, so the lower one is the real stop (R7.77). Else the Tokens rule.
+// The weekly stop shown in the top bar: the lowest weekly stop row, the project's own (autonomy.json
+// limit.stopAtPercent, an acct row, also when its action is warn) or the global percent on the week. The lower one is
+// the real stop (R7.77). A warn-only stop still has a value, so it shows as "stop 15%". Else the Tokens rule.
 export function bindingStopRow(rows) {
   if (!Array.isArray(rows)) return null;
-  const blocking = rows.filter(function (r) {
-    const weekly = r.kind === "acct" || (r.scope === "global" && r.kind === "pct" && r.window === "week");
-    return weekly && r.action !== "warn" && typeof r.limit === "number";
+  const weekly = rows.filter(function (r) {
+    const isWeekly = r.kind === "acct" || (r.scope === "global" && r.kind === "pct" && r.window === "week");
+    return isWeekly && typeof r.limit === "number";
   });
-  if (!blocking.length) return weeklyStopRow(rows);
-  return blocking.reduce(function (a, b) { return b.limit < a.limit ? b : a; });
+  if (!weekly.length) return weeklyStopRow(rows);
+  return weekly.reduce(function (a, b) { return b.limit < a.limit ? b : a; });
 }
 
 // The limit rows of a snapshot's meters: the snapshot carries {limits, today, week}, a plain list is taken as is.
@@ -112,23 +113,58 @@ function stopText(meters) {
   return row ? "stop " + fmtPercent(row.limit) : "stop off";
 }
 
-// "Week 63% · stop 95%": the weekly share (snap.usage) and the weekly stop. Pure, so the render test can check it.
-// A stale or missing reading reads "Week unknown", and the age is added: "Week unknown · stop 85% · 31 h old".
+// The age of the reading in short words: "3m", "2h". Used by ageText.
+function shortAge(s) {
+  return s < 3600 ? Math.floor(s / 60) + "m" : Math.round(s / 3600) + "h";
+}
+
+// The reading age: "just now", "3m ago" when fresh; "stale 2h" when older than maxUsageAgeMin (the stale flag from
+// the usage view, which reads the limit from docs/autonomy.json or 90 minutes). Empty when the age is not known.
+export function ageText(usage) {
+  if (!usage) return "";
+  const s = typeof usage.ageNow === "number" ? Math.max(0, usage.ageNow) : null;
+  if (usage.stale === true) return s === null ? "stale" : "stale " + shortAge(s);
+  if (s === null) return "";
+  return s < 60 ? "just now" : shortAge(s) + " ago";
+}
+
+// The clock time of the last reading (HH:MM, local time), or "" when the stored time cannot be read.
+export function readingTime(usage) {
+  const at = usage && usage.updated ? new Date(usage.updated) : null;
+  if (!at || isNaN(at.getTime())) return "";
+  const pad = function (n) { return (n < 10 ? "0" : "") + n; };
+  return pad(at.getHours()) + ":" + pad(at.getMinutes());
+}
+
+// The chip tooltip: the 5-hour share, and where the usage comes from and when it was last read.
+export function meterTitle(usage) {
+  const five = usage && typeof usage.fiveHourPercent === "number" ? fmtPercent(usage.fiveHourPercent) : "unknown";
+  const when = readingTime(usage);
+  const last = when ? "usage is pushed by the head; last reading at " + when : "usage is pushed by the head";
+  return "5-hour " + five + " · " + last;
+}
+
+// "Week 63% · stop 95% · 3m ago": the weekly share (snap.usage), the weekly stop and the reading age. Pure, so the
+// render test can check it. A missing weekly share reads "Week unknown". A stale reading keeps its last share and
+// says "stale 2h" (the chip shows in warning style, see metersHtml).
 export function meterText(usage, rows) {
-  const week = weekKnown(usage) ? "Week " + fmtPercent(usage.weeklyPercent) : "Week unknown";
-  const age = usage && usage.stale === true ? oldText(usage) : "";
+  const pct = usage && typeof usage.weeklyPercent === "number" ? fmtPercent(usage.weeklyPercent) : null;
+  const week = pct !== null ? "Week " + pct : "Week unknown";
+  const age = ageText(usage);
   return week + " · " + stopText(rows) + (age ? " · " + age : "");
 }
 
-// The one action when the weekly share is unknown: open the Tokens screen, where the usage entry form is.
+// The one action when the weekly share is unknown or stale: open the Tokens screen, where the usage entry form is.
 function enterHtml(vm) {
   return '<a class="btn top-enter" href="' + esc(sectionHash(vm.route, "tokens")) + '" data-focus="enter-usage">' +
     "Enter usage</a>";
 }
 
 function metersHtml(vm) {
-  return '<span class="top-meters" title="Weekly usage and the weekly stop">' +
-    esc(meterText(vm.usage, vm.meterRows)) + "</span>" + (weekKnown(vm.usage) ? "" : enterHtml(vm));
+  const stale = Boolean(vm.usage && vm.usage.stale === true);
+  return '<span class="top-meters' + (stale ? " chip-warning" : "") + '" title="' +
+    esc(meterTitle(vm.usage)) + '">' + esc(meterText(vm.usage, vm.meterRows)) + "</span>" +
+    (weekKnown(vm.usage) ? "" : enterHtml(vm));
 }
 
 function connHtml(conn) {

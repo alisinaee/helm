@@ -21,6 +21,14 @@ console.log(JSON.stringify({
   arrayRows: top.meterText(usage, [auto]),
   noRows: top.meterText(usage, shape([])),
   noMeters: top.meterText(usage, null),
+  fresh3m: top.meterText({ weeklyPercent: 9, stale: false, ageNow: 185 }, shape([])),
+  stale2h: top.meterText({ weeklyPercent: 9, stale: true, ageNow: 7300 }, shape([])),
+  warnStop: top.meterText({ weeklyPercent: 6, stale: false, ageNow: 60 },
+    shape([Object.assign({}, auto, { action: "warn", limit: 15 })])),
+  title: top.meterTitle({ weeklyPercent: 9, fiveHourPercent: 26, stale: false, ageNow: 185,
+    updated: "2026-10-13T11:59:00Z" }),
+  titleNoTime: top.meterTitle({ weeklyPercent: 9, stale: false }),
+  staleClass: top.meterText({ weeklyPercent: 9, stale: true, ageNow: 7300 }, shape([])),
 }));
 """
 
@@ -49,6 +57,22 @@ class TopBarStopTests(unittest.TestCase):
 
     def test_no_meters_reads_stop_unknown(self):
         self.assertIn("stop unknown", self.out["noMeters"])
+
+    def test_fresh_reading_shows_its_age(self):
+        self.assertEqual(self.out["fresh3m"], "Week 9% · stop off · 3m ago")
+
+    def test_stale_reading_keeps_share_and_says_stale_hours(self):
+        self.assertEqual(self.out["stale2h"], "Week 9% · stop off · stale 2h")
+
+    def test_warn_only_autonomy_stop_still_shows_its_value(self):
+        self.assertIn("stop 15%", self.out["warnStop"])
+
+    def test_tooltip_has_five_hour_share_and_reading_time(self):
+        self.assertTrue(self.out["title"].startswith("5-hour 26% · usage is pushed by the head; last reading at "))
+        self.assertRegex(self.out["title"], r"last reading at \d\d:\d\d$")
+
+    def test_tooltip_without_a_time_still_names_the_head(self):
+        self.assertEqual(self.out["titleNoTime"], "5-hour unknown · usage is pushed by the head")
 
 if __name__ == "__main__":
     unittest.main()

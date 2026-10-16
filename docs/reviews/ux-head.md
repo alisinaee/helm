@@ -19,3 +19,18 @@ UX search: "data table density", "truncation tooltip", "dark mode contrast", "re
 Checks: tests/unit/test_head_previews.py (service previews, same-origin vs cross-origin route), tests/web/test_head_view.py
 (column and CSS pins updated for the new widths), tests/web/test_head_*.py, lint_js, contrast.py. CSS stays under
 HEAD_CSS_MAX (7168 bytes).
+
+## R10.16 / H201 layout pass (header, tabs, height)
+
+Before: title, filter bar and the list on top; "Questions (N)" collapsed and the model line (plus a long "prev:" line) below the
+list, so with 197 rows both were out of reach. After (`alpha-head-1440x900-light`, `-500x900-dark`):
+
+| # | issue | fix |
+|---|-------|-----|
+| 1 | model line below the list | header row: "Head" left, chip "Opus 5.5 · since 12:32" (local time) and Expand all right; acct, usage and previous models in the chip tooltip |
+| 2 | questions at the bottom, collapsed | segmented tabs "Chat 7 / Questions 2" (badge); Questions is its own tab (cards, newest first, max 960 px); banner "N questions wait for you · Open" above the chat |
+| 3 | status links underlined, filters wrapped | status and List/Cards are segmented controls; search, kind, session, order, + Log and the "Showing N of M" count share the bar |
+| 4 | "Showing N of M" under the list | muted count at the right end of the bar; the pager under the list only appears with Load more or an error |
+| 5 | list height | the screen is a flex column; the list (`.hd-list`) is the only scroller and fills the rest |
+
+Checks: tests/web/test_head_*.py updated (tab, chip, banner); HEAD_CSS_MAX kept (7168), replaced rules removed.
