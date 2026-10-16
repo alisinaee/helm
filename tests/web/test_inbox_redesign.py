@@ -137,5 +137,36 @@ class InboxRedesignSource(unittest.TestCase):
         self.assertEqual(long, [])
 
 
+INBOX_CSS = os.path.join(WEB, "css", "inbox.css")
+
+
+class InboxUxPass(unittest.TestCase):
+    """R10.2: the tester's fixes. The expand glyph is centred, the copy button stays on the id line, the section head
+    shares one row with its copy button, and the default option is not a solid block."""
+
+    def setUp(self):
+        self.src = read(INBOX)
+        self.css = read(INBOX_CSS)
+
+    def test_section_head_uses_the_ib_head_row(self):
+        self.assertIn('<div class="page-head ib-head">', self.src)
+        self.assertRegex(self.css, r"\.ib-head \{ grid-template-columns: minmax\(0, 1fr\) var\(--ref-col\)")
+
+    def test_expand_glyph_is_centred_and_turns_when_open(self):
+        self.assertRegex(self.css, r"\.ib-row > \.btn \{[^}]*display: grid; place-items: center")
+        self.assertRegex(self.css, r"\.ib-item\.is-open \.ib-expand \{ transform: rotate\(90deg\)")
+
+    def test_copy_button_stays_on_the_id_line(self):
+        self.assertRegex(self.css, r"\.ib-body \.qc-line \{ display: flex")
+        self.assertIn('<p class="qc-line">', self.src)
+
+    def test_default_option_is_marked_by_border_not_a_solid_block(self):
+        self.assertIn("btn-primary is-default", self.src)
+        self.assertRegex(self.css, r"\.qc-opt\.is-default \{ background: var\(--surface-2\)")
+
+    def test_reduced_motion_stops_the_turn(self):
+        self.assertIn("@media (prefers-reduced-motion: reduce) { .ib-expand { transition: none } }", self.css)
+
+
 if __name__ == "__main__":
     unittest.main()

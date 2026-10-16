@@ -30,7 +30,14 @@
 .ib-row > .ib-main:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px }
 .ib-row > .ib-main .rg-t { display: block; min-width: 0 }
 .ib-row > :nth-child(3) { justify-self: end; text-align: right; font-variant-numeric: tabular-nums }
-.ib-row > .btn { justify-self: end; width: 2.25rem; min-width: 0; height: 2.25rem; padding: 0 }
+.ib-row > .btn { justify-self: end; display: grid; place-items: center; line-height: 1; width: 2.25rem; min-width: 0; height: 2.25rem; padding: 0 }
+.ib-expand { font-size: 1.25rem }
+.ib-expand { transition: transform .15s ease }
+.ib-item.is-open .ib-expand { transform: rotate(90deg) }
+@media (prefers-reduced-motion: reduce) { .ib-expand { transition: none } }
+/* Section head: the title and the copy button share one row (the copy button no longer drops to its own line). */
+.ib-head { grid-template-columns: minmax(0, 1fr) var(--ref-col); align-items: center }
+.ib-head > .ref-copy { margin: 0 }
 
 /* The body sits under the title column, so the answers line up with the title, not with the chip. */
 .ib-body {
@@ -43,6 +50,13 @@
 .ib-body p { margin: 0 }
 .ib-body .qc-text { overflow-wrap: anywhere }
 .ib-body .qc-timer { font-variant-numeric: tabular-nums }
+/* The id line keeps its copy button at the end of the same line, not on a line of its own. */
+.ib-body .qc-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-2) }
+.ib-body .qc-line > .ref-copy { margin-left: auto; width: 2rem; height: 2rem }
+/* The default option is marked by a border, a tint and its word, not a solid colour block. */
+.ib-item .ib-body .qc-opt.is-default { background: var(--surface-2); color: var(--text-1); border-color: var(--accent) }
+.ib-item .ib-body .qc-opt.is-default .qc-key { color: var(--accent); border-color: var(--accent) }
+.ib-item .ib-body .qc-opt.is-default .qc-def { color: var(--accent); opacity: 1 }
 
 /* Options: one row each, a fixed 28px letter chip, then the full label (no truncation) and its description. */
 .ib-item .ib-body .nz-list { grid-template-columns: minmax(0, 1fr); gap: 6px; min-width: 0 }
