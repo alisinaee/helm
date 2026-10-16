@@ -113,7 +113,7 @@ function preorder(tree) {
 }
 
 function workHash(row, project) {
-  return projectHash(project, "work") + "?f=" + encodeURIComponent("feat:" + row.id);
+  return projectHash(project, "work") + "/board?f=" + encodeURIComponent("feat:" + row.id);
 }
 
 function stateChip(row) {
@@ -318,9 +318,9 @@ export function plannerHtml(snap, st) {
 function pickProjectHtml(vm) {
   const projects = Array.isArray(vm.projects) ? vm.projects : [];
   if (!projects.length) return emptyHtml("No projects yet.", '<a href="#/all/overview">Go to All projects</a>');
-  const items = projects.map((p) => '<li><a class="btn" href="#/p/' + esc(p.id) + '/planner">' + esc(p.name || p.id) +
-    "</a></li>").join("");
-  return '<div class="page-head"><p class="page-title">Planner</p><p class="page-note">Pick a project</p></div>' +
+  const items = projects.map((p) => '<li><a class="btn" href="#/p/' + esc(p.id) + '/work/planner">' +
+    esc(p.name || p.id) + "</a></li>").join("");
+  return '<div class="page-head"><p class="page-title">Work</p><p class="page-note">Pick a project</p></div>' +
     '<ul class="pl-pick-list" aria-label="Projects">' + items + "</ul>";
 }
 
@@ -349,6 +349,11 @@ export function sectionView(vm) {
   if (vm.route.name !== "project") return pickProjectHtml(vm);
   const state = pageState(vm);
   if (state) return state;
+  return screenHtml(vm);
+}
+
+// The planner screen element alone, for the Work section's Planner view (R10.7). The caller has checked the snapshot.
+export function screenHtml(vm) {
   ui.project = vm.route.id;
   applyFocus(vm.route, vm.project.snapshot);
   latest = { snap: vm.project.snapshot, state: ui };
@@ -446,10 +451,16 @@ function focusKey(key) {
 // Runs after the render has put the screen element in main: paints the pieces, then the pending focus and scroll.
 function flush() {
   if (typeof document === "undefined" || !latest) return;
-  const main = document.getElementById("main");
-  const screen = main ? main.firstElementChild : null;
-  if (!screen || screen.getAttribute("data-section") !== "planner") return;
-  paint(screen, piecesOf(latest.snap, latest.state));
+  const screen = document.querySelector('#main [data-section="planner"]');
+  if (!screen) return;
+  try {
+    paint(screen, piecesOf(latest.snap, latest.state));
+  } catch (err) {
+    // A bad row must not freeze the page: show a stable error line and stop, instead of retrying every render.
+    painted = null;
+    screen.textContent = "The plan could not be shown: " + (err && err.message ? err.message : "unknown error");
+    return;
+  }
   const key = pendingFocus;
   pendingFocus = "";
   focusKey(key);
@@ -545,7 +556,7 @@ const ACTIONS = {
 
 function onClick(event) {
   const t = event.target;
-  if (!t || !t.closest) return;
+  if (!t || !t.closest || !t.closest('[data-section="planner"]')) return;
   const el = t.closest("[data-pl]");
   if (el) {
     if (el.tagName === "BUTTON" && !el.disabled) {
@@ -592,6 +603,7 @@ function onSubmit(event) {
 function onKeydown(event) {
   const t = event.target;
   if (event.key === "Escape") {
+    if (typeof document === "undefined" || !document.querySelector('#main [data-section="planner"]')) return;
     if (ui.edit) ACTIONS["edit-cancel"]();
     else if (ui.pick) ACTIONS["pick-close"]();
     return;

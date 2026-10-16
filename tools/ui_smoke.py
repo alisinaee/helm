@@ -30,9 +30,9 @@ CHROME_APP = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 CHROME_NAMES = ("chromium", "chromium-browser", "google-chrome")
 # Every section of the router's registry (web/js/routes.js) in nav order, settings last. The unit test in
 # tests/web/test_ui_smoke_sections.py requires this list to match routes.js, so a new section must be added here.
-SECTIONS = ("overview", "inbox", "head", "roadmap", "planner", "work", "agents", "workflow", "tokens", "rules",
+SECTIONS = ("overview", "inbox", "head", "roadmap", "work", "agents", "workflow", "tokens", "rules",
             "activity", "git", "settings")
-WORK_VIEWS = ("board", "list", "tree")
+WORK_VIEWS = ("board", "list", "tree", "planner")
 # (width, height, theme). Headless Chrome cannot go below about 500 px.
 COMBOS = ((1440, 900, "dark"), (1440, 900, "light"), (1024, 768, "dark"), (768, 1024, "dark"), (500, 900, "dark"))
 # Very wide screens (WP36): dark only, and only for the routes that WIDE_LABELS names (the rest would only repeat them).
@@ -46,7 +46,7 @@ SCHEME_FLAGS = {
 }
 # Each route checks for one of these class names inside the page: the section's own markup.
 PAGE_MARK = "page-title"
-MARKERS = {"overview": "ov-card", "work/board": "wk-col", "work/list": "wk-table", "work/tree": "wk-tree",
+MARKERS = {"overview": "ov-card", "work/board": "wk-col", "work/list": "wk-table", "work/tree": "wk-tree", "work/planner": "hd-screen",
            "roadmap": "lane", "issues": "iss-form", "tokens": "met-row"}
 COMING_SOON = "Coming soon"
 ERROR_TEXT = "This section could not be shown."
