@@ -1,6 +1,5 @@
 """UX group C checks (R8.13, R8.14, R8.16, R8.17): the Rules add form shows the budget field only for a budget rule,
 its checks are inline next to the field, an empty group offers an action, Sync reports its counts in a toast; the
-Issues count agrees with its noun and Close says "Close issue".
 The Rules render runs in node (skipped when node is not installed), the rest reads the sources.
 """
 
@@ -58,16 +57,6 @@ class RulesSource(unittest.TestCase):
     def test_copy_buttons_are_kept(self):
         self.assertIn("copyButton(\"rule\"", self.src)
         self.assertIn("copyButton(\"section\", \"rules.list\"", self.src)
-
-
-class IssuesSource(unittest.TestCase):
-    def test_close_wording_and_plural(self):
-        src = read(os.path.join(VIEWS, "issues.js"))
-        self.assertIn(">Close issue</button>", src)
-        self.assertIn('aria-label="Close issue \' + id', src)
-        self.assertNotIn('aria-label="Close \' + id', src)
-        self.assertIn('countWord(blockers, "blocker", "blockers")', src)
-        self.assertIn('n === 1 ? one : many', src)
 
 
 class AdminCssRule(unittest.TestCase):

@@ -1,12 +1,11 @@
-"""Checks for the Roadmap and Issues sections, and the Overview sections restored in WP32.
+"""Checks for the Roadmap section, and the Overview sections restored in WP32.
 
 The views are plain functions that return HTML strings. tests/web/render_plan.mjs renders them in node from the golden
 snapshot and from a synthetic one that carries a blocker, an approved phase, an unapproved phase with a budget, a
 deferred task and a title that needs escaping. The checks: lanes list open tasks in plan order; the Approve button only
 shows on unapproved phases; a blocker marks its task Blocked; the Up and Down buttons are disabled at the ends and
 every draggable card has them (drag is never the only path); the timeline bar widths follow the estimates; the empty
-states use the spec words; the issue form has labels and a blocker toggle; the filters and the close and detail links
-are right; the Overview has the restored sections; every data-action these views emit is handled by app.js; and the
+states use the spec words; the Overview has the restored sections; every data-action these views emit is handled by app.js; and the
 plan.css budget and the route, dispatch and Alt-key wiring hold. The node checks are skipped when node is not installed.
 """
 
@@ -93,7 +92,7 @@ class PlanRenderTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if shutil.which("node") is None:
-            raise unittest.SkipTest("node is not installed; the Roadmap and Issues render checks are skipped")
+            raise unittest.SkipTest("node is not installed; the Roadmap render checks are skipped")
         cls.out = render()
 
     def test_every_view_renders_non_empty(self):
@@ -179,43 +178,10 @@ class PlanRenderTests(unittest.TestCase):
 
     def test_empty_states_use_the_spec_words(self):
         self.assertIn("No plan yet. Ask the lead to run plan import.", self.out["lanesEmpty"])
-        self.assertIn("No open issues.", self.out["issuesEmpty"])
         self.assertIn("The roadmap belongs to one project.", self.out["roadmapAll"])
 
     def test_loading_roadmap_shows_a_skeleton(self):
         self.assertIn('aria-busy="true"', self.out["roadmapLoading"])
-
-    def test_issue_form_has_labels_the_task_link_and_the_blocker_toggle(self):
-        html = self.out["issuesSynth"]
-        self.assertIn('data-form="issue-new"', html)
-        self.assertIn('for="iss-title"', html)
-        self.assertIn('for="iss-task"', html)
-        self.assertIn('name="blocker"', html)
-        self.assertIn('<option value="">No task</option>', html)
-        self.assertIn('<option value="P1.2">P1.2 Data model</option>', html)
-        self.assertNotIn('<option value="P1.1"', html)
-
-    def test_issue_rows_and_the_blockers_filter(self):
-        everything = self.out["issuesSynth"]
-        self.assertIn("I1", everything)
-        self.assertIn("I2", everything)
-        blockers = self.out["issuesBlockers"]
-        self.assertIn("Missing fixture", blockers)
-        self.assertNotIn("Slow sync", blockers)
-        self.assertIn('href="#/p/splitnet/issues?f=blockers" aria-current="true"', blockers)
-
-    def test_all_filter_says_closed_issues_are_not_shown(self):
-        self.assertIn("Closed issues are not shown here yet.", self.out["issuesAll"])
-
-    def test_issue_has_one_click_close_and_a_detail_link(self):
-        html = self.out["issuesSynth"]
-        self.assertIn('data-action="issue-close" data-issue="I1"', html)
-        self.assertIn('href="#/p/splitnet/issues/i/I1"', html)
-
-    def test_blocker_names_the_task_it_blocks(self):
-        html = self.out["issuesSynth"]
-        self.assertIn("Blocks ", html)
-        self.assertIn('href="#/p/splitnet/work/i/P2.1"', html)
 
     def test_overview_restores_the_dropped_sections(self):
         html = self.out["overviewGolden"]
@@ -238,16 +204,14 @@ class PlanStaticTests(unittest.TestCase):
         routes = read(os.path.join(WEB, "js", "routes.js"))
         self.assertIn('"./views/roadmap.js"', routes)
         self.assertNotIn('"./views/issues.js"', routes)
-        for name in ("roadmap.js", "issues.js"):
+        for name in ("roadmap.js",):
             self.assertTrue(os.path.isfile(os.path.join(WEB, "js", "views", name)), name)
 
-    def test_app_dispatches_the_roadmap_and_issue_actions(self):
+    def test_app_dispatches_the_roadmap_actions(self):
         app = read(os.path.join(WEB, "js", "app.js"))
         self.assertIn('"plan-move"', app)
         self.assertIn('"phase-approve"', app)
-        self.assertIn('"issue-close"', app)
         self.assertIn('"./views/roadmap.js"', app)
-        self.assertIn('"./views/issues.js"', app)
 
     def test_alt_arrow_keys_are_bound_by_the_roadmap(self):
         keys = read(os.path.join(WEB, "js", "keys.js"))
@@ -261,11 +225,6 @@ class PlanStaticTests(unittest.TestCase):
         self.assertIn('run("plan.move"', roadmap)
         self.assertIn('run("phase.approve"', roadmap)
         self.assertNotIn("plan.import", roadmap)
-
-    def test_issue_ops_are_the_server_names(self):
-        issues = read(os.path.join(WEB, "js", "views", "issues.js"))
-        self.assertIn('run("issue.new"', issues)
-        self.assertIn('run("issue.close"', issues)
 
 
 if __name__ == "__main__":

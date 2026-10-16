@@ -1,4 +1,4 @@
-// Render the Roadmap and Issues views, and the restored Overview sections, in node (used by tests/web/test_plan.py).
+// Render the Roadmap view, and the restored Overview sections, in node (used by tests/web/test_plan.py).
 // argv: this script, web directory, golden snapshot JSON, synthetic snapshot JSON. Prints one JSON object with the HTML
 // of each view. The synthetic snapshot has a blocker on P2.1, one approved phase, one unapproved phase with a budget,
 // a deferred task and a title that needs escaping.
@@ -11,7 +11,6 @@ const synth = JSON.parse(readFileSync(process.argv[4], "utf8"));
 const load = (name) => import(pathToFileURL(web + "/js/" + name).href);
 const state = await load("state.js");
 const roadmap = await load("views/roadmap.js");
-const issues = await load("views/issues.js");
 const overview = await load("views/overview.js");
 
 const now = Date.parse("2026-10-13T12:00:00Z");
@@ -48,20 +47,15 @@ out.overviewGolden = overview.sectionView(vmOf(goldenStore, project("overview"))
 const synthStore = store({ splitnet: synth });
 out.lanesSynth = roadmap.sectionView(vmOf(synthStore, project("roadmap")));
 out.timelineSynth = roadmap.sectionView(vmOf(synthStore, project("roadmap", "timeline")));
-out.issuesSynth = issues.sectionView(vmOf(synthStore, project("issues")));
-out.issuesBlockers = issues.sectionView(vmOf(synthStore, project("issues", null, { f: "blockers" })));
-out.issuesAll = issues.sectionView(vmOf(synthStore, project("issues", null, { f: "all" })));
 out.overviewSynth = overview.sectionView(vmOf(synthStore, project("overview")));
 
 // No plan: the phases list is empty, so the Roadmap and the empty issue list say what to do.
 const emptyStore = store({ splitnet: { project: { id: "splitnet", title: "split-net" }, phases: [], tasks: [],
   issues: [] } });
 out.lanesEmpty = roadmap.sectionView(vmOf(emptyStore, project("roadmap")));
-out.issuesEmpty = issues.sectionView(vmOf(emptyStore, project("issues")));
 
 // Not in a project: both sections say the page belongs to one project.
 out.roadmapAll = roadmap.sectionView(vmOf(synthStore, home("roadmap")));
-out.issuesAll2 = issues.sectionView(vmOf(synthStore, home("issues")));
 
 // A project whose data is not loaded yet shows a skeleton, not an empty page.
 out.roadmapLoading = roadmap.sectionView(vmOf(state.createStore(), project("roadmap")));

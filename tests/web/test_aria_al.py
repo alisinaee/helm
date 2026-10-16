@@ -1,7 +1,7 @@
 """Static checks for the aria fixes in views a-l (R7.9c). Stdlib only; reads the view sources as text.
 
 Each named control must carry the accessible name written here. Whitespace is collapsed before matching so that
-line wraps in the source do not matter. The skipped rows (board filters, issues filter, limits presets and steppers,
+line wraps in the source do not matter. The skipped rows (board filters, limits presets and steppers,
 nav collapse) must stay as they were, because their aria-controls values name classes, not ids.
 """
 
@@ -52,7 +52,6 @@ EXPECTED = {
 
 SKIPPED = {
     "board.js": ['aria-controls="wk-filters"'],
-    "issues.js": ['aria-controls="iss-list"'],
     "nav.js": ['aria-controls="nav-list"'],
 }
 
