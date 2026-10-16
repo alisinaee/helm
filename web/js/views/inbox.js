@@ -671,5 +671,5 @@ export function sectionView(vm) {
   const open = inboxItems(scopeSnapshots(vm), Date.now()).length;
   const sectionCopy = copyButton("section", "inbox.questions", "open questions",
     { project: vm.route.id, sum: refSummary("section", { count: open }) });
-  return '<div class="page-head"><h2 class="page-title">Inbox</h2>' + sectionCopy + "</div>" + inboxBody(vm);
+  return '<div class="page-head ib-head"><h2 class="page-title">Inbox</h2>' + sectionCopy + "</div>" + inboxBody(vm);
 }
