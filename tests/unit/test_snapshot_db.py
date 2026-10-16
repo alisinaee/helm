@@ -8,10 +8,12 @@ open in another connection is not seen, and is seen whole once committed. Runs i
 import datetime
 import json
 import os
+import tempfile
 import unittest
 
+from roadmap.core.snapshot import build_snapshot
 from roadmap.services import loader
-from roadmap.store import db, events, migrate
+from roadmap.store import db, events, export, migrate
 from tests.unit.test_control_support import ControlCase, write_json
 
 NOW = datetime.datetime(2026, 10, 13, 14, 2, tzinfo=datetime.timezone.utc)
@@ -104,6 +106,100 @@ class SnapshotIsolationTest(SnapshotDbCase):
         seen = loader.load_snapshot("demo", now=NOW)
         self.assertIn("halfwritten", json.dumps(seen))
         self.assertGreater(seen["rev"], rev_before)
+
+
+WORK = {"schemaVersion": 1, "items": [
+    {"id": "W1", "kind": "task", "title": "Board", "status": "Todo", "prio": 1, "accepted": None, "reopened": 0,
+     "reopenDone": None},
+    {"id": "W2", "kind": "task", "title": "Store", "status": "Todo", "prio": 2, "accepted": None, "reopened": 0,
+     "reopenDone": None},
+    {"id": "W3", "kind": "task", "title": "Shipped", "status": "Done", "prio": 0, "accepted": "2026-10-14T09:00:00Z",
+     "reopened": 0, "reopenDone": None},
+    {"id": "W4", "kind": "task", "title": "Dropped", "status": "Won't do", "prio": 3, "accepted": None,
+     "reopened": 0, "reopenDone": None},
+], "links": {"P1.1": "W1", "P1.2": "W1", "P2.1": "W2", "P2.2": "W3", "P3.9": "W2"}, "events": []}
+WORK_TASKS = {"schemaVersion": 1, "phases": [{"id": "P1", "name": "one", "status": "todo"}], "tasks": [
+    {"id": "P1.1", "phase": "P1", "title": "a", "status": "done"},
+    {"id": "P1.2", "phase": "P1", "title": "b", "status": "todo"},
+    {"id": "P2.1", "phase": "P1", "title": "c", "status": "done"},
+    {"id": "P2.2", "phase": "P1", "title": "d", "status": "done"},
+]}
+
+
+def _work_snap(work_doc, tasks_doc=WORK_TASKS):
+    files = {"tasks.json": json.dumps(tasks_doc)}
+    if work_doc is not None:
+        files["work.json"] = json.dumps(work_doc)
+    return build_snapshot(files, {}, NOW)
+
+
+class SnapshotWorkTest(unittest.TestCase):
+    def test_work_key_rolls_up_status_and_progress(self):
+        rows = {r["id"]: r for r in _work_snap(WORK)["work"]}
+        self.assertEqual(rows["W1"]["status"], "Doing")                 # one done, one todo
+        self.assertEqual(rows["W1"]["progress"], {"done": 1, "total": 2})
+        self.assertEqual(rows["W1"]["prio"], "P1")
+        self.assertEqual(rows["W2"]["status"], "Review")                 # all linked tasks done, not accepted
+        self.assertEqual(rows["W2"]["progress"], {"done": 1, "total": 1})  # P3.9 is not in tasks.json: cancelled
+        self.assertEqual(rows["W3"]["status"], "Done")                   # accepted by the person
+        self.assertEqual(rows["W3"]["progress"], {"done": 1, "total": 1})
+        self.assertEqual(rows["W4"]["status"], "Won't do")
+        self.assertEqual(rows["W4"]["progress"], {"done": 0, "total": 0})
+
+    def test_work_rows_keep_work_json_order(self):
+        self.assertEqual([r["id"] for r in _work_snap(WORK)["work"]], ["W1", "W2", "W3", "W4"])
+
+    def test_no_work_json_leaves_key_out(self):
+        self.assertNotIn("work", _work_snap(None))
+
+    def test_bad_work_json_is_an_error_entry_not_a_crash(self):
+        files = {"tasks.json": json.dumps(WORK_TASKS), "work.json": "[1, 2"}
+        snap = build_snapshot(files, {}, NOW)
+        self.assertNotIn("work", snap)
+        self.assertTrue(any(e["file"] == "work.json" for e in snap["errors"]))
+
+
+class ExportWorkTest(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = self._tmp.name
+        self.conn = db.connect(os.path.join(self.root, "board.db"))
+        with db.txn(self.conn):
+            self.conn.execute("INSERT INTO phases (id, name, status, position, data) VALUES ('P1', 'one', 'todo', 1,"
+                              " '{}')")
+            for wid, title in (("W2", "second"), ("W10", "tenth"), ("W1", "first")):
+                self.conn.execute("INSERT INTO work_items (id, kind, title, outcome, status, prio, owner, phase,"
+                                  " created, updated, accepted_at, reopened, data) VALUES (?, 'task', ?, '', 'Todo',"
+                                  " 1, 'you', NULL, '2026-10-14T09:00:00Z', '2026-10-14T09:00:00Z', NULL, 0, '{}')",
+                                  (wid, title))
+            self.conn.execute("INSERT INTO tasks (id, phase, title, status, data, work_id) VALUES ('P1.1', 'P1', 'a',"
+                              " 'todo', '{}', 'W1')")
+
+    def tearDown(self):
+        self.conn.close()
+        self._tmp.cleanup()
+
+    def test_export_writes_work_json_with_items_and_links(self):
+        out = os.path.join(self.root, "out")
+        export.export(self.conn, out)
+        with open(os.path.join(out, "work.json"), encoding="utf-8") as fh:
+            doc = json.load(fh)
+        self.assertEqual(doc["schemaVersion"], 1)
+        self.assertEqual([i["id"] for i in doc["items"]], ["W1", "W2", "W10"])   # numeric id order
+        self.assertEqual(doc["items"][0]["prio"], 1)
+        self.assertIsNone(doc["items"][0]["accepted"])
+        self.assertEqual(doc["links"], {"P1.1": "W1"})
+        self.assertEqual(doc["events"], [])
+        self.assertIn("work.json", sorted(os.listdir(out)))
+
+    def test_work_json_export_is_byte_identical_twice(self):
+        out = os.path.join(self.root, "out")
+        export.export(self.conn, out)
+        with open(os.path.join(out, "work.json"), "rb") as fh:
+            first = fh.read()
+        export.export(self.conn, out)
+        with open(os.path.join(out, "work.json"), "rb") as fh:
+            self.assertEqual(first, fh.read())
 
 
 if __name__ == "__main__":

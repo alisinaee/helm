@@ -1,5 +1,6 @@
 """Deterministic JSON export of the SQLite store into the file shapes the repo tracks (tasks.json, jobs.json,
-head.jsonl). Read-only on the db; each file is written atomically (temp file, fsync, rename).
+head.jsonl, work.json). Read-only on the db; each file is written atomically (temp file, fsync, rename).
+work.json events are not in the store mirror yet, so they export as an empty list.
 
 Same db content gives byte-identical files: sorted keys, stable row order (phase position, then insertion
 order; head by seq), indent 2 for the JSON documents, compact one-object-per-line for head.jsonl, and a trailing
@@ -15,8 +16,10 @@ from roadmap.store import schema
 TASKS_FILE = "tasks.json"
 JOBS_FILE = "jobs.json"
 HEAD_FILE = "head.jsonl"
+WORK_FILE = "work.json"
+WORK_SCHEMA = 1                                     # work.json schemaVersion (services/work.py _empty)
 FILE_MODE = 0o644
-FILES_ALL = (TASKS_FILE, JOBS_FILE, HEAD_FILE)
+FILES_ALL = (TASKS_FILE, JOBS_FILE, HEAD_FILE, WORK_FILE)
 
 PHASE_CORE = ("id", "name", "status")
 TASK_CORE = ("id", "phase", "title", "status")
@@ -37,6 +40,17 @@ def _build(row, core):
     for key in core:
         if row[key] is not None:
             obj[key] = row[key]
+    return obj
+
+
+def _work_item(row):
+    """One Work item in the work.json shape (services/work.py): the data extras plus the v4 columns; accepted is the
+    accepted_at stamp and phase/accepted stay null when unset, as the service writes them."""
+    obj = json.loads(row["data"])
+    obj.update({"id": row["id"], "kind": row["kind"], "title": row["title"], "outcome": row["outcome"],
+                "status": row["status"], "prio": row["prio"], "owner": row["owner"], "phase": row["phase"],
+                "created": row["created"], "updated": row["updated"], "accepted": row["accepted_at"],
+                "reopened": row["reopened"]})
     return obj
 
 
@@ -69,24 +83,32 @@ def _snapshot(conn):
                 conn.execute("SELECT id, task, title, model, status, started, ended, data FROM jobs "
                              "ORDER BY rowid")]
         head = [json.loads(r["data"]) for r in conn.execute("SELECT data FROM asks ORDER BY seq")]
+        work = [_work_item(r) for r in
+                conn.execute("SELECT id, kind, title, outcome, status, prio, owner, phase, created, updated,"
+                             " accepted_at, reopened, data FROM work_items"
+                             " ORDER BY CAST(SUBSTR(id, 2) AS INTEGER), id")]
+        links = {r["id"]: r["work_id"] for r in
+                 conn.execute("SELECT id, work_id FROM tasks WHERE work_id IS NOT NULL ORDER BY id")}
     finally:
         conn.execute("COMMIT")
-    return phases, tasks, jobs, head
+    return phases, tasks, jobs, head, work, links
 
 
 def export(conn, out_dir):
-    """Write tasks.json, jobs.json and head.jsonl into out_dir from the db behind conn.
+    """Write tasks.json, jobs.json, head.jsonl and work.json into out_dir from the db behind conn.
 
     Returns the list of written paths. Call it outside db.txn(): it opens its own read transaction.
     """
-    phases, tasks, jobs, head = _snapshot(conn)
+    phases, tasks, jobs, head, work, links = _snapshot(conn)
     os.makedirs(out_dir, exist_ok=True)
 
     tasks_doc = {"schemaVersion": schema.current_version("tasks"), "phases": phases, "tasks": tasks}
     jobs_doc = {"schemaVersion": schema.current_version("jobs"), "jobs": jobs}
+    work_doc = {"schemaVersion": WORK_SCHEMA, "items": work, "links": links, "events": []}
     head_text = "".join(_line_text(obj) + "\n" for obj in head)
 
-    texts = {TASKS_FILE: _doc_text(tasks_doc), JOBS_FILE: _doc_text(jobs_doc), HEAD_FILE: head_text}
+    texts = {TASKS_FILE: _doc_text(tasks_doc), JOBS_FILE: _doc_text(jobs_doc), HEAD_FILE: head_text,
+             WORK_FILE: _doc_text(work_doc)}
     written = []
     for name in FILES_ALL:
         path = os.path.join(out_dir, name)
