@@ -180,12 +180,12 @@ function answerHtml(pid, q) {
     return optionHtml(pid, q, parts[i], n);
   }).join("");
   const list = buttons
-    ? '<div class="nz-list" role="group" aria-label="' + esc("Answers for " + q.id) + '">' + buttons + "</div>"
+    ? '<div class="nz-list ib-opts" role="group" aria-label="' + esc("Answers for " + q.id) + '">' + buttons + "</div>"
     : "";
   return list + '<form class="nz-row" data-form="inbox-question-answer" data-project="' + esc(pid) +
     '" data-qid="' + esc(q.id) + '" aria-label="' + esc("Other answer for " + q.id) + '">' +
-    '<label><span class="qc-id">Other</span> <input name="value" required placeholder="Type an answer"></label>' +
-    '<button type="submit" class="btn btn-small">Send</button></form>';
+    '<label><span class="qc-foot">Other</span> <input name="value" required placeholder="Type an answer"></label>' +
+    '<button type="submit" class="btn btn-small btn-primary">Send</button></form>';
 }
 
 // One question card, as Head shows it (Head's own question list). A card answered in this page shows one line until
@@ -288,13 +288,13 @@ function summaryHtml(c) {
   let text = c.all + " need you: " + c.questions + " questions, " + c.asks + " head asks, " + c.rules +
     " rule proposals";
   if (c.blockers) text += ", " + c.blockers + " blockers";
-  return '<section class="hd-now" aria-label="Inbox summary"><p class="hd-now-line">' + esc(text) + "</p></section>";
+  return '<p class="ib-sum" aria-label="Inbox summary">' + esc(text) + "</p>";
 }
 
 function filterHtml(c) {
-  return '<nav class="hd-filters" aria-label="Filter">' + FILTERS.map(function (pair) {
+  return '<nav class="ib-seg" aria-label="Filter">' + FILTERS.map(function (pair) {
     const cur = pair[0] === filter ? ' aria-current="page"' : "";
-    return '<button type="button" class="hd-filter" data-ib-filter="' + pair[0] + '" data-focus="ib-f-' +
+    return '<button type="button" class="ib-seg-b" data-ib-filter="' + pair[0] + '" data-focus="ib-f-' +
       pair[0] + '"' + cur + ">" + esc(pair[1]) + " " + c[pair[0]] + "</button>";
   }).join("") + "</nav>";
 }
@@ -319,7 +319,7 @@ function actionHtml(item, bid, open) {
   const dataExpanded = ' aria-expanded="' + (open ? "true" : "false") + '"';
   if (item.kind === "question" || item.kind === "ask") {
     const what = item.kind === "question" ? "Answer " : "Reply to ";
-    return '<button type="button" class="btn ib-expand"' + dataExpanded + ' aria-controls="' + bid +
+    return '<button type="button" class="btn btn-ghost ib-expand"' + dataExpanded + ' aria-controls="' + bid +
       '" aria-label="' + esc(what + item.id) + '">›</button>';
   }
   if (item.kind === "rule") {
@@ -335,8 +335,6 @@ function questionBody(item, now) {
   const e = item.entry;
   const q = e.q;
   const pid = e.pid;
-  const task = q.task ? ' <a class="qc-task" href="' + esc(itemHash(pid, q.task)) + '" aria-label="' +
-    esc("View task " + q.task) + '">' + esc(q.task) + "</a>" : "";
   const blocks = q.block ? chipHtml("Blocks work", "warning") : "";
   const copy = copyButton("question", q.id, q.id + " " + q.text, { project: pid, sum: refSummary("question", q) });
   const options = answerHtml(pid, Object.assign({}, q, { opts: Array.isArray(q.opts) ? q.opts : [] }));
@@ -347,8 +345,7 @@ function questionBody(item, now) {
     timer = '<p class="qc-foot"><span class="qc-timer" data-deadline-ms="' + esc(deadline) + '" data-word="' +
       esc(word) + '">' + esc(countdownText(deadline, word, now)) + "</span></p>";
   }
-  return '<p class="qc-line"><span class="qc-id">' + esc(q.id) + "</span>" + task + " " + blocks + " " + copy +
-    "</p><p class=\"qc-text\">" + esc(q.text) + "</p>" + timer + options;
+  return '<p class="qc-line">' + blocks + " " + copy + "</p>" + timer + options;
 }
 
 // The expanded Head ask: the summary, the head's note, the age, the reply form (head.set) and the Head link.
@@ -397,7 +394,7 @@ function taskBody(item) {
 
 // One row and its expanded body. The row is a list item: the chip, a one-line title with the project, the age, and the
 // action. The body is hidden until the row is open.
-function itemHtml(item, now, open) {
+function itemHtml(item, now, open, showProject) {
   const dk = domKey(item.key);
   const bid = "ib-body-" + dk;
   let body;
@@ -405,15 +402,23 @@ function itemHtml(item, now, open) {
   else if (item.kind === "ask") body = askBody(item);
   else if (item.kind === "rule") body = ruleBody(item);
   else body = taskBody(item);
-  return '<li class="ib-item' + (open ? " is-open" : "") + '" data-key="' + esc(item.key) + '">' +
+  const tid = item.kind === "question" && item.entry.q.task ? String(item.entry.q.task) : "";
+  const task = tid ? '<a class="chip ib-task" href="' + esc(itemHash(item.pid, tid)) + '" aria-label="' +
+    esc("View task " + tid) + '">' + esc(tid) + "</a>" : "<span></span>";
+  const proj = showProject ? ' <span class="qc-foot">' + esc(item.pname) + "</span>" : "";
+  return '<li class="ib-item' + (open ? " is-open" : "") + (isOld(item.at, now) ? " is-old" : "") +
+    '" data-key="' + esc(item.key) + '">' +
     '<div class="row-grid rg-fin ib-row"><span class="ib-kind">' + chipOf(item) + "</span>" +
     '<span class="rg-main ib-main" role="button" tabindex="0" aria-controls="' + bid + '" aria-expanded="' +
     (open ? "true" : "false") + '" data-focus="ib-' + esc(dk) + '" title="' + esc(item.title) + '">' +
-    '<span class="rg-t"><span class="qc-id">' + esc(item.id) + "</span> " + esc(item.title) + "</span>" +
-    '<span class="qc-foot">' + esc(item.pname) + "</span></span>" +
-    '<span class="rg-num qc-foot">' + esc(ageText(item.at, now)) + "</span>" +
+    '<span class="rg-t"><span class="qc-id">' + esc(item.id) + "</span> " + esc(item.title) + proj + "</span></span>" +
+    task + '<span class="rg-num qc-foot">' + esc(ageText(item.at, now)) + "</span>" +
     actionHtml(item, bid, open) + '</div><div class="ib-body" id="' + bid + '"' + (open ? "" : " hidden") + ">" +
     body + "</div></li>";
+}
+
+function isOld(at, now) {
+  return at != null && now - at > 86400000;
 }
 
 // The full Inbox body: the summary, the filter bar, then the rows. Empty when nothing needs you.
@@ -426,7 +431,7 @@ export function inboxBody(vm) {
     return filter === "all" || it.kind === FILTER_KIND[filter];
   });
   const rows = shown.length ? '<ul class="nz-list ib-list">' + shown.map(function (it) {
-    return itemHtml(it, now, isOpen(it));
+    return itemHtml(it, now, isOpen(it), vm.route.name !== "project");
   }).join("") + "</ul>" : '<p class="placeholder">Nothing in this filter.</p>';
   return summaryHtml(c) + filterHtml(c) + rows;
 }
@@ -597,6 +602,16 @@ function onDigit(index) {
   };
 }
 
+// The keys a to c pick the option in that position of the question that holds focus.
+function onLetter(index) {
+  return function () {
+    if (currentRoute().section !== "inbox") return;
+    const active = document.activeElement;
+    if (active && active.closest && active.closest("input, textarea")) return;
+    onDigit(index)();
+  };
+}
+
 // j and k move focus to the next or previous row (on the Inbox page only).
 function moveFocus(step) {
   return function () {
@@ -661,6 +676,7 @@ if (typeof document !== "undefined") {
 }
 
 for (let n = 1; n <= KEY_MAX; n++) bindKey(String(n), onDigit(n - 1));
+for (let n = 0; n < 3; n++) bindKey(String.fromCharCode(97 + n), onLetter(n));
 bindKey("j", moveFocus(1));
 bindKey("k", moveFocus(-1));
 
