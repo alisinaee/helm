@@ -353,5 +353,60 @@
     "task": "R10.15",
     "title": "haiku: R10.15 last 2 failing web tests",
     "model": "haiku"
+  },
+  "a64499505bc8b55b0": {
+    "task": "R10.20",
+    "title": "haiku: R10.20 System map A2 heat",
+    "model": "haiku"
+  },
+  "a9fea043a6da39a02": {
+    "task": "R10.13",
+    "title": "haiku: R10.13 Overview UX tester + fix",
+    "model": "haiku"
+  },
+  "a94dca81674c1e573": {
+    "task": "R10.9",
+    "title": "haiku: R10.9 Git UX tester + fix",
+    "model": "haiku"
+  },
+  "a07cb787f47413bf6": {
+    "task": "R10.5",
+    "title": "haiku: R10.5 page scrollbars fix",
+    "model": "haiku"
+  },
+  "af60f0e904edf64df": {
+    "task": "R10.14",
+    "title": "sonnet: R10.14 Inbox redesign (Sonnet)",
+    "model": "sonnet"
+  },
+  "aa667e3c2fddd6ded": {
+    "task": "R10.16",
+    "title": "sonnet: R10.16 Head layout: header + tabs",
+    "model": "sonnet"
+  },
+  "aa3cba2c18bb2450a": {
+    "task": "R10.28",
+    "title": "haiku: R10.28 top bar usage freshness",
+    "model": "haiku"
+  },
+  "a15fff5d8d2072c2a": {
+    "task": "R10.29",
+    "title": "opus: R10.29 usage auto-fetch (Opus)",
+    "model": "opus"
+  },
+  "a35e07d3e4c7e5ba7": {
+    "task": "R10.17",
+    "title": "haiku: R10.17 section import retry",
+    "model": "haiku"
+  },
+  "a3e3d74729acc0d85": {
+    "task": "R10.4",
+    "title": "sonnet: R10.4 Agents redesign (Sonnet)",
+    "model": "sonnet"
+  },
+  "a921b02f5f5f7706b": {
+    "task": "R7.31",
+    "title": "sonnet: R10.31 Workflow map fix (Sonnet)",
+    "model": "sonnet"
   }
 }

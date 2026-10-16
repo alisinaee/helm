@@ -22,6 +22,23 @@ START HERE in a new chat (any account, same Mac): `cd ~/Works/roadmap-board` and
 - **Queue after that (see docs/FINISH-PLAN.md, specs in docs/):** Backlog steps 2-3 then Work v2 + unified Issues (docs/BACKLOG-SPEC, WORK-V2-SPEC, WORK-UNIFIED-SPEC; person wants Issues folded into Work and Work interactive: + Add anything), Tokens C/D/E + a 5-hour stop control (docs/LIMITS-SIMPLE-SPEC), Git section (docs/GIT-SPEC, 7 steps + Cursor grok gate), logging 5b/6 (docs/LOGGING-SPEC), remaining UX R8.x (docs/UX-AUDIT.md; run the UX routine after every wave), R7.30 workflow map 'Open in new tab' with node details in the side panel, panel mail count vs Inbox badge (R8.22), agy/Cursor audits kept busy (agy jobs go through ~/Works/split_net/tools/agy-queue.py; Cursor via tools/cursor-review2.sh with CURSOR_MODEL=grok-4.7-xhigh), cutover R3.2 (person present), tag 1.0.0.
 - **Tool facts learnt:** workers must never amend or reset commits that are pushed (it caused a diverged push once); agy needs the VPN (403 otherwise: rerun); Cursor review runs one at a time; the `rules add` CLI refuses agents (rules.txt was written directly on the person's request).
 
+### Checkpoint 11 (2026-10-16 ~16:10, head reset run H182): paused at 5h 90%, weekly 12% (run cap 15%, H202)
+- Plan: phase R10 on the board (old open tasks on hold). Done + pushed today: R10.3 panel resize, R10.4 Work+Agents UX
+  (titles back), R10.5/R10.6 no page scrollbars, R10.7 Planner merged into Work, R10.8 Research deleted, R10.9 Git
+  rebuilt (diff2html, own SVG lanes), R10.10 core sync C1/C2/C5 + Cursor P1 fixes (git pathspec secret bypass),
+  R10.11 `roadmap init`, R10.13 Overview/Activity, R10.14 Inbox redesign, R10.16 Head (chat first, tabs, header),
+  R10.17 section import retry, R10.19/R10.20/R10.22 System map A1/A2/A4, R10.28 top bar usage age, R10.31 Workflow
+  map loads again.
+- Running at save: R10.29 usage auto-fetch by the service (Opus medium) -> verify, push, follow docs/USAGE-SOURCES.md.
+- Next: full-suite cleanup (about 15 failures in agents/usage/aria/button-count/activity/inbox tests after the UX
+  wave), shared CSS total near/over cap; R10.30 Tokens page redesign (Sonnet, after R10.29); Workflow arrows (no
+  task deps in R10, so no edges: decide phase-to-phase flow edges); R10.27 ledger auto-close bug; R10.21 A3, A5-A8
+  System map; R9.x on hold.
+- Rules from this run: ~/.claude/skills/head/SKILL.md "Planner-only rules" (H182, H189 agy policy, H193 Cursor OFF,
+  H196 UX recipe docs/ux/TESTER-RECIPE.md + taste rules, H197 agy <=20 min, H200 UI redesign = Sonnet with spec).
+- Person to check (needs-you): H173 Planner crash, H195, H198-H201 UI fixes. Person to run: `bin/roadmap limits set 15`.
+- First message for the new chat: `/head`
+
 ### Checkpoint 2026-10-15 (/head save, chat near limit)
 - Last commit: 61aaf25 (Agents engine + effort). Pushed. Tests: full suite green except WIP web/css noise.
 - Running (not stopped): j662 Cursor Head UI review, j671/j673/j674 agy audits, j675 Cursor git review, j679 Haiku reply+assets capture (WIP in roadmap/services/head.py, headops.py, hooks.py, http/routes.py, core/secrets.py and their tests).

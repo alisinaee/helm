@@ -539,3 +539,28 @@
 {"v":1,"t":"u","id":"H196","ts":"2026-10-16T11:26:47Z","by":"head","set":{"status":"done"},"note":"answer: recipe docs/ux/TESTER-RECIPE.md binds ui-ux-pro-max + Vercel guidelines to Haiku testers"}
 {"v":1,"t":"u","id":"H194","ts":"2026-10-16T11:36:27Z","by":"head","set":{"status":"done"},"note":"975cb0b + c7a4faf: chat first, real words, reply preview; head checked live"}
 {"v":1,"t":"u","id":"H195","ts":"2026-10-16T11:36:27Z","by":"head","set":{"status":"needs-you"},"note":"ecf9aca Inbox + c7a4faf Head UX passes done (recipe testers); please look and reopen if still bad"}
+{"v":1,"t":"e","ts":"2026-10-16T11:49:41Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"bug?","sum":"can you see here we have big scroll bar in right and bottom edge , why ?","len":204,"h":"sha1:551e5f5df630","prio":2,"id":"H198"}
+{"v":1,"t":"u","id":"H198","ts":"2026-10-16T11:50:32Z","by":"head","set":{"kind":"bug","sum":"Page-level scrollbars: closed side panel overflows right; Head list fixed height + page overflow"},"link":["+task:R10.5"]}
+{"v":1,"t":"e","ts":"2026-10-16T11:50:33Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"bad ui ux , alignment , bad button , in overview section","len":56,"h":"sha1:41acf7cd6435","prio":2,"id":"H199"}
+{"v":1,"t":"u","id":"H199","ts":"2026-10-16T11:51:04Z","by":"head","set":{"kind":"bug","sum":"Overview Activity card: bad wrapping, huge Undo buttons, misaligned rows"},"link":["+task:R10.13"]}
+{"v":1,"t":"e","ts":"2026-10-16T11:51:23Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"very bad ui ux , big buttons , dead space !!!!","len":46,"h":"sha1:4a6de936022a","prio":2,"id":"H200"}
+{"v":1,"t":"u","id":"H200","ts":"2026-10-16T11:51:41Z","by":"head","set":{"kind":"bug","sum":"Inbox still bad: full-width option/Send buttons, repeated titles, dead space"},"link":["+task:R10.14"]}
+{"v":1,"t":"e","ts":"2026-10-16T11:52:12Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"review?","sum":"head need to look at ui ux again , why the head title in below ?","len":117,"h":"sha1:cdbf4358dc38","prio":2,"id":"H201"}
+{"v":1,"t":"u","id":"H201","ts":"2026-10-16T11:52:19Z","by":"head","set":{"kind":"bug","sum":"Head view: model line and Questions group sit below a 197-row list"},"link":["+task:R10.16"]}
+{"v":1,"t":"e","ts":"2026-10-16T11:53:20Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"change limit to 15 weekly","len":25,"h":"sha1:be0e4a123531","prio":2,"id":"H202"}
+{"v":1,"t":"u","id":"H202","ts":"2026-10-16T11:53:27Z","by":"head","set":{"kind":"rule","sum":"Weekly Claude cap for this run raised to 15%"},"link":["+task:R10.1"]}
+{"v":1,"t":"e","ts":"2026-10-16T11:53:50Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"critical issue , not sync and update","len":36,"h":"sha1:430696964811","prio":2,"id":"H203"}
+{"v":1,"t":"u","id":"H203","ts":"2026-10-16T11:54:13Z","by":"head","set":{"kind":"bug","sum":"Top bar usage stale (6% vs real 9%) and stop off"},"link":["+task:R10.10"]}
+{"v":1,"t":"e","ts":"2026-10-16T11:55:17Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"critical issue why use this way ?","len":185,"h":"sha1:e3fa8d1f8a7e","prio":2,"id":"H204"}
+{"v":1,"t":"u","id":"H204","ts":"2026-10-16T11:55:29Z","by":"head","set":{"kind":"bug","sum":"Usage must be fetched automatically by the service (no head push); Opus permanent fix"},"link":["+task:R10.28"]}
+{"v":1,"t":"e","ts":"2026-10-16T11:57:04Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"ask?","sum":"bad ui ux still we have the box for set limit , you know my taste !!!!","len":71,"h":"sha1:06605e853cb6","prio":2,"id":"H205"}
+{"v":1,"t":"u","id":"H205","ts":"2026-10-16T11:57:19Z","by":"head","set":{"kind":"bug","sum":"Tokens page: full-width limit input, stray % line, wrapped resets cell, dead space"},"link":["+task:R10.28"]}
+{"v":1,"t":"e","ts":"2026-10-16T11:57:49Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"question?","sum":"wow , where is titles ?","len":23,"h":"sha1:df2aa11fa5c9","prio":2,"id":"H206"}
+{"v":1,"t":"u","id":"H206","ts":"2026-10-16T11:57:58Z","by":"head","set":{"kind":"bug","sum":"Agents table: job titles missing, empty gap, big Stop buttons"},"link":["+task:R10.4"]}
+{"v":1,"t":"e","ts":"2026-10-16T11:59:46Z","src":"hook","sid":"76a53f3a","acct":null,"kind":"review?","sum":"check workflow map , ui ux a lot of issue , not see arrows and , not aligng text , over flow the…","len":108,"h":"sha1:7df1251511f1","prio":2,"id":"H207"}
+{"v":1,"t":"u","id":"H207","ts":"2026-10-16T12:00:21Z","by":"head","set":{"kind":"bug","sum":"Workflow map: no arrows, misaligned text, overflow boxes; page stuck on skeleton"},"link":["+task:R10.13"]}
+{"v":1,"t":"u","id":"H207","ts":"2026-10-16T12:01:03Z","by":"head","set":{"kind":"bug","sum":"Workflow map stuck loading + arrows/labels/overflow"},"link":["+task:R10.31"]}
+{"v":1,"t":"u","id":"H198","ts":"2026-10-16T12:01:17Z","by":"head","set":{"status":"needs-you"},"note":"2e87ac6: closed panel display:none, app 100dvh; please check"}
+{"v":1,"t":"u","id":"H199","ts":"2026-10-16T12:01:18Z","by":"head","set":{"status":"needs-you"},"note":"4ad5191: Activity rows one line, icon Undo; please check"}
+{"v":1,"t":"u","id":"H200","ts":"2026-10-16T12:01:18Z","by":"head","set":{"status":"needs-you"},"note":"03ef902 + 3315c70 Inbox redesign; please check"}
+{"v":1,"t":"u","id":"H201","ts":"2026-10-16T12:02:20Z","by":"head","set":{"status":"needs-you"},"note":"df73618 Head header + Chat/Questions tabs; please check"}

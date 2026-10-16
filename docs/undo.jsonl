@@ -1,19 +1,3 @@
-{"activity":"A110","sum":"H67 triaged as decision","op":"head.restore","args":{"steps":[{"id":"H67","set":{"kind":"decision","sum":"go with that"},"link":["-task:R7.36"]}]},"at":"2026-10-15T13:55:04+03:30"}
-{"activity":"A111","sum":"H36 set status, note","op":"head.restore","args":{"steps":[{"id":"H36","set":{"status":"open"}}]},"at":"2026-10-15T13:55:04+03:30"}
-{"activity":"A112","sum":"H49 set status, note","op":"head.restore","args":{"steps":[{"id":"H49","set":{"status":"open"}}]},"at":"2026-10-15T13:55:04+03:30"}
-{"activity":"A113","sum":"H94 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H94","set":{"kind":"rule","sum":"i give you bypass permisssons , so dont ask for permision , you allow to do things"},"link":["-task:R7.36"]}]},"at":"2026-10-15T13:55:10+03:30"}
-{"activity":"A114","sum":"H54 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H54","set":{"kind":"ask","sum":"still not show the model use for opencode , fix it"},"link":["-task:R7.38"]}]},"at":"2026-10-15T13:56:40+03:30"}
-{"activity":"A115","sum":"H53 triaged as review","op":"head.restore","args":{"steps":[{"id":"H53","set":{"kind":"review","sum":"Run more OpenCode tasks at max effort; check the Agents effort column"},"link":["-task:R7.39"]}]},"at":"2026-10-15T13:56:40+03:30"}
-{"activity":"A116","sum":"H95 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H95","set":{"kind":"rule","sum":"u are the head , why dont do the things i told you ?"},"link":["-task:R7.36"]}]},"at":"2026-10-15T13:56:40+03:30"}
-{"activity":"A117","sum":"H52 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H52","set":{"kind":"ask","sum":"they did face issue , i think first you need to know how to run as max effort"}}]},"at":"2026-10-15T13:57:04+03:30"}
-{"activity":"A118","sum":"H99 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H99","set":{"kind":"rule","sum":"btw the new rules for cluade usage : go until 80% of 5h now u can use the opus 5.5 low or mid for…"},"link":["-task:R7.36"]}]},"at":"2026-10-15T14:02:10+03:30"}
-{"activity":"A119","sum":"H48 triaged as review","op":"head.restore","args":{"steps":[{"id":"H48","set":{"kind":"review","sum":"Cursor grok 4.7 xhigh: why sections do not sync, and the best sync design"},"link":["-task:R7.33","-task:R7.40"]}]},"at":"2026-10-15T14:02:31+03:30"}
-{"activity":"A120","sum":"H47 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H47","set":{"kind":"ask","sum":"Run ~20 parallel audit jobs (agy, OpenCode free max, Cursor)"}}]},"at":"2026-10-15T14:02:32+03:30"}
-{"activity":"A121","sum":"H100 triaged as review","op":"head.restore","args":{"steps":[{"id":"H100","set":{"kind":"review","sum":"alos u need to check why open code tasks faild , then start them again for fix"},"link":["-task:R7.32"]}]},"at":"2026-10-15T14:02:38+03:30"}
-{"activity":"A122","sum":"H101 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H101","set":{"kind":"ask","sum":"u can advice with opus low med or sonnect for take care of the sub tasks and task and planning to…"},"link":["-task:R7.36"]}]},"at":"2026-10-15T14:06:03+03:30"}
-{"activity":"A123","sum":"R7.32 todo->done","op":"task.status","args":{"id":"R7.32","status":"todo"},"at":"2026-10-15T14:10:15+03:30"}
-{"activity":"A124","sum":"R7.34 todo->done","op":"task.status","args":{"id":"R7.34","status":"todo"},"at":"2026-10-15T14:10:15+03:30"}
-{"activity":"A125","sum":"R7.35 todo->done","op":"task.status","args":{"id":"R7.35","status":"todo"},"at":"2026-10-15T14:10:15+03:30"}
 {"activity":"A126","sum":"R7.38 todo->done","op":"task.status","args":{"id":"R7.38","status":"todo"},"at":"2026-10-15T14:10:15+03:30"}
 {"activity":"A127","sum":"R7.39 todo->done","op":"task.status","args":{"id":"R7.39","status":"todo"},"at":"2026-10-15T14:10:15+03:30"}
 {"activity":"A128","sum":"H53 set status, note","op":"head.restore","args":{"steps":[{"id":"H53","set":{"status":"open"}}]},"at":"2026-10-15T14:10:31+03:30"}
@@ -498,3 +482,19 @@
 {"activity":"A663","sum":"H196 set status, note","op":"head.restore","args":{"steps":[{"id":"H196","set":{"status":"done"}}]},"at":"2026-10-16T14:56:47+03:30"}
 {"activity":"A664","sum":"H194 set status, note","op":"head.restore","args":{"steps":[{"id":"H194","set":{"status":"open"}}]},"at":"2026-10-16T15:06:27+03:30"}
 {"activity":"A665","sum":"H195 set status, note","op":"head.restore","args":{"steps":[{"id":"H195","set":{"status":"open"}}]},"at":"2026-10-16T15:06:27+03:30"}
+{"activity":"A667","sum":"H198 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H198","set":{"kind":"bug","sum":"can you see here we have big scroll bar in right and bottom edge , why ?"},"link":["-task:R10.5"]}]},"at":"2026-10-16T15:20:32+03:30"}
+{"activity":"A669","sum":"H199 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H199","set":{"kind":"ask","sum":"bad ui ux , alignment , bad button , in overview section"},"link":["-task:R10.13"]}]},"at":"2026-10-16T15:21:04+03:30"}
+{"activity":"A670","sum":"H200 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H200","set":{"kind":"ask","sum":"very bad ui ux , big buttons , dead space !!!!"},"link":["-task:R10.14"]}]},"at":"2026-10-16T15:21:41+03:30"}
+{"activity":"A671","sum":"R10.14 done->partial","op":"task.status","args":{"id":"R10.14","status":"done"},"at":"2026-10-16T15:21:42+03:30"}
+{"activity":"A672","sum":"H201 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H201","set":{"kind":"review","sum":"head need to look at ui ux again , why the head title in below ?"},"link":["-task:R10.16"]}]},"at":"2026-10-16T15:22:19+03:30"}
+{"activity":"A673","sum":"H202 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H202","set":{"kind":"ask","sum":"change limit to 15 weekly"},"link":["-task:R10.1"]}]},"at":"2026-10-16T15:23:27+03:30"}
+{"activity":"A674","sum":"H203 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H203","set":{"kind":"ask","sum":"critical issue , not sync and update"},"link":["-task:R10.10"]}]},"at":"2026-10-16T15:24:13+03:30"}
+{"activity":"A675","sum":"H204 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H204","set":{"kind":"ask","sum":"critical issue why use this way ?"},"link":["-task:R10.28"]}]},"at":"2026-10-16T15:25:29+03:30"}
+{"activity":"A677","sum":"H205 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H205","set":{"kind":"ask","sum":"bad ui ux still we have the box for set limit , you know my taste !!!!"},"link":["-task:R10.28"]}]},"at":"2026-10-16T15:27:19+03:30"}
+{"activity":"A678","sum":"H206 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H206","set":{"kind":"question","sum":"wow , where is titles ?"},"link":["-task:R10.4"]}]},"at":"2026-10-16T15:27:58+03:30"}
+{"activity":"A679","sum":"H207 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H207","set":{"kind":"review","sum":"check workflow map , ui ux a lot of issue , not see arrows and , not aligng text , over flow the…"},"link":["-task:R10.13"]}]},"at":"2026-10-16T15:30:21+03:30"}
+{"activity":"A680","sum":"H207 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H207","set":{"kind":"bug","sum":"Workflow map: no arrows, misaligned text, overflow boxes; page stuck on skeleton"},"link":["-task:R10.31"]}]},"at":"2026-10-16T15:31:03+03:30"}
+{"activity":"A681","sum":"H198 set status, note","op":"head.restore","args":{"steps":[{"id":"H198","set":{"status":"open"}}]},"at":"2026-10-16T15:31:18+03:30"}
+{"activity":"A682","sum":"H199 set status, note","op":"head.restore","args":{"steps":[{"id":"H199","set":{"status":"open"}}]},"at":"2026-10-16T15:31:18+03:30"}
+{"activity":"A683","sum":"H200 set status, note","op":"head.restore","args":{"steps":[{"id":"H200","set":{"status":"open"}}]},"at":"2026-10-16T15:31:18+03:30"}
+{"activity":"A684","sum":"H201 set status, note","op":"head.restore","args":{"steps":[{"id":"H201","set":{"status":"open"}}]},"at":"2026-10-16T15:32:20+03:30"}

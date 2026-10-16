@@ -3987,7 +3987,8 @@
       "refs": [
         "commit:83267e78a3aba715152dad739ff4af382ef9c3ec",
         "commit:85de6eb4404f72475b81b8c703d1975a392c4109",
-        "commit:fe677557267968301d43ac4992a7dcb12f26a3c4"
+        "commit:fe677557267968301d43ac4992a7dcb12f26a3c4",
+        "commit:e16a0f69916d03edee9400705e0cc734145fdf62"
       ],
       "at": {
         "done": "2026-10-16T15:10:38+03:30"
@@ -3997,7 +3998,7 @@
       "id": "R10.5",
       "phase": "R10",
       "title": "Scroll behaviour: one scroll container per section, sticky headers",
-      "status": "partial",
+      "status": "done",
       "tokensK": 5,
       "thinking": "low",
       "model": "haiku",
@@ -4007,7 +4008,10 @@
       "note": "web/css",
       "at": {
         "partial": "2026-10-16T14:56:00+03:30"
-      }
+      },
+      "refs": [
+        "commit:2e87ac6c55b3a932759e2df12ac7de2968e21e0c"
+      ]
     },
     {
       "id": "R10.6",
@@ -4081,7 +4085,8 @@
       "refs": [
         "commit:81ca110028947ed4b50014636ce4e49880ab63ca",
         "commit:f2028191f15059f81652561df0d065d897f97601",
-        "commit:0a17a01d64b241d6fc22a95b3f19eceab7a7234a"
+        "commit:0a17a01d64b241d6fc22a95b3f19eceab7a7234a",
+        "commit:14ad9b2dc29beb9a1e8d1f5c869e5cc9cafe2661"
       ],
       "at": {
         "done": "2026-10-16T13:53:41+03:30"
@@ -4153,10 +4158,12 @@
       "checkK": 0,
       "note": "web",
       "refs": [
-        "commit:e675a2710e49b5180cb567c6342c580625d8bdf7"
+        "commit:e675a2710e49b5180cb567c6342c580625d8bdf7",
+        "commit:99aea1ca3fc2b22a6d0b05d650181a751e0994eb",
+        "commit:4ad51917fcd3fa670677ede5637c962863766110"
       ],
       "at": {
-        "done": "2026-10-16T14:01:34+03:30"
+        "done": "2026-10-16T15:27:03+03:30"
       }
     },
     {
@@ -4172,10 +4179,13 @@
       "checkK": 0,
       "note": "inbox.js, panel.js",
       "refs": [
-        "commit:9fb649a7e57741f255bf76cdf49ac4f1393b8c6b"
+        "commit:9fb649a7e57741f255bf76cdf49ac4f1393b8c6b",
+        "commit:03ef9026712dcdfaffe523c580e5df6b55b00a23",
+        "commit:3315c701ebadbe6eeb37180062c69f61cd31726d"
       ],
       "at": {
-        "done": "2026-10-16T13:14:56+03:30"
+        "done": "2026-10-16T13:14:56+03:30",
+        "partial": "2026-10-16T15:21:42+03:30"
       }
     },
     {
@@ -4192,7 +4202,8 @@
       "note": "roadmap/services/head*.py, hooks.py, head.js",
       "refs": [
         "commit:a58e165a751d4c59e14df8faab6133694399422a",
-        "commit:975cb0bb32c56e10c719dc42de8731886a619c6b"
+        "commit:975cb0bb32c56e10c719dc42de8731886a619c6b",
+        "commit:df73618fd5d1f0893305e0e41741b6f481aebb83"
       ],
       "at": {
         "done": "2026-10-16T13:44:00+03:30",
@@ -4233,7 +4244,8 @@
       "checkK": 0,
       "note": "roadmap/http/static*, web/index.html",
       "refs": [
-        "commit:1a35494510c0885b5b255a2dd2feb289d6555a93"
+        "commit:1a35494510c0885b5b255a2dd2feb289d6555a93",
+        "commit:7d40d2729a876095aed372311355643542bb6547"
       ],
       "at": {
         "done": "2026-10-16T14:05:34+03:30"
@@ -4275,14 +4287,20 @@
       "id": "R10.20",
       "phase": "R10",
       "title": "System map A2: heat from git log + jobs + work",
-      "status": "todo",
+      "status": "done",
       "tokensK": 3,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "systemheat.py"
+      "note": "systemheat.py",
+      "refs": [
+        "commit:75c87a1b64c68f75c558add0cb2aa8339f8b4ead"
+      ],
+      "at": {
+        "done": "2026-10-16T15:21:03+03:30"
+      }
     },
     {
       "id": "R10.21",
@@ -4367,6 +4385,75 @@
       "check": "none",
       "checkK": 0,
       "note": "cli"
+    },
+    {
+      "id": "R10.27",
+      "phase": "R10",
+      "title": "Ledger: binding a new ask to an already-done task must not auto-close it (H194,H200,H201 closed at once)",
+      "status": "todo",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "roadmap/services/head.py fold"
+    },
+    {
+      "id": "R10.28",
+      "phase": "R10",
+      "title": "Top bar usage: show age of reading, stale state, and the weekly stop (H203)",
+      "status": "partial",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "topbar.js",
+      "verify": true
+    },
+    {
+      "id": "R10.29",
+      "phase": "R10",
+      "title": "Usage auto-fetch by the background service like 3rd-party apps (H204)",
+      "status": "partial",
+      "tokensK": 8,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "roadmap/services/usage*"
+    },
+    {
+      "id": "R10.30",
+      "phase": "R10",
+      "title": "Tokens page redesign: compact stop control, aligned spend table (H205)",
+      "status": "todo",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "limits.js, usage.js"
+    },
+    {
+      "id": "R10.31",
+      "phase": "R10",
+      "title": "Workflow map: loads, visible arrows, aligned labels, no overflow (H207)",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "workflow.js, graph/*",
+      "refs": [
+        "commit:a3dce707d326db9591a25cfda5da0e3ded9b73ee"
+      ]
     }
   ],
   "schemaVersion": 1

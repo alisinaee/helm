@@ -6217,6 +6217,192 @@
       "refs": [
         "commit:fe677557267968301d43ac4992a7dcb12f26a3c4"
       ]
+    },
+    {
+      "id": "j1003",
+      "title": "haiku: R10.20 System map A2 heat",
+      "model": "haiku",
+      "task": "R10.20",
+      "status": "done",
+      "started": "2026-10-16T15:18:34+03:30",
+      "ended": "2026-10-16T15:20:34+03:30",
+      "refs": [
+        "commit:75c87a1b64c68f75c558add0cb2aa8339f8b4ead"
+      ]
+    },
+    {
+      "id": "j1004",
+      "title": "haiku: R10.13 Overview UX tester + fix",
+      "model": "haiku",
+      "task": "R10.13",
+      "status": "done",
+      "started": "2026-10-16T15:18:39+03:30",
+      "ended": "2026-10-16T15:26:45+03:30",
+      "refs": [
+        "commit:99aea1ca3fc2b22a6d0b05d650181a751e0994eb",
+        "commit:4ad51917fcd3fa670677ede5637c962863766110"
+      ]
+    },
+    {
+      "id": "j1005",
+      "title": "haiku: R10.9 Git UX tester + fix",
+      "model": "haiku",
+      "task": "R10.9",
+      "status": "done",
+      "started": "2026-10-16T15:18:45+03:30",
+      "ended": "2026-10-16T15:27:28+03:30",
+      "refs": [
+        "commit:14ad9b2dc29beb9a1e8d1f5c869e5cc9cafe2661"
+      ]
+    },
+    {
+      "id": "j1006",
+      "title": "agy: aria + strings audit head/inbox/agents",
+      "model": "agy",
+      "task": "R10.2",
+      "effort": "high",
+      "status": "failed",
+      "started": "2026-10-16T15:18:56+03:30",
+      "ended": "2026-10-16T15:27:35+03:30"
+    },
+    {
+      "id": "j1007",
+      "title": "haiku: R10.13 follow-up",
+      "model": "haiku",
+      "task": "R10.13",
+      "status": "done",
+      "started": "2026-10-16T15:20:46+03:30",
+      "ended": "2026-10-16T15:26:45+03:30",
+      "refs": [
+        "commit:99aea1ca3fc2b22a6d0b05d650181a751e0994eb",
+        "commit:4ad51917fcd3fa670677ede5637c962863766110"
+      ]
+    },
+    {
+      "id": "j1008",
+      "title": "haiku: R10.5 page scrollbars fix",
+      "model": "haiku",
+      "task": "R10.5",
+      "status": "done",
+      "started": "2026-10-16T15:20:55+03:30",
+      "ended": "2026-10-16T15:30:05+03:30",
+      "refs": [
+        "commit:2e87ac6c55b3a932759e2df12ac7de2968e21e0c"
+      ]
+    },
+    {
+      "id": "j1009",
+      "title": "sonnet: R10.14 Inbox redesign (Sonnet)",
+      "model": "sonnet",
+      "task": "R10.14",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-16T15:21:52+03:30",
+      "ended": "2026-10-16T15:25:53+03:30",
+      "refs": [
+        "commit:03ef9026712dcdfaffe523c580e5df6b55b00a23"
+      ]
+    },
+    {
+      "id": "j1010",
+      "title": "sonnet: R10.16 Head layout: header + tabs",
+      "model": "sonnet",
+      "task": "R10.16",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-16T15:22:29+03:30",
+      "ended": "2026-10-16T15:29:47+03:30",
+      "refs": [
+        "commit:df73618fd5d1f0893305e0e41741b6f481aebb83"
+      ]
+    },
+    {
+      "id": "j1011",
+      "title": "haiku: R10.28 top bar usage freshness",
+      "model": "haiku",
+      "task": "R10.28",
+      "status": "done",
+      "started": "2026-10-16T15:24:22+03:30",
+      "ended": "2026-10-16T15:29:51+03:30"
+    },
+    {
+      "id": "j1012",
+      "title": "opus: R10.29 usage auto-fetch (Opus)",
+      "model": "opus",
+      "task": "R10.29",
+      "effort": "medium",
+      "status": "running",
+      "started": "2026-10-16T15:25:47+03:30",
+      "ended": null
+    },
+    {
+      "id": "j1013",
+      "title": "sonnet: R10.14 follow-up inbox live polish",
+      "model": "sonnet",
+      "task": "R10.14",
+      "status": "done",
+      "started": "2026-10-16T15:26:38+03:30",
+      "ended": "2026-10-16T15:27:41+03:30",
+      "refs": [
+        "commit:3315c701ebadbe6eeb37180062c69f61cd31726d"
+      ],
+      "tokensK": 94.0
+    },
+    {
+      "id": "j1014",
+      "title": "sonnet: R10.14 follow-up",
+      "model": "sonnet",
+      "task": "R10.14",
+      "status": "done",
+      "started": "2026-10-16T15:26:43+03:30",
+      "ended": "2026-10-16T15:27:22+03:30",
+      "refs": [
+        "commit:3315c701ebadbe6eeb37180062c69f61cd31726d"
+      ]
+    },
+    {
+      "id": "j1015",
+      "title": "haiku: R10.17 section import retry",
+      "model": "haiku",
+      "task": "R10.17",
+      "status": "done",
+      "started": "2026-10-16T15:27:04+03:30",
+      "ended": "2026-10-16T15:32:11+03:30",
+      "refs": [
+        "commit:7d40d2729a876095aed372311355643542bb6547"
+      ]
+    },
+    {
+      "id": "j1016",
+      "title": "sonnet: R10.4 Agents redesign (Sonnet)",
+      "model": "sonnet",
+      "task": "R10.4",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-16T15:28:08+03:30",
+      "ended": "2026-10-16T15:32:55+03:30",
+      "refs": [
+        "commit:e16a0f69916d03edee9400705e0cc734145fdf62"
+      ]
+    },
+    {
+      "id": "j1017",
+      "title": "haiku: R10.28 follow-up",
+      "model": "haiku",
+      "task": "R10.28",
+      "status": "done",
+      "started": "2026-10-16T15:30:11+03:30",
+      "ended": "2026-10-16T15:30:23+03:30"
+    },
+    {
+      "id": "j1018",
+      "title": "sonnet: R10.31 Workflow map fix (Sonnet)",
+      "model": "sonnet",
+      "task": "R7.31",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-16T15:30:58+03:30",
+      "ended": "2026-10-16T15:37:03+03:30"
     }
   ]
 }
