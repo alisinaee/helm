@@ -1,5 +1,5 @@
 #!/bin/sh
-# roadmap-board CLI shim. Follows its own symlinks to find the repo, then runs the package from there.
+# Helm CLI shim (bin/helm is an alias). Follows its own symlinks to find the repo, then runs the package from there.
 # Fast path: `roadmap hook pre` (the PreToolUse gate) exits 0 at once, without starting Python, while no project has a
 # block sentinel (<state>/block-<project>). Most tool calls therefore cost no Python start.
 # The state folder is derived like paths.state_dir(): ROADMAP_HOME is stripped and expanduser'd, and then made absolute.

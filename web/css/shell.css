@@ -78,3 +78,4 @@
 .side{position:fixed;inset:0;width:100%;border-left:0}
 .toasts{right:var(--sp-3);bottom:calc(var(--h-bnav) + var(--sp-3))}
 }
+.nav-brand{margin:0;padding:var(--sp-2);font-weight:700}

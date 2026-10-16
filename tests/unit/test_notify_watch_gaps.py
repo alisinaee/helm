@@ -74,7 +74,7 @@ class NotifyHelperTests(HomeCase):
         notify.notify("question", None, "B", "demo", runner=self.runner, now=1000)
         self.assertEqual(len(self.calls), 2)
         for argv in self.calls:
-            self.assertIn('with title "roadmap-board"', argv[2])
+            self.assertIn('with title "Helm"', argv[2])
 
     def test_project_of_is_none_for_a_folder_that_is_not_registered(self):
         self.assertIsNone(notify.project_of(os.path.join(self.tmp, "nowhere", "docs")))

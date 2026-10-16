@@ -25,7 +25,7 @@ KEYCHAIN_NOT_FOUND = usage.KEYCHAIN_ITEM_NOT_FOUND
 DEFAULT_PORT = 8780
 # The legacy split-net dashboard port. Read at call time, so tests can point the check at a free port.
 LEGACY_PORT = 8765
-LEGACY_FIX = ("The old split-net dashboard may still run on 8765; roadmap-board uses 8780 (set in the global config). "
+LEGACY_FIX = ("The old split-net dashboard may still run on 8765; Helm uses 8780 (set in the global config). "
               "Stop the old one only after the cutover checklist (docs/RELEASE.md).")
 HEALTH_TIMEOUT_S = 1.0
 HEALTH_PATH = "/api/v1/health"
@@ -59,7 +59,7 @@ def check_repo():
     if os.path.isfile(os.path.join(repo, "roadmap", "__init__.py")):
         return _row("repo", "Repo path", OK, repo)
     return _row("repo", "Repo path", FAIL, "the roadmap package is not at " + repo,
-                "Clone roadmap-board again and run the service install from that folder.")
+                "Clone Helm again and run the service install from that folder.")
 
 
 def check_shim():

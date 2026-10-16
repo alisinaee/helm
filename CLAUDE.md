@@ -1,4 +1,4 @@
-# CLAUDE.md for roadmap-board (read docs/HANDOVER.md first)
+# CLAUDE.md for Helm (formerly roadmap-board; repo alisinaee/helm, dir ~/Works/helm; CLI `bin/helm` = `bin/roadmap`) (read docs/HANDOVER.md first)
 
 You are continuing a project the person has been building across a very long chat. docs/HANDOVER.md has every feature, rule, decision, state and open item. Key rules in short:
 - Answer short and spartan (the person has limited tokens and likes only the answer). Top-priority new feature: the HEAD section (docs/HEAD-SECTION-REQUEST.md, R7.31).

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to roadmap-board are listed here. The format follows
+All notable changes to Helm are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [SemVer](https://semver.org/).
 Each work package writes a fragment in `changes/WPn.md`; the fragments are merged here at release time.
 

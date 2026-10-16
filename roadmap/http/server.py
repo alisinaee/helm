@@ -289,7 +289,7 @@ def _exc_event(exc, path):
 
 
 class _Handler(BaseHTTPRequestHandler):
-    server_version = "roadmap-board"
+    server_version = "Helm"
     protocol_version = "HTTP/1.1"
     timeout = 10
 
