@@ -25,7 +25,8 @@ function taskHtml(ctx, task) {
   if (task.blocked) flags.push(chipHtml("blocked", "danger"));
   const copy = taskCopyHtml(ctx.pid, ctx.snap, copyItem(task));
   return '<li class="wk-tree-task" data-wk-task="' + esc(task.id) + '" data-state="' + esc(task.state) + '">' +
-    '<div class="wk-tree-row row-grid"><span class="wk-id num">' + esc(task.id) + "</span>" +
+    '<div class="wk-tree-row row-grid"><span class="wk-ind" aria-hidden="true"></span>' +
+    '<span class="wk-id num">' + esc(task.id) + "</span>" +
     '<a class="wk-title rg-t" href="' + esc(taskHref(ctx, task.id)) + '" aria-label="Task ' + esc(task.id) + ": " +
     esc(task.title) + '" data-focus="wk-title-' + esc(task.id) +
     '">' + esc(task.title) + "</a>" +
