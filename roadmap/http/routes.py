@@ -26,6 +26,7 @@ from roadmap.services import git as git_service
 from roadmap.services import head as head_service
 from roadmap.services import jobs as job_service
 from roadmap.services import system as system_service
+from roadmap.services import system_arch
 from roadmap.services import systemheat
 from roadmap.services import tasks as task_service
 from roadmap.core.parsers import parse_jobs
@@ -782,6 +783,15 @@ def project_system(app, req, match):
             "layers": mapped["layers"], "components": components, "edges": mapped["edges"],
             "heat": heat["heat"], "summary": heat["summary"], "fileCount": mapped["fileCount"],
             "truncated": mapped["truncated"], "sha": sha}
+    try:
+        jobs = job_service.list_jobs(data_dir)
+    except RoadmapError:
+        jobs = []
+    try:
+        body["arch"] = system_arch.analyze(path, mapped, systemheat.history(path, sha)["commits"], jobs)
+    except (RoadmapError, OSError, ValueError) as err:
+        body["arch"] = None
+        body["warnings"].append("system views unavailable: " + str(err)[:120])
     return json_reply(200, body, headers=[("ETag", etag)])
 
 

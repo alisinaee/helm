@@ -46,5 +46,40 @@
     {"from": "http-api", "to": "services", "label": "calls use cases", "kind": "call"},
     {"from": "services", "to": "core", "label": "parse and format", "kind": "call"},
     {"from": "services", "to": "store", "label": "read and write state", "kind": "data"}
-  ]
+  ],
+ "containers": [
+  {"id": "web", "name": "Web dashboard", "tech": "HTML/JS SPA in the browser", "components": ["web-shell", "views", "graph-engine", "web-vendor"], "notes": "Hash-routed single page; polls the snapshot every 2 s and posts registry ops."},
+  {"id": "py", "name": "roadmap process", "tech": "Python: CLI + local HTTP server", "components": ["cli", "hooks", "http-api", "services", "core", "store"], "notes": "One package, two entry modes: bin/roadmap <command> and roadmap serve on 127.0.0.1."},
+  {"id": "tools", "name": "Dev tools", "tech": "Python and shell", "components": ["tools"], "notes": "Checks, linters, UI smoke and agent job scripts."}],
+ "flows": [
+  {"id": "page-refresh", "name": "Dashboard refresh", "notes": "Every 2 s the page reads one snapshot per project and redraws the active section.", "steps": [
+    {"from": "user", "to": "web-shell", "label": "open #/p/<id>/<section>"},
+    {"from": "web-shell", "to": "http-api", "label": "GET /api/v1/projects/<id>/snapshot"},
+    {"from": "http-api", "to": "services", "label": "build snapshot"},
+    {"from": "services", "to": "store", "label": "read tasks, jobs, work"},
+    {"from": "services", "to": "core", "label": "parse and summarise"},
+    {"from": "http-api", "to": "web-shell", "label": "200 JSON (ETag)", "reply": true},
+    {"from": "web-shell", "to": "views", "label": "render the section"},
+    {"from": "views", "to": "graph-engine", "label": "layout and draw maps"}]},
+  {"id": "board-action", "name": "Board action", "notes": "A click in the UI becomes one registry op; the write is atomic and logged.", "steps": [
+    {"from": "user", "to": "views", "label": "click (move, accept, answer)"},
+    {"from": "views", "to": "http-api", "label": "POST /api/v1/cmd {op, args}"},
+    {"from": "http-api", "to": "http-api", "label": "CSRF, origin, rate limit"},
+    {"from": "http-api", "to": "services", "label": "run the op"},
+    {"from": "services", "to": "store", "label": "lock, atomic write, activity line"},
+    {"from": "http-api", "to": "views", "label": "200 result + undo", "reply": true}]},
+  {"id": "agent-job", "name": "Agent job recorded by hooks", "notes": "Claude Code calls the hook on every tool use; jobs open and close without manual steps.", "steps": [
+    {"from": "claude-code", "to": "cli", "label": "roadmap hook (PreToolUse)"},
+    {"from": "cli", "to": "hooks", "label": "run_hook(payload)"},
+    {"from": "hooks", "to": "services", "label": "gate: allowed while blocked?"},
+    {"from": "claude-code", "to": "cli", "label": "roadmap hook (PostToolUse)"},
+    {"from": "cli", "to": "hooks", "label": "detect Agent / Bash job"},
+    {"from": "hooks", "to": "services", "label": "start or close job"},
+    {"from": "services", "to": "store", "label": "write jobs.json"}]},
+  {"id": "cli-command", "name": "CLI command", "notes": "bin/roadmap <group> <command>: one module per group in roadmap/commands.", "steps": [
+    {"from": "user", "to": "cli", "label": "bin/roadmap task done R1.2"},
+    {"from": "cli", "to": "services", "label": "use case"},
+    {"from": "services", "to": "store", "label": "read, lock, write"},
+    {"from": "services", "to": "core", "label": "validate and format"},
+    {"from": "cli", "to": "user", "label": "text or --json", "reply": true}]}]
 }

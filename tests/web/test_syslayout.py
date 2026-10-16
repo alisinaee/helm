@@ -1,249 +1,187 @@
-"""The system map layout (R10.22, A4), run in node over web/js/graph/syslayout.js.
+"""The System views layout (R10.33), run in node over web/js/graph/syslayout.js.
 
-Checks on generated systems (a fixed-seed 24-card system, a small chain, and edge cases): no two cards overlap, every
-card sits inside the width and height, cards keep layer order left to right, every route is orthogonal, starts on the
-source card's right side and ends on the target card's left side, and no segment crosses the inside of any card. The
-output is the same for a second run and for the input shuffled (order does not matter). Unknown ends, self loops and
-duplicate edges are dropped with a warning, and an undeclared layer goes to "other" last. 24 cards lay out in under
-50 ms (best of five runs). The node checks are skipped when node is not installed.
+layeredLayout: on generated views (a fixed-seed 30-node view in 5 groups, a small chain, edge cases) no two nodes
+overlap, every node sits inside its band box and the drawing, bands do not overlap, every edge starts on a side of its
+source and ends on a side of its target, every placed label covers no node and no other label, the output is the same
+for a second run, unknown ends / self loops / duplicates are dropped, an unknown group gets its own band, callers sit
+above callees inside a band, a tall drawing flows into columns on a wide canvas, and 30 nodes lay out in under 50 ms.
+sequenceLayout: one row per step in order, self calls loop. matrixLayout: one cell per edge at its row and column.
 """
 
 import json
 import os
 import random
-import re
 import shutil
 import subprocess
 import unittest
 
 TESTS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REPO = os.path.dirname(TESTS)
-WEB = os.path.join(REPO, "web")
-SYSLAYOUT = os.path.join(WEB, "js", "graph", "syslayout.js")
+WEB = os.path.join(os.path.dirname(TESTS), "web")
 NODE = shutil.which("node")
-CARD_W = 200
-CARD_H = 64
 
-# stdin: {"cases": {name: system}}. stdout: {name: {layout, text, again, shuffled, ms}} (ms is the best of five runs).
 SCRIPT = r"""
 (async () => {
   const { readFileSync } = await import("node:fs");
   const { join } = await import("node:path");
   const { pathToFileURL } = await import("node:url");
-  const web = process.argv[1];
-  const { systemLayout } = await import(pathToFileURL(join(web, "js", "graph", "syslayout.js")).href);
+  const m = await import(pathToFileURL(join(process.argv[1], "js", "graph", "syslayout.js")).href);
   const input = JSON.parse(readFileSync(0, "utf8"));
-  const out = {};
-  const reverse = (sys) => ({
-    layers: sys.layers || [],
-    components: (sys.components || []).slice().reverse(),
-    edges: (sys.edges || []).slice().reverse(),
-  });
-  for (const name of Object.keys(input.cases)) {
-    const sys = input.cases[name];
-    const layout = systemLayout(sys);
-    let best = Infinity;
-    for (let k = 0; k < 5; k += 1) {
-      const t0 = performance.now();
-      systemLayout(sys);
-      best = Math.min(best, performance.now() - t0);
+  const out = { cases: {} };
+  for (const [name, view] of Object.entries(input.cases)) {
+    const opts = { aspect: view.aspect || 1 };
+    const lay = m.layeredLayout(view, opts);
+    let ms = Infinity;
+    for (let i = 0; i < 5; i++) {
+      const t = process.hrtime.bigint();
+      m.layeredLayout(view, opts);
+      ms = Math.min(ms, Number(process.hrtime.bigint() - t) / 1e6);
     }
-    out[name] = {
-      layout,
-      text: JSON.stringify(layout),
-      again: JSON.stringify(systemLayout(sys)),
-      shuffled: JSON.stringify(systemLayout(reverse(sys))),
-      ms: best,
-    };
+    out.cases[name] = { lay, again: m.layeredLayout(view, opts), ms };
   }
-  process.stdout.write(JSON.stringify(out));
+  out.seq = m.sequenceLayout(input.flow);
+  out.mx = m.matrixLayout(input.matrix);
+  out.consts = { NODE_W: m.NODE_W, NODE_H: m.NODE_H, LABEL_H: 16 };
+  console.log(JSON.stringify(out));
 })();
 """
 
 
-def generated_system(seed, n_cards, layers, n_edges):
+def big_view(seed=7, n=30, groups=5):
     rnd = random.Random(seed)
-    components = []
-    for i in range(n_cards):
-        components.append({
-            "id": "c-%02d" % i,
-            "name": "Component %d" % i,
-            "layer": layers[i % len(layers)],
-            "kind": "module",
-        })
-    edges = set()
-    while len(edges) < n_edges:
-        a = rnd.randrange(n_cards)
-        b = rnd.randrange(n_cards)
-        if a != b:
-            edges.add((a, b))
-    return {
-        "version": 1,
-        "layers": layers,
-        "components": components,
-        "edges": [{"from": "c-%02d" % a, "to": "c-%02d" % b, "label": "x", "kind": "call"}
-                  for a, b in sorted(edges)],
-    }
-
-
-def chain_system():
-    return {
-        "version": 1,
-        "layers": ["ui", "service", "data"],
-        "components": [
-            {"id": "web-ui", "name": "Web UI", "layer": "ui"},
-            {"id": "api", "name": "API", "layer": "service"},
-            {"id": "store", "name": "Store", "layer": "data"},
-            {"id": "tool", "name": "Tool", "layer": "ui"},
-        ],
-        "edges": [
-            {"from": "web-ui", "to": "api"},
-            {"from": "api", "to": "store"},
-            {"from": "web-ui", "to": "store"},
-            {"from": "store", "to": "web-ui"},
-            {"from": "tool", "to": "tool"},
-            {"from": "api", "to": "missing"},
-            {"from": "web-ui", "to": "api"},
-        ],
-    }
-
-
-def other_system():
-    return {
-        "layers": ["ui"],
-        "components": [
-            {"id": "a", "layer": "ui"},
-            {"id": "b", "layer": "mystery"},
-            {"id": "c"},
-        ],
-        "edges": [{"from": "a", "to": "b"}],
-    }
+    gs = [{"id": "g%d" % i, "label": "Group %d" % i} for i in range(groups)]
+    nodes = [{"id": "n%d" % i, "label": "Node %d" % i, "group": "g%d" % (i % groups)} for i in range(n)]
+    edges = []
+    for _ in range(n * 2):
+        a, b = rnd.sample(range(n), 2)
+        edges.append({"from": "n%d" % a, "to": "n%d" % b, "label": "uses n%d" % b, "kind": "call",
+                      "count": rnd.randint(1, 9), "derived": rnd.random() < 0.5})
+    return {"groups": gs, "nodes": nodes, "edges": edges}
 
 
 CASES = {
-    "grid24": generated_system(7, 24, ["ui", "service", "cli", "data", "external"], 40),
-    "chain": chain_system(),
-    "other": other_system(),
-    "empty": {},
+    "big": big_view(),
+    "chain": {"groups": [{"id": "a", "label": "A"}],
+              "nodes": [{"id": x, "label": x, "group": "a"} for x in ("top", "mid", "low")],
+              "edges": [{"from": "top", "to": "mid", "label": "calls", "kind": "call"},
+                        {"from": "mid", "to": "low", "label": "calls", "kind": "call"}]},
+    "edge": {"groups": [{"id": "a", "label": "A"}],
+             "nodes": [{"id": "x", "label": "x", "group": "a"}, {"id": "y", "label": "y", "group": "zz"}],
+             "edges": [{"from": "x", "to": "y", "label": "ok", "kind": "call"},
+                       {"from": "x", "to": "y", "label": "dup", "kind": "call"},
+                       {"from": "x", "to": "x", "label": "self", "kind": "call"},
+                       {"from": "x", "to": "ghost", "label": "unknown", "kind": "call"}]},
+    "tall": dict({"groups": [{"id": "g%d" % i, "label": "G%d" % i} for i in range(6)],
+                  "nodes": [{"id": "n%d" % i, "label": "n%d" % i, "group": "g%d" % i} for i in range(6)],
+                  "edges": []}, aspect=3),
 }
+FLOW = {"participants": [{"id": "a", "label": "A"}, {"id": "b", "label": "B"}],
+        "steps": [{"from": "a", "to": "b", "label": "go"}, {"from": "b", "to": "b", "label": "self"},
+                  {"from": "b", "to": "a", "label": "back", "reply": True}, {"from": "a", "to": "ghost", "label": "x"}]}
+MATRIX = {"nodes": [{"id": "c1", "label": "C1"}, {"id": "c2", "label": "C2"}, {"id": "s1", "label": "s1"},
+                    {"id": "s2", "label": "s2"}],
+          "edges": [{"from": "c1", "to": "s1", "label": "reads, writes"}, {"from": "c2", "to": "s2", "label": "reads"}]}
 
 
-def run_node(cases):
-    proc = subprocess.run([NODE, "--experimental-default-type=module", "-e", SCRIPT, WEB],
-                          input=json.dumps({"cases": cases}), capture_output=True, text=True, timeout=120)
-    if proc.returncode != 0:
-        raise AssertionError("node failed: " + proc.stderr)
-    return json.loads(proc.stdout)
+def overlap(a, b):
+    return (a["x"] < b["x"] + b["w"] and b["x"] < a["x"] + a["w"] and
+            a["y"] < b["y"] + b["h"] and b["y"] < a["y"] + a["h"])
 
 
-def overlaps(a, b):
-    return (a["x"] < b["x"] + b["w"] and b["x"] < a["x"] + a["w"]
-            and a["y"] < b["y"] + b["h"] and b["y"] < a["y"] + a["h"])
+def start_end(d):
+    nums = [float(x) for x in d.replace("M", " ").replace("C", " ").split()]
+    return (nums[0], nums[1]), (nums[-2], nums[-1])
 
 
-def crosses_inside(seg, card):
-    # Open rectangle shrunk by half a pixel, so a segment that only touches a border does not count.
-    x0, y0 = card["x"] + 0.5, card["y"] + 0.5
-    x1, y1 = card["x"] + card["w"] - 0.5, card["y"] + card["h"] - 0.5
-    (ax, ay), (bx, by) = seg
-    if ay == by:
-        return y0 < ay < y1 and min(ax, bx) < x1 and max(ax, bx) > x0
-    if ax == bx:
-        return x0 < ax < x1 and min(ay, by) < y1 and max(ay, by) > y0
-    return False
+def on_side(pt, n, slack=3):
+    x, y = pt
+    inside_x = n["x"] - slack <= x <= n["x"] + n["w"] + slack
+    return inside_x and (abs(y - n["y"]) <= slack or abs(y - (n["y"] + n["h"])) <= slack)
 
 
 @unittest.skipIf(NODE is None, "node is not installed")
-class SystemLayoutTest(unittest.TestCase):
+class SysLayoutTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.out = run_node(CASES)
+        payload = json.dumps({"cases": CASES, "flow": FLOW, "matrix": MATRIX})
+        proc = subprocess.run([NODE, "-e", SCRIPT, WEB], input=payload, capture_output=True, text=True,
+                              check=False, timeout=60)
+        if proc.returncode != 0:
+            raise AssertionError(proc.stderr)
+        cls.out = json.loads(proc.stdout)
 
-    def layout(self, name):
-        return self.out[name]["layout"]
+    def lay(self, name):
+        return self.out["cases"][name]["lay"]
 
-    def test_no_card_overlaps_and_all_inside(self):
-        for name in ("grid24", "chain", "other"):
-            lay = self.layout(name)
-            cards = lay["cards"]
-            for i, a in enumerate(cards):
-                self.assertTrue(0 <= a["x"] and a["x"] + a["w"] <= lay["width"], name)
-                self.assertTrue(0 <= a["y"] and a["y"] + a["h"] <= lay["height"], name)
-                for b in cards[i + 1:]:
-                    self.assertFalse(overlaps(a, b), (name, a["id"], b["id"]))
-
-    def test_layer_order_left_to_right(self):
-        lay = self.layout("grid24")
-        xs = {}
-        for c in lay["cards"]:
-            xs.setdefault(c["layer"], set()).add(c["x"])
-        self.assertTrue(all(len(v) == 1 for v in xs.values()))
-        order = [layer for layer, _ in sorted(((l, next(iter(v))) for l, v in xs.items()), key=lambda p: p[1])]
-        self.assertEqual(order, lay["layers"])
-        self.assertEqual(lay["layers"], ["ui", "service", "cli", "data", "external"])
-
-    def test_routes_orthogonal_and_on_card_borders(self):
-        for name in ("grid24", "chain", "other"):
-            lay = self.layout(name)
-            cards = {c["id"]: c for c in lay["cards"]}
-            self.assertEqual(len(lay["routes"]), len(CASES[name].get("edges", [])) if name != "chain" else 4, name)
-            for r in lay["routes"]:
-                pts = r["points"]
-                for p, q in zip(pts, pts[1:]):
-                    self.assertTrue(p[0] == q[0] or p[1] == q[1], (name, r["from"], r["to"]))
-                src, dst = cards[r["from"]], cards[r["to"]]
-                self.assertEqual(pts[0][0], src["x"] + CARD_W)
-                self.assertTrue(src["y"] < pts[0][1] < src["y"] + CARD_H, (name, r["from"]))
-                self.assertEqual(pts[-1][0], dst["x"])
-                self.assertTrue(dst["y"] < pts[-1][1] < dst["y"] + CARD_H, (name, r["to"]))
-                self.assertTrue(r["d"].startswith("M "))
-
-    def test_no_route_crosses_a_card(self):
-        for name in ("grid24", "chain"):
-            lay = self.layout(name)
-            for r in lay["routes"]:
-                pts = r["points"]
-                for p, q in zip(pts, pts[1:]):
-                    for card in lay["cards"]:
-                        self.assertFalse(crosses_inside((p, q), card), (name, r["from"], r["to"], card["id"]))
-
-    def test_ports_and_channels_are_spread(self):
-        for name in ("grid24", "chain"):
-            seen = set()
-            chans = set()
-            for r in self.layout(name)["routes"]:
-                pts = r["points"]
-                for key in ((r["from"], "o", pts[0][1]), (r["to"], "i", pts[-1][1])):
-                    self.assertNotIn(key, seen, (name, key))
-                    seen.add(key)
-                if len(pts) == 6:
-                    self.assertNotIn(pts[2][1], chans)
-                    chans.add(pts[2][1])
-
-    def test_deterministic_and_order_independent(self):
+    def test_no_overlap_and_inside_bands(self):
         for name in CASES:
-            self.assertEqual(self.out[name]["text"], self.out[name]["again"], name)
-            self.assertEqual(self.out[name]["text"], self.out[name]["shuffled"], name)
+            lay = self.lay(name)
+            nodes = lay["nodes"]
+            for i, a in enumerate(nodes):
+                for b in nodes[i + 1:]:
+                    self.assertFalse(overlap(a, b), (name, a["id"], b["id"]))
+                box = lay["groups"][a["band"]]
+                self.assertTrue(box["x"] <= a["x"] and a["x"] + a["w"] <= box["x"] + box["w"], (name, a["id"]))
+                self.assertTrue(box["y"] <= a["y"] and a["y"] + a["h"] <= box["y"] + box["h"], (name, a["id"]))
+                self.assertLessEqual(a["x"] + a["w"], lay["width"])
+                self.assertLessEqual(a["y"] + a["h"], lay["height"])
+            for i, a in enumerate(lay["groups"]):
+                for b in lay["groups"][i + 1:]:
+                    self.assertFalse(overlap(a, b), (name, a["id"], b["id"]))
 
-    def test_edge_cases_are_reported_not_fatal(self):
-        chain = self.layout("chain")
-        self.assertEqual(len(chain["routes"]), 4)
-        self.assertTrue(any("missing" in w for w in chain["warnings"]))
-        other = self.layout("other")
-        self.assertEqual(other["layers"], ["ui", "other"])
-        self.assertEqual([c["layer"] for c in other["cards"]], ["ui", "other", "other"])
-        empty = self.layout("empty")
-        self.assertEqual((empty["cards"], empty["routes"], empty["columns"]), ([], [], []))
-        self.assertGreater(empty["width"], 0)
+    def test_edges_run_from_side_to_side(self):
+        for name in CASES:
+            lay = self.lay(name)
+            nodes = {n["id"]: n for n in lay["nodes"]}
+            for e in lay["edges"]:
+                s, t = start_end(e["d"])
+                self.assertTrue(on_side(s, nodes[e["from"]]), (name, e))
+                self.assertTrue(on_side(t, nodes[e["to"]]), (name, e))
 
-    def test_twenty_four_cards_under_50_ms(self):
-        self.assertLess(self.out["grid24"]["ms"], 50)
+    def test_labels_cover_no_node_and_no_label(self):
+        lay = self.lay("big")
+        boxes = [{"x": e["lx"] - e["lw"] / 2, "y": e["ly"] - 8, "w": e["lw"], "h": 16}
+                 for e in lay["edges"] if e["lx"] is not None]
+        self.assertGreater(len(boxes), 5)
+        for i, a in enumerate(boxes):
+            for n in lay["nodes"]:
+                self.assertFalse(overlap(a, n), (a, n["id"]))
+            for b in boxes[i + 1:]:
+                self.assertFalse(overlap(a, b), (a, b))
 
-    def test_module_has_no_dom_or_markup(self):
-        with open(SYSLAYOUT, encoding="utf-8") as f:
-            src = f.read()
-        for pat in (r"\bdocument\b", r"\binnerHTML\b", r"\bMath\.random\b", r"\bDate\.now\b"):
-            self.assertIsNone(re.search(pat, src), pat)
+    def test_deterministic_and_fast(self):
+        for name in CASES:
+            self.assertEqual(self.out["cases"][name]["lay"], self.out["cases"][name]["again"], name)
+        self.assertLess(self.out["cases"]["big"]["ms"], 50)
+
+    def test_bad_edges_dropped_and_unknown_group_banded(self):
+        lay = self.lay("edge")
+        self.assertEqual([(e["from"], e["to"], e["label"]) for e in lay["edges"]], [("x", "y", "ok")])
+        self.assertEqual([g["id"] for g in lay["groups"]], ["a", "zz"])
+
+    def test_callers_above_callees_inside_a_band(self):
+        nodes = {n["id"]: n for n in self.lay("chain")["nodes"]}
+        self.assertLess(nodes["top"]["y"], nodes["mid"]["y"])
+        self.assertLess(nodes["mid"]["y"], nodes["low"]["y"])
+
+    def test_tall_drawing_flows_into_columns(self):
+        lay = self.lay("tall")
+        self.assertGreater(len({g["x"] for g in lay["groups"]}), 1)
+        self.assertGreater(lay["width"], lay["groups"][0]["w"])
+
+    def test_sequence_rows_and_self_call(self):
+        seq = self.out["seq"]
+        self.assertEqual([r["n"] for r in seq["rows"]], [1, 2, 3])
+        self.assertTrue(seq["rows"][1]["self"])
+        self.assertTrue(seq["rows"][2]["reply"])
+        ys = [r["y"] for r in seq["rows"]]
+        self.assertEqual(ys, sorted(ys))
+        self.assertEqual(len(seq["heads"]), 2)
+
+    def test_matrix_cells(self):
+        mx = self.out["mx"]
+        self.assertEqual([r["id"] for r in mx["rows"]], ["c1", "c2"])
+        self.assertEqual([c["id"] for c in mx["cols"]], ["s1", "s2"])
+        self.assertEqual([c["write"] for c in mx["cells"]], [True, False])
 
 
 if __name__ == "__main__":

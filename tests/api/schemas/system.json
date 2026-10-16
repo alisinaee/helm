@@ -22,4 +22,7 @@
    "edges": {"type": "array", "items": {"type": "object"}},
    "heat": {"type": "object"},
    "fileCount": {"type": "integer"},
-   "sha": {"type": ["string", "null"]}}}
+   "sha": {"type": ["string", "null"]},
+   "arch": {"type": ["object", "null"], "required": ["views", "flows", "details", "stats"],
+     "properties": {"views": {"type": "object"}, "flows": {"type": "array"}, "details": {"type": "object"},
+                    "stats": {"type": "object"}}}}}

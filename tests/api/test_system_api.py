@@ -29,6 +29,9 @@ class SystemRoute(ServerCase):
         self.assertIsNone(body["sha"])  # the fixture is not a git repo
         self.assertTrue(body["components"])
         self.assertIn("heat", body)
+        views = body["arch"]["views"]
+        self.assertEqual(sorted(views), ["components", "containers", "context", "data", "layers", "modules"])
+        self.assertIn("p:user", body["arch"]["details"])
         self.assertTrue(res.header("ETag").startswith('"'))
 
     def test_304_on_a_matching_if_none_match(self):
