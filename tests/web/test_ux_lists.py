@@ -50,14 +50,14 @@ class ActivityRowsTest(unittest.TestCase):
     def test_undo_label_says_what_it_undoes(self):
         text = read(VIEWS, "activity.js")
         # R7.65: the visible label is the fixed word; the full text is in aria-label and title.
-        self.assertIn('>Undo</button>', text)
-        self.assertIn('title="\' + esc("Undo " + what)', text)
+        self.assertIn('class="act-undo"', text)
+        self.assertIn('aria-label="\' + label + \'" title="\' + label', text)
         self.assertIn('class="act-row row-grid"', text)
 
     def test_undo_sits_in_one_fixed_column(self):
         flow = read(CSS, "flow.css")
-        self.assertIn(".act-row { display: grid; grid-template-columns: minmax(0, 1fr) 9.5rem;", flow)
-        self.assertIn(".act-row .btn { white-space: normal; width: 100%; margin: 0; }", flow)
+        self.assertIn(".act-list > .act-row.row-grid { grid-template-columns: 3.25rem minmax(0, 1fr) auto 1.75rem;", flow)
+        self.assertIn(".act-undo { display: inline-grid; place-items: center; width: 28px; height: 28px;", flow)
 
 
 class AgentsRowsTest(unittest.TestCase):

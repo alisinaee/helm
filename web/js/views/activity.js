@@ -12,19 +12,24 @@ const SOURCE_WORD = { gui: "Dashboard", cli: "Terminal", agent: "Agent", phone: 
 
 // One activity line as a list item. The Undo button is shown only when the line says it can be undone. Its visible
 // label is the fixed word "Undo"; the full text (what it undoes) goes in aria-label and title.
+// One row on a fixed grid: age | text (one line, ellipsis, full text in title) | source chip | icon-only Undo.
+// "R10.4 done -> done" reads "R10.4 done → done" with no-break spaces around the arrow.
 export function activityRowHtml(line, pid, pname, now, showProject) {
   const when = relTime(line.atMs, now);
   const what = line.sum || line.op || "change";
+  const shown = esc(what).replace(/\s*(?:-&gt;|→)\s*/g, " → ");
+  const label = esc("Undo " + what);
   const undo = line.undo
-    ? '<button type="button" class="btn btn-small" data-action="undo-line" data-project="' + esc(pid) +
-      '" data-activity="' + esc(line.id) + '" aria-label="' + esc("Undo " + what) + '" title="' + esc("Undo " + what) +
-      '" data-focus="undo-' + esc(pid) + "-" + esc(line.id) + '">Undo</button>'
+    ? '<button type="button" class="act-undo" data-action="undo-line" data-project="' + esc(pid) +
+      '" data-activity="' + esc(line.id) + '" aria-label="' + label + '" title="' + label +
+      '" data-focus="undo-' + esc(pid) + "-" + esc(line.id) + '"><svg class="ico" aria-hidden="true" ' +
+      'focusable="false"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>'
     : "";
+  const chips = chipHtml(SOURCE_WORD[line.src] || "Other", "neutral") +
+    (showProject ? chipHtml(pname, "neutral") : "");
   return '<li class="act-row row-grid"><span class="act-time num" title="' + esc(when.title) + '">' +
-    esc(when.text || MISSING) + "</span>" +
-    '<span class="act-main"><span class="act-sum">' + esc(what) + "</span> " +
-    chipHtml(SOURCE_WORD[line.src] || "Other", "neutral") +
-    (showProject ? " " + chipHtml(pname, "neutral") : "") + "</span>" + undo + "</li>";
+    esc(when.text || MISSING) + '</span><span class="act-sum" title="' + esc(what) + '">' + shown +
+    '</span><span class="act-src">' + chips + "</span>" + undo + "</li>";
 }
 
 // The lines in view, newest first: [{line, pid, pname}].
