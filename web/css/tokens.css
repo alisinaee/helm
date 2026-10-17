@@ -197,7 +197,28 @@
 .spend-list .tk-spend > :last-child { white-space: nowrap; overflow-wrap: normal }
 @media (prefers-reduced-motion: no-preference) { .tk-seg, .tk-dot { transition: all var(--t-fast) } }
 
-/* R11.8 accounts: fixed grid, numbers right-aligned, actions in their own column */
-.tk-acct { display: grid; grid-template-columns: minmax(8rem, 1.2fr) minmax(10rem, 1.6fr) 7rem 4.5rem 4.5rem 5rem auto;
-  gap: var(--sp-2); align-items: center }
-.tk-acct .rg-act { display: flex; gap: var(--sp-1); justify-content: flex-end; flex-wrap: wrap }
+/* R11.8 accounts: one table. The list owns the tracks; header and rows take them through subgrid. */
+.spend-list.tk-acct-list {
+  --acct-cols: minmax(160px, 1fr) minmax(160px, 1.2fr) max-content 6ch 6ch max-content max-content;
+  display: grid; grid-template-columns: var(--acct-cols); gap: var(--sp-2) var(--sp-3); width: 100%; min-width: 0 }
+.tk-acct-head, .tk-acct-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid;
+  column-gap: var(--sp-3); align-items: center; min-width: 0; margin: 0; padding: 0 }
+.tk-acct-head { color: var(--text-3); font-size: var(--fs-11); font-weight: 600; white-space: nowrap }
+.tk-acct-row { font-size: var(--fs-13) }
+.tk-acct-cell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.tk-acct-head .tk-acct-cell { overflow: visible }
+.tk-acct-num { text-align: right; font-variant-numeric: tabular-nums }
+.tk-acct-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-1); overflow: visible }
+.tk-acct-actions .btn { width: auto; min-width: 0; margin: 0; white-space: nowrap }
+.tk-acct-cell::before { content: none }
+@media (max-width: 699px) {
+  .spend-list.tk-acct-list { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3) }
+  .tk-acct-head { display: none }
+  .tk-acct-row { grid-template-columns: minmax(0, 1fr); row-gap: var(--sp-1); padding-bottom: var(--sp-3);
+    border-bottom: 1px solid var(--track) }
+  .tk-acct-cell { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); white-space: normal;
+    overflow-wrap: anywhere }
+  .tk-acct-cell::before { content: attr(data-label); flex: 0 0 6.5rem; color: var(--text-3); font-size: var(--fs-11) }
+  .tk-acct-num { text-align: left }
+  .tk-acct-actions { justify-content: flex-start }
+}
