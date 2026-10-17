@@ -66,7 +66,8 @@ class ToolbarRenderTest(unittest.TestCase):
         self.assertFalse(self.out["open"])  # storage that throws reads as closed
 
     def test_collapsed_by_default(self):
-        self.assertRegex(self.html, r'data-tb-toggle="pop" aria-expanded="false" aria-controls="tb-work-pop"')
+        self.assertRegex(self.html, r'data-tb-toggle="pop" aria-haspopup="dialog" aria-expanded="false"'
+                         r' aria-controls="tb-work-pop"')
         self.assertRegex(self.html, r'<div class="tb-pop" id="tb-work-pop" role="dialog" aria-label="Filters" hidden>')
         self.assertIn('aria-expanded="true"', self.open_html)
         self.assertNotRegex(self.open_html, r'id="tb-work-pop"[^>]*hidden')
@@ -96,6 +97,20 @@ class ToolbarRenderTest(unittest.TestCase):
         self.assertNotIn("tb-more", self.empty)
         self.assertNotIn("tb-search", self.empty)
 
+    def test_many_views_become_a_select(self):
+        many = dict(CFG, key="rules", views=[{"id": v, "label": v.title(), "current": v == "a"}
+                                             for v in ("a", "b", "c", "d", "e")])
+        h = render([many])["html"][0]
+        self.assertNotIn("tb-seg-btn", h)
+        self.assertRegex(h, r'<select class="tb-view-select" data-tb-view-select[^>]*>')
+        self.assertIn('<option value="a" selected>A</option>', h)
+        self.assertIn('<option value="e">E</option>', h)
+
+    def test_popover_follows_filters_in_the_row(self):
+        row = self.html.split('<div class="tb-row">', 1)[1].split('<div class="tb-acts">', 1)[0]
+        self.assertLess(row.index('tb-filters'), row.index('tb-pop"'))
+        self.assertIn('aria-haspopup="dialog"', self.html)
+
     def test_aria_controls_resolve(self):
         for h in (self.html, self.open_html, self.empty):
             ids = set(re.findall(r'\sid="([^"]+)"', h))
@@ -117,7 +132,10 @@ class ToolbarStaticTest(unittest.TestCase):
 
     def test_css_contract(self):
         css = read("web", "css", "toolbar.css")
-        self.assertIn("max-height: 40px", css)
+        self.assertIn("flex-wrap: wrap", css)
+        self.assertIn("gap: 6px var(--sp-2)", css)
+        self.assertIn("min-width: 160px", css)
+        self.assertNotIn("max-height: 40px", css)
         self.assertIn("position: sticky", css)
         self.assertIn("@media (max-width: 767px)", css)
         self.assertIn(":focus-visible", css)
