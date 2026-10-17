@@ -30,13 +30,101 @@ export function applyMeters(root) {
   }
 }
 
-// Replace one section's contents. Returns true when the DOM changed. Markup equal to the last write (or to the current
-// innerHTML) is not written at all. Otherwise the section is written; a focused control inside it keeps its id (or
-// data-focus key), its value and its selection, and the scroll position of the section and of each scrolled
-// descendant is kept. When the new markup has no matching control or element, focus or scroll is not restored there.
+// Replace one section's contents by morphing the live DOM toward the new markup (no library). Returns true when the DOM
+// changed. Markup equal to the last write (or to the current innerHTML) is not written at all. The morph keeps every
+// element that still exists (matched by id, data-key, data-id, else by tag in order), so a <details> the user opened, a
+// form the user unhid, a typed value, a hover or a transition survives a refresh; only changed attributes and text are
+// written. `open` and `hidden` follow the server only when the server's own value changed (see syncAttrs). While the
+// user is mid-interaction inside the section (pointer down, a menu or popover open, a dirty focused field) the write is
+// deferred and the latest markup is applied about 150 ms after the interaction ends. A focused control that had to be
+// replaced keeps its id (or data-focus key), value and selection; scroll positions of the section and its scrolled
+// descendants are kept. A minimal document without createElement (some tests) gets the plain innerHTML write.
+const pending = new Map();
+let flushTimer = 0;
+let pointerDownTarget = null;
+let listening = false;
+const FLUSH_MS = 150;
+const KEEP_ATTRS = ["open", "hidden"];
+const BUSY_SELECTOR = ".tb-pop:not([hidden]), .tb-menu:not([hidden]), .sys-menu-host:not([hidden]), " +
+  "details.wk-menu[open], [aria-haspopup][aria-expanded=\"true\"]";
+
+function canMorph() {
+  return typeof document.createElement === "function";
+}
+
+function listen() {
+  if (listening || typeof document.addEventListener !== "function") return;
+  listening = true;
+  const down = function (ev) { pointerDownTarget = ev.target || null; };
+  const up = function () {
+    pointerDownTarget = null;
+    scheduleFlush();
+  };
+  document.addEventListener("pointerdown", down, true);
+  document.addEventListener("pointerup", up, true);
+  document.addEventListener("pointercancel", up, true);
+  document.addEventListener("focusout", scheduleFlush, true);
+}
+
+function isDirty(node) {
+  if (!node || !node.tagName) return false;
+  if (node.tagName === "INPUT" || node.tagName === "TEXTAREA") {
+    if (node.type === "checkbox" || node.type === "radio") return node.checked !== node.defaultChecked;
+    return node.value !== node.defaultValue;
+  }
+  if (node.tagName === "SELECT" && node.options) {
+    return Array.from(node.options).some(function (o) { return o.selected !== o.defaultSelected; });
+  }
+  return false;
+}
+
+// True while the user is working inside el: the section should not be rewritten now.
+export function isInteracting(el) {
+  if (pointerDownTarget && typeof el.contains === "function" && el.contains(pointerDownTarget)) return true;
+  if (typeof el.querySelector === "function" && el.querySelector(BUSY_SELECTOR)) return true;
+  const active = document.activeElement;
+  return Boolean(active) && typeof el.contains === "function" && el.contains(active) && isDirty(active);
+}
+
+function scheduleFlush() {
+  if (!pending.size || flushTimer) return;
+  flushTimer = setTimeout(flushPending, FLUSH_MS);
+}
+
+function flushPending() {
+  flushTimer = 0;
+  for (const [id, html] of Array.from(pending)) {
+    const el = document.getElementById(id);
+    if (!el) {
+      pending.delete(id);
+    } else if (!isInteracting(el)) {
+      pending.delete(id);
+      applyPatch(el, id, html);
+    }
+  }
+  scheduleFlush();
+}
+
 export function patch(sectionId, html) {
   const el = document.getElementById(sectionId);
   if (!el) return false;
+  if (lastHtml.get(sectionId) === html) {
+    pending.delete(sectionId);
+    return false;
+  }
+  if (canMorph()) {
+    listen();
+    if (isInteracting(el)) {
+      pending.set(sectionId, html);
+      scheduleFlush();
+      return false;
+    }
+  }
+  pending.delete(sectionId);
+  return applyPatch(el, sectionId, html);
+}
+
+function applyPatch(el, sectionId, html) {
   if (lastHtml.get(sectionId) === html || el.innerHTML === html) {
     lastHtml.set(sectionId, html);
     return false;
@@ -45,12 +133,167 @@ export function patch(sectionId, html) {
   const inside = Boolean(active) && el.contains(active);
   const keep = inside ? focusState(active) : null;
   const scrolled = collectScroll(el);
-  el.innerHTML = html;
+  writeHtml(el, html);
   lastHtml.set(sectionId, html);
   applyMeters(el);
-  if (keep) restoreFocus(el, keep);
+  if (keep && !(document.activeElement && el.contains(document.activeElement))) restoreFocus(el, keep);
   restoreScroll(el, scrolled);
   return true;
+}
+
+function parseInto(html) {
+  const tpl = document.createElement("template");
+  tpl.innerHTML = html;
+  return tpl.content || tpl;
+}
+
+// Write html into el: a morph when el already has content, a plain write for the first render.
+function writeHtml(el, html) {
+  if (!canMorph()) {
+    el.innerHTML = html;
+    return;
+  }
+  const src = parseInto(html);
+  if (!el.firstChild) {
+    el.innerHTML = html;
+    stampTree(el);
+    return;
+  }
+  morphChildren(el, src);
+}
+
+// Remember the server's open/hidden for every element that carries them (see syncAttrs).
+function stampTree(root) {
+  const found = typeof root.querySelectorAll === "function" ? root.querySelectorAll("details, [hidden]") : [];
+  const list = Array.from(found);
+  if (root.nodeType === 1) list.push(root);
+  for (const node of list) stampNode(node);
+}
+
+function stampNode(node) {
+  if (node.nodeType !== 1 || !node.hasAttribute) return;
+  node.__srv = { open: node.hasAttribute("open"), hidden: node.hasAttribute("hidden") };
+}
+
+function keyOfChild(node) {
+  if (node.nodeType !== 1) return null;
+  const id = node.getAttribute("id");
+  if (id) return "#" + id;
+  const key = node.getAttribute("data-key");
+  if (key) return "k:" + key;
+  const did = node.getAttribute("data-id");
+  return did ? "d:" + did : null;
+}
+
+function sigOf(node) {
+  return node.nodeType === 1 ? node.nodeName : "#" + node.nodeType;
+}
+
+// Update oldEl's attributes to newEl's. `open` and `hidden` are written only when the server value differs from the
+// server value of the previous render, so what the user toggled in between stays.
+function syncAttrs(oldEl, newEl) {
+  if (!oldEl.__srv) stampNode(oldEl);
+  const srv = oldEl.__srv;
+  for (const name of KEEP_ATTRS) {
+    const want = newEl.hasAttribute(name);
+    if (want === srv[name]) continue;
+    srv[name] = want;
+    if (want) oldEl.setAttribute(name, newEl.getAttribute(name));
+    else oldEl.removeAttribute(name);
+  }
+  const next = Array.from(newEl.attributes);
+  const names = new Set();
+  for (const attr of next) {
+    if (KEEP_ATTRS.indexOf(attr.name) >= 0) continue;
+    names.add(attr.name);
+    if (oldEl.getAttribute(attr.name) !== attr.value) oldEl.setAttribute(attr.name, attr.value);
+  }
+  for (const attr of Array.from(oldEl.attributes)) {
+    if (KEEP_ATTRS.indexOf(attr.name) < 0 && !names.has(attr.name)) oldEl.removeAttribute(attr.name);
+  }
+}
+
+function morphNode(oldNode, newNode) {
+  if (oldNode.nodeType !== 1) {
+    if (oldNode.nodeValue !== newNode.nodeValue) oldNode.nodeValue = newNode.nodeValue;
+    return;
+  }
+  const before = oldNode.nodeName === "TEXTAREA" ? oldNode.textContent : oldNode.getAttribute("value");
+  syncAttrs(oldNode, newNode);
+  morphChildren(oldNode, newNode);
+  syncField(oldNode, newNode, before);
+}
+
+// A field's live value or checked state follows the new markup (the attribute alone does not move it once the user
+// has touched it), except for the focused control (being edited) and an unsent text draft (the server value did not
+// change). Checkboxes and radios always follow the markup.
+function syncField(oldEl, newEl, before) {
+  const tag = oldEl.nodeName;
+  if (tag !== "INPUT" && tag !== "TEXTAREA" && tag !== "SELECT") return;
+  if (document.activeElement === oldEl) return;
+  if (tag === "INPUT") {
+    const kind = (oldEl.getAttribute("type") || "text").toLowerCase();
+    if (kind === "checkbox" || kind === "radio") {
+      const want = newEl.hasAttribute("checked");
+      if (oldEl.checked !== want) oldEl.checked = want;
+    } else {
+      const want = newEl.getAttribute("value") || "";
+      // An unsent draft stays when the server's own value did not change.
+      if (oldEl.value !== want && (before || "") !== want) oldEl.value = want;
+    }
+  } else if (tag === "TEXTAREA") {
+    if (oldEl.value !== newEl.textContent && (before || "") !== newEl.textContent) oldEl.value = newEl.textContent;
+  } else if (oldEl.options) {
+    Array.from(oldEl.options).forEach(function (opt, i) {
+      const src = newEl.options ? newEl.options[i] : null;
+      if (src && opt.selected !== src.hasAttribute("selected")) opt.selected = src.hasAttribute("selected");
+    });
+  }
+}
+
+// Make parent's children match newParent's, reusing old nodes: by key first, else the next unused old node of the same
+// tag, in order. Cost is linear in the number of children.
+function morphChildren(parent, newParent) {
+  const oldKids = Array.from(parent.childNodes);
+  const newKids = Array.from(newParent.childNodes);
+  const keyed = new Map();
+  const queues = new Map();
+  for (const node of oldKids) {
+    const key = keyOfChild(node);
+    if (key && !keyed.has(key)) {
+      keyed.set(key, node);
+    } else {
+      const sig = sigOf(node);
+      if (!queues.has(sig)) queues.set(sig, { list: [], at: 0 });
+      queues.get(sig).list.push(node);
+    }
+  }
+  const used = new Set();
+  let cursor = parent.firstChild;
+  for (const nw of newKids) {
+    const key = keyOfChild(nw);
+    let match = null;
+    if (key) {
+      match = keyed.get(key) || null;
+    } else {
+      const q = queues.get(sigOf(nw));
+      if (q && q.at < q.list.length) match = q.list[q.at++];
+    }
+    if (match && used.has(match)) match = null;
+    if (match) {
+      used.add(match);
+      morphNode(match, nw);
+      if (match === cursor) cursor = cursor.nextSibling;
+      else parent.insertBefore(match, cursor);
+    } else {
+      parent.insertBefore(nw, cursor);
+      used.add(nw);
+      if (nw.nodeType === 1) stampTree(nw);
+    }
+  }
+  for (const node of oldKids) {
+    if (!used.has(node) && node.parentNode === parent) parent.removeChild(node);
+  }
 }
 
 // A stable key for one child element among its siblings: its id, else its data-key, else its tag and class list with
@@ -159,10 +402,10 @@ function restoreFocus(el, state) {
   match.focus({ preventScroll: true });
 }
 
-// Replace the contents of one element that has no id (patch() needs one). Sets meter widths like patch() does.
+// Replace the contents of one element that has no id (patch() needs one), by the same morph. Sets meter widths.
 export function setHtml(el, html) {
   if (!el) return;
-  el.innerHTML = html;
+  writeHtml(el, html);
   applyMeters(el);
 }
 
@@ -173,13 +416,51 @@ export function parseOne(html) {
   return tpl.content ? tpl.content.firstElementChild : tpl.firstElementChild;
 }
 
-// Put newEl in place of oldEl. A focused control inside oldEl keeps its focus, value and selection (as in patch()).
+// Put newEl in place of oldEl (callers keep using newEl). A focused control inside oldEl keeps its focus, value and
+// selection (as in patch()), and a <details> the user opened or a hidden element the user unhid stays so when the
+// server's own open/hidden value did not change.
 export function swapNode(oldEl, newEl) {
   const active = document.activeElement;
   const keep = Boolean(active) && oldEl.contains(active) ? focusState(active) : null;
+  if (canMorph() && typeof oldEl.hasAttribute === "function" && typeof newEl.hasAttribute === "function") {
+    carryState(oldEl, newEl);
+  }
   oldEl.parentNode.replaceChild(newEl, oldEl);
   if (keep) restoreFocus(newEl, keep);
   return newEl;
+}
+
+function carryState(oldRoot, newRoot) {
+  const pairs = [[oldRoot, newRoot]];
+  const walk = function (o, n) {
+    const ok = Array.from(o.children || []);
+    const nk = Array.from(n.children || []);
+    const seenO = new Map();
+    const byKey = new Map();
+    for (const c of ok) byKey.set(scrollKey(c, seenO), c);
+    const seenN = new Map();
+    for (const c of nk) {
+      if (typeof c.hasAttribute !== "function") continue;
+      const m = byKey.get(scrollKey(c, seenN));
+      if (m) {
+        pairs.push([m, c]);
+        walk(m, c);
+      }
+    }
+  };
+  walk(oldRoot, newRoot);
+  stampTree(newRoot);
+  for (const [o, n] of pairs) {
+    const srv = o.__srv;
+    for (const name of KEEP_ATTRS) {
+      const serverNow = n.hasAttribute(name);
+      const serverBefore = srv ? srv[name] : o.hasAttribute(name);
+      if (serverNow !== serverBefore || o.hasAttribute(name) === serverNow) continue;
+      if (!n.__srv) stampNode(n);
+      if (o.hasAttribute(name)) n.setAttribute(name, "");
+      else n.removeAttribute(name);
+    }
+  }
 }
 
 export function setHidden(sectionId, hidden) {
