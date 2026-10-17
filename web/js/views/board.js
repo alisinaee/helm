@@ -214,19 +214,10 @@ export function taskHref(ctx, id) {
   return buildHash({ name: "project", id: ctx.pid, section: "work", view: ctx.view, item: id, filters: ctx.filters });
 }
 
-function filterChipHtml(token, text, pressed) {
-  return '<button type="button" class="wk-chip" aria-pressed="' + (pressed ? "true" : "false") +
-    '" data-wk="filter" data-token="' + esc(token) + '" data-focus="wk-chip-' + esc(token) + '">' + esc(text) +
-    "</button>";
-}
-
-function groupHtml(label, chips) {
-  return '<div class="wk-chips" role="group" aria-label="' + esc(label) + '"><span class="wk-chips-label">' +
-    esc(label) + "</span>" + chips + "</div>";
-}
-
-// The filter chips for Board and List and Tree. Model and phase chips show only the values this project has.
-export function filterBarHtml(ctx) {
+// The filter groups of Board, List and Tree (R11.119): they live in the section toolbar's Filters popover, so the
+// rows stay collapsed. Model and phase options show only the values this project has. The tokens are the same ones the
+// route keeps in f, so a link and the applied chips agree.
+export function filterGroups(ctx) {
   const tokens = ctx.F.tokens;
   const pressed = function (token) {
     return tokens.indexOf(token) >= 0;
@@ -241,29 +232,33 @@ export function filterBarHtml(ctx) {
       return t.phase === p.id;
     });
   });
-  const flags = filterChipHtml("needs", "Needs you", pressed("needs")) +
-    filterChipHtml("blocked", "Blocked", pressed("blocked"));
-  const modelChips = models.map(function (m) {
-    return filterChipHtml("model:" + m, m, pressed("model:" + m));
-  }).join("");
-  const phaseChips = phases.map(function (p) {
-    return filterChipHtml("phase:" + p.id, p.id + " " + p.name, pressed("phase:" + p.id));
-  }).join("");
-  const statusChips = COLUMNS.map(function (c) {
-    return filterChipHtml("status:" + c.key, c.label, pressed("status:" + c.key));
-  }).join("");
-  // The Kind chips only steer the Board, which is the one view that shows issues.
-  const kindChips = ctx.view === "board"
-    ? groupHtml("Kind", filterChipHtml("kind:task", "Task", ctx.F.kind === "task") +
-      filterChipHtml("kind:issue", "Issue", ctx.F.kind === "issue") +
-      filterChipHtml("kind:all", "All", ctx.F.kind === "" || ctx.F.kind === "all"))
-    : "";
-  const clear = tokens.length
-    ? '<button type="button" class="btn btn-small" data-wk="clear" data-focus="wk-clear">Clear filters</button>'
-    : "";
-  return '<div class="wk-filters">' + kindChips + groupHtml("Show", flags) +
-    (models.length ? groupHtml("Model", modelChips) : "") +
-    (phases.length ? groupHtml("Phase", phaseChips) : "") + groupHtml("Status", statusChips) + clear + "</div>";
+  const groups = [];
+  // The Kind options only steer the Board, which is the one view that shows issues.
+  if (ctx.view === "board") {
+    groups.push({ id: "kind", label: "Kind", options: [
+      { token: "kind:task", label: "Task", on: ctx.F.kind === "task" },
+      { token: "kind:issue", label: "Issue", on: ctx.F.kind === "issue" },
+      { token: "kind:all", label: "All", on: ctx.F.kind === "all" },
+    ] });
+  }
+  groups.push({ id: "show", label: "Show", options: [
+    { token: "needs", label: "Needs you", on: pressed("needs") },
+    { token: "blocked", label: "Blocked", on: pressed("blocked") },
+  ] });
+  if (models.length) {
+    groups.push({ id: "model", label: "Model", options: models.map(function (m) {
+      return { token: "model:" + m, label: m, on: pressed("model:" + m) };
+    }) });
+  }
+  if (phases.length) {
+    groups.push({ id: "phase", label: "Phase", options: phases.map(function (p) {
+      return { token: "phase:" + p.id, label: p.id + " " + p.name, on: pressed("phase:" + p.id) };
+    }) });
+  }
+  groups.push({ id: "status", label: "Status", options: COLUMNS.map(function (c) {
+    return { token: "status:" + c.key, label: c.label, on: pressed("status:" + c.key) };
+  }) });
+  return groups;
 }
 
 // The quick actions for a card: the other statuses it can move to, with Reopen for a done task.

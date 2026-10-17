@@ -139,7 +139,7 @@ class HeadSource(unittest.TestCase):
         self.assertIn('<tr class="hd-detail"><td colspan="10">', self.src)
 
     def test_view_toggle_is_in_the_hash_and_defaults_to_the_list(self):
-        self.assertIn('view: pair[0]', self.src)
+        self.assertIn('go(el, Object.assign(st, { view: value }))', self.src)
         self.assertIn('const cards = o.view === "cards";', self.src)
         self.assertIn('pick(params.get("view"), ["cards", "list"], 5) || "list"', self.src)
 
@@ -459,8 +459,8 @@ class HeadRender(unittest.TestCase):
 
     def test_view_toggle_links_and_the_hash_keep_the_view(self):
         html = self.out["list"]
-        self.assertIn('class="hd-filter hd-view" href="#head?f=all&amp;view=list" aria-current="page">List', html)
-        self.assertIn('href="#head?f=all&amp;view=cards">Cards', html)
+        self.assertIn('aria-pressed="true" data-tb-view="list"', html)
+        self.assertIn('aria-pressed="false" data-tb-view="cards"', html)
         self.assertIn('data-view="list"', html)
         self.assertIn('data-view="cards"', self.out["screen"])
         self.assertEqual(self.out["hashList"], "#head?f=all&view=list")

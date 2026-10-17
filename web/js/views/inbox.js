@@ -13,6 +13,7 @@ import { bindKey } from "../keys.js";
 import { pendingValue, run } from "../cmd.js";
 import { currentRoute, projectHash } from "../router.js";
 import { headSeenHtml } from "./headseen.js";
+import { toolbarHtml } from "../toolbar.js";
 
 const KEY_MAX = 6;
 const REC_SUFFIX = " (recommended)";
@@ -295,12 +296,11 @@ function summaryHtml(c) {
   return '<p class="ib-sum" aria-label="Inbox summary">' + esc(text) + "</p>";
 }
 
+// The filter is the shared section toolbar's view switcher (R11.119): one segmented row, the count on each label.
 function filterHtml(c) {
-  return '<nav class="ib-seg" aria-label="Filter">' + FILTERS.map(function (pair) {
-    const cur = pair[0] === filter ? ' aria-current="page"' : "";
-    return '<button type="button" class="ib-seg-b" data-ib-filter="' + pair[0] + '" data-focus="ib-f-' +
-      pair[0] + '"' + cur + ">" + esc(pair[1]) + " " + c[pair[0]] + "</button>";
-  }).join("") + "</nav>";
+  return toolbarHtml({ key: "inbox", label: "Inbox filter", views: FILTERS.map(function (pair) {
+    return { id: pair[0], label: pair[1] + " " + c[pair[0]], current: pair[0] === filter };
+  }) });
 }
 
 function domKey(key) {
@@ -656,12 +656,6 @@ function moveFocus(step) {
 function onPageClick(event) {
   const t = event.target;
   if (!t || !t.closest) return;
-  const filterBtn = t.closest("[data-ib-filter]");
-  if (filterBtn && filterBtn.closest("#main")) {
-    filter = filterBtn.getAttribute("data-ib-filter");
-    document.dispatchEvent(new Event("rb:render"));
-    return;
-  }
   const expand = t.closest(".ib-expand");
   if (expand && expand.closest("#main")) {
     const item = expand.closest(".ib-item");
@@ -694,9 +688,18 @@ function onPageKey(event) {
   }
 }
 
+// The shared toolbar's view switcher (rb:toolbar, key inbox) picks the filter.
+function onToolbar(event) {
+  const d = event.detail || {};
+  if (d.key !== "inbox" || d.type !== "view") return;
+  filter = d.value;
+  document.dispatchEvent(new Event("rb:render"));
+}
+
 if (typeof document !== "undefined") {
   document.addEventListener("click", onPageClick);
   document.addEventListener("keydown", onPageKey);
+  document.addEventListener("rb:toolbar", onToolbar);
 }
 
 for (let n = 1; n <= KEY_MAX; n++) bindKey(String(n), onDigit(n - 1));

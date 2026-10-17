@@ -21,6 +21,7 @@ import { settingsAction } from "./views/settings.js";
 import { initPanel, panelView } from "./views/panel.js";
 import { initResize } from "./resize.js";
 import { initSplitters } from "./splitter.js";
+import { initToolbars } from "./toolbar.js";
 import { topbarView } from "./views/topbar.js";
 import { dismissToast, setToastHold, setToastListener, toastsHtml, undoToast } from "./views/toast.js";
 import { copyRef } from "./ref.js";
@@ -614,6 +615,7 @@ function boot() {
   initPanel({ render: render });
   initResize();
   initSplitters();
+  initToolbars();
   document.addEventListener("click", onClick);
   document.addEventListener("change", onChange);
   document.addEventListener("rb:render", render);

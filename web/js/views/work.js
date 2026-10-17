@@ -7,12 +7,14 @@ import { bannerHtml, emptyHtml, esc, skeletonHtml } from "../dom.js";
 import { run, runBatch } from "../cmd.js";
 import { buildHash, currentRoute } from "../router.js";
 import { loadUi, updateUi } from "../state.js";
-import { boardView, COLUMNS, filterBarHtml, finePointer, matchesFilters, parseFilters, setStatus, toggleToken,
+import { boardView, COLUMNS, filterGroups, finePointer, matchesFilters, parseFilters, setStatus, toggleToken,
   matchesIssue, workIssues, workTasks } from "./board.js";
 import { clearSelection, groupBarHtml, GROUPS, listView, nextSort, parseSort, setAllSelected, setSelected } from
   "./list.js";
 import { subtaskToggle, treeView } from "./tree.js";
-import { bind as bindPlanner, screenHtml as plannerScreen } from "./planner.js";
+import { bind as bindPlanner, filterGroups as plannerFilterGroups, screenHtml as plannerScreen,
+  setStatusFilter as setPlannerStatus } from "./planner.js";
+import { toolbarHtml } from "../toolbar.js";
 
 // R10.7: the Planner is the fourth view of Work. It reads the same snapshot (tasks and features) as the other three.
 const VIEWS = ["board", "list", "tree", "planner"];
@@ -169,12 +171,14 @@ function headHtml(ctx) {
     note = ctx.shown.length === total ? total + (total === 1 ? " task" : " tasks")
       : "Showing " + ctx.shown.length + " of " + total + " tasks";
   }
-  const buttons = VIEWS.map(function (v) {
-    return '<button type="button" aria-pressed="' + (ctx.view === v ? "true" : "false") +
-      '" data-wk="view" data-view="' + v + '" data-focus="wk-view-' + v + '">' + VIEW_LABEL[v] + "</button>";
-  }).join("");
+  // One toolbar row (R11.119): the four views, the Filters popover (the Planner's status in its view), no action.
+  const groups = ctx.view === "planner" ? plannerFilterGroups() : (ctx.F ? filterGroups(ctx) : []);
+  const bar = toolbarHtml({ key: "work", label: "Work toolbar", groups: groups,
+    views: VIEWS.map(function (v) {
+      return { id: v, label: VIEW_LABEL[v], current: ctx.view === v };
+    }) });
   return '<div class="page-head"><h2 class="page-title">Work</h2><p class="page-note">' + esc(note) + "</p></div>" +
-    '<div class="wk-top"><div class="seg wk-views" role="group" aria-label="Work view">' + buttons + "</div></div>";
+    bar;
 }
 
 // The issue cards that pass the filters (the Board shows them; none inside a feature scope).
@@ -193,14 +197,14 @@ function bodyHtml(ctx) {
   if (!ctx.shown.length) {
     // Filters can leave no task while issue cards still match: those show on the Board, not a "no match" line.
     if (!issues.length) {
-      return filterBarHtml(ctx) + emptyHtml("No tasks match these filters.",
+      return emptyHtml("No tasks match these filters.",
         '<button type="button" class="btn btn-small" data-wk="clear" data-focus="wk-clear">Clear filters</button>');
     }
-    return filterBarHtml(ctx) + boardView(ctx);
+    return boardView(ctx);
   }
-  if (ctx.view === "list") return filterBarHtml(ctx) + groupBarHtml(ctx) + listView(ctx);
-  if (ctx.view === "tree") return filterBarHtml(ctx) + treeView(ctx);
-  return filterBarHtml(ctx) + boardView(ctx);
+  if (ctx.view === "list") return groupBarHtml(ctx) + listView(ctx);
+  if (ctx.view === "tree") return treeView(ctx);
+  return boardView(ctx);
 }
 
 export function sectionView(vm) {
@@ -329,6 +333,34 @@ function onClick(event) {
   }
 }
 
+// The section toolbar (rb:toolbar, toolbar.js): the view switch, filter tokens toggle in the route f, Clear resets f.
+// In the Planner view the Status options are the Planner's own filter, not a tag filter.
+function onToolbar(event) {
+  const d = event.detail || {};
+  const root = event.target && event.target.closest ? event.target.closest(".wk") : null;
+  if (!root || d.key !== "work") return;
+  const pid = root.getAttribute("data-project");
+  const prefs = readPrefs(pid, currentRoute());
+  if (d.type === "view") {
+    goWork(pid, { view: d.value });
+  } else if (prefs.view === "planner") {
+    // The Planner's Status is one choice: a chosen option again turns it off (back to All).
+    if (d.type === "token" || d.type === "remove") {
+      setPlannerStatus(String(d.value).slice(3), true);
+      dispatchRender();
+      focusLater('[data-tb-token="' + d.value + '"]');
+    } else if (d.type === "clear") {
+      setPlannerStatus("", false);
+      dispatchRender();
+    }
+  } else if (d.type === "token" || d.type === "remove") {
+    const scope = splitFeat(prefs.f);
+    goWork(pid, { f: joinFeat(scope.feat, toggleToken(scope.rest, d.value)) });
+  } else if (d.type === "clear") {
+    goWork(pid, { f: joinFeat(splitFeat(prefs.f).feat, "") });
+  }
+}
+
 function onChange(event) {
   const el = event.target;
   const root = el && el.closest ? el.closest(".wk") : null;
@@ -358,4 +390,5 @@ function onChange(event) {
 if (typeof document !== "undefined") {
   document.addEventListener("click", onClick);
   document.addEventListener("change", onChange);
+  document.addEventListener("rb:toolbar", onToolbar);
 }

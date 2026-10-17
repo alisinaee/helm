@@ -19,6 +19,7 @@ import { pendingValue, run } from "../cmd.js";
 import { getJson } from "../api.js";
 import { buildHash } from "../router.js";
 import { showToast } from "./toast.js";
+import { toolbarHtml } from "../toolbar.js";
 import { collect, pageState, questionCardHtml, questionKey, watchCountdowns } from "./inbox.js";
 
 export const FILTERS = [["open", "Open"], ["queue", "Queue"], ["doing", "Doing"], ["done", "Done"],
@@ -153,17 +154,6 @@ function alertsHtml(counts) {
   return items.length ? '<nav class="hd-alerts" aria-label="Needs attention">' + items.join("") + "</nav>" : "";
 }
 
-function filterHtml(opts) {
-  const active = opts.f || "all";
-  const links = FILTERS.map(function (pair) {
-    const cur = pair[0] === active ? ' aria-current="page"' : "";
-    return '<a class="hd-filter" href="' + esc(hashOf({ f: pair[0], kind: opts.kind, sid: opts.sid, q: opts.q,
-      sort: opts.sort, view: opts.view })) +
-      '"' + cur + ">" + esc(pair[1]) + "</a>";
-  });
-  return links.join("");
-}
-
 // The page hash for one filter state. Empty values are left out, so the hash stays short; the default order
 // (sort=new) is left out too.
 export function hashOf(state) {
@@ -177,44 +167,41 @@ export function hashOf(state) {
   return "#head" + (parts.length ? "?" + parts.join("&") : "");
 }
 
-function optionsHtml(values, current, allText) {
-  return ['<option value=""' + (current ? "" : " selected") + ">" + esc(allText) + "</option>"]
-    .concat(values.map(function (v) {
-      return '<option value="' + esc(v) + '"' + (v === current ? " selected" : "") + ">" + esc(v) + "</option>";
-    })).join("");
-}
-
+// The Head bar (R11.119): one toolbar row. The view switch (List | Cards) and search sit in the row; Status, Kind,
+// Session and Order are the Filters popover, and the applied chips show under the row. The state stays in the hash.
 function barHtml(vm, opts) {
   const accts = [];
   for (const row of rowsOf(vm)) {
     const label = String(row.acct || row.sid || "");
     if (label && accts.indexOf(label) < 0) accts.push(label);
   }
-  return '<div class="hd-bar" data-f="' + esc(opts.f || "all") + '" data-view="' +
-    (opts.view === "cards" ? "cards" : "list") + '">' +
-    '<label class="hd-search"><span class="hd-lbl">Search</span><input type="search" data-field="q" value="' +
-    esc(opts.q || "") + '" placeholder="/ search" aria-label="Search the log"></label>' +
-    '<label class="hd-sel"><span class="hd-lbl">Kind</span><select data-field="kind">' +
-    optionsHtml(KINDS, opts.kind, "all") + "</select></label>" +
-    '<label class="hd-sel"><span class="hd-lbl">Session</span><select data-field="sid">' +
-    optionsHtml(accts, opts.sid, "all") + "</select></label>" +
-    '<label class="hd-sel"><span class="hd-lbl">Order</span><select data-field="sort">' +
-    '<option value="new"' + (opts.sort === "old" ? "" : " selected") + ">Newest</option>" +
-    '<option value="old"' + (opts.sort === "old" ? " selected" : "") + ">Oldest</option></select></label>" +
-    '<button type="button" class="btn hd-log" data-action="head-log">+ Log</button>' +
-    '<nav class="hd-filters hd-seg" aria-label="Filter">' + filterHtml(opts) + "</nav>" + viewHtml(opts) +
-    countHtml(opts.pager) + "</div>";
-}
-
-// The Cards | List toggle. The hash keeps view=list or view=cards; the default (no view key) is the list.
-function viewHtml(opts) {
-  const current = opts.view === "cards" ? "cards" : "list";
-  const links = [["list", "List"], ["cards", "Cards"]].map(function (pair) {
-    const cur = pair[0] === current ? ' aria-current="page"' : "";
-    return '<a class="hd-filter hd-view" href="' + esc(hashOf({ f: opts.f || "all", kind: opts.kind, sid: opts.sid,
-      q: opts.q, sort: opts.sort, view: pair[0] })) + '"' + cur + ">" + esc(pair[1]) + "</a>";
+  const cur = opts.f || "all";
+  const groups = [
+    { id: "status", label: "Status", options: FILTERS.filter(function (p) {
+      return p[0] !== "all";
+    }).map(function (p) {
+      return { token: "status:" + p[0], label: p[1], on: cur === p[0] };
+    }) },
+    { id: "kind", label: "Kind", options: KINDS.map(function (k) {
+      return { token: "kind:" + k, label: k, on: opts.kind === k };
+    }) },
+    { id: "session", label: "Session", options: accts.map(function (a) {
+      return { token: "sid:" + a, label: a, on: opts.sid === a };
+    }) },
+    { id: "order", label: "Order", options: [{ token: "sort:old", label: "Oldest first", on: opts.sort === "old" }] },
+  ].filter(function (g) {
+    return g.options.length > 0;
   });
-  return '<nav class="hd-views hd-seg" aria-label="View">' + links.join("") + "</nav>";
+  const bar = toolbarHtml({
+    key: "head", label: "Head toolbar",
+    views: [{ id: "list", label: "List", current: opts.view !== "cards" },
+      { id: "cards", label: "Cards", current: opts.view === "cards" }],
+    search: { value: opts.q || "", placeholder: "/ search", label: "Search the log" },
+    groups: groups,
+    actions: [{ id: "log", label: "+ Log", primary: true }],
+  });
+  return '<div class="hd-bar" data-f="' + esc(cur) + '" data-view="' +
+    (opts.view === "cards" ? "cards" : "list") + '">' + bar + countHtml(opts.pager) + "</div>";
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -1050,23 +1037,49 @@ export function attachHeadListeners() {
       run("head.merge", { id: id, into: field("into") }, { project: project, label: id + " merged" });
     }
   });
+  // Search commits on change (Enter or blur), as the old field did; typing alone does not re-render the list.
   main.addEventListener("change", function (event) {
     const el = event.target;
-    const bar = el && el.closest ? el.closest(".hd-bar") : null;
-    const key = el && el.getAttribute ? el.getAttribute("data-field") : null;
-    if (!bar || !key) return;
-    window.location.hash = scopedHash(setField(bar, key, el.value || ""), projectOf(el));
+    if (el && el.hasAttribute && el.hasAttribute("data-tb-search")) {
+      go(el, Object.assign(hashState(), { q: el.value || "" }));
+    }
+  });
+  main.addEventListener("rb:toolbar", function (event) {
+    const d = event.detail || {};
+    const el = event.target;
+    if (d.key !== "head" || !el) return;
+    const st = hashState();
+    const value = String(d.value || "");
+    const at = value.indexOf(":");
+    if (d.type === "view") {
+      go(el, Object.assign(st, { view: value }));
+    } else if (d.type === "token" || d.type === "remove") {
+      if (at < 0) return;
+      // Status, Kind and Session are one choice each: a chosen option again clears it. Order is on or off.
+      const kind = value.slice(0, at);
+      const val = value.slice(at + 1);
+      if (kind === "status") st.f = st.f === val ? "all" : val;
+      else if (kind === "kind") st.kind = st.kind === val ? "" : val;
+      else if (kind === "sid") st.sid = st.sid === val ? "" : val;
+      else if (kind === "sort") st.sort = st.sort === "old" ? "new" : "old";
+      go(el, st);
+    } else if (d.type === "clear") {
+      go(el, Object.assign(st, { f: "all", kind: "", sid: "", sort: "" }));
+    } else if (d.type === "action" && d.value === "log") {
+      showToast({ text: "Type in the chat. Every message is logged here." });
+    }
   });
 }
 
-function setField(bar, key, value) {
-  const f = bar.getAttribute("data-f") || "all";
-  const state = { f: f, q: "", kind: "", sid: "", sort: "", view: bar.getAttribute("data-view") || "list" };
-  for (const el of bar.querySelectorAll("[data-field]")) {
-    state[el.getAttribute("data-field")] = el.value || "";
-  }
-  state[key] = value;
-  return hashOf(state);
+// The state of the page hash, with the defaults the bar shows; a toolbar choice changes one key of it.
+function hashState() {
+  const params = queryOf();
+  return { f: params.get("f") || "all", q: params.get("q") || "", kind: params.get("kind") || "",
+    sid: params.get("sid") || "", sort: params.get("sort") || "", view: params.get("view") || "list" };
+}
+
+function go(el, state) {
+  window.location.hash = scopedHash(hashOf(state), projectOf(el));
 }
 
 // The Head hash is project-scoped in the app ("#/p/<id>/head?..."); hashOf() gives the bare "#head?..." form.

@@ -12,6 +12,7 @@ import { bannerHtml, chipHtml, emptyHtml, esc, setHtml, skeletonHtml } from "../
 import { MISSING, fmtDuration, fmtTokens } from "../format.js";
 import { buildHash, currentRoute, projectHash } from "../router.js";
 import { pageState } from "./inbox.js";
+import { toolbarHtml } from "../toolbar.js";
 import { tableHtml } from "./wf_table.js";
 
 const LANE_H = 44;
@@ -774,6 +775,7 @@ let activeMap = null;
 let lastView = null;
 let mapKinds = null;
 let mapHasNow = false;
+let mapTb = "";
 
 function mapStateFor(pid) {
   let st = mapStates.get(pid);
@@ -854,17 +856,41 @@ function toggled(list, value) {
   });
 }
 
-function chipsHtml(route, range, label, key, values, selected) {
-  const chips = values.map(function (v) {
-    const on = selected.indexOf(v) >= 0;
-    const change = {};
-    change[key] = toggled(selected, v).join("|");
-    return '<a class="wfg-chip" href="' + esc(mapHash(route, range, change)) + '"' +
-      (on ? ' aria-current="true"' : "") + ">" + esc(v) + "</a>";
-  }).join("");
-  return '<div class="wfg-chips" role="group" aria-label="' + esc(label) + '"><span class="wfg-chips-lbl">' +
-    esc(label) + "</span>" + chips + "</div>";
+// The Map's filters in the section toolbar (R11.119): one Filters button with its popover and applied chips. The
+// count sits in the row's gap. The st:, ag: and ph: tokens are the same hash state the old chip rows wrote.
+function mapToolbarHtml(opts, phases, countText) {
+  const pick = function (key, values) {
+    const on = mapList(opts[key]);
+    return values.map(function (v) {
+      return { token: key + ":" + v, label: v, on: on.indexOf(v) >= 0 };
+    });
+  };
+  const html = toolbarHtml({ key: "wf", label: "Map filters", groups: [
+    { id: "st", label: "Status", options: pick("st", MAP_STATUS) },
+    { id: "ag", label: "Agent", options: pick("ag", MAP_AGENT) },
+    { id: "ph", label: "Phase", options: pick("ph", phases) }] });
+  return html.replace('<span class="tb-gap"></span>', '<span class="tb-gap"></span><span class="wfg-count" ' +
+    'aria-live="polite">' + esc(countText) + "</span>");
 }
+
+// The Filters popover writes through the hash: a token toggles its value, Clear drops all three filters.
+function onToolbar(e) {
+  const d = e.detail || {};
+  if (d.key !== "wf") return;
+  const route = currentRoute();
+  const range = rangeOf(route);
+  if (d.type === "clear") {
+    window.location.hash = mapHash(route, range, { st: "", ag: "", ph: "" });
+    return;
+  }
+  const m = /^(st|ag|ph):(.*)$/.exec(String(d.value || ""));
+  if ((d.type !== "token" && d.type !== "remove") || !m) return;
+  const change = {};
+  change[m[1]] = toggled(mapList(mapOpts(route)[m[1]]), m[2]).join("|");
+  window.location.hash = mapHash(route, range, change);
+}
+
+if (typeof document !== "undefined") document.addEventListener("rb:toolbar", onToolbar);
 
 function ctlHtml(label, op, text, pressed) {
   const press = pressed === undefined ? "" : ' aria-pressed="' + (pressed ? "true" : "false") + '"';
@@ -975,21 +1001,15 @@ function mapSvg(kit, ctx) {
   const phases = all.lanes.map(function (l) {
     return l.id;
   });
-  const filters = '<div class="wfg-chips-row">' +
-    chipsHtml(route, range, "Status", "st", MAP_STATUS, mapList(opts.st)) +
-    chipsHtml(route, range, "Agent", "ag", MAP_AGENT, mapList(opts.ag)) +
-    chipsHtml(route, range, "Phase", "ph", phases, mapList(opts.ph)) + "</div>";
-  const count = '<div class="wfg-bar"><span class="wfg-count" aria-live="polite">' + matched + " of " + total +
-    " items</span></div>";
+  // Folded phases hide their tasks: the count says how many are drawn. Show all (the control bar) draws every phase.
+  const folded = matched > shown && !showAll;
+  const countText = folded ? "Showing " + shown + " of " + matched + " items" +
+    (flow.capped ? " (the view caps at " + flow.cap + ")" : "") : matched + " of " + total + " items";
+  mapTb = mapToolbarHtml(opts, phases, countText);
   if (!matched) {
-    return count + filters + '<p class="wf-hint">No tasks match these filters. <a href="' +
+    return '<p class="wf-hint">No tasks match these filters. <a href="' +
       esc(mapHash(route, range, { st: "", ag: "", ph: "" })) + '">Clear filters</a></p>';
   }
-  // Folded phases hide their tasks: the note says how many are drawn, and Show all draws every phase (slow).
-  const note = matched > shown && !showAll
-    ? '<p class="wfg-note">Showing ' + shown + " of " + matched + " items" +
-      (flow.capped ? " (the view caps at " + flow.cap + ")" : "") + ". Expand phases to see the rest. " +
-      '<a href="' + esc(mapHash(route, range, { all: "1" })) + '">Show all (slow)</a></p>' : "";
   const crumbs = narrow() ? '<nav class="wfg-chips" aria-label="Phases">' + (flow.frames || []).map(function (f) {
     const nb = flow.now && flow.now.box;
     const here = !!nb && nb.x >= f.x && nb.x < f.x + f.w;
@@ -1034,7 +1054,7 @@ function mapSvg(kit, ctx) {
     onView: function (v) {
       mapStateFor(ctx.pid).view = v;
     } };
-  return count + filters + note + crumbs + '<div class="wfg-stage">' + ctl +
+  return crumbs + '<div class="wfg-stage">' + ctl +
     '<div class="wfg-host" data-wf-map-host data-wf-rev="' + esc(pendingMap.rev) + '"></div></div>';
 }
 
@@ -1117,6 +1137,7 @@ function spaceStep(dir, viaKey) {
 function mapBody(route, raw, range, stamp) {
   mapKinds = null;
   mapHasNow = false;
+  mapTb = "";
   if (route.name !== "project") {
     return emptyHtml("Select a project to view diagram.", '<a href="#/all/projects">View projects</a>');
   }
@@ -1267,10 +1288,6 @@ export function sectionView(vm) {
     (view === "map" ? "Tasks flow left to right from Start to Now, one frame per phase. Select a task to see its " +
       "details." : "Each bar is a job from start to end, in lanes by role and model. Hover or focus a bar for its " +
       "details, and press Enter to open its task.") + "</p></div>";
-  const controls = '<div class="wf-controls"><nav class="seg plan-views" aria-label="View">' +
-    viewLinks(route, view, range) +
-    (view === "map" ? "" : '</nav><nav class="seg plan-views" aria-label="Range">' + rangeLinks(route, view, range) +
-      "</nav>" + (view === "timeline" ? navButtons() : "")) + "</div>";
   let body;
   if (model.empty && view !== "map") {
     const agents = route.name === "project" ? projectHash(route.id, "agents") : "#/all/agents";
@@ -1283,6 +1300,11 @@ export function sectionView(vm) {
   } else {
     body = (model.jobCount ? "" : emptyRange(route, view)) + timelineSvg(model);
   }
+  // The Map's filter bar joins the view switcher in one row (mapTb is set by the Map body above).
+  const controls = '<div class="wf-controls"><nav class="seg plan-views" aria-label="View">' +
+    viewLinks(route, view, range) +
+    (view === "map" ? "</nav>" + mapTb : '</nav><nav class="seg plan-views" aria-label="Range">' +
+      rangeLinks(route, view, range) + "</nav>" + (view === "timeline" ? navButtons() : "")) + "</div>";
   return '<div class="wf-page">' + head + controls + '<div class="wf" data-wf-view="' + esc(view) + '">' + body +
     // The Map has no strip: a tap opens the right panel's Details (navigate), so a strip would repeat it.
     (view === "map" ? "" : '<div class="wf-detail row-grid wf-cols">' + detailHtml(model, selectedKey) + "</div>") +

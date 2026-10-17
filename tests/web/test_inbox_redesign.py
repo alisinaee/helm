@@ -125,8 +125,9 @@ class InboxRedesignSource(unittest.TestCase):
         self.assertIsNone(re.search(r"\.innerHTML|insertAdjacentHTML", self.src))
 
     def test_filter_and_expand_are_clicks_on_the_page(self):
-        self.assertIn("data-ib-filter=", self.src)
+        self.assertIn("toolbarHtml({ key: \"inbox\"", self.src)
         self.assertIn('document.addEventListener("click", onPageClick)', self.src)
+        self.assertIn('document.addEventListener("rb:toolbar", onToolbar)', self.src)
 
     def test_no_new_css_or_inline_styles_or_handlers(self):
         self.assertIsNone(INLINE.search(self.src))

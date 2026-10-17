@@ -259,13 +259,16 @@ class WorkflowMapTests(unittest.TestCase):
         self.assertIn('data-wf-frame="', self.source)
 
     def test_map_filters_and_phase_folds_ride_in_f(self):
-        self.assertIn("#/p/alpha/workflow/map?f=range%3Aweek%2Cst%3Adoing", self.out["sections"]["map"])
+        # The Status filter is a toolbar checkbox (R11.119); its token writes st: into the same f= hash.
+        self.assertIn('data-tb-token="st:doing"', self.out["sections"]["map"])
+        self.assertIn('class="tb" data-tb="wf"', self.out["sections"]["map"])
         self.assertIn('keep.push((f.collapsed ? "+" : "-") + f.lane);', self.source)
         self.assertIn("window.location.hash = mapHash(route, rangeOf(route), { x: keep.join(\"|\") });", self.source)
 
     def test_a_capped_or_folded_map_says_how_many_items_it_shows(self):
-        self.assertIn("'<p class=\"wfg-note\">Showing ' + shown + \" of \" + matched + \" items\" +", self.source)
+        self.assertIn('const countText = folded ? "Showing " + shown + " of " + matched + " items" +', self.source)
         self.assertIn('(flow.capped ? " (the view caps at " + flow.cap + ")" : "")', self.source)
+        self.assertIn('mapTb = mapToolbarHtml(opts, phases, countText);', self.source)
 
 
 if __name__ == "__main__":
