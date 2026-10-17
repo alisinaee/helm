@@ -1,5 +1,3 @@
-{"id":"A284","at":"2026-10-15T15:45:28+03:30","src":"agent","op":"task.status","sum":"R7.62 todo->partial","undo":true}
-{"id":"A285","at":"2026-10-15T15:45:28+03:30","src":"agent","op":"task.status","sum":"R7.65 todo->partial","undo":true}
 {"id":"A286","at":"2026-10-15T15:45:28+03:30","src":"agent","op":"task.status","sum":"R7.66 todo->partial","undo":true}
 {"id":"A287","at":"2026-10-15T15:45:28+03:30","src":"agent","op":"task.status","sum":"R7.68 todo->partial","undo":true}
 {"id":"A288","at":"2026-10-15T15:45:37+03:30","src":"agent","op":"task.status","sum":"R7.67 todo->done","undo":true}
@@ -498,3 +496,5 @@
 {"id":"A781","at":"2026-10-17T09:16:26+03:30","src":"agent","op":"task.add","sum":"R11.113 todo in R11","undo":true}
 {"id":"A782","at":"2026-10-17T09:18:24+03:30","src":"agent","op":"task.status","sum":"R11.113 partial->done","undo":true}
 {"id":"A783","at":"2026-10-17T09:18:52+03:30","src":"agent","op":"task.status","sum":"R10.28 partial->done","undo":true}
+{"id":"A784","at":"2026-10-17T09:46:55+03:30","src":"agent","op":"head.set","sum":"H238 set status, note","undo":true}
+{"id":"A785","at":"2026-10-17T09:46:55+03:30","src":"agent","op":"head.set","sum":"H239 set status, note","undo":true}

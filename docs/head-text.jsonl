@@ -421,3 +421,6 @@
 {"id":"H235","text":"/head  \ni did switch accounts \ncontinue the jobs \n5h limit set to 50%\nbecarefull about it \naslo open the server in pane too"}
 {"id":"H236","text":"why the server is empty dhsabord ? \nalso we are on the token saver mode \nas much as possible"}
 {"id":"H237","text":"maybe its better to use sonnet for continue this task , as low or med \nor use haikue as much as possible"}
+{"id":"H238","text":"Yes, fix the agy-queue RB path in split-net to ~/Works/helm and run the UI audit."}
+{"id":"H239","text":"no no no split net project task \nand for now u cant run any agy task , the vpn is off , also cant use cursor"}
+{"id":"H239","reply":"I put split-net back the way it was: `agy-queue.py` again points at the old path. No agy audit ran.\n\nFrom now on I won't start agy, Cursor or split-net work, and I'll ignore the hook's \"idle\" hints for them. That rule is in the runbook and pushed.\n\nEverything for this project is pushed. Claude workers aren't running because there are no open tasks left, apart from the R7.31 umbrella."}

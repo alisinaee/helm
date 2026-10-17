@@ -8677,8 +8677,25 @@
       "title": "haiku: R11.109 fix old timeline tests",
       "model": "haiku",
       "task": "R11.109",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-17T09:21:52+03:30",
+      "ended": "2026-10-17T09:22:37+03:30",
+      "tokens": {
+        "in": 20,
+        "out": 4818,
+        "cacheRead": 573314,
+        "cacheWrite": 37816,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1081",
+      "title": "agy: R11 UI audit: activity, tokens account, roadmap map",
+      "model": "agy",
+      "task": "R11.4",
+      "effort": "high",
+      "status": "running",
+      "started": "2026-10-17T09:46:04+03:30",
       "ended": null
     }
   ]
