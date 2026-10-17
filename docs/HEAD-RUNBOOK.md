@@ -20,6 +20,14 @@
 > plain task text only. The auto job still won't carry a task id (the detector has no task field), so manual
 > `job start`/`job done` stays necessary for task binding; the duplicate is cosmetic, not a bug to "fix" further.
 
+> 2026-10-17 H299 (root cause: Effort and Tokens always "-" on manually-started jobs): `job start` takes
+> `--effort low|medium|high|xhigh|max` and `job done` takes `--tokens K` (thousands) — both optional, both silently
+> blank if omitted. The head never passed either, so every manually-registered job shows "-" in both columns, even
+> though the matching auto-detected duplicate job (H295) DOES carry real measured tokens (it reads the subagent
+> transcript). RULE: always pass `--effort` on `job start` (match the Agent tool call's effort/model tier), and on
+> `job done` look up the matching auto job's `tokensK` in `bin/roadmap job list --json` (same task, title containing
+> the job id) and pass it with `--tokens` so the board shows real numbers instead of "-".
+
 # Head runbook (how the head works here; read after HANDOVER.md)
 
 Product renamed to Helm (2026-10-16): repo alisinaee/helm, dir ~/Works/helm; use `bin/helm` or `bin/roadmap` (same). Project id stays `roadmap-board`.
