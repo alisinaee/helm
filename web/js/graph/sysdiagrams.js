@@ -36,6 +36,7 @@ function ctx(opts) {
   const o = opts || {};
   const sp = Number(o.space);
   return { sel: o.selected == null ? null : String(o.selected), near: o.near instanceof Set ? o.near : null,
+    edges: ["off", "selected", "all"].includes(o.edges) ? o.edges : "selected",
     sp: Number.isFinite(sp) && sp > 0 ? Math.min(2.5, Math.max(0.6, sp)) : 1 };
 }
 
@@ -1097,23 +1098,41 @@ export function classSvg(cls, opts) {
   });
   const obstacles = [...place.values()];
   const agg = new Map();
+  // Class edges: "off", "selected" (default: only those of the selected class) or "all". Between two open modules the
+  // default view draws one aggregated module-to-module edge instead.
+  const mode = c.edges;
+  const bandBox = new Map(blocks.filter((b) => b.open).map((b) => ["g:" + b.g, { id: b.id, label: b.label, x: b.x,
+    y: b.y, w: b.w, h: b.h }]));
   es.forEach((e) => {
     const fa = owner.get(String(e.from)) || String(e.from);
     const fb = owner.get(String(e.to)) || String(e.to);
     if (fa === fb) return;
-    const k = fa + "\u0001" + fb + "\u0001" + (e.kind === "extends" ? "x" : "u");
+    let ka = fa;
+    let kb = fb;
+    const open = !owner.has(String(e.from)) && !owner.has(String(e.to));
+    if (open) {
+      const mine = c.sel !== null && (String(e.from) === c.sel || String(e.to) === c.sel);
+      if (mode === "off" || (mode === "selected" && !mine)) {
+        if (mode === "off") return;
+        ka = "g:" + byId.get(String(e.from)).group;
+        kb = "g:" + byId.get(String(e.to)).group;
+        if (ka === kb) return;
+        if (!bandBox.has(ka) || !bandBox.has(kb)) return;
+      }
+    }
+    const k = ka + "\u0001" + kb + "\u0001" + (e.kind === "extends" ? "x" : "u");
     const cur = agg.get(k);
     if (cur) cur.n++;
-    else agg.set(k, { a: fa, b: fb, e, n: 1, merged: fa !== String(e.from) || fb !== String(e.to) });
+    else agg.set(k, { a: ka, b: kb, e, n: 1, merged: ka !== String(e.from) || kb !== String(e.to) });
   });
   agg.forEach((r) => {
-    const a = place.get(r.a);
-    const b = place.get(r.b);
+    const a = place.get(r.a) || bandBox.get(r.a);
+    const b = place.get(r.b) || bandBox.get(r.b);
     const isExt = r.e.kind === "extends";
     const sw = r.n > 1 ? f(Math.min(3, 1.2 + Math.log2(r.n) * 0.4)) : "1.2";
     const attrs = 'stroke="' + v("--text-2") + '" stroke-width="' + sw + '"' + (isExt ? ' marker-end="url(#sysd-tri)"' :
       ' stroke-dasharray="5 3" marker-end="url(#sysd-open)"');
-    const R = routeEdge(a, b, obstacles);
+    const R = routeEdge(a, b, bandBox.has(r.a) || bandBox.has(r.b) ? [] : obstacles);
     parts.push(pathG(c, a.id, b.id, polyD(R.pts), attrs, a.label + (isExt ? " extends " : " uses ") + b.label +
         (r.n > 1 ? " (" + r.n + ")" : r.e.label ? " (" + r.e.label + ")" : "")));
     const lab = r.n > 1 ? String(r.n) : !isExt && r.e.label && !r.merged ? clip(r.e.label, 14) : "";

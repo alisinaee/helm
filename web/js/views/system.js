@@ -48,6 +48,8 @@ const RENDERERS = Object.assign(Object.fromEntries(VIEWS.map((m) => [m[0], m])),
 const collapsed = new Set();
 // Class modules the person collapsed (all start expanded); clsMods is the module list of the last class diagram.
 const clsShut = new Set();
+const EDGE_MODES = ["off", "selected", "all"];
+let clsEdges = "selected";
 let clsMods = [];
 let drill = [];
 let lastLay = null;
@@ -449,7 +451,8 @@ function stage(pid, arch) {
     const has = item && (spec[4] === "items" ? true : Array.isArray(item[spec[4]]) && item[spec[4]].length);
     if (!has) return { html: emptyHtml("Nothing found for " + spec[1] + ". Try another view."), note: note };
     if (spec[3] === classSvg) clsMods = classModules(item);
-    const out = spec[3](item, { selected: selected, shut: clsShut, aspect: canvasAspect(), space: spaceNow() });
+    const out = spec[3](item, { selected: selected, shut: clsShut, edges: clsEdges, aspect: canvasAspect(),
+      space: spaceNow() });
     svg = svgWrap(out.inner, out.w + 2 * PAD, out.h + 2 * PAD, spec[1] + " diagram").replace('<g id="sys-vp">',
       '<g id="sys-vp"><g transform="translate(' + PAD + " " + PAD + ')">').replace(/<\/g><\/svg>$/, "</g></g></svg>");
   } else {
@@ -547,7 +550,8 @@ function toolbarHtml(pid, arch) {
     op("sys", "Show the system summary", "Summary") + copyIdHtml(pid, arch) +
     op("update", "Add a task to update and check the System diagrams", "Update diagrams") +
     (current === "classes" ? op("cls-shut", "Collapse all class modules", "Collapse all") +
-      op("cls-open", "Expand all class modules", "Expand all") : "") + "</span>";
+      op("cls-open", "Expand all class modules", "Expand all") +
+      op("cls-edges", "Class edges: " + clsEdges + " (click to change)", "Class edges: " + clsEdges) : "") + "</span>";
   return { bar: '<div class="wfg-bar" role="toolbar" aria-label="System views">' + switcherHtml(arch) + stats +
     "</div>", acts: acts, tools: tools };
 }
@@ -669,11 +673,28 @@ function setView(id) {
   lastLay = null;
 }
 
+// Space the overlay clusters take at the top and bottom of the canvas (+8px), so Fit keeps the drawing clear of them.
+function overlayInset(svg, r) {
+  const host = svg.parentElement && svg.parentElement.closest ? svg.parentElement.closest(".sys-box") : null;
+  const out = { top: 0, bottom: 0 };
+  if (!host || !host.querySelectorAll || !r) return out;
+  host.querySelectorAll(".sys-ov").forEach((o) => {
+    const b = o.getBoundingClientRect();
+    if (!b.height) return;
+    if (b.top - r.top < r.height / 2) out.top = Math.max(out.top, b.bottom - r.top + 8);
+    else out.bottom = Math.max(out.bottom, r.bottom - b.top + 8);
+  });
+  return out;
+}
+
 // The true fit: the whole drawing inside the canvas, centred, scale clamped to 0.2..1.5.
-export function openingView(box, size) {
-  const fit = Math.min((size.w - 2 * PAD) / Math.max(1, box.w), (size.h - 2 * PAD) / Math.max(1, box.h));
+export function openingView(box, size, inset) {
+  const top = (inset && inset.top) || 0;
+  const bot = (inset && inset.bottom) || 0;
+  const free = Math.max(1, size.h - top - bot);
+  const fit = Math.min((size.w - 2 * PAD) / Math.max(1, box.w), (free - 2 * PAD) / Math.max(1, box.h));
   const k = Math.max(FIT_MIN, Math.min(FIT_MAX, fit));
-  return { k: k, x: (size.w - box.w * k) / 2, y: (size.h - box.h * k) / 2 };
+  return { k: k, x: (size.w - box.w * k) / 2, y: top + (free - box.h * k) / 2 };
 }
 
 function nativeFs() {
@@ -692,6 +713,7 @@ function mountNow() {
   const box = { w: Number(svg.getAttribute("data-w")) || 1, h: Number(svg.getAttribute("data-h")) || 1 };
   const r = svg.getBoundingClientRect();
   const size = { w: r.width || box.w, h: r.height || box.h };
+  const inset = overlayInset(svg, r);
   svg.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === "[" || e.key === "]") {
@@ -715,7 +737,7 @@ function mountNow() {
   }
   keepCentre = null;
   api = mountViewport(svg, svg.querySelector("#sys-vp"), {
-    view: auto || !view ? openingView(box, size) : view, box: box, taps: taps, fit: false,
+    view: auto || !view ? openingView(box, size, inset) : view, box: box, taps: taps, fit: false,
     onTap: (el) => select(el.getAttribute("data-sys")),
     onClear: () => {
       if (selected) select(null);
@@ -865,6 +887,10 @@ function onClick(event) {
   else if (op === "fit") fitNow();
   else if (op === "cls-shut") setAllModules(true);
   else if (op === "cls-open") setAllModules(false);
+  else if (op === "cls-edges") {
+    clsEdges = EDGE_MODES[(EDGE_MODES.indexOf(clsEdges) + 1) % EDGE_MODES.length];
+    redraw();
+  }
   else if (api && op === "actual") {
     auto = false;
     api.actual();

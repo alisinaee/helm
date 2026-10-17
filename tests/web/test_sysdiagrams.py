@@ -202,7 +202,7 @@ class SysDiagramsTest(unittest.TestCase):
         self.assertNotIn('aria-expanded="false"', r["inner"])
         self.assertIn('aria-expanded="true"', r["inner"])
         self.assertIn('data-sys-tog="cls:m0"', r["inner"])
-        self.assertEqual(r["inner"].count("<path class=\"sys-e"), 120)
+        self.assertEqual(r["inner"].count("<path class=\"sys-e"), 80)  # module-level edges
         self.assertGreater(r["w"] / r["h"], 1.2)
         self.assertLess(r["w"] / r["h"], 2.6)
         for i, a in enumerate(r["boxes"]):
