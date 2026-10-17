@@ -72,7 +72,7 @@ class TimelineUxSourceTests(unittest.TestCase):
         self.assertIn('return hit || "all";', self.source)
 
     def test_the_now_button_scrolls_back_to_the_now_line(self):
-        self.assertIn('data-wf-now="1">Now</button>', self.source)
+        self.assertIn('data-wf-now="1" aria-label="Jump to now">Now</button>', self.source)
         self.assertIn("jumpToNow(closestEl(nowBtn, \".wf-page\"));", self.source)
 
     def test_the_lane_rows_have_no_fixed_height_classes(self):
