@@ -26,7 +26,8 @@ from roadmap.services import git as git_service
 from roadmap.services import head as head_service
 from roadmap.services import jobs as job_service
 from roadmap.services import system as system_service
-from roadmap.services import system_arch
+from roadmap.services import system_arch, system_v2
+from roadmap.services import work as work_service
 from roadmap.services import systemheat
 from roadmap.services import tasks as task_service
 from roadmap.core.parsers import parse_jobs
@@ -751,15 +752,17 @@ def git_diff(app, req, match):
 
 
 def _system_etag(path, data_dir, sha):
-    """The ETag of the system map: the HEAD sha plus the mtimes of docs/system.json and jobs.json (heat moves with the
-    jobs). A missing file counts as 0. Quoted, as the other ETags here are."""
+    """The ETag of the system map: the HEAD sha plus the mtimes of docs/system.json, jobs.json, tasks.json and the
+    Work store (heat and the bound tasks move with them). A missing file counts as 0. Quoted, as the other ETags
+    here are."""
     stamps = []
-    for name in (os.path.join(path, "docs", system_service.SYSTEM_FILE), os.path.join(data_dir, job_service.JOBS_FILE)):
+    for name in (os.path.join(path, "docs", system_service.SYSTEM_FILE), os.path.join(data_dir, job_service.JOBS_FILE),
+                 task_service.tasks_path(data_dir), os.path.join(data_dir, work_service.FILE)):
         try:
             stamps.append(os.stat(name).st_mtime_ns)
         except OSError:
             stamps.append(0)
-    return '"%s-%d-%d"' % (sha or "nosha", stamps[0], stamps[1])
+    return '"%s-%s"' % (sha or "nosha", "-".join(str(n) for n in stamps))
 
 
 def project_system(app, req, match):
@@ -787,11 +790,18 @@ def project_system(app, req, match):
         jobs = job_service.list_jobs(data_dir)
     except RoadmapError:
         jobs = []
+    commits = []
     try:
-        body["arch"] = system_arch.analyze(path, mapped, systemheat.history(path, sha)["commits"], jobs)
+        commits = systemheat.history(path, sha)["commits"]
+        body["arch"] = system_arch.analyze(path, mapped, commits, jobs)
     except (RoadmapError, OSError, ValueError) as err:
         body["arch"] = None
         body["warnings"].append("system views unavailable: " + str(err)[:120])
+    try:
+        if body["arch"] is not None:
+            system_v2.extend(path, mapped, body["arch"], data_dir, commits)
+    except Exception as err:   # one failure only adds a warning; the arch from analyze is kept
+        body["warnings"].append("system v2 unavailable: " + str(err)[:120])
     return json_reply(200, body, headers=[("ETag", etag)])
 
 

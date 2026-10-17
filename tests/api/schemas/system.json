@@ -25,4 +25,10 @@
    "sha": {"type": ["string", "null"]},
    "arch": {"type": ["object", "null"], "required": ["views", "flows", "details", "stats"],
      "properties": {"views": {"type": "object"}, "flows": {"type": "array"}, "details": {"type": "object"},
-                    "stats": {"type": "object"}}}}}
+                    "stats": {"type": "object"}, "diagrams": {"type": "object"},
+                    "catalog": {"type": "array", "items": {"type": "object",
+                      "required": ["id", "family", "label", "score", "available", "reason", "derived"],
+                      "properties": {"id": {"type": "string"}, "family": {"type": "string"},
+                                     "label": {"type": "string"}, "score": {"type": "integer"},
+                                     "available": {"type": "boolean"}, "reason": {"type": "string"},
+                                     "derived": {"type": "boolean"}}}}}}}}

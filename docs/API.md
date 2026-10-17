@@ -175,6 +175,13 @@ inside the project folder (a symlink is refused with a warning). `ETag` is the s
 and `jobs.json`; a matching `If-None-Match` gives `304` with no body. Same-origin guard as the git reads: the page's
 own GET (`Sec-Fetch-Site: same-origin`) only, otherwise `403`. Never on the phone listener.
 
+System v2 (additive, in `arch`): `catalog: [{id, family, label, score, available, reason, derived}]` for the 13 views
+(pinned order from `docs/system.json` `views`), `diagrams: {classes, deployment, usecases, activity, states, er}` (a
+diagram whose generator fails or is missing is left out and named in `warnings`), and `arch.details["c:<id>"]` /
+`["k:<id>"]` gain `board` (bound agent tasks), `work` (bound Work items), `progress {done, total, pct}` and `refId`.
+Tasks bind by `components[].tasks|work` in `docs/system.json`, task ids in commit subjects touching the component, and
+`file:` refs / paths / the component name in a task. The `ETag` also covers the mtimes of `tasks.json` and `work.json`.
+
 ```json
 {"source": "baseline", "warnings": [], "layers": ["code", "cli", "tests", "docs", "config"],
  "components": [{"id": "roadmap", "name": "roadmap", "layer": "code", "kind": "module", "files": [],
