@@ -396,10 +396,14 @@ export function acctPanelHtml() {
       '<button type="button" class="btn" data-tk="acct" data-act="reload">Retry</button></p>'
       : '<p class="page-note">Loading accounts.</p>';
   }
-  const head = '<li class="row-grid tk-acct rg-head"><span class="rg-t">Account</span>' +
-    '<span class="rg-t">Logged in as</span>' +
-    '<span class="rg-t">Status</span><span class="rg-num">Weekly</span><span class="rg-num">5 hour</span>' +
-    '<span class="rg-num">Read</span><span class="rg-act">Actions</span></li>';
+  // One table: the list owns the tracks (tokens.css --acct-cols); header and rows take them through subgrid.
+  const cell = function (label, cls, body, title) {
+    return '<span class="' + (cls ? "tk-acct-cell " + cls : "tk-acct-cell") + '" data-label="' + esc(label) + '"' +
+      (title ? ' title="' + esc(title) + '"' : "") + ">" + body + "</span>";
+  };
+  const head = '<li class="tk-acct-head">' + cell("Account", "", "Account") + cell("Logged in as", "", "Logged in as") +
+    cell("Status", "", "Status") + cell("Weekly", "tk-acct-num", "Weekly") + cell("5 hour", "tk-acct-num", "5 hour") +
+    cell("Read", "tk-acct-num", "Read") + cell("Actions", "tk-acct-actions", "Actions") + "</li>";
   const pct = function (v) {
     return typeof v === "number" ? Math.round(v) + "%" : MISSING;
   };
@@ -407,6 +411,7 @@ export function acctPanelHtml() {
     const who = a.identity || {};
     const name = who.loggedIn === false ? "not logged in" : [who.emailMasked, who.plan].filter(Boolean).join(" · ") ||
       MISSING;
+    const nameTitle = name === MISSING ? "Not known until the account is checked" : (who.orgName || "");
     const r = a.reading || {};
     const btns = [a.active ? "" : acctButton(a.id, "switch", "Use", a.label),
       acctButton(a.id, "login", "Log in", a.label),
@@ -414,17 +419,16 @@ export function acctPanelHtml() {
       a.enabled ? acctButton(a.id, "disconnect", "Disconnect", a.label) :
         acctButton(a.id, "connect", "Connect", a.label)]
       .join("");
-    return '<li class="row-grid tk-acct"><span class="rg-t" title="' + esc(a.path || "") + '">' + esc(a.label) +
-      (a.active ? " (active)" : "") + '</span><span class="rg-t" title="' + esc(who.orgName || "") + '">' +
-      esc(name) +
-      '</span><span class="rg-t" title="' + esc(a.reason || "") + '">' + esc(a.status) +
-      '</span><span class="rg-num num">' +
-      esc(pct(r.weeklyPercent)) + '</span><span class="rg-num num">' +
-      esc(pct(r.fiveHourPercent)) +
-      '</span><span class="rg-num num">' + esc(acctAge(r.ageS)) +
-      '</span><span class="rg-act">' + btns + "</span></li>";
+    return '<li class="tk-acct-row">' +
+      cell("Account", "", esc(a.label) + (a.active ? " (active)" : ""), a.path || "") +
+      cell("Logged in as", "", esc(name), nameTitle) +
+      cell("Status", "", esc(a.status), a.reason || "") +
+      cell("Weekly", "tk-acct-num", esc(pct(r.weeklyPercent))) +
+      cell("5 hour", "tk-acct-num", esc(pct(r.fiveHourPercent))) +
+      cell("Read", "tk-acct-num", esc(acctAge(r.ageS))) +
+      cell("Actions", "tk-acct-actions", btns) + "</li>";
   }).join("");
-  return '<ul class="spend-list" aria-label="Claude accounts">' + head + rows + "</ul>" +
+  return '<ul class="spend-list tk-acct-list" aria-label="Claude accounts">' + head + rows + "</ul>" +
     '<p class="page-note" role="status">' + esc(acct.note || acct.data.note || "") + "</p>";
 }
 
