@@ -320,13 +320,18 @@ function scrollKey(node, seen) {
   return sig + "@" + index;
 }
 
-// The scroll position of el and of every scrolled descendant, each with its path of keys from el.
+// The scroll position of el and of every scrolled descendant, each with its path of keys from el. A mount host's
+// children are never touched by the morph (see isMountHost/morphNode), so its subtree is not walked either: for a
+// large imperative mount (the Workflow Map's SVG, hundreds of nodes) that subtree can be most of the section, and with
+// a 2 s poll re-running patch() on every refresh, walking it every time (reading scrollTop/scrollLeft, which can force
+// a synchronous layout) was the main-thread cost that froze the tab once the Map grew past a few hundred items.
 function collectScroll(root) {
   const out = [];
   function walk(node, path) {
     if (node.scrollTop > 0 || node.scrollLeft > 0) {
       out.push({ path: path, top: node.scrollTop || 0, left: node.scrollLeft || 0 });
     }
+    if (node.nodeType === 1 && node !== root && isMountHost(node)) return;
     const seen = new Map();
     for (const child of Array.from(node.children || [])) {
       walk(child, path.concat([scrollKey(child, seen)]));
