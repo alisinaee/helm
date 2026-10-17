@@ -276,8 +276,9 @@ export function graphSvg(g, details, label) {
   const act = activity(details);
   const shift = PAD - lay.top;
   const bands = lay.groups.map((b) => '<g><rect x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h +
-    '" rx="8" fill="' + v("--surface-2") + '" fill-opacity=".35" stroke="' + v("--track") + '"/><text x="' +
-    (b.x + 10) + '" y="' + (b.y + 16) + '" font-size="11" font-weight="600" fill="' + v("--text-3") + '">' +
+    '" rx="8" fill="' + v("--surface-2") + '" fill-opacity=".35" stroke="' + v("--track") +
+    '"/><text x="' + (b.toggle ? b.toggle.x + b.toggle.size + 6 : b.x + 10) + '" y="' +
+    (b.y + 16) + '" font-size="11" font-weight="600" fill="' + v("--text-3") + '">' +
     esc(b.label) + "</text>" + (b.toggle ? togSvg(b.toggle, b.id, true, b.label) : "") + "</g>").join("");
   const edges = lay.edges.map((e) => edgeSvg(e, near)).join("");
   const nodes = lay.nodes.map((n) => nodeSvg(n, near, act[n.id]) + (n.toggle ? togSvg(n.toggle,
@@ -445,6 +446,7 @@ function copyIdHtml(pid, arch) {
   return '<span class="sys-copy">' + copyButton(kind, id, label, { project: pid, sum: sum }) + "</span>";
 }
 
+// Returns {bar: view choice + stats, acts/tools: overlay clusters drawn inside the diagram box}.
 function toolbarHtml(pid, arch) {
   const fs = fullHost !== null || nativeFs() !== null;
   const op = (name, label, text, cls) => '<button type="button" class="btn btn-small' + (cls ? " " + cls : "") +
@@ -454,13 +456,15 @@ function toolbarHtml(pid, arch) {
     " lines · " + (s.imports || 0) + " imports</span>" : "";
   const screen = fullHost !== null ? op("exit", "Close full screen (Esc)", "Close") : nativeFs() !== null ?
     op("full", "Exit full screen (Esc)", "Exit full screen") : op("full", "Open full screen", "Full screen");
-  return '<div class="wfg-bar" role="toolbar" aria-label="System views">' + switcherHtml(arch) +
-    '<span class="wfg-chips" role="group" aria-label="Zoom">' + op("out", "Zoom out", "−") +
-    op("actual", "Zoom to 100 percent", "100%", "sys-zoom") + op("in", "Zoom in", "+") +
-    op("fit", "Fit to screen", "Fit") + op("sys", "Show the system summary", "Summary") + "</span>" +
-    '<span class="wfg-chips" role="group" aria-label="Actions">' + copyIdHtml(pid, arch) +
-    op("update", "Add a task to update and check the System diagrams", "Update diagrams") + screen + "</span>" +
-    (fs ? "" : count) + "</div>";
+  const stats = fs ? "" : count;
+  const tools = '<span class="sys-ov sys-ov-tr" role="group" aria-label="Zoom and screen"><span class="sys-zg">' +
+    op("out", "Zoom out", "−") + op("actual", "Zoom to 100 percent", "100%", "sys-zoom") + op("in", "Zoom in", "+") +
+    "</span>" + op("fit", "Fit to screen", "Fit") + screen + "</span>";
+  const acts = '<span class="sys-ov sys-ov-tl" role="group" aria-label="Diagram actions">' +
+    op("sys", "Show the system summary", "Summary") + copyIdHtml(pid, arch) +
+    op("update", "Add a task to update and check the System diagrams", "Update diagrams") + "</span>";
+  return { bar: '<div class="wfg-bar" role="toolbar" aria-label="System views">' + switcherHtml(arch) + stats +
+    "</div>", acts: acts, tools: tools };
 }
 
 function retryHtml() {
@@ -483,10 +487,13 @@ export function bodyHtml(pid, got) {
   }
   const st = stage(pid, arch);
   const note = current === "flows" ? '<span class="wfg-note">' + esc(st.note) + "</span>" : "";
-  return toolbarHtml(pid, arch) + crumbsHtml() + '<div class="wfg-bar">' + (st.html && !st.svg ? "" : st.html) + note +
-    '<span class="wfg-chips">' + (st.legend || "") +
-    "</span>" + warn + "</div>" + (st.svg ? '<div class="wfg-stage sys-canvas">' + st.svg + "</div>" : st.html) +
-    (st.panel || "");
+  const tb = toolbarHtml(pid, arch);
+  const head = (st.html && !st.svg ? "" : st.html) + note + warn;
+  const leg = st.legend ? '<span class="sys-ov sys-ov-bl" role="group" aria-label="Legend">' + st.legend +
+    "</span>" : "";
+  return tb.bar + crumbsHtml() + (head ? '<div class="wfg-bar">' + head + "</div>" : "") +
+    '<div class="sys-box">' + tb.acts + tb.tools + (st.svg ? '<div class="wfg-stage sys-canvas">' + st.svg + "</div>" :
+    st.html) + leg + "</div>" + (st.panel || "");
 }
 
 // Breadcrumb of drill levels: the view, then each opened group; the last is the current level.
