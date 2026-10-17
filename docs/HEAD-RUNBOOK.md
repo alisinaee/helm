@@ -11,6 +11,15 @@
 > Agent tool call, a real worker (Agent tool) does the edit, then `job done` after it reports back. If the head
 > edits code directly anyway (even "just a comment" or "just a config flag"), that is a bug: stop and delegate instead.
 
+> 2026-10-17 H295 (root cause: duplicate "unknown" jobs in Agents): the Agent tool call ALWAYS gets auto-registered
+> as a second job by `roadmap/services/hooks.py` AgentDetector, on top of any manual `bin/roadmap job start`. Its
+> model comes only from the Agent tool's own `model` input (never guessed) — leave it out and it shows "unknown".
+> Its title is `model + ": " + description` verbatim, so a job id in the Agent description (e.g. "j1131: ...") leaks
+> into the board as a confusing near-duplicate. RULE: always pass an explicit `model` ("haiku"/"sonnet"/"opus") on
+> every Agent tool call that matches the manually-registered job's model, and never put a job id in the description —
+> plain task text only. The auto job still won't carry a task id (the detector has no task field), so manual
+> `job start`/`job done` stays necessary for task binding; the duplicate is cosmetic, not a bug to "fix" further.
+
 # Head runbook (how the head works here; read after HANDOVER.md)
 
 Product renamed to Helm (2026-10-16): repo alisinaee/helm, dir ~/Works/helm; use `bin/helm` or `bin/roadmap` (same). Project id stays `roadmap-board`.
