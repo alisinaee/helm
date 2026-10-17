@@ -30,6 +30,10 @@ def register(sub, common):
         parser = actions.add_parser(name, parents=[common], help=text)
         if name == "logs":
             parser.add_argument("-f", "--follow", action="store_true", help="keep printing new lines")
+        if name == "restart":
+            parser.add_argument("--if-stale", action="store_true",
+                                 help="only restart when web/, roadmap/http/ or roadmap/services/ changed since "
+                                      "the running process started (skip otherwise)")
         parser.set_defaults(handler=_HANDLERS[name])
 
 
@@ -58,6 +62,14 @@ PAST = {"start": "started", "stop": "stopped", "restart": "restarted"}
 
 def _acting(verb, call):
     def handler(args):
+        if verb == "restart" and getattr(args, "if_stale", False):
+            check = launchd.stale()
+            if not check["stale"]:
+                state = launchd.status()
+                if not _wants_json(args):
+                    print("skipped: no change under web/, roadmap/http/ or roadmap/services/ since the service "
+                          "started (pid " + str(check["pid"]) + ")")
+                return {"action": "restart", "skipped": True, "loaded": state["loaded"], "pid": state["pid"]}
         call()
         state = launchd.status()
         if not _wants_json(args):
@@ -69,6 +81,8 @@ def _acting(verb, call):
 
 def _status(args):
     state = launchd.status()
+    check = launchd.stale() if state["loaded"] else {"stale": False}
+    state["stale"] = check["stale"]
     if not _wants_json(args):
         print("label    " + state["label"])
         print("plist    " + state["plist"] + (" (installed)" if state["plistInstalled"] else " (not installed)"))
@@ -76,6 +90,9 @@ def _status(args):
         if state["loaded"]:
             print("state    " + str(state["state"]) + ", pid " + str(state["pid"])
                   + ", last exit " + str(state["lastExitCode"]))
+            if check["stale"]:
+                print("RESTART NEEDED: web/, roadmap/http/ or roadmap/services/ changed since this process "
+                      "started. Run: roadmap service restart")
     return state
 
 

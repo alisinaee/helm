@@ -227,6 +227,63 @@ def status(runner=None):
     return info
 
 
+# Folders whose contents the running server reads only at startup (the static file allowlist, the HTTP/launchd
+# code itself): a change under any of these after the process started means a restart is needed to take effect.
+# See docs/HANDOVER.md: "the static file list is built at startup so NEW web files 404 until restart".
+STALE_WATCH_DIRS = ("web", os.path.join("roadmap", "http"), os.path.join("roadmap", "services"))
+
+
+def process_start_time(pid, runner=None):
+    """Epoch seconds the given pid has been running since, via `ps -o etimes=`. None when ps fails, the pid is
+    unknown, or output is not a plain integer (e.g. the pid has since exited)."""
+    run = runner or RUNNER
+    rc, out, _ = run(["ps", "-o", "etimes=", "-p", str(pid)])
+    text = (out or "").strip()
+    if rc != 0 or not text.isdigit():
+        return None
+    return time.time() - int(text)
+
+
+def _newest_mtime(repo, dirs):
+    """The newest mtime among files under the given dirs (relative to repo), or None if none exist/are readable."""
+    newest = None
+    for rel in dirs:
+        base = os.path.join(repo, rel)
+        for dirpath, dirnames, filenames in os.walk(base):
+            dirnames[:] = [d for d in dirnames if not d.startswith(".") and d != "__pycache__"]
+            for name in filenames:
+                if name.startswith("."):
+                    continue
+                try:
+                    mtime = os.path.getmtime(os.path.join(dirpath, name))
+                except OSError:
+                    continue
+                if newest is None or mtime > newest:
+                    newest = mtime
+    return newest
+
+
+def stale(runner=None, repo=None):
+    """Whether web/, roadmap/http/ or roadmap/services/ changed after the running service process started, so a
+    restart is needed before the change takes effect (see STALE_WATCH_DIRS). Read-only: launchctl print plus ps.
+    False (never an error) when the service is not loaded, its pid is unknown, or the pid's start time can't be
+    read — those are "can't tell", not "known fresh", but the caller only ever uses this to decide whether to
+    prompt/restart, so treating them as non-stale is the safe default."""
+    state = status(runner)
+    pid = state.get("pid")
+    result = {"stale": False, "pid": pid, "startedAt": None, "newestChange": None}
+    if not state["loaded"] or not pid:
+        return result
+    started = process_start_time(pid, runner)
+    if started is None:
+        return result
+    newest = _newest_mtime(repo or repo_root(), STALE_WATCH_DIRS)
+    result["startedAt"] = started
+    result["newestChange"] = newest
+    result["stale"] = newest is not None and newest > started
+    return result
+
+
 def listener_on(port, runner=None):
     """{"pid", "name"} of the process listening on TCP port (lsof, read-only), or None when nothing listens.
     lsof missing or failing gives None as well; the caller decides what that means."""
