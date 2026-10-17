@@ -36,7 +36,10 @@ class TimelineSourceTests(unittest.TestCase):
         source = read_text("web", "js", "views", "workflow.js")
         for name in ("pointerdown", "pointermove", "pointerup", "wheel", "ctrlKey"):
             self.assertIn(name, source)
-        self.assertIn("scrollLeft = Math.max(0, anchor * z - cx);", source)
+        # Drag moves the scroller; zoom keeps the time under the cursor (navZoom); the pan survives a re-render.
+        self.assertIn("drag.sc.scrollLeft = drag.left - dx;", source)
+        self.assertIn("navZoom(lastModel.base, tlNav, nextSpan, cx / w)", source)
+        self.assertIn("scroller.scrollLeft = scrollLeft;", source)
         self.assertIn("if (window.location.hash === lastHash) return;", source)
 
     def test_the_scroller_is_not_a_native_touch_scroll_and_does_not_select_text(self):
