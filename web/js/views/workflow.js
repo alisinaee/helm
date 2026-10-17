@@ -40,7 +40,6 @@ function spacers(html, n) {
 }
 const MAX_ROWS = 8;
 const BAR_GAP = 4;
-const TL_ZOOM_MAX = 8;
 const CHIP = { doing: "neutral", done: "success", blocked: "danger", queued: "neutral" };
 const DEFS = '<marker id="wf-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" ' +
   'orient="auto-start-reverse"><path class="wf-arrow" d="M0 0L8 4L0 8z"/></marker>' +
@@ -53,6 +52,7 @@ let lastModel = null;
 let selectedKey = null;
 let scrollLeft = 0;
 let timelineZoom = 1;
+let tlNav = { span: 1, shift: 0 };
 let tlPlotW = 0;  // the plot width at zoom 1, measured from the scroller
 let drag = null;
 let suppressClick = false;
@@ -174,9 +174,38 @@ function windowOf(range, now, starts) {
   return { key: "all", t0: Math.min.apply(null, [now - 2 * HOUR].concat(starts)), t1: now };
 }
 
+// Timeline navigation (R11.109). nav = { span, shift }: span scales the window length (1 = the range as chosen), shift
+// moves the window centre back in time in ms (0 = the present). Pure, so tests can drive it.
+export const NAV_SPAN_MIN = 1 / 32;
+export const NAV_SPAN_MAX = 8;
+export function navWindow(t0, t1, span, shift) {
+  const s = Math.min(NAV_SPAN_MAX, Math.max(NAV_SPAN_MIN, Number(span) || 1));
+  const sh = Math.max(0, Number(shift) || 0);
+  const len = Math.max(1, (t1 - t0) * s);
+  const c = (t0 + t1) / 2 - sh;
+  return { t0: c - len / 2, t1: c + len / 2, span: s, shift: sh };
+}
+
+// Zoom to a new span keeping the time under fraction f (0..1) of the window fixed. Returns the new nav.
+export function navZoom(base, nav, nextSpan, f) {
+  const cur = navWindow(base.t0, base.t1, nav.span, nav.shift);
+  const next = navWindow(base.t0, base.t1, nextSpan, 0);
+  const fr = Math.min(1, Math.max(0, Number(f)));
+  const at = cur.t0 + fr * (cur.t1 - cur.t0);
+  const len = next.t1 - next.t0;
+  const c = at - fr * len + len / 2;
+  return { span: next.span, shift: Math.max(0, (base.t0 + base.t1) / 2 - c) };
+}
+
+// Pan by a fraction of the window length; positive goes forward in time, and the present is the limit.
+export function navPan(base, nav, frac) {
+  const len = (base.t1 - base.t0) * navWindow(base.t0, base.t1, nav.span, 0).span;
+  return { span: nav.span, shift: Math.max(0, nav.shift - frac * len) };
+}
+
 // The model for one project (a raw snapshot) or for several (an array: one lane per project, the global view).
 // Bars are jobs, queued tasks and blocked tasks; cards are the tasks for the Map; marks are task status times.
-export function layout(snap, range, now) {
+export function layout(snap, range, now, nav) {
   const multi = Array.isArray(snap);
   const raws = (multi ? snap : [snap]).filter(isObj);
   const starts = [];
@@ -189,8 +218,14 @@ export function layout(snap, range, now) {
     return r[0] === range;
   }) ? range : "today";
   const win = windowOf(key, now, starts);
-  const t0 = win.t0;
-  const t1 = win.t1;
+  const base = { t0: win.t0, t1: win.t1 };
+  const nw = nav ? navWindow(base.t0, base.t1, nav.span, nav.shift) : null;
+  const t0 = nw ? nw.t0 : win.t0;
+  const t1 = nw ? nw.t1 : win.t1;
+  if (nw) {
+    win.t0 = t0;
+    win.t1 = t1;
+  }
   const projects = raws.map(function (raw, i) {
     const project = isObj(raw.project) ? raw.project : {};
     const pid = String(project.id || "project-" + (i + 1));
@@ -377,7 +412,7 @@ export function layout(snap, range, now) {
   cards.forEach(function (c) {
     byKey.set(c.key, c);
   });
-  return { now: now, range: win, multi: multi, lanes: lanes, items: items, cards: cards, marks: marks,
+  return { now: now, base: base, range: win, multi: multi, lanes: lanes, items: items, cards: cards, marks: marks,
     phases: phases, edges: edges, byKey: byKey, empty: total === 0,
     jobCount: items.filter(function (it) {
       return it.kind === "job";
@@ -673,6 +708,32 @@ function measureTimeline(root) {
 }
 
 // The Now button scrolls the Timeline back to the now line (after a pan).
+function navButtons() {
+  return '<span class="seg" role="group" aria-label="Timeline navigation">' +
+    '<button type="button" class="btn btn-small" data-wf-nav="back" aria-label="Earlier">Earlier</button>' +
+    '<button type="button" class="btn btn-small" data-wf-nav="fwd" aria-label="Later">Later</button>' +
+    '<button type="button" class="btn btn-small" data-wf-nav="out" aria-label="Zoom out">-</button>' +
+    '<button type="button" class="btn btn-small" data-wf-nav="in" aria-label="Zoom in">+</button></span>' +
+    '<button type="button" class="btn btn-small" data-wf-now="1" aria-label="Jump to now">Now</button>';
+}
+
+function setNav(next) {
+  tlNav = next;
+  scrollLeft = 0;
+  window.dispatchEvent(new Event("hashchange"));
+}
+
+function navOp(op, f) {
+  if (!lastModel || !lastModel.base) return;
+  const base = lastModel.base;
+  const fr = f == null ? 0.5 : f;
+  if (op === "back") setNav(navPan(base, tlNav, -0.25));
+  else if (op === "fwd") setNav(navPan(base, tlNav, 0.25));
+  else if (op === "in") setNav(navZoom(base, tlNav, tlNav.span / 1.5, fr));
+  else if (op === "out") setNav(navZoom(base, tlNav, tlNav.span * 1.5, fr));
+  else if (op === "now") setNav({ span: tlNav.span, shift: 0 });
+}
+
 function jumpToNow(root) {
   const sc = root && root.querySelector(".wf-tl");
   if (!sc || !lastModel || !lastModel.range) return;
@@ -1151,7 +1212,7 @@ export function sectionView(vm) {
   const stamp = entries[0].stamp || "";
   // The Map draws from graph/model.js, so it skips the Timeline model; only its view, route and empty flags are kept.
   const model = view === "map" ? { empty: false, jobCount: 0, byKey: new Map() }
-    : layout(route.name === "project" ? raws[0] : raws, range, nowMs());
+    : layout(route.name === "project" ? raws[0] : raws, range, nowMs(), view === "timeline" ? tlNav : null);
   model.view = view;
   model.route = route;
   lastModel = model;
@@ -1162,8 +1223,7 @@ export function sectionView(vm) {
   const controls = '<div class="wf-controls"><nav class="seg plan-views" aria-label="View">' +
     viewLinks(route, view, range) +
     (view === "map" ? "" : '</nav><nav class="seg plan-views" aria-label="Range">' + rangeLinks(route, view, range) +
-      "</nav>" + (view === "timeline" ? '<button type="button" class="btn btn-small" data-wf-now="1">Now</button>' :
-      "")) + "</div>";
+      "</nav>" + (view === "timeline" ? navButtons() : "")) + "</div>";
   let body;
   if (model.empty && view !== "map") {
     const agents = route.name === "project" ? projectHash(route.id, "agents") : "#/all/agents";
@@ -1231,7 +1291,16 @@ function onClick(e) {
     return;
   }
   const nowBtn = closestEl(e.target, "[data-wf-now]");
+  const navBtn = closestEl(e.target, "[data-wf-nav]");
+  if (navBtn) {
+    navOp(navBtn.getAttribute("data-wf-nav"));
+    return;
+  }
   if (nowBtn) {
+    if (tlNav.shift) {
+      navOp("now");
+      return;
+    }
     jumpToNow(closestEl(nowBtn, ".wf-page"));
     return;
   }
@@ -1317,6 +1386,15 @@ function onKey(e) {
     toggleFrame(fold.getAttribute("data-wf-fold"));
     return;
   }
+  if (e.target && e.target.classList && e.target.classList.contains("wf-tl") && !e.ctrlKey && !e.metaKey &&
+    !e.altKey && lastModel && lastModel.view === "timeline") {
+    const ops = { ArrowLeft: "back", ArrowRight: "fwd", "+": "in", "=": "in", "-": "out", "_": "out" };
+    if (ops[e.key]) {
+      e.preventDefault();
+      navOp(ops[e.key], 0.5);
+      return;
+    }
+  }
   const el = closestEl(e.target, "[data-wf-item]");
   if (!el || !lastModel) return;
   if (e.key === "Enter" || e.key === " ") {
@@ -1392,13 +1470,12 @@ function tlScroller(target) {
   return closestEl(target, ".wf-tl");
 }
 
-function zoomTimeline(next, cx, scroller) {
-  const z = Math.min(TL_ZOOM_MAX, Math.max(1, next));
-  if (Math.abs(z - timelineZoom) < 0.001) return;
-  const anchor = (scroller.scrollLeft + cx) / timelineZoom;
-  timelineZoom = z;
-  scrollLeft = Math.max(0, anchor * z - cx);
-  window.dispatchEvent(new Event("hashchange"));
+function zoomTimeline(nextSpan, cx, scroller) {
+  if (!lastModel || !lastModel.base) return;
+  const w = scroller.clientWidth || 1;
+  const next = navZoom(lastModel.base, tlNav, nextSpan, cx / w);
+  if (Math.abs(next.span - tlNav.span) < 0.0001) return;
+  setNav(next);
 }
 
 function distanceOf(a, b) {
@@ -1414,7 +1491,7 @@ function onDown(e) {
     drag = { pinch: false, x: e.clientX, left: sc.scrollLeft, moved: false, sc: sc };
   } else if (touches.size === 2) {
     const pts = Array.from(touches.values());
-    drag = { pinch: true, d0: distanceOf(pts[0], pts[1]), z0: timelineZoom, sc: sc, raf: null };
+    drag = { pinch: true, d0: distanceOf(pts[0], pts[1]), z0: tlNav.span, sc: sc, raf: null };
   }
 }
 
@@ -1430,7 +1507,7 @@ function onMove(e) {
       const mid = (pts[0].x + pts[1].x) / 2 - rect.left;
       const scale = distanceOf(pts[0], pts[1]) / (drag.d0 || 1);
       drag.raf = null;
-      zoomTimeline(drag.z0 * scale, mid, drag.sc);
+      zoomTimeline(drag.z0 / scale, mid, drag.sc);
     });
     return;
   }
@@ -1453,7 +1530,7 @@ function onWheel(e) {
   if (!sc || !(e.ctrlKey || e.metaKey)) return;
   e.preventDefault();
   const rect = sc.getBoundingClientRect();
-  zoomTimeline(timelineZoom * Math.exp(-e.deltaY / 200), e.clientX - rect.left, sc);
+  zoomTimeline(tlNav.span * Math.exp(e.deltaY / 200), e.clientX - rect.left, sc);
 }
 
 // R7.30: the Map alone in its own tab (#/full/<pid>/workflow, from the Map's "Open full screen" link). The diagram
