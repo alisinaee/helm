@@ -15,7 +15,7 @@ import { projectHash } from "../router.js";
 import { showToast } from "./toast.js";
 
 const TABS = [["changes", "Changes"], ["history", "History"], ["branches", "Branches"]];
-const NOTE = "Commit takes only the files ticked. Force push, reset, discard, merge and rebase are never offered.";
+const NOTE = "No force push, reset, discard, merge or rebase.";
 
 const LANE_W = 12; // px between lanes in the graph SVG
 const LANE_MAX = 8; // lanes beyond this share the last column
@@ -261,6 +261,34 @@ function onClick(event) {
   }
 }
 
+function onChange(event) {
+  const el = event.target;
+  const left = el && el.closest ? el.closest(".git-left") : null;
+  if (!left) return;
+  if (el.getAttribute("data-git") === "all") {
+    left.querySelectorAll('input[name="path"]').forEach(function (box) {
+      box.checked = el.checked;
+    });
+  }
+  syncForm(left.querySelector('[data-git="commit"] button'));
+}
+
+function onInput(event) {
+  const el = event.target;
+  if (!el || el.id !== "git-msg") return;
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 160) + "px";
+  syncForm(el);
+}
+
+// Cmd/Ctrl+Enter in the message box commits.
+function onKey(event) {
+  const el = event.target;
+  if (!el || el.id !== "git-msg" || event.key !== "Enter" || !(event.metaKey || event.ctrlKey)) return;
+  event.preventDefault();
+  if (lastVm && lastVm.route.name === "project" && el.form) commit(el.form, lastVm.route.id);
+}
+
 function onSubmit(event) {
   const form = event.target;
   if (!form || !form.getAttribute || form.getAttribute("data-git") !== "commit") return;
@@ -271,6 +299,9 @@ function onSubmit(event) {
 // Listeners are bound once, on the document: the section's markup is replaced on every render.
 document.addEventListener("click", onClick);
 document.addEventListener("submit", onSubmit);
+document.addEventListener("change", onChange);
+document.addEventListener("input", onInput);
+document.addEventListener("keydown", onKey);
 
 // The one-letter status a file row shows: "??" is untracked (U), otherwise the first changed side of XY.
 function statusLetter(code) {
@@ -282,19 +313,47 @@ function fileRows(list) {
   return list.map(function (row) {
     const path = typeof row === "string" ? row : row.path;
     const code = typeof row === "string" ? "??" : row.code;
-    return '<li class="row-grid git-files"><input type="checkbox" name="path" value="' + esc(path) +
-      '" aria-label="Commit ' + esc(path) + '"><span class="rg-num num" title="' + esc(code) + '">' +
-      esc(statusLetter(code)) + '</span><span class="rg-t" title="' + esc(path) + '">' + esc(path) + "</span></li>";
+    const letter = statusLetter(code);
+    const cut = path.lastIndexOf("/");
+    const dir = cut > 0 ? path.slice(0, cut + 1) : "";
+    return '<li><label class="git-fr"><input type="checkbox" name="path" value="' + esc(path) +
+      '" aria-label="Commit file"><span class="git-st git-st-' + esc(letter.toLowerCase()) + '" title="' + esc(code) +
+      '">' + esc(letter) + '</span><span class="git-fn" title="' + esc(path) + '"><b>' + esc(path.slice(cut + 1)) +
+      "</b>" + (dir ? "<i>" + esc(dir) + "</i>" : "") + "</span></label></li>";
   }).join("");
+}
+
+function commitPanel() {
+  return '<form class="git-form" data-git="commit" novalidate>' +
+    '<textarea id="git-msg" name="message" rows="2" maxlength="4000" placeholder="Summary (required)" ' +
+    'aria-label="Commit message"></textarea><div class="git-cr">' +
+    '<input id="git-task" name="task" type="text" maxlength="20" autocomplete="off" placeholder="Task id" ' +
+    'aria-label="Task id"><button type="submit" class="btn btn-primary" data-focus="git-commit" disabled>' +
+    '<span data-git-count>Commit</span></button></div><p class="git-foot">' + esc(NOTE) + "</p></form>";
+}
+
+function headerHtml(vm, entry) {
+  const s = (entry && entry.status) || null;
+  const name = (vm.project && vm.project.name) || vm.route.id;
+  const chips = [chipHtml(name, "neutral")];
+  let push = "";
+  if (s) {
+    chips.push('<span class="git-chip git-branch">' + esc(s.detached ? "Detached HEAD" : s.branch || "") + "</span>");
+    chips.push('<span class="git-chip">' + esc(s.upstream || "No upstream") + ' <span class="git-ab">↑' +
+      esc(s.ahead || 0) + " ↓" + esc(s.behind || 0) + "</span></span>");
+    const ahead = s.ahead || 0;
+    push = '<button type="button" class="btn' + (ahead > 0 ? " btn-primary" : "") + '" data-git="push" ' +
+      'data-focus="git-push"' + (ahead > 0 ? "" : ' disabled title="Nothing to push: no commits ahead."') + ">" +
+      (ahead > 0 ? "Push " + esc(ahead) + "↑" : "Push") + "</button>";
+  }
+  return '<div class="git-bar"><h2 class="page-title">Git</h2><div class="git-chips">' + chips.join("") +
+    '</div><div class="git-act"><button type="button" class="btn" data-git="refresh" data-focus="git-refresh" ' +
+    'aria-label="Refresh" title="Refresh">Refresh</button>' + push + "</div></div>";
 }
 
 function changesHtml(pid, entry) {
   const s = entry.status || {};
   const parts = [];
-  const where = s.detached ? "Detached HEAD" : "Branch " + (s.branch || "");
-  parts.push('<p class="page-note">' + esc(where) + " · " + esc(s.upstream ? "Upstream " + s.upstream :
-    "No upstream") + " · " + chipHtml("ahead " + (s.ahead || 0), "neutral") + " " +
-    chipHtml("behind " + (s.behind || 0), "neutral") + "</p>");
   if (s.in_progress) {
     parts.push(bannerHtml("warning", "A " + s.in_progress + " is unfinished.", "Finish it in a terminal. " +
       "Commits are paused."));
@@ -307,20 +366,36 @@ function changesHtml(pid, entry) {
   }
   const files = [].concat(s.staged || [], s.changed || [], s.untracked || []);
   if (!files.length) {
-    parts.push(emptyHtml("Nothing to commit.", "The working tree is clean."));
+    parts.push(emptyHtml("Working tree clean", "Nothing to commit."));
     return parts.join("");
   }
-  parts.push('<ul class="git-list" aria-label="Changed files">' + fileRows(files) + "</ul>");
-  if (!s.detached && !s.in_progress) {
-    parts.push('<form class="git-form" data-git="commit" novalidate>' +
-      '<label class="git-cf">Commit message<textarea id="git-msg" name="message" rows="2" maxlength="4000">' +
-      '</textarea></label><label class="git-cf">Task<input id="git-task" name="task" type="text" maxlength="20" ' +
-      'autocomplete="off"></label>' +
-      '<button type="submit" class="btn btn-primary" data-focus="git-commit">Commit selected</button></form>');
-  }
-  parts.push('<div><button type="button" class="btn" data-git="push" data-focus="git-push">Push</button>' +
-    "<p class=\"page-note\">Push runs only when the project's policy allows it. A refusal says why.</p></div>");
+  const canCommit = !s.detached && !s.in_progress;
+  const left = '<div class="git-left"><div class="git-gh"><input type="checkbox" data-git="all" ' +
+    'aria-label="Select all files"><span>Changes (' + files.length + ')</span></div>' +
+    '<ul class="git-list" aria-label="Changed files">' + fileRows(files) + "</ul>" +
+    (canCommit ? commitPanel() : "") + "</div>";
+  const right = '<div class="git-right">' + emptyHtml("Select a file", "A diff preview for uncommitted changes " +
+    "is not available yet.") + "</div>";
+  parts.push('<div class="git-split">' + left + right + "</div>");
   return parts.join("");
+}
+
+// Keeps the Commit button's label and enabled state in step with the ticks and the message, without a repaint.
+function syncForm(root) {
+  const form = root && root.closest ? root.closest('[data-git="commit"]') : null;
+  const scope = form ? form.parentNode : null;
+  if (!form || !scope) return;
+  const ticked = scope.querySelectorAll('input[name="path"]:checked').length;
+  const all = scope.querySelector('[data-git="all"]');
+  const boxes = scope.querySelectorAll('input[name="path"]').length;
+  if (all) {
+    all.checked = boxes > 0 && ticked === boxes;
+    all.indeterminate = ticked > 0 && ticked < boxes;
+  }
+  const label = form.querySelector("[data-git-count]");
+  if (label) label.textContent = ticked ? "Commit " + ticked + (ticked === 1 ? " file" : " files") : "Commit";
+  const btn = form.querySelector('button[type="submit"]');
+  if (btn) btn.disabled = !ticked || !form.elements.message.value.trim();
 }
 
 function historyHtml(vm, entry) {
@@ -383,11 +458,10 @@ function bodyHtml(vm, pid) {
 
 function tabsHtml() {
   const buttons = TABS.map(function (t) {
-    return '<button type="button" class="btn" data-git="tab" data-tab="' + t[0] + '" aria-pressed="' +
+    return '<button type="button" role="tab" class="git-tab" data-git="tab" data-tab="' + t[0] + '" aria-selected="' +
       (tab === t[0] ? "true" : "false") + '" data-focus="git-tab-' + t[0] + '">' + esc(t[1]) + "</button>";
   }).join("");
-  return '<div class="seg" role="group" aria-label="Git views">' + buttons +
-    '<button type="button" class="btn" data-git="refresh" data-focus="git-refresh">Refresh</button></div>';
+  return '<div class="git-tabs" role="tablist" aria-label="Git views">' + buttons + "</div>";
 }
 
 // The project's own page. With All projects it lists the projects, each linking to its Git page.
@@ -403,9 +477,7 @@ function chooserHtml(vm) {
 function sectionHtml(vm) {
   if (vm.route.name !== "project") return chooserHtml(vm);
   const pid = vm.route.id;
-  const name = (vm.project && vm.project.name) || pid;
-  return '<div class="page-head"><h2 class="page-title">Git: ' + esc(name) + '</h2><p class="page-note">' +
-    esc(NOTE) + "</p></div>" + tabsHtml() + bodyHtml(vm, pid);
+  return '<div class="git-page">' + headerHtml(vm, store.get(pid)) + tabsHtml() + bodyHtml(vm, pid) + "</div>";
 }
 
 export function sectionView(vm) {
