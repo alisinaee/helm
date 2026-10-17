@@ -22,6 +22,7 @@ from datetime import datetime, timedelta, timezone
 from roadmap.errors import EXIT_INVALID_DATA, EXIT_USAGE, RoadmapError
 from roadmap.log import get_logger
 from roadmap.services import ledger
+from roadmap.services import tokenshare
 from roadmap.services import usage_sources
 from roadmap.store import config as config_store
 from roadmap.store import atomic, lock, paths, schema
@@ -428,6 +429,7 @@ def _record_ledger(changes, stored):
         return
     try:
         ledger.record_reading(stored.get("weeklyPercent"), stored.get("fiveHourPercent"), datetime.now().astimezone())
+        tokenshare.record(stored.get("weeklyPercent"), stored.get("fiveHourPercent"))
     except Exception as exc:  # the ledger is derived data; a failure must not fail the sync
         log.warning("usage ledger not updated: %s", type(exc).__name__)
 
