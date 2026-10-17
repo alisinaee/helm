@@ -1,39 +1,33 @@
-# UI/UX Review Skills & Haiku Tester Recipe
+# UI/UX Review & Testing Skills for Claude Code (Haiku)
 
+## Skill Comparison
 | name | repo url | license | stars/last update | what it checks | fits vanilla JS? | install |
 |---|---|---|---|---|---|---|
-| ui-ux-pro-max | https://github.com/nextlevelbuilder/ui-ux-pro-max-skill | MIT | ~135k / 2026-10 | Priority 1-10 UX/a11y/layout hierarchy (WCAG contrast, touch >=44px, no horiz scroll, form labels, focus rings, 119 UX guidelines) | Yes (pure markdown guidelines + local zero-dep python CLI) | Installed at `~/.claude/skills/ui-ux-pro-max` |
-| web-design-guidelines | https://github.com/vercel-labs/agent-skills | MIT | ~34k / UNKNOWN | Web Interface Guidelines: a11y, focus rings, icon button aria-labels, textarea submit, tabular numbers, reduced motion | Yes (standards-based DOM/CSS linting; outputs terse file:line) | `npx skills add vercel-labs/agent-skills --skill web-design-guidelines` |
-| frontend-design | https://github.com/anthropics/skills | Apache-2.0 / UNKNOWN | ~175k / UNKNOWN | Anti-slop creative design direction: custom 4-6 color palettes, distinctive fonts, asymmetric layout before code generation | No (generative tool for greenfield UIs; clobbers existing custom tokens/design systems) | `npx skills add anthropics/skills --skill frontend-design` |
-| uxui-evaluator | https://github.com/uxuiprinciples/agent-skills | CC-BY-NC-SA-4.0 | UNKNOWN / UNKNOWN | 168 academic UX heuristics, user flow friction, cognitive load, interface smells | Partial (high-level heuristics fit, but actionable remediation needs paid API) | `npx skills add uxuiprinciples/agent-skills` |
-| taste-skill | https://github.com/Leonxlnx/taste-skill | MIT | ~25k+ / UNKNOWN | Anti-slop design system generation, Awwwards-style aesthetics, typography pairings | No (generative for new apps; overrides existing design systems) | `npx skills add Leonxlnx/taste-skill` |
+| **ui-ux-pro-max** | https://github.com/nextlevelbuilder/ui-ux-pro-max-skill | MIT | 136.4k / 2026-10-15 | 119 UX guidelines, 10 rule categories (contrast >=4.5:1, touch >=44px, spacing, layout shifts, tokens, forms, navigation) | Yes (use UX guidelines & references; skip palette/style generators) | Pre-installed at `~/.claude/skills/ui-ux-pro-max` |
+| **web-design-guidelines** | https://github.com/vercel-labs/agent-skills | UNKNOWN | 32.5k / 2026-10-16 | Terse file:line lint: semantic HTML (<button> vs <a>), :focus-visible, aria-label on icon buttons, form attributes, touch targets | Yes (100% web standards & DOM checks, zero framework lock-in) | `npx skills add vercel-labs/agent-skills --skill web-design-guidelines` |
+| **frontend-design** | https://github.com/anthropics/skills | UNKNOWN | 181.5k / 2026-10-16 | Aesthetic direction, distinctive typography, avoiding AI tropes (cream/terracotta/purple gradients); no automated audit checklist | No (generative/subjective; conflicts with custom design systems) | `npx skills add anthropics/skills --skill frontend-design` |
+| **impeccable** | https://github.com/pbakaus/impeccable | Apache-2.0 | 81.8k / 2026-10-16 | 59 deterministic detector rules + LLM design critique/audit (visual hierarchy, alignment, contrast, spacing, anti-slop) | Partially (rules fit HTML/CSS, but full CLI setup adds token/tool overhead) | `npx impeccable install` |
+| **accessibility-skills** | https://github.com/mgifford/accessibility-skills | AGPL-3.0 | 54 / 2026-10-15 | Comprehensive WCAG 2.2 AA audits (aria-live, contrast, keyboard, focus, touch-pointer, forms, tables) across 30+ skills | Yes (pure a11y standards, but excessive prompt overhead for Haiku) | `git clone https://github.com/mgifford/accessibility-skills.git` |
 
 ## Recommended Combo (Max 2)
-1. **ui-ux-pro-max (UX domain subset)**: Local zero-token-overhead guidance for structural UX (WCAG contrast, touch targets >=44px, row alignment, responsive collapsing) via static references and local CLI without palette generation.
-2. **web-design-guidelines (Vercel Labs)**: Lightweight web-standards checklist for micro-interaction and accessibility hygiene (visible focus rings, aria-labels on icon buttons, form submit states, tabular numbers, reduced-motion).
+1. **`ui-ux-pro-max` (offline)**: Authoritative UX interaction rules (touch >=44px, spacing >=8px, feedback/toasts, reduced motion, priority ordering) without network dependency.
+2. **`web-design-guidelines` (Vercel)**: High signal-to-noise linter rules for semantic HTML, focus rings, keyboard accessibility, and terse `file:line` issue formatting.
+*Why for Haiku:* Low prompt footprint, zero hallucinated aesthetic redesigns, strictly enforces existing vanilla CSS tokens and HTML structure.
 
-## Haiku Tester Recipe
+## Haiku Worker Tester Recipe
+### 1. Rules Files to Read
+- `docs/UI-CHECKLIST.md` (Project authoritative rules 0–10, CSS budget <= 72 KB, `.row-grid` tracks).
+- `~/.claude/skills/ui-ux-pro-max/references/quick-reference.md` (§1 a11y, §2 touch, §5 responsive layout, §8 forms).
+- Vercel `command.md` rules (`https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md`).
 
-### Rules Files to Read
-1. `docs/UI-CHECKLIST.md` (local repo rules: Priority 0 row alignment, contrast >=4.5:1, touch targets >=44px, mobile-first, semantic tokens, SVG sprites, CSS <=72KB).
-2. `~/.claude/skills/ui-ux-pro-max/references/quick-reference.md` (§1 a11y, §2 touch/interaction, §5 responsive layout).
-3. On-demand search: `python3 ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<topic>" --domain ux -n 3` (do NOT run `--design-system`).
-
-### Checks & Execution Order
-1. **Screenshot Matrix (8 States)**: Capture section screenshots across 4 widths (500px mobile, 768px tablet, 1440px desktop, 2560px ultrawide) in both `dark` and `light` themes.
-2. **Step 1 - Row Alignment & Dead Space (Priority 0)**:
-   - Measure `.row-grid` columns via `getBoundingClientRect()`.
-   - Verify action and numeric columns align across cards and rows within <=2px delta.
-   - Detect dead space (>40% unused width in numeric or title tracks).
-3. **Step 2 - Responsive Layout & Overflow (Rule 5)**:
-   - Verify `document.documentElement.scrollWidth <= clientWidth` at 500, 768, 1440, and 2560px (zero horizontal scroll).
-   - Verify tables collapse into stacked cards at 500px while retaining visible field labels.
-4. **Step 3 - Accessibility & Touch Targets (Rules 1 & 2)**:
-   - Check text contrast >=4.5:1; verify visible `:focus-visible` rings on all interactive elements.
-   - Assert all icon buttons have non-empty `aria-label`; verify `prefers-reduced-motion` compliance.
-   - Ensure interactive touch targets are >=44x44px at 500px width with >=8px separation.
-5. **Step 4 - Tokens, Icons & Hygiene (Rules 6, 7 & Limits)**:
-   - Enforce `tabular-nums` on numbers; verify 0 raw hex values outside `web/css/tokens.css`.
-   - Verify SVG sprites only (no emojis as UI icons); verify empty states have 1 sentence + 1 action.
-   - Confirm browser console has 0 errors, CSP clean, and total CSS `wc -c web/css/*.css` <= 72 KB.
-6. **Step 5 - Output Findings**: Format output table: `# | section | width | theme | rule | measured evidence | fix`.
+### 2. Ordered Audit & Fix Sequence
+1. **Rule 0 Row Alignment:** Verify every list/data row uses `.row-grid` (`web/css/components.css`) with fixed column tracks: chip, title (1fr, ellipsis), task, elapsed, tabular-nums tokens, fixed action. Run `pytest tests/web/test_rows.py`.
+2. **Semantic HTML & Focus:** Ensure `<button>` for actions, `<a>` for navigation, `:focus-visible` ring on every control (never unstyled `outline: none`), `aria-label` on icon-only buttons, SVG sprite only (no emoji), form inputs have labels, `autocomplete`, no paste blocking.
+3. **Design System & Tokens:** Verify no raw hex in `web/css/*.css` outside `tokens.css`. Run `python3 tools/contrast.py` (contrast >= 4.5:1). Check total CSS <= 72 KB (`wc -c web/css/*.css`).
+4. **Interaction & Touch:** Targets >= 44x44 px (mobile) / >= 24 px (desktop), 8px+ spacing, toasts auto-dismiss in 3–5 s with Undo, drag has keyboard/button alternative (WCAG 2.2), `prefers-reduced-motion` respected.
+5. **Multi-Viewport Screenshot Matrix:** Capture screenshots across 4 breakpoints and 2 themes (8 captures total):
+   - Breakpoints: **500px** (mobile compact), **768px** (tablet/collapsed row), **1440px** (desktop standard), **2560px** (wide display).
+   - Themes: **Dark** (`--force-prefers-color-scheme=dark`) and **Light** (`--blink-settings=preferredColorScheme=1`).
+   - Command: `python3 tools/ui_smoke.py` (or headless Chrome `--window-size=W,H --screenshot=build/ui-smoke/<view>-<W>-<theme>.png`).
+   - Visual checks: horizontal overflow (`overflow-x`), text clipping, row track alignment, contrast, and layout shift.
+6. **Pre-Delivery Gate:** Confirm zero console errors, clean CSP, and test suite green (`pytest tests/web/test_shell.py tests/web/test_rows.py`).

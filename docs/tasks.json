@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-16",
+  "updated": "2026-10-17",
   "phases": [
     {
       "id": "R1",
@@ -44,6 +44,11 @@
     {
       "id": "R10",
       "name": "Head reset 2026-10-16 (H182)",
+      "status": "partial"
+    },
+    {
+      "id": "R11",
+      "name": "Helm v2: System, panel, Activity, Roadmap map, Tokens, head channel",
       "status": "partial"
     }
   ],
@@ -4385,14 +4390,17 @@
       "id": "R10.25",
       "phase": "R10",
       "title": "System map A7: full-screen route",
-      "status": "todo",
+      "status": "done",
       "tokensK": 3,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
       "checkK": 0,
-      "note": "fullmap.js"
+      "note": "fullmap.js",
+      "refs": [
+        "commit:26aabcd6e6001dfbceb4a74fd752d7a6567879ac"
+      ]
     },
     {
       "id": "R10.26",
@@ -4424,7 +4432,10 @@
       "checkK": 0,
       "note": "roadmap/services/head.py fold",
       "refs": [
-        "commit:cb9fc27b4dda5dac11a5c2ea977038bd7ca88236"
+        "commit:cb9fc27b4dda5dac11a5c2ea977038bd7ca88236",
+        "commit:50d6361956a43f49bc02cbed86a8970d5c5cc9bf",
+        "commit:2d71c084c6450adbab90b4fe283f37aece41010a",
+        "commit:d2a72085afc6a6dc0ba28de36cd66188e1eeea15"
       ]
     },
     {
@@ -4544,6 +4555,381 @@
       "refs": [
         "commit:3896c8c9ba8c46defc5d8a933f51324ff758ee93"
       ]
+    },
+    {
+      "id": "R11.0",
+      "phase": "R11",
+      "title": "CSS budget: raise shared web/css cap so sections can grow (test_shell)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:6d4cbfd06cc454af1fb2e82a2aa75a65f2893868"
+      ],
+      "at": {
+        "done": "2026-10-17T08:38:05+03:30"
+      }
+    },
+    {
+      "id": "R11.1",
+      "phase": "R11",
+      "title": "System v2: research diagram types, spec, subtasks, zoom/fullscreen/context menu/expand/task binding/timeline",
+      "status": "done",
+      "tokensK": 400,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:5846b27529c7b684f0f2d1cf9b98b768527a328b"
+      ]
+    },
+    {
+      "id": "R11.2",
+      "phase": "R11",
+      "title": "Core: does a panel interaction reach the head agent? audit + close every gap",
+      "status": "done",
+      "tokensK": 150,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": true,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T09:04:33+03:30",
+        "done": "2026-10-17T09:06:46+03:30"
+      },
+      "refs": [
+        "commit:eec5ff1352c2b3559cfa0e2a04aa3a94e7477223"
+      ]
+    },
+    {
+      "id": "R11.3",
+      "phase": "R11",
+      "title": "Drag-resize handles on every section/panel divider",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:820d841bc3e5f719802d6d39dfb6183769a93dfe"
+      ]
+    },
+    {
+      "id": "R11.4",
+      "phase": "R11",
+      "title": "Activity redesign: full project history with filters and time",
+      "status": "done",
+      "tokensK": 150,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:4ef9235968b90d86fcc51c3130bed844460e2f9c"
+      ],
+      "at": {
+        "done": "2026-10-17T09:04:33+03:30"
+      }
+    },
+    {
+      "id": "R11.5",
+      "phase": "R11",
+      "title": "Roadmap map: visual diagram (research best approach, build)",
+      "status": "done",
+      "tokensK": 150,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:6ba66d5beb18ced947d3e13590d9277dd0dbac85"
+      ],
+      "at": {
+        "done": "2026-10-17T09:04:33+03:30"
+      }
+    },
+    {
+      "id": "R11.6",
+      "phase": "R11",
+      "title": "Tokens: total used, remaining estimate per section, model history charts",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T09:04:33+03:30",
+        "done": "2026-10-17T09:06:29+03:30"
+      },
+      "refs": [
+        "commit:eec5ff1352c2b3559cfa0e2a04aa3a94e7477223"
+      ]
+    },
+    {
+      "id": "R11.7",
+      "phase": "R11",
+      "title": "Toolbars/filters: collapse into compact bar + Filters disclosure on every section (save space)",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:9c5252f362660c81bad7e8244c7dd3960c1adfad"
+      ]
+    },
+    {
+      "id": "R11.101",
+      "phase": "R11",
+      "title": "System v2 backend: bind board tasks + Work items to components, progress, catalog (system_tasks/system_v2)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T08:47:26+03:30"
+      },
+      "refs": [
+        "commit:5846b27529c7b684f0f2d1cf9b98b768527a328b",
+        "commit:1766d195eea926723cfd62e188d34e63f49be542"
+      ]
+    },
+    {
+      "id": "R11.102",
+      "phase": "R11",
+      "title": "System v2: ER/EER + state machines derived from schemas and stores (system_data.py)",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T08:46:39+03:30"
+      },
+      "refs": [
+        "commit:ba39d0890afa69c7bdab53995e71c34179a5618d",
+        "commit:6ace67aa60c44fd14ba21c3983dcd4f2b7e5c1bd"
+      ]
+    },
+    {
+      "id": "R11.103",
+      "phase": "R11",
+      "title": "System v2: class, deployment, use-case, activity diagrams derived from code (system_behave.py)",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T08:47:03+03:30"
+      },
+      "refs": [
+        "commit:cbbae478cc045022bd0f0e921339684d3e40c741"
+      ]
+    },
+    {
+      "id": "R11.104",
+      "phase": "R11",
+      "title": "System v2 UI core: fill viewport no scroll, true fit, zoom %, full screen, grouped switcher, Copy id, Update diagrams",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30"
+      },
+      "refs": [
+        "commit:a98b48b7bae82938141ead7791a653cf5be3fa86",
+        "commit:1609b369ba54272e8d7df50d4e9db66b0f7eecf0",
+        "commit:6590b2348472b045ac5ecfbbc95165e1a7791b35"
+      ]
+    },
+    {
+      "id": "R11.105",
+      "phase": "R11",
+      "title": "System v2: right-click context menu module (system-menu.js)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T08:46:31+03:30"
+      },
+      "refs": [
+        "commit:2c8b246fe7d1696637544075670fcd409b156a97"
+      ]
+    },
+    {
+      "id": "R11.106",
+      "phase": "R11",
+      "title": "System v2: side panel shows board tasks, Work items, progress, copy, ask Head",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T08:46:39+03:30"
+      },
+      "refs": [
+        "commit:cf3da9ba4199ce9f6b9395bc590d2b0eed867be8"
+      ]
+    },
+    {
+      "id": "R11.107",
+      "phase": "R11",
+      "title": "System v2: SVG renderers for ER, state, use-case, activity, deployment, class (sysdiagrams.js)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T09:04:33+03:30"
+      }
+    },
+    {
+      "id": "R11.108",
+      "phase": "R11",
+      "title": "System v2: expandable groups and drill subgraph in syslayout.js",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T08:47:34+03:30"
+      },
+      "refs": [
+        "commit:6dd6c2385d6d8591769368c23894b15f3bb711ac"
+      ]
+    },
+    {
+      "id": "R11.109",
+      "phase": "R11",
+      "title": "Workflow timeline: drag/scroll through time, zoom spans, Now",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T09:04:33+03:30",
+        "done": "2026-10-17T09:06:29+03:30"
+      },
+      "refs": [
+        "commit:01a6555985e32e94f59891a335aac1bf84106b9b"
+      ]
+    },
+    {
+      "id": "R11.110",
+      "phase": "R11",
+      "title": "System v2 integration: wire menu, expand/drill, breadcrumb, new diagram kinds into system.js",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T09:11:10+03:30"
+      },
+      "refs": [
+        "commit:251befee4834f886d400b9a319d3404ac9fffd63"
+      ]
+    },
+    {
+      "id": "R11.111",
+      "phase": "R11",
+      "title": "System v2: seed docs/system.json overrides (tasks, work, machines) and update views spec",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true,
+      "at": {
+        "done": "2026-10-17T09:12:04+03:30"
+      }
+    },
+    {
+      "id": "R11.8",
+      "phase": "R11",
+      "title": "Tokens: show logged-in account(s), login/logout buttons, multi-account usage auth",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": true,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T09:04:33+03:30",
+        "done": "2026-10-17T09:06:46+03:30"
+      },
+      "refs": [
+        "commit:eec5ff1352c2b3559cfa0e2a04aa3a94e7477223",
+        "commit:aae9ff102aa1c4d247c9b1d919ec5f5a95b12d71",
+        "commit:dcc33b4cb3a5bd5ddee1bd251f6f58f9b796efe7"
+      ]
+    },
+    {
+      "id": "R11.112",
+      "phase": "R11",
+      "title": "System v2 Classes diagram: collapse by module by default, readable at fit (200+ classes render at 20%)",
+      "status": "partial",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
     }
   ],
   "schemaVersion": 1

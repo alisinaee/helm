@@ -626,3 +626,45 @@
 {"v":1,"t":"u","id":"H220","ts":"2026-10-16T18:56:42Z","by":"head","set":{"status":"done"},"note":"3896c8c rename to Helm; repo alisinaee/helm, dir ~/Works/helm, service restarted, 4021 tests OK"}
 {"v":1,"t":"u","id":"H222","ts":"2026-10-16T18:56:42Z","by":"head","set":{"status":"done"},"note":"3896c8c rename to Helm; repo alisinaee/helm, dir ~/Works/helm, service restarted, 4021 tests OK"}
 {"v":1,"t":"u","id":"H224","ts":"2026-10-16T18:56:43Z","by":"head","set":{"status":"done"},"note":"3896c8c rename to Helm; repo alisinaee/helm, dir ~/Works/helm, service restarted, 4021 tests OK"}
+{"v":1,"t":"u","id":"H224","ts":"2026-10-16T19:05:01Z","by":"auto","set":{"prio":1}}
+{"v":1,"t":"e","ts":"2026-10-16T19:05:46Z","src":"hook","sid":"8b5b9050","acct":null,"kind":"question?","sum":"why i see still the roadmap on my work dir ?","len":44,"h":"sha1:8e79580ddb37","prio":2,"id":"H225"}
+{"v":1,"t":"u","id":"H225","ts":"2026-10-16T19:05:57Z","by":"head","set":{"status":"done"},"note":"answer: it was the compat symlink ~/Works/roadmap-board -> helm; removed, only ~/Works/helm remains"}
+{"v":1,"t":"s","ts":"2026-10-16T19:06:28Z","sid":"7701d8ef","model":"Sonnet 5.5","ev":"claim"}
+{"v":1,"t":"e","ts":"2026-10-16T19:07:57Z","src":"hook","sid":"7701d8ef","acct":null,"kind":"review?","sum":"all things push and ok /head need to create check point ?","len":59,"h":"sha1:7338b94fe039","prio":2,"id":"H226"}
+{"v":1,"t":"u","id":"H226","ts":"2026-10-16T19:08:14Z","by":"head","set":{"status":"done"},"note":"answer: yes checkpoint 12 written to docs/HANDOVER.md and pushed"}
+{"v":1,"t":"s","ts":"2026-10-16T19:09:00Z","sid":"e998305c","model":"Sonnet 5.5","ev":"claim"}
+{"v":1,"t":"e","ts":"2026-10-16T19:09:00Z","src":"hook","sid":"e998305c","acct":null,"kind":"review?","sum":"Fix make check-ui failures on Tokens and Head sections (Sonnet).","len":64,"h":"sha1:daf6ec258b1b","prio":2,"id":"H227"}
+{"v":1,"t":"e","ts":"2026-10-16T19:10:31Z","src":"hook","sid":"e998305c","acct":null,"kind":"ask?","sum":"continue the left over tasks for the helm project","len":53,"h":"sha1:45e809af4d5c","prio":2,"id":"H228"}
+{"v":1,"t":"s","ts":"2026-10-17T04:02:28Z","sid":"7701d8ef","model":"Sonnet 5.5","ev":"claim"}
+{"v":1,"t":"u","id":"H227","ts":"2026-10-17T04:04:21Z","by":"head","set":{"status":"done"},"note":"answer: make check-ui passes now (ui smoke ok, 106 page runs) after rename and CSS trim; nothing left to fix"}
+{"v":1,"t":"u","id":"H228","ts":"2026-10-17T04:04:22Z","by":"head","set":{"kind":"ask","sum":"continue leftover tasks: R10.25, R10.32 step 4, ledger auto-close bug"},"link":["+task:R10.25"]}
+{"v":1,"t":"e","ts":"2026-10-17T04:05:18Z","src":"hook","sid":"7701d8ef","acct":null,"kind":"ask?","sum":"as head continue the tasks","len":26,"h":"sha1:14f7eef67e3f","prio":2,"id":"H229"}
+{"v":1,"t":"u","id":"H229","ts":"2026-10-17T04:05:22Z","by":"head","set":{"kind":"ask","sum":"continue the tasks (head mode)"},"link":["+task:R10.32"]}
+{"v":1,"t":"u","id":"H229","ts":"2026-10-17T04:05:52Z","by":"auto","set":{"status":"done"},"note":"auto: R10.32 e4e30d7, R10.32 74bed87, R10.32 922a437, R10.32 5683760"}
+{"v":1,"t":"u","id":"H228","ts":"2026-10-17T04:08:29Z","by":"head","note":"R10.27 2d71c08 done; R10.25 and R10.35 running"}
+{"v":1,"t":"u","id":"H228","ts":"2026-10-17T04:09:44Z","by":"auto","set":{"status":"done"},"note":"auto: R10.25 26aabcd"}
+{"v":1,"t":"u","id":"H228","ts":"2026-10-17T04:18:32Z","by":"head","set":{"status":"done"},"note":"2d71c08 R10.27, 26aabcd R10.25, a81f582 R10.35, d2a7208 test fix; suite+check-ui green"}
+{"v":1,"t":"u","id":"H229","ts":"2026-10-17T04:18:32Z","by":"head","set":{"status":"done"},"note":"2d71c08 R10.27, 26aabcd R10.25, a81f582 R10.35, d2a7208 test fix; suite+check-ui green"}
+{"v":1,"t":"e","ts":"2026-10-17T05:06:32Z","src":"hook","sid":"7701d8ef","acct":null,"kind":"review?","sum":"ask opus about the \"system\" section we have some crtitcal issue : * the zoom in out , full screen…","len":3004,"h":"sha1:ff0b426c761e","prio":2,"id":"H230"}
+{"v":1,"t":"u","id":"H230","ts":"2026-10-17T05:06:45Z","by":"head","set":{"kind":"ask","sum":"System v2 + panel drag handles + Activity history + Roadmap map + Tokens features + panel->head chan"},"link":["+task:R10.33"],"seen":["task:R10.33"]}
+{"v":1,"t":"u","id":"H230","ts":"2026-10-17T05:07:12Z","by":"auto","set":{"status":"done"},"note":"auto: R10.33 796d4bf"}
+{"v":1,"t":"u","id":"H230","ts":"2026-10-17T05:08:05Z","by":"head","set":{"kind":"ask","sum":"System v2, drag handles, Activity, Roadmap map, Tokens, panel->head channel: R11.1-R11.6 launched"},"link":["+task:R11.1"]}
+{"v":1,"t":"e","ts":"2026-10-17T05:11:18Z","src":"hook","sid":"7701d8ef","acct":null,"kind":"rule?","sum":"the other general things : some sectioin have the actions in top , it should manage better in…","len":246,"h":"sha1:fcae540dfd22","prio":2,"id":"H231"}
+{"v":1,"t":"u","id":"H231","ts":"2026-10-17T05:11:26Z","by":"head","set":{"kind":"rule","sum":"section toolbars/filters waste space (Work shows 5 filter rows): collapse into compact bar with expa"},"link":["+task:R11.7"]}
+{"v":1,"t":"e","ts":"2026-10-17T05:12:11Z","src":"hook","sid":"7701d8ef","acct":null,"kind":"ask?","sum":"set the weekly limit to the 40% now its on 20%","len":46,"h":"sha1:b07fe857b357","prio":0,"id":"H232"}
+{"v":1,"t":"u","id":"H232","ts":"2026-10-17T05:12:33Z","by":"head","set":{"status":"done"},"note":"answer: head weekly cap set to 40% in docs/HEAD-RUNBOOK.md and memory; weekly now 21%"}
+{"v":1,"t":"e","ts":"2026-10-17T05:13:38Z","src":"hook","sid":"7701d8ef","acct":null,"kind":"ask?","sum":"the very importatn things in the token section , we have internal auth for that things , it need…","len":195,"h":"sha1:e6e4b4ddb3ef","prio":2,"id":"H233"}
+{"v":1,"t":"u","id":"H233","ts":"2026-10-17T05:13:46Z","by":"head","set":{"kind":"ask","sum":"Tokens section: show which account is logged in for usage auth, login/logout buttons, multi-account"},"link":["+task:R11.8"]}
+{"v":1,"t":"e","ts":"2026-10-17T05:18:43Z","src":"hook","sid":"7701d8ef","acct":null,"kind":"rule?","sum":"dont run any new things","len":23,"h":"sha1:1a42a76b20f3","prio":2,"id":"H234"}
+{"v":1,"t":"u","id":"H234","ts":"2026-10-17T05:18:49Z","by":"head","set":{"kind":"rule","sum":"do not launch any new workers/tasks until the person says; running ones finish"},"link":["+task:R11.1"],"seen":["task:R11.1"]}
+{"v":1,"t":"u","id":"H234","ts":"2026-10-17T05:18:52Z","by":"head","set":{"status":"done"},"note":"answer: rule recorded in runbook + memory hold-launches; no new launches until you say go"}
+{"v":1,"t":"e","ts":"2026-10-17T05:24:04Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"/head i did switch accounts continue the jobs 5h limit set to 50% becarefull about it aslo open…","len":123,"h":"sha1:242fbb99c076","prio":2,"id":"H235"}
+{"v":1,"t":"s","ts":"2026-10-17T05:27:35Z","sid":"8bc13c25","model":"Opus 5.5","ev":"claim"}
+{"v":1,"t":"e","ts":"2026-10-17T05:27:35Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"why the server is empty dhsabord ?","len":92,"h":"sha1:c875534ce1f9","prio":2,"id":"H236"}
+{"v":1,"t":"e","ts":"2026-10-17T05:31:06Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"maybe its better to use sonnet for continue this task , as low or med or use haikue as much as…","len":104,"h":"sha1:c51a2aa8223e","prio":3,"id":"H237"}
+{"v":1,"t":"u","id":"H235","ts":"2026-10-17T05:32:00Z","by":"head","set":{"kind":"ask","sum":"Resume after account switch; 5h stop 50%; wave 1 launched"},"link":["+task:R11.2","+task:R11.4"]}
+{"v":1,"t":"u","id":"H233","ts":"2026-10-17T05:32:01Z","by":"head","set":{"kind":"ask","sum":"Tokens: show logged-in account(s)"}}
+{"v":1,"t":"u","id":"H236","ts":"2026-10-17T05:32:09Z","by":"head","set":{"status":"done"},"note":"answer: new web files 404 until service restart; restarted the service, page loads"}
+{"v":1,"t":"u","id":"H237","ts":"2026-10-17T05:32:09Z","by":"head","set":{"status":"done"},"note":"answer: wave 1 uses 2 Haiku workers and 1 Sonnet low; Haiku first from now"}
+{"v":1,"t":"u","id":"H233","ts":"2026-10-17T05:35:26Z","by":"auto","set":{"status":"done"},"note":"auto: R11.8 eec5ff1"}
+{"v":1,"t":"u","id":"H235","ts":"2026-10-17T05:35:26Z","by":"auto","set":{"status":"done"},"note":"auto: R11.2 eec5ff1, R11.4 4ef9235"}

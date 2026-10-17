@@ -433,5 +433,230 @@
     "task": "R10.24",
     "title": "sonnet: R10.24 System map A6 + layout polish",
     "model": "sonnet"
+  },
+  "a2b5b89422698e6d8": {
+    "task": "R10.30",
+    "title": "sonnet: R10.30 Tokens page UI fix",
+    "model": "sonnet"
+  },
+  "a342fdfc039cb138a": {
+    "task": "R10.32",
+    "title": "sonnet: R10.32 per-job token capture backend",
+    "model": "sonnet"
+  },
+  "a89557622602bdb64": {
+    "task": "R10.27",
+    "title": "haiku: R10.27 web test cleanup",
+    "model": "haiku"
+  },
+  "af2390d77a2819db0": {
+    "task": "R10.32",
+    "title": "sonnet: R10.32 per-task tokens UI",
+    "model": "sonnet"
+  },
+  "a4686c448ef9676f4": {
+    "task": "R10.14",
+    "title": "sonnet: R10.14 Inbox question rows redesign",
+    "model": "sonnet"
+  },
+  "ab1b26a70f585bfa0": {
+    "task": "R10.31",
+    "title": "sonnet: R10.31 Workflow layout arrows zoom",
+    "model": "sonnet"
+  },
+  "aeef049ecd07f19a5": {
+    "task": "R10.33",
+    "title": "opus: R10.33 System section investigate+complete",
+    "model": "opus"
+  },
+  "af16857ecc5eef7a5": {
+    "task": "R10.14",
+    "title": "opus: R10.14 Inbox questions UX by Opus",
+    "model": "opus"
+  },
+  "aca3371c656a776fa": {
+    "task": "R10.34",
+    "title": "sonnet: R10.34 Helm brand rename (text/UI)",
+    "model": "sonnet"
+  },
+  "a9221782d9e689b2b": {
+    "task": "R10.27",
+    "title": "sonnet: R10.27 check-ui Tokens+Head fix",
+    "model": "sonnet"
+  },
+  "afec08e9357205c2d": {
+    "task": "R10.25",
+    "title": "sonnet: R10.25 System map full-screen route",
+    "model": "sonnet"
+  },
+  "a90dadfeae1254481": {
+    "task": "R10.27",
+    "title": "haiku: R10.27 ledger auto-close bug check",
+    "model": "haiku"
+  },
+  "a0a6562cd057068e3": {
+    "task": "R10.32",
+    "title": "sonnet: R10.35 per-task percent-of-limit estimate",
+    "model": "sonnet"
+  },
+  "aacaf12c36478a68a": {
+    "task": "R10.27",
+    "title": "haiku: R10.27 fix supervisor test for new bind rule",
+    "model": "haiku"
+  },
+  "ac82274c6f95e4fb9": {
+    "task": "R11.0",
+    "title": "haiku: R11.0 CSS budget raise",
+    "model": "haiku"
+  },
+  "acad37bd32cea8602": {
+    "task": "R11.1",
+    "title": "opus: R11.1 System v2 lead (Opus)",
+    "model": "opus"
+  },
+  "aa40e41662b5a2715": {
+    "task": "R11.2",
+    "title": "opus: R11.2 panel to head channel audit (Opus)",
+    "model": "opus"
+  },
+  "ac1adb70b0d11aa37": {
+    "task": "R11.3",
+    "title": "sonnet: R11.3 drag-resize handles",
+    "model": "sonnet"
+  },
+  "a7d6be373908da370": {
+    "task": "R11.4",
+    "title": "opus: R11.4 Activity redesign (Opus)",
+    "model": "opus"
+  },
+  "a3038bbfe6072ee01": {
+    "task": "R11.5",
+    "title": "opus: R11.5 Roadmap map (Opus)",
+    "model": "opus"
+  },
+  "a3d1048ef666e1d60": {
+    "task": "R11.6",
+    "title": "sonnet: R11.6 Tokens page features",
+    "model": "sonnet"
+  },
+  "aad4fd9500b2437cd": {
+    "task": "R11.7",
+    "title": "opus: R11.7 toolbar pattern spec + audit (Opus)",
+    "model": "opus"
+  },
+  "ade850a83a4294dc9": {
+    "task": "R7.31",
+    "title": "haiku: Inventory section top controls",
+    "model": "haiku"
+  },
+  "abbe4de3e4d301f36": {
+    "task": "R11.8",
+    "title": "opus: R11.8 Tokens account login design+backend (Opus)",
+    "model": "opus"
+  },
+  "a379d7638ab12a5cc": {
+    "task": "R11.101",
+    "title": "sonnet: R11.101 System v2 backend task binding",
+    "model": "sonnet"
+  },
+  "a18f4733fb3e89a69": {
+    "task": "R11.102",
+    "title": "sonnet: R11.102 ER and state diagrams derivation",
+    "model": "sonnet"
+  },
+  "a6c8ee67663b27179": {
+    "task": "R11.103",
+    "title": "sonnet: R11.103 class deployment usecase activity derivation",
+    "model": "sonnet"
+  },
+  "a3393ab5575963992": {
+    "task": "R11.104",
+    "title": "sonnet: R11.104 System UI core layout zoom fullscreen",
+    "model": "sonnet"
+  },
+  "a97bd86de17155b76": {
+    "task": "R11.105",
+    "title": "sonnet: R11.105 System context menu module",
+    "model": "sonnet"
+  },
+  "a6fde016f91ec1e50": {
+    "task": "R11.106",
+    "title": "sonnet: R11.106 System side panel tasks progress",
+    "model": "sonnet"
+  },
+  "ad33b73145fd03465": {
+    "task": "R11.107",
+    "title": "sonnet: R11.107 System SVG renderers new diagrams",
+    "model": "sonnet"
+  },
+  "afc2096aa19671377": {
+    "task": "R11.108",
+    "title": "sonnet: R11.108 syslayout expandable groups and drill",
+    "model": "sonnet"
+  },
+  "af907616a410eed2c": {
+    "task": "R11.109",
+    "title": "sonnet: R11.109 Workflow timeline drag scroll zoom",
+    "model": "sonnet"
+  },
+  "a078c9960c02002f7": {
+    "task": "R11.104",
+    "title": "haiku: R11.104 lint and a11y test fixes",
+    "model": "haiku"
+  },
+  "a229c4e2769cbe7f6": {
+    "task": "R11.2",
+    "title": "haiku: R11.2 finish panel to head channel",
+    "model": "haiku"
+  },
+  "a290aa11ef25d6ef1": {
+    "task": "R11.4",
+    "title": "sonnet: R11.4 finish Activity redesign",
+    "model": "sonnet"
+  },
+  "a000ed3aa8de706e9": {
+    "task": "R11.6",
+    "title": "sonnet: R11.6 R11.8 finish Tokens page",
+    "model": "sonnet"
+  },
+  "a7404561c674046f1": {
+    "task": "R11.104",
+    "title": "haiku: R11.104 p7 lint and r765 fixes",
+    "model": "haiku"
+  },
+  "a97254a17d468d88b": {
+    "task": "R11.5",
+    "title": "sonnet: R11.5 finish Roadmap map",
+    "model": "sonnet"
+  },
+  "a9ee5284f82088473": {
+    "task": "R11.109",
+    "title": "sonnet: R11.109 Workflow timeline drag zoom",
+    "model": "sonnet"
+  },
+  "a6bf7c071644322f5": {
+    "task": "R11.8",
+    "title": "haiku: R11.8 usage accounts routes",
+    "model": "haiku"
+  },
+  "a1c8c421f1feb4db3": {
+    "task": "R11.8",
+    "title": "haiku: R11.8 Account tab grid fix",
+    "model": "haiku"
+  },
+  "a7df9ab33dd8279b1": {
+    "task": "R11.110",
+    "title": "sonnet: R11.110 System v2 integration",
+    "model": "sonnet"
+  },
+  "a681d15dfa421a7d8": {
+    "task": "R11.111",
+    "title": "haiku: R11.111 seed system.json overrides",
+    "model": "haiku"
+  },
+  "a96fb0bd836713893": {
+    "task": "R11.112",
+    "title": "sonnet: R11.112 Classes diagram readable",
+    "model": "sonnet"
   }
 }

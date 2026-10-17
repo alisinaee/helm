@@ -7975,6 +7975,635 @@
         "cacheWrite": 82345,
         "model": "sonnet"
       }
+    },
+    {
+      "id": "j1036",
+      "title": "sonnet: R10.27 check-ui Tokens+Head fix",
+      "model": "sonnet",
+      "task": "R10.27",
+      "status": "done",
+      "started": "2026-10-16T22:40:46+03:30",
+      "ended": "2026-10-16T22:45:24+03:30",
+      "refs": [
+        "commit:50d6361956a43f49bc02cbed86a8970d5c5cc9bf"
+      ],
+      "tokens": {
+        "in": 20,
+        "out": 2208,
+        "cacheRead": 572646,
+        "cacheWrite": 67009,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1037",
+      "title": "sonnet: R10.27 check-ui Tokens+Head",
+      "model": "sonnet",
+      "task": "R10.27",
+      "status": "done",
+      "started": "2026-10-16T22:40:46+03:30",
+      "ended": "2026-10-16T22:45:27+03:30",
+      "refs": [
+        "commit:50d6361956a43f49bc02cbed86a8970d5c5cc9bf"
+      ]
+    },
+    {
+      "id": "j1038",
+      "title": "sonnet: R10.25 System map full-screen route",
+      "model": "sonnet",
+      "task": "R10.25",
+      "status": "done",
+      "started": "2026-10-17T07:34:30+03:30",
+      "ended": "2026-10-17T07:39:48+03:30",
+      "refs": [
+        "commit:26aabcd6e6001dfbceb4a74fd752d7a6567879ac"
+      ],
+      "tokens": {
+        "in": 70,
+        "out": 16400,
+        "cacheRead": 2527105,
+        "cacheWrite": 87872,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1039",
+      "title": "haiku: R10.27 ledger auto-close bug check",
+      "model": "haiku",
+      "task": "R10.27",
+      "status": "done",
+      "started": "2026-10-17T07:34:35+03:30",
+      "ended": "2026-10-17T07:37:53+03:30",
+      "tokens": {
+        "in": 66,
+        "out": 23796,
+        "cacheRead": 2582621,
+        "cacheWrite": 103470,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1040",
+      "title": "sonnet: R10.35 per-task percent-of-limit estimate",
+      "model": "sonnet",
+      "task": "R10.32",
+      "status": "done",
+      "started": "2026-10-17T07:35:30+03:30",
+      "ended": "2026-10-17T07:44:00+03:30",
+      "tokens": {
+        "in": 50,
+        "out": 11873,
+        "cacheRead": 1730645,
+        "cacheWrite": 58550,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1041",
+      "title": "haiku: R10.27 follow-up commit",
+      "model": "haiku",
+      "task": "R10.27",
+      "status": "done",
+      "started": "2026-10-17T07:37:59+03:30",
+      "ended": "2026-10-17T07:38:26+03:30",
+      "refs": [
+        "commit:2d71c084c6450adbab90b4fe283f37aece41010a"
+      ]
+    },
+    {
+      "id": "j1042",
+      "title": "haiku: R10.27 follow-up",
+      "model": "haiku",
+      "task": "R10.27",
+      "status": "done",
+      "started": "2026-10-17T07:38:02+03:30",
+      "ended": "2026-10-17T07:38:24+03:30",
+      "refs": [
+        "commit:2d71c084c6450adbab90b4fe283f37aece41010a"
+      ],
+      "tokens": {
+        "in": 78,
+        "out": 25978,
+        "cacheRead": 3111825,
+        "cacheWrite": 108038,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1043",
+      "title": "haiku: R10.27 fix supervisor test for new bind rule",
+      "model": "haiku",
+      "task": "R10.27",
+      "status": "done",
+      "started": "2026-10-17T07:48:08+03:30",
+      "ended": "2026-10-17T07:48:24+03:30",
+      "refs": [
+        "commit:d2a72085afc6a6dc0ba28de36cd66188e1eeea15"
+      ],
+      "tokens": {
+        "in": 10,
+        "out": 1213,
+        "cacheRead": 200152,
+        "cacheWrite": 52274,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1044",
+      "title": "haiku: R11.0 CSS budget raise",
+      "model": "haiku",
+      "task": "R11.0",
+      "status": "done",
+      "started": "2026-10-17T08:37:12+03:30",
+      "ended": "2026-10-17T08:37:29+03:30",
+      "refs": [
+        "commit:6d4cbfd06cc454af1fb2e82a2aa75a65f2893868"
+      ],
+      "tokens": {
+        "in": 10,
+        "out": 1907,
+        "cacheRead": 202908,
+        "cacheWrite": 53819,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1045",
+      "title": "opus: R11.1 System v2 lead (Opus)",
+      "model": "opus",
+      "task": "R11.1",
+      "effort": "medium",
+      "status": "failed",
+      "started": "2026-10-17T08:37:25+03:30",
+      "ended": "2026-10-17T08:54:42+03:30",
+      "refs": [
+        "commit:5846b27529c7b684f0f2d1cf9b98b768527a328b"
+      ]
+    },
+    {
+      "id": "j1046",
+      "title": "opus: R11.2 panel to head channel audit (Opus)",
+      "model": "opus",
+      "task": "R11.2",
+      "effort": "medium",
+      "status": "failed",
+      "started": "2026-10-17T08:37:34+03:30",
+      "ended": "2026-10-17T08:54:43+03:30"
+    },
+    {
+      "id": "j1047",
+      "title": "sonnet: R11.3 drag-resize handles",
+      "model": "sonnet",
+      "task": "R11.3",
+      "status": "done",
+      "started": "2026-10-17T08:37:39+03:30",
+      "ended": "2026-10-17T08:46:47+03:30",
+      "refs": [
+        "commit:820d841bc3e5f719802d6d39dfb6183769a93dfe"
+      ],
+      "tokens": {
+        "in": 40,
+        "out": 10360,
+        "cacheRead": 1235962,
+        "cacheWrite": 73688,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1048",
+      "title": "opus: R11.4 Activity redesign (Opus)",
+      "model": "opus",
+      "task": "R11.4",
+      "effort": "medium",
+      "status": "failed",
+      "started": "2026-10-17T08:37:47+03:30",
+      "ended": "2026-10-17T08:54:43+03:30"
+    },
+    {
+      "id": "j1049",
+      "title": "opus: R11.5 Roadmap map (Opus)",
+      "model": "opus",
+      "task": "R11.5",
+      "effort": "medium",
+      "status": "failed",
+      "started": "2026-10-17T08:37:53+03:30",
+      "ended": "2026-10-17T08:54:43+03:30"
+    },
+    {
+      "id": "j1050",
+      "title": "sonnet: R11.6 Tokens page features",
+      "model": "sonnet",
+      "task": "R11.6",
+      "status": "failed",
+      "started": "2026-10-17T08:38:00+03:30",
+      "ended": "2026-10-17T08:54:43+03:30"
+    },
+    {
+      "id": "j1051",
+      "title": "opus: R11.7 toolbar pattern spec + audit (Opus)",
+      "model": "opus",
+      "task": "R11.7",
+      "effort": "medium",
+      "status": "done",
+      "started": "2026-10-17T08:41:32+03:30",
+      "ended": "2026-10-17T08:45:50+03:30",
+      "refs": [
+        "commit:9c5252f362660c81bad7e8244c7dd3960c1adfad"
+      ],
+      "tokens": {
+        "in": 62,
+        "out": 24493,
+        "cacheRead": 2389657,
+        "cacheWrite": 76616,
+        "model": "opus"
+      }
+    },
+    {
+      "id": "j1052",
+      "title": "haiku: Inventory section top controls",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-10-17T08:42:38+03:30",
+      "ended": "2026-10-17T08:44:40+03:30",
+      "tokens": {
+        "in": 36,
+        "out": 16245,
+        "cacheRead": 1132458,
+        "cacheWrite": 93012,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1053",
+      "title": "opus: R11.8 Tokens account login design+backend (Opus)",
+      "model": "opus",
+      "task": "R11.8",
+      "effort": "medium",
+      "status": "failed",
+      "started": "2026-10-17T08:44:02+03:30",
+      "ended": "2026-10-17T08:54:43+03:30"
+    },
+    {
+      "id": "j1054",
+      "title": "sonnet: R11.101 System v2 backend task binding",
+      "model": "sonnet",
+      "task": "R11.101",
+      "status": "done",
+      "started": "2026-10-17T08:44:29+03:30",
+      "ended": "2026-10-17T08:47:15+03:30",
+      "refs": [
+        "commit:1766d195eea926723cfd62e188d34e63f49be542"
+      ],
+      "tokens": {
+        "in": 44,
+        "out": 19165,
+        "cacheRead": 1807433,
+        "cacheWrite": 76727,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1055",
+      "title": "sonnet: R11.102 ER and state diagrams derivation",
+      "model": "sonnet",
+      "task": "R11.102",
+      "status": "done",
+      "started": "2026-10-17T08:44:42+03:30",
+      "ended": "2026-10-17T08:46:32+03:30",
+      "refs": [
+        "commit:ba39d0890afa69c7bdab53995e71c34179a5618d"
+      ],
+      "tokens": {
+        "in": 12,
+        "out": 19123,
+        "cacheRead": 335722,
+        "cacheWrite": 46386,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1056",
+      "title": "sonnet: R11.103 class deployment usecase activity derivation",
+      "model": "sonnet",
+      "task": "R11.103",
+      "status": "done",
+      "started": "2026-10-17T08:44:56+03:30",
+      "ended": "2026-10-17T08:46:59+03:30",
+      "refs": [
+        "commit:cbbae478cc045022bd0f0e921339684d3e40c741"
+      ],
+      "tokens": {
+        "in": 14,
+        "out": 20278,
+        "cacheRead": 401490,
+        "cacheWrite": 50650,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1057",
+      "title": "sonnet: R11.104 System UI core layout zoom fullscreen",
+      "model": "sonnet",
+      "task": "R11.104",
+      "status": "done",
+      "started": "2026-10-17T08:45:24+03:30",
+      "ended": "2026-10-17T08:48:13+03:30",
+      "refs": [
+        "commit:a98b48b7bae82938141ead7791a653cf5be3fa86"
+      ],
+      "tokens": {
+        "in": 44,
+        "out": 21249,
+        "cacheRead": 1800819,
+        "cacheWrite": 77188,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1058",
+      "title": "sonnet: R11.105 System context menu module",
+      "model": "sonnet",
+      "task": "R11.105",
+      "status": "done",
+      "started": "2026-10-17T08:45:38+03:30",
+      "ended": "2026-10-17T08:46:24+03:30",
+      "refs": [
+        "commit:2c8b246fe7d1696637544075670fcd409b156a97"
+      ],
+      "tokens": {
+        "in": 12,
+        "out": 7584,
+        "cacheRead": 313783,
+        "cacheWrite": 35975,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1059",
+      "title": "sonnet: R11.106 System side panel tasks progress",
+      "model": "sonnet",
+      "task": "R11.106",
+      "status": "done",
+      "started": "2026-10-17T08:45:47+03:30",
+      "ended": "2026-10-17T08:46:33+03:30",
+      "refs": [
+        "commit:cf3da9ba4199ce9f6b9395bc590d2b0eed867be8"
+      ],
+      "tokens": {
+        "in": 18,
+        "out": 5938,
+        "cacheRead": 506706,
+        "cacheWrite": 38129,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1060",
+      "title": "sonnet: R11.107 System SVG renderers new diagrams",
+      "model": "sonnet",
+      "task": "R11.107",
+      "status": "failed",
+      "started": "2026-10-17T08:46:01+03:30",
+      "ended": "2026-10-17T08:54:43+03:30"
+    },
+    {
+      "id": "j1061",
+      "title": "sonnet: R11.108 syslayout expandable groups and drill",
+      "model": "sonnet",
+      "task": "R11.108",
+      "status": "done",
+      "started": "2026-10-17T08:46:09+03:30",
+      "ended": "2026-10-17T08:47:30+03:30",
+      "refs": [
+        "commit:6dd6c2385d6d8591769368c23894b15f3bb711ac"
+      ],
+      "tokens": {
+        "in": 18,
+        "out": 11367,
+        "cacheRead": 566345,
+        "cacheWrite": 47161,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1062",
+      "title": "sonnet: R11.109 Workflow timeline drag scroll zoom",
+      "model": "sonnet",
+      "task": "R11.109",
+      "status": "failed",
+      "started": "2026-10-17T08:46:20+03:30",
+      "ended": "2026-10-17T08:54:43+03:30"
+    },
+    {
+      "id": "j1063",
+      "title": "sonnet: R11.102 follow-up",
+      "model": "sonnet",
+      "task": "R11.102",
+      "status": "done",
+      "started": "2026-10-17T08:47:26+03:30",
+      "ended": "2026-10-17T08:47:35+03:30",
+      "refs": [
+        "commit:6ace67aa60c44fd14ba21c3983dcd4f2b7e5c1bd"
+      ],
+      "tokens": {
+        "in": 18,
+        "out": 20359,
+        "cacheRead": 488385,
+        "cacheWrite": 48422,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1064",
+      "title": "haiku: R11.104 lint and a11y test fixes",
+      "model": "haiku",
+      "task": "R11.104",
+      "status": "done",
+      "started": "2026-10-17T09:01:26+03:30",
+      "ended": "2026-10-17T09:03:26+03:30",
+      "tokens": {
+        "in": 32,
+        "out": 18827,
+        "cacheRead": 1109346,
+        "cacheWrite": 87140,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1065",
+      "title": "haiku: R11.2 finish panel to head channel",
+      "model": "haiku",
+      "task": "R11.2",
+      "status": "done",
+      "started": "2026-10-17T09:01:32+03:30",
+      "ended": "2026-10-17T09:03:06+03:30",
+      "tokens": {
+        "in": 34,
+        "out": 14680,
+        "cacheRead": 1278378,
+        "cacheWrite": 59669,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1066",
+      "title": "sonnet: R11.4 finish Activity redesign",
+      "model": "sonnet",
+      "task": "R11.4",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-17T09:01:38+03:30",
+      "ended": "2026-10-17T09:02:24+03:30",
+      "tokens": {
+        "in": 26,
+        "out": 3367,
+        "cacheRead": 695891,
+        "cacheWrite": 62958,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1067",
+      "title": "sonnet: R11.6 R11.8 finish Tokens page",
+      "model": "sonnet",
+      "task": "R11.6",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-17T09:02:41+03:30",
+      "ended": "2026-10-17T09:05:19+03:30",
+      "tokens": {
+        "in": 40,
+        "out": 6606,
+        "cacheRead": 1284125,
+        "cacheWrite": 49327,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1068",
+      "title": "haiku: R11.104 p7 lint and r765 fixes",
+      "model": "haiku",
+      "task": "R11.104",
+      "status": "done",
+      "started": "2026-10-17T09:03:37+03:30",
+      "ended": "2026-10-17T09:07:48+03:30",
+      "tokens": {
+        "in": 26,
+        "out": 12745,
+        "cacheRead": 766357,
+        "cacheWrite": 38454,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1069",
+      "title": "sonnet: R11.5 finish Roadmap map",
+      "model": "sonnet",
+      "task": "R11.5",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-17T09:03:46+03:30",
+      "ended": "2026-10-17T09:04:02+03:30",
+      "tokens": {
+        "in": 6,
+        "out": 655,
+        "cacheRead": 131572,
+        "cacheWrite": 22549,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1070",
+      "title": "sonnet: R11.109 Workflow timeline drag zoom",
+      "model": "sonnet",
+      "task": "R11.109",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-17T09:04:29+03:30",
+      "ended": "2026-10-17T09:06:22+03:30",
+      "tokens": {
+        "in": 26,
+        "out": 9369,
+        "cacheRead": 770961,
+        "cacheWrite": 41019,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1071",
+      "title": "haiku: R11.8 usage accounts routes",
+      "model": "haiku",
+      "task": "R11.8",
+      "status": "done",
+      "started": "2026-10-17T09:05:40+03:30",
+      "ended": "2026-10-17T09:06:23+03:30",
+      "tokens": {
+        "in": 16,
+        "out": 7964,
+        "cacheRead": 442890,
+        "cacheWrite": 38092,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1072",
+      "title": "haiku: R11.8 Account tab grid fix",
+      "model": "haiku",
+      "task": "R11.8",
+      "status": "done",
+      "started": "2026-10-17T09:07:07+03:30",
+      "ended": "2026-10-17T09:09:53+03:30",
+      "tokens": {
+        "in": 22,
+        "out": 18212,
+        "cacheRead": 703718,
+        "cacheWrite": 47647,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1073",
+      "title": "sonnet: R11.110 System v2 integration",
+      "model": "sonnet",
+      "task": "R11.110",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-17T09:08:55+03:30",
+      "ended": "2026-10-17T09:11:01+03:30",
+      "tokens": {
+        "in": 30,
+        "out": 12100,
+        "cacheRead": 1157525,
+        "cacheWrite": 73724,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1074",
+      "title": "haiku: R11.111 seed system.json overrides",
+      "model": "haiku",
+      "task": "R11.111",
+      "status": "done",
+      "started": "2026-10-17T09:10:17+03:30",
+      "ended": "2026-10-17T09:11:53+03:30",
+      "tokens": {
+        "in": 28,
+        "out": 16618,
+        "cacheRead": 1017753,
+        "cacheWrite": 67026,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1075",
+      "title": "sonnet: R11.112 Classes diagram readable",
+      "model": "sonnet",
+      "task": "R11.112",
+      "effort": "low",
+      "status": "running",
+      "started": "2026-10-17T09:11:52+03:30",
+      "ended": null
     }
   ]
 }

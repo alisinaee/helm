@@ -61,10 +61,10 @@
       "def": null,
       "block": false,
       "timeoutS": null,
-      "status": "open",
-      "answer": null,
+      "status": "answered",
+      "answer": "No, I will enter new numbers",
       "asked": "2026-10-16T12:14:56+03:30",
-      "answered": null
+      "answered": "2026-10-16T21:26:46+03:30"
     },
     {
       "id": "Q5",
@@ -77,10 +77,10 @@
       "def": null,
       "block": false,
       "timeoutS": null,
-      "status": "open",
-      "answer": null,
+      "status": "answered",
+      "answer": "No",
       "asked": "2026-10-16T12:14:57+03:30",
-      "answered": null
+      "answered": "2026-10-16T21:07:13+03:30"
     },
     {
       "id": "Q6",
@@ -94,10 +94,10 @@
       "def": null,
       "block": false,
       "timeoutS": null,
-      "status": "open",
-      "answer": null,
+      "status": "answered",
+      "answer": "Not yet",
       "asked": "2026-10-16T12:14:57+03:30",
-      "answered": null
+      "answered": "2026-10-16T21:07:22+03:30"
     },
     {
       "id": "Q7",
@@ -110,10 +110,10 @@
       "def": null,
       "block": false,
       "timeoutS": null,
-      "status": "open",
-      "answer": null,
+      "status": "answered",
+      "answer": "Yes",
       "asked": "2026-10-16T12:14:57+03:30",
-      "answered": null
+      "answered": "2026-10-16T21:07:30+03:30"
     },
     {
       "id": "Q8",

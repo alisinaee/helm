@@ -1,0 +1,2 @@
+{"id":"A1","at":"2026-10-14T09:55:40+03:30","src":"gui","op":"control.stop","sum":"stop project","undo":true}
+{"id":"A2","at":"2026-10-14T09:55:51+03:30","src":"gui","op":"control.resume","sum":"resume","undo":true}
