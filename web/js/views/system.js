@@ -14,6 +14,9 @@ import { mountViewport } from "../graph/viewport.js";
 import { LABEL_MAX, layeredLayout, matrixLayout, MX_COL, MX_HEAD, MX_LEFT, MX_ROW, sequenceLayout, weak } from
   "../graph/syslayout.js";
 import { human, panelHtml } from "./system-panel.js";
+import { anchorShift, collapseGroups, subgraph } from "../graph/syslayout.js";
+import { bindContextMenu, openMenu } from "./system-menu.js";
+import { activitySvg, classSvg, deploymentSvg, erSvg, stateSvg, usecaseSvg } from "../graph/sysdiagrams.js";
 
 export const VIEWS = [
   ["context", "Context", "Who uses the system and which outside systems it talks to (C4 level 1)."],
@@ -28,8 +31,23 @@ const TONES = ["--accent", "--info", "--success", "--warning", "--m-opus", "--m-
   "--m-agy", "--m-sonnet"];
 const EDGE = { call: "--text-2", import: "--text-3", data: "--info", event: "--accent", violation: "--danger",
   cycle: "--danger" };
-// The views this file can draw (id -> [id, label, note]); a later task adds the new diagrams here.
-const RENDERERS = Object.fromEntries(VIEWS.map((m) => [m[0], m]));
+// The v2 diagrams (drawn from arch.diagrams[id]); they show in the switcher only when the catalog lists them.
+const DIAGRAMS = {
+  classes: ["classes", "Classes", "Classes and modules with their relations.", classSvg, "nodes"],
+  deployment: ["deployment", "Deployment", "Where each part runs and what it is deployed on.", deploymentSvg, "nodes"],
+  usecases: ["usecases", "Use cases", "Who uses the system and what they can do.", usecaseSvg, "actors"],
+  activity: ["activity", "Activity", "Step by step activity with decisions.", activitySvg, "items"],
+  states: ["states", "States", "States and the transitions between them.", stateSvg, "items"],
+  er: ["er", "ER", "Entities and how they relate.", erSvg, "entities"],
+};
+// The views this file can draw (id -> [id, label, note]).
+const RENDERERS = Object.assign(Object.fromEntries(VIEWS.map((m) => [m[0], m])),
+  Object.fromEntries(Object.keys(DIAGRAMS).map((k) => [k, DIAGRAMS[k].slice(0, 3)])));
+const collapsed = new Set();
+let drill = [];
+let lastLay = null;
+let anchorId = null;
+let pendingShift = null;
 const FAMILIES = [["structure", "Structure"], ["behaviour", "Behaviour"], ["data", "Data"]];
 const REC_SCORE = 30;
 const FIT_MIN = 0.2;
@@ -52,7 +70,7 @@ let watcher = null;
 function readPref(key, dflt) {
   try {
     const v = globalThis.localStorage && globalThis.localStorage.getItem(key);
-    return VIEWS.some((x) => x[0] === v) ? v : dflt;
+    return RENDERERS[v] ? v : dflt;
   } catch (err) {
     return dflt;
   }
@@ -225,17 +243,44 @@ function canvasAspect() {
   return w > 0 && h > 240 ? w / (h - 190) : 1.8;
 }
 
+// The view after the drill path (each level a subgraph) and the collapsed groups.
+export function shownView(g) {
+  let out = g;
+  drill.forEach((id) => {
+    out = subgraph(out, id);
+  });
+  return collapsed.size ? collapseGroups(out, collapsed) : out;
+}
+
+function togSvg(t, id, open, label) {
+  return '<g class="sys-tog" data-sys-tog="' + esc(id) + '" tabindex="0" role="button" aria-expanded="' + open +
+    '" aria-label="' + esc((open ? "Collapse " : "Expand ") + label) + '"><rect x="' + t.x + '" y="' + t.y +
+    '" width="' + t.size + '" height="' + t.size + '" rx="4" fill="' + v("--surface-1") + '" stroke="' +
+    v("--line") + '"/><path d="M' + (t.x + 5) + " " + (t.y + t.size / 2) + "h" + (t.size - 10) +
+    (open ? "" : "M" + (t.x + t.size / 2) + " " + (t.y + 5) + "v" + (t.size - 10)) + '" stroke="' + v("--text-2") +
+    '" stroke-width="1.5" fill="none"/></g>';
+}
+
 export function graphSvg(g, details, label) {
+  const before = lastLay;
+  g = shownView(g);
   const lay = layeredLayout(g, { aspect: canvasAspect() });
+  lastLay = lay;
+  if (anchorId && before) {
+    const mv = anchorShift(before, lay, anchorId);
+    pendingShift = mv;
+    anchorId = null;
+  }
   const near = nearSet(lay.edges);
   const act = activity(details);
   const shift = PAD - lay.top;
   const bands = lay.groups.map((b) => '<g><rect x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h +
     '" rx="8" fill="' + v("--surface-2") + '" fill-opacity=".35" stroke="' + v("--track") + '"/><text x="' +
     (b.x + 10) + '" y="' + (b.y + 16) + '" font-size="11" font-weight="600" fill="' + v("--text-3") + '">' +
-    esc(b.label) + "</text></g>").join("");
+    esc(b.label) + "</text>" + (b.toggle ? togSvg(b.toggle, b.id, true, b.label) : "") + "</g>").join("");
   const edges = lay.edges.map((e) => edgeSvg(e, near)).join("");
-  const nodes = lay.nodes.map((n) => nodeSvg(n, near, act[n.id])).join("");
+  const nodes = lay.nodes.map((n) => nodeSvg(n, near, act[n.id]) + (n.toggle ? togSvg(n.toggle,
+    String(n.id).replace(/^g:/, ""), !n.collapsed, n.label) : "")).join("");
   const labels = lay.edges.map((e) => labelSvg(e, near)).join("");
   return svgWrap('<g transform="translate(0 ' + shift + ')">' + bands + edges + nodes + labels + "</g>", lay.width,
     lay.height + shift + PAD, label);
@@ -301,7 +346,7 @@ function viewOf(arch, id) {
 }
 
 function stage(pid, arch) {
-  const mode = VIEWS.find((x) => x[0] === current) || VIEWS[2];
+  const mode = RENDERERS[current] || VIEWS[2];
   let svg = "";
   let legend = "";
   let flowBar = "";
@@ -317,6 +362,27 @@ function stage(pid, arch) {
     note = (flow.notes || note) + (flow.derived ? " (derived from imports)" : "");
     svg = flowSvg(flow);
     legend = legendHtml(new Set(["call"])) + '<span class="wfg-chip">- - reply</span>';
+  } else if (DIAGRAMS[current]) {
+    const spec = DIAGRAMS[current];
+    const data = arch.diagrams && arch.diagrams[current];
+    let item = data;
+    if (data && spec[4] === "items") {
+      const items = Array.isArray(data.items) ? data.items : [];
+      item = items.find((i) => i.id === flowId) || items[0];
+      if (item) {
+        flowId = item.id;
+        flowBar = '<span class="wfg-chips" role="group" aria-label="Item">' + items.map((f) => {
+          const text = esc(f.name || f.label || f.id);
+          return '<button type="button" class="btn btn-small" data-sys-flow="' + esc(f.id) + '" aria-pressed="' +
+            (f.id === item.id) + '">' + text + "</button>";
+        }).join("") + "</span>";
+      }
+    }
+    const has = item && (spec[4] === "items" ? true : Array.isArray(item[spec[4]]) && item[spec[4]].length);
+    if (!has) return { html: emptyHtml("Nothing found for " + spec[1] + ". Try another view."), note: note };
+    const out = spec[3](item, { selected: selected });
+    svg = svgWrap(out.inner, out.w + 2 * PAD, out.h + 2 * PAD, spec[1] + " diagram").replace('<g id="sys-vp">',
+      '<g id="sys-vp"><g transform="translate(' + PAD + " " + PAD + ')">').replace(/<\/g><\/svg>$/, "</g></g></svg>");
   } else {
     const g = viewOf(arch, current);
     if (!g.nodes.length) {
@@ -370,7 +436,7 @@ function switcherHtml(arch) {
 function copyIdHtml(pid, arch) {
   const sel = selected && selected !== "sys" ? selected : null;
   const node = sel ? (arch.details && arch.details[sel]) || {} : null;
-  const mode = VIEWS.find((x) => x[0] === current) || VIEWS[2];
+  const mode = RENDERERS[current] || VIEWS[2];
   const label = node ? node.title || sel : mode[1];
   const kind = sel ? "component" : "view";
   const id = sel ? sel.replace(/^[a-z]:/, "") : "system." + current;
@@ -416,10 +482,25 @@ export function bodyHtml(pid, got) {
   }
   const st = stage(pid, arch);
   const note = current === "flows" ? '<span class="wfg-note">' + esc(st.note) + "</span>" : "";
-  return toolbarHtml(pid, arch) + '<div class="wfg-bar">' + (st.html && !st.svg ? "" : st.html) + note +
+  return toolbarHtml(pid, arch) + crumbsHtml() + '<div class="wfg-bar">' + (st.html && !st.svg ? "" : st.html) + note +
     '<span class="wfg-chips">' + (st.legend || "") +
     "</span>" + warn + "</div>" + (st.svg ? '<div class="wfg-stage sys-canvas">' + st.svg + "</div>" : st.html) +
     (st.panel || "");
+}
+
+// Breadcrumb of drill levels: the view, then each opened group; the last is the current level.
+function crumbsHtml() {
+  if (!drill.length) return "";
+  const mode = RENDERERS[current] || VIEWS[2];
+  const item = (label, i, last) => {
+    const text = esc(label);
+    return last ? '<span class="sys-crumb" aria-current="page">' + text + "</span>" :
+      '<button type="button" class="btn btn-small" data-sys-crumb="' + i + '">' + text + "</button>";
+  };
+  const parts = [item(mode[1], -1, false)].concat(drill.map((id, i) => item(id.replace(/^[a-z]:/, ""), i,
+    i === drill.length - 1)));
+  return '<nav class="sys-crumbs" aria-label="Drill level">' + parts.join('<span aria-hidden="true">/</span>') +
+    "</nav>";
 }
 
 function sectionHtml(vm) {
@@ -428,7 +509,7 @@ function sectionHtml(vm) {
       emptyHtml("Pick a project to see its system views.");
   }
   const pid = vm.route.id;
-  const mode = VIEWS.find((x) => x[0] === current) || VIEWS[2];
+  const mode = RENDERERS[current] || VIEWS[2];
   return '<div class="sys" id="sys-root">' + sysInner(pid, mode) + "</div>";
 }
 
@@ -456,7 +537,7 @@ function redraw() {
   const fsEl = nativeFs();
   if (fsEl && fsEl.id === "sys-root" && lastVm.route.name === "project") {
     // Native full screen: keep the .sys element (replacing it would leave full screen), swap only what is inside.
-    patch("sys-root", sysInner(lastVm.route.id, VIEWS.find((x) => x[0] === current) || VIEWS[2]));
+    patch("sys-root", sysInner(lastVm.route.id, RENDERERS[current] || VIEWS[2]));
     mountSoon();
     return;
   }
@@ -490,6 +571,9 @@ function setView(id) {
   writePref("rb.sys.view", id);
   auto = true;
   view = null;
+  drill = [];
+  collapsed.clear();
+  lastLay = null;
 }
 
 // The true fit: the whole drawing inside the canvas, centred, scale clamped to 0.2..1.5.
@@ -521,6 +605,10 @@ function mountNow() {
     e.stopImmediatePropagation();
     fitNow();
   }, true);
+  if (pendingShift && !auto && view) {
+    view = { k: view.k, x: view.x - pendingShift.dx * view.k, y: view.y - pendingShift.dy * view.k };
+  }
+  pendingShift = null;
   api = mountViewport(svg, svg.querySelector("#sys-vp"), {
     view: auto || !view ? openingView(box, size) : view, box: box, taps: taps, fit: false,
     onTap: (el) => select(el.getAttribute("data-sys")),
@@ -550,6 +638,7 @@ function mountNow() {
   const manual = () => {
     auto = false;
   };
+  bindMenu(svg);
   svg.addEventListener("pointerdown", manual);
   svg.addEventListener("wheel", manual);
 }
@@ -561,7 +650,10 @@ function mountSoon() {
 function onKey(event) {
   if (!lastVm) return;
   const t = event.target;
-  if ((event.key === "Enter" || event.key === " ") && t && t.getAttribute && t.getAttribute("data-sys")) {
+  if ((event.key === "Enter" || event.key === " ") && t && t.getAttribute && t.getAttribute("data-sys-tog")) {
+    event.preventDefault();
+    toggleGroup(t.getAttribute("data-sys-tog"));
+  } else if ((event.key === "Enter" || event.key === " ") && t && t.getAttribute && t.getAttribute("data-sys")) {
     event.preventDefault();
     select(t.getAttribute("data-sys"));
   } else if (event.key === "Escape") {
@@ -618,7 +710,8 @@ export function leaveFull() {
 
 function onClick(event) {
   const t = event.target && event.target.closest ?
-    event.target.closest("[data-sys-view],[data-sys-op],[data-sys-flow],[data-sys-go]") : null;
+    event.target.closest("[data-sys-view],[data-sys-op],[data-sys-flow],[data-sys-go],[data-sys-tog]," +
+      "[data-sys-crumb]") : null;
   if (!t || !lastVm) return;
   if (t.hasAttribute("data-sys-view")) {
     setView(t.getAttribute("data-sys-view"));
@@ -627,6 +720,16 @@ function onClick(event) {
       selected = null;
     }
     redraw();
+    return;
+  }
+  if (t.hasAttribute("data-sys-tog")) {
+    toggleGroup(t.getAttribute("data-sys-tog"));
+    return;
+  }
+  if (t.hasAttribute("data-sys-crumb")) {
+    drill = drill.slice(0, Number(t.getAttribute("data-sys-crumb")) + 1);
+    lastLay = null;
+    fitNow();
     return;
   }
   if (t.hasAttribute("data-sys-flow")) {
@@ -661,6 +764,61 @@ function onClick(event) {
     api.zoom(op === "in" ? 1.25 : 0.8);
   } else if (op === "update") updateDiagrams(lastVm.route.id);
   else if (op === "ask") askHead(lastVm.route.id, t.getAttribute("data-sys-id"), t.getAttribute("data-sys-label"));
+}
+
+function toggleGroup(id) {
+  anchorId = id;
+  if (collapsed.has(id)) collapsed.delete(id);
+  else collapsed.add(id);
+  redraw();
+}
+
+function drillInto(id) {
+  const g = String(id).replace(/^g:/, "");
+  collapsed.delete(g);
+  drill = drill.concat([g]);
+  lastLay = null;
+  fitNow();
+}
+
+function menuTarget(node) {
+  const id = node.getAttribute("data-sys");
+  const a = arch();
+  const d = a && a.details ? a.details[id] : null;
+  const n = (a ? viewOf(a, current).nodes : []).find((x) => x.id === id) || {};
+  return { id: id, label: n.label || (d && d.title) || id, kind: n.kind || (d && d.kind) || "node",
+    group: n.kind === "group" };
+}
+
+function menuAction(action, id) {
+  if (!lastVm) return;
+  const pid = lastVm.route.id;
+  if (action === "details") {
+    selected = null;
+    select(id);
+  } else if (action === "work") window.location.hash = "#/p/" + encodeURIComponent(pid) + "/work";
+  else if (action === "copy") {
+    const text = refOf(pid, "component", String(id).replace(/^[a-z]:/, ""));
+    if (globalThis.navigator && navigator.clipboard) navigator.clipboard.writeText(text).catch(() => null);
+  } else if (action === "ask") askHead(pid, id, "");
+  else if (action === "toggle") toggleGroup(String(id).replace(/^g:/, ""));
+  else if (action === "drill") drillInto(id);
+  else if (action === "views") {
+    selected = null;
+    select(id);
+  }
+}
+
+function bindMenu(svg) {
+  const host = svg.closest ? svg.closest(".sys") : null;
+  if (!host) return;
+  bindContextMenu(svg, menuTarget, (t, at) => {
+    const a = arch();
+    const d = a && a.details ? a.details[t.id] : null;
+    const gid = String(t.id).replace(/^g:/, "");
+    openMenu(host, at, t, d, { pid: lastVm.route.id, expanded: !collapsed.has(gid) && !t.id.startsWith("g:"),
+      canDrill: t.group || t.kind === "container", returnFocus: svg }, menuAction);
+  });
 }
 
 // Fit button and key: always the true fit of the whole drawing.

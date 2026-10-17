@@ -118,7 +118,7 @@ class SystemViewTest(unittest.TestCase):
         self.assertIn('data-sys-view="context"', more)
         self.assertIn("disabled", more)  # modules is not available
         self.assertNotIn('data-sys-view="containers"', more)
-        self.assertNotIn("classes", html)  # an id this file cannot draw
+        self.assertIn("classes", html)  # R11.110: the v2 diagrams are drawn
         self.assertIn('data-sys-view="flows"', html.split('<details')[0])
         self.assertNotIn("sys-more", self.out["ok"])
 
