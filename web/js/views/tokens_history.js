@@ -353,7 +353,7 @@ function xTicks(slots) {
 // action connect | disconnect | switch | check | login (login opens Terminal; the person finishes it in the browser).
 // Login and logout run the existing CLI flow; the page never sees a password or token. E-mails are masked on the
 // phone listener only (it may be reached over a tunnel); the main listener shows the full address.
-const acct = { data: null, at: 0, loading: false, error: false, busy: "", note: "" };
+const acct = { data: null, at: 0, loading: false, error: false, busy: "", note: "", adding: false };
 
 function loadAccounts() {
   if (acct.loading || typeof fetch === "undefined") return;
@@ -418,7 +418,8 @@ export function acctPanelHtml() {
       acctButton(a.id, "login", "Log in", a.label),
       acctButton(a.id, "check", "Check", a.label),
       a.enabled ? acctButton(a.id, "disconnect", "Disconnect", a.label) :
-        acctButton(a.id, "connect", "Connect", a.label)]
+        acctButton(a.id, "connect", "Connect", a.label),
+      a.active ? "" : acctButton(a.id, "remove", "Remove", a.label)]
       .join("");
     return '<li class="tk-acct-row">' +
       cell("Account", "", esc(a.label) + (a.active ? " (active)" : ""), a.path || "") +
@@ -430,19 +431,58 @@ export function acctPanelHtml() {
       cell("Actions", "tk-acct-actions", btns) + "</li>";
   }).join("");
   return '<ul class="spend-list tk-acct-list" aria-label="Claude accounts">' + head + rows + "</ul>" +
+    acctAddForm() +
     '<p class="page-note" role="status">' + esc(acct.note || acct.data.note || "") + "</p>";
+}
+
+function acctAddForm() {
+  if (!acct.adding) {
+    return '<p><button type="button" class="btn" data-tk="acct" data-act="add-open">+ Add account</button></p>';
+  }
+  return '<form class="tk-acct-add" data-act="add-form">' +
+    '<label>Label <input type="text" name="label" required></label> ' +
+    '<label>Type <select name="source"><option value="config-dir">Config dir</option>' +
+    '<option value="credentials-file">Credentials file</option></select></label> ' +
+    '<label>Path <input type="text" name="path" placeholder="~/.claude-work" required></label> ' +
+    '<button type="submit" class="btn">Add</button> ' +
+    '<button type="button" class="btn" data-tk="acct" data-act="add-cancel">Cancel</button></form>';
+}
+
+function acctAdd(form) {
+  if (acct.busy) return;
+  const f = form.elements;
+  const label = f.label.value.trim();
+  const id = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  acct.busy = "add";
+  const payload = {id: id, label: label, source: f.source.value, path: f.path.value.trim()};
+  postJson("/api/v1/usage/accounts", payload)
+    .then(function () {
+      acct.adding = false;
+      acct.note = "Done: added " + label + ".";
+    }).catch(function (err) {
+      acct.note = "Failed: " + (err && err.message ? err.message : "add");
+    }).finally(function () {
+      acct.busy = "";
+      acct.at = 0;
+      rerender();
+    });
 }
 
 function acctAction(el) {
   const act = el.getAttribute("data-act");
   const id = el.getAttribute("data-id");
+  if (act === "add-open" || act === "add-cancel") {
+    acct.adding = act === "add-open";
+    rerender();
+    return;
+  }
   if (act === "reload") {
     acct.at = 0;
     acct.error = false;
     rerender();
     return;
   }
-  if (acct.busy || !/^(connect|disconnect|switch|check|login)$/.test(act) || !id) return;
+  if (acct.busy || !/^(connect|disconnect|switch|check|login|remove)$/.test(act) || !id) return;
   acct.busy = act;
   postJson("/api/v1/usage/accounts/" + encodeURIComponent(id) + "/" + act, {}).then(function (res) {
     const d = res && res.data || {};
@@ -521,6 +561,13 @@ function keys(event) {
 
 if (typeof document !== "undefined" && typeof document.addEventListener === "function") {
   document.addEventListener("click", click);
+  document.addEventListener("submit", function (event) {
+    const form = event.target;
+    if (form && form.getAttribute && form.getAttribute("data-act") === "add-form") {
+      event.preventDefault();
+      acctAdd(form);
+    }
+  });
   document.addEventListener("keydown", keys);
   document.addEventListener("pointerover", tip);
   document.addEventListener("pointermove", tip);

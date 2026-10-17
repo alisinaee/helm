@@ -321,7 +321,7 @@ def limits_route(app, req, match):
     return limits_get(app, req, match) if req.method == "GET" else limits_put(app, req, match)
 
 
-ACCOUNT_ACTIONS = ("connect", "disconnect", "switch", "check", "login")
+ACCOUNT_ACTIONS = ("connect", "disconnect", "switch", "check", "login", "remove")
 
 
 def usage_accounts_get(app, req, match):
@@ -332,7 +332,8 @@ def usage_accounts_get(app, req, match):
 
 def usage_accounts_action(app, req, match):
     """POST /api/v1/usage/accounts/{id}/{action}: connect, disconnect, switch, check or login one account.
-    The write guard runs first. An unknown action or account id gives a 404 error envelope."""
+    The write guard runs first. An unknown action or account id gives a 404 error envelope. Main listener only."""
+    _phone_refuse(app)
     _write_guard(app, req)
     account_id, action = match.group("id"), match.group("action")
     if action not in ACCOUNT_ACTIONS:
@@ -345,9 +346,35 @@ def usage_accounts_action(app, req, match):
         result = usage_accounts.connect(account_id, src="ui")
     elif action == "disconnect":
         result = usage_accounts.disconnect(account_id, src="ui")
+    elif action == "remove":
+        result = usage_accounts.remove(account_id, src="ui")
     else:
         result = usage_accounts.switch(account_id, src="ui")
     return json_reply(200, result)
+
+
+def _phone_refuse(app):
+    if app.cmd_source == "phone":
+        raise RoadmapError("forbidden", "accounts can only be changed from the main board page", EXIT_ERROR)
+
+
+def usage_accounts_add(app, req, match):
+    """POST /api/v1/usage/accounts {id, label, source, path, keychainService}: add one account. Main listener only."""
+    _phone_refuse(app)
+    _write_guard(app, req)
+    try:
+        body = security.strict_json_loads(req.read_body().decode("utf-8"))
+    except ValueError:
+        raise RoadmapError("invalid_input", "the body must be JSON", EXIT_USAGE)
+    if not isinstance(body, dict):
+        raise RoadmapError("invalid_input", "the body must be a JSON object", EXIT_USAGE)
+    result = usage_accounts.add(body.get("id"), label=body.get("label"), source=body.get("source") or "config-dir",
+                                path=body.get("path"), keychain_service=body.get("keychainService"), src="ui")
+    return json_reply(200, result)
+
+
+def usage_accounts_route(app, req, match):
+    return usage_accounts_get(app, req, match) if req.method == "GET" else usage_accounts_add(app, req, match)
 
 
 def cmd(app, req, match):
@@ -990,7 +1017,7 @@ ROUTES = (
     (re.compile(r"/api/v1/usage"), ("GET",), usage_get),
     (re.compile(r"/api/v1/limits"), ("GET", "PUT", "POST"), limits_route),
     (re.compile(r"/api/v1/usage/sync"), ("POST",), usage_sync),
-    (re.compile(r"/api/v1/usage/accounts"), ("GET",), usage_accounts_get),
+    (re.compile(r"/api/v1/usage/accounts"), ("GET", "POST"), usage_accounts_route),
     (re.compile(r"/api/v1/usage/accounts/(?P<id>[^/]+)/(?P<action>[a-z]+)"), ("POST",), usage_accounts_action),
     (re.compile(r"/api/v1/cmd"), ("POST",), cmd),
     (re.compile(r"/api/v1/log"), ("POST",), log_post),
