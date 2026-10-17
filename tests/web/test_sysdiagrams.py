@@ -114,6 +114,7 @@ CASES = {
     "bigER": {"fn": "erSvg", "data": big_er(), "time": True},
     "bigCls": {"fn": "classSvg", "data": big_cls(), "time": True},
     "modCls": {"fn": "classSvg", "data": mod_cls(), "opts": {"aspect": 1.78}},
+    "five": {"fn": "classSvg", "data": mod_cls(5, 14), "opts": {"aspect": 1300 / 560}},
     "modOpen": {"fn": "classSvg", "data": mod_cls(), "opts": {"aspect": 1.78, "open": ["m3"]}},
 }
 for _fn in ("erSvg", "stateSvg", "usecaseSvg", "activitySvg", "deploymentSvg", "classSvg"):
@@ -209,6 +210,15 @@ class SysDiagramsTest(unittest.TestCase):
         self.assertEqual(r["inner"].count("<path class=\"sys-e"), 80)
         self.assertRegex(r["inner"], r'data-from="g:m0" data-to="g:m1"')
         self.assertIn("(2)", r["inner"])
+
+    def test_five_modules_in_rows(self):
+        r = self.out["five"]
+        self.assertEqual(len(r["boxes"]), 5)
+        ys = sorted({b["y"] for b in r["boxes"]})
+        self.assertLessEqual(len(ys), 2)
+        self.assertGreaterEqual(max(sum(1 for b in r["boxes"] if b["y"] == y) for y in ys), 3)
+        self.assertRegex(r["inner"], r'data-from="g:m0" data-to="g:m1"')
+        self.assertIn("uses mod2 (2)", r["inner"])
 
     def test_module_expand(self):
         r = self.out["modOpen"]
