@@ -523,7 +523,28 @@ def page(events, opts, now_ms=None):
     if not before:
         scoped = [e for e in base if (kinds is None or e["kind"] in kinds) and (actors is None or e["actor"] in actors)]
         body["hist"] = histogram(scoped, now_ms)
+        body["tl"] = timeline_bins(scoped, lo, hi, now_ms)
     return body
+
+
+TL_BINS = 250
+
+
+def timeline_bins(events, lo, hi, now_ms=None):
+    """Whole-range bins for the Activity timeline strip: {t0, t1, first, n, kinds: {kind: [count per bin]}}. t0 is the
+    range start (or the oldest event), t1 the range end (or now)."""
+    in_range = [e for e in events if (lo is None or e["ms"] >= lo) and (hi is None or e["ms"] <= hi)]
+    first = min((e["ms"] for e in in_range), default=None)
+    t1 = hi if hi is not None else ((now_ms or int(time.time() * 1000)) // 60000) * 60000
+    t0 = lo if lo is not None else (first if first is not None else t1 - 86400000)
+    if t1 <= t0:
+        t1 = t0 + 60000
+    kinds = {}
+    for event in in_range:
+        index = min(TL_BINS - 1, int((event["ms"] - t0) * TL_BINS // (t1 - t0)))
+        if index >= 0:
+            kinds.setdefault(event["kind"], [0] * TL_BINS)[index] += 1
+    return {"t0": t0, "t1": t1, "first": first, "n": TL_BINS, "kinds": kinds}
 
 
 def histogram(events, now_ms=None):

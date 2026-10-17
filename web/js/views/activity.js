@@ -203,7 +203,8 @@ function onClick(event) {
     st.sel = st.sel === id ? null : id;
     repaint();
   } else if (what === "tl") {
-    pickOnTimeline(el.getAttribute("data-id"));
+    pickOnTimeline(el.getAttribute("data-id"), Number(el.getAttribute("data-from")),
+      Number(el.getAttribute("data-to")));
   } else if (what === "close") {
     const id = st.sel;
     st.sel = null;
@@ -345,9 +346,21 @@ function onTip(event) {
   tipEl.style.top = Math.max(4, event.clientY + 16) + "px";
 }
 
-function pickOnTimeline(id) {
+function pickOnTimeline(id, from, to) {
   const st = current();
   if (!st) return;
+  if (!id) {
+    const hit = st.events.find(function (e) { return e.ms >= from && e.ms <= to; });
+    if (!hit) {
+      setFilters(function (f) {
+        f.preset = "custom";
+        f.from = from;
+        f.to = to;
+      });
+      return;
+    }
+    id = hit.id;
+  }
   st.sel = id;
   repaint();
   const row = document.getElementById("hx-r-" + id);
