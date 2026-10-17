@@ -10,7 +10,7 @@ import { SECTIONS, SETTINGS, sectionById } from "../routes.js";
 import { sectionHash } from "../router.js";
 import { panelIsOpen } from "../state.js";
 import { showToast } from "./toast.js";
-import { weekKnown, weeklyStopRow } from "./limits.js";
+import { weeklyStopRow } from "./limits.js";
 
 const THEME_LABEL = { auto: "Auto", dark: "Dark", light: "Light" };
 const MARK_LABEL = "I am seeing a bug here";
@@ -20,12 +20,6 @@ const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\])$/;
 export function markAllowed() {
   if (typeof window === "undefined" || typeof location === "undefined") return false;
   return LOCAL_HOST.test(location.hostname) && Boolean(csrfToken());
-}
-
-// Phone width (under 600 px): the top bar has no room for Mark or Cmd+K, and a phone keyboard has no Cmd key.
-function phoneWidth() {
-  return typeof window !== "undefined" && typeof window.matchMedia === "function" &&
-    window.matchMedia("(max-width: 599px)").matches;
 }
 
 // Mark this moment in the debug log (R7.16 step 5b). mark() records the route and the ref of the focused row.
@@ -160,11 +154,63 @@ function enterHtml(vm) {
     "Enter usage</a>";
 }
 
+// Stop for one window from the meter rows, read defensively: a five-hour row (window five_hour / 5h) or, when
+// there is none, the weekly stop. Null when no stop is set.
+function stopFor(vm, win) {
+  const rows = limitRows(vm.meterRows) || [];
+  const stops = vm.limits && vm.limits.stops ? vm.limits.stops : (vm.stops || null);
+  if (stops && typeof stops[win] === "number") return stops[win];
+  if (win === "five") {
+    const hit = rows.filter(function (r) {
+      return typeof r.limit === "number" && /^(five_hour|5h|five)/.test(String(r.window || ""));
+    });
+    if (hit.length) return hit.reduce(function (a, b) { return b.limit < a.limit ? b : a; }).limit;
+  }
+  const row = bindingStopRow(rows);
+  return row && typeof row.limit === "number" ? row.limit : null;
+}
+
+function clockOf(iso) {
+  const at = iso ? new Date(iso) : null;
+  if (!at || isNaN(at.getTime())) return "";
+  const pad = function (n) { return (n < 10 ? "0" : "") + n; };
+  return pad(at.getHours()) + ":" + pad(at.getMinutes());
+}
+
+// Tone of a mini bar: danger at the stop, warning from stop - 10, else none.
+export function miniTone(pct, stop) {
+  if (typeof pct !== "number" || typeof stop !== "number") return "";
+  if (pct >= stop) return " tone-danger";
+  return pct >= stop - 10 ? " tone-warning" : "";
+}
+
+function miniHtml(vm, id, label, long, pct, stop, resets) {
+  const known = typeof pct === "number";
+  const tone = miniTone(pct, stop);
+  const text = known ? fmtPercent(pct) : "unknown";
+  const when = clockOf(resets);
+  const title = long + " " + text + (stop !== null ? ", stop at " + fmtPercent(stop) : ", no stop") +
+    (when ? ", resets " + when : "") + (ageText(vm.usage) ? "; updated " + ageText(vm.usage) : "");
+  const tick = stop !== null ? '<span class="mini-tick" data-pct="' + esc(Math.min(100, stop)) + '"></span>' : "";
+  return '<span class="mini' + (known ? "" : " is-unknown") + '" data-win="' + id + '" title="' + esc(title) + '">' +
+    '<span class="mini-l">' + label + '</span><span class="meter' + tone + '"><span class="meter-fill" data-pct="' +
+    (known ? esc(Math.min(100, Math.max(0, pct))) : 0) + '"></span>' + tick + '</span><span class="mini-v">' +
+    esc(text) + "</span></span>";
+}
+
+// The usage widget: account chip (more than one account only), 5h and W mini bars, one link to Tokens > Limits.
 function metersHtml(vm) {
-  const stale = Boolean(vm.usage && vm.usage.stale === true);
-  return '<span class="top-meters' + (stale ? " chip-warning" : "") + '" title="' +
-    esc(meterTitle(vm.usage)) + '">' + esc(meterText(vm.usage, vm.meterRows)) + "</span>" +
-    (weekKnown(vm.usage) ? "" : enterHtml(vm));
+  const u = vm.usage || null;
+  const stale = Boolean(u && (u.stale === true || (typeof u.ageNow === "number" && u.ageNow > 900)));
+  const accts = Array.isArray(vm.accounts) ? vm.accounts : [];
+  const chip = accts.length > 1 ? '<span class="chip top-acct" title="Account">' +
+    esc(String(accts[0].name || accts[0].id || "account").replace(/(.{2}).*(.{2})/, "$1…$2")) + "</span>" : "";
+  const href = sectionHash(vm.route, "tokens") + "/limits";
+  return chip + '<a class="top-meters' + (stale ? " is-stale" : "") + '" href="' + esc(href) +
+    '" data-focus="usage" aria-label="Usage and limits">' +
+    miniHtml(vm, "5h", "5h", "5 hours", u ? u.fiveHourPercent : null, stopFor(vm, "five"), u && u.fiveHourResetsAt) +
+    miniHtml(vm, "w", "W", "Week", u ? u.weeklyPercent : null, stopFor(vm, "week"), u && u.weeklyResetsAt) +
+    (stale ? '<span class="dot top-stale" aria-hidden="true"></span>' : "") + "</a>";
 }
 
 function connHtml(conn) {
@@ -195,28 +241,19 @@ function panelToggleHtml(vm) {
     '<use href="/icons.svg#i-panel"></use></svg></button>';
 }
 
-// The command palette button (Cmd+K or Ctrl+K opens it too; keys.js handles data-action="palette-open").
-function paletteHtml() {
-  if (phoneWidth()) return "";
-  return '<button type="button" class="btn" data-action="palette-open" data-focus="palette" aria-haspopup="dialog"' +
-    ' aria-label="Command palette (Cmd+K or Ctrl+K)" title="Command palette (Cmd+K or Ctrl+K)">⌘K</button>';
-}
-
-// The Mark button (localhost only): flag icon and the word, with the full sentence in the name (keys.js handles it).
-function markHtml() {
-  if (!markAllowed() || phoneWidth()) return "";
-  return '<button type="button" class="btn" data-action="mark-bug" data-focus="mark-bug"' +
-    ' aria-label="Mark: ' + MARK_LABEL + '" title="' + MARK_LABEL + ' (m)">' +
-    '<svg class="ico" aria-hidden="true" focusable="false"><use href="/icons.svg#i-flag"></use></svg>Mark</button>';
+// More menu (native details): the theme cycle lives here. Cmd+K and m stay keys and palette commands.
+function moreHtml(theme) {
+  return '<details class="top-more"><summary class="btn" aria-label="More" title="More">' +
+    '<svg class="ico" aria-hidden="true" focusable="false"><use href="/icons.svg#i-more"></use></svg></summary>' +
+    '<div class="top-menu"><button type="button" class="btn" data-action="cycle-theme" data-focus="theme"' +
+    ' aria-label="Change theme">Theme: ' + esc(themeLabel(theme)) + "</button></div></details>";
 }
 
 export function topbarView(vm) {
   const theme = vm.theme || "auto";
   return '<div class="top-row">' + crumbHtml(vm) +
-    '<div class="top-tools">' + controlHtml(vm) + metersHtml(vm) + connHtml(vm.conn) + markHtml() + paletteHtml() +
-    '<button type="button" class="btn" data-action="cycle-theme" data-focus="theme" aria-label="Theme: ' +
-    esc(themeLabel(theme)) + '. Change theme">' + esc(themeLabel(theme)) + "</button>" +
+    '<div class="top-tools">' + controlHtml(vm) + metersHtml(vm) + connHtml(vm.conn) +
     '<button type="button" class="btn" data-action="help-open" data-focus="help" aria-haspopup="dialog"' +
-    ' aria-label="Keyboard shortcuts">?</button>' + panelToggleHtml(vm) +
+    ' aria-label="Keyboard shortcuts">?</button>' + panelToggleHtml(vm) + moreHtml(theme) +
     "</div></div>";
 }

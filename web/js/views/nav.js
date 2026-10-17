@@ -16,6 +16,41 @@ function icon(name) {
     '"></use></svg>';
 }
 
+const STALE_MS = 30 * 60 * 1000;
+
+// Running jobs seen recently: running or claimed, ignoring a job whose heartbeat is older than 30 minutes
+// (a job with no heartbeat field is kept).
+// A snapshot without job rows falls back to its own running count.
+function liveRunning(snap) {
+  if (!Array.isArray(snap.running)) return snap.runningCount || 0;
+  const now = Date.now();
+  return snap.running.filter(function (j) {
+    const at = j.updatedMs || j.heartbeatMs;
+    return typeof at !== "number" || now - at <= STALE_MS;
+  }).length;
+}
+
+const SEEN_KEY = "helm.nav.seen";
+
+function readSeen() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SEEN_KEY) || "{}");
+    return raw && typeof raw === "object" ? raw : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+// Opening a section marks its current count seen (called by navView for the current section).
+function markSeen(id, n) {
+  try {
+    const seen = readSeen();
+    if (seen[id] === n) return;
+    seen[id] = n;
+    localStorage.setItem(SEEN_KEY, JSON.stringify(seen));
+  } catch (e) { /* storage blocked: no new state */ }
+}
+
 // Counts for the badges. Scope is the project in a project route, else every registered project.
 export function countsFor(vm) {
   const snaps = vm.snapshotList || [];
@@ -40,7 +75,7 @@ export function countsFor(vm) {
     blockers += (snap.issues || []).filter(function (issue) {
       return issue.kind === "blocker";
     }).length;
-    running += snap.runningCount || 0;
+    running += liveRunning(snap);
     tasksNeedingYou += snap.tasks.filter(function (t) {
       return t.needsUser;
     }).length;
@@ -54,30 +89,35 @@ export function countsFor(vm) {
     issues: blockers, head: headAsks };
 }
 
-function badgeFor(section, counts) {
-  if (section.id === "inbox" && counts.inbox > 0) {
-    return '<span class="nav-b" data-tone="neutral">' + esc(counts.inbox) +
-      '<span class="sr-only"> waiting for you</span></span>';
-  }
-  if (section.id === "head" && counts.head > 0) {
-    return '<span class="nav-b" data-tone="neutral">' + esc(counts.head) +
-      '<span class="sr-only"> open asks</span></span>';
-  }
-  // Work badge (R7.97): tasks that need you plus open blockers, which now live on the Work board.
-  if (section.id === "work" && counts.work + counts.issues > 0) {
-    return '<span class="nav-b" data-tone="danger">' + esc(counts.work + counts.issues) +
-      '<span class="sr-only"> tasks need you or open blockers</span></span>';
-  }
-  if (section.id === "agents" && counts.agents > 0) {
-    return '<span class="nav-b" data-tone="success">' + esc(counts.agents) +
-      '<span class="sr-only"> running</span></span>';
-  }
+const BADGES = {
+  inbox: { key: "inbox", tone: "neutral", word: "waiting for you" },
+  head: { key: "head", tone: "neutral", word: "open asks" },
+  work: { key: "work", tone: "neutral", word: "need you" },
+  agents: { key: "agents", tone: "success", word: "running" },
+};
+
+function badgeFor(section, counts, seen, current) {
   if (section.id === "tokens" && counts.tokens) {
     const label = counts.tokens === "danger" ? "limit reached" : "limit warning";
-    return '<span class="nav-b" data-tone="' + esc(counts.tokens) + '" data-dot="1">' +
+    return '<span class="nav-b" data-tone="' + esc(counts.tokens) + '" data-dot="1" title="' + label + '">' +
       '<span class="sr-only">' + esc(label) + "</span></span>";
   }
-  return "";
+  const def = BADGES[section.id];
+  if (!def) return "";
+  let n = counts[def.key] || 0;
+  let tone = def.tone;
+  let word = def.word;
+  if (section.id === "work") {
+    n = counts.work + counts.issues;
+    tone = counts.issues > 0 ? "danger" : "neutral";
+    word = counts.issues > 0 ? "need you or blocked" : "need you";
+  }
+  if (n <= 0) return "";
+  if (current) markSeen(section.id, n);
+  const fresh = !current && typeof seen[section.id] === "number" && n > seen[section.id];
+  return '<span class="nav-b" data-tone="' + tone + '"' + (fresh ? ' data-new="1"' : "") + ' title="' + n + " " +
+    word + '"><span aria-hidden="true">' + (n > 99 ? "99+" : n) + '</span><span class="sr-only">' + n + " " +
+    word + "</span></span>";
 }
 
 function linkHtml(vm, section, counts) {
@@ -85,7 +125,7 @@ function linkHtml(vm, section, counts) {
   return '<a class="nav-i" href="' + esc(sectionHash(vm.route, section.id)) + '"' +
     (current ? ' aria-current="page"' : "") + ' title="' + esc(section.label) + '">' +
     icon(section.icon) + '<span class="nav-l">' + esc(section.label) + "</span>" +
-    badgeFor(section, counts) + "</a>";
+    badgeFor(section, counts, readSeen(), current) + "</a>";
 }
 
 export function navView(vm) {
@@ -98,7 +138,7 @@ export function navView(vm) {
     '<div class="nav-list">' + list + "</div>" +
     '<div class="nav-foot">' + linkHtml(vm, SETTINGS, counts) +
     '<button type="button" class="nav-collapse" data-action="nav-mini" aria-label="' +
-    (mini ? "Expand menu" : "Collapse menu") + '">' + icon("collapse") +
+    (mini ? "Expand menu" : "Collapse menu") + '">' + icon(mini ? "expand" : "collapse") +
     '<span class="nav-l">' + (mini ? "Expand" : "Collapse") + "</span></button></div>";
 }
 
