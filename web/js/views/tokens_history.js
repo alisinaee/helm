@@ -476,7 +476,8 @@ function acctAddForm() {
     esc(defaultPath) + '" required></label> ' :
     '<button type="button" class="btn" data-tk="acct" data-act="advanced-toggle">Advanced</button>';
   return '<form class="tk-acct-add" data-act="add-form" autocomplete="off">' +
-    '<label>Label <input type="text" name="label" required autocomplete="off" value="' + esc(acct.lastLabel || "") + '"></label>' +
+    '<label>Label <input type="text" name="label" required autocomplete="off" value="' +
+      esc(acct.lastLabel || "") + '"></label>' +
     advanced +
     '<button type="submit" class="btn">Add</button> ' +
     '<button type="button" class="btn" data-tk="acct" data-act="add-cancel">Cancel</button></form>';
