@@ -31,8 +31,9 @@ class SupervisorJsonTests(HomeCase):
         return next(r for r in head_svc.rows(self.data) if r["id"] == eid)
 
     def test_json_project_tick_creates_no_db_and_folds_done_task_ask(self):
-        self.write_tasks("done")
+        self.write_tasks("doing")
         eid = self.ask("export and import the roadmap", ["R7.44"])
+        self.write_tasks("done")
         report = supervisor.tick(self.data)
         self.assertFalse(os.path.exists(self.db_path))
         self.assertTrue(report["ran"])
