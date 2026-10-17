@@ -9,7 +9,7 @@ import os
 import plistlib
 import re
 
-from roadmap.services import system
+from roadmap.services import system, system_arch
 
 MAX_CLASS_NODES = 80
 MAX_CASES = 60
@@ -18,6 +18,7 @@ MAX_STEPS = 40
 MAX_RUN = 6
 CAP_LIST = 8
 MAX_SCAN = 600
+MAX_IMPORT_EDGES = 400
 
 _JS_EXT = (".js", ".mjs", ".ts", ".tsx", ".jsx")
 _JS_CLASS = re.compile(r"^\s*export\s+(?:default\s+)?class\s+(\w+)(?:\s+extends\s+([\w.]+))?", re.M)
@@ -127,6 +128,25 @@ def _base_name(base):
     return None
 
 
+def _import_edges(root, files, keep):
+    """kind "imports" edges between kept JS module nodes (ids mod:<path>), resolved with the arch import rules."""
+    known, edges, seen = set(files), [], set()
+    for path in sorted(files):
+        nid = "mod:" + path
+        if nid not in keep or not path.endswith(_JS_EXT) or _is_test(path) or ".test." in path:
+            continue
+        targets, _ = system_arch._js_imports(_text(root, path), path, known)
+        for target in targets:
+            tid = "mod:" + target
+            if target == path or tid not in keep or (nid, tid) in seen:
+                continue
+            seen.add((nid, tid))
+            edges.append({"from": nid, "to": tid, "kind": "imports", "label": "imports"})
+            if len(edges) >= MAX_IMPORT_EDGES:
+                return edges
+    return edges
+
+
 def classes(root, files, mapped):
     owner, names = _owner(files, mapped)
     nodes, pending = [], []
@@ -172,6 +192,7 @@ def classes(root, files, mapped):
         for base in bases:
             if base in byname and byname[base] != nid:
                 edges.append({"from": nid, "to": byname[base], "kind": "extends", "label": "extends"})
+    edges.extend(_import_edges(root, files, keep))
     groups = [{"id": g, "label": names.get(g, "Other" if g == "other" else g)} for g in order
               if g in {n["group"] for n in nodes}]
     out = {"groups": groups, "nodes": nodes, "edges": edges}

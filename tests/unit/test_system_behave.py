@@ -64,6 +64,21 @@ class ClassesTest(Base):
         self.assertIn("x", [n["id"] for n in d["nodes"]])
         self.assertEqual(d["edges"], [])
 
+    def test_import_edges_between_module_nodes(self):
+        self.put("web/js/a.js", "import { load } from './b.js';\nimport React from 'react';\n"
+                 "export function run() { return load(); }\n")
+        self.put("web/js/b.js", "export function load() { return 1; }\n")
+        self.put("web/js/c.js", "export function other() { return 2; }\n")
+        d = self.run_fn(sb.classes)
+        ids = {n["id"] for n in d["nodes"]}
+        imports = [(e["from"], e["to"]) for e in d["edges"] if e["kind"] == "imports"]
+        self.assertTrue(d["edges"])
+        self.assertIn(("mod:web/js/a.js", "mod:web/js/b.js"), imports)
+        self.assertEqual(len(imports), 1)
+        for e in d["edges"]:
+            self.assertIn(e["from"], ids)
+            self.assertIn(e["to"], ids)
+
 
 class DeploymentTest(Base):
     def test_sources(self):
