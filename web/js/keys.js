@@ -10,6 +10,7 @@ import { SECTIONS, SETTINGS } from "./routes.js";
 import { isSheetWidth, loadUi, panelIsOpen, updateUi } from "./state.js";
 import { triggerUndo } from "./views/toast.js";
 import { isPaletteKey } from "./views/palette.js";
+import { navNarrow, navOverOpen, setNavOver } from "./views/nav.js";
 import { markAllowed, markBug } from "./views/topbar.js";
 
 // Single-key shortcuts (WCAG 2.1.4) can be turned off in Settings > Keyboard shortcuts. The choice lives under its
@@ -105,6 +106,10 @@ function goToSection(key) {
 }
 
 function onKeydown(event) {
+  if (event.key === "Escape" && navOverOpen()) {
+    toggleNavOver(false);
+    return;
+  }
   // Cmd+K or Ctrl+K opens the command palette, also while its own search field has focus (it then closes).
   if (isPaletteKey(event)) {
     event.preventDefault();
@@ -188,10 +193,31 @@ function onShellClick(event) {
     markBug();
   } else if (action === "palette-open") {
     hooks.openPalette();
+  } else if (action === "nav-over") {
+    toggleNavOver(!navOverOpen());
   }
+}
+
+// Narrow window: the rail expands as an overlay (data-nav-over on the app root), closed by Esc or an outside click.
+function toggleNavOver(open) {
+  setNavOver(open);
+  const root = document.querySelector(".app");
+  if (root) root.toggleAttribute("data-nav-over", open);
+  hooks.rerender();
+}
+
+function onOutsideClick(event) {
+  if (navOverOpen() && !(event.target.closest && event.target.closest(".nav"))) toggleNavOver(false);
 }
 
 export function initKeys() {
   document.addEventListener("keydown", onKeydown);
   document.addEventListener("click", onShellClick);
+  document.addEventListener("click", onOutsideClick);
+  if (typeof window.matchMedia === "function") {
+    window.matchMedia("(max-width: 1199px)").addEventListener("change", function () {
+      if (!navNarrow()) toggleNavOver(false);
+      else hooks.rerender();
+    });
+  }
 }

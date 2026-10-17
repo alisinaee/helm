@@ -6,6 +6,22 @@ import { sectionHash } from "../router.js";
 import { SECTIONS, SETTINGS } from "../routes.js";
 
 let moreOpen = false;
+let navOver = false;
+const NARROW = "(max-width: 1199px)";
+
+// Same breakpoint as shell.css: below 1200 px the rail is drawn collapsed by CSS whatever the user toggle says.
+export function navNarrow() {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" &&
+    window.matchMedia(NARROW).matches;
+}
+
+export function navOverOpen() {
+  return navOver && navNarrow();
+}
+
+export function setNavOver(open) {
+  navOver = Boolean(open);
+}
 
 export function toggleMore() {
   moreOpen = !moreOpen;
@@ -130,14 +146,17 @@ function linkHtml(vm, section, counts) {
 
 export function navView(vm) {
   const counts = countsFor(vm);
-  const mini = vm.ui.navMini;
+  const narrow = navNarrow();
+  const over = narrow && navOver;
+  // Effective state: the user's toggle or a narrow window. A narrow window opens as an overlay, not a push.
+  const mini = (vm.ui.navMini || narrow) && !over;
   const list = SECTIONS.map(function (s) {
     return linkHtml(vm, s, counts);
   }).join("");
   return '<p class="nav-brand" title="Helm">' + (mini ? "H" : "Helm") + "</p>" +
     '<div class="nav-list">' + list + "</div>" +
     '<div class="nav-foot">' + linkHtml(vm, SETTINGS, counts) +
-    '<button type="button" class="nav-collapse" data-action="nav-mini" aria-label="' +
+    '<button type="button" class="nav-collapse" data-action="' + (narrow ? "nav-over" : "nav-mini") + '" aria-label="' +
     (mini ? "Expand menu" : "Collapse menu") + '">' + icon(mini ? "expand" : "collapse") +
     '<span class="nav-l">' + (mini ? "Expand" : "Collapse") + "</span></button></div>";
 }
