@@ -849,6 +849,36 @@ export function deploymentSvg(dep, opts) {
 
 // ---------------------------------------------------------------- Class / module
 
+const MODAUTO = 12;
+const MODW = 190;
+const MODH = 56;
+const GX = 40;
+const GY = 34;
+const BP = 14;
+const BHEAD = 24;
+
+// Shelf-pack boxes (each with w, h) left to right into rows no wider than lim; returns positions and extent.
+export function shelf(list, lim, gx, gy) {
+  const at = [];
+  let x = 0;
+  let y = 0;
+  let rowH = 0;
+  let w = 0;
+  list.forEach((b) => {
+    if (x > 0 && x + b.w > lim) {
+      x = 0;
+      y += rowH + gy;
+      rowH = 0;
+    }
+    at.push([x, y]);
+    x += b.w + gx;
+    w = Math.max(w, x - gx);
+    rowH = Math.max(rowH, b.h);
+  });
+  return { at, w, h: y + rowH };
+}
+
+
 export function classSvg(cls, opts) {
   const c = ctx(opts);
   const nodes = uniq(arr(cls && cls.nodes), "id");
@@ -908,68 +938,105 @@ export function classSvg(cls, opts) {
       order.push(it.group);
     }
   });
-  const LIM = 1200;
-  const GX = 40;
-  const GY = 34;
-  const BP = 14;
-  const BHEAD = 24;
-  const bands = [];
-  const parts = [];
-  let y = 0;
-  let maxW = 0;
-  const bandParts = [];
+  const mods = arr(opts && opts.open instanceof Set ? [...opts.open] : opts && opts.open).map(String);
+  const openSet = new Set(mods);
+  const auto = items.length > MODAUTO && order.length > 1;
+  const aspect = opts && opts.aspect > 0 ? opts.aspect : 1.78;
+  const isOpen = (g) => !auto || openSet.has(g);
+  const blocks = [];
+  const owner = new Map();
   order.forEach((g) => {
     const list = items.filter((it) => it.group === g);
     if (!list.length) return;
+    const label = g ? gl.get(g) || g : "(none)";
+    if (!isOpen(g)) {
+      list.forEach((it) => owner.set(it.id, "g:" + g));
+      blocks.push({ g, label, list, open: false, w: MODW, h: MODH, id: "g:" + g });
+      return;
+    }
     list.sort((a, b) => a.depth - b.depth || (a.label < b.label ? -1 : a.label > b.label ? 1 : 0));
-    const lines = [];
-    let cur = null;
-    let curDepth = -1;
-    list.forEach((it) => {
-      if (!cur || it.depth !== curDepth || cur.w + it.w + GX > LIM) {
-        cur = { list: [], w: -GX, h: 0 };
-        lines.push(cur);
-        curDepth = it.depth;
-      }
-      cur.list.push(it);
-      cur.w += it.w + GX;
-      cur.h = Math.max(cur.h, it.h);
+    const area = list.reduce((t, it) => t + (it.w + GX) * (it.h + GY), 0);
+    const pos = shelf(list, Math.max(300, Math.sqrt(area * aspect)), GX, GY);
+    list.forEach((it, k) => {
+      it.x = pos.at[k][0] + BP;
+      it.y = pos.at[k][1] + BHEAD + BP;
     });
-    const bw = Math.max(...lines.map((l) => l.w)) + 2 * BP;
-    let yy = y + BHEAD + BP;
-    lines.forEach((l) => {
-      let xx = BP;
-      l.list.forEach((it) => {
-        it.x = xx;
-        it.y = yy;
-        xx += it.w + GX;
-      });
-      yy += l.h + GY;
+    blocks.push({ g, label, list, open: true, w: Math.max(pos.w + 2 * BP, MODW), h: pos.h + BHEAD + 2 * BP,
+      id: "g:" + g });
+  });
+  const total = blocks.reduce((t, b) => t + (b.w + 24) * (b.h + 24), 0);
+  const top = shelf(blocks, Math.max(MODW + 24, Math.sqrt(total * aspect)), 24, 24);
+  blocks.forEach((b, k) => {
+    b.x = top.at[k][0];
+    b.y = top.at[k][1];
+    if (b.open) b.list.forEach((it) => {
+      it.x += b.x;
+      it.y += b.y;
     });
-    const bh = yy - GY + BP - y;
-    const label = g ? gl.get(g) || g : "";
-    bands.push({ id: "g:" + g, x: 0, y, w: bw, h: bh });
-    bandParts.push('<g><title>' + esc(label) + '</title><rect x="0" y="' + f(y) + '" width="' + f(bw) + '" height="' +
-        f(bh) + '" rx="8" fill="none" stroke="' +
-      v("--track") + '"/>' + (label ? text(BP, y +
-          17, clip(label, Math.floor((bw - 2 * BP) / CH)), 12, v("--text-2"), ' font-weight="600"') : "") + "</g>");
-    maxW = Math.max(maxW, bw);
-    y += bh + 24;
+  });
+  const bands = [];
+  const parts = [];
+  const boxes = [];
+  const bandParts = blocks.map((b) => {
+    const tog = '<g class="sys-tog" data-sys-tog="cls:' + esc(b.g) + '" tabindex="0" role="button" aria-expanded="' +
+        b.open + '" aria-label="' + esc((b.open ? "Collapse " : "Expand ") + b.label) +
+        '"><rect x="' + f(b.x + b.w - 26) + '" y="' + f(b.y + 4) + '" width="20" height="20" rx="4" fill="' +
+        v("--surface-1") + '" stroke="' + v("--line") +
+        '"/><path d="M' + f(b.x + b.w - 22) + " " + f(b.y + 14) + "h12" + (b.open ? "" : "M" + f(b.x + b.w - 16) + " " +
+        f(b.y + 8) + "v12") + '" stroke="' + v("--text-2") + '" stroke-width="1.5" fill="none"/></g>';
+    const ttl = clip(b.label, Math.floor((b.w - 40) / CH));
+    if (auto) {
+      if (b.open) bands.push({ id: b.id, x: b.x, y: b.y, w: b.w, h: b.h });
+      else boxes.push({ id: b.id, x: b.x, y: b.y, w: b.w, h: b.h });
+    } else bands.push({ id: b.id, x: b.x, y: b.y, w: b.w, h: b.h });
+    if (!b.open) {
+      return '<g class="sys-mod"><title>' + esc(b.label + ": " + b.list.length + " classes") + '</title><rect x="' +
+        f(b.x) + '" y="' + f(b.y) + '" width="' + f(b.w) + '" height="' + f(b.h) + '" rx="8" fill="' +
+        v("--surface-2") + '" stroke="' + v("--line") + '"/>' + text(b.x + 12, b.y + 24, ttl, 13, v("--text-1"),
+        ' font-weight="700"') + text(b.x + 12, b.y + 44, b.list.length + (b.list.length === 1 ? " class" : " classes"),
+        12, v("--text-2")) + tog + "</g>";
+    }
+    return "<g><title>" + esc(b.label) + '</title><rect x="' + f(b.x) + '" y="' + f(b.y) + '" width="' + f(b.w) +
+      '" height="' + f(b.h) + '" rx="8" fill="none" stroke="' + v("--track") + '"/>' +
+      text(b.x + BP, b.y + 17, ttl, 12, v("--text-2"), ' font-weight="600"') + (auto ? tog : "") + "</g>";
   });
   parts.push(bandParts.join(""));
+  const place = new Map();
+  blocks.forEach((b) => {
+    if (!b.open) place.set(b.id, { id: b.id, label: b.label, x: b.x, y: b.y, w: b.w, h: b.h });
+  });
+  items.forEach((it) => {
+    if (!owner.has(it.id)) place.set(it.id, it);
+  });
+  const agg = new Map();
   es.forEach((e) => {
-    const a = byId.get(String(e.from));
-    const b = byId.get(String(e.to));
-    const isExt = e.kind === "extends";
-    const attrs = 'stroke="' + v("--text-2") + '" stroke-width="1.2"' + (isExt ? ' marker-end="url(#sysd-tri)"' :
+    const fa = owner.get(String(e.from)) || String(e.from);
+    const fb = owner.get(String(e.to)) || String(e.to);
+    if (fa === fb) return;
+    const k = fa + "\u0001" + fb + "\u0001" + (e.kind === "extends" ? "x" : "u");
+    const cur = agg.get(k);
+    if (cur) cur.n++;
+    else agg.set(k, { a: fa, b: fb, e, n: 1, merged: fa !== String(e.from) || fb !== String(e.to) });
+  });
+  agg.forEach((r) => {
+    const a = place.get(r.a);
+    const b = place.get(r.b);
+    const isExt = r.e.kind === "extends";
+    const sw = r.n > 1 ? f(Math.min(3, 1.2 + Math.log2(r.n) * 0.4)) : "1.2";
+    const attrs = 'stroke="' + v("--text-2") + '" stroke-width="' + sw + '"' + (isExt ? ' marker-end="url(#sysd-tri)"' :
       ' stroke-dasharray="5 3" marker-end="url(#sysd-open)"');
     const L = link(a, b);
     parts.push(pathG(c, a.id, b.id, line(L.p, L.q), attrs, a.label + (isExt ? " extends " : " uses ") + b.label +
-        (e.label ? " (" + e.label + ")" : "")));
-    if (!isExt && e.label && L.len > tw(clip(e.label, 14)) + 24) parts.push(halo((L.p[0] + L.q[0]) / 2, (L.p[1] +
-        L.q[1]) / 2 - 4, clip(e.label, 14)));
+        (r.n > 1 ? " (" + r.n + ")" : r.e.label ? " (" + r.e.label + ")" : "")));
+    const lab = r.n > 1 ? String(r.n) : !isExt && r.e.label && !r.merged ? clip(r.e.label, 14) : "";
+    if (lab && L.len > tw(lab) + 24) parts.push(halo((L.p[0] + L.q[0]) / 2, (L.p[1] + L.q[1]) / 2 - 4, lab));
   });
   items.forEach((it) => {
+    if (owner.has(it.id)) return;
+    boxes.push({ id: it.id, x: it.x, y: it.y, w: it.w, h: it.h });
+  });
+  items.forEach((it) => {
+    if (owner.has(it.id)) return;
     const sk = strokeOf(c, it.id);
     const rowsOf = (r, y0, n) => r.rows.map((s, i) => {
       const more = i === CAP && n > CAP;
@@ -989,6 +1056,5 @@ export function classSvg(cls, opts) {
     parts.push(nodeG(c, it.id, it.label, it.label + (it.n.sub ? "\n" + it.n.sub : "") + "\n" + it.at.n +
         " attributes, " + it.me.n + " methods", it.x, it.y, body));
   });
-  return finish(parts.join(""), maxW, y - 24, items.map((it) => ({ id: it.id, x: it.x, y: it.y, w: it.w, h: it.h })),
-      bands);
+  return finish(parts.join(""), top.w, top.h, boxes, bands);
 }

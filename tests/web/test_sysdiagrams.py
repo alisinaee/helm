@@ -26,7 +26,8 @@ SCRIPT = r"""
   const out = {};
   for (const [name, c] of Object.entries(input)) {
     const fn = m[c.fn];
-    const r = fn(c.data, c.opts ? { selected: c.opts.selected, near: c.opts.near ? new Set(c.opts.near) : null } : undefined);
+    const r = fn(c.data, c.opts ? { selected: c.opts.selected, near: c.opts.near ? new Set(c.opts.near) : null,
+      open: c.opts.open ? new Set(c.opts.open) : undefined, aspect: c.opts.aspect } : undefined);
     let ms = Infinity;
     if (c.time) for (let i = 0; i < 5; i++) {
       const t = process.hrtime.bigint();
@@ -96,6 +97,15 @@ def big_cls(n=80):
     return {"groups": [{"id": "g%d" % i, "label": "G%d" % i} for i in range(5)], "nodes": nodes, "edges": edges}
 
 
+def mod_cls(mods=40, per=6):
+    nodes = [{"id": "M%d.C%d" % (m, i), "label": "C%d" % i, "kind": "class", "group": "m%d" % m,
+              "attrs": ["a"], "methods": ["f()"]} for m in range(mods) for i in range(per)]
+    edges = [{"from": "M%d.C0" % m, "to": "M%d.C1" % ((m + 1) % mods), "kind": "uses"} for m in range(mods)]
+    edges += [{"from": "M%d.C%d" % (m, i), "to": "M%d.C0" % ((m + 2) % mods), "kind": "uses"}
+              for m in range(mods) for i in (2, 3)]
+    return {"groups": [{"id": "m%d" % m, "label": "mod%d" % m} for m in range(mods)], "nodes": nodes, "edges": edges}
+
+
 CASES = {
     "er": {"fn": "erSvg", "data": ER}, "state": {"fn": "stateSvg", "data": STATES},
     "uc": {"fn": "usecaseSvg", "data": UC}, "act": {"fn": "activitySvg", "data": ACT},
@@ -103,6 +113,8 @@ CASES = {
     "er_sel": {"fn": "erSvg", "data": ER, "opts": {"selected": "task", "near": ["task", "log"]}},
     "bigER": {"fn": "erSvg", "data": big_er(), "time": True},
     "bigCls": {"fn": "classSvg", "data": big_cls(), "time": True},
+    "modCls": {"fn": "classSvg", "data": mod_cls(), "opts": {"aspect": 1.78}},
+    "modOpen": {"fn": "classSvg", "data": mod_cls(), "opts": {"aspect": 1.78, "open": ["m3"]}},
 }
 for _fn in ("erSvg", "stateSvg", "usecaseSvg", "activitySvg", "deploymentSvg", "classSvg"):
     CASES["empty_" + _fn] = {"fn": _fn, "data": {}}
@@ -177,6 +189,39 @@ class SysDiagramsTest(unittest.TestCase):
         self.assertIn("+4 more", self.out["cls"]["inner"])
         self.assertIn("sysd-open", self.out["cls"]["inner"])
 
+    def test_modules_collapsed_by_default(self):
+        r = self.out["modCls"]
+        self.assertEqual(len(r["boxes"]), 40)
+        self.assertTrue(all(b["id"].startswith("g:") for b in r["boxes"]))
+        self.assertIn("6 classes", r["inner"])
+        self.assertIn('aria-expanded="false"', r["inner"])
+        self.assertIn('data-sys-tog="cls:m0"', r["inner"])
+        self.assertGreater(r["w"] / r["h"], 1.2)
+        self.assertLess(r["w"] / r["h"], 2.6)
+        self.assertGreater(1600 / r["w"], 0.6)
+        self.assertGreater(900 / r["h"], 0.6)
+        for i, a in enumerate(r["boxes"]):
+            for b in r["boxes"][i + 1:]:
+                self.assertFalse(overlap(a, b))
+
+    def test_modules_aggregate_edges(self):
+        r = self.out["modCls"]
+        self.assertEqual(r["inner"].count("<path class=\"sys-e"), 80)
+        self.assertRegex(r["inner"], r'data-from="g:m0" data-to="g:m1"')
+        self.assertIn("(2)", r["inner"])
+
+    def test_module_expand(self):
+        r = self.out["modOpen"]
+        ids = [b["id"] for b in r["boxes"]]
+        self.assertIn("M3.C0", ids)
+        self.assertNotIn("g:m3", ids)
+        self.assertIn("g:m3", [b["id"] for b in r["bands"]])
+        self.assertIn('aria-expanded="true"', r["inner"])
+        self.assertEqual(len(ids), 39 + 6)
+        for i, a in enumerate(r["boxes"]):
+            for b in r["boxes"][i + 1:]:
+                self.assertFalse(overlap(a, b))
+
     def test_selected_and_near(self):
         base = self.out["er"]["inner"]
         sel = self.out["er_sel"]["inner"]
@@ -203,7 +248,7 @@ class SysDiagramsTest(unittest.TestCase):
                 for b in r["boxes"][i + 1:]:
                     self.assertFalse(overlap(a, b), (name, a, b))
         self.assertEqual(len(self.out["bigER"]["boxes"]), 60)
-        self.assertEqual(len(self.out["bigCls"]["boxes"]), 80)
+        self.assertEqual(len(self.out["bigCls"]["boxes"]), 5)
 
 
 if __name__ == "__main__":
