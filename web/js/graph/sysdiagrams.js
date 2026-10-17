@@ -902,7 +902,6 @@ export function deploymentSvg(dep, opts) {
 
 // ---------------------------------------------------------------- Class / module
 
-const MODAUTO = 12;
 const MODW = 190;
 const MODH = 56;
 const GX = 40;
@@ -949,6 +948,26 @@ export function shelf(list, lim, gx, gy) {
   return { at, w, h: y + rowH };
 }
 
+
+// Module (group) ids of a class diagram in draw order; the System view uses them for Collapse all.
+export function classModules(cls) {
+  const ids = [];
+  const seen = new Set();
+  const add = (g) => {
+    const k = g == null ? "" : String(g);
+    if (!seen.has(k)) {
+      seen.add(k);
+      ids.push(k);
+    }
+  };
+  arr(cls && cls.groups).forEach((g) => {
+    if (g && g.id != null) add(g.id);
+  });
+  arr(cls && cls.nodes).forEach((n) => {
+    if (n) add(n.group);
+  });
+  return ids;
+}
 
 export function classSvg(cls, opts) {
   const c = ctx(opts);
@@ -1009,11 +1028,11 @@ export function classSvg(cls, opts) {
       order.push(it.group);
     }
   });
-  const mods = arr(opts && opts.open instanceof Set ? [...opts.open] : opts && opts.open).map(String);
-  const openSet = new Set(mods);
-  const auto = items.length > MODAUTO && order.length > 1;
+  // Every module starts expanded; opts.shut lists the ones the person collapsed (the +/- toggle).
+  const shut = new Set(arr(opts && opts.shut instanceof Set ? [...opts.shut] : opts && opts.shut).map(String));
+  const multi = order.length > 1;
   const aspect = opts && opts.aspect > 0 ? opts.aspect : 1.78;
-  const isOpen = (g) => !auto || openSet.has(g);
+  const isOpen = (g) => !multi || !shut.has(g);
   const blocks = [];
   const owner = new Map();
   order.forEach((g) => {
@@ -1054,10 +1073,8 @@ export function classSvg(cls, opts) {
         '"/><path d="M' + f(b.x + b.w - 22) + " " + f(b.y + 14) + "h12" + (b.open ? "" : "M" + f(b.x + b.w - 16) + " " +
         f(b.y + 8) + "v12") + '" stroke="' + v("--text-2") + '" stroke-width="1.5" fill="none"/></g>';
     const ttl = clip(b.label, Math.floor((b.w - 40) / CH));
-    if (auto) {
-      if (b.open) bands.push({ id: b.id, x: b.x, y: b.y, w: b.w, h: b.h });
-      else boxes.push({ id: b.id, x: b.x, y: b.y, w: b.w, h: b.h });
-    } else bands.push({ id: b.id, x: b.x, y: b.y, w: b.w, h: b.h });
+    if (b.open) bands.push({ id: b.id, x: b.x, y: b.y, w: b.w, h: b.h });
+    else boxes.push({ id: b.id, x: b.x, y: b.y, w: b.w, h: b.h });
     if (!b.open) {
       return '<g class="sys-mod"><title>' + esc(b.label + ": " + b.list.length + " classes") + '</title><rect x="' +
         f(b.x) + '" y="' + f(b.y) + '" width="' + f(b.w) + '" height="' + f(b.h) + '" rx="8" fill="' +
@@ -1067,7 +1084,7 @@ export function classSvg(cls, opts) {
     }
     return "<g><title>" + esc(b.label) + '</title><rect x="' + f(b.x) + '" y="' + f(b.y) + '" width="' + f(b.w) +
       '" height="' + f(b.h) + '" rx="8" fill="none" stroke="' + v("--track") + '"/>' +
-      text(b.x + BP, b.y + 17, ttl, 12, v("--text-2"), ' font-weight="600"') + (auto ? tog : "") + "</g>";
+      text(b.x + BP, b.y + 17, ttl, 12, v("--text-2"), ' font-weight="600"') + (multi ? tog : "") + "</g>";
   });
   parts.push(bandParts.join(""));
   const place = new Map();
