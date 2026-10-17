@@ -15,11 +15,21 @@ class UsageAccountsRoutes(ServerCase):
         return self.request("POST", "/api/v1/usage/accounts/%s/%s" % (account, action),
                             headers=headers if headers is not None else self.write_headers())
 
-    def test_get_lists_rows_without_full_email(self):
+    def test_get_lists_rows_with_full_email_on_the_main_listener(self):
         with mock.patch("roadmap.services.usage_accounts.list_status", return_value=[ROW]) as status:
             res = self.request("GET", "/api/v1/usage/accounts", headers=SAME)
         self.assertEqual(res.status, 200)
         self.assertEqual(res.json(), [ROW])
+        status.assert_called_once_with(full_email=True)
+
+    def test_get_masks_the_email_on_the_phone_listener(self):
+        from roadmap.http import routes
+
+        class _PhoneishApp:
+            cmd_source = "phone"
+
+        with mock.patch("roadmap.services.usage_accounts.list_status", return_value=[ROW]) as status:
+            routes.usage_accounts_get(_PhoneishApp(), None, None)
         status.assert_called_once_with(full_email=False)
 
     def test_post_needs_the_write_guard(self):

@@ -325,8 +325,9 @@ ACCOUNT_ACTIONS = ("connect", "disconnect", "switch", "check", "login")
 
 
 def usage_accounts_get(app, req, match):
-    """GET /api/v1/usage/accounts: the Tokens page Account tab's rows, emails masked. Read only."""
-    return json_reply(200, usage_accounts.list_status(full_email=False))
+    """GET /api/v1/usage/accounts: the Tokens page Account tab's rows. Full e-mail on the main (gui) listener,
+    masked on the phone listener (it may be reached over a tunnel). Read only."""
+    return json_reply(200, usage_accounts.list_status(full_email=app.cmd_source != "phone"))
 
 
 def usage_accounts_action(app, req, match):
