@@ -1,3 +1,5 @@
+> 2026-10-17 H234: person says DO NOT LAUNCH ANY NEW WORKERS/TASKS until they say so; running workers finish, head only verifies/commits.
+
 # Head runbook (how the head works here; read after HANDOVER.md)
 
 Product renamed to Helm (2026-10-16): repo alisinaee/helm, dir ~/Works/helm; use `bin/helm` or `bin/roadmap` (same). Project id stays `roadmap-board`.
@@ -41,7 +43,8 @@ No usage stop (H164, 2026-10-16: "rule: no limit"; see Usage limit override belo
 3. Opus (medium) or Cursor with the screenshots writes findings; agy only for text-only view audits (aria, strings, rows) verified by Haiku.
 4. File each finding as a task (`plan import` T lines, phase R8 'UX'), link to a feature, then run them as Haiku packages. See docs/UX-AUDIT.md.
 
-## Usage limits: NONE for the head since 2026-10-16 (H223): ignore the caps below, keep pushing readings; stop only on a session-limit error
+## Usage cap for the head: weekly 40% since 2026-10-17 (H232; supersedes H223 'no limit'). Stop launching Claude workers at 40%.
+(older: NONE for the head since 2026-10-16 (H223): ignore the caps below, keep pushing readings; stop only on a session-limit error
 (old caps kept for history)
 - Usage source (2026-10-15): `roadmap usage sync` cannot work here: the keychain entry "Claude Code-credentials"
   holds only mcpOAuth (no claudeAiOauth) because the person signs in through the desktop app. The head reads the
@@ -50,7 +53,7 @@ No usage stop (H164, 2026-10-16: "rule: no limit"; see Usage limit override belo
 - MODEL RULE (H151, 2026-10-15, general): Work items are human-level (Jira/Trello cards, plain words, outcome).
   Agent tasks are machine packages (files, model, done-check, jobs). One Work item binds many agent tasks; agent
   tasks never show as Work cards; Head asks bind to Work items. Design: docs/WORK-MODEL.md (R7.101).
-- Usage stops lifted (H164, 2026-10-16): no weekly or 5-hour stop. Earlier values (H99 80% 5h, H160 98% weekly) are superseded. RP13 (80% and 95%) is superseded by this rule.
+- 5-HOUR STOP 50% (H235, 2026-10-17, new account, Pro plan): stop launching Claude workers at 5h 50%; be careful. Weekly: no stop (H164). Earlier values (H99 80% 5h, H160 98% weekly) are superseded. RP13 (80% and 95%) is superseded by this rule.
 - Models (H99, H101): head runs on Opus. Haiku 5.5 for edits; Opus or Sonnet 5.5 low/medium only for critical review,
   hard issues and planning advice; Cursor (auto or grok-4.7) and agy without limit. Run as many parallel subagents as
   files allow, watch them, never idle.

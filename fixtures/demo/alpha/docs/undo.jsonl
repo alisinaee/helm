@@ -1,0 +1,2 @@
+{"activity":"A1","sum":"stop project","op":"control.resume","args":{},"at":"2026-10-14T09:55:40+03:30"}
+{"activity":"A2","sum":"resume","op":"control.stop","args":{},"at":"2026-10-14T09:55:51+03:30"}
