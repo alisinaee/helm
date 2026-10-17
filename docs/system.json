@@ -3,29 +3,34 @@
   "layers": ["external", "ui", "api", "cli", "service", "core", "data", "tooling", "docs"],
   "components": [
     {"id": "claude-code", "name": "Claude Code", "layer": "external", "kind": "agent", "files": [],
-     "notes": "The Claude Code CLI; its hooks call roadmap hook pre/post."},
+     "notes": "The Claude Code CLI; its hooks call roadmap hook pre/post.", "tasks": ["R1.4"]},
     {"id": "cli", "name": "CLI", "layer": "cli", "kind": "tool",
      "files": ["bin/**", "roadmap/__init__.py", "roadmap/__main__.py", "roadmap/cli.py", "roadmap/commands/**"],
-     "entry": "bin/roadmap", "notes": "argparse tree; one module per command group in roadmap/commands."},
+     "entry": "bin/roadmap", "notes": "argparse tree; one module per command group in roadmap/commands.",
+     "tasks": ["R1.1", "R10.26"]},
     {"id": "hooks", "name": "Hooks", "layer": "service", "kind": "service", "files": ["roadmap/services/hooks.py"],
-     "notes": "Claude Code hook handling; roadmap hooks install is manual only."},
+     "notes": "Claude Code hook handling; roadmap hooks install is manual only.", "tasks": ["R1.4", "R1.8"]},
     {"id": "services", "name": "Services", "layer": "service", "kind": "service", "files": ["roadmap/services/**"],
-     "notes": "Use-case logic: tasks, jobs, head, git ops, usage, system map."},
+     "notes": "Use-case logic: tasks, jobs, head, git ops, usage, system map.",
+     "tasks": ["R1.4", "R1.6", "R1.9", "R10.19", "R10.20", "R11.101"]},
     {"id": "http-api", "name": "HTTP API", "layer": "api", "kind": "service", "files": ["roadmap/http/**"],
-     "entry": "roadmap/http/server.py", "notes": "Local server on localhost; JSON routes under /api/v1."},
+     "entry": "roadmap/http/server.py", "notes": "Local server on localhost; JSON routes under /api/v1.",
+     "tasks": ["R1.5", "R10.21"]},
     {"id": "core", "name": "Core", "layer": "core", "kind": "module",
      "files": ["roadmap/core/**", "roadmap/errors.py", "roadmap/log.py"],
      "notes": "Pure parsing, formatting and snapshot logic; no I/O policy."},
     {"id": "store", "name": "Store", "layer": "data", "kind": "store",
      "files": ["roadmap/store/**", "roadmap/templates/**", "docs/*.json", "docs/*.jsonl"],
-     "notes": "Per-project JSON and JSONL state under docs/ and the global roadmap home."},
+     "notes": "Per-project JSON and JSONL state under docs/ and the global roadmap home.", "tasks": ["R7.96"]},
     {"id": "web-shell", "name": "Web shell", "layer": "ui", "kind": "module",
      "files": ["web/index.html", "web/legacy.html", "web/icons.svg", "web/js/*.js", "web/css/**"],
-     "entry": "web/index.html", "notes": "SPA shell: hash router, state, api client, shared CSS."},
+     "entry": "web/index.html", "notes": "SPA shell: hash router, state, api client, shared CSS.",
+     "tasks": ["R1.7", "R10.17"]},
     {"id": "views", "name": "Views", "layer": "ui", "kind": "module", "files": ["web/js/views/**"],
-     "notes": "One file per section; each renders into the shell."},
+     "notes": "One file per section; each renders into the shell.",
+     "tasks": ["R10.23", "R11.104", "R11.105", "R11.106", "R11.110"]},
     {"id": "graph-engine", "name": "Graph engine", "layer": "ui", "kind": "module", "files": ["web/js/graph/**"],
-     "notes": "SVG graph drawing used by the workflow and system views."},
+     "notes": "SVG graph drawing used by the workflow and system views.", "tasks": ["R11.107", "R11.108"]},
     {"id": "web-vendor", "name": "Web vendor", "layer": "ui", "kind": "module", "files": ["web/vendor/**"],
      "notes": "Third-party browser libraries with their licences."},
     {"id": "tests", "name": "Tests", "layer": "tooling", "kind": "tool",
@@ -34,7 +39,7 @@
      "files": ["tools/**", "Makefile", ".editorconfig", ".gitignore"], "notes": "make check, lint and UI smoke scripts."},
     {"id": "docs", "name": "Docs", "layer": "docs", "kind": "store",
      "files": ["docs/**", "changes/**", "CLAUDE.md", "README.md", "CONTRIBUTING.md", "CHANGELOG.md", "LICENSE"],
-     "notes": "Specs, runbooks, the handover and change notes."}
+     "notes": "Specs, runbooks, the handover and change notes.", "tasks": ["R11.111"]}
   ],
   "edges": [
     {"from": "claude-code", "to": "hooks", "label": "PreToolUse / PostToolUse hooks", "kind": "event"},
@@ -47,6 +52,15 @@
     {"from": "services", "to": "core", "label": "parse and format", "kind": "call"},
     {"from": "services", "to": "store", "label": "read and write state", "kind": "data"}
   ],
+  "external": [
+    {"id": "agy", "name": "agy (Gemini staffer)"},
+    {"id": "cursor", "name": "Cursor (review agent)"}
+  ],
+  "deployment": {
+    "nodes": [
+      {"id": "dev", "label": "This Mac", "sub": "launchd service on 127.0.0.1:8780", "kind": "device", "group": "dev"}
+    ]
+  },
  "containers": [
   {"id": "web", "name": "Web dashboard", "tech": "HTML/JS SPA in the browser", "components": ["web-shell", "views", "graph-engine", "web-vendor"], "notes": "Hash-routed single page; polls the snapshot every 2 s and posts registry ops."},
   {"id": "py", "name": "roadmap process", "tech": "Python: CLI + local HTTP server", "components": ["cli", "hooks", "http-api", "services", "core", "store"], "notes": "One package, two entry modes: bin/roadmap <command> and roadmap serve on 127.0.0.1."},

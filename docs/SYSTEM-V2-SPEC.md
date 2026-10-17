@@ -162,3 +162,29 @@ scroll from the timeline; lanes scroll inside the plot.
 
 New web files (need a service restart to stop 404): web/js/views/system-menu.js, web/js/graph/sysdiagrams.js.
 New Python modules load on restart too: system_tasks.py, system_v2.py, system_data.py, system_behave.py.
+
+## 6. Overrides file (docs/system.json, R11.111)
+
+One optional file per project, version 1. The architecture map (`system.py`) reads `components`, `edges`, `layers`,
+`containers`, `flows`, `external`; the v2 diagrams read the keys below. Everything else in the file is derived.
+
+| Key | Used by | Shape | Seeded in this repo |
+|-----|---------|-------|---------------------|
+| `components[].tasks` | `system_tasks.bind` | task ids from docs/tasks.json (e.g. `"R11.105"`) | yes, on every component with a matching task |
+| `components[].work` | `system_tasks.bind` | Work item ids (`"W3"`) | no: docs/work.json has no items in this repo, so none are bound (an unknown id is ignored) |
+| `external` | context diagram | `[{id, name}]` extra external systems | agy, Cursor |
+| `deployment` | deployment diagram | `{nodes: [{id, label, sub, kind, group}], groups, edges}`, merged by id | `dev` node renamed "This Mac" (launchd on 127.0.0.1:8780) |
+| `machines` | states diagram | state machines: `[{id, name, file, states, transitions, initial}]`, merged by id | not seeded (no state machine is known to be hand kept) |
+| `entities` | ER diagram | entity list, merged by id | not seeded |
+| `classes`, `usecases`, `activities` | class, use-case, activity diagrams | merged by id (see roadmap/services/system_behave.py) | not seeded |
+
+Rules: a bad or missing file never breaks the map (the baseline is used with a warning); ids are task ids
+(`[A-Za-z0-9][A-Za-z0-9._-]{0,19}`, at most 100 per component); `roadmap system check` validates the file.
+
+New diagram kinds (catalogue in section 2, drawn by `web/js/graph/sysdiagrams.js`):
+- **ER** (`er`, data family): entities and relations from SQL, JSON Schema and tracked stores; crow's-foot cards.
+- **States** (`states`, behaviour): state machines from status constants and assignments; `guessed` transitions drawn dashed.
+- **Use cases** (`usecases`, behaviour): actors and cases from docs/system.json, drawn with system boundary.
+- **Activity** (`activity`, behaviour): decision, merge and fork nodes, swimlanes optional.
+- **Deployment** (`deployment`, structure): devices, processes (Makefile, plists, units) and external systems.
+- **Class** (`classes`, structure): classes, bases and attributes from Python `ast` and JS sources.
