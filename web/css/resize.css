@@ -1,6 +1,5 @@
 .rz{display:none;position:fixed;top:0;bottom:0;width:6px;z-index:calc(var(--z-over) + 2);cursor:col-resize;touch-action:none;background:transparent}
-.rz:hover,.rz:focus-visible,.rz-drag{background:var(--accent,currentColor);opacity:.5}
-.rz:focus-visible{outline:none}
+.rz:hover,.rz:focus-visible,.rz-drag{background:var(--accent,currentColor);opacity:.5}.rz:focus-visible{outline:none}
 @media (min-width:1200px){
 .rz-nav{left:calc(var(--w-nav) - 3px)}
 .app[data-nav="full"] .rz-nav{display:block}
@@ -11,6 +10,5 @@
 .spl::after{content:"";position:absolute;top:0;bottom:0;left:2px;width:2px;background:var(--line);transition:background .12s}
 .spl:hover::after,.spl-drag::after{background:var(--accent,currentColor)}
 .spl:focus-visible::after{left:1px;width:4px;background:var(--focus,var(--accent))}
-@media (min-width:1100px){.spl{display:block}}
-@media (prefers-reduced-motion:reduce){.spl::after{transition:none}}
+@media (min-width:1100px){.spl{display:block}}@media (prefers-reduced-motion:reduce){.spl::after{transition:none}}
 @media (min-width:1100px){.git-hist{grid-template-columns:minmax(0,1fr) 6px var(--split-git,26rem);gap:0}.git-hist>.git-detail{padding-left:var(--sp-2)}}
