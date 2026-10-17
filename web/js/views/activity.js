@@ -14,6 +14,7 @@ import {
   clock, dayLabel, defaultFilters, eventFromLine, groupByDay, loadFirst, loadOlder, matches, modelShort, modelTone,
   refText, saveFilters, stamp, stateFor, toMarkdown,
 } from "./activity_data.js";
+import { timelineHtml, msAt, VIEW_W } from "./activity_timeline.js";
 import { actorHtml, detailHtml, hrefOf, kindHtml, num, scrubberHtml, toolbarHtml } from "./activity_view.js";
 
 // The log keeps gui, cli, agent or phone; the detail pane shows the plain name.
@@ -123,7 +124,7 @@ export function sectionView(vm) {
   }
   return '<div class="hx-page' + (all ? " hx-all" : "") + (selected ? " has-detail" : "") + '">' +
     toolbarHtml(st, { totalText: totalText(st, events.length, fallback), live: !fallback }) +
-    scrubberHtml(st, now) + note +
+    timelineHtml(st, events, now) + scrubberHtml(st) + note +
     '<div class="hx-body"><div class="hx-scroll" id="hx-scroll" role="region" aria-label="Project history" ' +
     'tabindex="0">' + body + "</div>" + detailHtml(selected, ctx) + "</div></div>";
 }
@@ -201,6 +202,8 @@ function onClick(event) {
     const id = el.getAttribute("data-id");
     st.sel = st.sel === id ? null : id;
     repaint();
+  } else if (what === "tl") {
+    pickOnTimeline(el.getAttribute("data-id"));
   } else if (what === "close") {
     const id = st.sel;
     st.sel = null;
@@ -273,53 +276,82 @@ function onKey(event) {
   }
 }
 
-// The scrubber: press, drag across the bars, release. A press with no drag picks that one bar.
-const drag = { on: false, i0: 0, i1: 0, svg: null };
+// The timeline: press and drag across the strip to set a custom range; a press with no drag is a click on a mark.
+const drag = { on: false, x0: 0, x1: 0, svg: null, moved: false };
 
-function barIndex(svg, clientX) {
+function fracOf(svg, clientX) {
   const box = svg.getBoundingClientRect();
-  const n = Number(svg.getAttribute("data-n")) || 1;
-  return Math.max(0, Math.min(n - 1, Math.floor(((clientX - box.left) / Math.max(1, box.width)) * n)));
+  return Math.max(0, Math.min(1, (clientX - box.left) / Math.max(1, box.width)));
 }
 
 function drawPick() {
   const pick = drag.svg && drag.svg.querySelector("#hx-pick");
   if (!pick) return;
-  const lo = Math.min(drag.i0, drag.i1);
-  const hi = Math.max(drag.i0, drag.i1);
-  pick.setAttribute("x", String(lo * 10));
-  pick.setAttribute("width", String((hi - lo + 1) * 10));
+  const lo = Math.min(drag.x0, drag.x1);
+  pick.setAttribute("x", String(lo * VIEW_W));
+  pick.setAttribute("width", String(Math.abs(drag.x1 - drag.x0) * VIEW_W));
 }
 
 function onDown(event) {
-  const svg = event.target && event.target.closest ? event.target.closest("#hx-svg") : null;
+  const svg = event.target && event.target.closest ? event.target.closest("#hx-tl") : null;
   if (!svg || event.button !== 0) return;
   drag.on = true;
+  drag.moved = false;
   drag.svg = svg;
-  drag.i0 = drag.i1 = barIndex(svg, event.clientX);
-  drawPick();
-  if (svg.setPointerCapture) svg.setPointerCapture(event.pointerId);
-  event.preventDefault();
+  drag.x0 = drag.x1 = fracOf(svg, event.clientX);
 }
 
 function onMove(event) {
   if (!drag.on) return;
-  drag.i1 = barIndex(drag.svg, event.clientX);
+  drag.x1 = fracOf(drag.svg, event.clientX);
+  if (!drag.moved && Math.abs(drag.x1 - drag.x0) * drag.svg.getBoundingClientRect().width < 6) return;
+  drag.moved = true;
   drawPick();
 }
 
 function onUp() {
   if (!drag.on) return;
   drag.on = false;
-  const start = Number(drag.svg.getAttribute("data-start"));
-  const step = Number(drag.svg.getAttribute("data-step"));
-  const lo = Math.min(drag.i0, drag.i1);
-  const hi = Math.max(drag.i0, drag.i1);
+  if (!drag.moved) return;
+  const t0 = Number(drag.svg.getAttribute("data-t0"));
+  const t1 = Number(drag.svg.getAttribute("data-t1"));
+  const lo = msAt(Math.min(drag.x0, drag.x1), t0, t1);
+  const hi = msAt(Math.max(drag.x0, drag.x1), t0, t1);
   setFilters(function (f) {
     f.preset = "custom";
-    f.from = start + lo * step;
-    f.to = start + (hi + 1) * step - 1;
+    f.from = lo;
+    f.to = hi;
   });
+}
+
+// Hover tooltip for the timeline marks (data-tip).
+let tipEl = null;
+function onTip(event) {
+  const el = event.target && event.target.closest ? event.target.closest(".hx-tl-m[data-tip]") : null;
+  if (!el) {
+    if (tipEl) tipEl.hidden = true;
+    return;
+  }
+  if (!tipEl) {
+    tipEl = document.createElement("div");
+    tipEl.className = "hx-tip";
+    tipEl.setAttribute("role", "tooltip");
+    document.body.appendChild(tipEl);
+  }
+  tipEl.textContent = el.getAttribute("data-tip");
+  tipEl.hidden = false;
+  const box = tipEl.getBoundingClientRect();
+  tipEl.style.left = Math.max(4, Math.min(event.clientX + 12, window.innerWidth - box.width - 4)) + "px";
+  tipEl.style.top = Math.max(4, event.clientY + 16) + "px";
+}
+
+function pickOnTimeline(id) {
+  const st = current();
+  if (!st) return;
+  st.sel = id;
+  repaint();
+  const row = document.getElementById("hx-r-" + id);
+  if (row && row.scrollIntoView) row.scrollIntoView({ block: "center" });
 }
 
 function poll() {
@@ -337,6 +369,8 @@ if (HAS_DOM) {
   document.addEventListener("pointerdown", onDown);
   document.addEventListener("pointermove", onMove);
   document.addEventListener("pointerup", onUp);
+  document.addEventListener("pointerover", onTip);
+  document.addEventListener("pointerout", onTip);
   document.addEventListener("pointercancel", onUp);
   setInterval(poll, POLL_MS);
 }

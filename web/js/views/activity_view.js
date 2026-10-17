@@ -6,12 +6,10 @@ import { fmtTokens } from "../format.js";
 import { copyButton } from "../ref.js";
 import { projectHash } from "../router.js";
 import {
-  ACTOR_WORD, ACTORS, KIND_WORD, KINDS, PRESETS, localInput, rangeOf, refText, stamp,
+  ACTOR_WORD, ACTORS, KIND_WORD, KINDS, PRESETS, localInput, refText, stamp,
 } from "./activity_data.js";
 
 const ACTOR_ICON = { user: "inbox", head: "head", agent: "agents", system: "settings" };
-const BAR_W = 10;
-const BAR_H = 36;
 
 export function icon(name) {
   return '<svg class="ico" aria-hidden="true" focusable="false">' +
@@ -63,40 +61,16 @@ export function toolbarHtml(st, opts) {
     '<div class="hx-chips" role="group" aria-label="Kinds">' + kinds + "</div></div>";
 }
 
-// The histogram strip: one bar per hour or day; drag across it (or click a bar) to pick a range. The range inputs
-// below are the keyboard path.
-export function scrubberHtml(st, now) {
-  const h = st.hist;
+// The custom range inputs (the keyboard path for picking a window); the timeline strip itself is in
+// activity_timeline.js.
+export function scrubberHtml(st) {
   const f = st.filt;
-  const range = rangeOf(f, now);
-  const inputs = f.preset === "custom" ? '<span class="hx-range">' +
+  if (f.preset !== "custom") return "";
+  return '<div class="hx-scrub"><span class="hx-range">' +
     '<label><span class="hx-lbl">From</span><input type="datetime-local" class="input hx-dt" id="hx-from" ' +
     'data-hx="from" value="' + esc(localInput(f.from)) + '"></label>' +
     '<label><span class="hx-lbl">To</span><input type="datetime-local" class="input hx-dt" id="hx-to" ' +
-    'data-hx="to" value="' + esc(localInput(f.to)) + '"></label></span>' : "";
-  if (!h || !h.counts || !h.counts.length) {
-    return inputs ? '<div class="hx-scrub">' + inputs + "</div>" : "";
-  }
-  const max = Math.max.apply(null, h.counts.concat([1]));
-  const w = h.counts.length * BAR_W;
-  const bars = h.counts.map(function (c, i) {
-    const t0 = h.start + i * h.step;
-    const t1 = t0 + h.step - 1;
-    const on = (range[0] == null || t1 >= range[0]) && (range[1] == null || t0 <= range[1]);
-    const bh = c ? Math.max(2, Math.round((c / max) * BAR_H)) : 1;
-    const label = (h.unit === "hour" ? stamp(t0).slice(5, 16) : stamp(t0).slice(0, 10)) + ": " + c + " events";
-    return '<rect class="hx-b' + (on ? " on" : "") + (c ? "" : " z") + '" x="' + (i * BAR_W + 1) + '" y="' +
-      (BAR_H + 2 - bh) + '" width="' + (BAR_W - 2) + '" height="' + bh + '"><title>' + esc(label) +
-      "</title></rect>";
-  }).join("");
-  const first = h.unit === "hour" ? stamp(h.start).slice(5, 16) : stamp(h.start).slice(0, 10);
-  return '<div class="hx-scrub"><div class="hx-strip">' +
-    '<svg class="hx-svg" id="hx-svg" viewBox="0 0 ' + w + " " + (BAR_H + 2) + '" preserveAspectRatio="none" ' +
-    'data-start="' + h.start + '" data-step="' + h.step + '" data-n="' + h.counts.length + '" role="img" ' +
-    'aria-label="Events per ' + esc(h.unit) + '. Drag across to pick a time range.">' + bars +
-    '<rect class="hx-pick" id="hx-pick" x="0" y="0" width="0" height="' + (BAR_H + 2) + '"></rect></svg>' +
-    '<span class="hx-axis"><span>' + esc(first) + "</span><span>per " + esc(h.unit) +
-    "</span><span>now</span></span></div>" + inputs + "</div>";
+    'data-hx="to" value="' + esc(localInput(f.to)) + '"></label></span></div>';
 }
 
 export function actorHtml(a) {
