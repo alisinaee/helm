@@ -87,11 +87,52 @@ class SystemViewTest(unittest.TestCase):
         self.assertEqual(svg.count('fill="none" stroke="var(--info)"'), 8)
         self.assertIn("rotate(-55)", svg)
 
-    def test_opening_view_never_above_100_or_below_60_percent(self):
+    def test_opening_view_is_a_true_fit_clamped_to_20_and_150_percent(self):
         small, big = self.out["open"]
-        self.assertEqual(small["k"], 1)
-        self.assertEqual(big["k"], 0.6)
-        self.assertEqual(big["x"], 12)
+        self.assertEqual(small["k"], 1.5)
+        self.assertEqual(small["x"], 300)
+        self.assertAlmostEqual(big["k"], 776 / 3000)
+        self.assertAlmostEqual(big["x"], (1200 - 4000 * 776 / 3000) / 2)
+        wide, huge = self.out["fit"]
+        self.assertAlmostEqual(wide["k"], 1176 / 1200 if 1176 / 1200 < 776 / 400 else 776 / 400)
+        self.assertAlmostEqual(wide["y"], (800 - 400 * wide["k"]) / 2)
+        self.assertEqual(huge["k"], 0.2)
+
+    def test_toolbar_has_zoom_readout_copy_id_and_update(self):
+        html = self.out["ok"]
+        self.assertRegex(html, r'data-sys-op="out"[^>]*>[^<]*</button><button[^>]*data-sys-op="actual"[^>]*>100%</button>'
+                               r'<button[^>]*data-sys-op="in"')
+        self.assertIn("sys-zoom", html)
+        self.assertIn('data-action="copy-ref"', html)
+        self.assertIn('data-ref="rb:ok/view/system.components"', html)
+        self.assertIn('data-sys-op="update"', html)
+        self.assertIn(">Update diagrams</button>", html)
+        self.assertIn('class="sys" id="sys-root"', html)
+
+    def test_catalog_groups_views_by_family_and_puts_the_rest_in_more(self):
+        html = self.out["cat"]
+        for fam in ("Structure", "Behaviour", "Data"):
+            self.assertIn('aria-label="%s"' % fam, html)
+        self.assertIn('<details class="sys-more"><summary class="btn btn-small">More</summary>', html)
+        more = html.split('<details class="sys-more">')[1].split("</details>")[0]
+        self.assertIn('data-sys-view="context"', more)
+        self.assertIn("disabled", more)  # modules is not available
+        self.assertNotIn('data-sys-view="containers"', more)
+        self.assertNotIn("classes", html)  # an id this file cannot draw
+        self.assertIn('data-sys-view="flows"', html.split('<details')[0])
+        self.assertNotIn("sys-more", self.out["ok"])
+
+    def test_layout_css_fills_the_space_and_docks_the_panel(self):
+        css = read("css", "system.css")
+        self.assertIn(".main:has(>.sys){overflow:hidden", css)
+        self.assertRegex(css, r"\.sys\{[^}]*height:100%[^}]*min-height:0")
+        self.assertRegex(css, r"\.sys-canvas\{flex:1;min-height:0")
+        self.assertRegex(css, r"\.sys-canvas>\.wfg-svg\{[^}]*height:100%")
+        self.assertRegex(css, r"\.sys-panel\{position:absolute;top:0;right:0;bottom:0;[^}]*width:min\(400px,100%\)[^}]*overflow:auto")
+        for cls in (".sys-menu{", ".sys-menu-h{", ".sys-menu-i{", ".sys-menu-sep{", ".sys-menu-list{", ".sys-crumbs{",
+                    ".sys-tog{"):
+            self.assertIn(cls, css)
+        self.assertNotIn("100vh - 190px", css)
 
     def test_missing_api_old_service_and_errors(self):
         self.assertIn("System map needs the API", self.out["missing"])
@@ -107,7 +148,7 @@ class SystemViewTest(unittest.TestCase):
             self.assertIsNone(INLINE.search(text), path)
             if path[0] == "js":
                 self.assertTrue(all(len(line) <= 120 for line in text.splitlines()), path)
-        self.assertLessEqual(len(read("css", "system.css").encode()), 400)
+        self.assertLessEqual(len(read("css", "system.css").encode()), 8192)
         self.assertIn("/css/system.css", read("index.html"))
         self.assertIn('id: "system"', read("js", "routes.js"))
 
@@ -144,8 +185,12 @@ class SystemFullScreenTest(unittest.TestCase):
         self.assertIn("else if (fullHost) closeFull();", src)
         self.assertIn("export function mountFull(host, pid)", src)
 
-    def test_full_screen_adds_no_css(self):
-        self.assertNotIn("sys-full", read("css", "system.css"))
+    def test_native_full_screen_with_route_fallback(self):
+        src = read("js", "views", "system.js")
+        self.assertIn("requestFullscreen", src)
+        self.assertIn("webkitRequestFullscreen", src)
+        self.assertIn('document.addEventListener("fullscreenchange"', src)
+        self.assertIn("Exit full screen", src)
 
 
 if __name__ == "__main__":

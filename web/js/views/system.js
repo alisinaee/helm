@@ -7,6 +7,8 @@
 // panel (system-panel.js) and dims what is not connected to it; Esc or Close shuts it.
 
 import { getJson } from "../api.js";
+import { run } from "../cmd.js";
+import { copyButton, refOf } from "../ref.js";
 import { bannerHtml, chipHtml, emptyHtml, esc, patch, skeletonHtml } from "../dom.js";
 import { mountViewport } from "../graph/viewport.js";
 import { LABEL_MAX, layeredLayout, matrixLayout, MX_COL, MX_HEAD, MX_LEFT, MX_ROW, sequenceLayout, weak } from
@@ -26,6 +28,12 @@ const TONES = ["--accent", "--info", "--success", "--warning", "--m-opus", "--m-
   "--m-agy", "--m-sonnet"];
 const EDGE = { call: "--text-2", import: "--text-3", data: "--info", event: "--accent", violation: "--danger",
   cycle: "--danger" };
+// The views this file can draw (id -> [id, label, note]); a later task adds the new diagrams here.
+const RENDERERS = Object.fromEntries(VIEWS.map((m) => [m[0], m]));
+const FAMILIES = [["structure", "Structure"], ["behaviour", "Behaviour"], ["data", "Data"]];
+const REC_SCORE = 30;
+const FIT_MIN = 0.2;
+const FIT_MAX = 1.5;
 const MATRIX_EDGES = 16;
 const PAD = 12;
 const store = new Map();
@@ -329,21 +337,57 @@ function stage(pid, arch) {
   return { html: flowBar ? flowBar : "", svg: svg, legend: legend, note: note, panel: panelHtml(pid, selected, d) };
 }
 
-function toolbarHtml(arch) {
-  const fs = fullHost !== null;
-  const seg = VIEWS.map((m) => '<button type="button" class="btn btn-small" data-sys-view="' + m[0] +
-    '" aria-pressed="' + (current === m[0]) + '" title="' + esc(m[2]) + '">' + m[1] + "</button>").join("");
-  const op = (name, label, text) => '<button type="button" class="btn btn-small" data-sys-op="' + name +
-    '" aria-label="' + label + '">' + text + "</button>";
+function viewButton(id, label, note) {
+  return '<button type="button" class="btn btn-small" data-sys-view="' + esc(id) + '" aria-pressed="' +
+    (current === id) + '" title="' + esc(note || "") + '">' + esc(label) + "</button>";
+}
+
+// With a catalog: Structure / Behaviour / Data segments of recommended views and a More menu; else every view.
+function switcherHtml(arch) {
+  const cat = Array.isArray(arch.catalog) ? arch.catalog.filter((c) => c && RENDERERS[c.id]) : [];
+  if (!cat.length) return '<span class="wfg-chips" role="group" aria-label="View">' +
+    VIEWS.map((m) => viewButton(m[0], m[1], m[2])).join("") + "</span>";
+  const rec = (c) => c.id === current || (c.available !== false && Number(c.score) >= REC_SCORE);
+  const btn = (c) => viewButton(c.id, c.label || RENDERERS[c.id][1], c.reason || RENDERERS[c.id][2]);
+  const segs = FAMILIES.map((f) => {
+    const list = cat.filter((c) => c.family === f[0] && rec(c));
+    return list.length ? '<span class="sys-seg" role="group" aria-label="' + f[1] + '"><span class="sys-seg-l">' +
+      f[1] + "</span>" + list.map(btn).join("") + "</span>" : "";
+  }).join("");
+  const more = cat.filter((c) => !rec(c));
+  return segs + (more.length ? '<details class="sys-more"><summary class="btn btn-small">More</summary>' +
+    '<div class="sys-more-m">' + more.map((c) => c.available === false ? '<button type="button" class="btn ' +
+    'btn-small" disabled title="' + esc(c.reason || "Not available") + '">' + esc(c.label || c.id) + "</button>" :
+    btn(c)).join("") + "</div></details>" : "");
+}
+
+function copyIdHtml(pid, arch) {
+  const sel = selected && selected !== "sys" ? selected : null;
+  const node = sel ? (arch.details && arch.details[sel]) || {} : null;
+  const mode = VIEWS.find((x) => x[0] === current) || VIEWS[2];
+  const label = node ? node.title || sel : mode[1];
+  const kind = sel ? "component" : "view";
+  const id = sel ? sel.replace(/^[a-z]:/, "") : "system." + current;
+  const sum = sel ? "System component " + label + " (" + current + " view)" : "System " + mode[1] + " view of " + pid;
+  return '<span class="sys-copy">' + copyButton(kind, id, label, { project: pid, sum: sum }) + "</span>";
+}
+
+function toolbarHtml(pid, arch) {
+  const fs = fullHost !== null || nativeFs() !== null;
+  const op = (name, label, text, cls) => '<button type="button" class="btn btn-small' + (cls ? " " + cls : "") +
+    '" data-sys-op="' + name + '" aria-label="' + label + '">' + text + "</button>";
   const s = arch.stats || {};
   const count = s.sourceFiles ? '<span class="wfg-count">' + s.sourceFiles + " source files · " + human(s.lines) +
     " lines · " + (s.imports || 0) + " imports</span>" : "";
-  return '<div class="wfg-bar" role="toolbar" aria-label="System views"><span class="wfg-chips" role="group" ' +
-    'aria-label="View">' + seg + '</span><span class="wfg-chips" role="group" aria-label="Zoom">' +
-    op("out", "Zoom out", "−") + op("in", "Zoom in", "+") + op("fit", "Fit to screen", "Fit") +
-    op("sys", "Show the system summary", "Summary") + "</span>" + (fs ? "" : count) + '<span class="wfg-chips" ' +
-    'role="group" aria-label="Screen">' + (fs ? op("exit", "Close full screen (Esc)", "Close") :
-    op("full", "Open full screen", "Full screen")) + "</span></div>";
+  const screen = fullHost !== null ? op("exit", "Close full screen (Esc)", "Close") : nativeFs() !== null ?
+    op("full", "Exit full screen (Esc)", "Exit full screen") : op("full", "Open full screen", "Full screen");
+  return '<div class="wfg-bar" role="toolbar" aria-label="System views">' + switcherHtml(arch) +
+    '<span class="wfg-chips" role="group" aria-label="Zoom">' + op("out", "Zoom out", "−") +
+    op("actual", "Zoom to 100 percent", "100%", "sys-zoom") + op("in", "Zoom in", "+") +
+    op("fit", "Fit to screen", "Fit") + op("sys", "Show the system summary", "Summary") + "</span>" +
+    '<span class="wfg-chips" role="group" aria-label="Actions">' + copyIdHtml(pid, arch) +
+    op("update", "Add a task to update and check the System diagrams", "Update diagrams") + screen + "</span>" +
+    (fs ? "" : count) + "</div>";
 }
 
 function retryHtml() {
@@ -366,7 +410,7 @@ export function bodyHtml(pid, got) {
   }
   const st = stage(pid, arch);
   const note = current === "flows" ? '<span class="wfg-note">' + esc(st.note) + "</span>" : "";
-  return toolbarHtml(arch) + '<div class="wfg-bar">' + (st.html && !st.svg ? "" : st.html) + note +
+  return toolbarHtml(pid, arch) + '<div class="wfg-bar">' + (st.html && !st.svg ? "" : st.html) + note +
     '<span class="wfg-chips">' + (st.legend || "") +
     "</span>" + warn + "</div>" + (st.svg ? '<div class="wfg-stage sys-canvas">' + st.svg + "</div>" : st.html) +
     (st.panel || "");
@@ -379,9 +423,13 @@ function sectionHtml(vm) {
   }
   const pid = vm.route.id;
   const mode = VIEWS.find((x) => x[0] === current) || VIEWS[2];
-  return '<div class="sys"><div class="page-head"><h2 class="page-title">System</h2><p class="page-note">' +
+  return '<div class="sys" id="sys-root">' + sysInner(pid, mode) + "</div>";
+}
+
+function sysInner(pid, mode) {
+  return '<div class="page-head"><h2 class="page-title">System</h2><p class="page-note">' +
     esc(mode[0] === "flows" ? "Sequence diagrams of key flows." : mode[2]) + "</p></div>" +
-    bodyHtml(pid, store.get(pid)) + "</div>";
+    bodyHtml(pid, store.get(pid));
 }
 
 // A7: "#/full/<pid>/system" shows the same module state alone in #full-view (no nav); Close or Esc goes back.
@@ -399,6 +447,13 @@ function redraw() {
     return;
   }
   if (!lastVm) return;
+  const fsEl = nativeFs();
+  if (fsEl && fsEl.id === "sys-root" && lastVm.route.name === "project") {
+    // Native full screen: keep the .sys element (replacing it would leave full screen), swap only what is inside.
+    patch("sys-root", sysInner(lastVm.route.id, VIEWS.find((x) => x[0] === current) || VIEWS[2]));
+    mountSoon();
+    return;
+  }
   patch("main", sectionHtml(lastVm));
   mountSoon();
 }
@@ -431,23 +486,35 @@ function setView(id) {
   view = null;
 }
 
-// The opening view: the whole drawing when it fits at 60 % or more (never above 100 %), else 60 % from the top left.
+// The true fit: the whole drawing inside the canvas, centred, scale clamped to 0.2..1.5.
 export function openingView(box, size) {
   const fit = Math.min((size.w - 2 * PAD) / Math.max(1, box.w), (size.h - 2 * PAD) / Math.max(1, box.h));
-  const k = Math.max(0.6, Math.min(1, fit));
-  const x = box.w * k <= size.w - 2 * PAD ? (size.w - box.w * k) / 2 : PAD;
-  const y = box.h * k <= size.h - 2 * PAD ? (size.h - box.h * k) / 2 : PAD;
-  return { k: k, x: x, y: y };
+  const k = Math.max(FIT_MIN, Math.min(FIT_MAX, fit));
+  return { k: k, x: (size.w - box.w * k) / 2, y: (size.h - box.h * k) / 2 };
+}
+
+function nativeFs() {
+  if (typeof document === "undefined") return null;
+  return document.fullscreenElement || document.webkitFullscreenElement || null;
+}
+
+function zoomText(k) {
+  return Math.round(k * 100) + "%";
 }
 
 function mountNow() {
   const svg = typeof document !== "undefined" ? svgEl() : null;
   if (!svg || mounted.has(svg)) return;
   mounted.add(svg);
-  if (fullHost) svg.style.height = Math.max(240, innerHeight - svg.getBoundingClientRect().top - 8) + "px";
   const box = { w: Number(svg.getAttribute("data-w")) || 1, h: Number(svg.getAttribute("data-h")) || 1 };
   const r = svg.getBoundingClientRect();
   const size = { w: r.width || box.w, h: r.height || box.h };
+  svg.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || (e.key !== "0" && e.key !== "f" && e.key !== "F")) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    fitNow();
+  }, true);
   api = mountViewport(svg, svg.querySelector("#sys-vp"), {
     view: auto || !view ? openingView(box, size) : view, box: box, taps: taps, fit: false,
     onTap: (el) => select(el.getAttribute("data-sys")),
@@ -456,6 +523,9 @@ function mountNow() {
     },
     onView: (nv) => {
       view = { k: nv.k, x: nv.x, y: nv.y };
+      const root = svg.closest ? svg.closest(".sys") : null;
+      const z = root ? root.querySelector(".sys-zoom") : null;
+      if (z) z.textContent = zoomText(nv.k);
     },
   });
   if (watcher) watcher.disconnect();
@@ -515,6 +585,7 @@ export function mountFull(host, pid) {
     host.textContent = "";
     const box = document.createElement("div");
     box.id = "sys-full-" + (seq += 1);
+    box.style.height = "calc(100vh - 16px)";
     host.appendChild(box);
     host.style.setProperty("--h-top", "0px");
     host.style.padding = "8px";
@@ -573,16 +644,62 @@ function onClick(event) {
     store.delete(lastVm.route.id);
     load(lastVm.route.id);
     redraw();
-  } else if (op === "full") openFull();
+  } else if (op === "full") toggleFull(t);
   else if (op === "exit") closeFull();
-  else if (op === "fit") {
-    auto = true;
-    view = null;
-    redraw();
+  else if (op === "fit") fitNow();
+  else if (api && op === "actual") {
+    auto = false;
+    api.actual();
   } else if (api && (op === "in" || op === "out")) {
     auto = false;
     api.zoom(op === "in" ? 1.25 : 0.8);
+  } else if (op === "update") updateDiagrams(lastVm.route.id);
+  else if (op === "ask") askHead(lastVm.route.id, t.getAttribute("data-sys-id"), t.getAttribute("data-sys-label"));
+}
+
+// Fit button and key: always the true fit of the whole drawing.
+function fitNow() {
+  auto = true;
+  view = null;
+  redraw();
+}
+
+// Full screen: the Fullscreen API on the .sys element; without it (or when refused) the #/full/<pid>/system route.
+function toggleFull(btn) {
+  if (nativeFs()) {
+    const out = document.exitFullscreen || document.webkitExitFullscreen;
+    if (out) out.call(document);
+    return;
   }
+  const el = btn && btn.closest ? btn.closest(".sys") : null;
+  const ask = el && (el.requestFullscreen || el.webkitRequestFullscreen);
+  if (!ask) {
+    openFull();
+    return;
+  }
+  try {
+    const res = ask.call(el);
+    if (res && typeof res.catch === "function") res.catch(() => openFull());
+  } catch (err) {
+    openFull();
+  }
+}
+
+async function updateDiagrams(pid) {
+  const made = await run("task.add", { title: "Update System diagrams and check them (" + pid + ")" },
+    { project: pid, label: "Task added: update System diagrams" });
+  if (!made || !made.id) return;
+  await run("head.log", { text: "Update the System diagrams of " + pid + " and check them", kind: "ask",
+    sum: "update System diagrams", refs: ["task:" + made.id] },
+  { project: pid, label: "Head asked to update the diagrams" });
+}
+
+function askHead(pid, id, label) {
+  const name = label || id || "component";
+  const ref = refOf(pid, "component", String(id || "").replace(/^[a-z]:/, ""));
+  return run("head.log", { text: "Question about System component " + name + " (" + ref + "): please review it",
+    kind: "question", sum: "System: " + name, refs: ["doc:docs/system.json"] },
+  { project: pid, label: "Question sent to Head" });
 }
 
 let bound = false;
@@ -591,6 +708,8 @@ function bindDoc() {
   bound = true;
   document.addEventListener("click", onClick);
   document.addEventListener("keydown", onKey);
+  document.addEventListener("fullscreenchange", redraw);
+  document.addEventListener("webkitfullscreenchange", redraw);
 }
 
 export function sectionView(vm) {

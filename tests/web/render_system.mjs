@@ -44,18 +44,29 @@ const payload = {
     layers: comps }, flows: [flow], stats: { sourceFiles: 12, lines: 3400, imports: 40 },
   details: { "c:api": { kind: "component", title: "HTTP API", commits30: 4, heat: { runningJobs: 1 } } } },
 };
+const catalog = [
+  { id: "components", family: "structure", label: "Components", score: 80, available: true },
+  { id: "containers", family: "structure", label: "Containers", score: 50, available: true },
+  { id: "context", family: "structure", label: "Context", score: 10, available: true },
+  { id: "modules", family: "structure", label: "Modules", score: 90, available: false, reason: "no modules" },
+  { id: "flows", family: "behaviour", label: "Flows", score: 60, available: true },
+  { id: "data", family: "data", label: "Data", score: 40, available: true },
+  { id: "classes", family: "structure", label: "Classes", score: 99, available: true },
+];
 let mode = "ok";
 globalThis.document = { dispatchEvent() { return true; }, addEventListener() {}, getElementById() { return null; } };
 globalThis.fetch = async () => {
   if (mode === "404") return new Response('{"error":{"code":"not_found","message":"no"}}', { status: 404 });
   if (mode === "500") return new Response('{"error":{"code":"x","message":"boom"}}', { status: 500 });
+  if (mode === "cat") return new Response(JSON.stringify(Object.assign({}, payload,
+    { arch: Object.assign({}, payload.arch, { catalog: catalog }) })), { status: 200 });
   const body = mode === "old" ? Object.assign({}, payload, { arch: undefined }) : payload;
   return new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
 };
 const pause = () => new Promise((r) => setTimeout(r, 60));
 const vm = (id) => ({ route: { name: "project", id, section: "system", view: null, item: null, filters: {} } });
 const out = {};
-for (const [key, m] of [["ok", "ok"], ["missing", "404"], ["broken", "500"], ["old", "old"]]) {
+for (const [key, m] of [["ok", "ok"], ["missing", "404"], ["broken", "500"], ["old", "old"], ["cat", "cat"]]) {
   mode = m;
   out[key + "Loading"] = mod.sectionView(vm(key));
   await pause();
@@ -67,6 +78,8 @@ out.flow = mod.flowSvg(flow);
 out.matrix = mod.matrixSvg(data);
 out.open = [mod.openingView({ w: 400, h: 300 }, { w: 1200, h: 800 }), mod.openingView({ w: 4000, h: 3000 },
   { w: 1200, h: 800 })];
+out.fit = [mod.openingView({ w: 1200, h: 400 }, { w: 1200, h: 800 }), mod.openingView({ w: 20000, h: 100 },
+  { w: 1000, h: 500 })];
 out.views = mod.VIEWS.map((v) => v[0]);
 out.global = mod.sectionView({ route: { name: "home", id: null, section: "system" } });
 console.log(JSON.stringify(out));
