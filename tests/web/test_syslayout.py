@@ -310,3 +310,29 @@ class SysLayoutCollapseTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+SPACE_SCRIPT = r"""
+(async () => {
+  const { join } = await import("node:path");
+  const { pathToFileURL } = await import("node:url");
+  const m = await import(pathToFileURL(join(process.argv[1], "js", "graph", "syslayout.js")).href);
+  const view = { groups: [{ id: "a", label: "A" }], nodes: [{ id: "x", group: "a" }, { id: "y", group: "a" }],
+    edges: [] };
+  const one = m.layeredLayout(view, { space: 1 });
+  const two = m.layeredLayout(view, { space: 2 });
+  const gap = (l) => l.nodes[1].x - l.nodes[0].x;
+  console.log(JSON.stringify({ g1: gap(one), g2: gap(two), w1: one.nodes[0].w, w2: two.nodes[0].w,
+    clamp: [m.clampSpace(9), m.clampSpace(0.1), m.clampSpace("x")] }));
+})();
+"""
+
+
+@unittest.skipUnless(NODE, "node not installed")
+class SpaceFactor(unittest.TestCase):
+    def test_factor_two_widens_gap_not_boxes(self):
+        out = subprocess.run([NODE, "-e", SPACE_SCRIPT, WEB], capture_output=True, text=True, check=True).stdout
+        r = json.loads(out)
+        self.assertGreater(r["g2"], r["g1"])
+        self.assertEqual(r["w1"], r["w2"])
+        self.assertEqual(r["clamp"], [2.5, 0.6, 1])

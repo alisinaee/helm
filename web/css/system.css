@@ -43,3 +43,4 @@
 .sys-ov-bl{bottom:var(--sp-2);left:var(--sp-2);font-size:var(--fs-11);flex-wrap:nowrap;padding:2px var(--sp-2)}
 .sys-ov-bl .wfg-chip{font-size:var(--fs-11);white-space:nowrap}
 .sys-zg{display:inline-flex;align-items:center;gap:2px}
+.sys-sp{min-width:44px;font-variant-numeric:tabular-nums}

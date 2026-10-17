@@ -11,7 +11,8 @@ import { run } from "../cmd.js";
 import { copyButton, refOf } from "../ref.js";
 import { bannerHtml, chipHtml, emptyHtml, esc, patch, skeletonHtml } from "../dom.js";
 import { mountViewport } from "../graph/viewport.js";
-import { LABEL_MAX, layeredLayout, matrixLayout, MX_COL, MX_HEAD, MX_LEFT, MX_ROW, sequenceLayout, weak } from
+import { clampSpace, LABEL_MAX, layeredLayout, matrixLayout, MX_COL, MX_HEAD, MX_LEFT, MX_ROW, sequenceLayout,
+  weak } from
   "../graph/syslayout.js";
 import { human, panelHtml } from "./system-panel.js";
 import { anchorShift, collapseGroups, subgraph } from "../graph/syslayout.js";
@@ -76,6 +77,53 @@ function readPref(key, dflt) {
     return dflt;
   }
 }
+
+// Spacing factor per view (gaps and padding only), kept in localStorage.
+const SP_STEP = 0.2;
+let keepCentre = null;
+
+function spaceKey() {
+  return "rb.sys.space." + current + (current === "flows" || DIAGRAMS[current] ? "." + (flowId || "") : "");
+}
+
+function spaceNow() {
+  if (memSpace.has(spaceKey())) return memSpace.get(spaceKey());
+  try {
+    const v = globalThis.localStorage && globalThis.localStorage.getItem(spaceKey());
+    return v == null ? 1 : clampSpace(v);
+  } catch (err) {
+    return 1;
+  }
+}
+
+function spaceText(x) {
+  return x.toFixed(1) + "×";
+}
+
+function setSpace(next) {
+  const sp = Math.round(clampSpace(next) * 10) / 10;
+  if (sp === spaceNow()) return;
+  try {
+    if (globalThis.localStorage) globalThis.localStorage.setItem(spaceKey(), String(sp));
+  } catch (err) {
+    // Blocked storage: the factor lasts for this page only.
+  }
+  memSpace.set(spaceKey(), sp);
+  const svg = typeof document !== "undefined" ? svgEl() : null;
+  if (!auto && view && svg) {
+    const w = Number(svg.getAttribute("data-w")) || 1;
+    const h = Number(svg.getAttribute("data-h")) || 1;
+    const r = svg.getBoundingClientRect();
+    keepCentre = { fx: ((r.width / 2 - view.x) / view.k) / w, fy: ((r.height / 2 - view.y) / view.k) / h };
+  }
+  redraw();
+}
+
+function spaceStep(dir) {
+  setSpace(spaceNow() + dir * SP_STEP);
+}
+
+const memSpace = new Map();
 
 function writePref(key, value) {
   try {
@@ -265,7 +313,7 @@ function togSvg(t, id, open, label) {
 export function graphSvg(g, details, label) {
   const before = lastLay;
   g = shownView(g);
-  const lay = layeredLayout(g, { aspect: canvasAspect() });
+  const lay = layeredLayout(g, { aspect: canvasAspect(), space: spaceNow() });
   lastLay = lay;
   if (anchorId && before) {
     const mv = anchorShift(before, lay, anchorId);
@@ -289,7 +337,7 @@ export function graphSvg(g, details, label) {
 }
 
 export function flowSvg(flow) {
-  const lay = sequenceLayout(flow);
+  const lay = sequenceLayout(flow, spaceNow());
   const heads = lay.heads.map((p) => {
     const sel = selected === p.id;
     return '<g class="wfg-n" data-sys="' + esc(p.id) + '" data-wf-item="' + esc(p.id) + '" tabindex="-1" ' +
@@ -382,7 +430,7 @@ function stage(pid, arch) {
     }
     const has = item && (spec[4] === "items" ? true : Array.isArray(item[spec[4]]) && item[spec[4]].length);
     if (!has) return { html: emptyHtml("Nothing found for " + spec[1] + ". Try another view."), note: note };
-    const out = spec[3](item, { selected: selected, open: clsOpen, aspect: canvasAspect() });
+    const out = spec[3](item, { selected: selected, open: clsOpen, aspect: canvasAspect(), space: spaceNow() });
     svg = svgWrap(out.inner, out.w + 2 * PAD, out.h + 2 * PAD, spec[1] + " diagram").replace('<g id="sys-vp">',
       '<g id="sys-vp"><g transform="translate(' + PAD + " " + PAD + ')">').replace(/<\/g><\/svg>$/, "</g></g></svg>");
   } else {
@@ -457,7 +505,13 @@ function toolbarHtml(pid, arch) {
   const screen = fullHost !== null ? op("exit", "Close full screen (Esc)", "Close") : nativeFs() !== null ?
     op("full", "Exit full screen (Esc)", "Exit full screen") : op("full", "Open full screen", "Full screen");
   const stats = fs ? "" : count;
-  const tools = '<span class="sys-ov sys-ov-tr" role="group" aria-label="Zoom and screen"><span class="sys-zg">' +
+  const sp = spaceNow();
+  const spacing = '<span class="sys-zg" role="group" aria-label="Spacing"><span class="sys-seg-l">Spacing</span>' +
+    op("sp-less", "Less space", "−") + '<button type="button" class="btn btn-small sys-sp" data-sys-op="sp-val" ' +
+    'aria-label="Spacing (double-click to reset)" title="Double-click to reset">' + spaceText(sp) + "</button>" +
+    op("sp-more", "More space", "+") + "</span>";
+  const tools = '<span class="sys-ov sys-ov-tr" role="group" aria-label="Zoom and screen">' + spacing +
+    '<span class="sys-zg">' +
     op("out", "Zoom out", "−") + op("actual", "Zoom to 100 percent", "100%", "sys-zoom") + op("in", "Zoom in", "+") +
     "</span>" + op("fit", "Fit to screen", "Fit") + screen + "</span>";
   const acts = '<span class="sys-ov sys-ov-tl" role="group" aria-label="Diagram actions">' +
@@ -608,7 +662,14 @@ function mountNow() {
   const r = svg.getBoundingClientRect();
   const size = { w: r.width || box.w, h: r.height || box.h };
   svg.addEventListener("keydown", (e) => {
-    if (e.ctrlKey || e.metaKey || e.altKey || (e.key !== "0" && e.key !== "f" && e.key !== "F")) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === "[" || e.key === "]") {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      spaceStep(e.key === "]" ? 1 : -1);
+      return;
+    }
+    if (e.key !== "0" && e.key !== "f" && e.key !== "F") return;
     e.preventDefault();
     e.stopImmediatePropagation();
     fitNow();
@@ -617,6 +678,11 @@ function mountNow() {
     view = { k: view.k, x: view.x - pendingShift.dx * view.k, y: view.y - pendingShift.dy * view.k };
   }
   pendingShift = null;
+  if (keepCentre && !auto && view) {
+    view = { k: view.k, x: size.w / 2 - keepCentre.fx * box.w * view.k,
+      y: size.h / 2 - keepCentre.fy * box.h * view.k };
+  }
+  keepCentre = null;
   api = mountViewport(svg, svg.querySelector("#sys-vp"), {
     view: auto || !view ? openingView(box, size) : view, box: box, taps: taps, fit: false,
     onTap: (el) => select(el.getAttribute("data-sys")),
@@ -763,6 +829,8 @@ function onClick(event) {
     redraw();
   } else if (op === "full") toggleFull(t);
   else if (op === "exit") closeFull();
+  else if (op === "sp-less") spaceStep(-1);
+  else if (op === "sp-more") spaceStep(1);
   else if (op === "fit") fitNow();
   else if (api && op === "actual") {
     auto = false;
@@ -886,6 +954,9 @@ let from = "";
 function bindDoc() {
   bound = true;
   document.addEventListener("click", onClick);
+  document.addEventListener("dblclick", (e) => {
+    if (e.target && e.target.closest && e.target.closest('[data-sys-op="sp-val"]')) setSpace(1);
+  });
   document.addEventListener("keydown", onKey);
   document.addEventListener("fullscreenchange", redraw);
   document.addEventListener("webkitfullscreenchange", redraw);
