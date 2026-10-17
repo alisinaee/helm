@@ -8828,6 +8828,22 @@
         "cacheWrite": 65496,
         "model": "sonnet"
       }
+    },
+    {
+      "id": "j1090",
+      "title": "haiku: R11.118 gen_facts size cap fix",
+      "model": "haiku",
+      "task": "R11.118",
+      "status": "done",
+      "started": "2026-10-17T10:00:31+03:30",
+      "ended": "2026-10-17T10:03:00+03:30",
+      "tokens": {
+        "in": 22,
+        "out": 6752,
+        "cacheRead": 612728,
+        "cacheWrite": 33362,
+        "model": "haiku"
+      }
     }
   ]
 }

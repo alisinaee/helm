@@ -703,5 +703,10 @@
     "task": "R11.118",
     "title": "haiku: R11.118 Git diff preview",
     "model": "haiku"
+  },
+  "a20c0285cb168a670": {
+    "task": "R11.118",
+    "title": "haiku: R11.118 gen_facts size cap fix",
+    "model": "haiku"
   }
 }

@@ -1,6 +1,6 @@
 # FACTS: roadmap-board grounding file
 
-Generated 2026-10-14 by tools/gen_facts.py. Do not edit by hand; run `python3 tools/gen_facts.py`.
+Generated 2026-10-17 by tools/gen_facts.py. Do not edit by hand; run `python3 tools/gen_facts.py`.
 Every fact here is read from the code or the docs at generation time. Where this file and another doc disagree, the code wins.
 
 ## 1. Command help (`bin/roadmap <command> --help`)
@@ -28,6 +28,18 @@ options:
   -h, --help   show this help message and exit
   --json       print the {ok, data | error} JSON envelope on stdout
   --port PORT  open this port for this call only (default: config port, 8780)
+```
+
+### roadmap tick
+
+```text
+usage: roadmap tick [-h] [--json] [--project ID]
+
+options:
+  -h, --help    show this help message and exit
+  --json        print the {ok, data | error} JSON envelope on stdout
+  --project ID  project id (default: $ROADMAP_PROJECT, then the registered
+                project of this folder)
 ```
 
 ### roadmap service
@@ -72,6 +84,21 @@ options:
   --json      print the {ok, data | error} JSON envelope on stdout
 ```
 
+### roadmap init
+
+```text
+usage: roadmap init [-h] [--json] [--name NAME] [--no-service] [path]
+
+positional arguments:
+  path          project folder (default: the current folder)
+
+options:
+  -h, --help    show this help message and exit
+  --json        print the {ok, data | error} JSON envelope on stdout
+  --name NAME   display name (default: the folder name)
+  --no-service  do not install or start the launchd service
+```
+
 ### roadmap job
 
 ```text
@@ -91,6 +118,20 @@ options:
   --json      print the {ok, data | error} JSON envelope on stdout
 ```
 
+### roadmap tokens
+
+```text
+usage: roadmap tokens [-h] [--json] ACTION ...
+
+positional arguments:
+  ACTION
+    backfill  fill tokens of past jobs from subagent transcripts
+
+options:
+  -h, --help  show this help message and exit
+  --json      print the {ok, data | error} JSON envelope on stdout
+```
+
 ### roadmap task
 
 ```text
@@ -103,7 +144,25 @@ positional arguments:
     done      mark tasks done
     start     mark tasks started (partial)
     hold      put tasks on hold
+    backlog   move a task to the backlog (the person only)
+    promote   move a backlog task to todo (the person only)
+    add       add a todo task (quick add)
+    move      reorder a task within its phase
     set       bulk patch from stdin, one 'ID key=value ...' line per task
+
+options:
+  -h, --help  show this help message and exit
+  --json      print the {ok, data | error} JSON envelope on stdout
+```
+
+### roadmap backlog
+
+```text
+usage: roadmap backlog [-h] [--json] ACTION ...
+
+positional arguments:
+  ACTION
+    add       add a backlog task
 
 options:
   -h, --help  show this help message and exit
@@ -164,23 +223,26 @@ options:
 ### roadmap ask
 
 ```text
-usage: roadmap ask [-h] [--json] [--project ID] [--task ID] [--opt A]
+usage: roadmap ask [-h] [--json] [--project ID] [--task ID] [--option A]
                    [--default A] [--block] [--timeout S]
                    [TEXT ...]
 
 positional arguments:
-  TEXT          the question, or one of: get Q3 | wait Q3 | list
+  TEXT                 the question, or one of: get Q3 | wait Q3 | list
 
 options:
-  -h, --help    show this help message and exit
-  --json        print the {ok, data | error} JSON envelope on stdout
-  --project ID  project id (default: $ROADMAP_PROJECT, then the registered
-                project of this folder)
-  --task ID     the task the question is about
-  --opt A       an answer option (repeatable)
-  --default A   the answer taken on timeout
-  --block       the task waits for the answer
-  --timeout S   seconds until the default is taken
+  -h, --help           show this help message and exit
+  --json               print the {ok, data | error} JSON envelope on stdout
+  --project ID         project id (default: $ROADMAP_PROJECT, then the
+                       registered project of this folder)
+  --task ID            the task the question is about
+  --option A, --opt A  an answer option: "Label" or "Label: description"; add
+                       " (recommended)" to the label to mark it. 2 to 6
+                       options, or none; free text is always allowed
+                       (repeatable)
+  --default A          the answer taken on timeout
+  --block              the task waits for the answer
+  --timeout S          seconds until the default is taken
 ```
 
 ### roadmap answer
@@ -240,6 +302,9 @@ positional arguments:
   ACTION
     add       add a feature
     list      one line per feature
+    tree      the plan outline: one line per item (at most 60 lines)
+    set       change a feature's ask flag
+    move      move a feature up or down, or under a parent
     show      one feature and its tasks
     link      link a feature to tasks
     unlink    unlink a feature from tasks
@@ -328,6 +393,76 @@ options:
   --json        print the {ok, data | error} JSON envelope on stdout
   --project ID  project id (default: $ROADMAP_PROJECT, then the registered
                 project of this folder)
+```
+
+### roadmap head
+
+```text
+usage: roadmap head [-h] [--json] ACTION ...
+
+positional arguments:
+  ACTION
+    log       log one message verbatim (redacted), with its kind and summary
+    t         triage one entry in one call: head t H15 <kind> "<sum>" [REF..]
+              [--status S]
+    list      one line per entry: id, kind, status, age, links, summary
+    show      one entry: summary, verbatim, links with their states, history
+              (at most 14 lines)
+    set       change fields: head set H15 status=declined note=".." (a done
+              close needs a commit sha, job id or answer: note)
+    bind      add links to an entry
+    unbind    remove links from an entry
+    split     split one entry into two: head split H15 "<sum a>" "<sum b>"
+    merge     merge a duplicate into another entry: head merge H16 --into H9
+    convert   create a task, issue or backlog item from an entry and bind it
+    claim     start a head session: writes a claim record and prints the
+              carried-over open asks
+    brief     the resume digest, at most 15 lines
+    pause     pause the autopilot gate (writes the head-pause file)
+    resume    resume the autopilot gate (removes the head-pause file)
+    triage    untriaged entries with suggestions
+    next      the head ops that can run now, one runnable command per line
+    review    the person's review: no id lists the done entries, H15 confirm
+              or H15 reopen decides
+    accept    mark an entry accepted (the person only)
+    forget    blank the
+... (truncated)
+```
+
+### roadmap work
+
+```text
+usage: roadmap work [-h] [--json] ACTION ...
+
+positional arguments:
+  ACTION
+    list      one line per Work item: id, status, prio, n/m done, title
+    show      one Work item: outcome and its agent tasks (at most 15 lines)
+    add       add a Work item: work add "<title>" [--outcome ..] [--kind
+              task|issue] [--prio P0-P3]
+    set       change a Work item: work set W12 [--title ..] [--outcome ..]
+              [--prio P0-P3]
+    link      bind an agent task to a Work item: work link R7.86 W12
+    accept    accept a Work item into Done (the person only)
+    reopen    reopen a Review or Done Work item (the person only)
+
+options:
+  -h, --help  show this help message and exit
+  --json      print the {ok, data | error} JSON envelope on stdout
+```
+
+### roadmap ref
+
+```text
+usage: roadmap ref [-h] [--json] ref
+
+positional arguments:
+  ref         the ref the Copy button gives, for example rb:roadmap-
+              board/task/R3.2
+
+options:
+  -h, --help  show this help message and exit
+  --json      print the {ok, data | error} JSON envelope on stdout
 ```
 
 ### roadmap hook
@@ -433,15 +568,19 @@ usage: roadmap rules [-h] [--json] ACTION ...
 
 positional arguments:
   ACTION
-    show      the rules for a task, model and role (at most 12 lines)
-    add       add a rule at the end of docs/rules.txt
-    rm        remove a rule by id, for example R3
-    sync      write the all, lead and claude rules into CLAUDE.md
-    check     validate docs/rules.txt against the caps
+    show       the rules for a task, model and role (at most 12 lines)
+    add        add a rule at the end of docs/rules.txt
+    rm         remove a rule by id, for example R3
+    sync       write the all, lead and claude rules into CLAUDE.md
+    check      validate docs/rules.txt against the caps
+    propose    propose a rule (agents may); the person accepts
+    proposals  the open rule proposals (at most 15 lines)
+    accept     accept a proposal into docs/rules.txt (person only)
+    reject     reject a proposal (person only)
 
 options:
-  -h, --help  show this help message and exit
-  --json      print the {ok, data | error} JSON envelope on stdout
+  -h, --help   show this help message and exit
+  --json       print the {ok, data | error} JSON envelope on stdout
 ```
 
 ### roadmap usage
@@ -451,13 +590,16 @@ usage: roadmap usage [-h] [--json] ACTION ...
 
 positional arguments:
   ACTION
-    show      show the stored usage
-    sync      fetch usage now
-    push      store usage from JSON on stdin
+    show        show the stored usage
+    sync        fetch usage now
+    push        store usage from JSON on stdin
+    statusline  Claude Code status line: store its rate_limits, then print a
+                status line
+    account     which Claude login the usage sync reads
 
 options:
-  -h, --help  show this help message and exit
-  --json      print the {ok, data | error} JSON envelope on stdout
+  -h, --help    show this help message and exit
+  --json        print the {ok, data | error} JSON envelope on stdout
 ```
 
 ### roadmap doctor
@@ -536,18 +678,99 @@ options:
   --json      print the {ok, data | error} JSON envelope on stdout
 ```
 
+### roadmap logs
+
+```text
+usage: roadmap logs [-h] [--json] [--since 10m|2h|1d] [--src {core,hook,ui}]
+                    [--ev NAME] [--ref rb:...] [--session last|SID]
+                    [--level {DEBUG,INFO,WARN,ERROR}] [--limit N]
+                    [--on | --off]
+                    [{summary,marks,status}]
+
+positional arguments:
+  {summary,marks,status}
+                        summary | marks | status (default: the last WARN and
+                        ERROR events)
+
+options:
+  -h, --help            show this help message and exit
+  --json                print the {ok, data | error} JSON envelope on stdout
+  --since 10m|2h|1d     only events newer than this
+  --src {core,hook,ui}  ui, core or hook
+  --ev NAME             one event name, for example ui.error
+  --ref rb:...          one project/kind/id reference
+  --session last|SID    one session id, or the newest one
+  --level {DEBUG,INFO,WARN,ERROR}
+                        the lowest level shown (default WARN)
+  --limit N             newest N events (cap 100)
+  --on                  status: turn the debug log on
+  --off                 status: turn the debug log off
+```
+
+### roadmap git
+
+```text
+usage: roadmap git [-h] [--json] ACTION ...
+
+positional arguments:
+  ACTION
+    status    branch, counts and top changed files
+    log       the newest commits
+    branches  local branches
+    branch    create or switch a branch (no argument: list them)
+    show      one commit: header and file list
+    commit    commit exactly the named paths (never everything)
+    push      push the current branch (policy in docs/git.json; never forced)
+
+options:
+  -h, --help  show this help message and exit
+  --json      print the {ok, data | error} JSON envelope on stdout
+```
+
+### roadmap system
+
+```text
+usage: roadmap system [-h] [--json] ACTION ...
+
+positional arguments:
+  ACTION
+    show      show the components, layers and edges
+    check     validate docs/system.json (exit 1 when invalid)
+
+options:
+  -h, --help  show this help message and exit
+  --json      print the {ok, data | error} JSON envelope on stdout
+```
+
 ## 2. HTTP routes (roadmap/http/routes.py)
 
 | method | path (regex) | purpose |
 |---|---|---|
 | GET | `/api/v1/health` | - |
 | GET | `/api/v1/meta` | - |
-| GET | `/api/v1/projects` | - |
+| GET | `/api/v1/projects` | The project list. Each row is built from the same cached snapshot the project's own route ser... |
 | GET | `'/api/v1/projects/(?P<pid>' + _PID + ')/snapshot'` | - |
-| GET | `'/api/v1/projects/(?P<pid>' + _PID + ')/notes(?:/(?P<name>[^/]*))?'` | GET /api/v1/projects/{pid}/notes: the note list. GET .../notes/{name}: one note as plain text (UTF-8). |
+| GET | `'/api/v1/projects/(?P<pid>' + _PID + ')/head'` | GET /api/v1/projects/{pid}/head: the rows (f=open drops done and declined; the newest n) with... |
+| GET | `'/api/v1/projects/(?P<pid>' + _PID + ')/panel'` | GET /api/v1/projects/{pid}/panel (R11.2): the person's newest board actions with their head s... |
+| GET | `'/api/v1/projects/(?P<pid>' + _PID + ')/jobs'` | GET /api/v1/projects/{pid}/jobs?offset=0&limit=10: one page of the finished jobs, newest firs... |
+| GET | `'/api/v1/projects/(?P<pid>' + _PID + ')/history'` | GET /api/v1/projects/{pid}/history?kind=&actor=&from=&to=&q=&before=&limit=: the project's hi... |
+| GET | `/api/v1/history` | GET /api/v1/history?...&project=: every project's history merged, each event with project and... |
+| GET | `'/api/v1/projects/(?P<pid>' + _PID + ')/git/status'` | GET .../git/status: branch, upstream, ahead/behind, detached, in-progress, and the changed fi... |
+| GET | `'/api/v1/projects/(?P<pid>' + _PID + ')/git/log'` | GET .../git/log?n=10: the newest commits (n from 1 to 100) with their task and job links. |
+| GET | `'/api/v1/projects/(?P<pid>' + _PID + ')/git/branches'` | GET .../git/branches: the local branches, the current one flagged, with ahead/behind and last... |
+| GET | `'/api/v1/projects/(?P<pid>' + _PID + ')/git/show/(?P<sha>[^/]*)'` | GET .../git/show/{sha}: one commit (its links) and its files with +/- counts. Same-origin pag... |
+| GET | `'/api/v1/projects/(?P<pid>' + _PID + ')/git/diff/(?P<sha>[^/]*)'` | GET .../git/diff/{sha}?path=: one file's patch for that commit. Secret names are hidden; bina... |
+| GET | `'/api/v1/projects/(?P<pid>' + _PID + ')/git/diff'` | GET .../git/diff?path=: one changed file's diff in the worktree (an untracked file as all add... |
+| GET | `'/api/v1/projects/(?P<pid>' + _PID + ')/system'` | GET /api/v1/projects/{pid}/system: the System map of one registered project. Components (with... |
+| GET | `/api/v1/tokens/history` | GET /api/v1/tokens/history[?project=pid]: daily token sums by model, totals, per-task sums, t... |
 | GET | `/api/v1/usage` | - |
 | POST | `/api/v1/usage/sync` | - |
-| POST | `/api/v1/cmd` | POST /api/v1/cmd {op, args, project?}: one registry op. Order: CSRF and origin, JSON type, body size (413), |
+| GET | `/api/v1/usage/accounts` | GET /api/v1/usage/accounts: the Tokens page Account tab's rows, emails masked. Read only. |
+| POST | `/api/v1/usage/accounts/(?P<id>[^/]+)/(?P<action>[a-z]+)` | POST /api/v1/usage/accounts/{id}/{action}: connect, disconnect, switch, check or login one ac... |
+| POST | `/api/v1/cmd` | POST /api/v1/cmd {op, args, project?}: one registry op. Order: CSRF and origin, JSON type, bo... |
+| POST | `/api/v1/log` | POST /api/v1/log {sid, events: [...]} (R7.16): a batch of browser debug events, at most 50. O... |
+| GET | `/api/v1/log/status` | GET /api/v1/log/status: whether the debug log is on, its size in bytes and its file count. No... |
+| GET | `/api/v1/log/report` | GET /api/v1/log/report?n=30: the plain-text debug report for the GUI's Copy button (R7.16 ste... |
 | GET | `/data\.json` | Deprecated alias: the first registered project's snapshot. Removed in 2.0. |
 
 ## 3. /cmd ops (roadmap/services/cmdops.py)
@@ -568,192 +791,308 @@ options:
 
 | name | file:line | value |
 |---|---|---|
-| `ACC_MAX` | `roadmap/core/features.py:20` | `160` |
-| `ACC_MAX` | `roadmap/services/featops.py:18` | `160` |
-| `ACTIVITY_SUM_MAX` | `roadmap/core/parsers.py:25` | `60` |
+| `ACC_MAX` | `roadmap/core/features.py:26` | `160` |
+| `ACC_MAX` | `roadmap/services/featops.py:22` | `160` |
+| `ACTIVITY_SUM_MAX` | `roadmap/core/parsers.py:27` | `60` |
 | `AFTER_MAX` | `roadmap/core/planfmt.py:17` | `5` |
-| `AFTER_MAX` | `roadmap/core/snapshot.py:26` | `5` |
+| `AFTER_MAX` | `roadmap/core/snapshot.py:34` | `5` |
+| `AGENTS_MAP_MAX` | `roadmap/services/hooks.py:47` | `200` |
 | `ANSWERED_KEEP` | `roadmap/services/questions.py:14` | `50` |
-| `ANSWER_MAX` | `roadmap/commands/watch.py:20` | `60` |
-| `BUDGET_MAX` | `roadmap/services/rules.py:23` | `100000` |
+| `ANSWER_MAX` | `roadmap/commands/watch.py:21` | `60` |
+| `ASK_OF_MAX` | `roadmap/core/refs.py:18` | `5` |
+| `ASSETS_MAX` | `roadmap/services/head.py:29` | `20` |
+| `BIND_MAX` | `roadmap/core/head.py:25` | `2` |
+| `BUDGET_MAX` | `roadmap/services/rules.py:24` | `100000` |
 | `BY_MAX` | `roadmap/services/comments.py:15` | `40` |
-| `CAP` | `roadmap/services/queue.py:12` | `50` |
+| `CACHE_MAX` | `roadmap/services/system.py:38` | `16` |
+| `CACHE_MAX` | `roadmap/services/system_arch.py:40` | `8` |
+| `CACHE_MAX` | `roadmap/services/system_v2.py:22` | `16` |
+| `CACHE_MAX` | `roadmap/services/systemheat.py:26` | `16` |
+| `CAP` | `roadmap/services/queue.py:10` | `50` |
+| `CAP` | `roadmap/services/system_tasks.py:14` | `40` |
 | `CLOSED_KEEP` | `roadmap/services/issues.py:12` | `100` |
-| `COMMENT_MAX` | `roadmap/core/parsers.py:24` | `280` |
+| `COMMENT_MAX` | `roadmap/core/parsers.py:26` | `280` |
 | `DAYS_KEEP` | `roadmap/services/ledger.py:30` | `14` |
-| `FEATS_MAX` | `roadmap/core/parsers.py:27` | `3` |
+| `DEFAULT_LIMIT` | `roadmap/commands/logs.py:20` | `20` |
+| `FEATS_MAX` | `roadmap/core/parsers.py:29` | `3` |
 | `FEATURES_MAX` | `roadmap/core/planfmt.py:19` | `60` |
 | `FEAT_ACC_MAX` | `roadmap/core/planfmt.py:21` | `160` |
 | `FEAT_TITLE_MAX` | `roadmap/core/planfmt.py:20` | `80` |
-| `ID_MAX` | `roadmap/services/features.py:24` | `99` |
-| `JOBS_KEEP` | `roadmap/services/budget.py:14` | `500` |
+| `FREE_MAX` | `roadmap/services/headpanel.py:24` | `100` |
+| `GATE_LIMIT` | `roadmap/services/head.py:751` | `5` |
+| `GIT_MAX` | `roadmap/services/history.py:31` | `400` |
+| `HEAD_BYTES_MAX` | `roadmap/core/snapshot.py:45` | `8192` |
+| `HEAD_DONE_MAX` | `roadmap/core/snapshot.py:37` | `5` |
+| `HEAD_HISTORY_MAX` | `roadmap/http/routes.py:554` | `20` |
+| `HEAD_LINKED_MAX` | `roadmap/core/snapshot.py:41` | `6` |
+| `HEAD_LINKS_MAX` | `roadmap/core/snapshot.py:40` | `3` |
+| `HEAD_NOTE_MAX` | `roadmap/core/snapshot.py:39` | `200` |
+| `HEAD_OPEN_MAX` | `roadmap/core/snapshot.py:36` | `40` |
+| `HEAD_PREV_MAX` | `roadmap/core/snapshot.py:44` | `3` |
+| `HEAD_SUM_MAX` | `roadmap/core/snapshot.py:38` | `60` |
+| `HEAD_TITLE_MAX` | `roadmap/core/snapshot.py:42` | `60` |
+| `HIST_MAX` | `roadmap/services/history.py:36` | `240` |
+| `ID_MAX` | `roadmap/services/features.py:25` | `99` |
+| `ISSUES_CLOSED_MAX` | `roadmap/core/snapshot.py:32` | `5` |
+| `JOBS_KEEP` | `roadmap/services/budget.py:18` | `500` |
+| `JOB_IDS_MAX` | `roadmap/services/commands.py:692` | `200` |
 | `KEEP` | `roadmap/services/activity.py:12` | `500` |
+| `KEEP` | `roadmap/services/headpanel.py:22` | `300` |
 | `KEEP` | `roadmap/store/backup.py:11` | `14` |
-| `KEEP_FINISHED` | `roadmap/services/jobs.py:17` | `200` |
+| `KEEP_FINISHED` | `roadmap/services/jobs.py:18` | `200` |
+| `LABEL_MAX` | `roadmap/services/usage_accounts.py:53` | `40` |
 | `LAUNCHD_LOG_LIMIT` | `roadmap/services/doctor.py:32` | `5 * 1024 * 1024` |
+| `LIMIT_CAP` | `roadmap/commands/logs.py:21` | `100` |
+| `LINE_MAX` | `roadmap/core/refs.py:16` | `10` |
 | `LINE_MAX` | `roadmap/services/control.py:29` | `160` |
-| `LINK_MAX` | `roadmap/services/featops.py:20` | `3` |
+| `LINK_MAX` | `roadmap/services/featops.py:24` | `3` |
 | `LIST_MAX` | `roadmap/commands/ask.py:18` | `10` |
-| `LIST_MAX` | `roadmap/commands/issue.py:8` | `20` |
-| `NOTE_MAX` | `roadmap/core/parsers.py:21` | `300` |
+| `LIST_MAX` | `roadmap/commands/issue.py:9` | `20` |
+| `LOG_BATCH_MAX` | `roadmap/http/security.py:217` | `50` |
+| `LOG_MAX` | `roadmap/services/git.py:34` | `100` |
+| `MARKS_MAX` | `roadmap/commands/logs.py:22` | `10` |
+| `MESSAGE_MAX` | `roadmap/services/gitops.py:34` | `4000` |
+| `NOTE_MAX` | `roadmap/core/parsers.py:22` | `300` |
+| `NOTE_MAX` | `roadmap/services/head.py:32` | `160` |
 | `OPEN_CAP` | `roadmap/services/issues.py:11` | `200` |
 | `OPEN_CAP` | `roadmap/services/questions.py:13` | `50` |
-| `OPTS_MAX` | `roadmap/core/parsers.py:23` | `5` |
+| `OPTS_LIMIT` | `roadmap/services/questions.py:18` | `6` |
+| `OPTS_MAX` | `roadmap/core/parsers.py:24` | `6` |
 | `OPT_MAX` | `roadmap/services/questions.py:15` | `60` |
-| `PERCENT_MAX` | `roadmap/services/cmdops.py:25` | `100` |
-| `PHASE_LINE_MAX` | `roadmap/services/tasks.py:23` | `160` |
+| `OPT_TEXT_MAX` | `roadmap/core/parsers.py:25` | `260` |
+| `OPT_TEXT_MAX` | `roadmap/services/questions.py:16` | `260` |
+| `OUTCOME_MAX` | `roadmap/services/work.py:29` | `240` |
+| `PATHS_MAX` | `roadmap/services/gitops.py:33` | `500` |
+| `PERCENT_MAX` | `roadmap/services/cmdops.py:28` | `100` |
+| `PHASE_LINE_MAX` | `roadmap/services/tasks.py:25` | `160` |
 | `PHONE_FAIL_LIMIT` | `roadmap/http/security.py:29` | `10` |
-| `QUERY_LIMIT` | `roadmap/services/tasks.py:20` | `20` |
-| `Q_TEXT_MAX` | `roadmap/core/parsers.py:22` | `200` |
-| `RECENT_MAX` | `roadmap/core/snapshot.py:21` | `2` |
+| `PROTECTED_MAX` | `roadmap/services/gitops.py:32` | `50` |
+| `QUERY_LIMIT` | `roadmap/services/tasks.py:22` | `20` |
+| `Q_MAX` | `roadmap/services/history.py:34` | `200` |
+| `Q_TEXT_MAX` | `roadmap/core/parsers.py:23` | `200` |
+| `REASON_MAX` | `roadmap/services/jobs.py:24` | `80` |
+| `RECENT_MAX` | `roadmap/core/snapshot.py:26` | `2` |
 | `RECENT_MAX` | `roadmap/services/ledger.py:36` | `36` |
+| `REPORT_MSG_CAP` | `roadmap/log.py:554` | `160` |
+| `SAMPLES_KEEP` | `roadmap/services/tokenshare.py:18` | `2000` |
 | `SHOWN_MAX` | `roadmap/commands/budget.py:11` | `8` |
-| `SUBS_MAX` | `roadmap/core/parsers.py:14` | `12` |
-| `SUB_TITLE_MAX` | `roadmap/core/parsers.py:15` | `80` |
+| `SHOW_MAX` | `roadmap/commands/head.py:35` | `14` |
+| `STDERR_KEEP` | `roadmap/services/git.py:26` | `64 * 1024` |
+| `STDOUT_CAP` | `roadmap/services/git.py:24` | `2 * 1024 * 1024` |
+| `SUBS_MAX` | `roadmap/core/parsers.py:15` | `12` |
+| `SUB_TITLE_MAX` | `roadmap/core/parsers.py:16` | `80` |
+| `SUMMARY_MAX` | `roadmap/services/history.py:33` | `240` |
 | `SUMMARY_MAX` | `roadmap/services/notify.py:25` | `60` |
+| `SUM_MAX` | `roadmap/core/head.py:54` | `100` |
+| `SUM_MAX` | `roadmap/services/head.py:31` | `head.SUM_MAX` |
+| `SUM_MAX` | `roadmap/services/headpanel.py:23` | `160` |
 | `TASKS_MAX` | `roadmap/services/issues.py:13` | `5` |
+| `TEXT_MAX` | `roadmap/services/head.py:28` | `8000` |
+| `TEXT_MAX` | `roadmap/services/history.py:32` | `4000` |
 | `TEXT_MAX` | `roadmap/services/notify.py:24` | `120` |
+| `TEXT_SHOW_MAX` | `roadmap/commands/head.py:36` | `200` |
 | `TITLE_MAX` | `roadmap/commands/research.py:24` | `80` |
-| `TITLE_MAX` | `roadmap/core/features.py:19` | `80` |
-| `TITLE_MAX` | `roadmap/core/parsers.py:20` | `120` |
-| `TITLE_MAX` | `roadmap/services/featops.py:19` | `80` |
-| `TITLE_MAX` | `roadmap/services/jobs.py:21` | `200` |
-| `TOKENS_K_MAX` | `roadmap/services/commands.py:33` | `10000000` |
-| `UNDO_KEEP` | `roadmap/services/commands.py:28` | `500` |
-| `VIEW_MAX` | `roadmap/commands/plan.py:77` | `15` |
-| `_KEEP` | `roadmap/core/planfmt.py:28` | `object()` |
+| `TITLE_MAX` | `roadmap/core/features.py:25` | `80` |
+| `TITLE_MAX` | `roadmap/core/parsers.py:21` | `120` |
+| `TITLE_MAX` | `roadmap/services/featops.py:23` | `80` |
+| `TITLE_MAX` | `roadmap/services/jobs.py:23` | `200` |
+| `TITLE_MAX` | `roadmap/services/work.py:28` | `60` |
+| `TITLE_MAX` | `roadmap/store/work_db.py:15` | `60` |
+| `TOKENS_K_MAX` | `roadmap/services/commands.py:38` | `10000000` |
+| `TREE_MAX` | `roadmap/commands/feature.py:14` | `60` |
+| `UNDO_KEEP` | `roadmap/services/commands.py:33` | `500` |
+| `USAGE_ISO_MAX` | `roadmap/services/cmdops.py:283` | `40` |
+| `VIEW_MAX` | `roadmap/commands/plan.py:78` | `15` |
+| `_KEEP` | `roadmap/core/planfmt.py:30` | `object()` |
 
 ## 5. Module tree (first docstring line of each file)
 
 ### roadmap/
 
-- `roadmap/__init__.py`: roadmap-board: a live roadmap dashboard and job tracker for Claude Code projects.
+- `roadmap/__init__.py`: Helm: a live roadmap dashboard and job tracker for Claude Code projects.
 - `roadmap/__main__.py`: Entry point for `python3 -m roadmap`.
 - `roadmap/cli.py`: Command line entry point: the argparse tree, the --json envelope and the exit codes.
 - `roadmap/commands/__init__.py`: Command groups. Each module here registers its own commands with the CLI.
 - `roadmap/commands/agent_guide.py`: Command agent-guide: print the short guide for AI agents (roadmap.core.guide, at most 40 lines).
 - `roadmap/commands/ask.py`: Questions: ask, ask get, ask wait, ask list, and answer.
+- `roadmap/commands/backlog.py`: Command group backlog: add an idea to the backlog (status backlog: known, not committed, not...
 - `roadmap/commands/backup.py`: Top-level command backup: copies the data files of one or all projects into the state directory.
 - `roadmap/commands/budget.py`: Command budget: show the spend and the limits (budget show [--phase P], at most 8 lines).
 - `roadmap/commands/comment.py`: Commands comment and comments: add a comment on a task or issue, and read the newest ones.
 - `roadmap/commands/control.py`: Command group control: stop (always allowed), resume and override (refused from an agent shell).
-- `roadmap/commands/doctor.py`: Top-level command doctor: runs the install checks and prints ok, warn or fail with a plain-words fix for each
-- `roadmap/commands/feature.py`: Command group feature (WP52): the planner's features. add, list, show, link, unlink, accept and rm.
+- `roadmap/commands/doctor.py`: Top-level command doctor: runs the install checks and prints ok, warn or fail with a plain-wo...
+- `roadmap/commands/feature.py`: Command group feature (WP52): the planner's features. add, list, tree, show, set, move, link,...
+- `roadmap/commands/git.py`: Command group git: status, log, branches, branch, show, commit and push for the project folde...
+- `roadmap/commands/head.py`: Command group head (HEAD-SPEC section 4): the ledger of the person's asks. log, t (triage in...
 - `roadmap/commands/hook.py`: Top-level command hook: the stdin entry that Claude Code hooks call.
 - `roadmap/commands/hooks.py`: Command group hooks: install and inspect the Claude Code hooks of a project.
 - `roadmap/commands/inbox.py`: Command inbox: what needs the user or the next agent, in at most 6 lines
-- `roadmap/commands/issue.py`: Command group issue: open, list, show, close and link issues (issues.json). Writes go through the command layer.
+- `roadmap/commands/init.py`: Command init: set a project up in one idempotent step (register, empty board, hooks, service).
+- `roadmap/commands/issue.py`: Command group issue: open, list, show, close and link issues (issues.json). Writes go through...
 - `roadmap/commands/job.py`: Command group job: record Claude jobs and their tokens in the project's jobs.json.
-- `roadmap/commands/limits.py`: Command groups limit and phase: the limit rows that stop agents (services/limits.py, services/control.py).
-- `roadmap/commands/open.py`: Top-level command open: opens the dashboard at http://127.0.0.1:<port>/ with the macOS open command (WP13).
-- `roadmap/commands/phone.py`: Command group phone: start, stop, link and status for the read-only phone listener's tunnel (WP13).
-- `roadmap/commands/plan.py`: Command group plan: import plan text into tasks.json, export it for a re-plan, or print the grammar (plan template).
+- `roadmap/commands/limits.py`: Command groups limit and phase: the limit rows that stop agents (services/limits.py, services...
+- `roadmap/commands/logs.py`: Command logs: the debug event log (R7.16), read through roadmap.log.
+- `roadmap/commands/open.py`: Top-level command open: opens the dashboard at http://127.0.0.1:<port>/ with the macOS open c...
+- `roadmap/commands/phone.py`: Command group phone: start, stop, link and status for the read-only phone listener's tunnel (...
+- `roadmap/commands/plan.py`: Command group plan: import plan text into tasks.json, export it for a re-plan, or print the g...
 - `roadmap/commands/project.py`: Command group project: register projects and keep their data files healthy.
-- `roadmap/commands/research.py`: Command group research (WP17): numbered research notes in <data dir>/research, one INDEX line per note, and checks.
-- `roadmap/commands/rules.py`: Command group rules: show, add, rm, sync and check the project rules (services/rules.py).
-- `roadmap/commands/serve.py`: Top-level commands serve and open. serve runs the dashboard server on 127.0.0.1 and, unless --no-usage-loop,
+- `roadmap/commands/ref.py`: Command ref: resolve a board ref (rb:<project>/<kind>/<id>, from the Copy button) to one shor...
+- `roadmap/commands/research.py`: Command group research (WP17): numbered research notes in <data dir>/research, one INDEX line...
+- `roadmap/commands/rules.py`: Command group rules: show, add, rm, sync and check the project rules (services/rules.py), and...
+- `roadmap/commands/serve.py`: Top-level commands serve and open. serve runs the dashboard server on 127.0.0.1 and, unless -...
 - `roadmap/commands/service.py`: Command group service: the launchd lifecycle of the background server (WP11).
-- `roadmap/commands/skills.py`: Command group skills: list the Haiku-sized skill templates and install them into <project>/.claude/skills.
-- `roadmap/commands/status.py`: Top-level command status: the board summary of one project in at most 8 lines and 700 characters.
+- `roadmap/commands/skills.py`: Command group skills: list the Haiku-sized skill templates and install them into <project>/.c...
+- `roadmap/commands/status.py`: Top-level command status: the board summary of one project in at most 8 lines and 700 charact...
 - `roadmap/commands/subtask.py`: Command group subtask: add a subtask to a task, and tick or untick one (P2.4/2).
-- `roadmap/commands/task.py`: Command group task: read and change tasks in the project's tasks.json (show, list, done, start, hold, set).
+- `roadmap/commands/system.py`: Command group system: the architecture map from docs/system.json (A8, SYSTEM-DESIGN-SECTION.md).
+- `roadmap/commands/task.py`: Command group task: read and change tasks in the project's tasks.json (show, list, done, star...
+- `roadmap/commands/tick.py`: Top-level command tick: one supervisor pass over the project store (reap, leases, retry, fold...
+- `roadmap/commands/tokens.py`: Command group tokens: measured per-job tokens from Claude Code subagent transcripts (R10.32).
 - `roadmap/commands/undo.py`: Command undo: put back a change that reports undo, by its activity id (undo A812).
 - `roadmap/commands/usage.py`: Command group usage: the global plan-usage store.
+- `roadmap/commands/usage_accounts.py`: `helm usage account ...` (R11.8, docs/USAGE-ACCOUNTS.md): list, check, connect, disconnect, s...
 - `roadmap/commands/version.py`: Top-level command version: prints the package version. The one implemented command in WP1.
-- `roadmap/commands/watch.py`: Command watch: block until a new Start is queued or a question is answered, then print one line.
+- `roadmap/commands/watch.py`: Command watch: block until a new Start is queued, a question is answered or the person acts o...
+- `roadmap/commands/work.py`: Work items from the CLI: work list, show, add, set, link, accept, reopen (docs/WORK-MODEL.md...
 - `roadmap/core/__init__.py`: Pure core: markdown tables, data-file parsers, extras, snapshot and number formatting. No I/O.
-- `roadmap/core/extras.py`: Registry of the optional roadmap extras: spikes, testing (RH checks) and the roadmap's Next up and Progress log.
+- `roadmap/core/extras.py`: Registry of the optional roadmap extras: spikes, testing (RH checks) and the roadmap's Next u...
 - `roadmap/core/features.py`: Planner features (docs/features.json): derive feature rows, coverage and orphan tasks.
-- `roadmap/core/format.py`: Number formatting for the dashboard. Mirrors web/js/format.js; both are tested against format_cases.json.
-- `roadmap/core/guide.py`: The static text of `roadmap agent-guide`: rules, the most used commands, the plan grammar, research and estimates.
-- `roadmap/core/mdtables.py`: Markdown helpers for the roadmap files: table rows, table iteration, level-2 sections and status classification.
+- `roadmap/core/format.py`: Number formatting for the dashboard. Mirrors web/js/format.js; both are tested against format...
+- `roadmap/core/guide.py`: The static text of `roadmap agent-guide`: rules, the most used commands, the plan grammar, re...
+- `roadmap/core/head.py`: Head section core (HEAD-SPEC section 2, 6): the pure fold of head.jsonl and the stdlib heuris...
+- `roadmap/core/mdtables.py`: Markdown helpers for the roadmap files: table rows, table iteration, level-2 sections and sta...
 - `roadmap/core/parsers.py`: Parsers for tasks.json, jobs.json and autonomy.json.
-- `roadmap/core/planfmt.py`: Plan text format for roadmap tasks and phases, and the bulk "set" line format. Pure functions, no I/O.
-- `roadmap/core/snapshot.py`: Build the roadmap snapshot: the dict the dashboard renders, from the texts of a project's data files.
+- `roadmap/core/planfmt.py`: Plan text format for roadmap tasks and phases, and the bulk "set" line format. Pure functions...
+- `roadmap/core/refs.py`: Board references (R7.12): the rb:<project>/<kind>/<id> strings the Copy button puts on the cl...
+- `roadmap/core/secrets.py`: Secret scrubbing (HEAD-SPEC section 7): masks credentials, personal data and long opaque runs...
+- `roadmap/core/snapshot.py`: Build the roadmap snapshot: the dict the dashboard renders, from the texts of a project's dat...
+- `roadmap/core/workstatus.py`: Status roll-up for Work items (docs/WORK-MODEL.md section 2). Pure: no I/O, stdlib only.
 - `roadmap/errors.py`: Typed errors shared by the CLI and the HTTP layer, with the CLI exit codes.
-- `roadmap/http/__init__.py`: The HTTP layer: the 127.0.0.1 server, the API v1 routes, the static pages and the security checks.
+- `roadmap/http/__init__.py`: The HTTP layer: the 127.0.0.1 server, the API v1 routes, the static pages and the security ch...
 - `roadmap/http/routes.py`: API v1 routes: the path table, the reply helpers and one function per route.
-- `roadmap/http/security.py`: Security rules for the HTTP layer as pure functions: Host and Origin checks, the CSRF check, the phone cookie, the
-- `roadmap/http/server.py`: The dashboard server: ThreadingHTTPServer bound to 127.0.0.1 only, with the request handler, the access log and
-- `roadmap/http/static.py`: Static pages from web/: an allowlist built once at startup. URL paths are only looked up in that map, so they
-- `roadmap/log.py`: Logging for the roadmap package: the namespace, the file handler with rotation, the redaction filter and the
+- `roadmap/http/security.py`: Security rules for the HTTP layer as pure functions: Host and Origin checks, the CSRF check,...
+- `roadmap/http/server.py`: The dashboard server: ThreadingHTTPServer bound to 127.0.0.1 only, with the request handler,...
+- `roadmap/http/static.py`: Static pages from web/: an allowlist built once at startup. URL paths are only looked up in t...
+- `roadmap/log.py`: Logging for the roadmap package: the namespace, the file handler with rotation, the redaction...
 - `roadmap/services/__init__.py`: Service layer: jobs and hooks (WP4), usage (WP6), and later launchd, tunnel and loader.
-- `roadmap/services/activity.py`: Activity log (activity.jsonl): one line per write, {id, at, src, op, sum, undo}. Keeps the newest 500 lines.
-- `roadmap/services/agentguard.py`: Agent guard: ops that loosen control are refused from an agent's shell (any non-empty CLAUDECODE), or when the
+- `roadmap/services/activity.py`: Activity log (activity.jsonl): one line per write, {id, at, src, op, sum, undo}. Keeps the ne...
+- `roadmap/services/agentguard.py`: Agent guard: ops that loosen control are refused from an agent's shell (any non-empty CLAUDEC...
 - `roadmap/services/budget.py`: Budget (budget.json): limits in thousands of tokens and the spend per task and model.
-- `roadmap/services/cmdops.py`: Command ops that wire the control, limit, rules and budget services into the WP21 registry (commands.OPS).
-- `roadmap/services/commands.py`: Command layer (WP21): the one write path for CLI calls, and the registry behind POST /api/v1/cmd.
-- `roadmap/services/comments.py`: Comments (comments.json): a flat thread per target (a task or an issue id). At most 20 per target; the older ones
+- `roadmap/services/cmdops.py`: Command ops that wire the control, limit, rules and budget services into the WP21 registry (c...
+- `roadmap/services/commands.py`: Command layer (WP21): the one write path for CLI calls, and the registry behind POST /api/v1/...
+- `roadmap/services/comments.py`: Comments (comments.json): a flat thread per target (a task or an issue id). At most 20 per ta...
 - `roadmap/services/control.py`: Control state (WP22): stop, resume, override and the limits that stop the agents of a project.
-- `roadmap/services/doctor.py`: The checks behind `roadmap doctor`. Each check returns a row: id, title, status (ok, warn or fail), detail, and fix
-- `roadmap/services/featops.py`: Feature ops (WP52): the registry entries for the planner's features, run through commands.run like the other ops.
+- `roadmap/services/doctor.py`: The checks behind `roadmap doctor`. Each check returns a row: id, title, status (ok, warn or...
+- `roadmap/services/featops.py`: Feature ops (WP52): the registry entries for the planner's features, run through commands.run...
 - `roadmap/services/features.py`: Planner features (WP52): the service behind the feature ops and the feature CLI.
-- `roadmap/services/hooks.py`: Hook driver: turns Claude Code hook events into job starts and closes. Ported from split-net's jobs_auto.py.
-- `roadmap/services/hooks_install.py`: Install, remove and inspect the roadmap hook entries in a project's .claude/settings.local.json (WP10).
-- `roadmap/services/issues.py`: Issues (issues.json): open, close and list. At most 200 open (open or doing); closed or wontfix issues beyond the
+- `roadmap/services/git.py`: Git core (GIT-SPEC step 1): a safe read runner for one registered project, input validation,...
+- `roadmap/services/gitops.py`: Git write ops (GIT-SPEC step 3): git.commit, git.push, git.branch, git.switch and git.revert,...
+- `roadmap/services/head.py`: Head store service (HEAD-SPEC sections 2, 3, 7): appends entries, updates and session records...
+- `roadmap/services/headimport.py`: HEAD-SPEC H11: seed the head ledger from a markdown doc. Numbered items and bullets under the...
+- `roadmap/services/headops.py`: Head ops (HEAD-SPEC sections 4 and 10): the registry entries behind `roadmap head ...`, run t...
+- `roadmap/services/headpanel.py`: Panel to head (R11.2): every write the person makes on the board reaches the head agent.
+- `roadmap/services/history.py`: Project history (R11.4, docs/ACTIVITY-V2.md): one read-only feed of everything that happened...
+- `roadmap/services/hooks.py`: Hook driver: turns Claude Code hook events into job starts and closes. Ported from split-net'...
+- `roadmap/services/hooks_install.py`: Install, remove and inspect the roadmap hook entries in a project's .claude/settings.local.js...
+- `roadmap/services/issues.py`: Issues (issues.json): open, close and list. At most 200 open (open or doing); closed or wontf...
 - `roadmap/services/jobs.py`: Job registry in each project's data folder (jobs.json): start, finish, list and prune.
-- `roadmap/services/launchd.py`: The launchd user agent that runs `roadmap serve`: render and write the plist, the lifecycle through launchctl,
-- `roadmap/services/launcher.py`: Opt-in launcher (R7.1 T4): opens Terminal with `claude` in the project folder when nobody is listening.
-- `roadmap/services/ledger.py`: Usage ledger (WP27): the global ledger.json of measured account points and of each project's tracked tokens.
-- `roadmap/services/limits.py`: Limit rows (WP27): the rules that stop agents when a window of usage is used up. Specified in docs/UI-SPEC.md 2b.
-- `roadmap/services/loader.py`: Load a registered project's data files into a snapshot, and name the process that holds a TCP port.
-- `roadmap/services/notify.py`: Desktop wake-up notifications (GAP-ANALYSIS 2.1): one macOS notification through osascript when a Start is queued,
+- `roadmap/services/jobtokens.py`: Measured tokens per job (R10.32): read a Claude Code subagent transcript and store the sums o...
+- `roadmap/services/launchd.py`: The launchd user agent that runs `roadmap serve`: render and write the plist, the lifecycle t...
+- `roadmap/services/launcher.py`: Opt-in launcher (R7.1 T4): opens Terminal with `claude` in the project folder when nobody is...
+- `roadmap/services/leases.py`: File leases in the SQLite store (docs/roadmap.db, table leases): one row per leased file.
+- `roadmap/services/ledger.py`: Usage ledger (WP27): the global ledger.json of measured account points and of each project's...
+- `roadmap/services/limits.py`: Limit rows (WP27): the rules that stop agents when a window of usage is used up. Specified in...
+- `roadmap/services/loader.py`: Load a registered project's data files into a snapshot, and name the process that holds a TCP...
+- `roadmap/services/notify.py`: Desktop wake-up notifications (GAP-ANALYSIS 2.1): one macOS notification through osascript wh...
 - `roadmap/services/presence.py`: Session presence (R7.1 T1): tells the board whether a Claude session is listening for a project.
 - `roadmap/services/projects.py`: Project maintenance (WP10): init templates, add, list, show, remove, check, migrate and backup.
-- `roadmap/services/questions.py`: Questions (questions.json): ask, answer, expire on timeout, list. At most 50 open. Answered or defaulted questions
+- `roadmap/services/questions.py`: Questions (questions.json): ask, answer, expire on timeout, list. At most 50 open. Answered o...
 - `roadmap/services/queue.py`: Start queue (queue.json): tasks waiting to be started, at most 50 entries, oldest first.
-- `roadmap/services/records.py`: Shared file work for the WP20 services: load a keyed JSON document at the current schema, save it atomically,
-- `roadmap/services/rules.py`: Project rules (WP22): docs/rules.txt, one rule per line, shown to the lead and to workers, and synced to CLAUDE.md.
-- `roadmap/services/tasks.py`: Tasks service (WP16): read, query, bulk upsert of phases and tasks from parsed plan records, and the status summary.
-- `roadmap/services/tunnel.py`: The phone tunnel: rotate the phone token, start ssh to localhost.run, read the tunnel URL, keep the pid file,
-- `roadmap/services/usage.py`: Account usage for the dashboard: the Anthropic usage reading, the global usage.json store, the mirror into each
-- `roadmap/store/__init__.py`: Storage layer: paths, atomic JSON writes, directory locks, config, schema versions, migrations and backups.
+- `roadmap/services/records.py`: Shared file work for the WP20 services: load a keyed JSON document at the current schema, sav...
+- `roadmap/services/rules.py`: Project rules (WP22): docs/rules.txt, one rule per line, shown to the lead and to workers, an...
+- `roadmap/services/supervisor.py`: Supervisor: one tick() pass over the project store (docs/roadmap.db). Idempotent and safe to...
+- `roadmap/services/system.py`: System map A1: load and validate the optional docs/system.json, or build an automatic baselin...
+- `roadmap/services/system_arch.py`: System views (R10.33): the engineering views of one project, derived from its code (docs/SYST...
+- `roadmap/services/system_behave.py`: R11.103 System v2: the class, deployment, use case and activity diagrams, derived from the co...
+- `roadmap/services/system_data.py`: System v2 data diagrams: ER / EER entities and state machines derived from the tracked files...
+- `roadmap/services/system_tasks.py`: System v2: which board (agent) tasks and Work items belong to which component (docs/SYSTEM-V2...
+- `roadmap/services/system_v2.py`: System v2 backend (docs/SYSTEM-V2-SPEC.md sections 2 and 3): extends the arch dict system_arc...
+- `roadmap/services/systemheat.py`: System map A2: heat per component, from the last 30 days of git history, the running jobs, th...
+- `roadmap/services/tasks.py`: Tasks service (WP16): read, query, bulk upsert of phases and tasks from parsed plan records,...
+- `roadmap/services/tokenhist.py`: Token history for the Tokens page (R11.6): daily sums by model, totals, per-task sums and the...
+- `roadmap/services/tokenshare.py`: Share of the weekly limit per job (R10.35): an estimate, not a measurement.
+- `roadmap/services/tunnel.py`: The phone tunnel: rotate the phone token, start ssh to localhost.run, read the tunnel URL, ke...
+- `roadmap/services/usage.py`: Account usage for the dashboard: the Anthropic usage reading, the global usage.json store, th...
+- `roadmap/services/usage_accounts.py`: Usage accounts (R11.8, docs/USAGE-ACCOUNTS.md): which Claude login Helm's usage sync reads, w...
+- `roadmap/services/usage_sources.py`: Where account usage comes from when nobody pastes it (R10.29). services/usage.py runs the cha...
+- `roadmap/services/work.py`: Work items (the human card) and the link from agent tasks to them (docs/WORK-MODEL.md section...
+- `roadmap/store/__init__.py`: Storage layer: paths, atomic JSON writes, directory locks, config, schema versions, migration...
 - `roadmap/store/atomic.py`: Atomic JSON writes (temp file, fsync, replace, fsync the directory) and strict JSON reads.
-- `roadmap/store/backup.py`: Timestamped copies of data files under the state directory. Keeps the newest 14 backups per project.
-- `roadmap/store/config.py`: Global config.json: schema v1 with ports, usage settings and the project list. Add, list, get and remove.
-- `roadmap/store/jsonl.py`: JSON-lines files (activity.jsonl and the *-archive.jsonl files): append one line, read tolerantly, keep the newest N.
-- `roadmap/store/lock.py`: Exclusive directory lock: flock on an fd of the data directory itself, the same mechanism as split_net jobs.py.
-- `roadmap/store/migrations.py`: Ordered migration steps per data kind. Reads upgrade in memory only; writers save the newest version.
-- `roadmap/store/paths.py`: Locations of the config, state and log directories. Setting ROADMAP_HOME redirects every path under one root.
+- `roadmap/store/backup.py`: Timestamped copies of data files under the state directory. Keeps the newest 14 backups per p...
+- `roadmap/store/config.py`: Global config.json: schema v1 with ports, usage settings and the project list. Add, list, get...
+- `roadmap/store/db.py`: SQLite store (stdlib sqlite3): one file per project (docs/roadmap.db), WAL, one short write t...
+- `roadmap/store/events.py`: Append-only event log in the SQLite store. One shared integer rev across all event kinds.
+- `roadmap/store/export.py`: Deterministic JSON export of the SQLite store into the file shapes the repo tracks (tasks.jso...
+- `roadmap/store/head_db.py`: Head ledger on the SQLite store (opt-in backend; JSON head.jsonl stays the default).
+- `roadmap/store/jobs_db.py`: Job registry in the SQLite store (roadmap/store/db.py, docs/roadmap.db), used when the switch in
+- `roadmap/store/jsonl.py`: JSON-lines files (activity.jsonl and the *-archive.jsonl files): append one line, read tolera...
+- `roadmap/store/lock.py`: Exclusive directory lock: flock on an fd of the data directory itself, the same mechanism as...
+- `roadmap/store/migrate.py`: Import an existing project's JSON files (tasks.json, jobs.json, head.jsonl) into the SQLite s...
+- `roadmap/store/migrations.py`: Ordered migration steps per data kind. Reads upgrade in memory only; writers save the newest...
+- `roadmap/store/paths.py`: Locations of the config, state and log directories. Setting ROADMAP_HOME redirects every path...
 - `roadmap/store/schema.py`: Schema versions per data file kind, with the read and write rules.
+- `roadmap/store/tasks_db.py`: JSON data files mirrored in the sqlite store (used only when the sqlite switch is on; JSON st...
+- `roadmap/store/work_db.py`: Work items (the human card) and their agent tasks (the machine packages) in the SQLite store...
 
 ### web/js/views/
 
-- `web/js/views/activity.js`: Activity (WP30): the activity lines, newest first.
-- `web/js/views/agents.js`: Agents (WP34): the running jobs as a tree (a lead job with its workers indented under it), the last 10 finished jobs, and a Stop button per row (op task.stop).
-- `web/js/views/board.js`: Work, Board view (WP31), and the helpers the List and Tree views share: the project's tasks with their live status (deferred tasks are not shown), the filter...
-- `web/js/views/details.js`: Details tab (WP29): the task, issue or question named by the route (#/p/<id>/<section>/i/<item>), or the project card when nothing is selected.
+- `web/js/views/activity.js`: Activity (R11.4, docs/ACTIVITY-V2.md): the full project history.
+- `web/js/views/activity_data.js`: Activity data (R11.4, docs/ACTIVITY-V2.md): the per-scope state of the history feed, the read...
+- `web/js/views/activity_timeline.js`: Activity timeline (R11.117): the horizontal strip at the top of the Activity page.
+- `web/js/views/activity_view.js`: Activity markup (R11.4): the filter bar, the time scrubber, the day-grouped rows and the deta...
+- `web/js/views/agents.js`: Agents (WP34): the running jobs as a tree (a lead job with its workers indented under it), an...
+- `web/js/views/board.js`: Work, Board view (WP31), and the helpers the List and Tree views share: the project's tasks w...
+- `web/js/views/details.js`: Details tab (WP29): the task, issue or question named by the route (#/p/<id>/<section>/i/<ite...
 - `web/js/views/extras.js`: Extras: the spike board and the real-hardware board.
+- `web/js/views/git.js`: Git (R7.29 W1.c, docs/GIT-SPEC.md section 5): the project's repo as the person reads it.
+- `web/js/views/head.js`: Head screen (R7.31 H8, docs/HEAD-SPEC.md sections 5 and 10).
+- `web/js/views/headseen.js`: Seen by head (R11.2, docs/PANEL-TO-HEAD.md): the person's newest board actions and whether th...
 - `web/js/views/home.js`: Home (#/): one card per project, then Running now across projects.
-- `web/js/views/inbox.js`: Inbox (WP30): the open questions as cards, one button per option (the default is highlighted), a countdown when the question has a timeout, and the task it b...
-- `web/js/views/issues.js`: Issues (WP32).
+- `web/js/views/inbox.js`: Inbox (WP30, R7.111): one list of everything that needs you (open questions, Head asks, rule...
 - `web/js/views/kpi.js`: KpiRow: six tiles for the project view.
 - `web/js/views/legend.js`: Legend: what the glyphs, chips and token figures mean.
-- `web/js/views/limits.js`: Limit rows (WP33): the editor rows, the add presets and their actions.
-- `web/js/views/list.js`: Work, List view (WP31): a dense table of the project's tasks with a checkbox, id, title, phase, status, model, est, spent, cap and flags.
+- `web/js/views/limits.js`: Limits, simple (R7.28 A, docs/LIMITS-SIMPLE-SPEC.md).
+- `web/js/views/list.js`: Work, List view (WP31): a dense table of the project's tasks with a checkbox, id, title, phas...
 - `web/js/views/nav.js`: Left nav (WP28): the section list with badges and the settings link at the foot.
-- `web/js/views/needsyou.js`: Needs you: the open tasks whose needsUser flag is set (the same count as the summary's need_user), as task rows.
-- `web/js/views/next.js`: Next up: the queued items from the roadmap, as plain text (the markdown bold and code marks are removed).
+- `web/js/views/needsyou.js`: Needs you: the open tasks whose needsUser flag is set (the same count as the summary's need_u...
+- `web/js/views/next.js`: Next up: the queued items from the roadmap, as plain text (the markdown bold and code marks a...
 - `web/js/views/overview.js`: Overview (WP30).
 - `web/js/views/palette.js`: Command palette (WP61b).
 - `web/js/views/panel.js`: Right panel (WP29): one <aside> with two tabs, Projects and Details.
 - `web/js/views/phases.js`: Phases: the main column of the project view.
-- `web/js/views/planner.js`: Planner (WP53).
+- `web/js/views/planner.js`: Planner (R7.109): the plan on the Head screen's layout and classes (.hd-* in head.css).
 - `web/js/views/projects.js`: Projects tab (WP29): "All projects" first, then one row per project.
 - `web/js/views/recent.js`: Recent progress: the newest rows of the roadmap log.
-- `web/js/views/research.js`: Research (WP34): the project's research notes (read only, from GET /api/v1/projects/{id}/notes) with a plain-text reader, and the onboarding checklist for a...
-- `web/js/views/roadmap.js`: Roadmap (WP32).
-- `web/js/views/rules.js`: Rules (WP33): the project's rules in tabs by scope group, a delete on each rule, an add form (scope, kind, text with a 160-character counter) and Sync to CLA...
-- `web/js/views/running.js`: Running now: the running jobs with live timers, then the last 6 finished jobs with duration and tokens.
-- `web/js/views/settings.js`: Settings (WP33): theme, density, what a phone may change, keyboard help and where the data lives.
+- `web/js/views/roadmap.js`: Roadmap (WP32, R7.110).
+- `web/js/views/roadmap_map.js`: Roadmap Map (R11.5, docs/ROADMAP-MAP.md): the plan as a metro line of phases with a column of...
+- `web/js/views/rules.js`: Rules (WP33): the project's rules in tabs by scope group, a delete on each rule, an add form...
+- `web/js/views/running.js`: Running now: the running jobs with live timers, then the last 6 finished jobs with duration a...
+- `web/js/views/settings.js`: Settings (WP33): theme, density, what a phone may change, keyboard help, where the data lives...
+- `web/js/views/system-menu.js`: System context menu (R11.105): header (name, kind, progress), action items, optional inline t...
+- `web/js/views/system-panel.js`: System views side panel (R10.33): the facts of the selected node, as a string.
+- `web/js/views/system.js`: System (R10.33, docs/SYSTEM-VIEWS-SPEC.md): the selected project drawn the way engineers draw...
 - `web/js/views/tasks.js`: Task rows and job chips.
 - `web/js/views/toast.js`: Toasts (WP28): one aria-live region.
-- `web/js/views/tokens.js`: Tokens (WP33): the meters (Today and This week) for the scope, the limits editor, the account card, spend and the override.
-- `web/js/views/topbar.js`: Top bar (WP28): the scope crumb (project name, section, view), the control pill with one Stop or Resume button, the Today and Week mini meters, the connectio...
+- `web/js/views/tokens.js`: Tokens (R7.28 B): one plain page, the same for All projects and a project.
+- `web/js/views/tokens_by.js`: Tokens by task and by model (R10.32 step 5): two read-only tables summed from the jobs that c...
+- `web/js/views/tokens_charts.js`: Small inline-SVG chart helpers for the Tokens page (R11.6).
+- `web/js/views/tokens_history.js`: Token history for the Tokens page (R11.6): the Overview tab (general tokens used, remaining e...
+- `web/js/views/topbar.js`: Top bar (WP28, R7.28 W1.d): the scope crumb (project name, section, view), the control pill w...
 - `web/js/views/tree.js`: Work, Tree view (WP31): phase, then task, then subtask checkboxes.
-- `web/js/views/usage.js`: UsageBand: the weekly and five-hour plan meters, reset countdowns, the stale marker and the Sync now button.
+- `web/js/views/usage.js`: UsageBand: the weekly and five-hour plan meters, reset countdowns, the stale marker, the Sync...
+- `web/js/views/wf_table.js`: The Workflow Table (R7.114, B-0 and B-4): one row per task that had activity in the range, no...
 - `web/js/views/work.js`: Work section (WP31): the Board, List and Tree views of one project's tasks.
-- `web/js/views/workflow.js`: Workflow (WP48, W2): the job spans and task edges of each project's snapshot (the workflow key, WP47), drawn as swimlanes (Timeline), phases as columns of ta...
+- `web/js/views/workflow.js`: Workflow (WP48, W2): the job spans and task edges of each project's snapshot (the workflow ke...
 
 ## 6. Data files and locations (from docs/ARCHITECTURE.md)
 
@@ -785,36 +1124,36 @@ options:
 
 ## 7. Last 30 commit subjects (newest first)
 
-- R7.5 A: aligned rows in tokens and phases
-- R6.34b: focusable diagram canvas
-- docs: R6.34 workflow diagram verification
-- R7.1 T5: queue notification names the command and may launch
-- docs: head runbook (commands to run the head loop)
-- R7.1 T6: snapshot session + queued-waiting UI
-- R7.1 T4: launcher service
-- R7.1 T3: hooks stamp presence
-- R7.1 T2: watch stamps presence
-- R7.1 T1: presence service
-- docs: relative links in agy-a4-aria
-- docs: use ~ instead of absolute home paths
-- docs: full-cycle agent token cost
-- lint_js: wrap long lines, no innerHTML in workflow
-- lint_py: wrap long lines
-- GUI Start refuses unapproved phase; RELEASE.md port 8780
-- docs: full handover (vision, rules, decisions, state, open items) + CLAUDE.md for new chats
-- tests: remove stray assertion
-- tests: Map view moved to graph/render.js (old mapSvg tests removed), SVG namespace is not an external host
-- WP61b: command palette hook-up
-- WP53b: planner fixes and smaller snapshot rows
-- WP72: workflow diagram renderer and viewport
-- WP65a: hooks and control gap tests
-- WP65b: commands and notify gap tests
-- WP62b: phase approval gate and research status line
-- docs: agy audit results (gaps, rows, palette, strings, docs)
-- board data: tasks with feats, jobs, limit (regenerated by sync-rb-board)
-- WP56: seed features for roadmap-board
-- WP62: project new --research, job progress
-- test_panel: featops ops count as registered
+- Board state: R11.114-R11.118 done
+- R11.118: Git worktree diff preview (read-only route + diff pane)
+- R11.117: timeline spans the whole range via server bins (tl)
+- R11.115: spacing control for Workflow map and Roadmap map
+- R11.117: Activity horizontal timeline with selected-item point
+- R11.116: Git section redesign (chips header, tabs, status pills, docked commit panel)
+- R11.115: System diagram spacing control (Spacing - / +, [ ], per-view)
+- R11.114: System diagram actions inside the diagram box; band toggle no longer covers label
+- Board state: ledger H238/H239
+- Runbook: H239 no agy/Cursor/split-net while VPN is off
+- R11.109: update timeline source tests to the new pan/zoom code
+- Board state: R11.112, R11.113, R10.28 done
+- R11.113: route class module edges around boxes, label in the gap
+- R11.112: class diagram import/extends edges from the backend
+- R11.112: fitShelf packs module boxes to the canvas aspect
+- R11.112: Classes diagram grouped by module, collapsed by default, aggregated edges
+- Board state: jobs, ledger, tasks; runbook 5h stop 50% (H235)
+- R11.111: seed docs/system.json overrides + spec section 6
+- R11.110: System v2 integration (new diagram kinds, expand/drill, breadcrumb, context menu)
+- R11.8: Account tab one aligned grid (subgrid, content-sized actions)
+- R11.104: p7 lint and r765 fixes (rewrap, setHtml, line numbers)
+- R11.8: usage accounts routes for the Tokens Account tab
+- R11.109: Workflow timeline pan/zoom/Now (buttons, wheel, pinch, keys)
+- R11.2 panel-to-head channel; R11.6/R11.8 Tokens history charts and Account tab
+- R11.5: Roadmap map view (layout, render, tests)
+- R11.104: lint/a11y fixes (toolbar aria-controls, sysdiagrams wrap, system labels, resize css)
+- R11.4: Activity redesign (full history, filters, time) + history API service
+- R11.104: System v2 UI core (fill-space layout, true fit, zoom readout, native full screen, switcher, toolbar actions)
+- R11.102: skip test fixtures in er/states
+- R11.108: syslayout collapseGroups, subgraph, anchorShift, toggles
 
 ## 8. UI rules (docs/UI-CHECKLIST.md, numbered rules)
 
