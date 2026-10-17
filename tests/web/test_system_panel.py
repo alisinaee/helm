@@ -26,7 +26,16 @@ const mod = { kind: "module", title: "web/js", fileCount: 3, lines: 90, files: [
   commits: 0 }], dependsOn: [], usedBy: [], packages: ["react"], component: { id: "c:web", label: "Web" } };
 const st = { kind: "store", title: "jobs.json", tracked: ["docs/jobs.json"], tables: [],
   readers: [{ path: "roadmap/services/jobs.py", mode: "reads, writes" }] };
-console.log(JSON.stringify({ full: m.panelHtml("my pid", "c:api", comp), mod: m.panelHtml("p", "m:web/js", mod),
+const board = [];
+for (let i = 1; i <= 17; i++) board.push({ id: "R" + i, title: "Task " + i, status: i === 1 ? "done" : "doing", model: "haiku" });
+board[1] = { id: "R2", title: "Evil <b>x</b>", status: "hold", model: "opus" };
+const bound = { kind: "component", title: 'Board "C"', progress: { done: 1, total: 17, pct: 6 }, board,
+  work: [{ id: "W3", title: "Human <card>", status: "todo", kind: "feature" }] };
+const bare = { kind: "component", title: "Bare" };
+const cont = { kind: "container", title: "Box", progress: { done: 0, total: 1, pct: 0 },
+  board: [{ id: "R9", title: "T", status: "todo", model: "" }], work: [], refId: "box-1" };
+console.log(JSON.stringify({ bound: m.panelHtml("my-pid", "c:api", bound), bare: m.panelHtml("my-pid", "c:bare", bare),
+  cont: m.panelHtml("my-pid", "k:box", cont), full: m.panelHtml("my pid", "c:api", comp), mod: m.panelHtml("p", "m:web/js", mod),
   store: m.panelHtml("p", "s:jobs", st), none: m.panelHtml("p", null, null), missing: m.panelHtml("p", "x", null),
   human: [m.human(999), m.human(1600), m.human(-1)] }));
 """
@@ -51,6 +60,42 @@ class SystemPanelTest(unittest.TestCase):
         self.assertIn('class="row-grid fin-row"', html)
         self.assertRegex(html, r'Commits \(30 days\)</span><span class="rg-num" title="5">5</span>')
         self.assertRegex(html, r'Lines</span><span class="rg-num" title="1.6k">1.6k</span>')
+
+    def test_board_tasks_progress_and_work(self):
+        html = self.out["bound"]
+        self.assertIn("Board tasks (17)", html)
+        self.assertIn("+2 more", html)
+        self.assertNotIn("Task 17", html)
+        self.assertIn('href="#/p/my-pid/roadmap/i/R1"', html)
+        self.assertIn('chip chip-success">done', html)
+        self.assertIn('chip chip-info">doing', html)
+        self.assertIn('chip chip-warning">hold', html)
+        self.assertIn('chip chip-neutral">todo', self.out["cont"])
+        self.assertIn("Work items (1)", html)
+        self.assertIn('href="#/p/my-pid/work/i/W3"', html)
+        self.assertIn("1/17 tasks done", html)
+        self.assertIn('data-pct="6"', html)
+        self.assertIn("Agent jobs", self.out["full"])
+
+    def test_actions_and_empty_state(self):
+        html = self.out["bound"]
+        self.assertIn('data-ref="rb:my-pid/component/api"', html)
+        self.assertIn('data-action="copy-ref"', html)
+        self.assertIn('data-sys-op="ask" data-sys-id="c:api" data-sys-label="Board &quot;C&quot;"', html)
+        self.assertIn('href="#/p/my-pid/work">Open in Work', html)
+        self.assertIn('data-ref="rb:my-pid/component/box-1"', self.out["cont"])
+        self.assertIn("Board tasks (1)", self.out["cont"])
+        bare = self.out["bare"]
+        self.assertIn("No tasks bound yet.", bare)
+        self.assertNotIn("tasks done", bare)
+        self.assertNotIn("Board tasks", bare)
+
+    def test_task_text_is_escaped(self):
+        html = self.out["bound"]
+        self.assertIn("Evil &lt;b&gt;x&lt;/b&gt;", html)
+        self.assertIn("Human &lt;card&gt;", html)
+        self.assertNotIn("<b>x</b>", html)
+        self.assertNotIn("<card>", html)
 
     def test_related_nodes_are_buttons_that_select(self):
         html = self.out["full"]

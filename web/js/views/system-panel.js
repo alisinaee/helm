@@ -3,7 +3,8 @@
 // component, module, store) and the lists for that kind. Rows use the shared .row-grid columns (name | number |
 // number), so counts line up; a related node is a link (data-sys-go) that system.js turns into a selection.
 
-import { chipHtml, esc } from "../dom.js";
+import { chipHtml, esc, meterHtml } from "../dom.js";
+import { copyButton } from "../ref.js";
 
 const KIND = { system: "System", person: "Person", external: "External system", container: "Container",
   component: "Component", module: "Module (folder)", store: "Data store" };
@@ -66,12 +67,66 @@ function facts(pairs) {
   return rows.join("");
 }
 
+const TONE = { done: "success", partial: "info", doing: "info", hold: "warning" };
+const BOARD_CAP = 15;
+
+function itemLink(href, text, cls) {
+  return '<a class="' + (cls || "rg-t") + '" href="' + esc(href) + '" title="' + esc(text) + '">' + esc(text) + "</a>";
+}
+
+function taskRow(base, t) {
+  const st = String(t.status || "todo");
+  const href = base + "/roadmap/i/" + encodeURIComponent(t.id);
+  return '<div class="row-grid fin-row"><span>' + chipHtml(st, TONE[st]) + "</span>" +
+    itemLink(href, t.id || "", "rg-num") + itemLink(href, t.title || t.id || "") + cell(t.model || "", "rg-num") +
+    "</div>";
+}
+
+function workRow(base, w) {
+  const st = String(w.status || "todo");
+  const href = base + "/work/i/" + encodeURIComponent(w.id);
+  return '<div class="row-grid fin-row"><span>' + chipHtml(st, TONE[st]) + "</span>" +
+    itemLink(href, w.id || "", "rg-num") + itemLink(href, w.title || w.id || "") +
+    "</div>";
+}
+
+// Progress, actions and the bound board tasks / Work items of a component or container (R11.106).
+function taskBlocks(pid, id, d, title, base) {
+  const board = Array.isArray(d.board) ? d.board : [];
+  const work = Array.isArray(d.work) ? d.work : [];
+  const pr = d.progress || {};
+  const total = num(pr.total);
+  const done = num(pr.done);
+  const pct = typeof pr.pct === "number" ? pr.pct : Math.round(done * 100 / (total || 1));
+  let out = "";
+  if (total > 0) {
+    out += '<div class="sys-progress">' + meterHtml(pct, "success") +
+      '<span class="wfg-note">' + done + "/" + total + " tasks done</span></div>";
+  }
+  const refId = d.refId || String(id).replace(/^[ck]:/, "");
+  out += '<div class="sys-actions">' + copyButton("component", refId, title, { project: pid,
+    sum: 'component "' + title + '" tasks=' + done + "/" + total }) +
+    '<button type="button" class="btn btn-small" data-sys-op="ask" data-sys-id="' + esc(id) + '" data-sys-label="' +
+    esc(title) + '">Ask Head</button> <a href="' + base + '/work">Open in Work</a></div>';
+  if (!board.length && !work.length) {
+    return out + '<p class="wfg-note">No tasks bound yet. Add "tasks" to this component in docs/system.json.</p>';
+  }
+  if (board.length) {
+    const rows = board.slice(0, BOARD_CAP).map((t) => taskRow(base, t));
+    if (board.length > BOARD_CAP) rows.push('<p class="wfg-note">+' + (board.length - BOARD_CAP) + " more</p>");
+    out += section("Board tasks (" + board.length + ")", rows);
+  }
+  if (work.length) out += section("Work items (" + work.length + ")", work.map((w) => workRow(base, w)));
+  return out;
+}
+
 export function panelHtml(pid, id, d) {
   if (!id || !d) return "";
   const title = d.title || id;
   const base = "#/p/" + encodeURIComponent(pid);
   let body = "";
   if (d.notes) body += "<p>" + esc(d.notes) + "</p>";
+  if (d.kind === "component" || d.kind === "container") body += taskBlocks(pid, id, d, title, base);
   if (d.kind === "system" && d.stats) {
     const s = d.stats;
     body += facts([["Files", s.files], ["Source files", s.sourceFiles], ["Lines of code", human(s.lines)],
@@ -94,8 +149,8 @@ export function panelHtml(pid, id, d) {
     }
     body += files(d.files, d.fileCount);
     body += section("Recent commits", (d.commits || []).map((c) => row(cell(c.subject, "rg-t"), c.sha, day(c.at))));
-    body += section("Agent jobs", (d.jobs || []).map((j) => row(cell((j.task || "") + " " + (j.title || ""), "rg-t"),
-      j.model || "", j.status || "")));
+    body += section("Agent jobs (running and recent)", (d.jobs || []).map((j) => row(
+      cell((j.task || "") + " " + (j.title || ""), "rg-t"), j.model || "", j.status || "")));
     if (Array.isArray(d.globs) && d.globs.length) {
       body += section("Paths", [row(cell(d.globs.join("  "), "rg-t code"), "", "")]);
     }
