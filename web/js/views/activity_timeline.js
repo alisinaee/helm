@@ -87,10 +87,34 @@ export function selectedText(e) {
   return "Selected: " + clockOf(e.ms) + ", " + (KIND_WORD[e.kind] || e.kind) + " " + (e.summary || e.verb || "");
 }
 
+// Marks from the server's whole-range bins (reply.tl): one per non-empty bin, coloured by its busiest kind.
+// ms is the bin start; the list may not hold its events yet, so a click picks a loaded one or sets the range.
+export function binsFromTl(tl) {
+  const w = (tl.t1 - tl.t0) / tl.n;
+  const out = [];
+  for (let i = 0; i < tl.n; i++) {
+    let total = 0;
+    let top = "other";
+    let best = 0;
+    for (const k of Object.keys(tl.kinds)) {
+      const c = tl.kinds[k][i];
+      total += c;
+      if (c > best) {
+        best = c;
+        top = k;
+      }
+    }
+    if (total) out.push({ x: (i * VIEW_W) / tl.n, n: total, id: "", ms: Math.round(tl.t0 + i * w), kind: top,
+      end: Math.round(tl.t0 + (i + 1) * w) - 1, summary: "" });
+  }
+  return out;
+}
+
 export function timelineHtml(st, events, now) {
   const f = st.filt;
-  const [t0, t1] = axisOf(f, events, now);
-  const marks = bin(events, t0, t1);
+  const useTl = st.status === "ready" && st.tl && st.tl.kinds;
+  const [t0, t1] = useTl ? [st.tl.t0, st.tl.t1] : axisOf(f, events, now);
+  const marks = useTl ? binsFromTl(st.tl) : bin(events, t0, t1);
   const sel = st.sel ? events.find(function (e) { return e.id === st.sel; }) : null;
   const tk = ticks(t0, t1, now);
   const grid = tk.map(function (t) {
@@ -99,8 +123,9 @@ export function timelineHtml(st, events, now) {
   }).join("");
   const rects = marks.map(function (m) {
     const h = m.n > 1 ? 24 : 14;
-    return '<rect class="hx-tl-m hx-m-' + esc(m.kind) + '" data-hx="tl" data-id="' + esc(m.id) + '" data-tip="' +
-      esc(tipOf(m)) + '" x="' + m.x + '" y="' + (AXIS_Y - h) + '" width="' + (BIN_W - 1) + '" height="' + h +
+    return '<rect class="hx-tl-m hx-m-' + esc(m.kind) + '" data-hx="tl" data-id="' + esc(m.id) +
+      '" data-from="' + m.ms + '" data-to="' + (m.end || m.ms) + '" data-tip="' + esc(tipOf(m)) +
+      '" x="' + m.x + '" y="' + (AXIS_Y - h) + '" width="' + (BIN_W - 1) + '" height="' + h +
       '"></rect>';
   }).join("");
   let selSvg = "";

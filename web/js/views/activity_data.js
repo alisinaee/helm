@@ -58,7 +58,7 @@ export function stateFor(route) {
   const key = scopeKey(route);
   if (!scopes.has(key)) {
     scopes.set(key, { key: key, pid: route.name === "project" ? route.id : null, filt: loadFilters(key), sel: null,
-      sig: null, status: "idle", events: [], next: null, total: 0, counts: null, actors: null, hist: null,
+      sig: null, status: "idle", events: [], next: null, total: 0, counts: null, actors: null, hist: null, tl: null,
       error: null, older: false, fresh: new Map(), inflight: null });
   }
   return scopes.get(key);
@@ -128,6 +128,7 @@ export function loadFirst(st, now, onDone) {
     st.counts = data.counts || null;
     st.actors = data.actors || null;
     st.hist = data.hist || null;
+    st.tl = data.tl || st.tl || null;
     st.status = "ready";
     st.error = null;
     st.sig = sig;

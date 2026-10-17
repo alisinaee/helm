@@ -129,6 +129,14 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual(hist["unit"], "hour")
         self.assertEqual(sum(hist["counts"]), len(self.events))
 
+    def test_timeline_bins_span_the_whole_range(self):
+        events = [{"ms": 1000 + i * 1000, "kind": "task" if i % 2 else "head", "actor": "user", "id": "e%d" % i,
+                   "summary": "x"} for i in range(1000)]
+        tl = history.timeline_bins(events, None, None, 2000000)
+        self.assertEqual((tl["t0"], tl["t1"], tl["first"]), (1000, 1980000, 1000))
+        self.assertEqual(sum(sum(v) for v in tl["kinds"].values()), 1000)
+        self.assertEqual(len(tl["kinds"]["task"]), tl["n"])
+
     def test_bad_queries_are_refused(self):
         for pairs in ([("kind", "nope")], [("actor", "robot")], [("limit", "0")], [("before", "x")],
                       [("from", "yesterday")], [("q", "a"), ("q", "b")], [("other", "1")]):
