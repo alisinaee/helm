@@ -67,11 +67,11 @@ class NavBadgeTests(unittest.TestCase):
         self.assertEqual(self.out["one"]["issues"], 1)
 
     def test_inbox_badge_is_drawn_and_says_waiting(self):
-        self.assertIn('data-tone="neutral">3<span class="sr-only"> waiting for you', self.out["inboxHtml"])
+        self.assertIn('data-tone="neutral" title="3 waiting for you"><span aria-hidden="true">3</span><span class="sr-only">3 waiting for you', self.out["inboxHtml"])
 
     def test_work_badge_counts_open_blockers_and_is_danger(self):
         html = self.out["issuesHtml"]
-        self.assertIn('data-tone="danger">1<span class="sr-only"> tasks need you or open blockers</span>', html)
+        self.assertIn('data-tone="danger" title="1 need you or blocked"><span aria-hidden="true">1</span><span class="sr-only">1 need you or blocked</span>', html)
         self.assertNotIn(">Issues</span>", html)
 
 
