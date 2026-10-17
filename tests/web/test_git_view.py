@@ -57,7 +57,8 @@ class GitSource(unittest.TestCase):
 
     def test_only_the_four_controls_exist(self):
         # Discard, reset, merge, rebase and force push are named only in the help line, never as a control.
-        self.assertEqual(sorted(set(DATA_GIT.findall(self.src))), ["all", "commit", "file", "mode", "pick", "push", "refresh", "tab"])
+        self.assertEqual(sorted(set(DATA_GIT.findall(self.src))),
+                         ["all", "commit", "file", "mode", "pick", "push", "refresh", "tab", "wfile"])
 
     def test_commit_never_takes_everything(self):
         self.assertNotIn("git add", self.src)
@@ -133,6 +134,33 @@ class GitRender(unittest.TestCase):
         self.assertIn("Select a file", html)
         self.assertIn('data-git="push"', html)
         self.assertIn('aria-selected="true" data-focus="git-tab-changes"', html)
+
+    def test_file_rows_are_buttons_beside_the_checkbox(self):
+        html = self.out["changes"]
+        self.assertIn('<button type="button" class="git-fb" data-git="wfile" data-path="docs/x.md"', html)
+        self.assertIn('aria-current="false"', html)
+
+    def test_diff_pane_has_name_status_pill_and_numbered_rows(self):
+        html = self.out["diff"]
+        self.assertIn('<span class="git-dname" title="docs/x.md">x.md</span>', html)
+        self.assertIn('<span class="git-st git-st-m" title=".M">M</span>', html)
+        self.assertIn('aria-current="true"', html)
+        self.assertIn('<div class="gd-row gd-hunk"><span class="gd-no"></span><span class="gd-no"></span>'
+                      '<span class="gd-tx">@@ -3,2 +3,3 @@</span></div>', html)
+        self.assertIn('<div class="gd-row gd-ctx"><span class="gd-no">3</span><span class="gd-no">3</span>'
+                      '<span class="gd-tx">keep</span></div>', html)
+        self.assertIn('<div class="gd-row gd-del"><span class="gd-no">4</span><span class="gd-no"></span>'
+                      '<span class="gd-tx">old</span></div>', html)
+        self.assertIn('<div class="gd-row gd-add"><span class="gd-no"></span><span class="gd-no">4</span>'
+                      '<span class="gd-tx">new &lt;b&gt;</span></div>', html)
+        self.assertIn('<span class="gd-no"></span><span class="gd-no">5</span><span class="gd-tx">extra</span>', html)
+        self.assertNotIn("new <b>", html)
+
+    def test_diff_error_state_is_a_banner_with_the_reason(self):
+        html = self.out["diffError"]
+        self.assertIn("Diff could not be read.", html)
+        self.assertIn("not in the status", html)
+        self.assertNotIn('class="git-diff"', html)
 
     def test_history_draws_a_lane_graph_per_row(self):
         html = self.out["history"]

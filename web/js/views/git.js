@@ -23,7 +23,9 @@ const ROW_H = 28;
 const VENDOR = ["/vendor/diff2html.min.js"];
 const detail = new Map(); // sha -> {commit, files} | {error}
 const diffs = new Map(); // sha + path -> {diff, skipped, truncated} | {error}
-const sel = { sha: null, path: null, mode: window.innerWidth < 640 ? "line-by-line" : "side-by-side" };
+const sel = { sha: null, path: null, wkey: null, mode: window.innerWidth < 640 ? "line-by-line" : "side-by-side" };
+const wdiffs = new Map(); // project + "\n" + path -> worktree diff reply | {error}
+const wreading = new Set(); // keys with a worktree diff read in flight
 let vendorState = "idle"; // idle | loading | ready | failed
 const store = new Map(); // project id -> {status, rows, branches, error}
 const reading = new Set(); // project ids with a read in flight
@@ -51,6 +53,8 @@ function load(pid) {
     .then(function (replies) {
       store.set(pid, { status: replies[0].data, rows: replies[1].data.rows || [],
         branches: replies[2].data.branches || [], error: null });
+      wdiffs.clear(); // the status moved on: the shown diff is read again
+      if (sel.wkey && sel.wkey.indexOf(pid + "\n") === 0) fetchWork(pid, sel.wkey.slice(pid.length + 1));
     }, function (err) {
       store.set(pid, { status: null, rows: [], branches: [],
         error: { code: err.code || "", message: err.message || "Git could not be read." } });
@@ -115,6 +119,28 @@ function pickCommit(pid, sha) {
   }, function (err) {
     detail.set(sha, { error: err.message || "Commit could not be read." });
   }).finally(repaint);
+}
+
+// The uncommitted diff of one changed file. The key holds the project, so a switch of project never shows another's.
+function fetchWork(pid, path) {
+  const key = pid + "\n" + path;
+  wreading.add(key);
+  getJson(gitBase(pid) + "diff?path=" + encodeURIComponent(path)).then(function (reply) {
+    wdiffs.set(key, reply.data);
+  }, function (err) {
+    wdiffs.set(key, { error: err.message || "Diff could not be read." });
+  }).finally(function () {
+    wreading.delete(key);
+    repaint();
+  });
+}
+
+function pickWork(pid, path) {
+  const key = pid + "\n" + path;
+  const moved = sel.wkey !== key;
+  sel.wkey = key;
+  if (!wdiffs.has(key) && !wreading.has(key)) fetchWork(pid, path);
+  if (moved) repaint();
 }
 
 function pickFile(pid, path) {
@@ -214,6 +240,57 @@ function diffHtml() {
   return note + '<pre class="git-raw">' + esc(got.diff) + "</pre>";
 }
 
+const DIFF_KIND = { "+": "add", "-": "del", " ": "ctx" };
+const HUNK = /^@@ -(\d+)(?:,\d+)? \+(\d+)/;
+
+// Old and new line numbers for each row, counted from the hunk headers. Hunk rows are muted, not numbered.
+function diffRowsHtml(lines) {
+  let oldNo = 0;
+  let newNo = 0;
+  return lines.map(function (row) {
+    if (row.t === "@") {
+      const m = HUNK.exec(row.text);
+      if (m) {
+        oldNo = Number(m[1]);
+        newNo = Number(m[2]);
+      }
+      return '<div class="gd-row gd-hunk"><span class="gd-no"></span><span class="gd-no"></span><span class="gd-tx">' +
+        esc(row.text) + "</span></div>";
+    }
+    let o = "";
+    let n = "";
+    if (row.t !== "+") o = String(oldNo++);
+    if (row.t !== "-") n = String(newNo++);
+    return '<div class="gd-row gd-' + (DIFF_KIND[row.t] || "ctx") + '"><span class="gd-no">' + o +
+      '</span><span class="gd-no">' + n + '</span><span class="gd-tx">' + esc(row.text) + "</span></div>";
+  }).join("");
+}
+
+// The right pane of Changes: the selected file's name and status, then its diff (or the loading and error state).
+function workDiffHtml(pid) {
+  if (!sel.wkey || sel.wkey.indexOf(pid + "\n") !== 0) {
+    return emptyHtml("Select a file", "Its uncommitted diff shows here.");
+  }
+  const path = sel.wkey.slice(pid.length + 1);
+  const got = wdiffs.get(sel.wkey);
+  const cut = path.lastIndexOf("/");
+  let pill = "";
+  if (got && got.status) {
+    const letter = statusLetter(got.status);
+    pill = '<span class="git-st git-st-' + esc(letter.toLowerCase()) + '" title="' + esc(got.status) + '">' +
+      esc(letter) + "</span>";
+  }
+  const head = '<div class="git-dhead"><span class="git-dname" title="' + esc(path) + '">' +
+    esc(path.slice(cut + 1)) + "</span>" + pill + "</div>";
+  if (!got) return head + skeletonHtml(["w-90", "w-60"]);
+  if (got.error) return head + bannerHtml("warning", "Diff could not be read.", got.error);
+  if (got.skipped) return head + emptyHtml("No diff shown.", got.skipped);
+  if (!got.lines || !got.lines.length) return head + emptyHtml("No text changes.", "Nothing to show for this file.");
+  const note = got.truncated ? bannerHtml("warning", "Diff cut.", "The diff is longer than the size cap.") : "";
+  return head + note + '<div class="git-diff" role="region" tabindex="0" aria-label="Diff of ' + esc(path) + '">' +
+    diffRowsHtml(got.lines) + "</div>";
+}
+
 function modeButtons() {
   return [["side-by-side", "Side by side"], ["line-by-line", "Inline"]].map(function (m) {
     return '<button type="button" class="btn" data-git="mode" data-mode="' + m[0] + '" aria-pressed="' +
@@ -253,6 +330,8 @@ function onClick(event) {
     pickCommit(pid, el.getAttribute("data-sha"));
   } else if (kind === "file") {
     pickFile(pid, el.getAttribute("data-path"));
+  } else if (kind === "wfile") {
+    pickWork(pid, el.getAttribute("data-path"));
   } else if (kind === "mode") {
     sel.mode = el.getAttribute("data-mode") === "line-by-line" ? "line-by-line" : "side-by-side";
     repaint();
@@ -281,12 +360,27 @@ function onInput(event) {
   syncForm(el);
 }
 
-// Cmd/Ctrl+Enter in the message box commits.
+// Up/Down move between the file buttons; focus loads the diff (onFocus). Cmd/Ctrl+Enter in the message box commits.
 function onKey(event) {
   const el = event.target;
+  if (el && el.getAttribute && el.getAttribute("data-git") === "wfile" &&
+    (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+    const list = el.closest(".git-list");
+    const files = list ? Array.from(list.querySelectorAll('[data-git="wfile"]')) : [];
+    const next = files[files.indexOf(el) + (event.key === "ArrowDown" ? 1 : -1)];
+    event.preventDefault();
+    if (next) next.focus();
+    return;
+  }
   if (!el || el.id !== "git-msg" || event.key !== "Enter" || !(event.metaKey || event.ctrlKey)) return;
   event.preventDefault();
   if (lastVm && lastVm.route.name === "project" && el.form) commit(el.form, lastVm.route.id);
+}
+
+function onFocus(event) {
+  const el = event.target;
+  if (!el || !el.getAttribute || el.getAttribute("data-git") !== "wfile") return;
+  if (lastVm && lastVm.route.name === "project") pickWork(lastVm.route.id, el.getAttribute("data-path"));
 }
 
 function onSubmit(event) {
@@ -302,6 +396,7 @@ document.addEventListener("submit", onSubmit);
 document.addEventListener("change", onChange);
 document.addEventListener("input", onInput);
 document.addEventListener("keydown", onKey);
+document.addEventListener("focusin", onFocus);
 
 // The one-letter status a file row shows: "??" is untracked (U), otherwise the first changed side of XY.
 function statusLetter(code) {
@@ -309,17 +404,20 @@ function statusLetter(code) {
   return String(code).replace(/\./g, "").charAt(0) || "M";
 }
 
-function fileRows(list) {
+// A checkbox (for the commit) and a button per file: the button shows the diff; the checkbox never does.
+function fileRows(list, pid) {
   return list.map(function (row) {
     const path = typeof row === "string" ? row : row.path;
     const code = typeof row === "string" ? "??" : row.code;
     const letter = statusLetter(code);
     const cut = path.lastIndexOf("/");
     const dir = cut > 0 ? path.slice(0, cut + 1) : "";
-    return '<li><label class="git-fr"><input type="checkbox" name="path" value="' + esc(path) +
-      '" aria-label="Commit file"><span class="git-st git-st-' + esc(letter.toLowerCase()) + '" title="' + esc(code) +
-      '">' + esc(letter) + '</span><span class="git-fn" title="' + esc(path) + '"><b>' + esc(path.slice(cut + 1)) +
-      "</b>" + (dir ? "<i>" + esc(dir) + "</i>" : "") + "</span></label></li>";
+    const on = sel.wkey === pid + "\n" + path;
+    return '<li class="git-fr"><input type="checkbox" name="path" value="' + esc(path) +
+      '" aria-label="Commit file"><button type="button" class="git-fb" data-git="wfile" data-path="' + esc(path) +
+      '" aria-current="' + on + '" title="' + esc(path) + '"><span class="git-st git-st-' +
+      esc(letter.toLowerCase()) + '" title="' + esc(code) + '">' + esc(letter) + '</span><span class="git-fn"><b>' +
+      esc(path.slice(cut + 1)) + "</b>" + (dir ? "<i>" + esc(dir) + "</i>" : "") + "</span></button></li>";
   }).join("");
 }
 
@@ -372,10 +470,9 @@ function changesHtml(pid, entry) {
   const canCommit = !s.detached && !s.in_progress;
   const left = '<div class="git-left"><div class="git-gh"><input type="checkbox" data-git="all" ' +
     'aria-label="Select all files"><span>Changes (' + files.length + ')</span></div>' +
-    '<ul class="git-list" aria-label="Changed files">' + fileRows(files) + "</ul>" +
+    '<ul class="git-list" aria-label="Changed files">' + fileRows(files, pid) + "</ul>" +
     (canCommit ? commitPanel() : "") + "</div>";
-  const right = '<div class="git-right">' + emptyHtml("Select a file", "A diff preview for uncommitted changes " +
-    "is not available yet.") + "</div>";
+  const right = '<div class="git-right">' + workDiffHtml(pid) + "</div>";
   parts.push('<div class="git-split">' + left + right + "</div>");
   return parts.join("");
 }

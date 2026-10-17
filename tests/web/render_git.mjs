@@ -44,6 +44,13 @@ const ALPHA = {
   },
 };
 
+// One worktree diff: a hunk at lines 3 (old) and 3 (new), a context line, a removal and two additions.
+const WORK_DIFF = {
+  path: "docs/x.md", status: ".M", truncated: false, skipped: null,
+  lines: [{ t: "@", text: "@@ -3,2 +3,3 @@" }, { t: " ", text: "keep" }, { t: "-", text: "old" },
+    { t: "+", text: "new <b>" }, { t: "+", text: "extra" }],
+};
+
 function reply(status, body) {
   return { ok: status < 400, status: status, json: async () => body, headers: { get: () => null } };
 }
@@ -55,6 +62,10 @@ globalThis.fetch = async function (url) {
   if (url.includes("/git/status")) return reply(200, ALPHA.status);
   if (url.includes("/git/log")) return reply(200, ALPHA.log);
   if (url.includes("/git/branches")) return reply(200, ALPHA.branches);
+  if (url.includes("/git/diff?")) {
+    if (url.includes("err.md")) return reply(400, { error: { code: "usage", message: "not in the status" } });
+    return reply(200, WORK_DIFF);
+  }
   return reply(404, { error: { code: "not_found", message: "no such route" } });
 };
 
@@ -90,5 +101,13 @@ const history = git.sectionView(view("alpha"));
 clickOn({ "data-git": "tab", "data-tab": "branches" });
 const branches = git.sectionView(view("alpha"));
 const all = git.sectionView(view(null));
+git.sectionView(view("alpha"));
+clickOn({ "data-git": "tab", "data-tab": "changes" });
+clickOn({ "data-git": "wfile", "data-path": "docs/x.md" });
+await settle();
+const diff = git.sectionView(view("alpha"));
+clickOn({ "data-git": "wfile", "data-path": "docs/err.md" });
+await settle();
+const diffError = git.sectionView(view("alpha"));
 
-console.log(JSON.stringify({ changes, notRepo, history, branches, all }));
+console.log(JSON.stringify({ changes, notRepo, history, branches, all, diff, diffError }));

@@ -275,6 +275,69 @@ def read_branches(project):
     return parse_branches(run(root, ["for-each-ref", "--format=" + fmt, "refs/heads/"]))
 
 
+def read_worktree_diff(project, path):
+    """The worktree diff of one changed file: git diff for a tracked file, the whole file as added for an untracked
+    one. The path must be in the current status (else usage, 400). Read-only. Returns path, status code, lines
+    [{t, text}] with t in + - space @, truncated, and skipped (the reason the text is hidden, or None)."""
+    root = repo_root(project)
+    rel = valid_rel_path(root, path)
+    status = parse_status(run(root, ["status", "--porcelain=v2", "--branch", "-z"]))
+    row = next((r for r in status["changed"] if r["path"] == rel), None)
+    if row is None:
+        row = next((r for r in status["staged"] if r["path"] == rel), None)
+    if row is not None:
+        code = row["code"]
+    elif rel in status["untracked"]:
+        code = "??"
+    else:
+        raise RoadmapError("usage", "path '" + rel[:200] + "' is not in the current status", EXIT_USAGE)
+    base = {"path": rel, "status": code, "lines": [], "truncated": False, "skipped": None}
+    if is_secret_path(rel):
+        base["skipped"] = diff_skip_reason(rel, 0)
+        return base
+    if code == "??":
+        return _untracked_diff(root, rel, base)
+    raw = run(root, ["--literal-pathspecs", "diff", "--no-color", "--no-ext-diff", "--", rel])
+    text, base["truncated"] = cap_text(raw)
+    base["lines"] = _diff_lines(text)
+    return base
+
+
+def _untracked_diff(root, rel, base):
+    """An untracked file as all added lines, capped. A binary or over 1 MB file gives its skip reason instead."""
+    full = os.path.join(root, rel)
+    if not os.path.isfile(full):
+        base["skipped"] = "not a regular file"
+        return base
+    size = os.path.getsize(full)
+    with open(full, "rb") as fh:
+        data = fh.read(DIFF_FILE_BYTES + 1)
+    base["skipped"] = diff_skip_reason(rel, size, data)
+    if base["skipped"] is not None:
+        return base
+    text, cut = cap_text(data.decode("utf-8", "replace"))
+    rows = text.split("\n")
+    if rows and rows[-1] == "":
+        rows.pop()
+    base["truncated"] = cut or len(data) > DIFF_FILE_BYTES
+    base["lines"] = [{"t": "@", "text": "@@ -0,0 +1,%d @@" % len(rows)}] + [{"t": "+", "text": r} for r in rows]
+    return base
+
+
+def _diff_lines(text):
+    """Parse git diff text into {t, text} rows: hunk headers and body lines only (file headers and the
+    'no newline' marker are dropped)."""
+    rows = []
+    started = False
+    for line in text.split("\n"):
+        if line.startswith("@@"):
+            started = True
+            rows.append({"t": "@", "text": line})
+        elif started and line[:1] in ("+", "-", " "):
+            rows.append({"t": line[:1], "text": line[1:]})
+    return rows
+
+
 def parse_status(text):
     """Parse `git status --porcelain=v2 --branch -z`. Pure: text in, dict out. A short or odd record is skipped."""
     result = {"branch": None, "oid": None, "detached": False, "upstream": None, "ahead": 0, "behind": 0,
