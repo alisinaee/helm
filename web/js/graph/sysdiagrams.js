@@ -129,6 +129,57 @@ function line(p, q) {
   return "M" + f(p[0]) + " " + f(p[1]) + "L" + f(q[0]) + " " + f(q[1]);
 }
 
+function polyD(pts) {
+  return pts.map((p, i) => (i ? "L" : "M") + f(p[0]) + " " + f(p[1])).join("");
+}
+
+// True when the segment p-q passes through the interior of box r (axis-aligned segments only).
+function hitsBox(p, q, r) {
+  return Math.max(p[0], q[0]) > r.x && Math.min(p[0], q[0]) < r.x + r.w &&
+    Math.max(p[1], q[1]) > r.y && Math.min(p[1], q[1]) < r.y + r.h;
+}
+
+function overlapY(a, b) {
+  return a.y < b.y + b.h && b.y < a.y + a.h;
+}
+
+// Route for an aggregated edge a -> b (R11.113). Pure: a, b and boxes are {id, x, y, w, h} in one coordinate space.
+// Same-row boxes join side to side when that straight run crosses no other box. Otherwise the path leaves a's bottom
+// edge, runs in the gap under the row and enters b from below, so no other box is crossed. Other pairs keep the
+// straight line between the box borders. Returns {pts, mid, len, ortho}; mid is where the count label sits.
+export function routeEdge(a, b, boxes) {
+  const others = arr(boxes).filter((r) => r && r.id !== a.id && r.id !== b.id);
+  const cxA = a.x + a.w / 2;
+  const cxB = b.x + b.w / 2;
+  if (overlapY(a, b)) {
+    const yMid = (Math.max(a.y, b.y) + Math.min(a.y + a.h, b.y + b.h)) / 2;
+    const toRight = cxB > cxA;
+    const p = [toRight ? a.x + a.w : a.x, yMid];
+    const q = [toRight ? b.x : b.x + b.w, yMid];
+    if (!others.some((r) => hitsBox(p, q, r))) return routed([p, q], [(p[0] + q[0]) / 2, yMid], false);
+    const rowBottom = [a, b].concat(others.filter((r) => overlapY(a, r))).reduce((m, r) => Math.max(m, r.y + r.h), 0);
+    const tops = others.filter((r) => r.y >= rowBottom).map((r) => r.y);
+    const gapY = tops.length ? (rowBottom + Math.min(...tops)) / 2 : rowBottom + 12;
+    const pts = [[cxA, a.y + a.h], [cxA, gapY], [cxB, gapY], [cxB, b.y + b.h]];
+    return routed(pts, [(cxA + cxB) / 2, gapY], true);
+  }
+  const L = link(a, b);
+  return routed([L.p, L.q], [(L.p[0] + L.q[0]) / 2, (L.p[1] + L.q[1]) / 2], false);
+}
+
+function routed(pts, mid, ortho) {
+  let len = 0;
+  for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+  return { pts, mid, len, ortho };
+}
+
+// Count label on a route: a small background rect (class sys-lbl-bg) with the text (class sys-lbl) centred on it.
+function countLabel(x, y, s) {
+  const w = tw(s) + 8;
+  return '<rect class="sys-lbl-bg" x="' + f(x - w / 2) + '" y="' + f(y - 7) + '" width="' + f(w) +
+    '" height="14" rx="3"/><text class="sys-lbl" x="' + f(x) + '" y="' + f(y + 4) + '">' + esc(s) + "</text>";
+}
+
 function uniq(list, key) {
   const seen = new Set();
   const out = [];
@@ -1024,6 +1075,7 @@ export function classSvg(cls, opts) {
   items.forEach((it) => {
     if (!owner.has(it.id)) place.set(it.id, it);
   });
+  const obstacles = [...place.values()];
   const agg = new Map();
   es.forEach((e) => {
     const fa = owner.get(String(e.from)) || String(e.from);
@@ -1041,11 +1093,11 @@ export function classSvg(cls, opts) {
     const sw = r.n > 1 ? f(Math.min(3, 1.2 + Math.log2(r.n) * 0.4)) : "1.2";
     const attrs = 'stroke="' + v("--text-2") + '" stroke-width="' + sw + '"' + (isExt ? ' marker-end="url(#sysd-tri)"' :
       ' stroke-dasharray="5 3" marker-end="url(#sysd-open)"');
-    const L = link(a, b);
-    parts.push(pathG(c, a.id, b.id, line(L.p, L.q), attrs, a.label + (isExt ? " extends " : " uses ") + b.label +
+    const R = routeEdge(a, b, obstacles);
+    parts.push(pathG(c, a.id, b.id, polyD(R.pts), attrs, a.label + (isExt ? " extends " : " uses ") + b.label +
         (r.n > 1 ? " (" + r.n + ")" : r.e.label ? " (" + r.e.label + ")" : "")));
     const lab = r.n > 1 ? String(r.n) : !isExt && r.e.label && !r.merged ? clip(r.e.label, 14) : "";
-    if (lab && L.len > tw(lab) + 24) parts.push(halo((L.p[0] + L.q[0]) / 2, (L.p[1] + L.q[1]) / 2 - 4, lab));
+    if (lab && (R.ortho || R.len > tw(lab) + 24)) parts.push(countLabel(R.mid[0], R.mid[1], lab));
   });
   items.forEach((it) => {
     if (owner.has(it.id)) return;
