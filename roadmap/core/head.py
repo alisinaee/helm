@@ -199,6 +199,12 @@ def _umbrella_ref(ref):
     return kind == "task" and planfmt.is_umbrella_task(rid)
 
 
+def all_bound_done(entry):
+    """True when every link was already done when it was bound (the 'seen' mark of its update record). Such an
+    entry is not closed by the links: it stays open until the head or the person closes it (R10.27)."""
+    return set(entry["links"]) <= set(entry["bound_done"])
+
+
 def _status(entry, link_state):
     links = entry["links"]
     states = [link_state.get(ref) for ref in links]
@@ -207,7 +213,7 @@ def _status(entry, link_state):
         return manual, False
     if manual == "done":
         return "done", False
-    if manual is None and links and all(s == "done" for s in states):
+    if manual is None and links and all(s == "done" for s in states) and not all_bound_done(entry):
         return "done", True
     if any(s in FAILED_LINK_STATES for s in states):
         return "failed", False
@@ -247,7 +253,8 @@ def fold(records, link_state=None, now=None, amber_min=30, stale_min=120):
             entries[eid] = {
                 "id": eid, "ts": rec.get("ts"), "src": rec.get("src"), "sid": rec.get("sid"),
                 "acct": rec.get("acct"), "kind": rec.get("kind"), "sum": rec.get("sum") or "",
-                "from": rec.get("from"), "links": [], "manual": None, "triaged": False, "into": None, "opts": [],
+                "from": rec.get("from"), "links": [], "bound_done": [], "manual": None, "triaged": False, "into": None,
+                "opts": [],
                 "prio": rec["prio"] if valid_prio(rec.get("prio")) else guess_prio(rec.get("sum")),
             }
             order.append(eid)
@@ -307,6 +314,7 @@ def _apply_update(entry, rec):
         entry["prio"] = sets["prio"]
     if rec.get("by") == "head" and "kind" in sets and "sum" in sets:
         entry["triaged"] = True
+    seen = [name for name in rec.get("seen") or [] if isinstance(name, str)]
     for ref in rec.get("link") or []:
         if not isinstance(ref, str) or len(ref) < 2 or ref[0] not in "+-":
             continue
@@ -314,8 +322,15 @@ def _apply_update(entry, rec):
         if ref[0] == "-":
             if name in entry["links"]:
                 entry["links"].remove(name)
+            if name in entry["bound_done"]:
+                entry["bound_done"].remove(name)
         elif parse_link(name) and name not in entry["links"] and len(entry["links"]) < MAX_LINKS:
             entry["links"].append(name)
+            if name not in seen and name in entry["bound_done"]:
+                entry["bound_done"].remove(name)
+    for name in seen:  # R10.27: links bound while their task was already done never auto-close the entry
+        if name in entry["links"] and name not in entry["bound_done"]:
+            entry["bound_done"].append(name)
 
 
 def _best_dup(entry, earlier, now):

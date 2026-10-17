@@ -477,6 +477,9 @@ def update(data_dir, eid, *, by, sets=None, links=(), note=None, now=None, timeo
         rec["set"] = sets
     if refs:
         rec["link"] = refs
+        seen = _done_at_bind(data_dir, [ref[1:] for ref in refs if ref[0] == "+"])
+        if seen:
+            rec["seen"] = seen
     if clean_note:
         rec["note"] = clean_note
     with lock.locked(data_dir, timeout):
@@ -485,6 +488,15 @@ def update(data_dir, eid, *, by, sets=None, links=(), note=None, now=None, timeo
             raise RoadmapError("not_found", "no head entry " + eid, EXIT_NOT_FOUND)
         jsonl.append_line(_path(data_dir, FILE), rec)
     return rec
+
+
+def _done_at_bind(data_dir, refs):
+    """The refs (e.g. 'task:R10.27') whose task is already done now. Stored as 'seen' on the bind record so the fold
+    does not close the entry on them (R10.27): only a task that turns done after the bind closes an ask."""
+    if not refs:
+        return []
+    done = {"task:" + str(t.get("id")) for t in jobs.task_records(data_dir) if str(t.get("status")) == "done"}
+    return [ref for ref in refs if ref in done]
 
 
 def fold_asks(data_dir, now=None):
@@ -498,7 +510,7 @@ def fold_asks(data_dir, now=None):
         if row.get("manual") is not None or _kind(row) != "ask":
             continue
         ids = [ref[len("task:"):] for ref in row["links"] if ref.startswith("task:")]
-        if not ids or any(states.get("task:" + tid) != "done" for tid in ids):
+        if not ids or any(states.get("task:" + tid) != "done" for tid in ids) or head.all_bound_done(row):
             continue
         note = "auto: " + ", ".join(_task_shas(tasks.get(tid), tid) for tid in ids)
         update(data_dir, row["id"], by="auto", sets={"status": "done"}, note=note, now=now)
