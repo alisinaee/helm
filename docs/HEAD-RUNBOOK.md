@@ -48,6 +48,17 @@
 > after any such push if unsure. `roadmap service restart --if-stale` restarts only when that check is true, so it
 > is safe to run after every push with no cost when nothing changed.
 
+> 2026-10-17 H(pending) (root cause: two jobs sat "running" with growing elapsed time but ZERO actual work — no
+> subagent, no commit, nothing uncommitted): the head ran `bin/roadmap job start` to register R11.138 and R11.141,
+> then got pulled into other asks arriving mid-turn and never followed through with the actual Agent tool call for
+> either — the registration alone made them LOOK like real in-progress work on the board. RULE: `job start` and the
+> Agent tool launch are ONE atomic action, never two separate steps split by anything else — call them in the same
+> turn, Agent tool call immediately after (or in the same message as) `job start`. If something interrupts before
+> the Agent call goes out, the job must be `job fail`-ed immediately, not left "running" as a silent placeholder.
+> Before reporting board status to the person, cross-check `bin/roadmap job list --json` running entries against
+> `ListAgents`'s actual live subagents — a "running" job with no matching live agent and no fresh commit is stale
+> and must be failed/relaunched on sight, not left for the person to notice first.
+
 # Head runbook (how the head works here; read after HANDOVER.md)
 
 Product renamed to Helm (2026-10-16): repo alisinaee/helm, dir ~/Works/helm; use `bin/helm` or `bin/roadmap` (same). Project id stays `roadmap-board`.
