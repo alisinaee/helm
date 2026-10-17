@@ -347,8 +347,12 @@ function historyHtml(vm, entry) {
       '</span><span class="rg-num num" title="' + esc(when.title) + '">' + esc(when.text) + "</span>" +
       copyButton("commit", row.sha, "Copy ref", { project: pid }) + "</li>";
   }).join("");
-  return '<div class="git-hist"><ul class="git-list git-commits" aria-label="Commits">' + head + rows +
-    '</ul><section class="git-detail" aria-label="Commit detail">' + detailHtml() + "</section></div>";
+  return '<div class="git-hist" data-splitter-host="git">' +
+    '<ul class="git-list git-commits" aria-label="Commits">' + head + rows + "</ul>" +
+    '<div class="spl" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Resize commit detail" ' +
+    'data-splitter="git" data-min="320" data-max="720" data-def="416" ' +
+    'title="Drag to resize, double-click to reset"></div>' +
+    '<section class="git-detail" aria-label="Commit detail">' + detailHtml() + "</section></div>";
 }
 
 function branchesHtml(vm, entry) {
