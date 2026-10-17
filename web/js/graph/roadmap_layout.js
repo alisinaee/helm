@@ -6,7 +6,10 @@
 // itself is the phase flow. "Now" is the phase that owns a running job, else the first phase that is not done.
 //
 // opts: { status: all|open|doing|blocked|hold|done, model: "" or a model name, open: {pid: bool},
-// showDone: {pid: bool}, deps: [[from, to], ...], running: {taskId: true}, blocked: [taskId, ...] }.
+// showDone: {pid: bool}, deps: [[from, to], ...], running: {taskId: true}, blocked: [taskId, ...], spacing: 1 }.
+// spacing (R11.115, 0.6 .. 2.5) scales the gap between columns and between cards; box sizes never change.
+
+import { spacingOf } from "./layout.js";
 
 export const COL_W = 200;
 export const FOLD_W = 120;
@@ -81,6 +84,9 @@ function depPath(a, b) {
 
 export function roadmapLayout(snap, opts) {
   const o = opts || {};
+  const k = spacingOf(o.spacing);
+  const colGap = Math.round(COL_GAP * k);
+  const cardGap = Math.round(CARD_GAP * k);
   const running = o.running || {};
   const blocked = o.blocked || [];
   const phases = Array.isArray(snap && snap.phases) ? snap.phases : [];
@@ -110,7 +116,7 @@ export function roadmapLayout(snap, opts) {
       total: total, pct: pct, doing: doing, now: p.id === nowId, cx: x + 12, cy: LINE_Y, shown: 0, hidden: 0 };
     cols.push(col);
     if (open) {
-      let y = HEAD_H + CARD_GAP;
+      let y = HEAD_H + cardGap;
       const shown = mine.filter(function (t) {
         const st = statusOf(t, running, blocked);
         return passes(st, o.status) && (!o.model || t.model === o.model);
@@ -122,7 +128,7 @@ export function roadmapLayout(snap, opts) {
       if (doneRows.length && o.status !== "done") {
         stubs.push({ id: "done:" + p.id, phase: p.id, x: x + (w - CARD_W) / 2, y: y, w: CARD_W, h: STUB_H,
           count: doneRows.length, open: !fold, cx: x + w / 2, cy: y + STUB_H / 2 });
-        y += STUB_H + CARD_GAP;
+        y += STUB_H + cardGap;
       }
       shown.forEach(function (t) {
         if (fold && t.state === "done") return;
@@ -134,7 +140,7 @@ export function roadmapLayout(snap, opts) {
         c.cy = c.y + c.h / 2;
         cards.push(c);
         boxOf[t.id] = c;
-        y += CARD_H + CARD_GAP;
+        y += CARD_H + cardGap;
       });
       col.shown = cards.filter(function (c) {
         return c.phase === p.id;
@@ -144,7 +150,7 @@ export function roadmapLayout(snap, opts) {
     } else {
       col.hidden = mine.length;
     }
-    x += w + COL_GAP;
+    x += w + colGap;
   });
   const edges = [];
   (Array.isArray(o.deps) ? o.deps : []).forEach(function (pair) {
@@ -154,7 +160,7 @@ export function roadmapLayout(snap, opts) {
     if (!a || !b || a === b) return;
     edges.push({ id: "dep:" + a.id + ">" + b.id, from: a.key, to: b.key, d: depPath(a, b) });
   });
-  const width = Math.max(x - COL_GAP + PAD, PAD * 2);
+  const width = Math.max(x - colGap + PAD, PAD * 2);
   const height = bottom + PAD;
   const first = cols[0];
   const last = cols[cols.length - 1];
@@ -164,6 +170,6 @@ export function roadmapLayout(snap, opts) {
   return {
     cols: cols, cards: cards, stubs: stubs, edges: edges, width: width, height: height,
     line: first ? { x1: first.cx, x2: last.cx, y: LINE_Y } : null,
-    now: nowCol ? { phase: nowCol.id, x: nowCol.x - COL_GAP / 2, cx: nowCol.cx, cy: LINE_Y } : null,
+    now: nowCol ? { phase: nowCol.id, x: nowCol.x - colGap / 2, cx: nowCol.cx, cy: LINE_Y } : null,
   };
 }

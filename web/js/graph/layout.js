@@ -20,12 +20,55 @@ export const NODE_H = 44;
 export const PILL_W = 52;
 export const PILL_H = 20;
 
+// Spacing factor (R11.115): scales the gaps and the group padding of a layout, never a node box or a font. 1 is the
+// default; the Map's − and + buttons step it by SPACE_STEP between SPACE_MIN and SPACE_MAX.
+export const SPACE_MIN = 0.6;
+export const SPACE_MAX = 2.5;
+export const SPACE_STEP = 0.2;
+export const SPACE_DEF = 1;
+
+export function spacingOf(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return SPACE_DEF;
+  return Math.min(SPACE_MAX, Math.max(SPACE_MIN, n));
+}
+
+// The next factor one step up (dir 1) or down (dir -1), rounded to one decimal.
+export function stepSpacing(v, dir) {
+  return spacingOf(Math.round((spacingOf(v) + dir * SPACE_STEP) * 10) / 10);
+}
+
+// The saved factor under key (localStorage, per map). Storage can be missing or blocked: the default then.
+export function readSpacing(key) {
+  try {
+    const raw = globalThis.localStorage ? globalThis.localStorage.getItem(key) : null;
+    return raw === null ? SPACE_DEF : spacingOf(raw);
+  } catch (err) {
+    return SPACE_DEF;
+  }
+}
+
+export function writeSpacing(key, v) {
+  try {
+    if (globalThis.localStorage) globalThis.localStorage.setItem(key, String(spacingOf(v)));
+  } catch (err) {
+    // Storage blocked: the factor lasts for this view only.
+  }
+}
+
+// The scaled gaps of one factor. Rounded, so factor 1 gives the constants above.
+function gapsOf(v) {
+  const k = spacingOf(v);
+  const s = (x) => Math.round(x * k);
+  return { colGap: s(COL_GAP), laneGap: s(LANE_GAP), lanePad: s(LANE_PAD), slotGap: s(SLOT_GAP),
+    cell: s(CELL_GAP), row: s(ROW_GAP), stack: s(STACK_GAP), strip: s(STRIP_GAP), stripSep: s(STRIP_SEP),
+    frame: s(FRAME_GAP), framePad: s(FRAME_PAD), channel: s(CHANNEL) };
+}
+
 const PILL_STEP = 58;
 const PILL_DY = 58;
 const SLOT_GAP = 10;
 const COL_GAP = 32;
-const COL_W = NODE_W + COL_GAP;
-const X0 = NODE_W + COL_GAP;
 const LANE_PAD = 8;
 const LANE_GAP = 8;
 const TOP_DEP = 8;
@@ -61,13 +104,9 @@ const CORNER = 12;
 const LOOP = 12;
 const WIDE = 100;
 
-function colX(c) {
-  return X0 + c * COL_W;
-}
-
-function slotOf(node, pills) {
-  if (node.type === "task" && pills > 0) return PILL_DY + PILL_H + SLOT_GAP;
-  return NODE_H + SLOT_GAP;
+function slotOf(node, pills, slotGap) {
+  if (node.type === "task" && pills > 0) return PILL_DY + PILL_H + slotGap;
+  return NODE_H + slotGap;
 }
 
 // Longest-path rank over the task pairs. Depth-first search finds the back edges, which are dropped before ranking.
@@ -141,8 +180,12 @@ function timeWindow(range, now, times) {
   return { t0, bucket, n: Math.max(1, Math.ceil(span / bucket)) };
 }
 
-export function layout(graph, mode, range, now) {
+export function layout(graph, mode, range, now, spacing) {
   const g = graph && Array.isArray(graph.nodes) ? graph : { nodes: [], edges: [], lanes: [] };
+  const gaps = gapsOf(spacing);
+  const colW = NODE_W + gaps.colGap;
+  const x0 = colW;
+  const colX = (c) => x0 + c * colW;
   const timeMode = mode === "time";
   const nowMs = Number(now) || 0;
   const nodes = g.nodes.filter((n) => n && typeof n.id === "string");
@@ -268,21 +311,22 @@ export function layout(graph, mode, range, now) {
       const cell = cells.get(c);
       let cy = 0;
       cell.top.concat(cell.tasks).forEach((id) => {
-        pos[id] = { x: colX(c), y: y + LANE_PAD + cy, w: NODE_W, h: NODE_H };
-        cy += slotOf(byId.get(id), pillCount.get(id) || 0);
+        pos[id] = { x: colX(c), y: y + gaps.lanePad + cy, w: NODE_W, h: NODE_H };
+        cy += slotOf(byId.get(id), pillCount.get(id) || 0, gaps.slotGap);
       });
       inner = Math.max(inner, cy);
     });
-    const h = Math.max(NODE_H + 2 * LANE_PAD, inner > 0 ? inner - SLOT_GAP + 2 * LANE_PAD : 0);
+    const pad = gaps.lanePad;
+    const h = Math.max(NODE_H + 2 * pad, inner > 0 ? inner - gaps.slotGap + 2 * pad : 0);
     const band = { id: lane, y, h };
     bands.push(band);
     bandOf.set(lane, band);
-    y += h + LANE_GAP;
+    y += h + gaps.laneGap;
   });
   nodes.forEach((n) => {
     if (n.type === "phase") {
       const band = bandOf.get(laneOf(n));
-      pos[n.id] = { x: 0, y: band.y + LANE_PAD, w: NODE_W, h: NODE_H };
+      pos[n.id] = { x: 0, y: band.y + gaps.lanePad, w: NODE_W, h: NODE_H };
     }
   });
   const pillIndex = new Map();
@@ -312,10 +356,10 @@ export function layout(graph, mode, range, now) {
   if (timeMode) {
     for (let i = 0; i < win.n; i += 1) ticks.push({ x: colX(i), t: win.t0 + i * win.bucket });
     if (nowMs >= win.t0 && nowMs <= win.t0 + win.n * win.bucket) {
-      nowX = Math.round(X0 + ((nowMs - win.t0) / win.bucket) * COL_W);
+      nowX = Math.round(x0 + ((nowMs - win.t0) / win.bucket) * colW);
     }
   }
-  const width = X0 + (maxCol + 1) * COL_W - COL_GAP + MARGIN;
+  const width = x0 + (maxCol + 1) * colW - gaps.colGap + MARGIN;
   const bottom = bands.length ? bands[bands.length - 1].y + bands[bands.length - 1].h : (timeMode ? TOP_TIME : TOP_DEP);
   return {
     mode: timeMode ? "time" : "dependency",
@@ -327,7 +371,7 @@ export function layout(graph, mode, range, now) {
     cycles,
     ticks,
     nowX,
-    flow: flowLayout(g, {}),
+    flow: flowLayout(g, { spacing: spacing }),
   };
 }
 
@@ -356,10 +400,10 @@ function taskHeight(pills) {
   return pills > 0 ? PILL_DY + PILL_H : NODE_H;
 }
 
-function cellHeight(cell, pillsOf) {
+function cellHeight(cell, pillsOf, stack) {
   let h = 0;
   cell.forEach((t, j) => {
-    h += taskHeight((pillsOf.get(t.id) || []).length) + (j ? STACK_GAP : 0);
+    h += taskHeight((pillsOf.get(t.id) || []).length) + (j ? stack : 0);
   });
   return h;
 }
@@ -399,6 +443,7 @@ function stableOrder(ids, pairs) {
 // one task, or a parallel group whose members stack in one column. Cells fill rows of up to four; odd rows run right to
 // left (snake), so consecutive tasks are always neighbours. The strip above holds the issues and the queue.
 function laneGeometry(tasks, strip, ctx) {
+  const gap = ctx.gap;
   const byTask = new Map(tasks.map((t) => [t.id, t]));
   const ordered = stableOrder(tasks.map((t) => t.id), ctx.pairs).map((id) => byTask.get(id));
   const cells = [];
@@ -416,7 +461,7 @@ function laneGeometry(tasks, strip, ctx) {
   const boxes = new Map();
   const brackets = [];
   const order = [];
-  const top = FRAME_PAD + TITLE_H + 8;
+  const top = gap.framePad + TITLE_H + 8;
   let cols = 0;
   let bottomY = top;
   if (strip.length) {
@@ -425,42 +470,42 @@ function laneGeometry(tasks, strip, ctx) {
     strip.forEach((n, k) => {
       const col = k % FLOW_COLS;
       const row = Math.floor(k / FLOW_COLS);
-      boxes.set(n.id, { x: FRAME_PAD + col * (NODE_W + CELL_GAP), y: top + row * (NODE_H + STRIP_GAP),
+      boxes.set(n.id, { x: gap.framePad + col * (NODE_W + gap.cell), y: top + row * (NODE_H + gap.strip),
         w: NODE_W, h: NODE_H });
     });
-    bottomY = top + rows * NODE_H + (rows - 1) * STRIP_GAP;
+    bottomY = top + rows * NODE_H + (rows - 1) * gap.strip;
   }
-  let y = strip.length ? bottomY + STRIP_SEP : top;
+  let y = strip.length ? bottomY + gap.stripSep : top;
   if (cells.length) {
     const gc = Math.min(FLOW_COLS, cells.length);
     cols = Math.max(cols, gc);
     for (let r = 0; r * gc < cells.length; r += 1) {
       const row = cells.slice(r * gc, r * gc + gc);
-      const rowH = Math.max(...row.map((cell) => cellHeight(cell, ctx.pillsOf)));
+      const rowH = Math.max(...row.map((cell) => cellHeight(cell, ctx.pillsOf, gap.stack)));
       row.forEach((cell, k) => {
         const col = r % 2 === 0 ? k : gc - 1 - k;
-        const x = FRAME_PAD + col * (NODE_W + CELL_GAP);
+        const x = gap.framePad + col * (NODE_W + gap.cell);
         let cyy = y;
         cell.forEach((t) => {
           const pills = ctx.pillsOf.get(t.id) || [];
           boxes.set(t.id, { x, y: cyy, w: NODE_W, h: NODE_H });
           pills.forEach((p, q) => boxes.set(p.id, { x: x + q * PILL_STEP, y: cyy + PILL_DY, w: PILL_W, h: PILL_H }));
           order.push(t.id);
-          cyy += taskHeight(pills.length) + STACK_GAP;
+          cyy += taskHeight(pills.length) + gap.stack;
         });
         if (cell.length > 1) {
-          brackets.push({ x: x - 4, y: y - 4, w: NODE_W + 8, h: cellHeight(cell, ctx.pillsOf) + 8,
+          brackets.push({ x: x - 4, y: y - 4, w: NODE_W + 8, h: cellHeight(cell, ctx.pillsOf, gap.stack) + 8,
             members: cell.map((t) => t.id) });
         }
       });
       bottomY = y + rowH;
-      y = bottomY + ROW_GAP;
+      y = bottomY + gap.row;
     }
   }
-  const width = 2 * FRAME_PAD + cols * NODE_W + Math.max(0, cols - 1) * CELL_GAP;
+  const width = 2 * gap.framePad + cols * NODE_W + Math.max(0, cols - 1) * gap.cell;
   return {
     w: Math.max(CARD_W, width),
-    h: bottomY + FRAME_PAD + CHANNEL,
+    h: bottomY + gap.framePad + gap.channel,
     boxes,
     brackets,
     order,
@@ -475,7 +520,7 @@ function loopRoute(a) {
 }
 
 // Two boxes in the same frame: straight when they share a row or a column, else one right-angled elbow.
-function insideRoute(a, b) {
+function insideRoute(a, b, gap) {
   if (a === b) return loopRoute(a);
   if (Math.abs(cy(a) - cy(b)) < 1) {
     return b.x > a.x ? [[right(a), cy(a)], [b.x, cy(b)]] : [[a.x, cy(a)], [right(b), cy(b)]];
@@ -484,11 +529,11 @@ function insideRoute(a, b) {
     return b.y > a.y ? [[anchor(a), bottom(a)], [anchor(b), b.y]] : [[anchor(a), a.y], [anchor(b), bottom(b)]];
   }
   if (b.x >= right(a)) {
-    const mx = right(a) + CELL_GAP / 2;
+    const mx = right(a) + gap.cell / 2;
     return [[right(a), cy(a)], [mx, cy(a)], [mx, cy(b)], [b.x, cy(b)]];
   }
   if (right(b) <= a.x) {
-    const mx = a.x - CELL_GAP / 2;
+    const mx = a.x - gap.cell / 2;
     return [[a.x, cy(a)], [mx, cy(a)], [mx, cy(b)], [right(b), cy(b)]];
   }
   const down = b.y > a.y;
@@ -518,7 +563,7 @@ function cardRoute(S, D, fd) {
   return [[right(a), cy(a)], [gx, cy(a)], [gx, cy(b)], [b.x, cy(b)]];
 }
 
-function routeEdge(S, D, frameBox) {
+function routeEdge(S, D, frameBox, gap) {
   if (S.kind === "start" && D.kind === "end") return [[right(S.box), cy(S.box)], [D.box.x, cy(D.box)]];
   if (S.kind === "start") {
     const fd = frameBox.get(D.lane);
@@ -531,7 +576,7 @@ function routeEdge(S, D, frameBox) {
   const fd = D.kind === "end" ? D.box : frameBox.get(D.lane);
   if (!fs || !fd) return null;
   // Tasks inside one folded frame all draw on its card: their edges are hidden inside it, not looped back onto it.
-  if (S.lane === D.lane) return S.card ? null : insideRoute(S.box, D.box);
+  if (S.lane === D.lane) return S.card ? null : insideRoute(S.box, D.box, gap);
   if (S.card && fd.x > fs.x) return cardRoute(S, D, fd);
   return crossRoute(S, D, fs, fd);
 }
@@ -539,6 +584,7 @@ function routeEdge(S, D, frameBox) {
 export function flowLayout(graph, opts) {
   const g = graph && Array.isArray(graph.nodes) ? graph : { nodes: [], edges: [] };
   const o = opts && typeof opts === "object" ? opts : {};
+  const gap = gapsOf(o.spacing);
   const nodes = g.nodes.filter((n) => n && typeof n.id === "string");
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const ends = (id) => id === "start" || id === "end" || byId.has(id);
@@ -601,7 +647,7 @@ export function flowLayout(graph, opts) {
   const geo = new Map();
   laneIds.forEach((lane) => {
     geo.set(lane, laneGeometry(tasksOf.get(lane) || [], stripOf.get(lane) || [],
-      { pairs: pairsOf.get(lane) || [], groupOf, pillsOf }));
+      { pairs: pairsOf.get(lane) || [], groupOf, pillsOf, gap }));
   });
 
   // Which frames are cards. Done phases start collapsed; opts.open and opts.close override; expandAll (Show all) turns
@@ -651,7 +697,7 @@ export function flowLayout(graph, opts) {
 
   // Place the frames left to right.
   const start = { x: MARGIN, y: 0, w: END_W, h: END_H };
-  let x = MARGIN + END_W + FRAME_GAP;
+  let x = MARGIN + END_W + gap.frame;
   const frameRec = new Map();
   const frames = [];
   laneIds.forEach((lane) => {
@@ -664,10 +710,10 @@ export function flowLayout(graph, opts) {
       id: "phase:" + lane, lane, label: ph ? ph.label : lane, approved: ph ? ph.approved === true : false,
       done: ph ? ph.done : 0, total: ph ? ph.total : 0, tokensK: ph ? ph.tokensK : 0, collapsed: isCard,
       x: box.x, y: box.y, w: box.w, h: box.h,
-      title: { x: box.x + FRAME_PAD, y: box.y + FRAME_PAD, w: box.w - 2 * FRAME_PAD, h: TITLE_H },
-      slot: { x: box.x + box.w - FRAME_PAD - SLOT, y: box.y + FRAME_PAD + 1, w: SLOT, h: SLOT },
+      title: { x: box.x + gap.framePad, y: box.y + gap.framePad, w: box.w - 2 * gap.framePad, h: TITLE_H },
+      slot: { x: box.x + box.w - gap.framePad - SLOT, y: box.y + gap.framePad + 1, w: SLOT, h: SLOT },
     });
-    x += box.w + FRAME_GAP;
+    x += box.w + gap.frame;
   });
   const mainBottom = frames.reduce((m, f) => Math.max(m, f.y + f.h), FLOW_TOP + END_H);
   const endX = x;
@@ -719,7 +765,7 @@ export function flowLayout(graph, opts) {
     const S = endpoint(e.from);
     const D = endpoint(e.to);
     if (!S || !D) return;
-    const pts = routeEdge(S, D, frameBox);
+    const pts = routeEdge(S, D, frameBox, gap);
     if (pts) routes[e.id] = pts.map(([px, py]) => [Math.round(px), Math.round(py)]);
   });
 

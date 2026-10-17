@@ -64,6 +64,11 @@ export function centreView(k, size, pt) {
   return { k: k, x: size.w / 2 - pt.x * k, y: size.h / 2 - pt.y * k };
 }
 
+// The diagram point under the middle of the screen, for a view {k, x, y} and a size {w, h}.
+export function flowCentre(view, size) {
+  return { x: (size.w / 2 - view.x) / view.k, y: (size.h / 2 - view.y) / view.k };
+}
+
 // True when the person asked for less motion. Node has no matchMedia, so there it is false.
 export function reducedMotion() {
   try {

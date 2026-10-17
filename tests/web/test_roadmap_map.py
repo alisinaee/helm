@@ -52,6 +52,8 @@ const out = {
   unfold: run({ open: { A: true, C: false } }),
   noRun: L.roadmapLayout(snap, { deps: [] }),
   empty: L.roadmapLayout({ phases: [], tasks: [] }, {}),
+  spaced: run({ spacing: 2 }),
+  spacedDef: run({ spacing: 1 }),
 };
 const raw = { project: { id: "x", title: "x" }, summary: {}, overall: { project: { done: 3, total: 8 } },
   phases: phases, tasks: tasks, jobs: [], blocked: [] };
@@ -164,6 +166,14 @@ class RoadmapMapLayoutTests(unittest.TestCase):
         self.assertGreaterEqual(lay["width"], cols["C"]["x"] + cols["C"]["w"])
         self.assertGreaterEqual(lay["height"], max(c["y"] + c["h"] for c in lay["cards"]))
 
+    def test_spacing_two_widens_the_gaps_and_keeps_the_card_size(self):
+        a, b = self.out["base"], self.out["spaced"]
+        self.assertEqual(self.out["spacedDef"], a)
+        self.assertGreater(b["cards"][1]["y"] - b["cards"][0]["y"], a["cards"][1]["y"] - a["cards"][0]["y"])
+        self.assertEqual(b["cards"][0]["w"], a["cards"][0]["w"])
+        self.assertEqual(b["cards"][0]["h"], a["cards"][0]["h"])
+        self.assertGreater(b["cols"][1]["x"] - b["cols"][0]["x"], a["cols"][1]["x"] - a["cols"][0]["x"])
+
     def test_pure_and_empty_safe(self):
         self.assertEqual(self.out["baseText"], self.out["againText"])
         self.assertEqual(self.out["empty"]["cols"], [])
@@ -194,8 +204,10 @@ class RoadmapMapSourceTests(unittest.TestCase):
         self.css = read("web", "css", "roadmap_map.css")
 
     def test_reuses_the_graph_viewport(self):
-        self.assertIn('import { mountViewport } from "../graph/viewport.js";', self.js)
+        self.assertIn('import { mountViewport, flowCentre } from "../graph/viewport.js";', self.js)
         self.assertIn('from "../graph/roadmap_layout.js"', self.js)
+        self.assertIn('from "../graph/layout.js"', self.js)
+        self.assertIn('"rb.space.roadmap"', self.js)
 
     def test_svg_is_csp_safe(self):
         self.assertIn("createElementNS", self.js)
