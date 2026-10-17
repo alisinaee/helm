@@ -308,9 +308,6 @@ class SysLayoutCollapseTest(unittest.TestCase):
         self.assertLess(self.out["ms"], 50)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 SPACE_SCRIPT = r"""
 (async () => {
@@ -321,8 +318,13 @@ SPACE_SCRIPT = r"""
     edges: [] };
   const one = m.layeredLayout(view, { space: 1 });
   const two = m.layeredLayout(view, { space: 2 });
-  const gap = (l) => l.nodes[1].x - l.nodes[0].x;
-  console.log(JSON.stringify({ g1: gap(one), g2: gap(two), w1: one.nodes[0].w, w2: two.nodes[0].w,
+  const gap = (l) => l.nodes[1].x - l.nodes[0].x - l.nodes[0].w;
+  const v2 = { groups: [{ id: "a" }, { id: "b" }], nodes: [{ id: "x", group: "a" }, { id: "y", group: "b" },
+    { id: "z", group: "b" }], edges: [{ from: "x", to: "y", label: "p" }, { from: "x", to: "z", label: "q" }] };
+  const rk = (l) => l.groups[1].y - l.groups[0].y - l.groups[0].h;
+  const r1 = m.layeredLayout(v2, { space: 1, aspect: 0.2 });
+  const r2 = m.layeredLayout(v2, { space: 2, aspect: 0.2 });
+  console.log(JSON.stringify({ rk1: rk(r1), rk2: rk(r2), lab: r2.edges.every((e) => e.lx !== null), g1: gap(one), g2: gap(two), w1: one.nodes[0].w, w2: two.nodes[0].w,
     clamp: [m.clampSpace(9), m.clampSpace(0.1), m.clampSpace("x")] }));
 })();
 """
@@ -333,6 +335,32 @@ class SpaceFactor(unittest.TestCase):
     def test_factor_two_widens_gap_not_boxes(self):
         out = subprocess.run([NODE, "-e", SPACE_SCRIPT, WEB], capture_output=True, text=True, check=True).stdout
         r = json.loads(out)
-        self.assertGreater(r["g2"], r["g1"])
+        self.assertEqual(r["g2"], 2 * r["g1"])
+        self.assertEqual(r["rk2"], 2 * r["rk1"])
+        self.assertTrue(r["lab"])
         self.assertEqual(r["w1"], r["w2"])
         self.assertEqual(r["clamp"], [2.5, 0.6, 1])
+
+
+BUNDLE_SCRIPT = r"""
+(async () => {
+  const { join } = await import("node:path");
+  const { pathToFileURL } = await import("node:url");
+  const m = await import(pathToFileURL(join(process.argv[1], "js", "graph", "syslayout.js")).href);
+  const nodes = [{ id: "s", group: "a" }].concat([1, 2, 3, 4].map((i) => ({ id: "t" + i, group: "b" })));
+  const edges = [1, 2, 3, 4].map((i) => ({ from: "s", to: "t" + i, label: "uses " + i }));
+  const l = m.layeredLayout({ groups: [{ id: "a" }, { id: "b" }], nodes: nodes, edges: edges }, { space: 2 });
+  console.log(JSON.stringify({ n: l.edges.length, label: l.edges[0].label, b: (l.edges[0].bundle || []).length }));
+})();
+"""
+
+
+@unittest.skipUnless(NODE, "node not installed")
+class Bundling(unittest.TestCase):
+    def test_parallel_edges_collapse_to_one_with_count(self):
+        out = subprocess.run([NODE, "-e", BUNDLE_SCRIPT, WEB], capture_output=True, text=True, check=True).stdout
+        self.assertEqual(json.loads(out), {"n": 1, "label": "\u00d74", "b": 4})
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -377,5 +377,5 @@ class SpaceFactor(unittest.TestCase):
         out = subprocess.run([NODE, "-e", SPACE_SCRIPT, WEB], capture_output=True, text=True, check=True).stdout
         r = json.loads(out)
         gap = lambda p: p[1][0] - p[0][0] - p[0][1]
-        self.assertGreater(gap(r["two"]), gap(r["one"]))
+        self.assertEqual(gap(r["two"]), 2 * gap(r["one"]))
         self.assertEqual([b[1] for b in r["one"]], [b[1] for b in r["two"]])

@@ -12,7 +12,7 @@ import { copyButton, refOf } from "../ref.js";
 import { bannerHtml, chipHtml, emptyHtml, esc, patch, skeletonHtml } from "../dom.js";
 import { mountViewport } from "../graph/viewport.js";
 import { clampSpace, LABEL_MAX, layeredLayout, matrixLayout, MX_COL, MX_HEAD, MX_LEFT, MX_ROW, sequenceLayout,
-  weak } from
+  weak, labelWidth } from
   "../graph/syslayout.js";
 import { human, panelHtml } from "./system-panel.js";
 import { anchorShift, collapseGroups, subgraph } from "../graph/syslayout.js";
@@ -235,6 +235,15 @@ function nodeSvg(n, near, act) {
     v("--text-2") + '">' + esc(clip(n.sub, room + 4)) + "</text>" + bar + run + "</g>";
 }
 
+// Tooltip of an edge; a bundle (several edges drawn as one, label "×N") lists every member.
+function edgeTip(e) {
+  if (e.bundle) {
+    return e.bundle.length + " edges\n" + e.bundle.map((m) => m.from + " \u2192 " + m.to + (m.label ? ": " +
+      m.label : "")).join("\n");
+  }
+  return e.label + (e.count ? " (" + e.count + " imports)" : "");
+}
+
 function edgeSvg(e, near) {
   const dim = near && !(near.has(e.from) && near.has(e.to) && (e.from === selected || e.to === selected));
   const color = v(EDGE[e.kind] || "--text-2");
@@ -249,11 +258,17 @@ function edgeSvg(e, near) {
 }
 
 function labelSvg(e, near) {
-  if (e.lx === null || !e.label) return "";
+  if (!e.label) return "";
   const dim = near && !(e.from === selected || e.to === selected);
-  return '<g class="sys-l' + (dim ? " wfg-dim" : "") + '"><rect x="' + (e.lx - e.lw / 2) + '" y="' + (e.ly - 8) +
-    '" width="' + e.lw + '" height="16" rx="3" fill="' + v("--surface-1") + '" stroke="' + v("--track") +
-    '"/><text x="' + e.lx + '" y="' + (e.ly + 4) + '" font-size="11" text-anchor="middle" fill="' +
+  // No room on the drawing: the label shows only for an edge of the selected node, at the middle of the edge.
+  const shown = e.lx !== null;
+  if (!shown && !(selected && (e.from === selected || e.to === selected))) return "";
+  const lx = shown ? e.lx : e.mx;
+  const ly = shown ? e.ly : e.my;
+  const lw = shown ? e.lw : labelWidth(e.label);
+  return '<g class="sys-l' + (dim ? " wfg-dim" : "") + '"><rect x="' + (lx - lw / 2) + '" y="' + (ly - 8) +
+    '" width="' + lw + '" height="16" rx="3" fill="' + v("--surface-1") + '" stroke="' + v("--track") +
+    '"/><text x="' + lx + '" y="' + (ly + 4) + '" font-size="11" text-anchor="middle" fill="' +
     v(e.kind === "violation" || e.kind === "cycle" ? "--danger" : "--text-2") + '">' +
     esc(clip(e.label, LABEL_MAX)) + "</text></g>";
 }
@@ -510,14 +525,24 @@ function toolbarHtml(pid, arch) {
     op("full", "Exit full screen (Esc)", "Exit full screen") : op("full", "Open full screen", "Full screen");
   const stats = fs ? "" : count;
   const sp = spaceNow();
-  const spacing = '<span class="sys-zg" role="group" aria-label="Spacing"><span class="sys-seg-l">Spacing</span>' +
-    op("sp-less", "Less space", "−") + '<button type="button" class="btn btn-small sys-sp" data-sys-op="sp-val" ' +
-    'aria-label="Spacing (double-click to reset)" title="Double-click to reset">' + spaceText(sp) + "</button>" +
-    op("sp-more", "More space", "+") + "</span>";
-  const tools = '<span class="sys-ov sys-ov-tr" role="group" aria-label="Zoom and screen">' + spacing +
-    '<span class="sys-zg">' +
-    op("out", "Zoom out", "−") + op("actual", "Zoom to 100 percent", "100%", "sys-zoom") + op("in", "Zoom in", "+") +
-    "</span>" + op("fit", "Fit to screen", "Fit") + screen + "</span>";
+  const ico = (d) => '<svg class="sys-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" ' +
+    'fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + d +
+    "</svg>";
+  const icoSpace = ico('<path d="M2 3v10M14 3v10M5 8h6M5 8l2-2M5 8l2 2M11 8l-2-2M11 8l-2 2"/>');
+  const icoZoom = ico('<circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/>');
+  const icoFit = ico('<path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/>');
+  const icoFull = ico('<path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4M6 6l-3-3M10 6l3-3M10 10l3 3M6 10l-3 3"/>');
+  const seg = (label, icon, inner, aria) => '<span class="sys-zg" role="group" aria-label="' + aria + '">' +
+    '<span class="sys-seg-l">' + icon + label + "</span>" + inner + "</span>";
+  const spacing = seg("Space", icoSpace, op("sp-less", "Less space", "−") +
+    '<button type="button" class="btn btn-small sys-sp" data-sys-op="sp-val" aria-label="Reset space" ' +
+    'title="Double-click to reset">' + spaceText(sp) + "</button>" + op("sp-more", "More space", "+"), "Space");
+  const zoom = seg("Zoom", icoZoom, op("out", "Zoom out", "−") + op("actual", "Zoom to 100 percent", "100%",
+    "sys-zoom") + op("in", "Zoom in", "+"), "Zoom");
+  const sep = '<span class="sys-sep" aria-hidden="true"></span>';
+  const tools = '<span class="sys-ov sys-ov-tr" role="group" aria-label="Space, zoom and screen">' + spacing + sep +
+    zoom + sep + op("fit", "Fit to screen", icoFit + "Fit") + screen.replace(/>([^<]+)<\/button>$/,
+    (m, t) => ">" + (t === "Full screen" || t === "Exit full screen" ? icoFull : "") + t + "</button>") + "</span>";
   const acts = '<span class="sys-ov sys-ov-tl" role="group" aria-label="Diagram actions">' +
     op("sys", "Show the system summary", "Summary") + copyIdHtml(pid, arch) +
     op("update", "Add a task to update and check the System diagrams", "Update diagrams") +
