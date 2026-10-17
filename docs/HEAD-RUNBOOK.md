@@ -37,6 +37,17 @@
 > work is finished — check `bin/roadmap job list --json` for stale `status: running` entries whose task already has
 > a pushed commit, and close them immediately if any are found.
 
+> 2026-10-17 H307 (R11.134, root cause: person saw "done" tasks that didn't apply in the panel): the head pushed
+> `web/js/*` changes across two tasks without restarting the live service each time, so the running process kept
+> serving its startup-time static file list (`roadmap/http/static.py` `StaticFiles` builds the allowlist once, in
+> `__init__`) — new/changed JS just 404'd or served stale content no matter how the person refreshed. RULE:
+> `bin/roadmap service restart` is MANDATORY in the same breath as any push touching `web/`, `roadmap/http/` or
+> `roadmap/services/` — never deferred, never batched across tasks. Don't rely on memory alone: `roadmap service
+> status` now reports `stale` (and prints "RESTART NEEDED" in plain output) whenever those paths changed after the
+> running process started, by comparing each file's mtime to the process start time (`ps -o etimes=`) — run it
+> after any such push if unsure. `roadmap service restart --if-stale` restarts only when that check is true, so it
+> is safe to run after every push with no cost when nothing changed.
+
 # Head runbook (how the head works here; read after HANDOVER.md)
 
 Product renamed to Helm (2026-10-16): repo alisinaee/helm, dir ~/Works/helm; use `bin/helm` or `bin/roadmap` (same). Project id stays `roadmap-board`.
