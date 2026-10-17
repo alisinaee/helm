@@ -21,3 +21,23 @@
    M web/js/views/overview.js
   ?? tests/web/test_overview_activity.py
 ACTION FOR THE CALLING AGENT: inspect these changes (`git diff`) before trusting this staffer. Rollback: `git checkout -- <path>` for tracked files, delete the new untracked ones.
+
+## Verified (Haiku)
+
+Each agy row was checked against the code on main plus this edit (R11.121). Verdict per row:
+
+1. toolbar.css `.tb-row` nowrap + max-height 40px: **real**. Fixed: wraps (`flex-wrap: wrap`, `gap: 6px var(--sp-2)`), no height cap.
+2. `.tb-search` min-width 0 collapses to a sliver: **real**. Fixed: `min-width: 160px; flex: 1 1 200px`.
+3. `.tb-pop` hardcoded `top` for one row: **real**. Fixed: the popover now sits inside `.tb-row` (positioned) at `top: calc(100% + sp-1)`.
+4. `.tb` z-index 5 under mobile bottom nav (z 40): **real**. Fixed: `.tb:has(.tb-pop:not([hidden]))` lifts to `--z-over + 1`.
+5. Mobile `.tb-row { max-height: none }`: **not real**. The cap must go so the row can wrap; the spec's single-row limit is met by the wrap rule.
+6. Focus does not move into the popover on open: **real**. Fixed: `setPanel(toggle, open, open)`.
+7. Esc with focus on the open Filters button does nothing: **real**. Fixed: Escape on an expanded `[data-tb-toggle="pop"]` closes it.
+8. Popover sits after the actions in DOM/focus order: **real**. Fixed: the popover is rendered right after the Filters button.
+9. Filters button lacks `aria-haspopup="dialog"`: **real**. Fixed.
+10. `.tb-pop` lacks `aria-modal="true"`: **not real**. The popover is non-modal (the page is not inert and an outside click closes it), so `aria-modal` would claim modality it does not enforce.
+11. `.tb-count` needs `aria-hidden`: **not real**. The button has `aria-label`, which replaces its content in the accessible name, so the count is not read twice. Left unchanged.
+12. Click outside does not close an open popover (clicks on search, empty space or other toolbar parts): **real**. Fixed: any click outside `.tb-pop`/`.tb-menu` closes them.
+13. Tab trap fails when the container itself has focus: **not real**. `.tb-pop` has no tabindex, so it cannot be the focused target and `i === -1` is unreachable.
+14. rules.js has 5 tabs (max 4 visible): **real**. Fixed in toolbar.js: more than 4 views render as one `<select data-tb-view-select>` (emits `view`). rules.js is unchanged.
+15. rules.js "Copy section" sits in `.page-head`, not the toolbar overflow: **real, not fixed**. Moving it needs an `rb:toolbar` action handler wired to the copy helper (ref.js/app.js), which is outside this task's file list. Deferred.

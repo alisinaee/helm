@@ -61,6 +61,13 @@ export function toggleToken(list, token) {
 
 function viewsHtml(cfg, k) {
   if (!cfg.views || cfg.views.length < 2) return "";
+  // More than 4 views do not fit as segments: they become one select (docs/TOOLBAR-PATTERN.md, Slot 1).
+  if (cfg.views.length > 4) {
+    return '<select class="tb-view-select" data-tb-view-select data-focus="tb-' + k + '-views" aria-label="View">' +
+      cfg.views.map(function (v) {
+        return '<option value="' + esc(v.id) + '"' + (v.current ? " selected" : "") + ">" + esc(v.label) + "</option>";
+      }).join("") + "</select>";
+  }
   return '<div class="tb-seg" role="group" aria-label="View">' + cfg.views.map(function (v) {
     // data-focus keeps focus on the same segment after dom.patch re-renders the section (view switch).
     return '<button type="button" class="tb-seg-btn" aria-pressed="' + (v.current ? "true" : "false") +
@@ -81,9 +88,9 @@ function filtersButtonHtml(cfg, k, open) {
   const n = activeCount(cfg);
   const badge = n ? ' <span class="tb-count">' + n + "</span>" : "";
   const label = n ? "Filters, " + n + " active" : "Filters";
-  return '<button type="button" class="btn btn-small tb-filters" data-tb-toggle="pop" aria-expanded="' +
-    (open ? "true" : "false") + '" aria-controls="tb-' + k + '-pop" aria-label="' + label + '">Filters' + badge +
-    "</button>";
+  return '<button type="button" class="btn btn-small tb-filters" data-tb-toggle="pop" aria-haspopup="dialog" ' +
+    'aria-expanded="' + (open ? "true" : "false") + '" aria-controls="tb-' + k + '-pop" aria-label="' + label +
+    '">Filters' + badge + "</button>";
 }
 
 function actionsHtml(cfg) {
@@ -137,10 +144,11 @@ function appliedHtml(cfg) {
 export function toolbarHtml(cfg) {
   const k = safeKey(cfg.key);
   const open = typeof cfg.open === "boolean" ? cfg.open : isOpen(k);
+  // The popover sits right after Filters inside the row (focus order follows the trigger; it anchors to the row).
   return '<div class="tb" data-tb="' + k + '" role="group" aria-label="' + esc(cfg.label || "Section toolbar") + '">' +
     '<div class="tb-row">' + viewsHtml(cfg, k) + searchHtml(cfg, k) + filtersButtonHtml(cfg, k, open) +
-    '<span class="tb-gap"></span>' + actionsHtml(cfg) + moreHtml(cfg, k) + "</div>" +
-    popoverHtml(cfg, k, open) + appliedHtml(cfg) + "</div>";
+    popoverHtml(cfg, k, open) + '<span class="tb-gap"></span><div class="tb-acts">' + actionsHtml(cfg) +
+    moreHtml(cfg, k) + "</div></div>" + appliedHtml(cfg) + "</div>";
 }
 
 // ---- DOM wiring (browser only) ----
@@ -192,9 +200,11 @@ export function initToolbars() {
     if (toggle) {
       const open = toggle.getAttribute("aria-expanded") !== "true";
       closeAll(toggle, root);
-      setPanel(toggle, open, open && toggle.getAttribute("data-tb-toggle") === "menu");
+      setPanel(toggle, open, open);
       return;
     }
+    // A click outside an open popover or menu (anywhere, including other parts of this toolbar) closes it.
+    if (!t.closest(".tb-pop, .tb-menu")) closeAll(null, null);
     const view = t.closest("[data-tb-view]");
     if (view) return emit(root, "view", view.getAttribute("data-tb-view"));
     const rm = t.closest("[data-tb-remove]");
@@ -212,6 +222,8 @@ export function initToolbars() {
     }
   });
   document.addEventListener("change", function (e) {
+    const sel = e.target && e.target.closest ? e.target.closest("[data-tb-view-select]") : null;
+    if (sel) return emit(sel.closest("[data-tb]"), "view", sel.value);
     const box = e.target && e.target.closest ? e.target.closest("[data-tb-token]") : null;
     const root = box ? box.closest("[data-tb]") : null;
     if (root) emit(root, "token", box.getAttribute("data-tb-token"));
@@ -223,6 +235,12 @@ export function initToolbars() {
   });
   document.addEventListener("keydown", function (e) {
     const t = e.target && e.target.closest ? e.target : null;
+    // Escape on the open Filters button itself (focus never left the trigger) closes the popover.
+    if (e.key === "Escape" && t && t.matches('[data-tb-toggle="pop"][aria-expanded="true"]')) {
+      setPanel(t, false, false);
+      e.preventDefault();
+      return;
+    }
     const panel = t ? t.closest(".tb-pop, .tb-menu") : null;
     if (!panel) return;
     const btn = Array.prototype.find.call(document.querySelectorAll("[aria-controls]"),
