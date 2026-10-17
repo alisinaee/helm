@@ -14,6 +14,7 @@ from roadmap.core import head as core
 from roadmap.core.snapshot import head_link_state
 from roadmap.services import agentguard, commands, control, headimport, hooks, jobs, loader, tasks
 from roadmap.services import head as store
+from roadmap.services import headpanel
 from roadmap.services import queue as queue_service
 from roadmap.store import paths, schema
 
@@ -162,6 +163,12 @@ def register(sub, common):
     forget = add("forget", "blank the verbatim text of an entry, keep the summary (the person only)")
     forget.add_argument("id", metavar="H15")
     forget.set_defaults(handler=_forget)
+
+    panel = add("panel", "the person's board actions for the head (R11.2): list them (marks them seen), or ack ids")
+    panel.add_argument("verb", nargs="?", default=None, choices=("ack",), help="ack: mark them acted")
+    panel.add_argument("ids", nargs="*", metavar="P3", help="the panel ids to ack, or all")
+    panel.add_argument("--full", action="store_true", help="print past the 15-line cap")
+    panel.set_defaults(handler=_panel)
 
     imp = add("import", "seed the ledger from a markdown doc: head import --doc FILE [--section 2,2b]")
     imp.add_argument("--doc", required=True, metavar="FILE", help="a markdown file inside the project folder")
@@ -630,4 +637,28 @@ def _runnable(args):
     print("ok %d runnable. next: %s" % (len(ops), ops[0]))
     for line in _fit(ops, _full(args), reserve=1):
         print(line)
+    return None
+
+
+def _panel(args):
+    """head panel: the newest board actions of the person with their state (listing marks the unseen ones seen, via
+    cli); head panel ack P3 P4 (or all) marks them acted."""
+    _, data_dir = tasks.resolve(args.project)
+    if args.verb == "ack":
+        if not args.ids:
+            raise commands._usage("name the panel ids to ack (P3 P4, or all)", "roadmap head panel")
+        done = headpanel.ack(data_dir, list(args.ids), now=_now())
+        if _json(args):
+            return {"acked": done}
+        _ok("panel acked: " + (" ".join(done) or "none of these ids"), "roadmap head panel")
+        return None
+    headpanel.take(data_dir, "cli", now=_now(), timeout=2.0, limit=headpanel.KEEP)
+    body = headpanel.state(data_dir)
+    if _json(args):
+        return body
+    lines = ["%s %-5s %s %s" % (r["id"], r["state"], (r.get("ts") or "")[5:16].replace("T", " "), r["sum"])
+             for r in body["rows"]]
+    for line in _fit(lines or ["no board actions yet"], _full(args), reserve=1):
+        print(line)
+    print("next: roadmap head panel ack <ids>" if lines else "next: " + BRIEF)
     return None

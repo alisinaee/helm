@@ -8,6 +8,7 @@ import json
 import subprocess
 import sys
 
+from roadmap.commands import usage_accounts as usage_accounts_cmd
 from roadmap.errors import EXIT_EXTERNAL, RoadmapError
 from roadmap.services import usage
 from roadmap.store import config as config_store
@@ -26,6 +27,7 @@ def register(sub, common):
     line.add_argument("--then", metavar="CMD", default=None,
                       help="status line command to run after storing (gets the same JSON on stdin; its output is shown)")
     line.set_defaults(handler=handle_statusline)
+    usage_accounts_cmd.register(actions, common)
 
 
 def _json_mode(args):

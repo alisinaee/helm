@@ -23,6 +23,7 @@ from roadmap.errors import EXIT_INVALID_DATA, EXIT_USAGE, RoadmapError
 from roadmap.log import get_logger
 from roadmap.services import ledger
 from roadmap.services import tokenshare
+from roadmap.services import usage_accounts
 from roadmap.services import usage_sources
 from roadmap.store import config as config_store
 from roadmap.store import atomic, lock, paths, schema
@@ -60,11 +61,15 @@ CODE_DENIED = "denied"
 CODE_EXPIRED = "expired"          # the refresh token was refused: the Claude Code login must be renewed once
 CODE_NET = "net"
 CODE_OTHER = "other"
+CODE_DISCONNECTED = "disconnected"  # R11.8: the person disconnected Helm from the active account; nothing is read
 KEYCHAIN_CODES = (CODE_NO_TOKEN, CODE_NO_ITEM, CODE_DENIED, CODE_EXPIRED)
 # No usable Claude Code login (desktop app sign-in only, or an expired one): not an error. The other sources run.
 UNAVAILABLE_CODES = (CODE_NO_TOKEN, CODE_NO_ITEM, CODE_EXPIRED)
 STATUS_UNAVAILABLE = "unavailable"
 STATUS_ERROR = "error"
+STATUS_DISCONNECTED = "disconnected"
+DISCONNECTED_REASON = ("Helm's usage sync is disconnected from this Claude account: Tokens > Account > Connect "
+                       "(or `helm usage account connect`)")
 UNAVAILABLE_REASON = "no Claude Code login on this Mac: run `claude auth login` once (docs/USAGE-SOURCES.md)"
 REQUEST_FILE = "usage-request.json"   # legacy head request flag (no longer written: Sync now fetches); still cleared
 REQUEST_MAX_AGE_S = 30 * 60
@@ -97,20 +102,24 @@ def token_refresh_allowed(cfg):
     return _usage_setting(cfg, TOKEN_REFRESH_KEY, False) is True
 
 
-def read_keychain_token(allow_refresh=False):
-    """The Claude Code OAuth access token (keychain, else ~/.claude/.credentials.json). With allow_refresh it is
-    refreshed first when it expires within 5 minutes; without it an expired token is code expired. Runs `security`;
-    no shell."""
+def read_keychain_token(allow_refresh=False, location=None):
+    """The Claude Code OAuth access token (keychain, else ~/.claude/.credentials.json; location picks another usage
+    account's login, R11.8). With allow_refresh it is refreshed first when it expires within 5 minutes; without it an
+    expired token is code expired. Runs `security`; no shell."""
     try:
-        return usage_sources.access_token(allow_refresh=allow_refresh)
+        if location is None:
+            return usage_sources.access_token(allow_refresh=allow_refresh)
+        return usage_sources.access_token(allow_refresh=allow_refresh, location=location)
     except usage_sources.SourceError as exc:
         raise UsageError(str(exc), exc.code)
 
 
-def _force_refresh():
+def _force_refresh(location=None):
     """A new access token after the endpoint refused the current one (HTTP 401). Only with usageTokenRefresh on."""
     try:
-        return usage_sources.access_token(force=True, allow_refresh=True)
+        if location is None:
+            return usage_sources.access_token(force=True, allow_refresh=True)
+        return usage_sources.access_token(force=True, allow_refresh=True, location=location)
     except usage_sources.SourceError as exc:
         raise UsageError(str(exc), exc.code)
 
@@ -373,6 +382,8 @@ def view(record, max_age=MAX_USAGE_AGE_MIN * 60, now=None):
 def _status(record):
     """(status, reason) of the last sync: unavailable (no claude.ai login here), error (a real failure), or None."""
     code = record.get("syncError")
+    if code == CODE_DISCONNECTED:
+        return STATUS_DISCONNECTED, DISCONNECTED_REASON
     if code in UNAVAILABLE_CODES:
         return STATUS_UNAVAILABLE, (record.get("lastError") if code == CODE_EXPIRED and record.get("lastError")
                                     else UNAVAILABLE_REASON)
@@ -463,9 +474,13 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
     cfg = _config(config)
     moment = now or datetime.now(timezone.utc)
     store = _load_store()
-    skip = background and _in_future(store.get("keychainRetryAfter"), moment)
+    account = usage_accounts.active_for_sync(cfg)
+    disconnected = not account["connected"]
+    if disconnected and store.get("syncError") != CODE_DISCONNECTED:
+        _update_store({"syncError": CODE_DISCONNECTED, "lastError": None})
+    skip = disconnected or (background and _in_future(store.get("keychainRetryAfter"), moment))
     oauth_error = None
-    if not background:
+    if not background and not disconnected:
         if store.get("syncError") in KEYCHAIN_CODES:
             age = _age_s(store.get("manualAttemptAt"), moment)
             if age is not None and age < MANUAL_KEYCHAIN_GAP_S:
@@ -478,13 +493,20 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
     if not skip:
         allow = token_refresh_allowed(cfg)
         own_login = get_token is None
+        where = account["location"]
         try:
-            keychain_token = read_keychain_token if not allow else functools.partial(read_keychain_token,
-                                                                                    allow_refresh=True)
+            if where is None:
+                keychain_token = read_keychain_token if not allow else functools.partial(read_keychain_token,
+                                                                                        allow_refresh=True)
+                force = _force_refresh
+            else:
+                keychain_token = functools.partial(read_keychain_token, allow_refresh=allow, location=where)
+                force = functools.partial(_force_refresh, location=where)
             reading = collect(get_token=get_token or keychain_token,
                               fetch=fetch or http_fetch,
-                              refresh=((_force_refresh if allow else _no_refresh) if own_login else None))
+                              refresh=((force if allow else _no_refresh) if own_login else None))
         except UsageError as exc:
+            usage_accounts.note_failure(account["id"], exc.code, str(exc))
             retry = None
             if exc.code in KEYCHAIN_CODES:
                 retry = (moment + timedelta(seconds=KEYCHAIN_BACKOFF_S)).isoformat(timespec="seconds")
@@ -498,6 +520,7 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
             changes = dict(usage_record(reading, SOURCE_ENDPOINT), lastError=None, syncError=None,
                            keychainRetryAfter=None)
             stored, mirrors = _commit(changes, cfg)
+            usage_accounts.note_reading(account["id"], stored)
             result = _result(stored, cfg, mirrors)
             _control_after_write()
             return result
@@ -508,6 +531,9 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
         raise oauth_error
     if skip and background:
         return None
+    if disconnected:
+        return {"ok": True, "status": STATUS_DISCONNECTED, "reason": DISCONNECTED_REASON,
+                "usage": view(_load_store(), max_age_s(cfg)), "mirrors": []}
     return _unavailable(cfg)
 
 
@@ -564,6 +590,28 @@ def _unavailable(cfg):
     stored = _load_store()
     return {"ok": True, "status": STATUS_UNAVAILABLE, "reason": UNAVAILABLE_REASON,
             "usage": view(stored, max_age_s(cfg)), "mirrors": []}
+
+
+def account_login_reset(disconnected=False):
+    """R11.8: the active account was connected or disconnected. Clear the keychain backoff so the next sync tries at
+    once (connect), or mark the store disconnected (disconnect). The stored reading stays."""
+    _update_store({"keychainRetryAfter": None, "manualAttemptAt": None, "lastError": None,
+                   "syncError": CODE_DISCONNECTED if disconnected else None})
+
+
+def account_switched(reading, config=None):
+    """R11.8: another account became active. Its last kept reading (or nothing) replaces the shown one, so the board
+    never shows one account's numbers under another; the estimate base is reset; no ledger point is added."""
+    cfg = _config(config)
+    fields = {key: (reading or {}).get(key) for key in REAL_FIELDS}
+    real = fields if fields.get("updated") else None
+    connected = usage_accounts.active_for_sync(cfg)["connected"]
+    stored = _update_store(dict(fields, lastReal=real, estimate=False, estimateCal=None, estimateCalFor=None,
+                                keychainRetryAfter=None, manualAttemptAt=None, lastError=None,
+                                syncError=None if connected else CODE_DISCONNECTED))
+    mirrors = mirror_to_projects(cfg, stored) if _mirror_enabled(cfg) else []
+    _control_after_write()
+    return _result(stored, cfg, mirrors)
 
 
 def show(config=None, now=None):

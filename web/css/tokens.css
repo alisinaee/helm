@@ -1,5 +1,7 @@
 :root {
   --ref-col: 1.5rem;
+  --split-git: 26rem;
+  --split-: 26rem;
   color-scheme: dark;
   --surface-0: #0e1116;
   --surface-1: #161b22;
@@ -122,3 +124,80 @@
 :root[data-theme="dark"] {
   color-scheme: dark
 }
+
+/* Tokens page (R11.6): tabs, controls, charts. Colours only from the tokens above. */
+.tk-panel[hidden], .tk-tip[hidden] { display: none }
+.tk-panel { display: grid; gap: var(--sp-3); min-width: 0; align-content: start }
+.tk-tabs { justify-self: start; margin-bottom: var(--sp-3) }
+.tk-tabs > button { min-height: var(--h-control) }
+.tk-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3) }
+.tk-chips { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2) }
+.tk-chip { display: inline-flex; align-items: center; gap: var(--sp-1); height: var(--h-control); padding: 0 var(--sp-3);
+  border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--text-2); font: inherit;
+  font-size: var(--fs-12); cursor: pointer }
+.tk-chip[aria-pressed="true"] { background: var(--surface-2); color: var(--text-1); font-weight: 600 }
+.tk-chip[aria-pressed="false"] { opacity: .6 }
+.hd-seg > [aria-pressed="true"] { background: var(--surface-2); color: var(--text-1); font-weight: 600 }
+.tk-sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block }
+.tk-b-haiku { background: var(--m-haiku) } .tk-b-sonnet { background: var(--m-sonnet) }
+.tk-b-opus { background: var(--m-opus) } .tk-b-other { background: var(--unknown) }
+.tk-grid, .tk-two { display: grid; gap: var(--sp-3); grid-template-columns: minmax(0, 1fr); min-width: 0 }
+.tk-pair { display: grid; gap: var(--sp-3); grid-template-columns: minmax(0, 1fr); min-width: 0 }
+@media (min-width: 700px) { .tk-pair { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+@media (min-width: 1000px) { .tk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .tk-grid > :nth-child(5) { grid-column: 1 / -1 } }
+@media (min-width: 1400px) { .tk-two { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+.tk-svg { display: block; width: 100%; height: auto; max-height: 260px }
+.tk-svg-d { width: 120px; flex: none }
+.tk-svg-s { max-width: 360px }
+.tk-gl { stroke: var(--track); stroke-width: 1 }
+.tk-ax, .tk-lb { fill: var(--text-3); font-size: 10px; font-family: var(--font-ui) }
+.tk-lb { fill: var(--text-2); font-size: 11px }
+.tk-val { font-variant-numeric: tabular-nums }
+.tk-hit { fill: transparent }
+.tk-bar:hover .tk-hit { fill: var(--sel) }
+.tk-m-haiku { fill: var(--m-haiku) } .tk-m-sonnet { fill: var(--m-sonnet) }
+.tk-m-opus { fill: var(--m-opus) } .tk-m-other { fill: var(--unknown) }
+.tk-path { fill: none; stroke-width: 2 }
+.tk-ln-haiku { stroke: var(--m-haiku); fill: var(--m-haiku) } .tk-ln-sonnet { stroke: var(--m-sonnet); fill: var(--m-sonnet) }
+.tk-ln-opus { stroke: var(--m-opus); fill: var(--m-opus) } .tk-ln-other { stroke: var(--unknown); fill: var(--unknown) }
+.tk-ln-week { stroke: var(--accent); fill: var(--accent) }
+.tk-path.tk-ln-haiku, .tk-path.tk-ln-sonnet, .tk-path.tk-ln-opus, .tk-path.tk-ln-other, .tk-path.tk-ln-week { fill: none }
+.tk-dot { stroke: none; opacity: 0 }
+.tk-dot:hover { opacity: 1 }
+.tk-ring, .tk-seg { fill: none; stroke-width: 16 }
+.tk-ring { stroke: var(--track) }
+.tk-ring-r { fill: var(--track) }
+.tk-s-haiku { stroke: var(--m-haiku) } .tk-s-sonnet { stroke: var(--m-sonnet) }
+.tk-s-opus { stroke: var(--m-opus) } .tk-s-other { stroke: var(--unknown) }
+.tk-seg:hover { stroke-width: 19 }
+.tk-ctr { fill: var(--text-1); font-size: 12px; font-weight: 600 }
+.tk-share { display: flex; align-items: center; gap: var(--sp-4) }
+.tk-leg { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin: 0; padding: 0; list-style: none; color: var(--text-2);
+  font-size: var(--fs-12) }
+.tk-leg li { display: inline-flex; align-items: center; gap: var(--sp-1) }
+.tk-leg-v { display: grid; gap: var(--sp-1); flex: 1; min-width: 0 }
+.tk-leg-v li { display: grid; grid-template-columns: 10px 4.5rem minmax(0, 1fr) 4rem; column-gap: var(--sp-2) }
+.tk-leg-v .num { text-align: right; font-variant-numeric: tabular-nums }
+.tk-sub { margin: 0 0 var(--sp-1); font-size: var(--fs-12); color: var(--text-3); font-weight: 600 }
+.tk-tbl { font-size: var(--fs-12); color: var(--text-2) }
+.tk-tbl summary { cursor: pointer; color: var(--text-3) }
+.tk-tbl table { border-collapse: collapse; margin-top: var(--sp-2); width: 100% }
+.tk-tbl th, .tk-tbl td { padding: 2px var(--sp-2); text-align: left; font-weight: 400; white-space: nowrap }
+.tk-tbl .num { text-align: right; font-variant-numeric: tabular-nums }
+.tk-tbl caption { text-align: left; color: var(--text-3); padding-bottom: var(--sp-1) }
+.tk-tip { position: fixed; z-index: var(--z-toast); pointer-events: none; max-width: 320px; padding: var(--sp-1) var(--sp-2);
+  background: var(--surface-2); color: var(--text-1); border: 1px solid var(--line); border-radius: var(--r-control);
+  box-shadow: var(--shadow-2); font-size: var(--fs-12) }
+.row-grid.tk-tot, .row-grid.tk-proj, .row-grid.tk-rem { grid-template-columns: var(--rg) }
+.tk-tot { --rg: minmax(0, 1fr) 6rem 6rem 6rem; min-height: var(--h-row) }
+.tk-proj { --rg: minmax(0, 1fr) 4rem 6rem 6rem 6rem 6rem; min-height: var(--h-row) }
+.tk-rem { --rg: minmax(0, 1fr) 3.5rem 5.5rem 5.5rem 6.5rem; min-height: var(--h-row) }
+.tk-sum { font-weight: 600; border-top: 1px solid var(--track) }
+.spend-list .tk-spend > :last-child { white-space: nowrap; overflow-wrap: normal }
+@media (prefers-reduced-motion: no-preference) { .tk-seg, .tk-dot { transition: all var(--t-fast) } }
+
+/* R11.8 accounts: fixed grid, numbers right-aligned, actions in their own column */
+.tk-acct { display: grid; grid-template-columns: minmax(8rem, 1.2fr) minmax(10rem, 1.6fr) 7rem 4.5rem 4.5rem 5rem auto;
+  gap: var(--sp-2); align-items: center }
+.tk-acct .rg-act { display: flex; gap: var(--sp-1); justify-content: flex-end; flex-wrap: wrap }

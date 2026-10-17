@@ -58,15 +58,18 @@ class SourceError(Exception):
 
 # ---------------------------------------------------------------- 1. OAuth credentials and refresh
 
-def credentials_file():
-    base = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.join(os.path.expanduser("~"), ".claude")
+def credentials_file(config_dir=None):
+    base = config_dir or os.environ.get("CLAUDE_CONFIG_DIR") or os.path.join(os.path.expanduser("~"), ".claude")
     return os.path.join(base.split(",")[0].strip(), ".credentials.json")
 
 
-def _keychain_read():
+# R11.8 (services/usage_accounts.py): a location names where one account's login lives: {"service": keychain service
+# or None, "file": credentials file path}. None means the default login (the item above, else credentials_file()).
+
+def _keychain_read(service=KEYCHAIN_SERVICE):
     """The raw keychain JSON text. Raises SourceError with a keychain code."""
     try:
-        proc = subprocess.run(["security", "find-generic-password", "-s", KEYCHAIN_SERVICE, "-w"],
+        proc = subprocess.run(["security", "find-generic-password", "-s", service, "-w"],
                               capture_output=True, text=True, timeout=KEYCHAIN_TIMEOUT_S)
     except subprocess.TimeoutExpired:
         raise SourceError("keychain did not answer in time")
@@ -79,20 +82,20 @@ def _keychain_read():
     return proc.stdout
 
 
-def _keychain_account():
+def _keychain_account(service=KEYCHAIN_SERVICE):
     """The keychain item's account name (metadata only, no -w)."""
-    proc = subprocess.run(["security", "find-generic-password", "-s", KEYCHAIN_SERVICE],
+    proc = subprocess.run(["security", "find-generic-password", "-s", service],
                           capture_output=True, text=True, timeout=KEYCHAIN_TIMEOUT_S)
     found = re.search(r'"acct"<blob>="([^"\n]*)"', proc.stdout or "")
     return found.group(1) if found else (os.environ.get("USER") or "")
 
 
-def _keychain_write(text):
+def _keychain_write(text, service=KEYCHAIN_SERVICE):
     """Replace the keychain item's data, keeping its account. The secret goes hex encoded through stdin."""
-    account = _keychain_account()
-    if not account or re.search(r'["\\\n]', account):
+    account = _keychain_account(service)
+    if not account or re.search(r'["\\\n]', account) or re.search(r'["\\\n]', service):
         raise SourceError("keychain account name is not usable")
-    line = 'add-generic-password -U -a "%s" -s "%s" -X %s\n' % (account, KEYCHAIN_SERVICE,
+    line = 'add-generic-password -U -a "%s" -s "%s" -X %s\n' % (account, service,
                                                                 text.encode("utf-8").hex())
     try:
         proc = subprocess.run(["security", "-i"], input=line, capture_output=True, text=True,
@@ -119,16 +122,20 @@ def _file_write(path, text):
         raise SourceError("credentials file write failed")
 
 
-def load_credentials():
-    """(oauth dict, raw dict, place) from the keychain, else the credentials file. place is ("keychain", None) or
-    ("file", path). Raises SourceError (no_item, no_token, denied)."""
-    keychain_error = None
-    try:
-        text, place = _keychain_read(), ("keychain", None)
-    except SourceError as exc:
-        keychain_error, text, place = exc, None, None
+def load_credentials(location=None):
+    """(oauth dict, raw dict, place) from the keychain, else the credentials file. place is ("keychain", service or
+    None) or ("file", path). location (R11.8) picks another account's keychain service and file; a location with
+    service None skips the keychain. Raises SourceError (no_item, no_token, denied)."""
+    keychain_error, text, place = None, None, None
+    service = location.get("service") if location else KEYCHAIN_SERVICE
+    if service:
+        try:
+            text = _keychain_read() if location is None else _keychain_read(service)
+            place = ("keychain", None if location is None else service)
+        except SourceError as exc:
+            keychain_error, text, place = exc, None, None
     if text is None or OAUTH_KEY not in text:
-        path = credentials_file()
+        path = (location or {}).get("file") or credentials_file()
         if os.path.isfile(path):
             try:
                 with open(path, "r", encoding="utf-8") as handle:
@@ -231,23 +238,25 @@ def _write_back(place, text):
     kind, path = place
     if kind == "file":
         _file_write(path, text)
+    elif path:
+        _keychain_write(text, path)
     else:
         _keychain_write(text)
 
 
-def access_token(force=False, now_s=None, post=None, write=None, allow_refresh=False):
+def access_token(force=False, now_s=None, post=None, write=None, allow_refresh=False, location=None):
     """A usable Claude Code access token. With allow_refresh (usageTokenRefresh: true) it is refreshed first when it
     expires within 5 minutes (or force is set). Without it nothing is refreshed or written: an expired token (or a
     forced one, after a 401) raises SourceError code expired, and the caller falls back to the other sources."""
     now_s = time.time() if now_s is None else now_s
-    oauth, raw, place = load_credentials()
+    oauth, raw, place = load_credentials(location)
     if not allow_refresh:
         if force or _expired(oauth, now_s):
             raise SourceError(EXPIRED_REASON, CODE_EXPIRED)
         return oauth["accessToken"].strip()
     if force or _expires_soon(oauth, now_s):
         # Read again right before the refresh: Claude Code may have refreshed it a moment ago.
-        oauth, raw, place = load_credentials()
+        oauth, raw, place = load_credentials(location)
         if force or _expires_soon(oauth, now_s):
             return refresh(oauth, raw, place, post=post, write=write, now_s=now_s)
     return oauth["accessToken"].strip()
