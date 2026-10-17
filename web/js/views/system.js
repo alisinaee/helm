@@ -17,7 +17,8 @@ import { clampSpace, LABEL_MAX, layeredLayout, matrixLayout, MX_COL, MX_HEAD, MX
 import { human, panelHtml } from "./system-panel.js";
 import { anchorShift, collapseGroups, subgraph } from "../graph/syslayout.js";
 import { bindContextMenu, openMenu } from "./system-menu.js";
-import { activitySvg, classSvg, deploymentSvg, erSvg, stateSvg, usecaseSvg } from "../graph/sysdiagrams.js";
+import { activitySvg, classModules, classSvg, deploymentSvg, erSvg, stateSvg,
+  usecaseSvg } from "../graph/sysdiagrams.js";
 
 export const VIEWS = [
   ["context", "Context", "Who uses the system and which outside systems it talks to (C4 level 1)."],
@@ -45,7 +46,9 @@ const DIAGRAMS = {
 const RENDERERS = Object.assign(Object.fromEntries(VIEWS.map((m) => [m[0], m])),
   Object.fromEntries(Object.keys(DIAGRAMS).map((k) => [k, DIAGRAMS[k].slice(0, 3)])));
 const collapsed = new Set();
-const clsOpen = new Set();
+// Class modules the person collapsed (all start expanded); clsMods is the module list of the last class diagram.
+const clsShut = new Set();
+let clsMods = [];
 let drill = [];
 let lastLay = null;
 let anchorId = null;
@@ -430,7 +433,8 @@ function stage(pid, arch) {
     }
     const has = item && (spec[4] === "items" ? true : Array.isArray(item[spec[4]]) && item[spec[4]].length);
     if (!has) return { html: emptyHtml("Nothing found for " + spec[1] + ". Try another view."), note: note };
-    const out = spec[3](item, { selected: selected, open: clsOpen, aspect: canvasAspect(), space: spaceNow() });
+    if (spec[3] === classSvg) clsMods = classModules(item);
+    const out = spec[3](item, { selected: selected, shut: clsShut, aspect: canvasAspect(), space: spaceNow() });
     svg = svgWrap(out.inner, out.w + 2 * PAD, out.h + 2 * PAD, spec[1] + " diagram").replace('<g id="sys-vp">',
       '<g id="sys-vp"><g transform="translate(' + PAD + " " + PAD + ')">').replace(/<\/g><\/svg>$/, "</g></g></svg>");
   } else {
@@ -516,7 +520,9 @@ function toolbarHtml(pid, arch) {
     "</span>" + op("fit", "Fit to screen", "Fit") + screen + "</span>";
   const acts = '<span class="sys-ov sys-ov-tl" role="group" aria-label="Diagram actions">' +
     op("sys", "Show the system summary", "Summary") + copyIdHtml(pid, arch) +
-    op("update", "Add a task to update and check the System diagrams", "Update diagrams") + "</span>";
+    op("update", "Add a task to update and check the System diagrams", "Update diagrams") +
+    (current === "classes" ? op("cls-shut", "Collapse all class modules", "Collapse all") +
+      op("cls-open", "Expand all class modules", "Expand all") : "") + "</span>";
   return { bar: '<div class="wfg-bar" role="toolbar" aria-label="System views">' + switcherHtml(arch) + stats +
     "</div>", acts: acts, tools: tools };
 }
@@ -832,6 +838,8 @@ function onClick(event) {
   else if (op === "sp-less") spaceStep(-1);
   else if (op === "sp-more") spaceStep(1);
   else if (op === "fit") fitNow();
+  else if (op === "cls-shut") setAllModules(true);
+  else if (op === "cls-open") setAllModules(false);
   else if (api && op === "actual") {
     auto = false;
     api.actual();
@@ -842,11 +850,18 @@ function onClick(event) {
   else if (op === "ask") askHead(lastVm.route.id, t.getAttribute("data-sys-id"), t.getAttribute("data-sys-label"));
 }
 
+// Collapse (shut) or expand every class module at once; the per-module toggles keep working after it.
+function setAllModules(shut) {
+  clsShut.clear();
+  if (shut) clsMods.forEach((g) => clsShut.add(g));
+  redraw();
+}
+
 function toggleGroup(id) {
   if (String(id).startsWith("cls:")) {
     const g = String(id).slice(4);
-    if (clsOpen.has(g)) clsOpen.delete(g);
-    else clsOpen.add(g);
+    if (clsShut.has(g)) clsShut.delete(g);
+    else clsShut.add(g);
     redraw();
     return;
   }

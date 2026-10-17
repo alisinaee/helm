@@ -36,6 +36,15 @@ class SystemIntegrationTest(unittest.TestCase):
         for word in ("bindContextMenu", "collapseGroups", "subgraph", "data-sys-crumb", "erSvg", "classSvg"):
             self.assertIn(word, src)
 
+    def test_class_modules_start_expanded_with_collapse_all(self):
+        with open(os.path.join(WEB, "js", "views", "system.js"), encoding="utf-8") as fh:
+            src = fh.read()
+        self.assertIn("clsShut", src)
+        self.assertNotIn("clsOpen", src)
+        self.assertIn('aria-label="Diagram actions"', src)
+        self.assertIn('op("cls-shut", "Collapse all class modules", "Collapse all")', src)
+        self.assertIn('op("cls-open", "Expand all class modules", "Expand all")', src)
+
 
 if __name__ == "__main__":
     unittest.main()

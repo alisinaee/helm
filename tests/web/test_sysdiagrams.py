@@ -27,7 +27,7 @@ SCRIPT = r"""
   for (const [name, c] of Object.entries(input)) {
     const fn = m[c.fn];
     const r = fn(c.data, c.opts ? { selected: c.opts.selected, near: c.opts.near ? new Set(c.opts.near) : null,
-      open: c.opts.open ? new Set(c.opts.open) : undefined, aspect: c.opts.aspect } : undefined);
+      shut: c.opts.shut ? new Set(c.opts.shut) : undefined, aspect: c.opts.aspect } : undefined);
     let ms = Infinity;
     if (c.time) for (let i = 0; i < 5; i++) {
       const t = process.hrtime.bigint();
@@ -114,8 +114,12 @@ CASES = {
     "bigER": {"fn": "erSvg", "data": big_er(), "time": True},
     "bigCls": {"fn": "classSvg", "data": big_cls(), "time": True},
     "modCls": {"fn": "classSvg", "data": mod_cls(), "opts": {"aspect": 1.78}},
-    "five": {"fn": "classSvg", "data": mod_cls(5, 14), "opts": {"aspect": 1300 / 560}},
-    "modOpen": {"fn": "classSvg", "data": mod_cls(), "opts": {"aspect": 1.78, "open": ["m3"]}},
+    "modShut": {"fn": "classSvg", "data": mod_cls(), "opts": {"aspect": 1.78, "shut": ["m%d" % i for i in range(40)]}},
+    "five": {"fn": "classSvg", "data": mod_cls(5, 14),
+             "opts": {"aspect": 1300 / 560, "shut": ["m%d" % i for i in range(5)]}},
+    "fiveOpen": {"fn": "classSvg", "data": mod_cls(5, 14), "opts": {"aspect": 1300 / 560}},
+    "modOpen": {"fn": "classSvg", "data": mod_cls(), "opts": {"aspect": 1.78,
+                                                             "shut": ["m%d" % i for i in range(40) if i != 3]}},
 }
 for _fn in ("erSvg", "stateSvg", "usecaseSvg", "activitySvg", "deploymentSvg", "classSvg"):
     CASES["empty_" + _fn] = {"fn": _fn, "data": {}}
@@ -190,8 +194,23 @@ class SysDiagramsTest(unittest.TestCase):
         self.assertIn("+4 more", self.out["cls"]["inner"])
         self.assertIn("sysd-open", self.out["cls"]["inner"])
 
-    def test_modules_collapsed_by_default(self):
+    def test_modules_expanded_by_default(self):
         r = self.out["modCls"]
+        self.assertEqual(len(r["boxes"]), 240)
+        self.assertFalse(any(b["id"].startswith("g:") for b in r["boxes"]))
+        self.assertEqual(len(r["bands"]), 40)
+        self.assertNotIn('aria-expanded="false"', r["inner"])
+        self.assertIn('aria-expanded="true"', r["inner"])
+        self.assertIn('data-sys-tog="cls:m0"', r["inner"])
+        self.assertEqual(r["inner"].count("<path class=\"sys-e"), 120)
+        self.assertGreater(r["w"] / r["h"], 1.2)
+        self.assertLess(r["w"] / r["h"], 2.6)
+        for i, a in enumerate(r["boxes"]):
+            for b in r["boxes"][i + 1:]:
+                self.assertFalse(overlap(a, b))
+
+    def test_modules_collapsed_when_shut(self):
+        r = self.out["modShut"]
         self.assertEqual(len(r["boxes"]), 40)
         self.assertTrue(all(b["id"].startswith("g:") for b in r["boxes"]))
         self.assertIn("6 classes", r["inner"])
@@ -206,7 +225,7 @@ class SysDiagramsTest(unittest.TestCase):
                 self.assertFalse(overlap(a, b))
 
     def test_modules_aggregate_edges(self):
-        r = self.out["modCls"]
+        r = self.out["modShut"]
         self.assertEqual(r["inner"].count("<path class=\"sys-e"), 80)
         self.assertRegex(r["inner"], r'data-from="g:m0" data-to="g:m1"')
         self.assertIn("(2)", r["inner"])
@@ -214,6 +233,8 @@ class SysDiagramsTest(unittest.TestCase):
     def test_five_modules_in_rows(self):
         r = self.out["five"]
         self.assertEqual(len(r["boxes"]), 5)
+        self.assertEqual(len(self.out["fiveOpen"]["boxes"]), 70)
+        self.assertLessEqual(self.out["fiveOpen"]["h"], self.out["fiveOpen"]["w"])
         ys = sorted({b["y"] for b in r["boxes"]})
         self.assertLessEqual(len(ys), 2)
         self.assertGreaterEqual(max(sum(1 for b in r["boxes"] if b["y"] == y) for y in ys), 3)
@@ -258,7 +279,7 @@ class SysDiagramsTest(unittest.TestCase):
                 for b in r["boxes"][i + 1:]:
                     self.assertFalse(overlap(a, b), (name, a, b))
         self.assertEqual(len(self.out["bigER"]["boxes"]), 60)
-        self.assertEqual(len(self.out["bigCls"]["boxes"]), 5)
+        self.assertEqual(len(self.out["bigCls"]["boxes"]), 80)
 
 
 ROUTE_SCRIPT = r"""
