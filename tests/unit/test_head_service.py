@@ -13,7 +13,7 @@ from unittest import mock
 
 from roadmap.core import head, secrets
 from roadmap.errors import RoadmapError
-from roadmap.services import head as svc
+from roadmap.services import head as svc, tasks
 from roadmap.store import lock
 
 NOW = datetime(2026, 10, 15, 12, 0, 0, tzinfo=timezone.utc)
@@ -351,6 +351,36 @@ class VerifiedGapTests(HeadServiceCase):
         self.assertFalse(any(line.startswith("  H1 ") for line in lines))
         self.assertFalse(any(line.startswith("  H2 ") for line in lines))
         self.assertTrue(any(line.startswith("  H3 ") for line in lines))
+
+
+class BindToDoneTask(HeadServiceCase):
+    """R10.27: an ask bound to a task that is already done stays open; a task done after the bind closes it."""
+
+    def set_task(self, status):
+        tasks.apply(self.data, [
+            {"kind": "phase", "line": 1, "id": "R10", "name": "P", "status": None},
+            {"kind": "task", "line": 2, "id": "R10.27", "phase": "R10", "title": "fix", "status": status,
+             "tokensK": 0, "thinking": "medium", "model": "haiku", "needsUser": None, "check": None,
+             "checkK": None, "note": None, "after": None, "feats": None},
+        ])
+
+    def row_status(self, eid):
+        return next(r for r in svc.rows(self.data) if r["id"] == eid)["status"]
+
+    def test_new_ask_bound_to_a_done_task_stays_open(self):
+        self.set_task("done")
+        eid = svc.capture(self.data, "a new ask bound to a done task", kind="ask")["id"]
+        svc.update(self.data, eid, by="head", links=["+task:R10.27"])
+        self.assertEqual(svc.fold_asks(self.data), [])
+        self.assertEqual(self.row_status(eid), "bound")
+
+    def test_ask_bound_to_a_task_that_finishes_later_closes(self):
+        self.set_task("todo")
+        eid = svc.capture(self.data, "an ask bound before the task is done", kind="ask")["id"]
+        svc.update(self.data, eid, by="head", links=["+task:R10.27"])
+        self.set_task("done")
+        self.assertEqual(svc.fold_asks(self.data), [eid])
+        self.assertEqual(self.row_status(eid), "done")
 
 
 class ScrubVectors(unittest.TestCase):

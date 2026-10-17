@@ -60,6 +60,21 @@ class BoundStates(unittest.TestCase):
         self.assertEqual(status_of(recs, {"task:R7.31": "done"}), "done")
         self.assertEqual(status_of([e("H2")], {}), "new")
 
+    def test_link_bound_while_done_does_not_close_the_ask(self):
+        recs = [e("H1"), u("H1", link=["+task:R10.27"])]
+        recs[1]["seen"] = ["task:R10.27"]
+        self.assertEqual(status_of(recs, {"task:R10.27": "done"}), "bound")
+
+    def test_a_task_that_turns_done_after_the_bind_closes_the_ask(self):
+        recs = [e("H1"), u("H1", link=["+task:R10.27"]), u("H1", link=["+task:R10.28"])]
+        recs[1]["seen"] = ["task:R10.27"]
+        self.assertEqual(status_of(recs, {"task:R10.27": "done", "task:R10.28": "doing"}), "doing")
+        self.assertEqual(status_of(recs, {"task:R10.27": "done", "task:R10.28": "done"}), "done")
+
+    def test_plain_bind_to_a_task_that_finishes_later_still_closes(self):
+        recs = [e("H1"), u("H1", link=["+task:R10.27"])]
+        self.assertEqual(status_of(recs, {"task:R10.27": "done"}), "done")
+
     def test_understood_is_still_queued_until_bound(self):
         recs = [e("H1"), u("H1", by="head", set_={"kind": "bug", "sum": "Export button fails"})]
         self.assertEqual(status_of(recs, {}), "understood")

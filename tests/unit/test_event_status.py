@@ -148,9 +148,9 @@ class AskFoldTests(EventCase):
     def test_ask_closes_with_real_shas_when_all_its_tasks_are_done(self):
         sha1 = self.commit_file("f.txt", "R7.44 first")
         sha2 = self.commit_file("g.txt", "R7.45 second")
+        eid = self.ask("please export and import", ["R7.44", "R7.45"])
         jobs.bind_commit(self.data, sha1, ["R7.44"])
         jobs.bind_commit(self.data, sha2, ["R7.45"])
-        eid = self.ask("please export and import", ["R7.44", "R7.45"])
         self.set_status("R7.44", "done")
         self.set_status("R7.45", "done")
         self.assertEqual(head_svc.fold_asks(self.data), [eid])
