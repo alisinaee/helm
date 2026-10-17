@@ -739,3 +739,26 @@
 {"v":1,"t":"u","id":"H262","ts":"2026-10-17T07:45:04Z","by":"head","set":{"kind":"ask","sum":"No upper limit on diagram spacing"},"link":["+task:R11.133"]}
 {"v":1,"t":"u","id":"H262","ts":"2026-10-17T07:46:16Z","by":"head","set":{"status":"done"},"note":"answer: limit removed in this R11.133 commit (min 0.2, no max)"}
 {"v":1,"t":"u","id":"H261","ts":"2026-10-17T07:48:29Z","by":"head","set":{"status":"done"},"note":"answer: fixed in this R11.132 commit; live check: map renders and survives refresh"}
+{"v":1,"t":"e","ts":"2026-10-17T07:49:14Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"question?","sum":"rb:roadmap-board/job/j1111 job \"agy: R11.128 rebrand survey\" state=running model=agy tokens=none…","len":119,"h":"sha1:e09940132628","prio":2,"id":"H263"}
+{"v":1,"t":"u","id":"H263","ts":"2026-10-17T07:49:30Z","by":"head","set":{"status":"done"},"note":"answer: agy job finished 10:55 but head never closed it (no wait); closed j1111, result in docs/reviews/agy-rebrand-survey.md"}
+{"v":1,"t":"e","ts":"2026-10-17T07:51:19Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"review?","sum":"https://parspack.com/ check this site what is the most budget freindly things for me to run the…","len":170,"h":"sha1:e7079f41393d","prio":2,"id":"H264"}
+{"v":1,"t":"s","ts":"2026-10-17T07:52:12Z","sid":"15e7f6d2","model":"Haiku 5.5","ev":"claim"}
+{"v":1,"t":"e","ts":"2026-10-17T07:53:25Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"نه خیلی گرونه کار با هاست سی پنل طور راه نمیوفته ؟","len":51,"h":"sha1:c6b5ddbf45bc","prio":2,"id":"H265"}
+{"v":1,"t":"e","ts":"2026-10-17T07:57:56Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"چیزای فری چطور؟ فایربیس یا کلادفلر ؟؟؟","len":38,"h":"sha1:b90e769032d3","prio":2,"id":"H266"}
+{"v":1,"t":"e","ts":"2026-10-17T07:59:05Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"میتونی ستاپشو انجام بدی ؟","len":25,"h":"sha1:e0ab41f39d80","prio":2,"id":"H267"}
+{"v":1,"t":"e","ts":"2026-10-17T08:00:03Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"سایتوش داخل پن باز کن تا برات لاگین کنم و پلن رایگانو خودت انتخاب کنی و کاراشو انجام بدی","len":88,"h":"sha1:0a401fb080dc","prio":2,"id":"H268"}
+{"v":1,"t":"e","ts":"2026-10-17T08:02:09Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"i did login , now continue","len":26,"h":"sha1:88ac5cafd4a5","prio":0,"id":"H269"}
+{"v":1,"t":"e","ts":"2026-10-17T08:03:23Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"تا ۸۵ ادامه بده","len":15,"h":"sha1:7e2dd1c64137","prio":2,"id":"H270"}
+{"v":1,"t":"e","ts":"2026-10-17T08:18:27Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"تغییر دادم توکن لیمت رو ادامه بده","len":33,"h":"sha1:193855770a60","prio":2,"id":"H271"}
+{"v":1,"t":"e","ts":"2026-10-17T08:26:13Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"چرا هی سوال میپرسی کارو انجام بده","len":33,"h":"sha1:d0060d263009","prio":2,"id":"H272"}
+{"v":1,"t":"e","ts":"2026-10-17T08:28:36Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"پرداخته چی ؟ گفتم پلن رایگان","len":28,"h":"sha1:ceae090e9628","prio":2,"id":"H273"}
+{"v":1,"t":"e","ts":"2026-10-17T08:29:46Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"بگرد راه بهتری پیدا کن اگه همین حالت تونل رایگانو بریم جلو و برای پنل پسورد بزاریم مشکل حل میشه ؟","len":98,"h":"sha1:260658fcc89a","prio":2,"id":"H274"}
+{"v":1,"t":"e","ts":"2026-10-17T08:30:28Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"تیل رو ادامه بده","len":16,"h":"sha1:5eedd4b9316c","prio":2,"id":"H275"}
+{"v":1,"t":"e","ts":"2026-10-17T08:34:23Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"بهم بگو اصلا این چیه داریم نصب میکنیم و چه کاری میکنه ؟","len":55,"h":"sha1:ffe5f2fbca91","prio":2,"id":"H276"}
+{"v":1,"t":"e","ts":"2026-10-17T08:35:06Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"خب چه کاریه اینجوری که حتما باید مک روشن باشه من دنبال راهی بودم که هلمو راحت ستاپ کنم رایگان و رو…","len":115,"h":"sha1:3389f1ad6908","prio":2,"id":"H277"}
+{"v":1,"t":"e","ts":"2026-10-17T08:35:46Z","src":"hook","sid":"15e7f6d2","acct":null,"kind":"ask?","sum":"نمیخاد هرچی نصب کردی برای این تسک ستاپ سرورو حذف کن","len":51,"h":"sha1:755cea0743be","prio":2,"id":"H278"}
+{"v":1,"t":"s","ts":"2026-10-17T09:17:46Z","sid":"8bc13c25","model":"Opus 5.5","ev":"claim"}
+{"v":1,"t":"e","ts":"2026-10-17T09:17:46Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"review?","sum":"create check point i want to switch my claude account","len":54,"h":"sha1:3d5f0413a901","prio":2,"id":"H279"}
+{"v":1,"t":"e","ts":"2026-10-17T09:19:02Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"terminate the running tasks","len":27,"h":"sha1:c57bd97d5f91","prio":2,"id":"H280"}
+{"v":1,"t":"u","id":"H280","ts":"2026-10-17T09:19:27Z","by":"head","set":{"status":"done"},"note":"answer: j1120/j1121 marked failed (another session's jobs); no agy or worker running"}
+{"v":1,"t":"u","id":"H279","ts":"2026-10-17T09:19:28Z","by":"head","set":{"status":"done"},"note":"answer: checkpoint written in HANDOVER section 0 and pushed"}

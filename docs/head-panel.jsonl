@@ -11,3 +11,4 @@
 {"id":"P11","ts":"2026-10-17T10:59:06+03:30","src":"gui","op":"limits.set","sum":"week stop at 30%","ref":""}
 {"id":"P12","ts":"2026-10-17T10:59:08+03:30","src":"gui","op":"limits.set","sum":"week stop at 32%","ref":""}
 {"id":"P13","ts":"2026-10-17T10:59:09+03:30","src":"gui","op":"limits.set","sum":"week stop at 33%","ref":""}
+{"id":"P14","ts":"2026-10-17T11:48:18+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 90%","ref":""}

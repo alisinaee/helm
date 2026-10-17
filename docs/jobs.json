@@ -9140,9 +9140,9 @@
       "title": "agy: R11.128 rebrand survey",
       "model": "agy",
       "task": "R11.128",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-17T10:51:43+03:30",
-      "ended": null
+      "ended": "2026-10-17T11:19:22+03:30"
     },
     {
       "id": "j1112",
@@ -9261,6 +9261,24 @@
         "cacheWrite": 37298,
         "model": "haiku"
       }
+    },
+    {
+      "id": "j1120",
+      "title": "haiku: Read parspack.com pricing",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-17T11:21:37+03:30",
+      "ended": "2026-10-17T12:49:07+03:30"
+    },
+    {
+      "id": "j1121",
+      "title": "haiku: Read parspack servers page",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "failed",
+      "started": "2026-10-17T11:22:34+03:30",
+      "ended": "2026-10-17T12:49:07+03:30"
     }
   ]
 }

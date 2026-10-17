@@ -1590,7 +1590,7 @@
       "id": "R7.31",
       "phase": "R7",
       "title": "HEAD section: ledger of what the person asks and decides, bound to tasks/issues/reviews, with status",
-      "status": "partial",
+      "status": "todo",
       "tokensK": 600,
       "thinking": "high",
       "model": "opus",
@@ -5238,13 +5238,16 @@
       "id": "R11.128",
       "phase": "R11",
       "title": "Finish Helm rebrand: project id roadmap-board -> helm (URLs, tab title, launchd label, paths) with data migration",
-      "status": "partial",
+      "status": "done",
       "tokensK": 0,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "refs": [
+        "commit:6ec0a8b26e1495484ec439d3b6f507a4d5d3bd1a"
+      ]
     },
     {
       "id": "R11.129",

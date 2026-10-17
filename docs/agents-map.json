@@ -778,5 +778,15 @@
     "task": "R11.133",
     "title": "haiku: R11.133 remove spacing upper limit",
     "model": "haiku"
+  },
+  "a58bedf9d02ab1c9d": {
+    "task": "R7.31",
+    "title": "haiku: Read parspack.com pricing",
+    "model": "haiku"
+  },
+  "a66697e4475513e97": {
+    "task": "R7.31",
+    "title": "haiku: Read parspack servers page",
+    "model": "haiku"
   }
 }
