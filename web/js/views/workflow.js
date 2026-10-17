@@ -170,7 +170,7 @@ function windowOf(range, now, starts) {
   if (range === "today") {
     const d = new Date(now);
     const t0 = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-    return { key: range, t0: t0, t1: t0 + DAY };
+    return { key: range, t0: t0, t1: now };
   }
   return { key: "all", t0: Math.min.apply(null, [now - 2 * HOUR].concat(starts)), t1: now };
 }
