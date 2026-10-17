@@ -79,6 +79,43 @@ class UsageAccountsRoutes(ServerCase):
         self.assertEqual(res.status, 404)
         self.assertEqual(res.json()["error"]["code"], "not_found")
 
-    def test_get_does_not_accept_post(self):
-        res = self.request("POST", "/api/v1/usage/accounts", headers=self.write_headers())
-        self.assertEqual(res.status, 405)
+    def add(self, body, headers=None):
+        import json
+        return self.request("POST", "/api/v1/usage/accounts", body=json.dumps(body).encode(),
+                            headers=headers if headers is not None else self.write_headers())
+
+    def test_post_add_calls_usage_accounts_add(self):
+        body = {"id": "work", "label": "Work", "source": "config-dir", "path": "~/.claude-work"}
+        with mock.patch("roadmap.services.usage_accounts.add", return_value=ROW) as add:
+            res = self.add(body)
+        self.assertEqual(res.status, 200, res.body[:200])
+        add.assert_called_once_with("work", label="Work", source="config-dir", path="~/.claude-work",
+                                    keychain_service=None, src="ui")
+
+    def test_post_add_rejects_a_non_object_body(self):
+        with mock.patch("roadmap.services.usage_accounts.add") as add:
+            res = self.add([1, 2])
+        self.assertEqual(res.status, 400)
+        add.assert_not_called()
+
+    def test_post_remove_maps_to_remove(self):
+        with mock.patch("roadmap.services.usage_accounts.remove", return_value=ROW) as rm:
+            res = self.post("acct-1", "remove")
+        self.assertEqual(res.status, 200, res.body[:200])
+        rm.assert_called_once_with("acct-1", src="ui")
+
+    def test_phone_listener_is_denied_add_and_remove(self):
+        from roadmap.errors import RoadmapError
+        from roadmap.http import routes
+
+        class _PhoneishApp:
+            cmd_source = "phone"
+
+        for fn, m in ((routes.usage_accounts_add, None), (routes.usage_accounts_action, {})):
+            with mock.patch("roadmap.services.usage_accounts.add") as add, \
+                    mock.patch("roadmap.services.usage_accounts.remove") as rm:
+                with self.assertRaises(RoadmapError) as ctx:
+                    fn(_PhoneishApp(), None, None)
+            self.assertEqual(ctx.exception.code, "forbidden")
+            add.assert_not_called()
+            rm.assert_not_called()
