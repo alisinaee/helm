@@ -56,6 +56,14 @@ export function fullRouteOf(hash) {
   return m ? m[1] : null;
 }
 
+// A7: "#/full/<pid>/system" is the System diagram alone, in the same tab. Returns the project id, or null.
+const FULL_SYS = /^#\/full\/([a-z0-9][a-z0-9-]{0,39})\/system(?:\?.*)?$/;
+
+export function fullSystemOf(hash) {
+  const m = FULL_SYS.exec(String(hash || ""));
+  return m ? m[1] : null;
+}
+
 function redirectLegacyIssues() {
   const next = legacyIssuesHash(window.location.hash) || legacyPlannerHash(window.location.hash);
   if (next) window.location.replace(next);
