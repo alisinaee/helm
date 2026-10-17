@@ -70,6 +70,29 @@ class AgentBindTests(FixtureCase):
         self.assertNotIn("task", jobs_now[0])
         self.assertEqual(jobs_now[0]["status"], "running")
 
+    def test_agent_adopts_manual_job_of_same_task(self):  # R11.144
+        manual = jobs.start_job(self.docs, "R7.40: worker", "sonnet", task="R7.40", effort="low")
+        self.agent("R7.40: worker", agent_id="a1b2c3d4e6")
+        rows = self.read_jobs()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["id"], manual["id"])
+        hooks.run_hook(json.dumps({"cwd": self.project, "hook_event_name": "SubagentStop", "agent_id": "a1b2c3d4e6"}))
+        self.assertEqual(self.read_jobs()[0]["status"], "done")
+
+    def test_head_job_is_not_adopted(self):
+        self.head_job("R7.40")
+        self.agent("R7.40: worker")
+        self.assertEqual(len(self.read_jobs()), 2)
+
+    def test_stop_surfaces_orphan_manual_job(self):
+        jobs.start_job(self.docs, "R7.40: never sent", "sonnet", task="R7.40")
+        stop = {"cwd": self.project, "hook_event_name": "Stop", "session_id": "s1"}
+        self.assertIsNone(hooks.run_hook(json.dumps(stop)))  # fresh: not yet an orphan
+        reply = hooks.run_hook(json.dumps(stop), now=time.time() + 900)
+        self.assertEqual(reply["decision"], "block")
+        self.assertIn("no agent behind them", reply["reason"])
+        self.assertIsNone(hooks.run_hook(json.dumps(dict(stop, stop_hook_active=True)), now=time.time() + 900))
+
 
 if __name__ == "__main__":
     unittest.main()

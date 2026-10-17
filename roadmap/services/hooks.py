@@ -46,6 +46,7 @@ HEAD_JOB_WINDOW_S = 3600       # the head job an agent job falls back to started
 AGENTS_MAP_FILE = "agents-map.json"  # agentId -> {task, title, model} of the agent jobs (R7.89), in the data folder
 AGENTS_MAP_MAX = 200                 # the newest entries kept in the agents map
 FOLLOWUP_MAX_S = 1800                # a follow-up job with no SubagentStop after this long is closed as done
+ORPHAN_AGE_S = 600                   # R11.144: a running job no hook owns, older than this, is surfaced at Stop
 IDLE_LAUNCH_N = 3                    # task ids named in the idle alert of the Stop gate
 
 
@@ -310,7 +311,10 @@ def _handle(raw, environ, cwd, now, clock, started):
         panel = "" if payload.get("stop_hook_active") else _panel_text(data_dir, payload, "stop", now, clock, started)
         reply = _stop_pickup(payload, project, data_dir, now, clock, started) or _stop_gate(payload, project, data_dir,
                                                                                           now)
-        return _with_panel_block(reply, panel)
+        reply = _with_panel_block(reply, panel)
+        orphans = "" if payload.get("stop_hook_active") or payload.get("agent_id") else _orphan_text(project, data_dir,
+                                                                                                    now)
+        return _with_panel_block(reply, orphans)
     if event == "PostToolUse":
         panel = _panel_text(data_dir, payload, "tool", now, clock, started)
         if panel:
@@ -371,7 +375,8 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
                     entry = detector.on_tool(tool, tool_input, payload.get("tool_response"),
                                              session_model=session_model)
                     if entry is not None:
-                        new = _start(data_dir, detector, entry, regex, known, now)
+                        new = _start(data_dir, detector, entry, regex, known, now,
+                                     owned={e.get("job") for e in snapshot})
                         if new is not None:
                             started.append(new)
                             if detector.name == "agent" and new.get("agent"):
@@ -1240,7 +1245,56 @@ def _agent_fallback_task(data_dir, known, now):
     return AGENT_FALLBACK_TASK if AGENT_FALLBACK_TASK in known else None
 
 
-def _start(data_dir, detector, entry, regex, known, now):
+def _adoptable(data_dir, task, owned):
+    """R11.144: the newest running job of this task that the hook does not own (a manual `job start`), or None. An
+    Agent call adopts it instead of starting a duplicate, so SubagentStop closes it with measured tokens and the head
+    has no second step to forget."""
+    if not task:
+        return None
+    try:
+        rows = [j for j in jobs.list_jobs(data_dir)
+                if j.get("status") == "running" and j.get("task") == task and j.get("id") not in owned
+                and j.get("model") != "head"]
+    except (RoadmapError, OSError, ValueError):
+        return None
+    return rows[-1] if rows else None
+
+
+def orphan_jobs(data_dir, owned, now, min_age_s=ORPHAN_AGE_S):
+    """R11.144: running jobs no hook entry owns (manual `job start` with no Agent call adopting them) older than
+    min_age_s: either never dispatched or never closed. [(id, task, minutes)]. Never raises."""
+    out = []
+    try:
+        for j in jobs.list_jobs(data_dir):
+            if j.get("status") != "running" or j.get("id") in owned:
+                continue
+            at = _parse_time(j.get("started"))
+            if at is None:
+                continue
+            age = now - at
+            if age >= min_age_s:
+                out.append((j.get("id"), j.get("task") or "-", int(age // 60)))
+    except Exception:
+        return []
+    return out
+
+
+def _orphan_text(project, data_dir, now):
+    """Stop-hook line naming orphan jobs, or ''."""
+    try:
+        with lock.locked(paths.state_dir(), timeout=HOOK_LOCK_TIMEOUT_S):
+            owned = {e.get("job") for e in _read_state(paths.hooks_file(project["id"]))["active"]}
+    except Exception:
+        return ""
+    rows = orphan_jobs(data_dir, owned, now)
+    if not rows:
+        return ""
+    names = ", ".join("%s %s %dm" % r for r in rows[:6])
+    return ("roadmap: %d job(s) running with no agent behind them: %s. Launch the Agent now (prefix its description "
+            "with the task id so it adopts the job) or close it: bin/roadmap job done <id>." % (len(rows), names))
+
+
+def _start(data_dir, detector, entry, regex, known, now, owned=frozenset()):
     """Register a job for a detected start when the text names a known task. An agent job that names none still gets
     a task (_agent_fallback_task). Returns the new state entry, or None. A busy project lock raises locked, so nothing
     is registered and the caller returns silently."""
@@ -1251,15 +1305,16 @@ def _start(data_dir, detector, entry, regex, known, now):
     if task is None and detector.name != "agent":
         _log("skip (no task id) from detector " + detector.name)
         return None
+    adopted = _adoptable(data_dir, task, owned) if detector.name == "agent" else None
     try:
-        job = jobs.start_job(data_dir, title, entry["model"], task, effort=entry.get("effort") or None,
-                             engine_model=entry.get("engine_model"))
+        job = adopted or jobs.start_job(data_dir, title, entry["model"], task, effort=entry.get("effort") or None,
+                                        engine_model=entry.get("engine_model"))
     except RoadmapError as exc:
         if exc.code == "locked":
             raise
         _log("skip: " + exc.message)
         return None
-    _log("start %s %s task %s" % (job["id"], detector.name, task))
+    _log("%s %s %s task %s" % ("adopt" if adopted else "start", job["id"], detector.name, task))
     return {"job": job["id"], "detector": detector.name, "kind": entry["kind"], "agent": entry["agent"],
             "watch": entry["watch"], "started": now, "task": task, "title": title, "model": entry["model"]}
 
