@@ -448,11 +448,11 @@ function acctAddForm() {
   const advanced = acct.advanced ?
     '<label>Type <select name="source"><option value="config-dir">Config dir</option>' +
     '<option value="credentials-file">Credentials file</option></select></label> ' +
-    '<label>Path <input type="text" name="path" placeholder="~/.claude-work" value="' +
+    '<label>Path <input type="text" name="path" placeholder="~/.claude-work" autocomplete="off" value="' +
     esc(defaultPath) + '" required></label> ' :
-    '<p><button type="button" class="btn" data-tk="acct" data-act="advanced-toggle">Advanced</button></p>';
-  return '<form class="tk-acct-add" data-act="add-form">' +
-    '<label>Label <input type="text" name="label" required value="' + esc(acct.lastLabel || "") + '"></label> ' +
+    '<button type="button" class="btn" data-tk="acct" data-act="advanced-toggle">Advanced</button>';
+  return '<form class="tk-acct-add" data-act="add-form" autocomplete="off">' +
+    '<label>Label <input type="text" name="label" required autocomplete="off" value="' + esc(acct.lastLabel || "") + '"></label>' +
     advanced +
     '<button type="submit" class="btn">Add</button> ' +
     '<button type="button" class="btn" data-tk="acct" data-act="add-cancel">Cancel</button></form>';
