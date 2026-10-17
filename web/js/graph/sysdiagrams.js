@@ -857,6 +857,24 @@ const GY = 34;
 const BP = 14;
 const BHEAD = 24;
 
+// The shelf that fits a 1000-wide canvas of the given aspect at the largest scale (capped at 1.5, so small sets
+// prefer the widest layout), trying every row width that breaks at a box.
+export function fitShelf(list, aspect, gx, gy) {
+  let lim = 0;
+  let best = null;
+  let bestScale = -1;
+  list.forEach((b) => {
+    lim += b.w + gx;
+    const r = shelf(list, lim - gx, gx, gy);
+    const sc = Math.min(1.5, 1000 / Math.max(r.w, 1), 1000 / aspect / Math.max(r.h, 1));
+    if (sc >= bestScale - 1e-9) {
+      best = r;
+      bestScale = sc;
+    }
+  });
+  return best || shelf(list, 1, gx, gy);
+}
+
 // Shelf-pack boxes (each with w, h) left to right into rows no wider than lim; returns positions and extent.
 export function shelf(list, lim, gx, gy) {
   const at = [];
@@ -955,8 +973,7 @@ export function classSvg(cls, opts) {
       return;
     }
     list.sort((a, b) => a.depth - b.depth || (a.label < b.label ? -1 : a.label > b.label ? 1 : 0));
-    const area = list.reduce((t, it) => t + (it.w + GX) * (it.h + GY), 0);
-    const pos = shelf(list, Math.max(300, Math.sqrt(area * aspect)), GX, GY);
+    const pos = fitShelf(list, aspect, GX, GY);
     list.forEach((it, k) => {
       it.x = pos.at[k][0] + BP;
       it.y = pos.at[k][1] + BHEAD + BP;
@@ -964,8 +981,7 @@ export function classSvg(cls, opts) {
     blocks.push({ g, label, list, open: true, w: Math.max(pos.w + 2 * BP, MODW), h: pos.h + BHEAD + 2 * BP,
       id: "g:" + g });
   });
-  const total = blocks.reduce((t, b) => t + (b.w + 24) * (b.h + 24), 0);
-  const top = shelf(blocks, Math.max(MODW + 24, Math.sqrt(total * aspect)), 24, 24);
+  const top = fitShelf(blocks, aspect, 24, 24);
   blocks.forEach((b, k) => {
     b.x = top.at[k][0];
     b.y = top.at[k][1];
