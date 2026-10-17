@@ -15,10 +15,10 @@
 
 export const NODE_W = 188;
 export const NODE_H = 50;
-const G_X = 28;
-const R_GAP = 26;
-const B_GAP = 70;
-const B_PAD = 12;
+const G_X = 36;
+const R_GAP = 34;
+const B_GAP = 76;
+const B_PAD = 16;
 export const GAP_X = G_X;
 export const ROW_GAP = R_GAP;
 export const BAND_GAP = B_GAP;
@@ -35,7 +35,7 @@ export function weak(e) {
 const CHAR_W = 6.2;
 const LABEL_H = 16;
 const SWEEPS = 4;
-const TRY_T = [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74, 0.18, 0.82];
+const TRY_T = [0.5, 0.44, 0.56, 0.38, 0.62, 0.32, 0.68, 0.26, 0.74, 0.2, 0.8, 0.14, 0.86];
 
 function clipText(s, n) {
   const t = String(s || "");
@@ -316,6 +316,40 @@ export function clampSpace(x) {
   return Number.isFinite(n) && n > 0 ? Math.min(SP_MAX, Math.max(SP_MIN, n)) : 1;
 }
 
+
+// Bundling-lite: edges leaving one node for the same group (3 or more), and the two directions between one pair of
+// nodes, collapse into ONE edge to the first target with `bundle` (the members) and a "×N" label.
+function bundleEdges(edges, groupOf) {
+  const plain = (e) => e.kind !== "violation" && e.kind !== "cycle";
+  const by = new Map();
+  edges.forEach((e) => {
+    const k = e.from + "\u0000>" + groupOf.get(e.to);
+    if (!by.has(k)) by.set(k, []);
+    by.get(k).push(e);
+  });
+  const out = [];
+  const done = new Set();
+  edges.forEach((e) => {
+    if (done.has(e)) return;
+    const list = by.get(e.from + "\u0000>" + groupOf.get(e.to)).filter((o) => !done.has(o));
+    const rev = edges.find((o) => o !== e && o.from === e.to && o.to === e.from && !done.has(o) &&
+      o.kind === e.kind);
+    const members = !plain(e) ? [e] : list.length >= 3 && groupOf.get(e.to) !== groupOf.get(e.from) ?
+      list.filter(plain) : rev ? [e, rev] : [e];
+    members.forEach((m) => done.add(m));
+    if (members.length < 2) {
+      out.push(e);
+      return;
+    }
+    const head = members[0];
+    const n = members.length;
+    out.push(Object.assign({}, head, { label: "\u00d7" + n, bundle: members.map((m) => ({ from: m.from, to: m.to,
+      label: m.label || "", count: m.count || 0 })), count: members.reduce((a, m) => a + (m.count || 0), 0),
+    derived: members.every((m) => m.derived), kind: head.kind }));
+  });
+  return out;
+}
+
 export function layeredLayout(view, opts) {
   const sp = clampSpace(opts && opts.space);
   const GAP_X = G_X * sp;
@@ -342,6 +376,11 @@ export function layeredLayout(view, opts) {
     seen.add(k);
     edges.push(e);
   });
+  const nbr0 = new Map();
+  nodes.forEach((n) => nbr0.set(n.id, n.group));
+  const edgesAll = edges.slice();
+  edges.length = 0;
+  bundleEdges(edgesAll, nbr0).forEach((e) => edges.push(e));
   const nbr = new Map();
   edges.forEach((e) => {
     nbr.set(e.from, (nbr.get(e.from) || []).concat(e.to));
@@ -469,23 +508,32 @@ export function layeredLayout(view, opts) {
     const d = "M" + f1(pts[0]) + " " + f1(pts[1]) + "C" + pts.slice(2).map(f1).join(" ");
     return Object.assign({}, p.e, { d: d, up: p.up, pts: pts, lx: null, ly: null, lw: 0 });
   });
-  // Labels: declared edges first, then by count; each takes the first point along its curve that is free.
-  const taken = Array.from(out.values()).map((n) => ({ x: n.x - 2, y: n.y - 2, w: n.w + 4, h: n.h + 4 }))
+  // Labels: declared edges first, then by count; each takes the first free spot along its curve, else beside it.
+  // Clearance grows with the spacing factor. A label with no room stays off (`lx` null; `mx`,`my` mark its middle).
+  const clr = 2 + 2 * sp;
+  const taken = Array.from(out.values())
+    .map((n) => ({ x: n.x - clr, y: n.y - clr, w: n.w + 2 * clr, h: n.h + 2 * clr }))
     .concat(boxes.map((b) => ({ x: b.x, y: b.y, w: Math.min(b.w, 12 + b.label.length * CHAR_W), h: 22 })));
   routes.slice().sort((u, v) => (u.derived === v.derived ? 0 : u.derived ? 1 : -1) ||
     (v.count || 0) - (u.count || 0)).forEach((r) => {
-    if (!r.label || weak(r)) return;
+    const mid = bez(r.pts, 0.5);
+    r.mx = f1(mid.x);
+    r.my = f1(mid.y);
+    if (!r.label || (weak(r) && !r.bundle)) return;
     const w = labelWidth(r.label);
-    for (const t of TRY_T) {
-      const c = bez(r.pts, t);
-      const box = { x: c.x - w / 2, y: c.y - LABEL_H / 2, w: w, h: LABEL_H };
-      if (box.x < 0 || box.x + w > fullW) continue;
-      if (taken.some((b) => hit(b, box))) continue;
-      taken.push({ x: box.x - 3, y: box.y - 2, w: w + 6, h: LABEL_H + 4 });
-      r.lx = f1(c.x);
-      r.ly = f1(c.y);
-      r.lw = w;
-      break;
+    const offs = [0, -(w / 2 + 8), w / 2 + 8, -(w + 14), w + 14];
+    for (const off of offs) {
+      for (const t of TRY_T) {
+        const c = bez(r.pts, t);
+        const box = { x: c.x + off - w / 2, y: c.y - LABEL_H / 2, w: w, h: LABEL_H };
+        if (box.x < 0 || box.x + w > fullW) continue;
+        if (taken.some((b) => hit(b, box))) continue;
+        taken.push({ x: box.x - clr, y: box.y - clr / 2, w: w + 2 * clr, h: LABEL_H + clr });
+        r.lx = f1(c.x + off);
+        r.ly = f1(c.y);
+        r.lw = w;
+        return;
+      }
     }
   });
   routes.forEach((r) => delete r.pts);

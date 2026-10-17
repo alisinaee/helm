@@ -506,7 +506,7 @@ export function usecaseSvg(uc, opts) {
   const EH = 54;
   const EG = 12 * c.sp;
   const BX = 140;
-  const BP = 16;
+  const BP = 16 * c.sp;
   const BH = 30;
   let gy = BH + BP;
   const gboxes = [];
@@ -1046,11 +1046,12 @@ export function classSvg(cls, opts) {
     }
     list.sort((a, b) => a.depth - b.depth || (a.label < b.label ? -1 : a.label > b.label ? 1 : 0));
     const pos = fitShelf(list, aspect, GX * c.sp, GY * c.sp);
+    const bp = BP * c.sp;
     list.forEach((it, k) => {
-      it.x = pos.at[k][0] + BP;
-      it.y = pos.at[k][1] + BHEAD + BP;
+      it.x = pos.at[k][0] + bp;
+      it.y = pos.at[k][1] + BHEAD + bp;
     });
-    blocks.push({ g, label, list, open: true, w: Math.max(pos.w + 2 * BP, MODW), h: pos.h + BHEAD + 2 * BP,
+    blocks.push({ g, label, list, open: true, w: Math.max(pos.w + 2 * bp, MODW), h: pos.h + BHEAD + 2 * bp,
       id: "g:" + g });
   });
   const top = fitShelf(blocks, aspect, 24 * c.sp, 24 * c.sp);
