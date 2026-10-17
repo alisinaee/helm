@@ -4,6 +4,7 @@
 import { esc } from "../dom.js";
 import { fmtTokens } from "../format.js";
 import { copyButton } from "../ref.js";
+import { toolbarHtml as sectionToolbar } from "../toolbar.js";
 import { projectHash } from "../router.js";
 import {
   ACTOR_WORD, ACTORS, KIND_WORD, KINDS, PRESETS, localInput, refText, stamp,
@@ -20,45 +21,36 @@ export function num(n) {
   return n == null ? "" : Number(n).toLocaleString("en-US");
 }
 
-// A toggle chip: fixed word, count in its own tabular cell.
-function chip(group, value, word, count, on) {
-  return '<button type="button" class="hx-chip hx-k-' + esc(value) + '" data-hx="' + group + '" data-v="' +
-    esc(value) + '" aria-pressed="' + (on ? "true" : "false") + '"><span class="hx-dot" aria-hidden="true">' +
-    '</span><span>' + esc(word) + '</span><span class="num hx-cnt">' + num(count || 0) + "</span></button>";
-}
-
+// The Activity bar (R11.119): title and count, Live, then ONE shared toolbar row (range segmented, search, Filters
+// popover with the Who and Kind groups, Copy as Markdown). The applied chips show under the row when a group is on.
 export function toolbarHtml(st, opts) {
   const f = st.filt;
-  const presets = PRESETS.map(function (p) {
-    return '<button type="button" class="hx-seg" data-hx="preset" data-v="' + p[0] + '" aria-pressed="' +
-      (f.preset === p[0] ? "true" : "false") + '"><span>' + esc(p[1]) + "</span></button>";
-  }).join("");
-  const actors = ACTORS.map(function (a) {
-    return chip("actor", a, ACTOR_WORD[a], st.actors ? st.actors[a] : null, f.actors.indexOf(a) >= 0);
-  }).join("");
-  const kinds = KINDS.filter(function (k) {
+  const views = PRESETS.map(function (p) {
+    return { id: p[0], label: p[1], current: f.preset === p[0] };
+  });
+  const who = { id: "actor", label: "Who", options: ACTORS.map(function (a) {
+    return { token: "actor:" + a, label: ACTOR_WORD[a], on: f.actors.indexOf(a) >= 0,
+      count: st.actors ? st.actors[a] : null };
+  }) };
+  const kind = { id: "kind", label: "Kind", options: KINDS.filter(function (k) {
     return !st.counts || st.counts[k] > 0 || f.kinds.indexOf(k) >= 0;
   }).map(function (k) {
-    return chip("kind", k, KIND_WORD[k], st.counts ? st.counts[k] : null, f.kinds.indexOf(k) >= 0);
-  }).join("");
-  const any = f.kinds.length || f.actors.length || f.q || f.preset !== "all";
+    return { token: "kind:" + k, label: KIND_WORD[k], on: f.kinds.indexOf(k) >= 0,
+      count: st.counts ? st.counts[k] : null };
+  }) };
   const live = opts.live ? '<span class="hx-live" title="New events appear on their own">' +
     '<span class="hx-pulse" aria-hidden="true"></span>Live</span>' : "";
   return '<div class="hx-bar">' +
     '<h2 class="page-title hx-title">Activity</h2>' +
-    '<span class="hx-total num" aria-live="polite">' + esc(opts.totalText) + "</span>" +
-    '<label class="hx-search"><span class="sr-only">Search history</span>' +
-    '<input type="search" id="hx-q" class="input hx-q" placeholder="Search ids, text, models" ' +
-    'autocomplete="off" spellcheck="false" value="' + esc(f.q) + '"></label>' +
-    '<div class="hx-segs" role="group" aria-label="Time range">' + presets + "</div>" +
-    live +
-    '<span class="hx-tools">' +
-    (any ? '<button type="button" class="btn btn-small" data-hx="clear">Clear</button>' : "") +
-    '<button type="button" class="btn btn-small" data-hx="export" title="Copy the events shown as a Markdown table"' +
-    ">Copy as Markdown</button></span></div>" +
-    '<div class="hx-filters"><div class="hx-chips" role="group" aria-label="Who">' + actors + "</div>" +
-    '<span class="hx-sep" aria-hidden="true"></span>' +
-    '<div class="hx-chips" role="group" aria-label="Kinds">' + kinds + "</div></div>";
+    '<span class="hx-total num" aria-live="polite">' + esc(opts.totalText) + "</span>" + live +
+    sectionToolbar({
+      key: "activity",
+      label: "Activity filters",
+      views: views,
+      search: { value: f.q, placeholder: "Search ids, text, models", label: "Search history" },
+      groups: [who, kind],
+      actions: [{ id: "export", label: "Copy as Markdown" }],
+    }) + "</div>";
 }
 
 // The custom range inputs (the keyboard path for picking a window); the timeline strip itself is in

@@ -185,19 +185,7 @@ function onClick(event) {
   const st = current();
   const what = el.getAttribute("data-hx");
   const v = el.getAttribute("data-v");
-  if (what === "kind") setFilters(function (f) { toggle(f.kinds, v); });
-  else if (what === "actor") setFilters(function (f) { toggle(f.actors, v); });
-  else if (what === "preset") {
-    setFilters(function (f) {
-      if (v === "custom" && f.preset !== "custom") {
-        const now = Date.now();
-        f.from = f.from || now - 86400000;
-        f.to = f.to || null;
-      }
-      f.preset = v;
-    });
-  } else if (what === "clear") setFilters(function (f) { Object.assign(f, defaultFilters()); });
-  else if (what === "older") loadOlder(st, Date.now(), repaint);
+  if (what === "older") loadOlder(st, Date.now(), repaint);
   else if (what === "open") {
     const id = el.getAttribute("data-id");
     st.sel = st.sel === id ? null : id;
@@ -210,9 +198,6 @@ function onClick(event) {
     st.sel = null;
     repaint();
     focusRow(id);
-  } else if (what === "export") {
-    const scope = lastVm.route.name === "project" ? lastVm.route.id : "All projects";
-    copyText(toMarkdown(shownEvents(st).slice(0, 500), "History: " + scope), "Copied as Markdown");
   } else if (what === "copy-md") {
     const e = shownEvents(st).find(function (x) { return x.id === el.getAttribute("data-id"); });
     if (e) copyText(toMarkdown([e], "Event"), "Copied as Markdown");
@@ -225,13 +210,45 @@ function focusRow(id) {
   if (btn) btn.focus();
 }
 
+// The Activity toolbar (R11.119, rb:toolbar with key activity): range views, the Who and Kind chips in Filters,
+// search (debounced) and Copy as Markdown. Removing an applied chip toggles the same token off.
+function onToolbar(event) {
+  const d = event.detail || {};
+  if (d.key !== "activity") return;
+  if (d.type === "view") setPreset(d.value);
+  else if (d.type === "token" || d.type === "remove") toggleToken(d.value);
+  else if (d.type === "clear") setFilters(function (f) { Object.assign(f, defaultFilters()); });
+  else if (d.type === "search") searchLater(d.value);
+  else if (d.type === "action" && d.value === "export") {
+    const scope = lastVm.route.name === "project" ? lastVm.route.id : "All projects";
+    copyText(toMarkdown(shownEvents(current()).slice(0, 500), "History: " + scope), "Copied as Markdown");
+  }
+}
+
+function setPreset(v) {
+  setFilters(function (f) {
+    if (v === "custom" && f.preset !== "custom") {
+      const now = Date.now();
+      f.from = f.from || now - 86400000;
+      f.to = f.to || null;
+    }
+    f.preset = v;
+  });
+}
+
+// A token is "actor:user" or "kind:head" (the Filters checkboxes and the applied chips).
+function toggleToken(token) {
+  const cut = String(token).indexOf(":");
+  const group = token.slice(0, cut);
+  const value = token.slice(cut + 1);
+  setFilters(function (f) { toggle(group === "actor" ? f.actors : f.kinds, value); });
+}
+
 let searchTimer = null;
-function onInput(event) {
-  if (!event.target || event.target.id !== "hx-q") return;
-  const value = event.target.value;
+function searchLater(text) {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(function () {
-    setFilters(function (f) { f.q = value.trim().slice(0, 200); });
+    setFilters(function (f) { f.q = String(text).trim().slice(0, 200); });
   }, 250);
 }
 
@@ -375,7 +392,7 @@ function poll() {
 
 if (HAS_DOM) {
   document.addEventListener("click", onClick);
-  document.addEventListener("input", onInput);
+  document.addEventListener("rb:toolbar", onToolbar);
   document.addEventListener("change", onChange);
   document.addEventListener("keydown", onKey);
   document.addEventListener("scroll", onScroll, true);

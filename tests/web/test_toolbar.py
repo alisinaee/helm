@@ -83,6 +83,7 @@ class ToolbarRenderTest(unittest.TestCase):
     def test_rows_controls_and_escaping(self):
         self.assertEqual(len(re.findall(r'data-tb-view="', self.html)), 2)
         self.assertIn('aria-pressed="true" data-tb-view="board"', self.html)
+        self.assertIn('data-focus="tb-work-v-list"', self.html)  # focus survives a view switch (dom.patch)
         self.assertIn("agy &lt;x&gt;", self.html)
         self.assertNotIn("<x>", self.html)
         self.assertEqual(len(re.findall(r'data-tb-act="a\d"|data-tb-act="new"', self.html)), 2)  # max 2 actions

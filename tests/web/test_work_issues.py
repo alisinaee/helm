@@ -130,10 +130,11 @@ class WorkIssuesTests(unittest.TestCase):
 
     def test_kind_filter_chips_and_each_kind(self):
         html = self.out["board"]
-        self.assertIn('data-token="kind:task"', html)
-        self.assertIn('data-token="kind:issue"', html)
-        self.assertIn('aria-pressed="true" data-wk="filter" data-token="kind:all"', html)
-        self.assertIn('aria-pressed="true" data-wk="filter" data-token="kind:issue"', self.out["issuesOnly"])
+        self.assertIn('data-tb-token="kind:task"', html)
+        self.assertIn('data-tb-token="kind:issue"', html)
+        self.assertIn('data-tb-token="kind:all"', html)
+        self.assertNotIn('data-tb-token="kind:all" checked', html)
+        self.assertIn('data-tb-token="kind:issue" checked', self.out["issuesOnly"])
         self.assertNotIn('data-wk-task="', self.out["issuesOnly"])
         self.assertIn('data-wk-issue="I1"', self.out["issuesOnly"])
         self.assertNotIn('data-wk-issue="', self.out["tasksOnly"])

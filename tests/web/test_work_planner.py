@@ -96,8 +96,8 @@ class WorkPlannerTest(unittest.TestCase):
         out = render([row("F1"), row("F2", "F1")])
         html = out["html"]
         self.assertIn('data-section="planner"', html)
-        self.assertIn('data-wk="view" data-view="planner"', html)
-        self.assertIn('aria-pressed="true" data-wk="view" data-view="planner"', html)
+        self.assertIn('data-tb-view="planner"', html)
+        self.assertIn('aria-pressed="true" data-tb-view="planner"', html)
         self.assertIn("2 plan items", html)
         self.assertEqual(html.count('<h2 class="page-title">Work</h2>'), 1)
         self.assertNotIn("planner", out["ids"])

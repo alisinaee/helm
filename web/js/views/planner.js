@@ -265,14 +265,23 @@ function orphansHtml(snap, features, tree, state) {
     'aria-label="Orphan tasks">' + items + "</ul>" + pick + "</div>";
 }
 
-function filterHtml(state, shownCount, total) {
-  const chips = FILTERS.map(function (f) {
-    return '<button type="button" class="btn btn-small hd-filter" data-pl="status" data-val="' + f[0] +
-      '" aria-pressed="' + (state.status === f[0]) + '" data-focus="pl-st:' + f[0] + '"><span>' + esc(f[1]) +
-      "</span></button>";
-  }).join("");
-  return '<nav class="hd-filters" aria-label="Filter">' + chips + "</nav>" +
-    '<p class="hd-count">' + esc("Showing " + shownCount + " of " + total) + "</p>";
+// The Status options for the Work toolbar's Filters popover (R11.119); the token is "st:" + the status.
+export function filterGroups() {
+  // No All option: no choice on means All (the badge counts only real choices).
+  return [{ id: "plan", label: "Status", options: FILTERS.filter(function (f) {
+    return f[0] !== "";
+  }).map(function (f) {
+    return { token: "st:" + f[0], label: f[1], on: ui.status === f[0] };
+  }) }];
+}
+
+// Sets the Status filter. With toggle, a choice that is already on turns back to All (the popover is one choice).
+export function setStatusFilter(val, toggle) {
+  ui.status = toggle && ui.status === val ? "" : val;
+}
+
+function countHtml(shownCount, total) {
+  return '<p class="hd-count">' + esc("Showing " + shownCount + " of " + total) + "</p>";
 }
 
 function topHtml() {
@@ -296,7 +305,7 @@ function piecesOf(snap, state) {
     return pieces;
   }
   const flat = flatten(tree, state);
-  pieces.push({ name: "bar", html: filterHtml(state, flat.length, rows.length) });
+  pieces.push({ name: "bar", html: countHtml(flat.length, rows.length) });
   pieces.push({ name: "add", html: addTop });
   if (flat.length) {
     pieces.push({ name: "list", html: LIST_OPEN, close: LIST_CLOSE, items: flat.map(function (e) {
@@ -506,10 +515,6 @@ function setOpen(id, on) {
 
 const ACTIONS = {
   toggle: (el, id) => setOpen(id, el.getAttribute("aria-expanded") !== "true"),
-  status: (el) => {
-    ui.status = el.getAttribute("data-val") || "";
-    redraw("pl-st:" + ui.status);
-  },
   add: (el, id) => startEdit("add", id),
   rename: (el, id) => startEdit("rename", id),
   "acc-edit": (el, id) => startEdit("acc", id),

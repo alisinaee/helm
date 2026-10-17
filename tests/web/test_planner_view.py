@@ -205,20 +205,15 @@ class PlannerViewTest(unittest.TestCase):
         self.assertIn('href="#/p/demo/work/i/R1.1"', f5)
 
     def test_filter_bar_and_count_line(self):
+        # R11.119: the Status chips live in the Work toolbar's Filters popover (filterGroups), not in the screen.
         html = self.out["defaultView"]
-        labels = ["All", "Doing", "Todo", "Done", "Waiting for your OK", "Uncovered"]
-        self.assertEqual(html.count('data-pl="status"'), 6)
-        for label in labels:
-            self.assertIn("<span>%s</span>" % label, html)
-        self.assertIn('data-val="" aria-pressed="true"', html)
+        self.assertEqual(html.count('data-pl="status"'), 0)
+        self.assertNotIn('class="hd-filter', html)
         self.assertIn("Showing 7 of 8", html)
         self.assertIn("Showing 3 of 8", self.out["doing"])
-        self.assertIn('data-val="doing" aria-pressed="true"', self.out["doing"])
         self.assertEqual(ITEM.findall(self.out["doing"]), ["F7", "F8", "F9"])
         self.assertEqual(ITEM.findall(self.out["waiting"]), ["F1"])
-        self.assertIn('data-val="uncovered" aria-pressed="true"', self.out["uncovered"])
         self.assertEqual(ITEM.findall(self.out["uncovered"]), ["F4", "F6"])
-
     def test_orphans_have_one_assign_button_each_and_a_picker_on_demand(self):
         html = self.out["defaultView"]
         self.assertEqual(html.count('data-pl="assign-open"'), 2)

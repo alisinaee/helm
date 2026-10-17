@@ -6,6 +6,7 @@ import { postJson } from "../api.js";
 import { bannerHtml, chipHtml, emptyHtml, esc } from "../dom.js";
 import { run } from "../cmd.js";
 import { pageState } from "./inbox.js";
+import { toolbarHtml } from "../toolbar.js";
 import { copyButton, refSummary } from "../ref.js";
 import { showToast } from "./toast.js";
 
@@ -71,13 +72,22 @@ function kindWord(kind) {
   return kind;
 }
 
+// The group tabs are the shared section toolbar's view switcher (R11.119): one segmented row.
 function tabsHtml(active) {
-  return '<div class="rule-tabs" role="group" aria-label="Rule groups">' + TABS.map(function (t) {
-    return '<button type="button" class="btn btn-small" aria-pressed="' + (t.id === active ? "true" : "false") +
-      '" data-action="rule-tab" data-tab="' + esc(t.id) + '" data-focus="tab-' + esc(t.id) + '">' +
-      esc(t.label) + "</button>";
-  }).join("") + "</div>";
+  return toolbarHtml({ key: "rules", label: "Rule groups", views: TABS.map(function (t) {
+    return { id: t.id, label: t.label, current: t.id === active };
+  }) });
 }
+
+// rb:toolbar with key rules picks the group and re-renders (the same state the old tab buttons set).
+function onToolbar(event) {
+  const d = event.detail || {};
+  if (d.key !== "rules" || d.type !== "view") return;
+  tab = d.value || "all";
+  document.dispatchEvent(new Event("rb:render"));
+}
+
+if (typeof document !== "undefined") document.addEventListener("rb:toolbar", onToolbar);
 
 function addFormHtml() {
   const scopes = SCOPE_OPTIONS.map(function (s) {

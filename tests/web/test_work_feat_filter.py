@@ -103,7 +103,7 @@ class WorkFeatFilterTest(unittest.TestCase):
     def test_chip_comes_before_the_list(self):
         html = self.render("feat:F1")
         self.assertLess(html.index("Plan item filter"), html.index("<table") if "<table" in html else
-                        html.index("wk-filters"))
+                        html.index("wk-board"))
 
     def test_other_filters_combine_with_the_scope(self):
         self.assertEqual(self.shown_ids(self.render("feat:F1,status:done")), [])

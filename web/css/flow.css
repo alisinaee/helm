@@ -1,5 +1,6 @@
 /* flow.css */
 .page-head { display: grid; gap: var(--sp-1); margin-bottom: var(--sp-3) }
+.rm-title-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2) }
 .page-title { margin: 0; font-size: var(--fs-17) }
 .page-note, .ov-sum, .ov-more { margin: 0; color: var(--text-3); font-size: var(--fs-12) }
 .ov { display: grid; gap: var(--sp-4); min-width: 0 }

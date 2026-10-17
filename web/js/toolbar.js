@@ -59,11 +59,12 @@ export function toggleToken(list, token) {
   return parts.join(",");
 }
 
-function viewsHtml(cfg) {
+function viewsHtml(cfg, k) {
   if (!cfg.views || cfg.views.length < 2) return "";
   return '<div class="tb-seg" role="group" aria-label="View">' + cfg.views.map(function (v) {
+    // data-focus keeps focus on the same segment after dom.patch re-renders the section (view switch).
     return '<button type="button" class="tb-seg-btn" aria-pressed="' + (v.current ? "true" : "false") +
-      '" data-tb-view="' + esc(v.id) + '">' + esc(v.label) + "</button>";
+      '" data-tb-view="' + esc(v.id) + '" data-focus="tb-' + k + "-v-" + esc(v.id) + '">' + esc(v.label) + "</button>";
   }).join("") + "</div>";
 }
 
@@ -137,7 +138,7 @@ export function toolbarHtml(cfg) {
   const k = safeKey(cfg.key);
   const open = typeof cfg.open === "boolean" ? cfg.open : isOpen(k);
   return '<div class="tb" data-tb="' + k + '" role="group" aria-label="' + esc(cfg.label || "Section toolbar") + '">' +
-    '<div class="tb-row">' + viewsHtml(cfg) + searchHtml(cfg, k) + filtersButtonHtml(cfg, k, open) +
+    '<div class="tb-row">' + viewsHtml(cfg, k) + searchHtml(cfg, k) + filtersButtonHtml(cfg, k, open) +
     '<span class="tb-gap"></span>' + actionsHtml(cfg) + moreHtml(cfg, k) + "</div>" +
     popoverHtml(cfg, k, open) + appliedHtml(cfg) + "</div>";
 }
