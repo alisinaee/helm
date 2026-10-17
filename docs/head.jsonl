@@ -672,3 +672,18 @@
 {"v":1,"t":"e","ts":"2026-10-17T06:16:49Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"decision?","sum":"no no no split net project task and for now u cant run any agy task , the vpn is off , cant use…","len":108,"h":"sha1:62a103f0123b","prio":0,"id":"H239"}
 {"v":1,"t":"u","id":"H238","ts":"2026-10-17T06:16:54Z","by":"head","set":{"status":"declined"},"note":"answer: person withdrew it in H239: no split-net task; my one-line edit reverted"}
 {"v":1,"t":"u","id":"H239","ts":"2026-10-17T06:16:55Z","by":"head","set":{"status":"done"},"note":"answer: reverted the split-net edit; no agy or Cursor jobs while VPN is off"}
+{"v":1,"t":"e","ts":"2026-10-17T06:18:15Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"the related things for acions on the diagram should be in the diagram box","len":73,"h":"sha1:45e056159555","prio":2,"id":"H240"}
+{"v":1,"t":"u","id":"H240","ts":"2026-10-17T06:18:23Z","by":"head","set":{"kind":"ask","sum":"System: diagram action controls belong inside the diagram box"},"link":["+task:R11.114"]}
+{"v":1,"t":"e","ts":"2026-10-17T06:19:33Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"for all the diagram maps we have : we need the actions for inc dec the space size between the…","len":181,"h":"sha1:f9f7efc77031","prio":2,"id":"H241"}
+{"v":1,"t":"u","id":"H240","ts":"2026-10-17T06:19:44Z","by":"head","set":{"status":"done"},"note":"answer: done in the R11.114 commit: diagram actions now sit inside the box"}
+{"v":1,"t":"u","id":"H241","ts":"2026-10-17T06:19:49Z","by":"head","set":{"kind":"ask","sum":"Spacing control (more/less space between boxes) for every diagram map"},"link":["+task:R11.115"]}
+{"v":1,"t":"e","ts":"2026-10-17T06:20:18Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"the git section ui is very bad like old apps , make it better and more modern using the ui ux skills","len":101,"h":"sha1:7999166631be","prio":2,"id":"H242"}
+{"v":1,"t":"u","id":"H242","ts":"2026-10-17T06:20:26Z","by":"head","set":{"kind":"ask","sum":"Git section UI looks old: modern redesign with UI/UX skills"},"link":["+task:R11.116"]}
+{"v":1,"t":"e","ts":"2026-10-17T06:21:47Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"in this section , in top , instead of current chart we need to have horizontal time line , when…","len":148,"h":"sha1:b0ff85f1a5c5","prio":2,"id":"H243"}
+{"v":1,"t":"u","id":"H243","ts":"2026-10-17T06:22:04Z","by":"head","set":{"kind":"ask","sum":"Activity: horizontal timeline at top instead of per-day chart; selected item as a point"},"link":["+task:R11.117"]}
+{"v":1,"t":"u","id":"H241","ts":"2026-10-17T06:22:05Z","by":"auto","set":{"status":"done"},"note":"auto: R11.115 685c93d"}
+{"v":1,"t":"u","id":"H242","ts":"2026-10-17T06:22:46Z","by":"auto","set":{"status":"done"},"note":"auto: R11.116 7a63b11"}
+{"v":1,"t":"u","id":"H243","ts":"2026-10-17T06:24:24Z","by":"auto","set":{"status":"done"},"note":"auto: R11.117 5def822"}
+{"v":1,"t":"u","id":"H241","ts":"2026-10-17T06:25:04Z","by":"head","set":{"status":"done"},"note":"answer: spacing control on System, Workflow map, Roadmap map (685c93d and this push)"}
+{"v":1,"t":"u","id":"H243","ts":"2026-10-17T06:26:51Z","by":"head","set":{"status":"done"},"note":"answer: Activity horizontal timeline with selected point, shipped in 5def822 and this follow-up"}
+{"v":1,"t":"u","id":"H242","ts":"2026-10-17T06:27:17Z","by":"head","set":{"status":"done"},"note":"answer: Git redesign 7a63b11 plus diff preview in this R11.118 push"}

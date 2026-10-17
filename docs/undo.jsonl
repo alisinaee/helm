@@ -1,20 +1,3 @@
-{"activity":"A204","sum":"H69 set status, note","op":"head.restore","args":{"steps":[{"id":"H69","set":{"status":"done"}}]},"at":"2026-10-15T14:25:47+03:30"}
-{"activity":"A205","sum":"H73 set status, note","op":"head.restore","args":{"steps":[{"id":"H73","set":{"status":"needs-you"}}]},"at":"2026-10-15T14:25:47+03:30"}
-{"activity":"A206","sum":"H74 set status, note","op":"head.restore","args":{"steps":[{"id":"H74","set":{"status":"needs-you"}}]},"at":"2026-10-15T14:25:47+03:30"}
-{"activity":"A207","sum":"H75 set status, note","op":"head.restore","args":{"steps":[{"id":"H75","set":{"status":"done"}}]},"at":"2026-10-15T14:25:48+03:30"}
-{"activity":"A208","sum":"H76 set status, note","op":"head.restore","args":{"steps":[{"id":"H76","set":{"status":"done"}}]},"at":"2026-10-15T14:25:48+03:30"}
-{"activity":"A209","sum":"H80 set status, note","op":"head.restore","args":{"steps":[{"id":"H80","set":{"status":"needs-you"}}]},"at":"2026-10-15T14:25:48+03:30"}
-{"activity":"A210","sum":"H89 set status, note","op":"head.restore","args":{"steps":[{"id":"H89","set":{"status":"open"}}]},"at":"2026-10-15T14:25:48+03:30"}
-{"activity":"A211","sum":"H96 set status, note","op":"head.restore","args":{"steps":[{"id":"H96","set":{"status":"done"}}]},"at":"2026-10-15T14:25:48+03:30"}
-{"activity":"A212","sum":"H100 set status, note","op":"head.restore","args":{"steps":[{"id":"H100","set":{"status":"open"}}]},"at":"2026-10-15T14:25:48+03:30"}
-{"activity":"A213","sum":"H88 set status, note","op":"head.restore","args":{"steps":[{"id":"H88","set":{"status":"done"}}]},"at":"2026-10-15T14:25:53+03:30"}
-{"activity":"A214","sum":"R7.44 todo->done","op":"task.status","args":{"id":"R7.44","status":"todo"},"at":"2026-10-15T14:28:36+03:30"}
-{"activity":"A215","sum":"R7.49 todo->done","op":"task.status","args":{"id":"R7.49","status":"todo"},"at":"2026-10-15T14:31:23+03:30"}
-{"activity":"A216","sum":"R7.45 todo->done","op":"task.status","args":{"id":"R7.45","status":"todo"},"at":"2026-10-15T14:31:40+03:30"}
-{"activity":"A217","sum":"H48 triaged as review","op":"head.restore","args":{"steps":[{"id":"H48","set":{"kind":"review","sum":"Cursor P2 sync review done: 13 findings, all REAL; fix as R7.40"},"link":["-task:R7.50","-task:R7.51","-task:R7.52"]}]},"at":"2026-10-15T14:31:40+03:30"}
-{"activity":"A218","sum":"H105 bound task:R7.50, task:R7.51, task:R7.52","op":"head.restore","args":{"steps":[{"id":"H105","link":["-task:R7.50","-task:R7.51","-task:R7.52"]}]},"at":"2026-10-15T14:31:40+03:30"}
-{"activity":"A219","sum":"H82 bound task:R7.50","op":"head.restore","args":{"steps":[{"id":"H82","link":["-task:R7.50"]}]},"at":"2026-10-15T14:31:41+03:30"}
-{"activity":"A220","sum":"H78 set status, note","op":"head.restore","args":{"steps":[{"id":"H78","set":{"status":"open"}}]},"at":"2026-10-15T14:32:32+03:30"}
 {"activity":"A221","sum":"H79 set status, note","op":"head.restore","args":{"steps":[{"id":"H79","set":{"status":"open"}}]},"at":"2026-10-15T14:32:32+03:30"}
 {"activity":"A222","sum":"H101 set status, note","op":"head.restore","args":{"steps":[{"id":"H101","set":{"status":"open"}}]},"at":"2026-10-15T14:32:32+03:30"}
 {"activity":"A223","sum":"H83 set status, note","op":"head.restore","args":{"steps":[{"id":"H83","set":{"status":"open"}}]},"at":"2026-10-15T14:32:36+03:30"}
@@ -498,3 +481,20 @@
 {"activity":"A783","sum":"R10.28 partial->done","op":"task.status","args":{"id":"R10.28","status":"partial"},"at":"2026-10-17T09:18:52+03:30"}
 {"activity":"A784","sum":"H238 set status, note","op":"head.restore","args":{"steps":[{"id":"H238","set":{"status":"open"}}]},"at":"2026-10-17T09:46:55+03:30"}
 {"activity":"A785","sum":"H239 set status, note","op":"head.restore","args":{"steps":[{"id":"H239","set":{"status":"open"}}]},"at":"2026-10-17T09:46:55+03:30"}
+{"activity":"A786","sum":"R11.114 todo in R11","op":"backlog.remove","args":{"id":"R11.114","phase":"R11","phaseCreated":false},"at":"2026-10-17T09:48:22+03:30"}
+{"activity":"A787","sum":"H240 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H240","set":{"kind":"ask","sum":"the related things for acions on the diagram should be in the diagram box"},"link":["-task:R11.114"]}]},"at":"2026-10-17T09:48:23+03:30"}
+{"activity":"A788","sum":"R11.114 partial->done","op":"task.status","args":{"id":"R11.114","status":"partial"},"at":"2026-10-17T09:49:43+03:30"}
+{"activity":"A789","sum":"H240 set status, note","op":"head.restore","args":{"steps":[{"id":"H240","set":{"status":"open"}}]},"at":"2026-10-17T09:49:44+03:30"}
+{"activity":"A790","sum":"R11.115 todo in R11","op":"backlog.remove","args":{"id":"R11.115","phase":"R11","phaseCreated":false},"at":"2026-10-17T09:49:44+03:30"}
+{"activity":"A791","sum":"H241 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H241","set":{"kind":"ask","sum":"for all the diagram maps we have : we need the actions for inc dec the space size between the…"},"link":["-task:R11.115"]}]},"at":"2026-10-17T09:49:50+03:30"}
+{"activity":"A792","sum":"R11.115 todo->partial","op":"task.status","args":{"id":"R11.115","status":"todo"},"at":"2026-10-17T09:49:50+03:30"}
+{"activity":"A793","sum":"R11.116 todo in R11","op":"backlog.remove","args":{"id":"R11.116","phase":"R11","phaseCreated":false},"at":"2026-10-17T09:50:22+03:30"}
+{"activity":"A794","sum":"H242 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H242","set":{"kind":"ask","sum":"the git section ui is very bad like old apps , make it better and more modern using the ui ux skills"},"link":["-task:R11.116"]}]},"at":"2026-10-17T09:50:26+03:30"}
+{"activity":"A795","sum":"R11.117 todo in R11","op":"backlog.remove","args":{"id":"R11.117","phase":"R11","phaseCreated":false},"at":"2026-10-17T09:51:53+03:30"}
+{"activity":"A796","sum":"H243 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H243","set":{"kind":"ask","sum":"in this section , in top , instead of current chart we need to have horizontal time line , when…"},"link":["-task:R11.117"]}]},"at":"2026-10-17T09:52:04+03:30"}
+{"activity":"A797","sum":"R11.116 partial->done","op":"task.status","args":{"id":"R11.116","status":"partial"},"at":"2026-10-17T09:52:46+03:30"}
+{"activity":"A798","sum":"R11.118 todo in R11","op":"backlog.remove","args":{"id":"R11.118","phase":"R11","phaseCreated":false},"at":"2026-10-17T09:52:46+03:30"}
+{"activity":"A800","sum":"H241 set status, note","op":"head.restore","args":{"steps":[{"id":"H241","set":{"status":"done"}}]},"at":"2026-10-17T09:55:05+03:30"}
+{"activity":"A802","sum":"H243 set status, note","op":"head.restore","args":{"steps":[{"id":"H243","set":{"status":"done"}}]},"at":"2026-10-17T09:56:51+03:30"}
+{"activity":"A803","sum":"R11.118 partial->done","op":"task.status","args":{"id":"R11.118","status":"partial"},"at":"2026-10-17T09:57:16+03:30"}
+{"activity":"A804","sum":"H242 set status, note","op":"head.restore","args":{"steps":[{"id":"H242","set":{"status":"done"}}]},"at":"2026-10-17T09:57:17+03:30"}

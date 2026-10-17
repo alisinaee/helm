@@ -673,5 +673,35 @@
     "task": "R11.109",
     "title": "haiku: R11.109 fix old timeline tests",
     "model": "haiku"
+  },
+  "ad6d9f2f7e1baf6d0": {
+    "task": "R11.114",
+    "title": "sonnet: R11.114 diagram actions inside box",
+    "model": "sonnet"
+  },
+  "a44e61044d12b2f5b": {
+    "task": "R11.115",
+    "title": "sonnet: R11.115 System diagram spacing control",
+    "model": "sonnet"
+  },
+  "aacd19890e780f4a4": {
+    "task": "R11.115",
+    "title": "haiku: R11.115 Workflow and Roadmap map spacing",
+    "model": "haiku"
+  },
+  "a60ac55709afbafc1": {
+    "task": "R11.116",
+    "title": "sonnet: R11.116 Git section redesign",
+    "model": "sonnet"
+  },
+  "a1d845adbfe0c761c": {
+    "task": "R11.117",
+    "title": "sonnet: R11.117 Activity horizontal timeline",
+    "model": "sonnet"
+  },
+  "ace64a30075dbef2f": {
+    "task": "R11.118",
+    "title": "haiku: R11.118 Git diff preview",
+    "model": "haiku"
   }
 }

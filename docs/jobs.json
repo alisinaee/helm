@@ -8697,6 +8697,137 @@
       "status": "running",
       "started": "2026-10-17T09:46:04+03:30",
       "ended": null
+    },
+    {
+      "id": "j1082",
+      "title": "sonnet: R11.114 diagram actions inside box",
+      "model": "sonnet",
+      "task": "R11.114",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-17T09:48:34+03:30",
+      "ended": "2026-10-17T09:49:20+03:30",
+      "tokens": {
+        "in": 14,
+        "out": 4365,
+        "cacheRead": 340590,
+        "cacheWrite": 63703,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1083",
+      "title": "sonnet: R11.115 System diagram spacing control",
+      "model": "sonnet",
+      "task": "R11.115",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-17T09:50:00+03:30",
+      "ended": "2026-10-17T09:51:30+03:30",
+      "tokens": {
+        "in": 34,
+        "out": 10188,
+        "cacheRead": 1169861,
+        "cacheWrite": 57657,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1084",
+      "title": "haiku: R11.115 Workflow and Roadmap map spacing",
+      "model": "haiku",
+      "task": "R11.115",
+      "status": "done",
+      "started": "2026-10-17T09:50:08+03:30",
+      "ended": "2026-10-17T09:54:35+03:30",
+      "refs": [
+        "commit:685c93dcfe8464adc265562ac479cf4e95d6f62b"
+      ],
+      "tokens": {
+        "in": 72,
+        "out": 53329,
+        "cacheRead": 3992887,
+        "cacheWrite": 158586,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1085",
+      "title": "sonnet: R11.116 Git section redesign",
+      "model": "sonnet",
+      "task": "R11.116",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-17T09:50:44+03:30",
+      "ended": "2026-10-17T09:52:16+03:30",
+      "tokens": {
+        "in": 16,
+        "out": 11258,
+        "cacheRead": 505978,
+        "cacheWrite": 47746,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1086",
+      "title": "sonnet: R11.117 Activity horizontal timeline",
+      "model": "sonnet",
+      "task": "R11.117",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-17T09:52:18+03:30",
+      "ended": "2026-10-17T09:53:57+03:30",
+      "tokens": {
+        "in": 18,
+        "out": 12161,
+        "cacheRead": 571402,
+        "cacheWrite": 49003,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1087",
+      "title": "haiku: R11.118 Git diff preview",
+      "model": "haiku",
+      "task": "R11.118",
+      "status": "done",
+      "started": "2026-10-17T09:52:57+03:30",
+      "ended": "2026-10-17T09:56:49+03:30",
+      "tokens": {
+        "in": 56,
+        "out": 37875,
+        "cacheRead": 2462103,
+        "cacheWrite": 95014,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1088",
+      "title": "sonnet: R11.117 follow-up full-range axis",
+      "model": "sonnet",
+      "task": "R11.117",
+      "status": "done",
+      "started": "2026-10-17T09:54:23+03:30",
+      "ended": "2026-10-17T09:56:13+03:30",
+      "refs": [
+        "commit:5def8227bda1fe12555b7f728dadfc9b1abab6a6"
+      ]
+    },
+    {
+      "id": "j1089",
+      "title": "sonnet: R11.117 follow-up",
+      "model": "sonnet",
+      "task": "R11.117",
+      "status": "done",
+      "started": "2026-10-17T09:54:29+03:30",
+      "ended": "2026-10-17T09:56:10+03:30",
+      "tokens": {
+        "in": 56,
+        "out": 20462,
+        "cacheRead": 2198794,
+        "cacheWrite": 65496,
+        "model": "sonnet"
+      }
     }
   ]
 }

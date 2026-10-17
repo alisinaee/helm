@@ -4964,6 +4964,99 @@
         "commit:02844c1b330e621651b9195d56d41d26b59204d4",
         "commit:9bde8a841c793dd8a80fc4979cbbd81707278b28"
       ]
+    },
+    {
+      "id": "R11.114",
+      "phase": "R11",
+      "title": "System: diagram actions (zoom, fit, full screen, copy, update, legend) inside the diagram box; toggle overlaps label",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T09:49:43+03:30"
+      },
+      "refs": [
+        "commit:2cf64fbfac1a5b1cb1786dad4f141d3dcc02493e"
+      ]
+    },
+    {
+      "id": "R11.115",
+      "phase": "R11",
+      "title": "Diagram spacing control (Space - / +) for System, Workflow map and Roadmap map",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T09:49:50+03:30",
+        "done": "2026-10-17T09:55:04+03:30"
+      },
+      "refs": [
+        "commit:685c93dcfe8464adc265562ac479cf4e95d6f62b",
+        "commit:1220199f38154ea8a2f04b86d9a4093765e670cf"
+      ]
+    },
+    {
+      "id": "R11.116",
+      "phase": "R11",
+      "title": "Git section redesign: modern layout (file list, diff preview, commit panel) per ui-ux-pro-max",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T09:52:46+03:30"
+      },
+      "refs": [
+        "commit:7a63b11b06240fa0efd69c789faf4a5a317123d9"
+      ]
+    },
+    {
+      "id": "R11.117",
+      "phase": "R11",
+      "title": "Activity: replace top per-day chart with a horizontal timeline; selected item shown as a point on it",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:5def8227bda1fe12555b7f728dadfc9b1abab6a6",
+        "commit:9edbfa6edc4534c901c992290eeb9198e91f3910"
+      ],
+      "at": {
+        "done": "2026-10-17T09:56:50+03:30"
+      }
+    },
+    {
+      "id": "R11.118",
+      "phase": "R11",
+      "title": "Git: diff preview endpoint for uncommitted files + render in the right pane",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T09:57:16+03:30"
+      },
+      "refs": [
+        "commit:06a50957d08a66575ea9ba0a2192c3f28a68f7c5"
+      ]
     }
   ],
   "schemaVersion": 1
