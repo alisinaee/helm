@@ -25,7 +25,7 @@ from roadmap.services import agentguard, commands, control, loader, usage, usage
 from roadmap.services import git as git_service
 from roadmap.services import head as head_service
 from roadmap.services import history as history_service
-from roadmap.services import headpanel, presence
+from roadmap.services import headpanel, limits_v2, presence
 from roadmap.services import jobs as job_service
 from roadmap.services import system as system_service
 from roadmap.services import system_arch, system_v2
@@ -285,6 +285,40 @@ def usage_sync(app, req, match):
         headpanel.record(panel_dir, "usage.sync", "usage Update pressed: a fresh usage reading was asked for",
                          src=src)
     return json_reply(200, usage.show())
+
+
+def limits_get(app, req, match):
+    """GET /api/v1/limits: both stop windows (five_hour, week) with the effective stop and the reading. Read only."""
+    return json_reply(200, limits_v2.view())
+
+
+def limits_put(app, req, match):
+    """PUT (or POST) /api/v1/limits: {window, on?, mode?, value?, once?}. A write of the person only (a stop that an
+    agent could raise would be no stop); it reaches the head as one panel line."""
+    _write_guard(app, req)
+    src = _cmd_source(app, req)[0]
+    if src != "gui":
+        raise RoadmapError("forbidden", "only the board page may change the stops", EXIT_USAGE)
+    try:
+        body = security.strict_json_loads(req.read_body().decode("utf-8"))
+    except ValueError:
+        raise RoadmapError("invalid_input", "the body must be JSON", EXIT_USAGE)
+    if not isinstance(body, dict) or not isinstance(body.get("window"), str):
+        raise RoadmapError("invalid_input", "the body must be an object with a window", EXIT_USAGE)
+    window = body["window"]
+    before, after = limits_v2.set_window(window, {k: v for k, v in body.items() if k != "window"})
+    line = None
+    panel_dir = _panel_dir()
+    if panel_dir:
+        line = headpanel.record(panel_dir, "limits.set", limits_v2.summary(window, after), src=src)
+    reply = {"windows": limits_v2.stops(persist=False)}
+    if panel_dir:
+        _to_head(panel_dir, reply, line)
+    return json_reply(200, reply)
+
+
+def limits_route(app, req, match):
+    return limits_get(app, req, match) if req.method == "GET" else limits_put(app, req, match)
 
 
 ACCOUNT_ACTIONS = ("connect", "disconnect", "switch", "check", "login")
@@ -953,6 +987,7 @@ ROUTES = (
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/system"), ("GET",), project_system),
     (re.compile(r"/api/v1/tokens/history"), ("GET",), tokens_history),
     (re.compile(r"/api/v1/usage"), ("GET",), usage_get),
+    (re.compile(r"/api/v1/limits"), ("GET", "PUT", "POST"), limits_route),
     (re.compile(r"/api/v1/usage/sync"), ("POST",), usage_sync),
     (re.compile(r"/api/v1/usage/accounts"), ("GET",), usage_accounts_get),
     (re.compile(r"/api/v1/usage/accounts/(?P<id>[^/]+)/(?P<action>[a-z]+)"), ("POST",), usage_accounts_action),

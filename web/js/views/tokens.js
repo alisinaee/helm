@@ -10,7 +10,8 @@ import { TABS, activeTab, acctPanelHtml, historyHtml, overviewHtml } from "./tok
 import { copyButton, refSummary } from "../ref.js";
 import { pageState } from "./inbox.js";
 import { tokensByHtml } from "./tokens_by.js";
-import { oldText, shareRowsHtml, weekKnown, weeklyStopHtml } from "./limits.js";
+import { oldText, shareRowsHtml, weekKnown } from "./limits.js";
+import { limitsV2Html } from "./limits_v2.js";
 import { usageView } from "./usage.js";
 
 const LIMIT_SENTENCE = "At the limit, agents stop starting new jobs. Override for 1 hour lets them run again.";
@@ -107,8 +108,8 @@ export function sectionView(vm) {
       : "Account-wide weekly stop and every project's spend.") + "</p></div>";
   const usage = '<section class="ov-card" aria-label="Usage now">' + usageView(bandVm(vm)) + unknownNoteHtml(vm) +
     "</section>";
-  // The weekly stop and the share rows bring their own heading and copy button (limits.js).
-  const stop = '<section class="ov-card" aria-label="Weekly stop">' + weeklyStopHtml(vm) + "</section>";
+  // The two stop cards (limits_v2.js) and the share rows (limits.js, own heading and copy button).
+  const stop = limitsV2Html(vm);
   const share = '<section class="ov-card" aria-label="Share per project">' + shareRowsHtml(vm) + "</section>";
   const blocked = blockedPid(snaps, isProject, pid);
   const blockedName = blocked ? (isProject ? vm.project.name : (vm.projects.find(function (p) {
