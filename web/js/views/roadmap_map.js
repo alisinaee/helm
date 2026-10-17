@@ -124,22 +124,27 @@ function toolbarHtml(snap) {
   const opts = ['<option value="">All models</option>'].concat(models.map(function (m) {
     return '<option value="' + esc(m) + '"' + (ui.model === m ? " selected" : "") + ">" + esc(m) + "</option>";
   })).join("");
+  return '<div class="rmm-bar"><div class="seg" role="group" aria-label="Filter by status">' + seg + "</div>" +
+    '<label class="rmm-model"><span class="rmm-lbl">Model</span><select class="rmm-select" data-rmm-model' +
+    ' aria-label="Filter by model">' + opts + "</select></label></div>";
+}
+
+// The map actions sit inside the map box, top right, like the System view's overlay (web/css/system.css .sys-ov).
+function overlayHtml() {
   const ctl = function (op, label, text) {
     return '<button type="button" class="btn btn-small" data-rmm-op="' + op + '" aria-label="' + label + '" title="' +
       label + '">' + text + "</button>";
   };
-  const space = '<div class="seg" role="group" aria-label="Spacing"><span class="rmm-lbl">Spacing</span>' +
+  const zoom = '<div class="rmm-og" role="group" aria-label="Map view">' + ctl("out", "Zoom out", "−") +
+    ctl("in", "Zoom in", "+") + ctl("fit", "Fit to screen", "Fit") + ctl("now", "Centre on Now", "Now") +
+    ctl("full", fullWord(), fullWord()) + "</div>";
+  const space = '<div class="rmm-og" role="group" aria-label="Spacing"><span class="rmm-lbl">Spacing</span>' +
     '<button type="button" class="btn btn-small" data-rmm-space="-1" aria-label="Less space" title="Less space ([)">' +
-    "−</button>" + '<span class="num" data-rmm-space="reset" title="Double-click to reset">' +
+    "−</button>" + '<span class="rmm-sp-v" data-rmm-space="reset" title="Double-click to reset">' +
     spaceText(ui.spacing) + "</span>" +
     '<button type="button" class="btn btn-small" data-rmm-space="1" aria-label="More space" title="More space (])">' +
     "+</button></div>";
-  return '<div class="rmm-bar"><div class="seg" role="group" aria-label="Filter by status">' + seg + "</div>" +
-    '<label class="rmm-model"><span class="rmm-lbl">Model</span><select class="rmm-select" data-rmm-model' +
-    ' aria-label="Filter by model">' + opts + "</select></label>" +
-    '<div class="rmm-ctl" role="group" aria-label="Map view">' + ctl("out", "Zoom out", "−") +
-    ctl("in", "Zoom in", "+") + ctl("fit", "Fit to screen", "Fit") + ctl("now", "Centre on Now", "Now") +
-    ctl("full", fullWord(), fullWord()) + "</div>" + space + "</div>";
+  return '<div class="rmm-ov">' + zoom + space + "</div>";
 }
 
 function spaceText(v) {
@@ -181,7 +186,8 @@ export function mapView(vm, snap, head) {
   const shown = lay.cards.length;
   const note = shown ? "" : '<p class="rmm-empty">No tasks match these filters.</p>';
   return '<div class="rmm-page' + (ui.full ? " is-full" : "") + '" data-rmm-page>' + head + toolbarHtml(snap) +
-    '<div class="rmm-stage"><div class="rmm-host" data-rmm-host data-rmm-rev="' + esc(rev) + '"></div>' + note +
+    '<div class="rmm-stage">' + overlayHtml() +
+    '<div class="rmm-host" data-rmm-host data-rmm-rev="' + esc(rev) + '"></div>' + note +
     '<aside class="rmm-aside" data-rmm-aside aria-label="Task details" hidden></aside></div>' +
     legendHtml() + "</div>";
 }
