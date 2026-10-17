@@ -6,6 +6,7 @@ stderr). Tests replace RUNNER with a fake, so nothing runs launchctl for real. T
 folder: ROADMAP_LAUNCH_AGENTS when set, else ~/Library/LaunchAgents. Logs go to store.paths.logs_dir().
 """
 
+import datetime
 import os
 import re
 import subprocess
@@ -234,14 +235,19 @@ STALE_WATCH_DIRS = ("web", os.path.join("roadmap", "http"), os.path.join("roadma
 
 
 def process_start_time(pid, runner=None):
-    """Epoch seconds the given pid has been running since, via `ps -o etimes=`. None when ps fails, the pid is
-    unknown, or output is not a plain integer (e.g. the pid has since exited)."""
+    """Epoch seconds the given pid started at, via `ps -o lstart=` (a date string such as
+    "Sat Oct 17 13:42:12 2026"; works on macOS BSD ps and Linux procps, unlike `etimes`). None when ps fails, the
+    pid is unknown, or the output does not parse (e.g. the pid has since exited)."""
     run = runner or RUNNER
-    rc, out, _ = run(["ps", "-o", "etimes=", "-p", str(pid)])
-    text = (out or "").strip()
-    if rc != 0 or not text.isdigit():
+    rc, out, _ = run(["ps", "-o", "lstart=", "-p", str(pid)])
+    # Collapse runs of spaces: BSD ps pads single-digit days ("Oct  7 ...") which strptime would not match.
+    text = " ".join((out or "").split())
+    if rc != 0 or not text:
         return None
-    return time.time() - int(text)
+    try:
+        return datetime.datetime.strptime(text, "%a %b %d %H:%M:%S %Y").timestamp()
+    except ValueError:
+        return None
 
 
 def _newest_mtime(repo, dirs):
