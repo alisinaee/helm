@@ -34,7 +34,9 @@ function arr(x) {
 
 function ctx(opts) {
   const o = opts || {};
-  return { sel: o.selected == null ? null : String(o.selected), near: o.near instanceof Set ? o.near : null };
+  const sp = Number(o.space);
+  return { sel: o.selected == null ? null : String(o.selected), near: o.near instanceof Set ? o.near : null,
+    sp: Number.isFinite(sp) && sp > 0 ? Math.min(2.5, Math.max(0.6, sp)) : 1 };
 }
 
 const DEFS = "<defs>" +
@@ -263,8 +265,8 @@ export function erSvg(er, opts) {
     colW[it.k] = Math.max(colW[it.k], it.w);
     rowH[it.r] = Math.max(rowH[it.r], it.h);
   });
-  const GX = 64;
-  const GY = 46;
+  const GX = 64 * c.sp;
+  const GY = 46 * c.sp;
   const colX = [];
   let x = 0;
   colW.forEach((w) => {
@@ -339,7 +341,7 @@ export function erSvg(er, opts) {
       (it.shown.length + it.more) + " attributes";
     out.push(nodeG(c, it.id, it.label, tip, it.x, it.y, body));
   });
-  const W = x - GX + 44;
+  const W = x - GX + 44 * c.sp;
   return finish(out.join(""), W, y - GY, items.map((it) => ({ id: it.id, x: it.x, y: it.y, w: it.w, h: it.h })), []);
 }
 
@@ -394,8 +396,8 @@ export function stateSvg(machine, opts) {
   });
   const finals = new Set(names.filter((s) => !out.get(s).length));
   const H = 36;
-  const GAPY = 44;
-  const GAPX = 96;
+  const GAPY = 44 * c.sp;
+  const GAPX = 96 * c.sp;
   const loops = new Map();
   trans.forEach((t) => {
     if (String(t.from) === String(t.to)) loops.set(String(t.from), (loops.get(String(t.from)) || 0) + 1);
@@ -502,7 +504,7 @@ export function usecaseSvg(uc, opts) {
   });
   const EW = 176;
   const EH = 54;
-  const EG = 12;
+  const EG = 12 * c.sp;
   const BX = 140;
   const BP = 16;
   const BH = 30;
@@ -520,10 +522,10 @@ export function usecaseSvg(uc, opts) {
       ells.push({ cs, id: String(cs.id), x: BX + BP + 12 + (i % cols) * (EW + EG), y: gy + head + 12 +
           Math.floor(i / cols) * (EH + EG), w: EW, h: EH });
     });
-    gy += gh + 16;
+    gy += gh + 16 * c.sp;
   });
   const bw = Math.max(0, ...gboxes.map((g) => g.w)) + 2 * BP;
-  const bh = Math.max(gy - 16 + BP, BH + 2 * BP + 40);
+  const bh = Math.max(gy - 16 * c.sp + BP, BH + 2 * BP + 40);
   const AH = 76;
   const ah = actors.length * (AH + 20) - 20;
   const totalH = Math.max(bh, ah);
@@ -671,8 +673,8 @@ export function activitySvg(item, opts) {
   nodes.forEach((n) => {
     (ranks[n.rank] = ranks[n.rank] || []).push(n);
   });
-  const colW = Math.max(...nodes.map((n) => n.w)) + 44;
-  const GAPY = 34;
+  const colW = Math.max(...nodes.map((n) => n.w)) + 44 * c.sp;
+  const GAPY = 34 * c.sp;
   let y = 0;
   const maxCols = Math.max(...ranks.map((r) => (r ? r.length : 0)));
   const total = maxCols * colW;
@@ -799,8 +801,8 @@ export function deploymentSvg(dep, opts) {
     return { g, framed, cols, head, pad, gw, gh: framed ? gh : gh, rh };
   });
   const gcols = Math.max(1, Math.ceil(Math.sqrt(cells.length)));
-  const GX = 56;
-  const GY = 46;
+  const GX = 56 * c.sp;
+  const GY = 46 * c.sp;
   const cw = new Array(gcols).fill(0);
   const rhs = [];
   cells.forEach((cell, i) => {
@@ -1024,7 +1026,7 @@ export function classSvg(cls, opts) {
       return;
     }
     list.sort((a, b) => a.depth - b.depth || (a.label < b.label ? -1 : a.label > b.label ? 1 : 0));
-    const pos = fitShelf(list, aspect, GX, GY);
+    const pos = fitShelf(list, aspect, GX * c.sp, GY * c.sp);
     list.forEach((it, k) => {
       it.x = pos.at[k][0] + BP;
       it.y = pos.at[k][1] + BHEAD + BP;
@@ -1032,7 +1034,7 @@ export function classSvg(cls, opts) {
     blocks.push({ g, label, list, open: true, w: Math.max(pos.w + 2 * BP, MODW), h: pos.h + BHEAD + 2 * BP,
       id: "g:" + g });
   });
-  const top = fitShelf(blocks, aspect, 24, 24);
+  const top = fitShelf(blocks, aspect, 24 * c.sp, 24 * c.sp);
   blocks.forEach((b, k) => {
     b.x = top.at[k][0];
     b.y = top.at[k][1];

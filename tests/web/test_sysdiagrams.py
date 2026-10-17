@@ -332,3 +332,29 @@ class RouteEdgeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+SPACE_SCRIPT = r"""
+(async () => {
+  const { join } = await import("node:path");
+  const { pathToFileURL } = await import("node:url");
+  const m = await import(pathToFileURL(join(process.argv[1], "js", "graph", "sysdiagrams.js")).href);
+  const er = { entities: [{ id: "a", label: "A", attrs: [{ name: "id", type: "int" }] },
+    { id: "b", label: "B", attrs: [{ name: "id", type: "int" }] }], relations: [] };
+  const box = (s, id) => { const g = new RegExp('data-sys="' + id + '"[^>]*>').test(s); return g; };
+  const pos = (o) => o.boxes.map((b) => [b.x, b.w]);
+  const one = m.erSvg(er, { space: 1 });
+  const two = m.erSvg(er, { space: 2 });
+  console.log(JSON.stringify({ one: pos(one), two: pos(two) }));
+})();
+"""
+
+
+@unittest.skipUnless(NODE, "node not installed")
+class SpaceFactor(unittest.TestCase):
+    def test_er_factor_two_widens_gap_not_boxes(self):
+        out = subprocess.run([NODE, "-e", SPACE_SCRIPT, WEB], capture_output=True, text=True, check=True).stdout
+        r = json.loads(out)
+        gap = lambda p: p[1][0] - p[0][0] - p[0][1]
+        self.assertGreater(gap(r["two"]), gap(r["one"]))
+        self.assertEqual([b[1] for b in r["one"]], [b[1] for b in r["two"]])

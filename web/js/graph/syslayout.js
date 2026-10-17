@@ -15,10 +15,14 @@
 
 export const NODE_W = 188;
 export const NODE_H = 50;
-export const GAP_X = 28;
-export const ROW_GAP = 26;
-export const BAND_GAP = 70;
-export const BAND_PAD = 12;
+const G_X = 28;
+const R_GAP = 26;
+const B_GAP = 70;
+const B_PAD = 12;
+export const GAP_X = G_X;
+export const ROW_GAP = R_GAP;
+export const BAND_GAP = B_GAP;
+export const BAND_PAD = B_PAD;
 export const BAND_HEAD = 24;
 export const WRAP = 6;
 export const LABEL_MAX = 30;
@@ -304,7 +308,20 @@ export function anchorShift(before, after, id) {
   return { dx: b.x - a.x, dy: b.y - a.y };
 }
 
+// Spacing factor (0.6 .. 2.5) scales gaps and padding only, never box sizes.
+export const SP_MIN = 0.6;
+export const SP_MAX = 2.5;
+export function clampSpace(x) {
+  const n = Number(x);
+  return Number.isFinite(n) && n > 0 ? Math.min(SP_MAX, Math.max(SP_MIN, n)) : 1;
+}
+
 export function layeredLayout(view, opts) {
+  const sp = clampSpace(opts && opts.space);
+  const GAP_X = G_X * sp;
+  const ROW_GAP = R_GAP * sp;
+  const BAND_GAP = B_GAP * sp;
+  const BAND_PAD = B_PAD * sp;
   if (opts && opts.collapsed && opts.collapsed.size) view = collapseGroups(view, opts.collapsed);
   const wrap = (opts && opts.wrap) || WRAP;
   const groups = (Array.isArray(view.groups) ? view.groups : []).filter((g) => g && g.id);
@@ -487,10 +504,13 @@ export const SEQ_COL = 184;
 export const SEQ_HEAD = 40;
 export const SEQ_ROW = 38;
 
-export function sequenceLayout(flow) {
+export function sequenceLayout(flow, space) {
+  const sp = clampSpace(space);
+  const SEQ_COL = 164 + 20 * sp;
+  const SEQ_ROW = 38 * sp;
   const parts = (Array.isArray(flow.participants) ? flow.participants : []).filter((p) => p && p.id);
   const col = new Map(parts.map((p, i) => [p.id, i]));
-  const heads = parts.map((p, i) => ({ id: p.id, label: p.label || p.id, x: i * SEQ_COL + 10, y: 0, w: SEQ_COL - 20,
+  const heads = parts.map((p, i) => ({ id: p.id, label: p.label || p.id, x: i * SEQ_COL + 10 * sp, y: 0, w: 164,
     h: SEQ_HEAD, cx: i * SEQ_COL + SEQ_COL / 2 }));
   const steps = (Array.isArray(flow.steps) ? flow.steps : []).filter((s) => s && col.has(s.from) && col.has(s.to));
   const rows = steps.map((s, i) => {
