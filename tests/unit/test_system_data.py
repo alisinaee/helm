@@ -144,6 +144,21 @@ class ErTests(Base):
         self.assertEqual(self.er()["entities"], [])
 
 
+class FixtureSkipTests(Base):
+    def test_skipped(self):
+        for rel in ("tests/a.sql", "x/fixtures/b.sql", "examples/c.sql", "__tests__/d.sql", "test/e.sql"):
+            self.put(rel, "CREATE TABLE t (id int);")
+            self.put(rel.replace(".sql", ".py"), 'STATUS = ("a", "b")\n')
+        self.put("test_m.py", 'STATUS = ("a", "b")\n')
+        self.put("m_test.py", 'STATUS = ("a", "b")\n')
+        self.put("a.test.js", 'const STATUS = ["a", "b"];\n')
+        self.put("a.spec.js", 'const STATUS = ["a", "b"];\n')
+        self.assertEqual(self.er()["entities"], [])
+        self.assertEqual(self.states()["items"], [])
+        self.put("real.py", 'STATUS = ("a", "b")\n')
+        self.assertEqual(len(self.states()["items"]), 1)
+
+
 class StatesTests(Base):
     def test_py_real_transition(self):
         self.put("svc.py", 'STATUS = ("todo", "doing", "done")\n'
