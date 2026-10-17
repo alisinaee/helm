@@ -213,6 +213,16 @@ function syncAttrs(oldEl, newEl) {
   }
 }
 
+// A mount host is an element a view fills imperatively after render (a diagram, a canvas, a minimap). Its markup is
+// empty, so a morph must not empty it: the children mounted into it stay, only its attributes are synced. A host is
+// marked by data-keep, data-mount, or an attribute named data-*host (data-wf-map-host, data-rmm-host).
+const HOST_ATTR = /^data-[\w-]*host$/;
+
+export function isMountHost(el) {
+  if (el.hasAttribute("data-keep") || el.hasAttribute("data-mount")) return true;
+  return Array.from(el.attributes).some(function (a) { return HOST_ATTR.test(a.name); });
+}
+
 function morphNode(oldNode, newNode) {
   if (oldNode.nodeType !== 1) {
     if (oldNode.nodeValue !== newNode.nodeValue) oldNode.nodeValue = newNode.nodeValue;
@@ -220,7 +230,8 @@ function morphNode(oldNode, newNode) {
   }
   const before = oldNode.nodeName === "TEXTAREA" ? oldNode.textContent : oldNode.getAttribute("value");
   syncAttrs(oldNode, newNode);
-  morphChildren(oldNode, newNode);
+  const keepKids = newNode.childNodes.length === 0 && isMountHost(oldNode);
+  if (!keepKids) morphChildren(oldNode, newNode);
   syncField(oldNode, newNode, before);
 }
 

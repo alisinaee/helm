@@ -73,5 +73,15 @@ class DomMorph(unittest.TestCase):
         self.assertLess(o["bigMs"], 1500)
 
 
+    def test_empty_mount_host_keeps_mounted_children(self):
+        o = self.out
+        self.assertTrue(o["hostPatch"])
+        self.assertTrue(o["hostKept"])
+        self.assertEqual(o["hostRev"], "2")
+
+    def test_empty_plain_element_is_emptied(self):
+        self.assertTrue(self.out["plainEmptied"])
+
+
 if __name__ == "__main__":
     unittest.main()
