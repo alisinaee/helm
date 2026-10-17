@@ -1067,17 +1067,33 @@ function openAtNow(api, flow) {
 }
 
 // Puts the pending diagram into the host the last patch rendered, with the minimap beside it. Runs after every patch.
+// The state of the diagram last mounted: a later patch (or a new host element) can drop the SVG or the minimap, and
+// mountMaps mounts them again from this state. host.__mountRev is a JS property, so a morph does not strip it.
+let mountedSt = null;
+
+function mountMini(host) {
+  if (!activeMap || narrow()) return;
+  if (activeMap.mini) activeMap.mini.stop();
+  activeMap.mini = graphKit.minimap.mountMinimap(host.parentNode, { flow: activeMap.st.flow, viewport: activeMap.api });
+}
+
 function mountMaps() {
-  if (!pendingMap || !graphKit || typeof document === "undefined") return;
+  if (!graphKit || typeof document === "undefined") return;
   const host = document.querySelector("[data-wf-map-host]");
   if (!host) return;
-  const st = pendingMap;
-  // The same revision is already drawn: keep it, so the reader's pan and zoom stay put.
-  if (host.firstChild && host.getAttribute("data-wf-rev") === st.rev) {
-    pendingMap = null;
+  const st = pendingMap || mountedSt;
+  if (!st) return;
+  pendingMap = null;
+  const drawn = Boolean(host.querySelector("svg")) && host.getAttribute("data-wf-rev") === st.rev &&
+    host.__mountRev === st.rev;
+  // The same revision is already drawn: keep it, so the reader's pan and zoom stay put. Only a minimap a patch dropped
+  // is mounted again.
+  if (drawn) {
+    if (activeMap && activeMap.mini && !host.parentNode.contains(activeMap.mini.svg)) mountMini(host);
     return;
   }
-  pendingMap = null;
+  mountedSt = st;
+  host.__mountRev = st.rev;
   host.replaceChildren();
   const store = mapStateFor(st.pid);
   const opening = !store.fitted;
@@ -1516,9 +1532,12 @@ export function bind(el) {
     new MutationObserver(function () {
       const scroller = el.querySelector(".wf-scroll");
       if (scroller && scrollLeft && scroller.scrollLeft !== scrollLeft) scroller.scrollLeft = scrollLeft;
-      mountMaps();
       measureTimeline(el);
     }).observe(el, { childList: true });
+    // The map host sits deeper than the section, so its changes need a subtree watch (mountMaps is a no-op when drawn).
+    new MutationObserver(function () {
+      mountMaps();
+    }).observe(el, { childList: true, subtree: true });
   }
   // Crossing the 640 px line swaps the minimap for the phase chips, so the Map renders again.
   if (typeof window !== "undefined" && typeof window.matchMedia === "function") {

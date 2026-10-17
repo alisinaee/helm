@@ -219,4 +219,21 @@ doc.active = tx;
 s.children[0].checked = true;
 patch("i", '<input type="checkbox" id="cb"><input id="tx" value="c">');
 out.txFocusedKept = tx.value === "typing" || s.children[1].value === "typing";
+// 10. An empty mount host keeps the children mounted into it across a patch (its attributes still sync).
+s = section("j");
+patch("j", '<div class="wfg-host" data-wf-map-host data-wf-rev="1"></div>');
+const mhost = s.firstChild;
+const mounted = new El("svg");
+mhost.appendChild(mounted);
+mhost.__mountRev = "1";
+out.hostPatch = patch("j", '<div class="wfg-host" data-wf-map-host data-wf-rev="2"></div>');
+out.hostKept = mhost.firstChild === mounted && s.firstChild === mhost;
+out.hostRev = mhost.getAttribute("data-wf-rev");
+
+// 11. An empty element that is not a mount host is still emptied.
+s = section("k");
+patch("k", '<div class="plain"></div>');
+s.firstChild.appendChild(new El("svg"));
+patch("k", '<div class="plain" data-x="1"></div>');
+out.plainEmptied = s.firstChild.childNodes.length === 0;
 console.log(JSON.stringify(out));
