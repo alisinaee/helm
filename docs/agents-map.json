@@ -708,5 +708,30 @@
     "task": "R11.118",
     "title": "haiku: R11.118 gen_facts size cap fix",
     "model": "haiku"
+  },
+  "a26ecc7a5d3777116": {
+    "task": "R11.119",
+    "title": "haiku: R11.119 toolbar: Workflow + Roadmap",
+    "model": "haiku"
+  },
+  "a4712badc3115a6d0": {
+    "task": "R11.119",
+    "title": "haiku: R11.119 toolbar: Work + Head + Planner",
+    "model": "haiku"
+  },
+  "a8115fe3fc5a21bbe": {
+    "task": "R11.119",
+    "title": "haiku: R11.119 toolbar: Activity Agents Inbox Rules",
+    "model": "haiku"
+  },
+  "a879008d5aa69b41c": {
+    "task": "R11.120",
+    "title": "haiku: R11.120 Roadmap map header alignment",
+    "model": "haiku"
+  },
+  "a2293dc858f228965": {
+    "task": "R11.124",
+    "title": "haiku: R11.124 Overview Activity NaN fix",
+    "model": "haiku"
   }
 }

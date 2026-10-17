@@ -1,29 +1,3 @@
-{"activity":"A222","sum":"H101 set status, note","op":"head.restore","args":{"steps":[{"id":"H101","set":{"status":"open"}}]},"at":"2026-10-15T14:32:32+03:30"}
-{"activity":"A223","sum":"H83 set status, note","op":"head.restore","args":{"steps":[{"id":"H83","set":{"status":"open"}}]},"at":"2026-10-15T14:32:36+03:30"}
-{"activity":"A224","sum":"R7.50 todo->done","op":"task.status","args":{"id":"R7.50","status":"todo"},"at":"2026-10-15T14:39:29+03:30"}
-{"activity":"A225","sum":"R7.51 todo->done","op":"task.status","args":{"id":"R7.51","status":"todo"},"at":"2026-10-15T14:39:29+03:30"}
-{"activity":"A226","sum":"R7.52 todo->done","op":"task.status","args":{"id":"R7.52","status":"todo"},"at":"2026-10-15T14:39:29+03:30"}
-{"activity":"A227","sum":"H82 set status, note","op":"head.restore","args":{"steps":[{"id":"H82","set":{"status":"open"}}]},"at":"2026-10-15T14:39:49+03:30"}
-{"activity":"A228","sum":"R7.47 todo->done","op":"task.status","args":{"id":"R7.47","status":"todo"},"at":"2026-10-15T15:18:17+03:30"}
-{"activity":"A229","sum":"R7.48 todo->done","op":"task.status","args":{"id":"R7.48","status":"todo"},"at":"2026-10-15T15:18:17+03:30"}
-{"activity":"A230","sum":"H102 set status, note","op":"head.restore","args":{"steps":[{"id":"H102","set":{"status":"open"}}]},"at":"2026-10-15T15:19:17+03:30"}
-{"activity":"A231","sum":"H104 set status, note","op":"head.restore","args":{"steps":[{"id":"H104","set":{"status":"open"}}]},"at":"2026-10-15T15:19:17+03:30"}
-{"activity":"A232","sum":"H105 set status, note","op":"head.restore","args":{"steps":[{"id":"H105","set":{"status":"open"}}]},"at":"2026-10-15T15:19:17+03:30"}
-{"activity":"A233","sum":"H107 set status, note","op":"head.restore","args":{"steps":[{"id":"H107","set":{"status":"open"}}]},"at":"2026-10-15T15:19:18+03:30"}
-{"activity":"A234","sum":"H108 set status, note","op":"head.restore","args":{"steps":[{"id":"H108","set":{"status":"open"}}]},"at":"2026-10-15T15:19:18+03:30"}
-{"activity":"A235","sum":"H109 set status, note","op":"head.restore","args":{"steps":[{"id":"H109","set":{"status":"open"}}]},"at":"2026-10-15T15:19:28+03:30"}
-{"activity":"A236","sum":"H110 triaged as question","op":"head.restore","args":{"steps":[{"id":"H110","set":{"kind":"question","sum":"im back , what is pend on me ?"},"link":["-task:R7.36"]}]},"at":"2026-10-15T15:19:47+03:30"}
-{"activity":"A237","sum":"H110 set status, note","op":"head.restore","args":{"steps":[{"id":"H110","set":{"status":"open"}}]},"at":"2026-10-15T15:19:47+03:30"}
-{"activity":"A238","sum":"H111 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H111","set":{"kind":"ask","sum":"weekly limit is 85"},"link":["-task:R7.36"]}]},"at":"2026-10-15T15:21:15+03:30"}
-{"activity":"A239","sum":"H69 set status, note","op":"head.restore","args":{"steps":[{"id":"H69","set":{"status":"needs-you"}}]},"at":"2026-10-15T15:21:32+03:30"}
-{"activity":"A240","sum":"H73 set status, note","op":"head.restore","args":{"steps":[{"id":"H73","set":{"status":"needs-you"}}]},"at":"2026-10-15T15:21:32+03:30"}
-{"activity":"A241","sum":"H74 set status, note","op":"head.restore","args":{"steps":[{"id":"H74","set":{"status":"needs-you"}}]},"at":"2026-10-15T15:21:32+03:30"}
-{"activity":"A242","sum":"H75 set status, note","op":"head.restore","args":{"steps":[{"id":"H75","set":{"status":"needs-you"}}]},"at":"2026-10-15T15:21:33+03:30"}
-{"activity":"A243","sum":"H76 set status, note","op":"head.restore","args":{"steps":[{"id":"H76","set":{"status":"needs-you"}}]},"at":"2026-10-15T15:21:33+03:30"}
-{"activity":"A244","sum":"H80 set status, note","op":"head.restore","args":{"steps":[{"id":"H80","set":{"status":"needs-you"}}]},"at":"2026-10-15T15:21:33+03:30"}
-{"activity":"A245","sum":"H112 triaged as decision","op":"head.restore","args":{"steps":[{"id":"H112","set":{"kind":"ask","sum":"leave tha argon , no need for now"},"link":["-task:R7.36"]}]},"at":"2026-10-15T15:21:33+03:30"}
-{"activity":"A246","sum":"H112 set status, note","op":"head.restore","args":{"steps":[{"id":"H112","set":{"status":"open"}}]},"at":"2026-10-15T15:21:33+03:30"}
-{"activity":"A247","sum":"H113 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H113","set":{"kind":"ask","sum":"currently we are not working on split net project we focus on the project managent project…"},"link":["-task:R7.36"]}]},"at":"2026-10-15T15:23:27+03:30"}
 {"activity":"A248","sum":"H113 set status, note","op":"head.restore","args":{"steps":[{"id":"H113","set":{"status":"open"}}]},"at":"2026-10-15T15:23:27+03:30"}
 {"activity":"A249","sum":"H114 triaged as question","op":"head.restore","args":{"steps":[{"id":"H114","set":{"kind":"question","sum":"did you figure out about core and panel sync feature ?"},"link":["-task:R7.50"]}]},"at":"2026-10-15T15:24:14+03:30"}
 {"activity":"A250","sum":"H115 triaged as review","op":"head.restore","args":{"steps":[{"id":"H115","set":{"kind":"review","sum":"did u review the head items and why some items missing ?"},"link":["-task:R7.44"]}]},"at":"2026-10-15T15:25:08+03:30"}
@@ -498,3 +472,29 @@
 {"activity":"A803","sum":"R11.118 partial->done","op":"task.status","args":{"id":"R11.118","status":"partial"},"at":"2026-10-17T09:57:16+03:30"}
 {"activity":"A804","sum":"H242 set status, note","op":"head.restore","args":{"steps":[{"id":"H242","set":{"status":"done"}}]},"at":"2026-10-17T09:57:17+03:30"}
 {"activity":"A805","sum":"H244 set status, note","op":"head.restore","args":{"steps":[{"id":"H244","set":{"status":"open"}}]},"at":"2026-10-17T10:11:51+03:30"}
+{"activity":"A806","sum":"H245 set status, note","op":"head.restore","args":{"steps":[{"id":"H245","set":{"status":"open"}}]},"at":"2026-10-17T10:12:55+03:30"}
+{"activity":"A807","sum":"R11.119 todo in R11","op":"backlog.remove","args":{"id":"R11.119","phase":"R11","phaseCreated":false},"at":"2026-10-17T10:22:48+03:30"}
+{"activity":"A808","sum":"H246 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H246","set":{"kind":"ask","sum":"see the head i told task about handl this sectting better way in ui ux , to have expandalbe…"},"link":["-task:R11.119"]}]},"at":"2026-10-17T10:22:49+03:30"}
+{"activity":"A810","sum":"R11.120 todo in R11","op":"backlog.remove","args":{"id":"R11.120","phase":"R11","phaseCreated":false},"at":"2026-10-17T10:23:41+03:30"}
+{"activity":"A811","sum":"H247 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H247","set":{"kind":"ask","sum":"alignment issue in here"},"link":["-task:R11.120"]}]},"at":"2026-10-17T10:23:41+03:30"}
+{"activity":"A813","sum":"H247 set status, note","op":"head.restore","args":{"steps":[{"id":"H247","set":{"status":"open"}}]},"at":"2026-10-17T10:26:55+03:30"}
+{"activity":"A814","sum":"R11.119 partial->done","op":"task.status","args":{"id":"R11.119","status":"partial"},"at":"2026-10-17T10:30:30+03:30"}
+{"activity":"A815","sum":"R11.121 todo in R11","op":"backlog.remove","args":{"id":"R11.121","phase":"R11","phaseCreated":false},"at":"2026-10-17T10:30:34+03:30"}
+{"activity":"A816","sum":"H246 set status, note","op":"head.restore","args":{"steps":[{"id":"H246","set":{"status":"done"}}]},"at":"2026-10-17T10:30:35+03:30"}
+{"activity":"A817","sum":"H249 set status, note","op":"head.restore","args":{"steps":[{"id":"H249","set":{"status":"open"}}]},"at":"2026-10-17T10:30:36+03:30"}
+{"activity":"A818","sum":"Q1 answered withdrawn: test cleanup (H250)","op":"question.reopen","args":{"id":"Q1"},"at":"2026-10-17T10:31:05+03:30"}
+{"activity":"A819","sum":"Q3 answered withdrawn: test cleanup (H250)","op":"question.reopen","args":{"id":"Q3"},"at":"2026-10-17T10:31:05+03:30"}
+{"activity":"A823","sum":"H250 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H250","set":{"kind":"ask","sum":"for test the intecation user with dashboard : clean current question , and add some ai agent…"},"link":["-task:R11.2"]}]},"at":"2026-10-17T10:31:17+03:30"}
+{"activity":"A824","sum":"R11.122 todo in R11","op":"backlog.remove","args":{"id":"R11.122","phase":"R11","phaseCreated":false},"at":"2026-10-17T10:32:18+03:30"}
+{"activity":"A825","sum":"H251 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H251","set":{"kind":"bug","sum":"one bad issue in some section for exmaple in the head : when ui update i see flickering on the…"},"link":["-task:R11.122"]}]},"at":"2026-10-17T10:32:19+03:30"}
+{"activity":"A826","sum":"Q9 answered Head","op":"question.reopen","args":{"id":"Q9"},"at":"2026-10-17T10:32:31+03:30"}
+{"activity":"A827","sum":"Q10 answered Yes","op":"question.reopen","args":{"id":"Q10"},"at":"2026-10-17T10:32:49+03:30"}
+{"activity":"A828","sum":"R11.123 todo in R11","op":"backlog.remove","args":{"id":"R11.123","phase":"R11","phaseCreated":false},"at":"2026-10-17T10:32:55+03:30"}
+{"activity":"A829","sum":"Q11 answered some junk test texts","op":"question.reopen","args":{"id":"Q11"},"at":"2026-10-17T10:32:57+03:30"}
+{"activity":"A830","sum":"H250 set status, note","op":"head.restore","args":{"steps":[{"id":"H250","set":{"status":"open"}}]},"at":"2026-10-17T10:33:05+03:30"}
+{"activity":"A831","sum":"R11.124 todo in R11","op":"backlog.remove","args":{"id":"R11.124","phase":"R11","phaseCreated":false},"at":"2026-10-17T10:34:23+03:30"}
+{"activity":"A832","sum":"H253 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H253","set":{"kind":"ask","sum":"ui ux issue and i think core issue in here"},"link":["-task:R11.124"]}]},"at":"2026-10-17T10:34:24+03:30"}
+{"activity":"A833","sum":"R11.125 todo in R11","op":"backlog.remove","args":{"id":"R11.125","phase":"R11","phaseCreated":false},"at":"2026-10-17T10:34:40+03:30"}
+{"activity":"A834","sum":"H252 triaged as review","op":"head.restore","args":{"steps":[{"id":"H252","set":{"kind":"review","sum":"u need to check the badge icon on the side panel , good ui for new ones and .."},"link":["-task:R11.125"]}]},"at":"2026-10-17T10:34:41+03:30"}
+{"activity":"A835","sum":"H248 triaged as question","op":"head.restore","args":{"steps":[{"id":"H248","set":{"kind":"question","sum":"question : if i interact with helm dashaboard , the head will now that ?"},"link":["-task:R11.2"]}]},"at":"2026-10-17T10:34:54+03:30"}
+{"activity":"A836","sum":"H248 set status, note","op":"head.restore","args":{"steps":[{"id":"H248","set":{"status":"open"}}]},"at":"2026-10-17T10:34:54+03:30"}

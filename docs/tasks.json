@@ -49,7 +49,7 @@
     {
       "id": "R11",
       "name": "Helm v2: System, panel, Activity, Roadmap map, Tokens, head channel",
-      "status": "done"
+      "status": "partial"
     }
   ],
   "tasks": [
@@ -5059,6 +5059,104 @@
         "commit:06a50957d08a66575ea9ba0a2192c3f28a68f7c5",
         "commit:c246cdab9b89a30bc451ad3dfca1a8fdcb22a895"
       ]
+    },
+    {
+      "id": "R11.119",
+      "phase": "R11",
+      "title": "Apply shared collapsible toolbar (Filters disclosure) to every section with filters",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T10:23:24+03:30",
+        "done": "2026-10-17T10:30:30+03:30"
+      },
+      "refs": [
+        "commit:abbe364af64789bea588de961f29341e0e4057f4"
+      ]
+    },
+    {
+      "id": "R11.120",
+      "phase": "R11",
+      "title": "Roadmap map: align header row; zoom/Fit/Now/Full screen/Spacing inside the map box on one baseline",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:40b81ca312383a8bc0e905b5ad6d0457f1f1efdc",
+        "commit:e6f08eae887f2f05ae87a3f292010985c56082e0"
+      ],
+      "at": {
+        "done": "2026-10-17T10:26:55+03:30"
+      }
+    },
+    {
+      "id": "R11.121",
+      "phase": "R11",
+      "title": "Toolbar narrow width: row wraps, search min width, no horizontal scroll (+ verified agy audit fixes)",
+      "status": "todo",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R11.122",
+      "phase": "R11",
+      "title": "Live refresh flicker: open items (details/menus) flicker or close on UI update; fix root in shared render",
+      "status": "partial",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R11.123",
+      "phase": "R11",
+      "title": "System Classes: open all modules expanded by default (person answered Q10: Yes)",
+      "status": "todo",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R11.124",
+      "phase": "R11",
+      "title": "Overview Activity card shows NaN:NaN/change: adapt to new activityRowHtml(e, ctx) shape",
+      "status": "partial",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
+    },
+    {
+      "id": "R11.125",
+      "phase": "R11",
+      "title": "Side rail badges: show counts in collapsed rail, new-since-seen state, clear tones/legend; fix stale Agents count",
+      "status": "todo",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0
     }
   ],
   "schemaVersion": 1

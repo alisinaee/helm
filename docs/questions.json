@@ -12,10 +12,10 @@
       "def": null,
       "block": false,
       "timeoutS": null,
-      "status": "open",
-      "answer": null,
+      "status": "answered",
+      "answer": "withdrawn: test cleanup (H250)",
       "asked": "2026-10-16T12:14:56+03:30",
-      "answered": null
+      "answered": "2026-10-17T10:31:05+03:30"
     },
     {
       "id": "Q2",
@@ -45,10 +45,10 @@
       "def": null,
       "block": false,
       "timeoutS": null,
-      "status": "open",
-      "answer": null,
+      "status": "answered",
+      "answer": "withdrawn: test cleanup (H250)",
       "asked": "2026-10-16T12:14:56+03:30",
-      "answered": null
+      "answered": "2026-10-17T10:31:05+03:30"
     },
     {
       "id": "Q4",
@@ -130,6 +130,52 @@
       "answer": "Later",
       "asked": "2026-10-16T12:14:57+03:30",
       "answered": "2026-10-16T13:29:29+03:30"
+    },
+    {
+      "id": "Q9",
+      "task": "R11.2",
+      "text": "TEST H250: Which section should the next UI pass focus on?",
+      "opts": [
+        "Head",
+        "Inbox",
+        "Agents"
+      ],
+      "def": null,
+      "block": false,
+      "timeoutS": null,
+      "status": "answered",
+      "answer": "Head",
+      "asked": "2026-10-17T10:31:09+03:30",
+      "answered": "2026-10-17T10:32:31+03:30"
+    },
+    {
+      "id": "Q10",
+      "task": "R11.2",
+      "text": "TEST H250: Should the Classes diagram open all modules expanded by default?",
+      "opts": [
+        "Yes",
+        "No"
+      ],
+      "def": null,
+      "block": false,
+      "timeoutS": null,
+      "status": "answered",
+      "answer": "Yes",
+      "asked": "2026-10-17T10:31:09+03:30",
+      "answered": "2026-10-17T10:32:49+03:30"
+    },
+    {
+      "id": "Q11",
+      "task": "R11.2",
+      "text": "TEST H250: Free text: write any short note for the head (it should reply in chat).",
+      "opts": [],
+      "def": null,
+      "block": false,
+      "timeoutS": null,
+      "status": "answered",
+      "answer": "some junk test texts",
+      "asked": "2026-10-17T10:31:09+03:30",
+      "answered": "2026-10-17T10:32:57+03:30"
     }
   ],
   "schemaVersion": 1

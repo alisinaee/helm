@@ -8844,6 +8844,181 @@
         "cacheWrite": 33362,
         "model": "haiku"
       }
+    },
+    {
+      "id": "j1091",
+      "title": "haiku: R11.119 toolbar: Workflow + Roadmap",
+      "model": "haiku",
+      "task": "R11.119",
+      "status": "done",
+      "started": "2026-10-17T10:23:10+03:30",
+      "ended": "2026-10-17T10:25:54+03:30",
+      "tokens": {
+        "in": 52,
+        "out": 24484,
+        "cacheRead": 2297821,
+        "cacheWrite": 118953,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1092",
+      "title": "haiku: R11.119 toolbar: Work + Head + Planner",
+      "model": "haiku",
+      "task": "R11.119",
+      "status": "done",
+      "started": "2026-10-17T10:23:16+03:30",
+      "ended": "2026-10-17T10:30:06+03:30",
+      "tokens": {
+        "in": 116,
+        "out": 50440,
+        "cacheRead": 6916700,
+        "cacheWrite": 126589,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1093",
+      "title": "haiku: R11.119 toolbar: Activity Agents Inbox Rules",
+      "model": "haiku",
+      "task": "R11.119",
+      "status": "done",
+      "started": "2026-10-17T10:23:23+03:30",
+      "ended": "2026-10-17T10:26:29+03:30",
+      "tokens": {
+        "in": 52,
+        "out": 31691,
+        "cacheRead": 2596549,
+        "cacheWrite": 97968,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1094",
+      "title": "haiku: R11.120 Roadmap map header alignment",
+      "model": "haiku",
+      "task": "R11.120",
+      "status": "done",
+      "started": "2026-10-17T10:23:48+03:30",
+      "ended": "2026-10-17T10:24:48+03:30",
+      "tokens": {
+        "in": 20,
+        "out": 9534,
+        "cacheRead": 612012,
+        "cacheWrite": 43946,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1095",
+      "title": "haiku: R11.120 follow-up overlay covers header",
+      "model": "haiku",
+      "task": "R11.120",
+      "status": "done",
+      "started": "2026-10-17T10:26:01+03:30",
+      "ended": "2026-10-17T10:26:51+03:30",
+      "refs": [
+        "commit:40b81ca312383a8bc0e905b5ad6d0457f1f1efdc"
+      ]
+    },
+    {
+      "id": "j1096",
+      "title": "haiku: R11.120 follow-up",
+      "model": "haiku",
+      "task": "R11.120",
+      "status": "done",
+      "started": "2026-10-17T10:26:02+03:30",
+      "ended": "2026-10-17T10:26:32+03:30",
+      "tokens": {
+        "in": 38,
+        "out": 14492,
+        "cacheRead": 1247680,
+        "cacheWrite": 52399,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1097",
+      "title": "haiku: R11.119 follow-up toolbar wiring",
+      "model": "haiku",
+      "task": "R11.119",
+      "status": "done",
+      "started": "2026-10-17T10:26:06+03:30",
+      "ended": "2026-10-17T10:27:11+03:30"
+    },
+    {
+      "id": "j1098",
+      "title": "haiku: R11.119 follow-up",
+      "model": "haiku",
+      "task": "R11.119",
+      "status": "done",
+      "started": "2026-10-17T10:26:10+03:30",
+      "ended": "2026-10-17T10:26:39+03:30",
+      "tokens": {
+        "in": 66,
+        "out": 28622,
+        "cacheRead": 3038565,
+        "cacheWrite": 128778,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1099",
+      "title": "haiku: R11.119 follow-up",
+      "model": "haiku",
+      "task": "R11.119",
+      "status": "done",
+      "started": "2026-10-17T10:26:42+03:30",
+      "ended": "2026-10-17T10:27:07+03:30",
+      "tokens": {
+        "in": 80,
+        "out": 32261,
+        "cacheRead": 3824211,
+        "cacheWrite": 134597,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1100",
+      "title": "agy: R11.119 toolbar a11y/spec audit",
+      "model": "agy",
+      "task": "R11.119",
+      "status": "running",
+      "started": "2026-10-17T10:28:45+03:30",
+      "ended": null,
+      "refs": [
+        "commit:abbe364af64789bea588de961f29341e0e4057f4"
+      ]
+    },
+    {
+      "id": "j1101",
+      "title": "agy staffer: -file $D/agy-tb.txt --effort high 2>",
+      "model": "agy",
+      "task": "R11.119",
+      "status": "failed",
+      "started": "2026-10-17T10:28:45+03:30",
+      "ended": "2026-10-17T10:34:10+03:30",
+      "refs": [
+        "commit:abbe364af64789bea588de961f29341e0e4057f4"
+      ]
+    },
+    {
+      "id": "j1102",
+      "title": "agy: R11.122 flicker root cause",
+      "model": "agy",
+      "task": "R11.122",
+      "status": "running",
+      "started": "2026-10-17T10:32:34+03:30",
+      "ended": null
+    },
+    {
+      "id": "j1103",
+      "title": "haiku: R11.124 Overview Activity NaN fix",
+      "model": "haiku",
+      "task": "R11.124",
+      "status": "running",
+      "started": "2026-10-17T10:34:35+03:30",
+      "ended": null
     }
   ]
 }
