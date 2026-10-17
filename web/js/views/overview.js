@@ -9,6 +9,7 @@ import { copyButton, refSummary } from "../ref.js";
 import { homeView } from "./home.js";
 import { inboxHash, inboxPreviewHtml, itemHash, pageState, scopeSnapshots, watchCountdowns } from "./inbox.js";
 import { activityRowHtml } from "./activity.js";
+import { eventFromLine } from "./activity_data.js";
 import { kpiView } from "./kpi.js";
 import { runningSection } from "./running.js";
 import { extrasSection } from "./extras.js";
@@ -158,11 +159,23 @@ function blockersHtml(snap) {
     '<ul class="nz-list">' + tasks.concat(issues).join("") + "</ul>", { project: snap.id, count: count });
 }
 
+// The row markup and styles belong to the Activity page; the Overview card loads the same stylesheet once.
+function ensureActivityCss() {
+  if (typeof document === "undefined" || document.querySelector("link[data-hx-css]")) return;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = "/css/activity.css";
+  link.setAttribute("data-hx-css", "1");
+  document.head.appendChild(link);
+}
+
 function activityHtml(snap, now) {
   const lines = snap.activity.slice().reverse().slice(0, ACTIVITY_MAX);
+  ensureActivityCss();
+  const ctx = { pid: snap.id, now: now, sel: null, fresh: null, all: false };
   const body = lines.length
-    ? '<ol class="act-list">' + lines.map(function (line) {
-      return activityRowHtml(line, snap.id, snap.title, now, false);
+    ? '<ol class="act-list hx-list">' + lines.map(function (line) {
+      return activityRowHtml(eventFromLine(line, snap.id, snap.title), ctx);
     }).join("") + "</ol>"
     : '<p class="placeholder">No activity yet.</p>';
   return cardHtml("activity", "Activity", "", body, { project: snap.id, count: lines.length });
