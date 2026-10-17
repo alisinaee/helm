@@ -13,5 +13,6 @@ const bnavHead = nav.navView({ route: { section: "overview", name: "all" }, ui: 
 console.log(JSON.stringify({
   headCount: counts.head,
   navHasHead: bnavHead.indexOf('href="#/all/head"') >= 0,
-  navBadge: /data-tone="neutral">\d+<span class="sr-only"> open asks/.test(bnavHead),
+  navBadge: /data-tone="neutral"[^>]*><span aria-hidden="true">\d+<\/span><span class="sr-only">\d+ open asks/
+    .test(bnavHead),
 }));

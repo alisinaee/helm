@@ -64,7 +64,7 @@ class TokensSimpleRender(unittest.TestCase):
 
     def test_section_order_is_the_spec_order(self):
         html = self.out["project"]
-        order = ['aria-label="Usage now"', "Weekly stop", "Share per project", 'aria-label="At the limit"',
+        order = ['aria-label="Usage now"', 'aria-label="Usage stops"', "Share per project", 'aria-label="At the limit"',
                  "Spend"]
         positions = [html.index(name) for name in order]
         self.assertEqual(positions, sorted(positions))
@@ -83,7 +83,7 @@ class TokensSimpleRender(unittest.TestCase):
     def test_weekly_stop_and_share_come_from_limits(self):
         if not real_limits_exports():
             self.assertIn("STOP-MARK", self.out["project"])
-        self.assertIn("Weekly stop", self.out["project"])
+        self.assertIn('aria-label="Usage stops"', self.out["project"])  # R11.126: limits_v2.js
         self.assertIn("Share per project", self.out["project"])
 
     def test_one_sentence_about_the_limit(self):
@@ -139,19 +139,25 @@ class TokensSimpleRender(unittest.TestCase):
 
     def test_all_view_names_no_project_in_the_weekly_stop(self):
         # The All view has no project route: its weekly stop form and its top bar carry no slug.
-        self.assertIn('data-form="weekly" data-project=""', self.out["global"])
+        self.assertIn('aria-label="Usage stops"', self.out["global"])  # R11.126: account-wide cards carry no slug
+        self.assertNotIn('data-form="weekly"', self.out["global"])
         self.assertNotIn('data-project="splitnet"', self.out["topbarAll"])
         self.assertNotIn('data-project="alpha"', self.out["topbarAll"])
 
-    def test_top_bar_is_one_weekly_line(self):
-        self.assertIn('<span class="top-meters" title="5-hour unknown · usage is pushed by the head">'
-                      "Week 63% · stop 95%</span>", self.out["topbar"])
-        self.assertIn("Week 63% · stop 95%", self.out["topbarAll"])
-        self.assertNotIn("mini", self.out["topbar"])
+    def test_top_bar_shows_5h_and_week_mini_bars_with_the_stop_tick(self):
+        # R11.129: the weekly text line became two mini bars; the stop is the tick on each bar and the title.
+        top = self.out["topbar"]
+        self.assertIn('data-win="5h"', top)
+        self.assertIn('<span class="mini" data-win="w" title="Week 63%, stop at 95%', top)
+        self.assertIn('<span class="mini-tick" data-pct="95">', top)
+        self.assertIn('title="Week 63%, stop at 95%', self.out["topbarAll"])
 
     def test_top_bar_says_off_and_unknown_in_words(self):
-        self.assertIn("Week 12% · stop off", self.out["topbarOff"])
-        self.assertIn("Week unknown · stop unknown", self.out["topbarUnknown"])
+        # With no stop the title says "no stop" in words; an unknown week says "unknown" in the bar.
+        self.assertIn('title="Week 12%, no stop', self.out["topbarOff"])
+        self.assertNotIn("mini-tick", self.out["topbarOff"])
+        self.assertIn('<span class="mini is-unknown" data-win="w"', self.out["topbarUnknown"])
+        self.assertIn('<span class="mini-v">unknown</span>', self.out["topbarUnknown"])
 
 
 class TokensSimpleSource(unittest.TestCase):
@@ -164,12 +170,12 @@ class TokensSimpleSource(unittest.TestCase):
         self.assertNotIn("innerHTML", self.src)
         self.assertTrue(all(len(line) <= 120 for line in self.src.split("\n")))
 
-    def test_top_bar_source_is_short_lined_and_has_no_mini_meters(self):
+    def test_top_bar_source_is_short_lined_and_draws_mini_bars_without_innerhtml(self):
         with open(os.path.join(VIEWS, "topbar.js"), encoding="utf-8") as fh:
             top = fh.read()
         self.assertTrue(all(len(line) <= 120 for line in top.split("\n")))
         self.assertNotIn("innerHTML", top)
-        self.assertNotIn("miniHtml", top)
+        self.assertIn("function miniHtml(", top)  # R11.129: the 5h and W bars are drawn by one helper
 
     def test_keeps_the_route_export(self):
         self.assertIn("export function sectionView(vm)", self.src)

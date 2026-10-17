@@ -1,6 +1,7 @@
-// Top bar (WP28, R7.28 W1.d): the scope crumb (project name, section, view), the control pill with one Stop or Resume
-// button, one text line "Week 63% · stop 95%" (the weekly share from snap.usage and the weekly stop row), the
-// connection dot, the theme toggle and "?". The client does no limit maths; missing values read "unknown".
+// Top bar (WP28, R7.28 W1.d, R11.129): the scope crumb (project name, section, view), the control pill with one Stop or
+// Resume button, the 5h and W usage mini bars (stop tick, title with the share and the stop), the connection dot, the
+// theme toggle and "?". A stale reading shows its age and an Enter usage link. The client does no limit maths;
+// missing values read "unknown".
 
 import { csrfToken } from "../api.js";
 import { esc } from "../dom.js";
@@ -199,18 +200,23 @@ function miniHtml(vm, id, label, long, pct, stop, resets) {
 }
 
 // The usage widget: account chip (more than one account only), 5h and W mini bars, one link to Tokens > Limits.
+// Stale is the usage view's flag (the 90-minute rule): then the age is written out and Enter usage is offered. The
+// weekly share unknown (no reading, or no weekly figure) offers Enter usage too.
 function metersHtml(vm) {
   const u = vm.usage || null;
-  const stale = Boolean(u && (u.stale === true || (typeof u.ageNow === "number" && u.ageNow > 900)));
+  const stale = Boolean(u && u.stale === true);
   const accts = Array.isArray(vm.accounts) ? vm.accounts : [];
   const chip = accts.length > 1 ? '<span class="chip top-acct" title="Account">' +
     esc(String(accts[0].name || accts[0].id || "account").replace(/(.{2}).*(.{2})/, "$1…$2")) + "</span>" : "";
   const href = sectionHash(vm.route, "tokens") + "/limits";
+  const age = stale ? '<span class="top-age chip-warning">' + esc(ageText(Object.assign({}, u, { stale: true }))) +
+    "</span>" : "";
+  const enter = stale || !u || typeof u.weeklyPercent !== "number" ? enterHtml(vm) : "";
   return chip + '<a class="top-meters' + (stale ? " is-stale" : "") + '" href="' + esc(href) +
     '" data-focus="usage" aria-label="Usage and limits">' +
     miniHtml(vm, "5h", "5h", "5 hours", u ? u.fiveHourPercent : null, stopFor(vm, "five"), u && u.fiveHourResetsAt) +
     miniHtml(vm, "w", "W", "Week", u ? u.weeklyPercent : null, stopFor(vm, "week"), u && u.weeklyResetsAt) +
-    (stale ? '<span class="dot top-stale" aria-hidden="true"></span>' : "") + "</a>";
+    (stale ? '<span class="dot top-stale" aria-hidden="true"></span>' : "") + "</a>" + age + enter;
 }
 
 function connHtml(conn) {

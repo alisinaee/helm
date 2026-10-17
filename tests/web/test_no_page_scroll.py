@@ -9,6 +9,8 @@ import os
 import re
 import unittest
 
+from tests.web.test_shell import SHELL_CSS_MAX
+
 TESTS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPO = os.path.dirname(TESTS)
 CSS = os.path.join(REPO, "web", "css")
@@ -63,7 +65,8 @@ class NoPageScrollTests(unittest.TestCase):
         self.assertIn(".hd-list{flex:1 1 auto;min-height:0;min-width:0;overflow:auto}", head)
 
     def test_shell_css_stays_under_cap(self):
-        self.assertLessEqual(len(self.shell.encode("utf-8")), 8 * 1024)
+        # The same cap as test_shell (SHELL_CSS_MAX), so the two tests cannot disagree again.
+        self.assertLessEqual(len(self.shell.encode("utf-8")), SHELL_CSS_MAX)
 
 
 if __name__ == "__main__":

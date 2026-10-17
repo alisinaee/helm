@@ -61,7 +61,7 @@ class HeadBadgeAndChip(unittest.TestCase):
     def test_nav_counts_open_asks_from_the_snapshot_head_key(self):
         nav = read(os.path.join(WEB, "js", "views", "nav.js"))
         self.assertIn("snap.head.counts.unhandled", nav)
-        self.assertIn('section.id === "head" && counts.head > 0', nav)
+        self.assertIn('head: { key: "head", tone: "neutral", word: "open asks" }', nav)  # R11.125: generic badge
         self.assertNotIn("innerHTML", nav)
 
     def test_overview_chip_links_to_the_unhandled_filter(self):
@@ -87,7 +87,7 @@ class HeadBadgeAndChip(unittest.TestCase):
         out = json.loads(proc.stdout)
         self.assertEqual(out["headCount"], 5)
         self.assertTrue(out["navHasHead"])
-        self.assertTrue(out["navBadge"])
+        self.assertTrue(out["navBadge"])  # the count reads as a number with an "open asks" screen-reader label
 
 
 class HeadRender(unittest.TestCase):
