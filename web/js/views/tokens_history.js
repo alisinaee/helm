@@ -353,7 +353,7 @@ function xTicks(slots) {
 // action connect | disconnect | switch | check | login (login opens Terminal; the person finishes it in the browser).
 // Login and logout run the existing CLI flow; the page never sees a password or token. E-mails are masked on the
 // phone listener only (it may be reached over a tunnel); the main listener shows the full address.
-const acct = { data: null, at: 0, loading: false, error: false, busy: "", note: "", adding: false };
+const acct = { data: null, at: 0, loading: false, error: false, busy: "", note: "", adding: false, advanced: false };
 
 function loadAccounts() {
   if (acct.loading || typeof fetch === "undefined") return;
@@ -435,15 +435,25 @@ export function acctPanelHtml() {
     '<p class="page-note" role="status">' + esc(acct.note || acct.data.note || "") + "</p>";
 }
 
+function acctSlug(label) {
+  return label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
 function acctAddForm() {
   if (!acct.adding) {
     return '<p><button type="button" class="btn" data-tk="acct" data-act="add-open">+ Add account</button></p>';
   }
-  return '<form class="tk-acct-add" data-act="add-form">' +
-    '<label>Label <input type="text" name="label" required></label> ' +
+  const slug = acctSlug(acct.lastLabel || "");
+  const defaultPath = slug ? "~/.claude-" + slug : "";
+  const advanced = acct.advanced ?
     '<label>Type <select name="source"><option value="config-dir">Config dir</option>' +
     '<option value="credentials-file">Credentials file</option></select></label> ' +
-    '<label>Path <input type="text" name="path" placeholder="~/.claude-work" required></label> ' +
+    '<label>Path <input type="text" name="path" placeholder="~/.claude-work" value="' +
+    esc(defaultPath) + '" required></label> ' :
+    '<p><button type="button" class="btn" data-tk="acct" data-act="advanced-toggle">Advanced</button></p>';
+  return '<form class="tk-acct-add" data-act="add-form">' +
+    '<label>Label <input type="text" name="label" required value="' + esc(acct.lastLabel || "") + '"></label> ' +
+    advanced +
     '<button type="submit" class="btn">Add</button> ' +
     '<button type="button" class="btn" data-tk="acct" data-act="add-cancel">Cancel</button></form>';
 }
@@ -452,15 +462,26 @@ function acctAdd(form) {
   if (acct.busy) return;
   const f = form.elements;
   const label = f.label.value.trim();
-  const id = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const id = acctSlug(label);
+  const source = acct.advanced && f.source ? f.source.value : "config-dir";
+  const path = acct.advanced && f.path ? f.path.value.trim() : "~/.claude-" + id;
+  acct.lastLabel = label;
   acct.busy = "add";
-  const payload = {id: id, label: label, source: f.source.value, path: f.path.value.trim()};
+  const payload = {id: id, label: label, source: source, path: path};
   postJson("/api/v1/usage/accounts", payload)
     .then(function () {
       acct.adding = false;
+      acct.advanced = false;
+      acct.lastLabel = "";
       acct.note = "Done: added " + label + ".";
     }).catch(function (err) {
-      acct.note = "Failed: " + (err && err.message ? err.message : "add");
+      const msg = err && err.message ? err.message : "add";
+      if (!acct.advanced && source === "config-dir" && /does not exist/.test(msg)) {
+        acct.note = "Added nothing yet: run this in a terminal, then click Add again: " +
+          "CLAUDE_CONFIG_DIR=" + path + " claude auth login";
+      } else {
+        acct.note = "Failed: " + msg;
+      }
     }).finally(function () {
       acct.busy = "";
       acct.at = 0;
@@ -473,6 +494,16 @@ function acctAction(el) {
   const id = el.getAttribute("data-id");
   if (act === "add-open" || act === "add-cancel") {
     acct.adding = act === "add-open";
+    acct.advanced = false;
+    acct.lastLabel = "";
+    rerender();
+    return;
+  }
+  if (act === "advanced-toggle") {
+    const form = el.closest("form");
+    const labelEl = form && form.elements ? form.elements.label : null;
+    acct.lastLabel = labelEl ? labelEl.value : "";
+    acct.advanced = true;
     rerender();
     return;
   }
