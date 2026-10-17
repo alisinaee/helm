@@ -56,7 +56,7 @@ class ActivityRowsTest(unittest.TestCase):
 
     def test_undo_sits_in_one_fixed_column(self):
         flow = read(CSS, "flow.css")
-        self.assertIn(".act-list > .act-row.row-grid { grid-template-columns: 3.25rem minmax(0, 1fr) auto 1.75rem;", flow)
+        self.assertIn(".act-list > .act-row.row-grid { grid-template-columns: 3rem auto minmax(0, 1fr) 1.75rem;", flow)
         self.assertIn(".act-undo { display: inline-grid; place-items: center; width: 28px; height: 28px;", flow)
 
 
