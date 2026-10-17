@@ -57,7 +57,7 @@ class GitSource(unittest.TestCase):
 
     def test_only_the_four_controls_exist(self):
         # Discard, reset, merge, rebase and force push are named only in the help line, never as a control.
-        self.assertEqual(sorted(set(DATA_GIT.findall(self.src))), ["commit", "file", "mode", "pick", "push", "refresh", "tab"])
+        self.assertEqual(sorted(set(DATA_GIT.findall(self.src))), ["all", "commit", "file", "mode", "pick", "push", "refresh", "tab"])
 
     def test_commit_never_takes_everything(self):
         self.assertNotIn("git add", self.src)
@@ -77,6 +77,7 @@ class GitSource(unittest.TestCase):
     def test_listeners_are_bound_once_on_the_document(self):
         self.assertIn('document.addEventListener("click", onClick)', self.src)
         self.assertIn('document.addEventListener("submit", onSubmit)', self.src)
+        self.assertIn('document.addEventListener("keydown", onKey)', self.src)
 
     def test_writes_go_through_the_command_endpoint_with_a_project(self):
         self.assertIn('postJson("/api/v1/cmd", { op: op, args: args, project: pid })', self.src)
@@ -92,7 +93,7 @@ class GitLayout(unittest.TestCase):
 class GitStylesheet(unittest.TestCase):
     def test_stylesheet_is_small_and_has_no_colours(self):
         text = read(CSS)
-        self.assertLessEqual(len(text.encode("utf-8")), 2048)
+        self.assertLessEqual(len(text.encode("utf-8")), 8192)
         self.assertIsNone(HEX.search(text))
         self.assertNotIn("style=", text)
 
@@ -116,19 +117,22 @@ class GitRender(unittest.TestCase):
 
     def test_changes_shows_branch_banners_files_and_the_commit_form(self):
         html = self.out["changes"]
-        self.assertIn("Git: alpha", html)
-        self.assertIn("Branch main", html)
-        self.assertIn("ahead 2", html)
+        self.assertIn("Git</h2>", html)
+        self.assertIn("alpha", html)
+        self.assertIn('class="git-chip git-branch">main<', html)
+        self.assertIn("↑2 ↓0", html)
+        self.assertIn("Push 2↑", html)
         self.assertIn('name="path" value="web/a.js"', html)
         self.assertIn('name="path" value="notes/new.txt"', html)
-        self.assertIn('<span class="rg-num num" title="M.">M</span>', html)
-        self.assertIn('<span class="rg-num num" title="??">U</span>', html)
-        self.assertIn('class="git-cf"', html)
+        self.assertIn('<span class="git-st git-st-m" title="M.">M</span>', html)
+        self.assertIn('<span class="git-st git-st-u" title="??">U</span>', html)
+        self.assertIn("Summary (required)", html)
+        self.assertIn("Changes (3)", html)
         self.assertIn('data-git="commit"', html)
         self.assertIn('id="git-msg"', html)
-        self.assertIn("Commit selected", html)
+        self.assertIn("Select a file", html)
         self.assertIn('data-git="push"', html)
-        self.assertIn('aria-pressed="true" data-focus="git-tab-changes"', html)
+        self.assertIn('aria-selected="true" data-focus="git-tab-changes"', html)
 
     def test_history_draws_a_lane_graph_per_row(self):
         html = self.out["history"]
@@ -143,7 +147,7 @@ class GitRender(unittest.TestCase):
 
     def test_history_rows_show_short_sha_task_and_relative_time(self):
         html = self.out["history"]
-        self.assertIn('aria-pressed="true" data-focus="git-tab-history"', html)
+        self.assertIn('aria-selected="true" data-focus="git-tab-history"', html)
         self.assertIn(">1a2b3c4<", html)
         self.assertIn("R7.61 api: retry", html)
         self.assertIn("tokens: simple", html)

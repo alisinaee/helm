@@ -19,7 +19,7 @@ SKIP = {"tokens.js", "topbar.js", "limits.js", "head.js"}
 ALLOWED = {
     ("board.js", 286): "task state word from a fixed table",
     ("board.js", 346): "task state word from a fixed table",
-    ("git.js", 387): "git tab name from a fixed list",
+    ("git.js", 462): "git tab name from a fixed list",
     ("settings.js", 50): "option label from a fixed list",
     ("workflow.js", 872): "control text passed by fixed callers",
     ("details.js", 394): "the user's own answer option, full text, aria-label names the question",
