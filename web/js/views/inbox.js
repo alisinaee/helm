@@ -372,7 +372,9 @@ function askBody(item) {
     '<input name="note" required autocomplete="off" placeholder="Your answer" aria-label="' +
     esc("Your answer to " + id) + '"><button type="submit" class="btn btn-primary">Answer</button>' +
     '<a class="btn btn-ghost ib-link" href="' + esc(headHash(pid, id)) + '" aria-label="' +
-    esc("Open " + id + " in Head") + '">Open in Head</a></form>';
+    esc("Open " + id + " in Head") + '">Open in Head</a>' +
+    '<button type="button" class="btn btn-ghost ib-link" data-action="head-dismiss" data-project="' + esc(pid) +
+    '" data-id="' + esc(id) + '" aria-label="' + esc("Dismiss " + id) + '">Dismiss</button></form>';
 }
 
 // The expanded rule proposal: the Head ids it came from, then one form line: the rule text (rules.accept), Edit and
@@ -596,7 +598,23 @@ export function pageAction(action, el) {
     ruleOp("rules.accept", el, {});
   } else if (action === "rule-reject") {
     ruleOp("rules.reject", el, {});
+  } else if (action === "head-dismiss") {
+    headDismiss(el);
   }
+}
+
+// Decline a Head ask without answering it (head.set status=declined). Asks for a confirm first, since it changes
+// ledger state.
+function headDismiss(el) {
+  if (!window.confirm("Dismiss this? It won't need an answer.")) return;
+  const pid = el.getAttribute("data-project");
+  const id = el.getAttribute("data-id");
+  run("head.set", { id: id, status: "declined", note: "declined from Inbox" }, {
+    project: pid,
+    key: headAskKey(pid, id),
+    label: id + " dismissed",
+  });
+  leaveItem(el, id + " dismissed");
 }
 
 // Accept or reject a rule proposal (person-only ops): the proposal id comes from the element's data-id.

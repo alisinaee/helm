@@ -536,7 +536,7 @@ function onClick(event) {
   } else if (action === "section-retry") {
     retrySection(el.getAttribute("data-section"));
   } else if (action === "inbox-answer" || action === "undo-line" || action === "override" ||
-    action === "rule-accept" || action === "rule-reject") {
+    action === "rule-accept" || action === "rule-reject" || action === "head-dismiss") {
     pageAction(action, el);
   } else if (limitAction(action, el) || ruleAction(action, el) || settingsAction(action, el)) {
     render();
