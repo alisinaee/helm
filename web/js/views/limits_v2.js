@@ -115,7 +115,7 @@ function cardHtml(w, rec, vm) {
     return '<button type="button" data-lv="mode" data-win="' + w + '" data-value="' + m + '" aria-pressed="' +
       (rec.mode === m) + '">' + MODE_WORDS[m] + "</button>";
   }).join("");
-  const sw = '<button type="button" class="btn" role="switch" data-lv="on" data-win="' + w + '" aria-checked="' +
+  const sw = '<button type="button" class="btn sw" role="switch" data-lv="on" data-win="' + w + '" aria-checked="' +
     rec.on + '" aria-label="' + (rec.on ? win.switchOn : win.switchOff) + '">' + (rec.on ? "On" : "Off") +
     "</button>";
   const min = rec.mode === "budget" ? Math.min(100, Math.round(rec.base) + 1) : 1;
