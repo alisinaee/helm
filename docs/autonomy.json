@@ -9,11 +9,11 @@
     "fiveHourStopAtPercent": 80
   },
   "usage": {
-    "weeklyPercent": 25,
-    "fiveHourPercent": 89,
-    "weeklyResetsAt": "2026-10-23T08:00:00.427863+00:00",
-    "fiveHourResetsAt": "2026-10-17T10:20:00.427841+00:00",
-    "updated": "2026-10-17T12:49:09+03:30",
+    "weeklyPercent": 29,
+    "fiveHourPercent": 2,
+    "weeklyResetsAt": "2026-10-19T06:00:00.049879+00:00",
+    "fiveHourResetsAt": "2026-10-17T14:20:00.049860+00:00",
+    "updated": "2026-10-17T13:01:15+03:30",
     "source": "Anthropic usage endpoint"
   }
 }
