@@ -872,6 +872,18 @@ function ctlHtml(label, op, text, pressed) {
     '"' + press + ">" + esc(text) + "</button>";
 }
 
+// The spacing buttons: − and + step the factor, double-click on the value puts it back to 1.
+function spaceHtml(value) {
+  return '<span class="seg wfg-space" role="group" aria-label="Spacing"><span class="wfg-chips-lbl">Spacing</span>' +
+    '<button type="button" class="btn btn-small" data-wf-space="-1" aria-label="Less space">−</button>' +
+    '<span class="num" data-wf-space="reset" title="Double-click to reset">' + spaceText(value) + "</span>" +
+    '<button type="button" class="btn btn-small" data-wf-space="1" aria-label="More space">+</button></span>';
+}
+
+function spaceText(v) {
+  return Number(v).toFixed(1) + "×";
+}
+
 function frameOf(id) {
   const frames = activeMap && activeMap.flow ? activeMap.flow.frames || [] : [];
   return frames.find(function (f) {
@@ -948,7 +960,9 @@ function mapSvg(kit, ctx) {
   const graph = filtered ? kit.model.buildGraph(ctx.raw, { status: mapList(opts.st), agent: mapList(opts.ag),
     phase: mapList(opts.ph), expand: true }) : all;
   const matched = countOf(graph);
-  const flow = kit.layout.flowLayout(graph, { expandAll: showAll, open: folds.open, close: folds.shut });
+  const spacing = kit.layout.readSpacing(SPACE_KEY);
+  const flowOpts = { expandAll: showAll, open: folds.open, close: folds.shut, spacing: spacing };
+  const flow = kit.layout.flowLayout(graph, flowOpts);
   const shown = graph.nodes.filter(function (n) {
     return n.type !== "phase" && flow.boxes[n.id];
   }).length;
@@ -986,7 +1000,7 @@ function mapSvg(kit, ctx) {
   }).join("") + "</nav>" : "";
   const ctl = '<div class="wfg-ctl" role="toolbar" aria-label="Diagram controls">' +
     ctlHtml("Zoom out", "out", "−") + ctlHtml("Zoom in", "in", "+") + ctlHtml("Fit to screen", "fit", "Fit") +
-    ctlHtml("Centre on Now (N)", "now", "Now") + ctlHtml("Go to Start (S)", "start", "Start") +
+    spaceHtml(spacing) + ctlHtml("Centre on Now (N)", "now", "Now") + ctlHtml("Go to Start (S)", "start", "Start") +
     ctlHtml("Actual size", "actual", "100%") + ctlHtml("Show all phases", "all", "Show all", showAll) +
     ctlHtml("Clear focus", "focus-off", "Reset focus") +
     '<a class="btn btn-small" href="' + esc(fullHash(ctx.pid)) +
@@ -995,8 +1009,8 @@ function mapSvg(kit, ctx) {
   // Focus mode lasts while its node's Details is open: Escape goes back to Projects (panel.js), which drops it here.
   st.focus = route.item ? st.focus : null;
   if (activeMap && activeMap.focus !== st.focus) syncFocus(ctx.pid, st.focus, graph);
-  pendingMap = { graph: graph, flow: flow, lay: flow, pid: ctx.pid, focus: st.focus, view: st.view, rev: ctx.stamp,
-    taps: st.taps,
+  pendingMap = { graph: graph, flow: flow, lay: flow, pid: ctx.pid, focus: st.focus, view: st.view,
+    rev: (ctx.stamp || "") + "~" + spacing, stamp: ctx.stamp, flowOpts: flowOpts, taps: st.taps,
     onTap: function (node) {
       const fold = node.getAttribute("data-wf-fold");
       if (fold) {
@@ -1021,7 +1035,7 @@ function mapSvg(kit, ctx) {
       mapStateFor(ctx.pid).view = v;
     } };
   return count + filters + note + crumbs + '<div class="wfg-stage">' + ctl +
-    '<div class="wfg-host" data-wf-map-host data-wf-rev="' + esc(ctx.stamp || "") + '"></div></div>';
+    '<div class="wfg-host" data-wf-map-host data-wf-rev="' + esc(pendingMap.rev) + '"></div></div>';
 }
 
 // Opens the map centred on Now, fitted to its height but never below OPEN_K (so the card titles stay readable). Later
@@ -1055,7 +1069,7 @@ function mountMaps() {
   const view = opening ? undefined : store.view;
   const api = graphKit.render.mountMap(host, Object.assign({}, st, { fit: false, view: view }));
   activeMap = { pid: st.pid, api: api, graph: st.graph, flow: st.flow, svg: host.querySelector("svg"),
-    focus: st.focus, fold: null, mini: null };
+    focus: st.focus, fold: null, mini: null, st: st };
   if (opening) openAtNow(api, st.flow);
   host.addEventListener("pointerdown", function (e) {
     const fold = closestEl(e.target, "[data-wf-fold]");
@@ -1065,6 +1079,39 @@ function mountMaps() {
     if (activeMap) activeMap.fold = null;
   });
   if (!narrow()) activeMap.mini = graphKit.minimap.mountMinimap(host.parentNode, { flow: st.flow, viewport: api });
+}
+
+// The spacing factor of the Map (R11.115) is kept in localStorage; the Map re-lays out and keeps its centre.
+const SPACE_KEY = "rb.space.workflow";
+
+// The spacing factor changes: the Map re-lays out (the same flow point stays in the middle, at the same zoom).
+function respace(next, viaKey) {
+  if (!activeMap || !graphKit) return;
+  const kit = graphKit;
+  const value = kit.layout.spacingOf(next);
+  if (value === kit.layout.readSpacing(SPACE_KEY)) return;
+  const a = activeMap;
+  const size = a.api.size();
+  const v = a.api.view();
+  const c = { x: (size.w / 2 - v.x) / v.k, y: (size.h / 2 - v.y) / v.k };
+  const oldW = a.st.flow.width || 1;
+  const oldH = a.st.flow.height || 1;
+  kit.layout.writeSpacing(SPACE_KEY, value);
+  const flow = kit.layout.flowLayout(a.st.graph, Object.assign({}, a.st.flowOpts, { spacing: value }));
+  mapStateFor(a.pid).view = { k: v.k, x: v.x, y: v.y };
+  pendingMap = Object.assign({}, a.st, { lay: flow, flow: flow, rev: (a.st.stamp || "") + "~" + value });
+  mountMaps();
+  if (!activeMap) return;
+  activeMap.api.centerOn({ x: c.x * flow.width / oldW, y: c.y * flow.height / oldH }, true);
+  const val = document.querySelector("[data-wf-space='reset']");
+  if (val) val.textContent = spaceText(value);
+  if (viaKey) activeMap.svg.focus({ preventScroll: true });
+}
+
+// One step of the spacing factor from the buttons or the [ and ] keys.
+function spaceStep(dir, viaKey) {
+  if (!activeMap || !graphKit) return;
+  respace(graphKit.layout.stepSpacing(graphKit.layout.readSpacing(SPACE_KEY), dir), viaKey);
 }
 
 function mapBody(route, raw, range, stamp) {
@@ -1323,6 +1370,11 @@ function onClick(e) {
     mapOp(mop.getAttribute("data-wf-map-op"));
     return;
   }
+  const space = closestEl(e.target, "[data-wf-space]");
+  if (space && space.getAttribute("data-wf-space") !== "reset") {
+    spaceStep(Number(space.getAttribute("data-wf-space")), false);
+    return;
+  }
   const crumb = closestEl(e.target, "[data-wf-frame]");
   if (crumb) {
     centerFrame(crumb.getAttribute("data-wf-frame"));
@@ -1371,6 +1423,10 @@ function neighbour(el, key, view) {
   return best;
 }
 
+function onDbl(e) {
+  if (closestEl(e.target, "[data-wf-space='reset']")) respace(1, false);
+}
+
 function onKey(e) {
   // N and S centre the Map on Now and Start from anywhere in the view, except the diagram (its viewport handles them).
   const typing = e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName || "");
@@ -1378,6 +1434,12 @@ function onKey(e) {
     /^[nNsS]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
     e.preventDefault();
     mapOp(e.key === "n" || e.key === "N" ? "now" : "start");
+    return;
+  }
+  if ((e.key === "[" || e.key === "]") && activeMap && lastModel && lastModel.view === "map" && !typing &&
+    closestEl(e.target, ".wfg-stage")) {
+    e.preventDefault();
+    spaceStep(e.key === "]" ? 1 : -1, true);
     return;
   }
   const fold = closestEl(e.target, "[data-wf-fold]");
@@ -1423,6 +1485,7 @@ export function bind(el) {
   if (!el || bound.has(el)) return;
   bound.add(el);
   el.addEventListener("click", onClick);
+  el.addEventListener("dblclick", onDbl);
   el.addEventListener("focusin", select);
   el.addEventListener("pointerover", select);
   el.addEventListener("keydown", onKey);

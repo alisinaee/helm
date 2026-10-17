@@ -12,8 +12,9 @@ import { chipHtml, esc, setHtml } from "../dom.js";
 import { fmtCount, fmtTokens } from "../format.js";
 import { refOf, refSummary } from "../ref.js";
 import { buildHash, currentRoute } from "../router.js";
-import { mountViewport } from "../graph/viewport.js";
+import { mountViewport, flowCentre } from "../graph/viewport.js";
 import { roadmapLayout, STATUSES } from "../graph/roadmap_layout.js";
+import { readSpacing, spacingOf, stepSpacing, writeSpacing } from "../graph/layout.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const CSS_HREF = "/css/roadmap_map.css";
@@ -24,10 +25,14 @@ const FILTER_WORD = { all: "All", open: "Open", doing: "Doing", blocked: "Blocke
 const TITLE_CHARS = 27;
 const NAME_CHARS = 22;
 
-const ui = { status: "all", model: "", open: {}, showDone: {}, full: false };
+// The spacing factor (R11.115) is kept for this map in localStorage; the view keeps its centre across a change.
+const SPACE_KEY = "rb.space.roadmap";
+const ui = { status: "all", model: "", open: {}, showDone: {}, full: false, spacing: readSpacing(SPACE_KEY) };
 const store = new Map();
 const deps = new Map();
 let pending = null;
+let recentre = null;
+let focusNext = false;
 let active = null;
 let menu = null;
 let cssLoaded = false;
@@ -123,12 +128,22 @@ function toolbarHtml(snap) {
     return '<button type="button" class="btn btn-small" data-rmm-op="' + op + '" aria-label="' + label + '" title="' +
       label + '">' + text + "</button>";
   };
+  const space = '<div class="seg" role="group" aria-label="Spacing"><span class="rmm-lbl">Spacing</span>' +
+    '<button type="button" class="btn btn-small" data-rmm-space="-1" aria-label="Less space" title="Less space ([)">' +
+    "−</button>" + '<span class="num" data-rmm-space="reset" title="Double-click to reset">' +
+    spaceText(ui.spacing) + "</span>" +
+    '<button type="button" class="btn btn-small" data-rmm-space="1" aria-label="More space" title="More space (])">' +
+    "+</button></div>";
   return '<div class="rmm-bar"><div class="seg" role="group" aria-label="Filter by status">' + seg + "</div>" +
     '<label class="rmm-model"><span class="rmm-lbl">Model</span><select class="rmm-select" data-rmm-model' +
     ' aria-label="Filter by model">' + opts + "</select></label>" +
     '<div class="rmm-ctl" role="group" aria-label="Map view">' + ctl("out", "Zoom out", "−") +
     ctl("in", "Zoom in", "+") + ctl("fit", "Fit to screen", "Fit") + ctl("now", "Centre on Now", "Now") +
-    ctl("full", fullWord(), fullWord()) + "</div></div>";
+    ctl("full", fullWord(), fullWord()) + "</div>" + space + "</div>";
+}
+
+function spaceText(v) {
+  return spacingOf(v).toFixed(1) + "×";
 }
 
 function fullWord() {
@@ -154,7 +169,7 @@ export function mapView(vm, snap, head) {
   const pid = vm.route.id;
   const running = runningIds(snap);
   const lay = roadmapLayout(snap, { status: ui.status, model: ui.model, open: ui.open, showDone: ui.showDone,
-    deps: depsOf(pid), running: running, blocked: snap.blocked || [] });
+    deps: depsOf(pid), running: running, blocked: snap.blocked || [], spacing: ui.spacing });
   const rev = stamp(lay);
   const tasks = {};
   (snap.tasks || []).forEach(function (t) {
@@ -325,10 +340,22 @@ function mount() {
     },
   });
   active = { host: host, svg: built.svg, api: api, rev: st.rev, st: st };
-  if (!saved) openAtNow(api, st.lay);
+  if (recentre) {
+    // A spacing change: the same part of the diagram stays in the middle of the screen, at the same zoom.
+    const sx = st.lay.width / (recentre.w || 1);
+    const sy = st.lay.height / (recentre.h || 1);
+    api.centerOn({ x: recentre.x * sx, y: recentre.y * sy }, true);
+    recentre = null;
+  } else if (!saved) {
+    openAtNow(api, st.lay);
+  }
   built.svg.addEventListener("keydown", onSvgKey);
   built.svg.addEventListener("contextmenu", onContext);
   select(built.svg, st.item);
+  if (focusNext) {
+    focusNext = false;
+    built.svg.focus({ preventScroll: true });
+  }
   if (focusKey) {
     const again = built.svg.querySelector('[data-wf-item="' + cssEsc(focusKey) + '"]');
     if (again) again.focus({ preventScroll: true });
@@ -348,6 +375,24 @@ function openAtNow(api, lay) {
 
 function rerender() {
   window.dispatchEvent(new Event("hashchange"));
+}
+
+// One step of the spacing factor (dir -1 or 1), or the value itself. The map re-lays out and keeps its centre.
+function changeSpacing(dir) {
+  setSpacing(stepSpacing(ui.spacing, dir));
+}
+
+function setSpacing(v) {
+  const next = spacingOf(v);
+  if (next === ui.spacing) return;
+  if (active) {
+    recentre = Object.assign(flowCentre(active.api.view(), active.api.size()),
+      { w: active.st.lay.width, h: active.st.lay.height });
+  }
+  ui.spacing = next;
+  writeSpacing(SPACE_KEY, next);
+  focusNext = true;
+  rerender();
 }
 
 // A tap, or Enter, on a map item: a card opens its details; a station or a stub folds or opens in place.
@@ -427,7 +472,10 @@ function syncAside() {
 
 function onSvgKey(e) {
   const node = e.target && e.target.closest ? e.target.closest("[data-wf-item]") : null;
-  if ((e.key === "Enter" || e.key === " ") && node) {
+  if (e.key === "[" || e.key === "]") {
+    e.preventDefault();
+    changeSpacing(e.key === "]" ? 1 : -1);
+  } else if ((e.key === "Enter" || e.key === " ") && node) {
     e.preventDefault();
     activate(node);
   } else if ((e.key === "ContextMenu" || (e.key === "F10" && e.shiftKey)) && node) {
@@ -567,6 +615,11 @@ function onClick(e) {
     rerender();
     return;
   }
+  const sp = t.closest("[data-rmm-space]");
+  if (sp && sp.getAttribute("data-rmm-space") !== "reset") {
+    changeSpacing(Number(sp.getAttribute("data-rmm-space")));
+    return;
+  }
   const op = t.closest("[data-rmm-op]");
   if (op && active) {
     const o = op.getAttribute("data-rmm-op");
@@ -583,6 +636,12 @@ function onClick(e) {
   } else if (t.closest("[data-rmm-exit]") && fullEl()) {
     exitFull();
   }
+}
+
+// Double-click on the value puts the spacing back to 1.
+function onDbl(e) {
+  const t = e.target;
+  if (t && t.closest && t.closest('[data-rmm-space="reset"]')) setSpacing(1);
 }
 
 function onChange(e) {
@@ -619,6 +678,7 @@ function wire() {
   wired = true;
   document.addEventListener("click", onClick);
   document.addEventListener("change", onChange);
+  document.addEventListener("dblclick", onDbl);
   document.addEventListener("keydown", onMenuKey, true);
   document.addEventListener("fullscreenchange", onFullChange);
 }
