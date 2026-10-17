@@ -1,38 +1,3 @@
-{"activity":"A248","sum":"H113 set status, note","op":"head.restore","args":{"steps":[{"id":"H113","set":{"status":"open"}}]},"at":"2026-10-15T15:23:27+03:30"}
-{"activity":"A249","sum":"H114 triaged as question","op":"head.restore","args":{"steps":[{"id":"H114","set":{"kind":"question","sum":"did you figure out about core and panel sync feature ?"},"link":["-task:R7.50"]}]},"at":"2026-10-15T15:24:14+03:30"}
-{"activity":"A250","sum":"H115 triaged as review","op":"head.restore","args":{"steps":[{"id":"H115","set":{"kind":"review","sum":"did u review the head items and why some items missing ?"},"link":["-task:R7.44"]}]},"at":"2026-10-15T15:25:08+03:30"}
-{"activity":"A251","sum":"R7.54 todo->done","op":"task.status","args":{"id":"R7.54","status":"todo"},"at":"2026-10-15T15:25:56+03:30"}
-{"activity":"A252","sum":"H117 triaged as review","op":"head.restore","args":{"steps":[{"id":"H117","set":{"kind":"review","sum":"the current running task why are so few ?"},"link":["-task:R7.21"]}]},"at":"2026-10-15T15:27:19+03:30"}
-{"activity":"A253","sum":"H118 bound task:R7.57","op":"head.restore","args":{"steps":[{"id":"H118","link":["-task:R7.57"]}]},"at":"2026-10-15T15:28:49+03:30"}
-{"activity":"A254","sum":"H119 bound task:R7.59","op":"head.restore","args":{"steps":[{"id":"H119","link":["-task:R7.59"]}]},"at":"2026-10-15T15:29:33+03:30"}
-{"activity":"A256","sum":"H114 set status, note","op":"head.restore","args":{"steps":[{"id":"H114","set":{"status":"open"}}]},"at":"2026-10-15T15:29:55+03:30"}
-{"activity":"A257","sum":"H115 set status, note","op":"head.restore","args":{"steps":[{"id":"H115","set":{"status":"open"}}]},"at":"2026-10-15T15:29:55+03:30"}
-{"activity":"A258","sum":"H116 triaged as review","op":"head.restore","args":{"steps":[{"id":"H116","set":{"kind":"review","sum":"bring all the head items back !"},"link":["-task:R7.44"]}]},"at":"2026-10-15T15:29:55+03:30"}
-{"activity":"A259","sum":"H116 set status, note","op":"head.restore","args":{"steps":[{"id":"H116","set":{"status":"open"}}]},"at":"2026-10-15T15:29:56+03:30"}
-{"activity":"A260","sum":"R7.57 todo->done","op":"task.status","args":{"id":"R7.57","status":"todo"},"at":"2026-10-15T15:30:20+03:30"}
-{"activity":"A261","sum":"H118 set status, note","op":"head.restore","args":{"steps":[{"id":"H118","set":{"status":"open"}}]},"at":"2026-10-15T15:30:20+03:30"}
-{"activity":"A262","sum":"H120 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H120","set":{"kind":"ask","sum":"Agents it need to keep all the hisroty , user can select and remove history"},"link":["-task:R7.60"]}]},"at":"2026-10-15T15:30:47+03:30"}
-{"activity":"A263","sum":"R7.58 todo->done","op":"task.status","args":{"id":"R7.58","status":"todo"},"at":"2026-10-15T15:32:16+03:30"}
-{"activity":"A264","sum":"H121 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H121","set":{"kind":"ask","sum":"i think the workflow map is not ok and sync"},"link":["-task:R7.62"]}]},"at":"2026-10-15T15:32:51+03:30"}
-{"activity":"A265","sum":"R7.53 todo->done","op":"task.status","args":{"id":"R7.53","status":"todo"},"at":"2026-10-15T15:32:51+03:30"}
-{"activity":"A266","sum":"R7.28 todo->done","op":"task.status","args":{"id":"R7.28","status":"todo"},"at":"2026-10-15T15:32:51+03:30"}
-{"activity":"A267","sum":"H122 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H122","set":{"kind":"review","sum":"the work flow map no need for time duration filter like today , its genral map review this section…"},"link":["-task:R7.62"]}]},"at":"2026-10-15T15:33:02+03:30"}
-{"activity":"A268","sum":"R7.61 todo->done","op":"task.status","args":{"id":"R7.61","status":"todo"},"at":"2026-10-15T15:33:39+03:30"}
-{"activity":"A269","sum":"H123 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H123","set":{"kind":"review","sum":"check the token section , why not working and sync to show correct data ?"},"link":["-task:R7.28"]}]},"at":"2026-10-15T15:34:47+03:30"}
-{"activity":"A270","sum":"H123 bound task:R7.63","op":"head.restore","args":{"steps":[{"id":"H123","link":["-task:R7.63"]}]},"at":"2026-10-15T15:34:57+03:30"}
-{"activity":"A271","sum":"H124 triaged as review","op":"head.restore","args":{"steps":[{"id":"H124","set":{"kind":"review","sum":"ask opus : about the /head feature we have , and the head section we have in the panel -- the head…"},"link":["-task:R7.64"]}]},"at":"2026-10-15T15:38:12+03:30"}
-{"activity":"A272","sum":"H125 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H125","set":{"kind":"ask","sum":"in the browser pane , close the old ones and open the latest and main one"},"link":["-task:R7.36"]}]},"at":"2026-10-15T15:39:26+03:30"}
-{"activity":"A273","sum":"H125 set status, note","op":"head.restore","args":{"steps":[{"id":"H125","set":{"status":"open"}}]},"at":"2026-10-15T15:39:26+03:30"}
-{"activity":"A274","sum":"R7.56 todo->done","op":"task.status","args":{"id":"R7.56","status":"todo"},"at":"2026-10-15T15:41:30+03:30"}
-{"activity":"A275","sum":"H126 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H126","set":{"kind":"review","sum":"ui issue , find similar ui issue and run sub task for check them all and fix them all pattenrt issue"},"link":["-task:R7.65"]}]},"at":"2026-10-15T15:41:39+03:30"}
-{"activity":"A276","sum":"H127 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H127","set":{"kind":"bug","sum":"the head state need to show the things that is done and full fill , i dont see this , see new and…"},"link":["-task:R7.66"]}]},"at":"2026-10-15T15:42:26+03:30"}
-{"activity":"A277","sum":"H124 bound task:R7.67, task:R7.68, task:R7.73","op":"head.restore","args":{"steps":[{"id":"H124","link":["-task:R7.67","-task:R7.68","-task:R7.73"]}]},"at":"2026-10-15T15:42:26+03:30"}
-{"activity":"A278","sum":"R7.64 todo->done","op":"task.status","args":{"id":"R7.64","status":"todo"},"at":"2026-10-15T15:42:26+03:30"}
-{"activity":"A279","sum":"H128 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H128","set":{"kind":"ask","sum":"i told in before to remove the issues section and i did told about how this should be handle"},"link":["-task:R7.25"]}]},"at":"2026-10-15T15:43:46+03:30"}
-{"activity":"A280","sum":"H129 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H129","set":{"kind":"ask","sum":"the time line feature is not good and ok, a lot of ui issue , cant drag and ..."},"link":["-task:R7.74"]}]},"at":"2026-10-15T15:44:09+03:30"}
-{"activity":"A281","sum":"H130 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H130","set":{"kind":"ask","sum":"still the work section is not sync and update , find and fix rout cuase issue"},"link":["-task:R7.68"]}]},"at":"2026-10-15T15:45:28+03:30"}
-{"activity":"A282","sum":"R3.7 todo->partial","op":"task.status","args":{"id":"R3.7","status":"todo"},"at":"2026-10-15T15:45:28+03:30"}
-{"activity":"A283","sum":"R7.25 todo->partial","op":"task.status","args":{"id":"R7.25","status":"todo"},"at":"2026-10-15T15:45:28+03:30"}
 {"activity":"A284","sum":"R7.62 todo->partial","op":"task.status","args":{"id":"R7.62","status":"todo"},"at":"2026-10-15T15:45:28+03:30"}
 {"activity":"A285","sum":"R7.65 todo->partial","op":"task.status","args":{"id":"R7.65","status":"todo"},"at":"2026-10-15T15:45:28+03:30"}
 {"activity":"A286","sum":"R7.66 todo->partial","op":"task.status","args":{"id":"R7.66","status":"todo"},"at":"2026-10-15T15:45:28+03:30"}
@@ -498,3 +463,38 @@
 {"activity":"A834","sum":"H252 triaged as review","op":"head.restore","args":{"steps":[{"id":"H252","set":{"kind":"review","sum":"u need to check the badge icon on the side panel , good ui for new ones and .."},"link":["-task:R11.125"]}]},"at":"2026-10-17T10:34:41+03:30"}
 {"activity":"A835","sum":"H248 triaged as question","op":"head.restore","args":{"steps":[{"id":"H248","set":{"kind":"question","sum":"question : if i interact with helm dashaboard , the head will now that ?"},"link":["-task:R11.2"]}]},"at":"2026-10-17T10:34:54+03:30"}
 {"activity":"A836","sum":"H248 set status, note","op":"head.restore","args":{"steps":[{"id":"H248","set":{"status":"open"}}]},"at":"2026-10-17T10:34:54+03:30"}
+{"activity":"A837","sum":"R11.124 partial->done","op":"task.status","args":{"id":"R11.124","status":"partial"},"at":"2026-10-17T10:36:08+03:30"}
+{"activity":"A838","sum":"H253 set status, note","op":"head.restore","args":{"steps":[{"id":"H253","set":{"status":"open"}}]},"at":"2026-10-17T10:36:09+03:30"}
+{"activity":"A839","sum":"R11.126 todo in R11","op":"backlog.remove","args":{"id":"R11.126","phase":"R11","phaseCreated":false},"at":"2026-10-17T10:36:32+03:30"}
+{"activity":"A840","sum":"H254 triaged as question","op":"head.restore","args":{"steps":[{"id":"H254","set":{"kind":"question","sum":"i want to change the token limit with panel , is that usable ?"},"link":["-task:R11.126"]}]},"at":"2026-10-17T10:36:33+03:30"}
+{"activity":"A841","sum":"R11.127 todo in R11","op":"backlog.remove","args":{"id":"R11.127","phase":"R11","phaseCreated":false},"at":"2026-10-17T10:37:09+03:30"}
+{"activity":"A842","sum":"H255 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H255","set":{"kind":"ask","sum":"icon on close is not ok here"},"link":["-task:R11.127"]}]},"at":"2026-10-17T10:37:10+03:30"}
+{"activity":"A843","sum":"R11.128 todo in R11","op":"backlog.remove","args":{"id":"R11.128","phase":"R11","phaseCreated":false},"at":"2026-10-17T10:39:19+03:30"}
+{"activity":"A844","sum":"H256 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H256","set":{"kind":"ask","sum":"i see bad issue : we did rename and rebrand to \"Helm\" but why i still see the roadmap in some…"},"link":["-task:R11.128"]}]},"at":"2026-10-17T10:39:20+03:30"}
+{"activity":"A845","sum":"R11.129 todo in R11","op":"backlog.remove","args":{"id":"R11.129","phase":"R11","phaseCreated":false},"at":"2026-10-17T10:46:09+03:30"}
+{"activity":"A846","sum":"H257 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H257","set":{"kind":"ask","sum":"it not good ui i need to set token for 5h aslo i told u user can set token limi in two ways how…"},"link":["-task:R11.126","-task:R11.129"]}]},"at":"2026-10-17T10:46:10+03:30"}
+{"activity":"A847","sum":"H258 triaged as rule","op":"head.restore","args":{"steps":[{"id":"H258","set":{"kind":"rule","sum":"do the task no limit -> rule focos on what i told u"},"link":["-task:R11.122"]}]},"at":"2026-10-17T10:47:51+03:30"}
+{"activity":"A848","sum":"R11.122 done->partial","op":"task.status","args":{"id":"R11.122","status":"done"},"at":"2026-10-17T10:48:55+03:30"}
+{"activity":"A849","sum":"R11.126 done->partial","op":"task.status","args":{"id":"R11.126","status":"done"},"at":"2026-10-17T10:48:55+03:30"}
+{"activity":"A850","sum":"R11.129 done->partial","op":"task.status","args":{"id":"R11.129","status":"done"},"at":"2026-10-17T10:48:55+03:30"}
+{"activity":"A851","sum":"R11.125 todo->partial","op":"task.status","args":{"id":"R11.125","status":"todo"},"at":"2026-10-17T10:48:55+03:30"}
+{"activity":"A852","sum":"R11.127 todo->partial","op":"task.status","args":{"id":"R11.127","status":"todo"},"at":"2026-10-17T10:48:55+03:30"}
+{"activity":"A855","sum":"R11.129 partial->done","op":"task.status","args":{"id":"R11.129","status":"partial"},"at":"2026-10-17T10:50:46+03:30"}
+{"activity":"A856","sum":"R11.125 partial->done","op":"task.status","args":{"id":"R11.125","status":"partial"},"at":"2026-10-17T10:50:46+03:30"}
+{"activity":"A857","sum":"R11.127 partial->done","op":"task.status","args":{"id":"R11.127","status":"partial"},"at":"2026-10-17T10:50:46+03:30"}
+{"activity":"A858","sum":"R11.123 partial->done","op":"task.status","args":{"id":"R11.123","status":"partial"},"at":"2026-10-17T10:51:06+03:30"}
+{"activity":"A859","sum":"R11.121 partial->done","op":"task.status","args":{"id":"R11.121","status":"partial"},"at":"2026-10-17T10:51:31+03:30"}
+{"activity":"A860","sum":"R3.8 todo in R3","op":"backlog.remove","args":{"id":"R3.8","phase":"R3","phaseCreated":false},"at":"2026-10-17T10:57:16+03:30"}
+{"activity":"A862","sum":"H251 set status, note","op":"head.restore","args":{"steps":[{"id":"H251","set":{"status":"open"}}]},"at":"2026-10-17T10:57:18+03:30"}
+{"activity":"A863","sum":"R11.130 todo in R11","op":"backlog.remove","args":{"id":"R11.130","phase":"R11","phaseCreated":false},"at":"2026-10-17T10:57:18+03:30"}
+{"activity":"A864","sum":"H259 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H259","set":{"kind":"bug","sum":"not too much readable make it better and u get the spacing wrong this shoud effect on all things…"},"link":["-task:R11.130"]}]},"at":"2026-10-17T10:57:19+03:30"}
+{"activity":"A865","sum":"R3.9 todo in R3","op":"backlog.remove","args":{"id":"R3.9","phase":"R3","phaseCreated":false},"at":"2026-10-17T10:57:21+03:30"}
+{"activity":"A866","sum":"R3.8 todo->partial","op":"task.status","args":{"id":"R3.8","status":"todo"},"at":"2026-10-17T10:57:52+03:30"}
+{"activity":"A867","sum":"H252 set status, note","op":"head.restore","args":{"steps":[{"id":"H252","set":{"status":"open"}}]},"at":"2026-10-17T10:58:05+03:30"}
+{"activity":"A868","sum":"H255 set status, note","op":"head.restore","args":{"steps":[{"id":"H255","set":{"status":"open"}}]},"at":"2026-10-17T10:58:06+03:30"}
+{"activity":"A869","sum":"R11.126 partial->done","op":"task.status","args":{"id":"R11.126","status":"partial"},"at":"2026-10-17T10:58:57+03:30"}
+{"activity":"A870","sum":"H254 set status, note","op":"head.restore","args":{"steps":[{"id":"H254","set":{"status":"open"}}]},"at":"2026-10-17T10:58:58+03:30"}
+{"activity":"A871","sum":"R11.131 todo in R11","op":"backlog.remove","args":{"id":"R11.131","phase":"R11","phaseCreated":false},"at":"2026-10-17T10:59:16+03:30"}
+{"activity":"A872","sum":"H260 set status, note","op":"head.restore","args":{"steps":[{"id":"H260","set":{"status":"open"}}]},"at":"2026-10-17T11:00:04+03:30"}
+{"activity":"A874","sum":"R3.8 partial->done","op":"task.status","args":{"id":"R3.8","status":"partial"},"at":"2026-10-17T11:01:41+03:30"}
+{"activity":"A875","sum":"H259 set status, note","op":"head.restore","args":{"steps":[{"id":"H259","set":{"status":"open"}}]},"at":"2026-10-17T11:01:41+03:30"}

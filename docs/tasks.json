@@ -5102,42 +5102,141 @@
       "id": "R11.121",
       "phase": "R11",
       "title": "Toolbar narrow width: row wraps, search min width, no horizontal scroll (+ verified agy audit fixes)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 0,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:51:31+03:30"
+      },
+      "refs": [
+        "commit:0abcaa26f4e252f6c9eacc69c76fef5a91f7f59f"
+      ]
     },
     {
       "id": "R11.122",
       "phase": "R11",
       "title": "Live refresh flicker: open items (details/menus) flicker or close on UI update; fix root in shared render",
-      "status": "partial",
+      "status": "done",
       "tokensK": 0,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "refs": [
+        "commit:e58ea3bd86273b422d452b5db9cf5adfab7c6a65",
+        "commit:c96d248cc60098f6740184ae8e0dfe75a03a1b53"
+      ],
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:57:17+03:30"
+      }
     },
     {
       "id": "R11.123",
       "phase": "R11",
       "title": "System Classes: open all modules expanded by default (person answered Q10: Yes)",
-      "status": "todo",
+      "status": "done",
       "tokensK": 0,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:51:06+03:30"
+      },
+      "refs": [
+        "commit:6b8b9727fbc83a7f008675963c2a1a2417563606"
+      ]
     },
     {
       "id": "R11.124",
       "phase": "R11",
       "title": "Overview Activity card shows NaN:NaN/change: adapt to new activityRowHtml(e, ctx) shape",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T10:36:08+03:30"
+      },
+      "refs": [
+        "commit:ad764cefaf33218a83a4a9a414c708ba235315d3"
+      ]
+    },
+    {
+      "id": "R11.125",
+      "phase": "R11",
+      "title": "Side rail badges: show counts in collapsed rail, new-since-seen state, clear tones/legend; fix stale Agents count",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:50:46+03:30"
+      },
+      "refs": [
+        "commit:83238fcb39cdfd25f43dba64d5573e045f1f498d"
+      ]
+    },
+    {
+      "id": "R11.126",
+      "phase": "R11",
+      "title": "Limits: 5-hour stop control in panel; head reads its caps from board stops; top bar stop state matches",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:c0277f5e8f0245e981b17c5ff79d2e711cfd21b9",
+        "commit:ec9f6b648e5527e90eb9fd271ce8f4dd28b6fa5f"
+      ],
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:58:57+03:30"
+      }
+    },
+    {
+      "id": "R11.127",
+      "phase": "R11",
+      "title": "Side rail Collapse button: icon must flip to expand (>>) when collapsed; label Expand",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:50:46+03:30"
+      },
+      "refs": [
+        "commit:83238fcb39cdfd25f43dba64d5573e045f1f498d",
+        "commit:bf4676d6d15a02faac8d9345362beb7261f20a6f"
+      ]
+    },
+    {
+      "id": "R11.128",
+      "phase": "R11",
+      "title": "Finish Helm rebrand: project id roadmap-board -> helm (URLs, tab title, launchd label, paths) with data migration",
       "status": "partial",
       "tokensK": 0,
       "thinking": "low",
@@ -5147,9 +5246,65 @@
       "checkK": 0
     },
     {
-      "id": "R11.125",
+      "id": "R11.129",
       "phase": "R11",
-      "title": "Side rail badges: show counts in collapsed rail, new-since-seen state, clear tones/legend; fix stale Agents count",
+      "title": "Top bar: compact visual usage (5h/W mini bars + stop tick, account), remove Mark/⌘K buttons",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:c0277f5e8f0245e981b17c5ff79d2e711cfd21b9",
+        "commit:83238fcb39cdfd25f43dba64d5573e045f1f498d",
+        "commit:19bc58e602c59ee938cf884830f5302a5825d3cd"
+      ],
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:50:46+03:30"
+      }
+    },
+    {
+      "id": "R3.8",
+      "phase": "R3",
+      "title": "Update System diagrams and check them (roadmap-board)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T10:57:52+03:30",
+        "done": "2026-10-17T11:01:41+03:30"
+      }
+    },
+    {
+      "id": "R11.130",
+      "phase": "R11",
+      "title": "System spacing: scale horizontal gaps too; edge labels never overlap boxes; readable overlay controls",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:c49f719479782ce6a1b51ddb2a526658e61d00e3",
+        "commit:5ae9ee9660583c4b6a49668be84a3aad885912e5"
+      ],
+      "at": {
+        "done": "2026-10-17T11:01:41+03:30"
+      }
+    },
+    {
+      "id": "R11.131",
+      "phase": "R11",
+      "title": "Panel: coalesce repeated stop changes from one drag into one head line (last value wins within 5 s)",
       "status": "todo",
       "tokensK": 0,
       "thinking": "low",

@@ -8983,9 +8983,9 @@
       "title": "agy: R11.119 toolbar a11y/spec audit",
       "model": "agy",
       "task": "R11.119",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-17T10:28:45+03:30",
-      "ended": null,
+      "ended": "2026-10-17T10:35:46+03:30",
       "refs": [
         "commit:abbe364af64789bea588de961f29341e0e4057f4"
       ]
@@ -9007,18 +9007,228 @@
       "title": "agy: R11.122 flicker root cause",
       "model": "agy",
       "task": "R11.122",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-17T10:32:34+03:30",
-      "ended": null
+      "ended": "2026-10-17T10:37:45+03:30"
     },
     {
       "id": "j1103",
       "title": "haiku: R11.124 Overview Activity NaN fix",
       "model": "haiku",
       "task": "R11.124",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-17T10:34:35+03:30",
+      "ended": "2026-10-17T10:35:48+03:30",
+      "tokens": {
+        "in": 26,
+        "out": 11293,
+        "cacheRead": 870996,
+        "cacheWrite": 50634,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1104",
+      "title": "sonnet: R11.122 live-refresh flicker fix",
+      "model": "sonnet",
+      "task": "R11.122",
+      "effort": "medium",
+      "status": "done",
+      "started": "2026-10-17T10:48:12+03:30",
+      "ended": "2026-10-17T10:55:49+03:30",
+      "tokens": {
+        "in": 38,
+        "out": 26180,
+        "cacheRead": 1469088,
+        "cacheWrite": 104015,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1105",
+      "title": "sonnet: R11.126 Limits v2 backend and UI",
+      "model": "sonnet",
+      "task": "R11.126",
+      "effort": "medium",
+      "status": "done",
+      "started": "2026-10-17T10:48:25+03:30",
+      "ended": "2026-10-17T10:58:14+03:30",
+      "tokens": {
+        "in": 88,
+        "out": 38453,
+        "cacheRead": 4792120,
+        "cacheWrite": 127295,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1106",
+      "title": "sonnet: R11.129 top bar, R11.125 badges, R11.127",
+      "model": "sonnet",
+      "task": "R11.129",
+      "effort": "low",
+      "status": "done",
+      "started": "2026-10-17T10:48:38+03:30",
+      "ended": "2026-10-17T10:50:20+03:30",
+      "tokens": {
+        "in": 34,
+        "out": 11272,
+        "cacheRead": 1118635,
+        "cacheWrite": 49803,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1107",
+      "title": "haiku: R11.121 toolbar narrow + audit fixes",
+      "model": "haiku",
+      "task": "R11.121",
+      "status": "done",
+      "started": "2026-10-17T10:48:45+03:30",
+      "ended": "2026-10-17T10:51:11+03:30",
+      "tokens": {
+        "in": 28,
+        "out": 25260,
+        "cacheRead": 1074173,
+        "cacheWrite": 97264,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1108",
+      "title": "haiku: R11.123 Classes modules expanded",
+      "model": "haiku",
+      "task": "R11.123",
+      "status": "done",
+      "started": "2026-10-17T10:48:51+03:30",
+      "ended": "2026-10-17T10:50:58+03:30",
+      "tokens": {
+        "in": 48,
+        "out": 19493,
+        "cacheRead": 1824303,
+        "cacheWrite": 67512,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1109",
+      "title": "sonnet: R11.127 follow-up auto-narrow rail state",
+      "model": "sonnet",
+      "task": "R11.127",
+      "status": "done",
+      "started": "2026-10-17T10:50:56+03:30",
+      "ended": "2026-10-17T10:52:40+03:30"
+    },
+    {
+      "id": "j1110",
+      "title": "sonnet: R11.129 follow-up",
+      "model": "sonnet",
+      "task": "R11.129",
+      "status": "done",
+      "started": "2026-10-17T10:51:00+03:30",
+      "ended": "2026-10-17T10:51:33+03:30",
+      "tokens": {
+        "in": 44,
+        "out": 14512,
+        "cacheRead": 1453564,
+        "cacheWrite": 56371,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1111",
+      "title": "agy: R11.128 rebrand survey",
+      "model": "agy",
+      "task": "R11.128",
+      "status": "running",
+      "started": "2026-10-17T10:51:43+03:30",
       "ended": null
+    },
+    {
+      "id": "j1112",
+      "title": "sonnet: R11.122 follow-up stale checkbox",
+      "model": "sonnet",
+      "task": "R11.122",
+      "status": "done",
+      "started": "2026-10-17T10:52:43+03:30",
+      "ended": "2026-10-17T10:56:32+03:30"
+    },
+    {
+      "id": "j1113",
+      "title": "sonnet: R11.122 follow-up",
+      "model": "sonnet",
+      "task": "R11.122",
+      "status": "done",
+      "started": "2026-10-17T10:52:44+03:30",
+      "ended": "2026-10-17T10:55:49+03:30",
+      "tokens": {
+        "in": 40,
+        "out": 26997,
+        "cacheRead": 1573103,
+        "cacheWrite": 104251,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1114",
+      "title": "haiku: R11.129 reconcile 13 web test failures",
+      "model": "haiku",
+      "task": "R11.129",
+      "status": "done",
+      "started": "2026-10-17T10:56:39+03:30",
+      "ended": "2026-10-17T11:02:31+03:30",
+      "tokens": {
+        "in": 58,
+        "out": 27444,
+        "cacheRead": 2647862,
+        "cacheWrite": 128828,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1115",
+      "title": "sonnet: R11.130 System spacing and readability",
+      "model": "sonnet",
+      "task": "R11.130",
+      "effort": "medium",
+      "status": "done",
+      "started": "2026-10-17T10:57:31+03:30",
+      "ended": "2026-10-17T10:59:24+03:30",
+      "tokens": {
+        "in": 36,
+        "out": 13027,
+        "cacheRead": 1268133,
+        "cacheWrite": 55506,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1116",
+      "title": "sonnet: R11.130 follow-up overlay reserves space",
+      "model": "sonnet",
+      "task": "R11.130",
+      "status": "done",
+      "started": "2026-10-17T11:00:04+03:30",
+      "ended": "2026-10-17T11:01:38+03:30",
+      "refs": [
+        "commit:c49f719479782ce6a1b51ddb2a526658e61d00e3"
+      ]
+    },
+    {
+      "id": "j1117",
+      "title": "sonnet: R11.130 follow-up",
+      "model": "sonnet",
+      "task": "R11.130",
+      "status": "done",
+      "started": "2026-10-17T11:00:05+03:30",
+      "ended": "2026-10-17T11:01:12+03:30",
+      "tokens": {
+        "in": 56,
+        "out": 18957,
+        "cacheRead": 2126068,
+        "cacheWrite": 71150,
+        "model": "sonnet"
+      }
     }
   ]
 }

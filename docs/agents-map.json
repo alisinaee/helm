@@ -733,5 +733,40 @@
     "task": "R11.124",
     "title": "haiku: R11.124 Overview Activity NaN fix",
     "model": "haiku"
+  },
+  "a253e96dd172d6603": {
+    "task": "R11.122",
+    "title": "sonnet: R11.122 live-refresh flicker fix",
+    "model": "sonnet"
+  },
+  "a48ec7f77d11dbd5c": {
+    "task": "R11.126",
+    "title": "sonnet: R11.126 Limits v2 backend and UI",
+    "model": "sonnet"
+  },
+  "ae214f70a3328f870": {
+    "task": "R11.129",
+    "title": "sonnet: R11.129 top bar, R11.125 badges, R11.127",
+    "model": "sonnet"
+  },
+  "a8512d0d29adcdadc": {
+    "task": "R11.121",
+    "title": "haiku: R11.121 toolbar narrow + audit fixes",
+    "model": "haiku"
+  },
+  "a968be2a3f24a83f3": {
+    "task": "R11.123",
+    "title": "haiku: R11.123 Classes modules expanded",
+    "model": "haiku"
+  },
+  "a5eea77646eddf9fe": {
+    "task": "R11.129",
+    "title": "haiku: R11.129 reconcile 13 web test failures",
+    "model": "haiku"
+  },
+  "a8faf7cd61f9dba41": {
+    "task": "R11.130",
+    "title": "sonnet: R11.130 System spacing and readability",
+    "model": "sonnet"
   }
 }

@@ -712,3 +712,24 @@
 {"v":1,"t":"u","id":"H252","ts":"2026-10-17T07:04:40Z","by":"head","set":{"kind":"review","sum":"Side panel badges: new-item UI and correctness"},"link":["+task:R11.125"]}
 {"v":1,"t":"u","id":"H248","ts":"2026-10-17T07:04:53Z","by":"head","set":{"kind":"question","sum":"Does the head know about dashboard interactions?"},"link":["+task:R11.2"],"seen":["task:R11.2"]}
 {"v":1,"t":"u","id":"H248","ts":"2026-10-17T07:04:54Z","by":"head","set":{"status":"done"},"note":"answer: yes via panel hook + roadmap watch; verified live in H250 test (P1-P3 delivered, acked)"}
+{"v":1,"t":"u","id":"H253","ts":"2026-10-17T07:06:09Z","by":"head","set":{"status":"done"},"note":"answer: root cause R11.4 signature change; Overview now maps lines via eventFromLine (this R11.124 commit)"}
+{"v":1,"t":"e","ts":"2026-10-17T07:06:09Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"question?","sum":"i want to change the token limit with panel , is that usable ?","len":62,"h":"sha1:2fcb45931129","prio":2,"id":"H254"}
+{"v":1,"t":"u","id":"H254","ts":"2026-10-17T07:06:33Z","by":"head","set":{"kind":"question","sum":"Can the token limit be changed from the panel?"},"link":["+task:R11.126"]}
+{"v":1,"t":"e","ts":"2026-10-17T07:07:03Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"icon on close is not ok here","len":28,"h":"sha1:486b4c53046a","prio":2,"id":"H255"}
+{"v":1,"t":"u","id":"H255","ts":"2026-10-17T07:07:09Z","by":"head","set":{"kind":"bug","sum":"Rail Collapse icon wrong when collapsed"},"link":["+task:R11.127"]}
+{"v":1,"t":"e","ts":"2026-10-17T07:09:07Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"i see bad issue : we did rename and rebrand to \"Helm\" but why i still see the roadmap in some…","len":106,"h":"sha1:2d6c16a74e89","prio":2,"id":"H256"}
+{"v":1,"t":"u","id":"H256","ts":"2026-10-17T07:09:20Z","by":"head","set":{"kind":"bug","sum":"Old roadmap-board name still visible (git author, URLs, tab title)"},"link":["+task:R11.128"]}
+{"v":1,"t":"e","ts":"2026-10-17T07:15:43Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"it not good ui i need to set token for 5h aslo i told u user can set token limi in two ways how…","len":492,"h":"sha1:a3e15481049d","prio":2,"id":"H257"}
+{"v":1,"t":"u","id":"H257","ts":"2026-10-17T07:16:10Z","by":"head","set":{"kind":"ask","sum":"Limits v2: 5h + weekly, budget-from-now or cap modes, draggable bar; top bar visual usage, remove un"},"link":["+task:R11.126","+task:R11.129"]}
+{"v":1,"t":"u","id":"H257","ts":"2026-10-17T07:16:17Z","by":"auto","set":{"status":"done"},"note":"auto: R11.126 c0277f5, R11.129 c0277f5"}
+{"v":1,"t":"e","ts":"2026-10-17T07:17:39Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"rule?","sum":"do the task no limit -> rule focos on what i told u","len":53,"h":"sha1:dc336245fb33","prio":2,"id":"H258"}
+{"v":1,"t":"u","id":"H258","ts":"2026-10-17T07:17:51Z","by":"head","set":{"kind":"rule","sum":"No usage limit; do the queued tasks, focus on the asks"},"link":["+task:R11.122"],"seen":["task:R11.122"]}
+{"v":1,"t":"e","ts":"2026-10-17T07:27:09Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"bug?","sum":"not too much readable make it better and u get the spacing wrong this shoud effect on all things…","len":299,"h":"sha1:aca2498d68d2","prio":2,"id":"H259"}
+{"v":1,"t":"u","id":"H251","ts":"2026-10-17T07:27:18Z","by":"head","set":{"status":"done"},"note":"answer: c96d248 morphs the DOM instead of innerHTML; live: open menu stayed open 16s, 0 toggles"}
+{"v":1,"t":"u","id":"H259","ts":"2026-10-17T07:27:19Z","by":"head","set":{"kind":"bug","sum":"Spacing only vertical; labels overlap; overlay controls not readable"},"link":["+task:R11.130"]}
+{"v":1,"t":"u","id":"H252","ts":"2026-10-17T07:28:05Z","by":"head","set":{"status":"done"},"note":"answer: numeric rail badges + new-since-seen in 83238fc (R11.125)"}
+{"v":1,"t":"u","id":"H255","ts":"2026-10-17T07:28:05Z","by":"head","set":{"status":"done"},"note":"answer: expand icon + narrow overlay in 83238fc and bf4676d (R11.127)"}
+{"v":1,"t":"u","id":"H254","ts":"2026-10-17T07:28:58Z","by":"head","set":{"status":"done"},"note":"answer: Limits v2 in this R11.126 commit: 5h+weekly, budget or cap, drag on bar; changes reach the head"}
+{"v":1,"t":"e","ts":"2026-10-17T07:29:45Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"question?","sum":"i did set the token limit with ui did you get that as head ?","len":61,"h":"sha1:d5cc5bec8bb1","prio":2,"id":"H260"}
+{"v":1,"t":"u","id":"H260","ts":"2026-10-17T07:30:04Z","by":"head","set":{"status":"done"},"note":"answer: yes, panel lines P6-P13 received; board stops 5h 80% cap, week 33% cap; head follows them"}
+{"v":1,"t":"u","id":"H259","ts":"2026-10-17T07:31:41Z","by":"head","set":{"status":"done"},"note":"answer: c49f719 + this R11.130 follow-up: spacing scales all gaps, labels clear, controls readable"}
