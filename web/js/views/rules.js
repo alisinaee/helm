@@ -139,7 +139,7 @@ export function sectionView(vm) {
   const rules = snap.rules;
   const sectionCopy = rules == null ? "" : copyButton("section", "rules.list", "rules",
     { project: vm.route.id, sum: refSummary("section", { count: rules.length }) });
-  const head = '<div class="page-head"><h2 class="page-title">Rules</h2><p class="page-note">Rules for agents in ' +
+  const head = '<div class="page-head rl-head"><p class="page-note">Rules for agents in ' +
     esc(vm.project.name) + ".</p>" + sectionCopy + "</div>";
   const notice = rules == null ? bannerHtml("warning", "Rules are not in the snapshot yet.",
     "Add and sync still work. The list appears when the snapshot carries rules.") : "";

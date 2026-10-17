@@ -1,6 +1,7 @@
 /* flow.css */
 .page-head { display: grid; gap: var(--sp-1); margin-bottom: var(--sp-3) }
-.rm-title-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2) }
+.rm-title-row, .rl-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2) }
+.rl-head .page-note { flex: 1 1 auto; min-width: 10rem }
 .page-title { margin: 0; font-size: var(--fs-17) }
 .page-note, .ov-sum, .ov-more { margin: 0; color: var(--text-3); font-size: var(--fs-12) }
 .ov { display: grid; gap: var(--sp-4); min-width: 0 }

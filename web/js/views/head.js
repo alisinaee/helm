@@ -667,7 +667,7 @@ function piecesOf(vm, opts) {
   const allOpen = rows.length > 0 && rows.every(function (row) {
     return open.indexOf(String(row.id)) >= 0;
   });
-  const top = '<div class="hd-top"><h2 id="hd-h" class="hd-title">Head</h2>' + nowHtml(head) +
+  const top = '<div class="hd-top">' + nowHtml(head) +
     (rows.length && tab !== "q" ? '<button type="button" class="btn hd-all" data-action="head-expand-all">' +
       (allOpen ? "Collapse all" : "Expand all") + "</button>" : "") + "</div>";
   const cards = o.view === "cards";
@@ -703,7 +703,7 @@ export function headHtml(vm, opts) {
   const inner = piecesOf(vm, o).map(function (piece) {
     return piece.build ? piece.build() : piece.html;
   }).join("");
-  return '<section class="hd-screen" data-project="' + esc(o.project || "") + '" aria-labelledby="hd-h">' +
+  return '<section class="hd-screen" data-project="' + esc(o.project || "") + '" aria-label="Head">' +
     inner + "</section>";
 }
 
@@ -1188,7 +1188,7 @@ export function sectionView(vm) {
     })]);
   latest = { vm: { head: head }, opts: opts, key: key };
   if (typeof setTimeout === "function") setTimeout(flushScreen, 0);
-  return '<section class="hd-screen" data-project="' + esc(opts.project || "") + '" aria-labelledby="hd-h"></section>';
+  return '<section class="hd-screen" data-project="' + esc(opts.project || "") + '" aria-label="Head"></section>';
 }
 
 // ---- In-place painting (R7.80). The screen element keeps its pieces; a piece is replaced only when its markup

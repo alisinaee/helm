@@ -151,7 +151,7 @@ class InboxUxPass(unittest.TestCase):
 
     def test_section_head_uses_the_ib_head_row(self):
         self.assertIn('<div class="page-head ib-head">', self.src)
-        self.assertRegex(self.css, r"\.ib-head \{ grid-template-columns: minmax\(0, 1fr\) var\(--ref-col\)")
+        self.assertRegex(self.css, r"\.ib-head \{ display: flex; justify-content: flex-end")
 
     def test_expand_glyph_is_centred_and_turns_when_open(self):
         self.assertRegex(self.css, r"\.ib-row > \.btn \{[^}]*display: grid; place-items: center")
