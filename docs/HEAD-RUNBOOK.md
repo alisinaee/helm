@@ -54,7 +54,7 @@ No usage stop (H164, 2026-10-16: "rule: no limit"; see Usage limit override belo
   Agent tasks are machine packages (files, model, done-check, jobs). One Work item binds many agent tasks; agent
   tasks never show as Work cards; Head asks bind to Work items. Design: docs/WORK-MODEL.md (R7.101).
 - H249 (2026-10-17): VPN back, agy allowed again under the agy policy (read-only, small, verified). Still NO Cursor, NO split-net tasks (H239).
-- H258 (2026-10-17): NO usage limit (supersedes H235 50% and H232 40%); keep pushing readings, stop only on a session-limit error. Focus on the person's asks. Weekly: no stop (H164). Earlier values (H99 80% 5h, H160 98% weekly) are superseded. RP13 (80% and 95%) is superseded by this rule.
+- H258 (2026-10-17): no runbook usage cap; the board limits (Tokens > Limits, `roadmap usage stops`) are the head's stops. Every agy job: background wait + `job done` (H263). Weekly: no stop (H164). Earlier values (H99 80% 5h, H160 98% weekly) are superseded. RP13 (80% and 95%) is superseded by this rule.
 - Models (H99, H101): head runs on Opus. Haiku 5.5 for edits; Opus or Sonnet 5.5 low/medium only for critical review,
   hard issues and planning advice; Cursor (auto or grok-4.7) and agy without limit. Run as many parallel subagents as
   files allow, watch them, never idle.

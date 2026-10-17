@@ -5,6 +5,23 @@ Read this first in a new chat (new Claude account is fine: everything is in this
 Pointers: head procedure in docs/HEAD-RUNBOOK.md; next work to 1.0.0 in docs/NEXT-WAVE.md.
 
 ## 0. State right now
+
+### Checkpoint 2026-10-17 ~11:40 (/head save before an account switch)
+- Last pushed work: R11.133 / R11.132 (55773f5) + board state. No WIP code; no running workers or agy jobs (j1120/j1121
+  "Read parspack ..." belonged to ANOTHER session in this repo and were terminated on the person's order, H280).
+- Done today: R11.2/4/5/6/8/104-133 (System v2, Activity timeline, Roadmap map, Tokens charts + Account tab, Git
+  redesign + diff, shared collapsible toolbar on all sections, flicker fix = DOM morph in web/js/dom.js keeping mount
+  hosts, Limits v2 (5h + weekly, budget or cap, draggable), top bar mini usage bars, numeric rail badges, spacing on all
+  maps with no upper limit). Full suite last green: 4250 tests (19bc58e); web suite 1154 OK after R11.132.
+- Rules from today: H258 no runbook usage cap; the BOARD's limits are the head's stops (Tokens > Limits; `roadmap usage
+  stops`; person set 5h 80% cap, week 33% cap at 10:59). H249 agy allowed again under the agy policy (read-only, small,
+  verified; ALWAYS run a background `wait` and `job done` for each agy job: H263 found a finished job left "running").
+  Cursor still off (H239). No split-net tasks. Git author for this repo is now "Helm" (repo-local config).
+- Queue (open): R11.128 finish rebrand roadmap-board -> helm (plan + inventory: docs/reviews/agy-rebrand-survey.md;
+  needs data migration of project id, launchd label, paths, URL redirect), R11.131 coalesce repeated stop-drag panel
+  lines into one head line, R7.31 umbrella. Ledger H264-H278 (Persian, parspack setup) came from another session: not
+  this head's work; ask the person before acting on them.
+- Usage at save: 5h ~78% (reset 13:50), week 24%.
 Renamed to Helm 2026-10-16 (repo alisinaee/helm, dir ~/Works/helm). Python package `roadmap`, ROADMAP_HOME, project id `roadmap-board` and state folders are unchanged; `bin/helm` is an alias of `bin/roadmap`.
 
 (state below) (2026-10-15, written by `/head save` before an account switch)
