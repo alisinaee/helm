@@ -22,11 +22,27 @@
 .git-right{display:none;min-width:0}
 .git-gh{display:flex;align-items:center;gap:var(--sp-3);height:var(--h-row);padding:0 var(--sp-3);
   font-size:var(--fs-12);font-weight:600;color:var(--text-2);border-bottom:1px solid var(--track)}
-.git-fr{display:grid;grid-template-columns:1.25rem 1.75rem minmax(0,1fr);gap:var(--sp-3);align-items:center;
-  height:var(--h-row);padding:0 var(--sp-3);cursor:pointer;font-size:var(--fs-13)}
+.git-fr{display:grid;grid-template-columns:1.25rem minmax(0,1fr);gap:var(--sp-3);align-items:center;
+  height:var(--h-row);padding:0 var(--sp-3);font-size:var(--fs-13)}
 .git-fr:hover{background:var(--surface-2)}
 .git-fr:has(input:checked){background:var(--sel)}
-.git-fr:focus-within{outline:2px solid var(--focus);outline-offset:-2px}
+.git-fr:has(.git-fb[aria-current=true]){background:var(--sel)}
+.git-fb{all:unset;box-sizing:border-box;display:grid;grid-template-columns:1.75rem minmax(0,1fr);gap:var(--sp-3);
+  align-items:center;min-width:0;height:100%;cursor:pointer}
+.git-fb:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.git-dhead{display:flex;align-items:center;gap:var(--sp-2);min-height:var(--h-row);padding:0 var(--sp-3);
+  border-bottom:1px solid var(--track);font-size:var(--fs-13)}
+.git-dname{font:600 var(--fs-13) var(--font-mono);color:var(--text-1);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;min-width:0}
+.git-diff{overflow:auto;max-height:70vh;font:var(--fs-12) var(--font-mono);border-radius:0 0 var(--r-card)
+  var(--r-card);background:var(--surface-1)}
+.gd-row{display:grid;grid-template-columns:3.5rem 3.5rem minmax(0,1fr);min-width:max-content;white-space:pre}
+.gd-no{padding:0 var(--sp-2);text-align:right;color:var(--text-3);user-select:none;background:var(--surface-2)}
+.gd-tx{padding:0 var(--sp-3)}
+.gd-add{background:color-mix(in srgb,var(--success) 16%,transparent)}
+.gd-del{background:color-mix(in srgb,var(--danger) 16%,transparent)}
+.gd-hunk{color:var(--text-3)}
+.gd-hunk .gd-tx{padding:var(--sp-1) var(--sp-3)}
 .git-st{display:inline-flex;justify-content:center;font:600 var(--fs-11) var(--font-mono);padding:2px 0;
   border-radius:var(--r-control);color:var(--text-3);background:color-mix(in srgb,var(--text-3) 18%,transparent)}
 .git-st-m{color:var(--warning);background:color-mix(in srgb,var(--warning) 18%,transparent)}

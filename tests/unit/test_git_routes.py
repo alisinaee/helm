@@ -208,5 +208,80 @@ class CommitAndBranchRefs(unittest.TestCase):
         self.assertIsNone(refs.build({}, "roadmap-board", "branch", "main"))
 
 
+
+class WorktreeDiffRoutes(ServerCase):
+    """GET .../git/diff?path=: the worktree diff of a changed file. A tracked file gives git diff, an untracked one
+    all added; a path outside the status, a traversal or a secret name is refused or hidden."""
+
+    def setUp(self):
+        super().setUp()
+        self.repo = os.path.join(os.path.realpath(self.tmp), "wtrepo")
+        os.makedirs(os.path.join(self.repo, "docs"))
+        git(self.repo, "init", "-q")
+        self._write(os.path.join(self.repo, "docs", "a.txt"), "one\n")
+        self._write(os.path.join(self.repo, "keep.txt"), "still\n")
+        git(self.repo, "add", "--", "docs/a.txt", "keep.txt")
+        git(self.repo, "commit", "-q", "-m", "first")
+        self._write(os.path.join(self.repo, "docs", "a.txt"), "one\ntwo\n")
+        self._write(os.path.join(self.repo, "untracked.txt"), "new\n")
+        self._write(os.path.join(self.repo, ".env"), "TOKEN=x\n")
+        config_store.add_project("wt-repo", self.repo, project_id="wtrepo")
+        self.origin = {"Origin": "http://127.0.0.1:%d" % self.port, "Sec-Fetch-Site": "same-origin"}
+
+    def _write(self, path, text):
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(text)
+
+    def diff(self, query, headers=None):
+        return self.request("GET", "/api/v1/projects/wtrepo/git/diff?" + query, headers=headers or self.origin)
+
+    def test_modified_file_is_a_git_diff(self):
+        body = self.diff("path=docs/a.txt").json()
+        self.assertEqual(body["path"], "docs/a.txt")
+        self.assertEqual(body["status"], ".M")
+        self.assertIsNone(body["skipped"])
+        self.assertFalse(body["truncated"])
+        self.assertEqual(body["lines"][0], {"t": "@", "text": "@@ -1 +1,2 @@"})
+        self.assertIn({"t": " ", "text": "one"}, body["lines"])
+        self.assertIn({"t": "+", "text": "two"}, body["lines"])
+        self.assertNotIn("diff --git", str(body["lines"]))
+
+    def test_untracked_file_is_all_added(self):
+        body = self.diff("path=untracked.txt").json()
+        self.assertEqual(body["status"], "??")
+        self.assertEqual(body["lines"], [{"t": "@", "text": "@@ -0,0 +1,1 @@"}, {"t": "+", "text": "new"}])
+
+    def test_untracked_output_is_capped_at_2000_lines(self):
+        self._write(os.path.join(self.repo, "big.txt"), "x\n" * 2500)
+        body = self.diff("path=big.txt").json()
+        self.assertTrue(body["truncated"])
+        self.assertEqual(sum(1 for row in body["lines"] if row["t"] == "+"), 2000)
+
+    def test_a_secret_name_is_hidden(self):
+        body = self.diff("path=.env").json()
+        self.assertEqual(body["skipped"], "hidden (secret pattern)")
+        self.assertEqual(body["lines"], [])
+
+    def test_a_path_outside_the_status_gives_400(self):
+        res = self.diff("path=keep.txt")
+        self.assertEqual(res.status, 400)
+
+    def test_traversal_absolute_and_empty_paths_give_400(self):
+        for query in ("path=../x", "path=docs/../../etc/passwd", "path=/etc/passwd", "path=", "path=-x"):
+            with self.subTest(query=query):
+                self.assertEqual(self.diff(query).status, 400)
+
+    def test_missing_path_and_extra_keys_give_400(self):
+        self.assertEqual(self.request("GET", "/api/v1/projects/wtrepo/git/diff", headers=self.origin).status, 400)
+        self.assertEqual(self.diff("path=docs/a.txt&x=1").status, 400)
+
+    def test_needs_the_same_origin_page(self):
+        self.assertEqual(self.request("GET", "/api/v1/projects/wtrepo/git/diff?path=docs/a.txt").status, 403)
+
+    def test_route_is_listed_in_the_table(self):
+        self.assertEqual(routes.route_template("/api/v1/projects/wtrepo/git/diff"),
+                         "/api/v1/projects/{pid}/git/diff")
+
+
 if __name__ == "__main__":
     unittest.main()

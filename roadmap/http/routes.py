@@ -866,6 +866,17 @@ def git_diff(app, req, match):
     return _git_reply(app, {"path": rel, "skipped": None, "diff": text, "truncated": truncated})
 
 
+def git_worktree_diff(app, req, match):
+    """GET .../git/diff?path=: one changed file's diff in the worktree (an untracked file as all added), capped.
+    The path must be in the current status. Same-origin page only."""
+    opts = _git_query(req.query, ("path",))
+    if "path" not in opts:
+        raise RoadmapError("invalid_input", "the query needs path=<file>", EXIT_USAGE)
+    _git_same_origin(app, req)
+    _, project_path = _git_project(match)
+    return _git_reply(app, git_service.read_worktree_diff(project_path, opts["path"]))
+
+
 def _system_etag(path, data_dir, sha):
     """The ETag of the system map: the HEAD sha plus the mtimes of docs/system.json, jobs.json, tasks.json and the
     Work store (heat and the bound tasks move with them). A missing file counts as 0. Quoted, as the other ETags
@@ -938,6 +949,7 @@ ROUTES = (
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/branches"), ("GET",), git_branches),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/show/(?P<sha>[^/]*)"), ("GET",), git_show),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/diff/(?P<sha>[^/]*)"), ("GET",), git_diff),
+    (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/diff"), ("GET",), git_worktree_diff),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/system"), ("GET",), project_system),
     (re.compile(r"/api/v1/tokens/history"), ("GET",), tokens_history),
     (re.compile(r"/api/v1/usage"), ("GET",), usage_get),
