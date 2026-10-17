@@ -910,22 +910,52 @@ function enqueue(item) {
   pump();
 }
 
-// Open or close one row in place (no re-render): the panel, the aria-expanded state and the open set.
+// Open or close one row in place (no re-render): the panel, the aria-expanded state and the open set. A row whose
+// text is not cached yet shows a loading note first and opens only once the text has arrived (or failed).
 function setOpen(item, on) {
   const id = idOf(item);
   const hit = item.querySelector(".hd-hit");
   const panel = item.querySelector(".hd-panel");
   if (!id || !hit || !panel) return;
-  panel.hidden = !on;
-  item.classList.toggle("is-open", on);
-  hit.setAttribute("aria-expanded", on ? "true" : "false");
-  hit.setAttribute("aria-label", (on ? "Hide " : "Show ") + id);
-  if (on) {
-    openSet.add(id);
-    enqueue(item);
-  } else {
+  const apply = function (state) {
+    panel.hidden = !state;
+    item.classList.toggle("is-open", state);
+    hit.setAttribute("aria-expanded", state ? "true" : "false");
+    hit.setAttribute("aria-label", (state ? "Hide " : "Show ") + id);
+  };
+  const note = item.querySelector(".hd-loading");
+  if (note) note.remove();
+  item.removeAttribute("data-loading");
+  if (!on) {
     openSet.delete(id);
+    apply(false);
+    return;
   }
+  openSet.add(id);
+  const screen = item.closest ? item.closest(".hd-screen") : null;
+  const pid = projectOf(item) || "";
+  const cached = fullCache.has(fullKey(pid, id)) || !screen || !FULL_ID.test(id) || !pid;
+  if (cached) {
+    apply(true);
+    enqueue(item);
+    return;
+  }
+  item.setAttribute("data-loading", "1");
+  hit.setAttribute("aria-busy", "true");
+  const p = document.createElement("p");
+  p.className = "page-note hd-loading";
+  p.textContent = "Loading " + id + ".";
+  panel.parentNode.insertBefore(p, panel);
+  fetchFull(pid, id).catch(function () {}).then(function () {
+    hit.removeAttribute("aria-busy");
+    if (item.getAttribute("data-loading") !== "1") return;
+    item.removeAttribute("data-loading");
+    const n = item.querySelector(".hd-loading");
+    if (n) n.remove();
+    if (!openSet.has(id)) return;
+    apply(true);
+    enqueue(item);
+  });
 }
 
 function loadOpenRows() {
