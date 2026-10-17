@@ -1,7 +1,7 @@
 // System context menu (R11.105): header (name, kind, progress), action items, optional inline task list.
 // menuItems/menuHtml/placeMenu/nextIndex are pure; openMenu/closeMenu/bindContextMenu touch the DOM.
 
-import { esc, chipHtml, meterHtml } from "../dom.js";
+import { esc, chipHtml, meterHtml, setHtml } from "../dom.js";
 
 const LIST_MAX = 12;
 const LONG_PRESS_MS = 500;
@@ -47,9 +47,12 @@ function taskRows(d, pid) {
 function listHtml(d, pid) {
   const rows = taskRows(d, pid);
   const shown = rows.slice(0, LIST_MAX).map((r) =>
-    '<a class="sys-menu-row" role="menuitem" href="' + esc(r.href) + '">' + chipHtml(r.status || "-", "neutral") +
-    '<span class="sys-menu-id">' + esc(r.id) + '</span><span class="sys-menu-t">' + esc(r.title) + "</span></a>").join("");
-  const more = rows.length > LIST_MAX ? '<span class="sys-menu-more">+' + (rows.length - LIST_MAX) + " more</span>" : "";
+    '<a class="sys-menu-row" role="menuitem" href="' + esc(r.href) + '">' +
+    chipHtml(r.status || "-", "neutral") +
+    '<span class="sys-menu-id">' + esc(r.id) + '</span><span class="sys-menu-t">' + esc(r.title) +
+    "</span></a>").join("");
+  const more = rows.length > LIST_MAX ?
+    '<span class="sys-menu-more">+' + (rows.length - LIST_MAX) + " more</span>" : "";
   return '<div class="sys-menu-list">' + shown + more + "</div>";
 }
 
@@ -69,7 +72,8 @@ export function menuHtml(target, d, opts) {
   for (const it of menuItems(t, d, o)) {
     body += btn(it);
     if (it.action === "tasks" && o.showTasks) body += listHtml(d, o.pid);
-    if (it.action === "ask" || it.action === "work") body += it.action === "ask" ? '<div class="sys-menu-sep" role="separator"></div>' : "";
+    if (it.action === "ask" || it.action === "work")
+      body += it.action === "ask" ? '<div class="sys-menu-sep" role="separator"></div>' : "";
   }
   return '<div class="sys-menu" role="menu" aria-label="' + esc("Actions for " + (t.label || t.id)) + '">' +
     head + '<div class="sys-menu-sep" role="separator"></div>' + body + "</div>";
@@ -138,7 +142,7 @@ function onKey(e) {
 
 function render() {
   const c = current;
-  el.innerHTML = menuHtml(c.target, c.d, c.opts);
+  setHtml(el, menuHtml(c.target, c.d, c.opts));
   const m = el.firstElementChild;
   const box = c.box;
   const pos = placeMenu(c.at, { w: m.offsetWidth, h: m.offsetHeight }, box);

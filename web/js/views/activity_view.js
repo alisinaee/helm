@@ -14,7 +14,8 @@ const BAR_W = 10;
 const BAR_H = 36;
 
 export function icon(name) {
-  return '<svg class="ico" aria-hidden="true" focusable="false"><use href="/icons.svg#i-' + esc(name) + '"></use></svg>';
+  return '<svg class="ico" aria-hidden="true" focusable="false">' +
+    '<use href="/icons.svg#i-' + esc(name) + '"></use></svg>';
 }
 
 export function num(n) {
