@@ -1,0 +1,61 @@
+/* Shared section toolbar (R11.7, docs/TOOLBAR-PATTERN.md, web/js/toolbar.js). One row <= 40px, filters collapsed. */
+.tb {position: sticky;top: 0;z-index: 5;background: var(--surface-0);display: flex;flex-direction: column;gap: var(--sp-1);
+  padding: var(--sp-1) 0}
+.tb-row {display: flex;align-items: center;gap: var(--sp-2);min-height: var(--h-control);max-height: 40px;
+  flex-wrap: nowrap;min-width: 0;position: relative}
+.tb-gap {flex: 1 1 auto}
+.tb-seg {display: inline-flex;border: 1px solid var(--line);border-radius: var(--r-control);overflow: hidden;
+  flex: 0 0 auto}
+.tb-seg-btn {height: var(--h-small);padding: 0 var(--sp-2);border: 0;background: var(--surface-1);color: var(--text-2);
+  font: inherit;font-size: var(--fs-12);cursor: pointer}
+.tb-seg-btn + .tb-seg-btn {border-left: 1px solid var(--line)}
+.tb-seg-btn[aria-pressed="true"] {background: var(--surface-2);color: var(--accent)}
+.tb-search {height: var(--h-small);width: 200px;min-width: 0;flex: 0 1 200px;padding: 0 var(--sp-2);
+  border: 1px solid var(--line);border-radius: var(--r-control);background: var(--surface-1);color: var(--text-1);
+  font: inherit;font-size: var(--fs-12)}
+.tb-filters, .tb-more {flex: 0 0 auto}
+.tb-count {display: inline-block;min-width: 16px;padding: 0 4px;margin-left: var(--sp-1);border-radius: 8px;
+  background: var(--accent);color: var(--on-accent);font-size: var(--fs-11);line-height: 16px;text-align: center;
+  font-variant-numeric: tabular-nums}
+.tb-more-wrap {position: relative;flex: 0 0 auto}
+.tb-menu {position: absolute;right: 0;top: calc(100% + var(--sp-1));z-index: var(--z-over);min-width: 180px;
+  display: flex;flex-direction: column;padding: var(--sp-1);background: var(--surface-1);border: 1px solid var(--line);
+  border-radius: var(--r-card);box-shadow: var(--shadow-2)}
+.tb-menu[hidden], .tb-pop[hidden] {display: none}
+.tb-menu-item {height: var(--h-control);padding: 0 var(--sp-2);border: 0;background: none;color: var(--text-1);
+  font: inherit;font-size: var(--fs-13);text-align: left;border-radius: var(--r-control);cursor: pointer}
+.tb-menu-item:hover, .tb-menu-item:focus-visible {background: var(--surface-2)}
+.tb-pop {position: absolute;left: 0;top: calc(var(--h-control) + var(--sp-3));z-index: var(--z-over);
+  width: min(720px, 100%);max-height: 60vh;overflow: auto;padding: var(--sp-3);background: var(--surface-1);
+  border: 1px solid var(--line);border-radius: var(--r-card);box-shadow: var(--shadow-2)}
+.tb-grps {display: grid;grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));gap: var(--sp-3)}
+.tb-grp {border: 0;margin: 0;padding: 0;min-width: 0}
+.tb-grp legend {padding: 0 0 var(--sp-1);color: var(--text-3);font-size: var(--fs-11);font-weight: 600}
+.tb-opt {display: grid;grid-template-columns: auto minmax(0, 1fr) auto;align-items: center;gap: var(--sp-2);
+  min-height: var(--h-small);font-size: var(--fs-13);color: var(--text-1);cursor: pointer}
+.tb-opt span:nth-child(2) {overflow: hidden;text-overflow: ellipsis;white-space: nowrap}
+.tb-opt-n {color: var(--text-3);font-size: var(--fs-12);font-variant-numeric: tabular-nums;text-align: right}
+.tb-pop-foot {display: flex;justify-content: flex-end;gap: var(--sp-2);margin-top: var(--sp-3);padding-top: var(--sp-2);
+  border-top: 1px solid var(--track)}
+.tb-applied {display: flex;flex-wrap: wrap;align-items: center;gap: var(--sp-1)}
+.tb-chip {display: inline-flex;align-items: center;gap: var(--sp-1);height: var(--h-small);padding: 0 var(--sp-2);
+  border: 1px solid var(--accent);border-radius: 12px;background: var(--sel);color: var(--text-1);font: inherit;
+  font-size: var(--fs-12);cursor: pointer}
+.tb-x {color: var(--text-2)}
+.tb-clear-link {height: var(--h-small);padding: 0 var(--sp-2);border: 0;background: none;color: var(--accent);font: inherit;
+  font-size: var(--fs-12);cursor: pointer}
+.tb-seg-btn:focus-visible, .tb-search:focus-visible, .tb-chip:focus-visible, .tb-clear-link:focus-visible,
+.tb-menu-item:focus-visible, .tb-opt input:focus-visible {outline: 2px solid var(--focus);outline-offset: 1px}
+@media (max-width: 767px) {
+  .tb-row {gap: var(--sp-1)}
+  .tb-search {flex: 1 1 auto;width: auto}
+  .tb-seg-btn, .tb-search, .tb-chip, .tb-clear-link, .tb-menu-item, .tb-row .btn {min-height: 44px}
+  .tb-row {max-height: none}
+  .tb-pop {position: fixed;left: 0;right: 0;bottom: 0;top: auto;width: auto;max-height: 70vh;
+    border-radius: var(--r-card) var(--r-card) 0 0}
+  .tb-grps {grid-template-columns: 1fr}
+  .tb-opt {min-height: 44px}
+}
+@media (prefers-reduced-motion: reduce) {
+  .tb * {transition: none}
+}

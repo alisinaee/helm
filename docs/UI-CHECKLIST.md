@@ -17,3 +17,5 @@ Rules every UI package must satisfy (priority order from the skill):
 10. Tables/boards: filters + bulk actions, empty states with one sentence and one action.
 
 Pre-delivery: check light and dark, 375 and 1440, console errors empty, CSP clean, `wc -c web/css/*.css` <= 72 KB (CSS_TOTAL_MAX in tests/web/test_shell.py).
+
+Section toolbars: one compact row, filters collapsed (R11.7, docs/TOOLBAR-PATTERN.md, web/js/toolbar.js). Top of a section = ONE row <= 40 px: view switcher (segmented), optional search, one "Filters" button with an active-count badge, max 2 primary actions, "..." overflow menu. Filter groups go in the collapsed popover (checkbox groups); applied filters show as removable chips in one wrapped line only when active. Never stack chip rows above the content.
