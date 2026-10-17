@@ -22,10 +22,10 @@ import tempfile
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_OUT = os.path.join(REPO, "docs", "facts", "FACTS.md")
 MAX_BYTES = 60 * 1024
-HELP_CAP = 2000          # characters of --help text kept per command
+HELP_CAP = 1500          # characters of --help text kept per command
 HELP_TIMEOUT = 60        # seconds per help call
 CONST_RE = re.compile(r"(_MAX|_CAP|_LIMIT|_KEEP)$|^(KEEP|CAP|LIMIT)$|^KEEP_|^LIMIT_")
-DOC_CLIP = 160
+DOC_CLIP = 96
 GIT_LOG_COUNT = 30
 
 
