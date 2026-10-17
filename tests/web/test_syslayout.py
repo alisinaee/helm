@@ -184,5 +184,129 @@ class SysLayoutTest(unittest.TestCase):
         self.assertEqual([c["write"] for c in mx["cells"]], [True, False])
 
 
+SCRIPT2 = r"""
+(async () => {
+  const { readFileSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const { pathToFileURL } = await import("node:url");
+  const m = await import(pathToFileURL(join(process.argv[1], "js", "graph", "syslayout.js")).href);
+  const input = JSON.parse(readFileSync(0, "utf8"));
+  const small = input.small;
+  const out = {};
+  out.collapsed = m.collapseGroups(small, new Set(["A"]));
+  out.container = m.collapseGroups(input.container, new Set(["api"]));
+  out.sub = m.subgraph(small, "A");
+  const before = m.layeredLayout(small, { aspect: 1 });
+  const after = m.layeredLayout(small, { aspect: 1, collapsed: new Set(["A"]) });
+  out.before = before;
+  out.after = after;
+  out.shift = m.anchorShift(before, after, "B");
+  out.shiftA = m.anchorShift(before, after, "A");
+  out.shiftNone = m.anchorShift(before, after, "nope");
+  const big = input.big;
+  const col = new Set(["g0", "g2"]);
+  out.big = m.layeredLayout(big, { aspect: 1, collapsed: col });
+  let ms = Infinity;
+  for (let i = 0; i < 5; i++) {
+    const t = process.hrtime.bigint();
+    m.layeredLayout(big, { aspect: 1, collapsed: col });
+    ms = Math.min(ms, Number(process.hrtime.bigint() - t) / 1e6);
+  }
+  out.ms = ms;
+  out.inputKept = JSON.stringify(small) === JSON.stringify(input.small);
+  console.log(JSON.stringify(out));
+})();
+"""
+
+SMALL = {"groups": [{"id": "A", "label": "Alpha"}, {"id": "B", "label": "Beta"}],
+         "nodes": [{"id": "a1", "label": "a1", "group": "A"}, {"id": "a2", "label": "a2", "group": "A"},
+                   {"id": "b1", "label": "b1", "group": "B"}, {"id": "b2", "label": "b2", "group": "B"}],
+         "edges": [{"from": "a1", "to": "a2", "label": "inner"}, {"from": "a1", "to": "b1", "label": "x"},
+                   {"from": "a2", "to": "b1", "label": "y", "count": 3}, {"from": "a2", "to": "b2", "label": "x"},
+                   {"from": "b1", "to": "b2", "label": "z"}]}
+CONTAINER = {"groups": [{"id": "g", "label": "G"}],
+             "nodes": [{"id": "api", "label": "API", "group": "g"},
+                       {"id": "r1", "label": "r1", "group": "g", "parent": "api"},
+                       {"id": "r2", "label": "r2", "group": "g", "parent": "api"},
+                       {"id": "db", "label": "db", "group": "g"}],
+             "edges": [{"from": "r1", "to": "db", "label": "q"}, {"from": "r2", "to": "db", "label": "q"},
+                       {"from": "r1", "to": "r2", "label": "inner"}]}
+
+
+@unittest.skipIf(NODE is None, "node is not installed")
+class SysLayoutCollapseTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        payload = json.dumps({"small": SMALL, "container": CONTAINER, "big": big_view(n=60, groups=6)})
+        proc = subprocess.run([NODE, "-e", SCRIPT2, WEB], input=payload, capture_output=True, text=True,
+                              check=False, timeout=60)
+        if proc.returncode != 0:
+            raise AssertionError(proc.stderr)
+        cls.out = json.loads(proc.stdout)
+
+    def test_collapse_merges_edges_with_counts(self):
+        c = self.out["collapsed"]
+        self.assertEqual([n["id"] for n in c["nodes"]], ["g:A", "b1", "b2"])
+        g = c["nodes"][0]
+        self.assertEqual((g["kind"], g["label"], g["sub"], g["members"], g["collapsed"]),
+                         ("group", "Alpha", "2 parts", ["a1", "a2"], True))
+        self.assertEqual([x["id"] for x in c["groups"]], ["B"])
+        es = {(e["from"], e["to"]): e for e in c["edges"]}
+        self.assertEqual(set(es), {("g:A", "b1"), ("g:A", "b2"), ("b1", "b2")})
+        self.assertEqual((es[("g:A", "b1")]["count"], es[("g:A", "b1")]["label"]), (4, "2 links"))
+        self.assertEqual(es[("g:A", "b2")]["label"], "x")
+        self.assertFalse(any(e["from"] == e["to"] for e in c["edges"]))
+        self.assertTrue(self.out["inputKept"])
+
+    def test_collapse_container_hides_children(self):
+        c = self.out["container"]
+        self.assertEqual([n["id"] for n in c["nodes"]], ["api", "db"])
+        self.assertEqual(c["nodes"][0]["members"], ["r1", "r2"])
+        self.assertEqual([(e["from"], e["to"], e["count"], e["label"]) for e in c["edges"]],
+                         [("api", "db", 2, "q")])
+
+    def test_toggles_exist(self):
+        for lay in (self.out["before"], self.out["after"]):
+            for g in lay["groups"]:
+                self.assertFalse(g["collapsed"])
+                self.assertEqual(g["toggle"]["size"], 20)
+                self.assertEqual((g["toggle"]["x"] > g["x"], g["toggle"]["y"] >= g["y"]), (True, True))
+                self.assertLessEqual(g["toggle"]["y"] + 20, g["y"] + g["h"])
+        node = [n for n in self.out["after"]["nodes"] if n["id"] == "g:A"][0]
+        self.assertTrue(node["collapsed"])
+        self.assertEqual(node["toggle"]["size"], 20)
+        self.assertIsNone(self.out["before"]["nodes"][0].get("toggle"))
+
+    def test_subgraph_boundary_nodes(self):
+        s = self.out["sub"]
+        kinds = {n["id"]: n.get("kind") for n in s["nodes"]}
+        self.assertEqual(set(kinds), {"a1", "a2", "b1", "b2"})
+        self.assertEqual((kinds["b1"], kinds["b2"], kinds["a1"]), ("external", "external", None))
+        self.assertEqual([n["sub"] for n in s["nodes"] if n["id"] == "b1"], ["outside"])
+        self.assertEqual([g["id"] for g in s["groups"]], ["A"])
+        self.assertEqual(len(s["edges"]), 4)
+        self.assertFalse(any(e["from"] == "b1" and e["to"] == "b2" for e in s["edges"]))
+
+    def test_anchor_shift(self):
+        b = {n["id"]: n for n in self.out["before"]["groups"]}["B"]
+        a = {n["id"]: n for n in self.out["after"]["groups"]}["B"]
+        self.assertEqual(self.out["shift"], {"dx": a["x"] - b["x"], "dy": a["y"] - b["y"]})
+        self.assertNotEqual(self.out["shift"]["dy"], 0)
+        self.assertIn("dx", self.out["shiftA"])
+        self.assertEqual(self.out["shiftNone"], {"dx": 0, "dy": 0})
+
+    def test_no_overlap_after_collapse_and_fast(self):
+        lay = self.out["big"]
+        ids = {n["id"] for n in lay["nodes"]}
+        self.assertTrue({"g:g0", "g:g2"} <= ids)
+        for i, a in enumerate(lay["nodes"]):
+            for b in lay["nodes"][i + 1:]:
+                self.assertFalse(overlap(a, b), (a["id"], b["id"]))
+        for i, a in enumerate(lay["groups"]):
+            for b in lay["groups"][i + 1:]:
+                self.assertFalse(overlap(a, b))
+        self.assertLess(self.out["ms"], 50)
+
+
 if __name__ == "__main__":
     unittest.main()

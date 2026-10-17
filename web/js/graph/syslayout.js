@@ -115,7 +115,197 @@ function bandDepth(ids, edges) {
   return depth;
 }
 
+const TOGGLE = 20;
+
+// Ids of `gid` and every group nested under it (groups carry an optional `parent` group id).
+function groupTree(groups, gid) {
+  const ids = new Set([gid]);
+  for (let grow = true; grow;) {
+    grow = false;
+    groups.forEach((g) => {
+      if (g && !ids.has(g.id) && ids.has(g.parent)) {
+        ids.add(g.id);
+        grow = true;
+      }
+    });
+  }
+  return ids;
+}
+
+// Collapses the groups (and container nodes) named in the Set `collapsed`; returns a new view, the input is untouched.
+// A collapsed group becomes ONE node {id:"g:"+id, kind:"group", members, collapsed:true}; a collapsed container keeps its
+// id and absorbs its children. Edges are re-pointed, self edges dropped, parallel edges merged (counts summed).
+export function collapseGroups(view, collapsed) {
+  const set = collapsed instanceof Set ? collapsed : new Set(collapsed || []);
+  const groups = (Array.isArray(view.groups) ? view.groups : []).filter((g) => g && g.id);
+  const nodes = (Array.isArray(view.nodes) ? view.nodes : []).filter((n) => n && n.id);
+  const edges = Array.isArray(view.edges) ? view.edges : [];
+  if (!set.size) return { groups: groups, nodes: nodes, edges: edges };
+  const gById = new Map(groups.map((g) => [g.id, g]));
+  const nById = new Map(nodes.map((n) => [n.id, n]));
+  // Outermost collapsed group above a group id (or "" when none), guarded against parent cycles.
+  const topGroup = (gid) => {
+    let top = "";
+    const seen = new Set();
+    for (let c = gid; c !== undefined && c !== null && gById.has(c) && !seen.has(c); c = gById.get(c).parent) {
+      seen.add(c);
+      if (set.has(c)) top = c;
+    }
+    return top;
+  };
+  const topNode = (n) => {
+    let top = "";
+    const seen = new Set([n.id]);
+    for (let c = n.parent; c && nById.has(c) && !seen.has(c); c = nById.get(c).parent) {
+      seen.add(c);
+      if (set.has(c)) top = c;
+    }
+    return top;
+  };
+  const gone = new Set();
+  groups.forEach((g) => {
+    if (topGroup(g.id)) gone.add(g.id);
+  });
+  const rep = new Map();
+  const members = new Map();
+  const add = (key, id) => {
+    if (!members.has(key)) members.set(key, []);
+    members.get(key).push(id);
+  };
+  const outNodes = [];
+  const made = new Set();
+  const groupNode = (gid) => {
+    const g = gById.get(gid);
+    return { id: "g:" + gid, label: g.label || gid, sub: "", kind: "group", group: g.parent || null, members: [],
+      collapsed: true };
+  };
+  nodes.forEach((n) => {
+    const tg = topGroup(n.group);
+    const tn = tg ? "" : topNode(n);
+    if (tg) {
+      const id = "g:" + tg;
+      rep.set(n.id, id);
+      add(id, n.id);
+      if (!made.has(id)) {
+        made.add(id);
+        outNodes.push(groupNode(tg));
+      }
+    } else if (tn) {
+      rep.set(n.id, tn);
+      add(tn, n.id);
+    } else {
+      rep.set(n.id, n.id);
+      outNodes.push(n);
+    }
+  });
+  groups.forEach((g) => {
+    const id = "g:" + g.id;
+    if (set.has(g.id) && !gone.has(g.id) && !made.has(id)) {
+      made.add(id);
+      outNodes.push(groupNode(g.id));
+    }
+  });
+  const result = outNodes.map((n) => {
+    if (!n.collapsed && !(set.has(n.id) && members.has(n.id))) return n;
+    const m = (members.get(n.id) || []).slice();
+    return Object.assign({}, n, { sub: m.length + " parts", members: m, collapsed: true });
+  });
+  const merged = new Map();
+  const out = [];
+  edges.forEach((e) => {
+    if (!e) return;
+    const f = rep.has(e.from) ? rep.get(e.from) : e.from;
+    const t = rep.has(e.to) ? rep.get(e.to) : e.to;
+    if (f === t) {
+      if (e.from !== e.to) return;
+      out.push(e);
+      return;
+    }
+    if (f === e.from && t === e.to) {
+      out.push(e);
+      return;
+    }
+    const k = f + "\u0000" + t;
+    let m = merged.get(k);
+    if (!m) {
+      m = { e: Object.assign({}, e, { from: f, to: t }), n: 0, count: 0, labels: new Set(), derived: true };
+      merged.set(k, m);
+      out.push(m);
+    }
+    m.n += 1;
+    m.count += e.count || 1;
+    m.labels.add(e.label || "");
+    m.derived = m.derived && !!e.derived;
+  });
+  const finalEdges = out.map((m) => {
+    if (!m.e) return m;
+    const labels = Array.from(m.labels).filter((l) => l);
+    const label = m.labels.size > 1 ? m.n + " links" : labels[0] || "";
+    return Object.assign({}, m.e, { label: label, count: m.count, derived: m.derived });
+  });
+  return { groups: groups.filter((g) => !set.has(g.id) && !gone.has(g.id)), nodes: result, edges: finalEdges };
+}
+
+// The part of `view` inside group `groupId` (its nested groups too; a container node id gives its children) plus one
+// boundary node {kind:"external", sub:"outside"} per outside neighbour and the edges between them.
+export function subgraph(view, groupId) {
+  const groups = (Array.isArray(view.groups) ? view.groups : []).filter((g) => g && g.id);
+  const nodes = (Array.isArray(view.nodes) ? view.nodes : []).filter((n) => n && n.id);
+  const edges = Array.isArray(view.edges) ? view.edges : [];
+  const gids = groupTree(groups, groupId);
+  let inside = nodes.filter((n) => gids.has(n.group));
+  if (!groups.some((g) => g.id === groupId)) {
+    const kids = new Set([groupId]);
+    for (let grow = true; grow;) {
+      grow = false;
+      nodes.forEach((n) => {
+        if (!kids.has(n.id) && kids.has(n.parent)) {
+          kids.add(n.id);
+          grow = true;
+        }
+      });
+    }
+    kids.delete(groupId);
+    inside = nodes.filter((n) => kids.has(n.id));
+  }
+  const ids = new Set(inside.map((n) => n.id));
+  const nById = new Map(nodes.map((n) => [n.id, n]));
+  const outside = new Map();
+  const keep = [];
+  edges.forEach((e) => {
+    if (!e) return;
+    const a = ids.has(e.from);
+    const b = ids.has(e.to);
+    if (a === b && !a) return;
+    const other = a ? e.to : e.from;
+    if (!(a && b)) {
+      if (!nById.has(other)) return;
+      if (!outside.has(other)) {
+        const n = nById.get(other);
+        outside.set(other, { id: n.id, label: n.label || n.id, sub: "outside", kind: "external", group: "outside" });
+      }
+    }
+    keep.push(e);
+  });
+  return { groups: groups.filter((g) => gids.has(g.id)), nodes: inside.concat(Array.from(outside.values())),
+    edges: keep };
+}
+
+// How far node or group `id` moved between two layouts (a group that collapsed answers as its "g:" node), so a view can
+// keep it under the pointer after a toggle. Unknown in either layout: {dx:0, dy:0}.
+export function anchorShift(before, after, id) {
+  const find = (lay) => {
+    const all = ((lay && lay.nodes) || []).concat((lay && lay.groups) || []);
+    return all.find((b) => b.id === id) || all.find((b) => b.id === "g:" + id) || null;
+  };
+  const a = find(before);
+  const b = find(after);
+  if (!a || !b) return { dx: 0, dy: 0 };
+  return { dx: b.x - a.x, dy: b.y - a.y };
+}
+
 export function layeredLayout(view, opts) {
+  if (opts && opts.collapsed && opts.collapsed.size) view = collapseGroups(view, opts.collapsed);
   const wrap = (opts && opts.wrap) || WRAP;
   const groups = (Array.isArray(view.groups) ? view.groups : []).filter((g) => g && g.id);
   const known = new Set(groups.map((g) => g.id));
@@ -164,7 +354,8 @@ export function layeredLayout(view, opts) {
   rowsOf.forEach((rowList, bi) => {
     const rows = rowList.length;
     const h = BAND_HEAD + rows * NODE_H + (rows - 1) * ROW_GAP + BAND_PAD;
-    boxes.push({ id: used[bi].id, label: used[bi].label || used[bi].id, x: 0, y: y, w: width, h: h });
+    boxes.push({ id: used[bi].id, label: used[bi].label || used[bi].id, x: 0, y: y, w: width, h: h,
+      collapsed: false });
     for (let r = 0; r < rows; r++) {
       const row = flat[fi++];
       const rw = row.length * NODE_W + (row.length - 1) * GAP_X;
@@ -281,6 +472,13 @@ export function layeredLayout(view, opts) {
     }
   });
   routes.forEach((r) => delete r.pts);
+  boxes.forEach((b) => {
+    b.toggle = { x: b.x + 4, y: b.y + 2, size: TOGGLE };
+  });
+  const parents = new Set(nodes.map((n) => n.parent).filter((p) => p));
+  out.forEach((n) => {
+    if (n.collapsed || parents.has(n.id)) n.toggle = { x: n.x + 4, y: n.y + 4, size: TOGGLE };
+  });
   const top = Math.min(0, ...routes.filter((r) => r.label && r.ly !== null).map((r) => r.ly - LABEL_H));
   return { width: fullW, height: height, top: top, groups: boxes, nodes: Array.from(out.values()), edges: routes };
 }
