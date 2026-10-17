@@ -1,4 +1,15 @@
 > 2026-10-17 H234: person says DO NOT LAUNCH ANY NEW WORKERS/TASKS until they say so; running workers finish, head only verifies/commits.
+> Superseded 2026-10-17 ~13:11 (H292/H293): person explicitly told the head to investigate and fix live UI issues
+> ("I told you to investigate and fix the issue") after noticing no running jobs showed in the Agents panel. That is
+> a go-ahead for the jobs launched in that session (R11.135/136/137) only — it is not a blanket lift of H234. Before
+> launching anything NOT asked for in the current message, the head still asks first.
+
+> 2026-10-17 H292/H293 (root cause, read this before editing anything yourself): the head edited code directly
+> (R11.134 e-mail fix) instead of delegating to a worker, so no job ever showed "running" in the board while the
+> work happened. RULE: the head NEVER edits files itself (planner-only, H182, below) — not even a "quick" one-line
+> fix. Every change, however small, goes through `bin/roadmap job start` (so it is visible as running) BEFORE the
+> Agent tool call, a real worker (Agent tool) does the edit, then `job done` after it reports back. If the head
+> edits code directly anyway (even "just a comment" or "just a config flag"), that is a bug: stop and delegate instead.
 
 # Head runbook (how the head works here; read after HANDOVER.md)
 
