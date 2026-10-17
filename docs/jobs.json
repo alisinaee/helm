@@ -8694,9 +8694,9 @@
       "model": "agy",
       "task": "R11.4",
       "effort": "high",
-      "status": "running",
+      "status": "failed",
       "started": "2026-10-17T09:46:04+03:30",
-      "ended": null
+      "ended": "2026-10-17T10:11:51+03:30"
     },
     {
       "id": "j1082",

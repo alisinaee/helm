@@ -687,3 +687,5 @@
 {"v":1,"t":"u","id":"H241","ts":"2026-10-17T06:25:04Z","by":"head","set":{"status":"done"},"note":"answer: spacing control on System, Workflow map, Roadmap map (685c93d and this push)"}
 {"v":1,"t":"u","id":"H243","ts":"2026-10-17T06:26:51Z","by":"head","set":{"status":"done"},"note":"answer: Activity horizontal timeline with selected point, shipped in 5def822 and this follow-up"}
 {"v":1,"t":"u","id":"H242","ts":"2026-10-17T06:27:17Z","by":"head","set":{"status":"done"},"note":"answer: Git redesign 7a63b11 plus diff preview in this R11.118 push"}
+{"v":1,"t":"e","ts":"2026-10-17T06:41:42Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"dude why u run the agy ?","len":75,"h":"sha1:c4da889cd93b","prio":0,"id":"H244"}
+{"v":1,"t":"u","id":"H244","ts":"2026-10-17T06:41:51Z","by":"head","set":{"status":"done"},"note":"answer: killed a leftover agy audit started 09:46 before H239; no agy or Cursor from now on"}
