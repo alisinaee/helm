@@ -18,7 +18,7 @@ from roadmap.core.extras import extra_file
 from roadmap.core.parsers import error_entry
 from roadmap.core.snapshot import build_snapshot
 from roadmap.errors import RoadmapError
-from roadmap.services import control, head as head_store, limits, presence, rules, usage
+from roadmap.services import control, head as head_store, limits, presence, rules, tokenshare, usage
 from roadmap.store import config as config_store
 from roadmap.store import db as store_db
 from roadmap.store import events as store_events
@@ -110,7 +110,9 @@ def load_snapshot(project_id, now=None):
             hit = _CACHE.get(project_id)
         if hit is not None and hit[0] == rev:
             moment = datetime.now().astimezone()
-            return dict(hit[1], server_time=moment.isoformat(timespec="seconds"), usage=usage.show(now=moment))
+            cached = dict(hit[1], server_time=moment.isoformat(timespec="seconds"), usage=usage.show(now=moment))
+            cached["jobs"] = tokenshare.annotate([dict(j) for j in cached.get("jobs") or []])
+            return cached
     snap = _build(entry, folder, rev, now)
     if now is None:
         with _CACHE_LOCK:
@@ -139,6 +141,7 @@ def _build(entry, folder, rev, now, store=None):
                           head_records=store["head"] if store is not None else _head_records(folder),
                           rev=rev, usage=usage.show(now=moment), rule_proposals=_rule_proposals(folder))
     snap["errors"] = errors + snap["errors"]
+    tokenshare.annotate(snap.get("jobs") or [])
     return snap
 
 
