@@ -47,7 +47,7 @@ class CopyColumnTests(unittest.TestCase):
     def test_every_row_grid_has_the_fixed_copy_track(self):
         self.assertIn("--ref-col: 1.5rem;", read(CSS_DIR, "tokens.css"))
         self.assertIn(".row-grid {\n  display: grid;\n  grid-template-columns: var(--rg) var(--ref-col);", self.css)
-        self.assertIn(".act-list > .act-row.row-grid { grid-template-columns: 3.25rem minmax(0, 1fr) auto 1.75rem;",
+        self.assertIn(".act-list > .act-row.row-grid { grid-template-columns: 3rem auto minmax(0, 1fr) 1.75rem;",
                       read(CSS_DIR, "flow.css"))
 
     def test_copy_button_sits_in_the_last_track_and_fades_until_hover(self):
