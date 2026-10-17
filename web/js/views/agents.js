@@ -291,7 +291,7 @@ export function sectionView(vm) {
   const now = Date.now();
   const showName = vm.route.name !== "project";
   const note = "Live. Workers sit under the job that started them. The square stops that task.";
-  return '<div class="page-head"><h2 class="page-title">Agents</h2><p class="page-note">' + esc(note) + "</p></div>" +
+  return '<div class="page-head"><p class="page-note">' + esc(note) + "</p></div>" +
     scopes.map(function (entry) {
       return projectBlock(entry, now, showName);
     }).join("");

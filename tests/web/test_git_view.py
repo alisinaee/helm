@@ -118,7 +118,6 @@ class GitRender(unittest.TestCase):
 
     def test_changes_shows_branch_banners_files_and_the_commit_form(self):
         html = self.out["changes"]
-        self.assertIn("Git</h2>", html)
         self.assertIn("alpha", html)
         self.assertIn('class="git-chip git-branch">main<', html)
         self.assertIn("↑2 ↓0", html)

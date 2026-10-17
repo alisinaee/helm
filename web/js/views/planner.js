@@ -331,7 +331,7 @@ function pickProjectHtml(vm) {
   if (!projects.length) return emptyHtml("No projects yet.", '<a href="#/all/overview">Go to All projects</a>');
   const items = projects.map((p) => '<li><a class="btn" href="#/p/' + esc(p.id) + '/work/planner">' +
     esc(p.name || p.id) + "</a></li>").join("");
-  return '<div class="page-head"><p class="page-title">Work</p><p class="page-note">Pick a project</p></div>' +
+  return '<div class="page-head"><p class="page-note">Pick a project</p></div>' +
     '<ul class="pl-pick-list" aria-label="Projects">' + items + "</ul>";
 }
 

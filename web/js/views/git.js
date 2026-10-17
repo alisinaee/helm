@@ -444,7 +444,7 @@ function headerHtml(vm, entry) {
       'data-focus="git-push"' + (ahead > 0 ? "" : ' disabled title="Nothing to push: no commits ahead."') + ">" +
       (ahead > 0 ? "Push " + esc(ahead) + "↑" : "Push") + "</button>";
   }
-  return '<div class="git-bar"><h2 class="page-title">Git</h2><div class="git-chips">' + chips.join("") +
+  return '<div class="git-bar"><div class="git-chips">' + chips.join("") +
     '</div><div class="git-act"><button type="button" class="btn" data-git="refresh" data-focus="git-refresh" ' +
     'aria-label="Refresh" title="Refresh">Refresh</button>' + push + "</div></div>";
 }
@@ -567,7 +567,7 @@ function chooserHtml(vm) {
     return '<li class="row-grid git-br"><a class="rg-t" href="' + esc(projectHash(p.id, "git")) + '">' +
       esc(p.name || p.id) + "</a></li>";
   }).join("");
-  return '<div class="page-head"><h2 class="page-title">Git</h2><p class="page-note">Pick a project to see its ' +
+  return '<div class="page-head"><p class="page-note">Pick a project to see its ' +
     "repo.</p></div>" + '<ul class="git-list" aria-label="Projects">' + list + "</ul>";
 }
 
