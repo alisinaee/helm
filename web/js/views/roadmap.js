@@ -2,6 +2,7 @@
 // done/total, open and doing counts and an Approve button; a long lane shows its first tasks and a "Show N more"
 // toggle. Tasks are compact cards with a status glyph, model, size, a doing chip (a job is running) and a Blocked
 // badge when an open blocker names them. Estimates, spend and budget live in the Timeline only.
+// Map (R11.5, roadmap_map.js): the phases as a metro line with a card column per open phase; zoom, pan, menus.
 // Timeline: one bar per phase in plan order, its width proportional
 // to the estimated tokens and the spent part filled; there are no calendar dates.
 // Reordering always ends in plan.move, which moves a task only within its own phase. The paths are native drag, the
@@ -15,6 +16,7 @@ import { fmtCount, fmtTokens, MISSING } from "../format.js";
 import { pageState } from "./inbox.js";
 import { modelChip, phaseCopyHtml, STATE_GLYPH, STATE_WORD, taskCopyHtml } from "./tasks.js";
 import { showToast } from "./toast.js";
+import { mapView } from "./roadmap_map.js";
 
 const NO_PLAN = "No plan yet. Ask the lead to run plan import.";
 const CROSS_PHASE = "A task moves only within its own phase.";
@@ -177,14 +179,22 @@ function timelineHtml(project, snap) {
 function pageHead(vm, snap) {
   const left = snap.tokensLeftK == null ? MISSING : "~" + fmtTokens(snap.tokensLeftK) + " tokens left";
   const id = esc(vm.route.id);
-  const timeline = vm.route.view === "timeline";
-  return '<div class="page-head"><p class="page-title">Roadmap</p><p class="page-note">' +
-    esc(fmtCount(snap.done || 0) + " of " + fmtCount(snap.total || 0) + " items done · " + left) + "</p></div>" +
+  const view = vm.route.view === "timeline" || vm.route.view === "map" ? vm.route.view : "lanes";
+  const tab = function (name, path, label) {
+    return '<a href="#/p/' + id + "/roadmap" + path + '"' + (view === name ? ' aria-current="page"' : "") + ">" +
+      label + "</a>";
+  };
+  const tabs = '<nav class="seg plan-views" aria-label="Roadmap view">' + tab("lanes", "", "Lanes") +
+    tab("timeline", "/timeline", "Timeline") + tab("map", "/map", "Map") + "</nav>";
+  const note = '<p class="page-note">' + esc(fmtCount(snap.done || 0) + " of " + fmtCount(snap.total || 0) +
+    " items done · " + left) + "</p>";
+  // The Map keeps its head to one row (its legend sits under the diagram), so the diagram gets the height.
+  if (view === "map") {
+    return '<div class="page-head rmm-head"><p class="page-title">Roadmap</p>' + note + tabs + "</div>";
+  }
+  return '<div class="page-head"><p class="page-title">Roadmap</p>' + note + "</div>" +
     '<p class="page-note">● done  ◐ in progress  ○ to do  ⏸ on hold  ▶ doing = a job is running. ' +
-    "Done tasks are not listed.</p>" +
-    '<nav class="seg plan-views" aria-label="Roadmap view">' +
-    '<a href="#/p/' + id + '/roadmap"' + (timeline ? "" : ' aria-current="page"') + ">Lanes</a>" +
-    '<a href="#/p/' + id + '/roadmap/timeline"' + (timeline ? ' aria-current="page"' : "") + ">Timeline</a></nav>";
+    "Done tasks are not listed.</p>" + tabs;
 }
 
 export function sectionView(vm) {
@@ -196,6 +206,7 @@ export function sectionView(vm) {
   const snap = vm.project.snapshot;
   current = snap;
   if (!snap.phases.length) return emptyHtml(NO_PLAN);
+  if (vm.route.view === "map") return mapView(vm, snap, pageHead(vm, snap));
   const body = vm.route.view === "timeline" ? timelineHtml(vm.route.id, snap)
     : '<ol class="lanes">' + snap.phases.map(function (p) {
       return laneHtml(vm, snap, p, doingIds(snap));
