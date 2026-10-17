@@ -9229,6 +9229,38 @@
         "cacheWrite": 71150,
         "model": "sonnet"
       }
+    },
+    {
+      "id": "j1118",
+      "title": "haiku: R11.132 morph keeps mounted host children",
+      "model": "haiku",
+      "task": "R11.132",
+      "status": "done",
+      "started": "2026-10-17T11:14:46+03:30",
+      "ended": "2026-10-17T11:17:48+03:30",
+      "tokens": {
+        "in": 36,
+        "out": 16244,
+        "cacheRead": 1379979,
+        "cacheWrite": 95626,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1119",
+      "title": "haiku: R11.133 remove spacing upper limit",
+      "model": "haiku",
+      "task": "R11.133",
+      "status": "done",
+      "started": "2026-10-17T11:15:13+03:30",
+      "ended": "2026-10-17T11:16:09+03:30",
+      "tokens": {
+        "in": 16,
+        "out": 10189,
+        "cacheRead": 440316,
+        "cacheWrite": 37298,
+        "model": "haiku"
+      }
     }
   ]
 }

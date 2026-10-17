@@ -768,5 +768,15 @@
     "task": "R11.130",
     "title": "sonnet: R11.130 System spacing and readability",
     "model": "sonnet"
+  },
+  "a7f0aaba63c908fef": {
+    "task": "R11.132",
+    "title": "haiku: R11.132 morph keeps mounted host children",
+    "model": "haiku"
+  },
+  "a7c0a0f5022543891": {
+    "task": "R11.133",
+    "title": "haiku: R11.133 remove spacing upper limit",
+    "model": "haiku"
   }
 }

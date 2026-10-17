@@ -733,3 +733,9 @@
 {"v":1,"t":"e","ts":"2026-10-17T07:29:45Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"question?","sum":"i did set the token limit with ui did you get that as head ?","len":61,"h":"sha1:d5cc5bec8bb1","prio":2,"id":"H260"}
 {"v":1,"t":"u","id":"H260","ts":"2026-10-17T07:30:04Z","by":"head","set":{"status":"done"},"note":"answer: yes, panel lines P6-P13 received; board stops 5h 80% cap, week 33% cap; head follows them"}
 {"v":1,"t":"u","id":"H259","ts":"2026-10-17T07:31:41Z","by":"head","set":{"status":"done"},"note":"answer: c49f719 + this R11.130 follow-up: spacing scales all gaps, labels clear, controls readable"}
+{"v":1,"t":"e","ts":"2026-10-17T07:43:55Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"work flow map is not working , empty !!!","len":47,"h":"sha1:1de4af92fc99","prio":2,"id":"H261"}
+{"v":1,"t":"u","id":"H261","ts":"2026-10-17T07:44:36Z","by":"head","set":{"kind":"bug","sum":"Workflow map empty after flicker fix"},"link":["+task:R11.132"]}
+{"v":1,"t":"e","ts":"2026-10-17T07:44:57Z","src":"hook","sid":"8bc13c25","acct":null,"kind":"ask?","sum":"why set limit for the spacing change on diagrams ?","len":77,"h":"sha1:cadf8c298f41","prio":2,"id":"H262"}
+{"v":1,"t":"u","id":"H262","ts":"2026-10-17T07:45:04Z","by":"head","set":{"kind":"ask","sum":"No upper limit on diagram spacing"},"link":["+task:R11.133"]}
+{"v":1,"t":"u","id":"H262","ts":"2026-10-17T07:46:16Z","by":"head","set":{"status":"done"},"note":"answer: limit removed in this R11.133 commit (min 0.2, no max)"}
+{"v":1,"t":"u","id":"H261","ts":"2026-10-17T07:48:29Z","by":"head","set":{"status":"done"},"note":"answer: fixed in this R11.132 commit; live check: map renders and survives refresh"}

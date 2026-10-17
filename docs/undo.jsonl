@@ -1,11 +1,3 @@
-{"activity":"A284","sum":"R7.62 todo->partial","op":"task.status","args":{"id":"R7.62","status":"todo"},"at":"2026-10-15T15:45:28+03:30"}
-{"activity":"A285","sum":"R7.65 todo->partial","op":"task.status","args":{"id":"R7.65","status":"todo"},"at":"2026-10-15T15:45:28+03:30"}
-{"activity":"A286","sum":"R7.66 todo->partial","op":"task.status","args":{"id":"R7.66","status":"todo"},"at":"2026-10-15T15:45:28+03:30"}
-{"activity":"A287","sum":"R7.68 todo->partial","op":"task.status","args":{"id":"R7.68","status":"todo"},"at":"2026-10-15T15:45:28+03:30"}
-{"activity":"A288","sum":"R7.67 todo->done","op":"task.status","args":{"id":"R7.67","status":"todo"},"at":"2026-10-15T15:45:37+03:30"}
-{"activity":"A289","sum":"R7.65 partial->done","op":"task.status","args":{"id":"R7.65","status":"partial"},"at":"2026-10-15T15:48:06+03:30"}
-{"activity":"A290","sum":"H126 set status, note","op":"head.restore","args":{"steps":[{"id":"H126","set":{"status":"open"}}]},"at":"2026-10-15T15:48:07+03:30"}
-{"activity":"A291","sum":"AUTO project week acct 85% block removed","op":"limit.set","args":{"id":"AUTO","scope":"project","window":"week","kind":"acct","value":85,"action":"block"},"at":"2026-10-15T15:49:46+03:30"}
 {"activity":"A292","sum":"L1 global week pct 95% block set","op":"limit.rm","args":{"id":"L1"},"at":"2026-10-15T15:49:48+03:30"}
 {"activity":"A293","sum":"R7.63 todo->done","op":"task.status","args":{"id":"R7.63","status":"todo"},"at":"2026-10-15T15:50:30+03:30"}
 {"activity":"A294","sum":"H131 triaged as question","op":"head.restore","args":{"steps":[{"id":"H131","set":{"kind":"ask","sum":"why it cant show current usage ?"},"link":["-task:R7.63"]}]},"at":"2026-10-15T15:50:30+03:30"}
@@ -498,3 +490,11 @@
 {"activity":"A872","sum":"H260 set status, note","op":"head.restore","args":{"steps":[{"id":"H260","set":{"status":"open"}}]},"at":"2026-10-17T11:00:04+03:30"}
 {"activity":"A874","sum":"R3.8 partial->done","op":"task.status","args":{"id":"R3.8","status":"partial"},"at":"2026-10-17T11:01:41+03:30"}
 {"activity":"A875","sum":"H259 set status, note","op":"head.restore","args":{"steps":[{"id":"H259","set":{"status":"open"}}]},"at":"2026-10-17T11:01:41+03:30"}
+{"activity":"A876","sum":"R11.132 todo in R11","op":"backlog.remove","args":{"id":"R11.132","phase":"R11","phaseCreated":false},"at":"2026-10-17T11:14:35+03:30"}
+{"activity":"A877","sum":"H261 triaged as bug","op":"head.restore","args":{"steps":[{"id":"H261","set":{"kind":"ask","sum":"work flow map is not working , empty !!!"},"link":["-task:R11.132"]}]},"at":"2026-10-17T11:14:36+03:30"}
+{"activity":"A878","sum":"R11.133 todo in R11","op":"backlog.remove","args":{"id":"R11.133","phase":"R11","phaseCreated":false},"at":"2026-10-17T11:15:03+03:30"}
+{"activity":"A879","sum":"H262 triaged as ask","op":"head.restore","args":{"steps":[{"id":"H262","set":{"kind":"ask","sum":"why set limit for the spacing change on diagrams ?"},"link":["-task:R11.133"]}]},"at":"2026-10-17T11:15:04+03:30"}
+{"activity":"A880","sum":"R11.133 partial->done","op":"task.status","args":{"id":"R11.133","status":"partial"},"at":"2026-10-17T11:16:16+03:30"}
+{"activity":"A881","sum":"H262 set status, note","op":"head.restore","args":{"steps":[{"id":"H262","set":{"status":"open"}}]},"at":"2026-10-17T11:16:17+03:30"}
+{"activity":"A882","sum":"R11.132 partial->done","op":"task.status","args":{"id":"R11.132","status":"partial"},"at":"2026-10-17T11:18:29+03:30"}
+{"activity":"A883","sum":"H261 set status, note","op":"head.restore","args":{"steps":[{"id":"H261","set":{"status":"open"}}]},"at":"2026-10-17T11:18:30+03:30"}

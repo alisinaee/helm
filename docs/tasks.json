@@ -5114,7 +5114,8 @@
         "done": "2026-10-17T10:51:31+03:30"
       },
       "refs": [
-        "commit:0abcaa26f4e252f6c9eacc69c76fef5a91f7f59f"
+        "commit:0abcaa26f4e252f6c9eacc69c76fef5a91f7f59f",
+        "commit:8f8904a397046dbbfe92ff28415388882ca23715"
       ]
     },
     {
@@ -5295,7 +5296,8 @@
       "checkK": 0,
       "refs": [
         "commit:c49f719479782ce6a1b51ddb2a526658e61d00e3",
-        "commit:5ae9ee9660583c4b6a49668be84a3aad885912e5"
+        "commit:5ae9ee9660583c4b6a49668be84a3aad885912e5",
+        "commit:8f8904a397046dbbfe92ff28415388882ca23715"
       ],
       "at": {
         "done": "2026-10-17T11:01:41+03:30"
@@ -5312,6 +5314,40 @@
       "needsUser": false,
       "check": "none",
       "checkK": 0
+    },
+    {
+      "id": "R11.132",
+      "phase": "R11",
+      "title": "Workflow map empty: dom morph strips JS-mounted children of host elements (regression of R11.122)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true,
+      "at": {
+        "done": "2026-10-17T11:18:29+03:30"
+      }
+    },
+    {
+      "id": "R11.133",
+      "phase": "R11",
+      "title": "Diagram spacing: remove the 2.5x upper limit (all maps)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T11:16:16+03:30"
+      },
+      "refs": [
+        "commit:1e3c5d55dcc961022d52df264ff9031074d5564d"
+      ]
     }
   ],
   "schemaVersion": 1
