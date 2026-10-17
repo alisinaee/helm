@@ -28,6 +28,15 @@
 > `job done` look up the matching auto job's `tokensK` in `bin/roadmap job list --json` (same task, title containing
 > the job id) and pass it with `--tokens` so the board shows real numbers instead of "-".
 
+> 2026-10-17 H305/H306 (root cause: jobs stuck "running" forever with growing elapsed time after the work was
+> already done, committed, verified and pushed): the head kept starting jobs correctly but never called
+> `bin/roadmap job done <jid>` once a worker's result was verified — it moved straight to the next task instead of
+> closing the loop on the current one. RULE: closing a job is NOT optional and NOT deferred to "later" — the moment
+> a worker's commit is verified (tests pass, diff looks right) and pushed, `job done <jid> --tokens <K> "<note>"`
+> runs in that same step, before starting anything else for that task. Never let a job sit "running" once its real
+> work is finished — check `bin/roadmap job list --json` for stale `status: running` entries whose task already has
+> a pushed commit, and close them immediately if any are found.
+
 # Head runbook (how the head works here; read after HANDOVER.md)
 
 Product renamed to Helm (2026-10-16): repo alisinaee/helm, dir ~/Works/helm; use `bin/helm` or `bin/roadmap` (same). Project id stays `roadmap-board`.
