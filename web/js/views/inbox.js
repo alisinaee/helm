@@ -12,6 +12,7 @@ import { copyButton, refSummary } from "../ref.js";
 import { bindKey } from "../keys.js";
 import { pendingValue, run } from "../cmd.js";
 import { currentRoute, projectHash } from "../router.js";
+import { headSeenHtml } from "./headseen.js";
 
 const KEY_MAX = 6;
 const REC_SUFFIX = " (recommended)";
@@ -710,5 +711,6 @@ export function sectionView(vm) {
   const open = inboxItems(scopeSnapshots(vm), Date.now()).length;
   const sectionCopy = copyButton("section", "inbox.questions", "open questions",
     { project: vm.route.id, sum: refSummary("section", { count: open }) });
-  return '<div class="page-head ib-head"><h2 class="page-title">Inbox</h2>' + sectionCopy + "</div>" + inboxBody(vm);
+  return '<div class="page-head ib-head"><h2 class="page-title">Inbox</h2>' + sectionCopy + "</div>" +
+    (vm.route.name === "project" ? headSeenHtml(vm.route.id) : "") + inboxBody(vm);
 }

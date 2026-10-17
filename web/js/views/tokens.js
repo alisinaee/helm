@@ -6,6 +6,7 @@
 
 import { bannerHtml, esc } from "../dom.js";
 import { MISSING, fmtPercent, fmtResets, fmtTokens } from "../format.js";
+import { TABS, activeTab, acctPanelHtml, historyHtml, overviewHtml } from "./tokens_history.js";
 import { copyButton, refSummary } from "../ref.js";
 import { pageState } from "./inbox.js";
 import { tokensByHtml } from "./tokens_by.js";
@@ -32,12 +33,25 @@ function overrideHtml(pid, name) {
     "Override for 1 hour</button></p>";
 }
 
+// "6d 3h", "5h 20m", "12m": the time left to a reset on one short line; MISSING when unknown or past.
+export function shortReset(value, now) {
+  const ms = typeof value === "number" ? value : Date.parse(value);
+  if (!isFinite(ms)) return MISSING;
+  const left = Math.floor((ms - (typeof now === "number" ? now : Date.now())) / 60000);
+  if (left <= 0) return "soon";
+  if (left >= 1440) return Math.floor(left / 1440) + "d " + Math.floor((left % 1440) / 60) + "h";
+  if (left >= 60) return Math.floor(left / 60) + "h " + (left % 60) + "m";
+  return left + "m";
+}
+
 // Spend per project, read-only: tokens used this week, the estimated share of the weekly allowance, and when the
 // weekly window resets. One shared row grid; the numbers sit right-aligned in their own cells.
 function spendTableHtml(vm, snaps) {
   const names = {};
   for (const p of vm.projects || []) names[p.id] = p.name;
-  const reset = fmtResets(vm.usage ? vm.usage.weeklyResetsAt : null, vm.now);
+  const resetAt = vm.usage ? vm.usage.weeklyResetsAt : null;
+  const reset = shortReset(resetAt, vm.now);
+  const resetTitle = fmtResets(resetAt, vm.now);
   const head = '<li class="row-grid tk-spend rg-head"><span class="rg-t">Project</span>' +
     '<span class="rg-num">Tokens used</span><span class="rg-num">Share of weekly</span>' +
     '<span class="rg-num">Resets</span></li>';
@@ -47,7 +61,8 @@ function spendTableHtml(vm, snaps) {
     const name = names[snap.id] || snap.title || snap.id;
     return '<li class="row-grid tk-spend"><span class="rg-t" title="' + esc(name) + '">' + esc(name) +
       '</span><span class="rg-num num">' + esc(fmtTokens(week.tokK)) + '</span><span class="rg-num num">' +
-      esc(share) + '</span><span class="rg-num num">' + esc(reset) + "</span></li>";
+      esc(share) + '</span><span class="rg-num num" title="' + esc(resetTitle) + '">' +
+      esc(reset) + "</span></li>";
   }).join("");
   return '<ul class="spend-list" aria-label="Spend per project this week">' + head + rows + "</ul>";
 }
@@ -105,5 +120,24 @@ export function sectionView(vm) {
     { project: refPid, sum: refSummary("section", snaps.length) }), spendTableHtml(vm, snaps));
   const accuracy = '<p class="page-note">Percentages are estimates; token counts are exact.</p>';
   const by = '<section class="ov-card" aria-label="Tokens by task and model">' + tokensByHtml(vm) + "</section>";
-  return head + notice + usage + stop + share + limit + spend + by + accuracy;
+  const panels = {
+    overview: overviewHtml(refPid || ""),
+    history: historyHtml(refPid || ""),
+    by: by,
+    account: sectionCard("tk-acct", "Claude accounts", "", acctPanelHtml()),
+    limits: usage + stop + share + limit + spend + accuracy,
+  };
+  return head + notice + tabsHtml() + TABS.map(function (t) {
+    return '<div class="tk-panel" role="tabpanel" id="tk-p-' + t[0] + '" aria-labelledby="tk-t-' + t[0] + '"' +
+      (t[0] === activeTab() ? "" : " hidden") + ">" + panels[t[0]] + "</div>";
+  }).join("");
+}
+
+function tabsHtml() {
+  return '<div class="hd-seg tk-tabs" role="tablist" aria-label="Tokens sections">' + TABS.map(function (t) {
+    const on = t[0] === activeTab();
+    return '<button type="button" role="tab" id="tk-t-' + t[0] + '" data-tk="tab" data-value="' + t[0] +
+      '" aria-selected="' + on + '" aria-controls="tk-p-' + t[0] + '" tabindex="' + (on ? 0 : -1) +
+      '" data-focus="tk-tab-' + t[0] + '">' + esc(t[1]) + "</button>";
+  }).join("") + "</div>";
 }

@@ -21,6 +21,7 @@ from roadmap.core import head as head_core
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, RoadmapError
 from roadmap.services import control, git, jobs, jobtokens, presence, rules
 from roadmap.services import head as head_svc
+from roadmap.services import headpanel
 from roadmap.services import queue as queue_service
 from roadmap.store import atomic, lock, paths, schema
 
@@ -289,7 +290,8 @@ def _handle(raw, environ, cwd, now, clock, started):
     _touch_presence(project, now, clock, started)
     if event == "SessionStart":
         _head_claim(project, data_dir, payload, now, clock, started)
-        return _session_start(project, data_dir, clock, started, now)
+        panel = _panel_text(data_dir, payload, "start", now, clock, started)
+        return _session_start(project, data_dir, clock, started, now, panel=panel)
     pattern, names = project_settings(data_dir)
     regex = task_regex(pattern)
     known = jobs.known_task_ids(data_dir)
@@ -305,9 +307,45 @@ def _handle(raw, environ, cwd, now, clock, started):
         # A busy lock: return silently, so the hook exits 0 within its time budget. The next event tries again.
     if event == "Stop":
         _head_reply_capture(payload, data_dir, now, clock, started)
-        return _stop_pickup(payload, project, data_dir, now, clock, started) or _stop_gate(payload, project, data_dir,
-                                                                                         now)
+        panel = "" if payload.get("stop_hook_active") else _panel_text(data_dir, payload, "stop", now, clock, started)
+        reply = _stop_pickup(payload, project, data_dir, now, clock, started) or _stop_gate(payload, project, data_dir,
+                                                                                          now)
+        return _with_panel_block(reply, panel)
+    if event == "PostToolUse":
+        panel = _panel_text(data_dir, payload, "tool", now, clock, started)
+        if panel:
+            return {"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": panel}}
     return None
+
+
+# ------------------------------------------------------------------ panel to head (R11.2, docs/PANEL-TO-HEAD.md)
+
+def _panel_text(data_dir, payload, via, now, clock, started):
+    """The person's unseen board actions as hook text, marked seen for this session, or ''. Never for a subagent's
+    own hook (agent_id in the payload) and off with head.panel false in the project config. Fail-open."""
+    try:
+        if payload.get("agent_id"):
+            return ""
+        cfg = _head_config(data_dir).get("head")
+        if isinstance(cfg, dict) and cfg.get("panel") is False:
+            return ""
+        budget = max(0.05, (PRE_TIMEOUT_S - (clock() - started)) * 0.5)
+        moment = datetime.datetime.fromtimestamp(now).astimezone()
+        return headpanel.take_text(data_dir, via, sid=head_svc.session_key(payload.get("session_id")), now=moment,
+                                   timeout=budget)
+    except Exception as exc:
+        _log("panel skipped: " + type(exc).__name__)
+        return ""
+
+
+def _with_panel_block(reply, panel):
+    """A Stop reply that also carries the panel text: it joins an existing block, or blocks alone so the head reads
+    what the person did before it ends its turn."""
+    if not panel:
+        return reply
+    if isinstance(reply, dict) and reply.get("decision") == "block":
+        return dict(reply, reason=panel + "\n" + str(reply.get("reason") or ""))
+    return {"decision": "block", "reason": panel}
 
 
 def _run_event(project, data_dir, event, payload, active, regex, known, now):
@@ -543,7 +581,7 @@ def _log_denial(pid, reason, now):
     _log("denied " + pid + ": " + reason)
 
 
-def _session_start(project, data_dir, clock, started, now=None):
+def _session_start(project, data_dir, clock, started, now=None, panel=""):
     """Up to INBOX_LINES lines for the agent's context: the stop line first, then queued and answered items, then
     the head's line (HEAD-SPEC section 3) when the project captures."""
     lines = []
@@ -556,11 +594,13 @@ def _session_start(project, data_dir, clock, started, now=None):
         lines.append("roadmap: stopped by user at " + stamp + ". Run roadmap inbox.")
     lines += control.pending_lines(data_dir, limit=INBOX_LINES - len(lines))
     head_lines = _head_session_lines(data_dir, now)
-    if not lines and not head_lines:
+    panel_lines = panel.split("\n") if panel else []
+    if not lines and not head_lines and not panel_lines:
         return None
     extra = _rule_lines(data_dir, _queued_task(data_dir), clock, started) if lines else []
     return {"hookSpecificOutput": {"hookEventName": "SessionStart",
-                                   "additionalContext": "\n".join(lines[:INBOX_LINES] + extra + head_lines)}}
+                                   "additionalContext": "\n".join(lines[:INBOX_LINES] + extra + head_lines
+                                                                  + panel_lines)}}
 
 
 # ------------------------------------------------------------------ head capture: UserPromptSubmit (HEAD-SPEC section 3)
@@ -782,8 +822,7 @@ def _head_reply_capture(payload, data_dir, now, clock, started):
 
 
 def _user_prompt(payload, environ, cwd, now, clock, started):
-    """Log the prompt for the head and reply with one triage line. Off unless the project sets headCapture. Fail-open:
-    it never blocks the prompt, and the lock wait is a share of what is left of the 0.3 s budget (a busy lock spools)."""
+    """The prompt's reply: the person's unseen board actions (R11.2) first, then the triage line of the capture."""
     project = _project_for(payload, environ, cwd)
     if project is None:
         return None
@@ -791,6 +830,18 @@ def _user_prompt(payload, environ, cwd, now, clock, started):
     if not os.path.isdir(data_dir):
         return None
     _head_claim(project, data_dir, payload, now, clock, started)
+    panel = _panel_text(data_dir, payload, "prompt", now, clock, started)
+    reply = _prompt_capture(payload, data_dir, now, clock, started)
+    text = "\n".join(part for part in (panel, reply) if part)
+    if not text:
+        return None
+    return {"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": text}}
+
+
+def _prompt_capture(payload, data_dir, now, clock, started):
+    """Log the prompt for the head and return one triage line, or None. Off unless the project sets headCapture.
+    Fail-open: it never blocks the prompt, and the lock wait is a share of what is left of the 0.3 s budget (a busy
+    lock spools)."""
     if not _head_on(data_dir):
         return None
     text = payload.get("prompt")
@@ -822,8 +873,7 @@ def _user_prompt(payload, environ, cwd, now, clock, started):
     if isinstance(hint, dict) and hint.get("hint") is False:
         return None
     untriaged = 0 if _too_slow(clock, started) else _untriaged(data_dir, moment, result["id"])
-    reply = _head_reply(result, untriaged)
-    return {"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": reply}}
+    return _head_reply(result, untriaged)
 
 
 def _untriaged(data_dir, moment, own):

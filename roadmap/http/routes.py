@@ -24,11 +24,14 @@ from roadmap.http import security
 from roadmap.services import agentguard, commands, control, loader, usage
 from roadmap.services import git as git_service
 from roadmap.services import head as head_service
+from roadmap.services import history as history_service
+from roadmap.services import headpanel, presence
 from roadmap.services import jobs as job_service
 from roadmap.services import system as system_service
 from roadmap.services import system_arch, system_v2
 from roadmap.services import work as work_service
 from roadmap.services import systemheat
+from roadmap.services import tokenhist
 from roadmap.services import tasks as task_service
 from roadmap.core.parsers import parse_jobs
 from roadmap.store import config as config_store
@@ -276,6 +279,11 @@ def usage_sync(app, req, match):
         app.sync()
     except usage.UsageError as exc:
         raise RoadmapError("usage_unavailable", str(exc), EXIT_EXTERNAL)
+    src = _cmd_source(app, req)[0]
+    panel_dir = _panel_dir() if src in headpanel.PERSON_SOURCES else None
+    if panel_dir:
+        headpanel.record(panel_dir, "usage.sync", "usage Update pressed: a fresh usage reading was asked for",
+                         src=src)
     return json_reply(200, usage.show())
 
 
@@ -316,7 +324,32 @@ def cmd(app, req, match):
             return _invalid(exc.message)
         raise
     control.after_write(project)
+    _to_head(data_dir, reply, headpanel.record_op(data_dir, op, args, reply, source))
     return json_reply(200, reply)
+
+
+def _to_head(data_dir, reply, line):
+    """R11.2: the person's write is on its way to the head. The reply names the panel line and whether a head session
+    is listening (watching, open or none), so the board can say sent / seen / acted. Never fails the write."""
+    if isinstance(reply, dict) and line:
+        reply["panel"] = {"id": line["id"], "head": presence.state(data_dir)}
+
+
+def _panel_dir(project=None):
+    try:
+        return task_service.resolve(_cmd_project(project))[1]
+    except Exception:
+        return None
+
+
+def project_panel(app, req, match):
+    """GET /api/v1/projects/{pid}/panel (R11.2): the person's newest board actions with their head state (sent, seen,
+    acted) and whether a head session is listening."""
+    project = _cmd_project(match.group("pid"))
+    _, data_dir = task_service.resolve(project)
+    body = headpanel.state(data_dir)
+    body["head"] = presence.state(data_dir)
+    return json_reply(200, body)
 
 
 _IDEM_KEY_RE = re.compile(r"[\x21-\x7e]{1,128}")
@@ -356,8 +389,18 @@ def log_post(app, req, match):
         _guard_refused(app, "rate", req.path)
         return error_reply(429, "rate_limited", "the debug log takes at most %d events a minute"
                            % security.LOG_EVENTS_PER_MIN, headers=[("Retry-After", "60")])
+    src = _cmd_source(app, req)[0]
     for event in events:
         _log_ui_event(event, sid)
+        if isinstance(event, dict) and event.get("ev") == "ui.mark" and src in headpanel.PERSON_SOURCES:
+            ref = event.get("ref") if isinstance(event.get("ref"), str) else ""
+            route = event.get("route") if isinstance(event.get("route"), str) else ""
+            scoped = re.match(r"#/p/([^/?#]+)", route)
+            # R11.2: a Mark is the person flagging a bug: the head of the marked project hears of it
+            panel_dir = _panel_dir(scoped.group(1) if scoped else None) or _panel_dir()
+            if panel_dir:
+                headpanel.record(panel_dir, "mark", "Mark: I am seeing a bug here" + (" at " + route if route else "")
+                                 + (" on " + ref if ref else ""), src=src, ref=ref)
     return Reply(204)
 
 
@@ -640,6 +683,50 @@ def project_jobs(app, req, match):
     return json_reply(200, {"offset": offset, "limit": limit, "total": total, "rows": shaped})
 
 
+def tokens_history(app, req, match):
+    """GET /api/v1/tokens/history[?project=pid]: daily token sums by model, totals, per-task sums, the remaining
+    estimate per phase and the weekly usage samples (services/tokenhist.py). Read only."""
+    opts = _git_query(req.query, ("project",))
+    pid = _cmd_project(opts["project"]) if opts.get("project") else None
+    entries = []
+    for entry in config_store.list_projects():
+        if pid and entry["id"] != pid:
+            continue
+        try:
+            entries.append({"id": entry["id"], "name": entry.get("name"),
+                            "data_dir": task_service.resolve(entry["id"])[1]})
+        except RoadmapError:
+            continue
+    return json_reply(200, tokenhist.collect(entries, pid))
+
+
+# ---------------------------------------------------------------- history (R11.4, docs/ACTIVITY-V2.md)
+
+def _history_reply(app, req, page_of):
+    """One history page as JSON with a content ETag (304 on a match). Head item text and replies are only in the reply
+    for this server's own page; the phone listener gets the paths scrubbed."""
+    full = app.cmd_source != "phone" and _same_page_read(req.headers, app.port)
+    body = page_of(parse_qsl(req.query or "", keep_blank_values=True), full)
+    obj = _phone_public(body) if app.cmd_source == "phone" else body
+    etag = content_etag(obj)
+    if etag_matches(req.headers.get("If-None-Match"), etag):
+        return Reply(304, headers=[("ETag", etag)])
+    return json_reply(200, obj, headers=[("ETag", etag)])
+
+
+def project_history(app, req, match):
+    """GET /api/v1/projects/{pid}/history?kind=&actor=&from=&to=&q=&before=&limit=: the project's history, newest
+    first, one page; next is the cursor for older events."""
+    project = config_store.get_project(_cmd_project(match.group("pid")))
+    return _history_reply(app, req, lambda pairs, full: history_service.project_page(project, pairs, full))
+
+
+def all_history(app, req, match):
+    """GET /api/v1/history?...&project=: every project's history merged, each event with project and pname."""
+    entries = config_store.list_projects()
+    return _history_reply(app, req, lambda pairs, full: history_service.all_page(entries, pairs, full))
+
+
 # ---------------------------------------------------------------- git (GIT-SPEC step 2, read only)
 
 GIT_LOG_DEFAULT, GIT_LOG_MAX = 10, 100
@@ -814,13 +901,17 @@ ROUTES = (
     (re.compile(r"/api/v1/projects"), ("GET",), projects),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/snapshot"), ("GET",), project_snapshot),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/head"), ("GET",), project_head),
+    (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/panel"), ("GET",), project_panel),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/jobs"), ("GET",), project_jobs),
+    (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/history"), ("GET",), project_history),
+    (re.compile(r"/api/v1/history"), ("GET",), all_history),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/status"), ("GET",), git_status),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/log"), ("GET",), git_log),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/branches"), ("GET",), git_branches),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/show/(?P<sha>[^/]*)"), ("GET",), git_show),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/git/diff/(?P<sha>[^/]*)"), ("GET",), git_diff),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/system"), ("GET",), project_system),
+    (re.compile(r"/api/v1/tokens/history"), ("GET",), tokens_history),
     (re.compile(r"/api/v1/usage"), ("GET",), usage_get),
     (re.compile(r"/api/v1/usage/sync"), ("POST",), usage_sync),
     (re.compile(r"/api/v1/cmd"), ("POST",), cmd),
