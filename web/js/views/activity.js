@@ -61,11 +61,13 @@ export function activityRowHtml(e, ctx) {
     (ctx.sel === e.id ? " sel" : "");
   const proj = ctx.all ? '<span class="hx-proj" title="' + esc(e.pname || "Account") + '">' +
     esc(e.pname || "Account") + "</span>" : "";
-  return '<li class="act-row row-grid" id="hx-r-' + esc(e.id) + '" data-key="' + esc(e.id) + '" data-hx-row="' + flags.trim() + '">' +
+  return '<li class="act-row row-grid" id="hx-r-' + esc(e.id) + '" data-key="' + esc(e.id) +
+    '" data-hx-row="' + flags.trim() + '">' +
     '<span class="hx-time num" title="' + esc(stamp(e.ms)) + '">' + esc(clock(e.ms)) + "</span>" + proj +
     actorHtml(e.actor) + kindHtml(e) +
     '<button type="button" class="hx-open" data-hx="open" data-id="' + esc(e.id) + '" title="' + esc(what) +
-    '" aria-controls="hx-r-' + esc(e.id) + '" aria-expanded="' + (ctx.sel === e.id ? "true" : "false") + '"><span class="act-sum">' + shown +
+    '" aria-controls="hx-r-' + esc(e.id) + '" aria-expanded="' + (ctx.sel === e.id ? "true" : "false") +
+    '"><span class="act-sum">' + shown +
     "</span></button>" + refCell + '<span class="hx-model chip-' + esc(modelTone(e.model)) + '" title="' +
     esc(e.model || "") + '">' + esc(modelShort(e.model)) + "</span>" +
     '<span class="hx-tok num">' + (e.tokensK == null ? "" : esc(fmtTokens(e.tokensK))) + "</span>" + undo + "</li>";

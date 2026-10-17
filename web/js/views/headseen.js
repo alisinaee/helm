@@ -3,7 +3,7 @@
 // acted = the head acked it, or a later head write names its ref. One collapsed line; it opens to the rows.
 // The data comes from GET /api/v1/projects/{pid}/panel, read at most every REFRESH_MS, and patched in place.
 
-import { chipHtml, esc } from "../dom.js";
+import { chipHtml, esc, setHtml } from "../dom.js";
 import { getJson } from "../api.js";
 
 const REFRESH_MS = 5000;
@@ -40,7 +40,7 @@ async function refresh(pid) {
   const node = document.querySelector('[data-headseen="' + pid + '"]');
   if (!node) return;
   const open = node.querySelector("details[open]");
-  node.innerHTML = bodyHtml(entry.data);
+  setHtml(node, bodyHtml(entry.data));
   if (open && node.querySelector("details")) node.querySelector("details").open = true;
 }
 
