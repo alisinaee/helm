@@ -33,3 +33,4 @@
 .sys-crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-1);font-size:var(--fs-12);color:var(--text-2)}
 .sys-tog{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;cursor:pointer}
 @media (max-width:640px){.sys{height:calc(100vh - var(--h-top) - var(--h-bnav) - var(--sp-6))}.sys-seg-l{display:none}}
+.sys-crumb{color:var(--text-1);font-weight:600}
