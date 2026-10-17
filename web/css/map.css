@@ -1,5 +1,7 @@
 .wf-page,.wf{display:flex;flex-direction:column;gap:var(--sp-2);min-width:0}
 .wf-controls{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+/* R11.139: one compact height for the view switch, range and Timeline nav buttons (was 28px links, 24px buttons, 44px on phones). */
+.wf-controls .plan-views a,.wf-controls .btn{min-height:var(--h-control);height:var(--h-control);padding:0 var(--sp-2);font-size:var(--fs-12)}
 .wf-scroll{overflow-x:auto;max-width:100%;min-width:0}
 .wf-grid{display:grid;grid-template-columns:9rem max-content 8.5rem;width:max-content}
 .wf-tl{touch-action:none;user-select:none}
