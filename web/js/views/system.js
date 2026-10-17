@@ -338,8 +338,15 @@ function stage(pid, arch) {
 }
 
 function viewButton(id, label, note) {
+  const text = esc(label);
   return '<button type="button" class="btn btn-small" data-sys-view="' + esc(id) + '" aria-pressed="' +
-    (current === id) + '" title="' + esc(note || "") + '">' + esc(label) + "</button>";
+    (current === id) + '" title="' + esc(note || "") + '">' + text + "</button>";
+}
+
+function unavailableHtml(c) {
+  const text = esc(c.label || c.id);
+  return '<button type="button" class="btn btn-small" disabled title="' + esc(c.reason || "Not available") +
+    '">' + text + "</button>";
 }
 
 // With a catalog: Structure / Behaviour / Data segments of recommended views and a More menu; else every view.
@@ -356,9 +363,8 @@ function switcherHtml(arch) {
   }).join("");
   const more = cat.filter((c) => !rec(c));
   return segs + (more.length ? '<details class="sys-more"><summary class="btn btn-small">More</summary>' +
-    '<div class="sys-more-m">' + more.map((c) => c.available === false ? '<button type="button" class="btn ' +
-    'btn-small" disabled title="' + esc(c.reason || "Not available") + '">' + esc(c.label || c.id) + "</button>" :
-    btn(c)).join("") + "</div></details>" : "");
+    '<div class="sys-more-m">' + more.map((c) => c.available === false ? unavailableHtml(c) : btn(c)).join("") +
+    "</div></details>" : "");
 }
 
 function copyIdHtml(pid, arch) {

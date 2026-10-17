@@ -224,7 +224,8 @@ export function initToolbars() {
     const t = e.target && e.target.closest ? e.target : null;
     const panel = t ? t.closest(".tb-pop, .tb-menu") : null;
     if (!panel) return;
-    const btn = document.querySelector('[aria-controls="' + panel.id + '"]');
+    const btn = Array.prototype.find.call(document.querySelectorAll("[aria-controls]"),
+      (b) => b.getAttribute("aria-controls") === panel.id) || null;
     if (e.key === "Escape") {
       if (btn) { setPanel(btn, false, false); btn.focus(); }
       e.preventDefault();

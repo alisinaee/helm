@@ -133,8 +133,8 @@ function groupTree(groups, gid) {
 }
 
 // Collapses the groups (and container nodes) named in the Set `collapsed`; returns a new view, the input is untouched.
-// A collapsed group becomes ONE node {id:"g:"+id, kind:"group", members, collapsed:true}; a collapsed container keeps its
-// id and absorbs its children. Edges are re-pointed, self edges dropped, parallel edges merged (counts summed).
+// A collapsed group becomes ONE node {id:"g:"+id, kind:"group", members, collapsed:true}; a collapsed container
+// keeps its id and absorbs its children. Edges are re-pointed, self edges dropped, parallel edges merged.
 export function collapseGroups(view, collapsed) {
   const set = collapsed instanceof Set ? collapsed : new Set(collapsed || []);
   const groups = (Array.isArray(view.groups) ? view.groups : []).filter((g) => g && g.id);
