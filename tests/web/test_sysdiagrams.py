@@ -261,5 +261,74 @@ class SysDiagramsTest(unittest.TestCase):
         self.assertEqual(len(self.out["bigCls"]["boxes"]), 5)
 
 
+ROUTE_SCRIPT = r"""
+(async () => {
+  const { readFileSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const { pathToFileURL } = await import("node:url");
+  const m = await import(pathToFileURL(join(process.argv[1], "js", "graph", "sysdiagrams.js")).href);
+  const input = JSON.parse(readFileSync(0, "utf8"));
+  const out = {};
+  for (const [name, c] of Object.entries(input)) out[name] = m.routeEdge(c.a, c.b, c.boxes);
+  console.log(JSON.stringify(out));
+})();
+"""
+
+
+def box(i, x, y, w=100, h=50):
+    return {"id": i, "x": x, "y": y, "w": w, "h": h}
+
+
+def hits_box(p, q, r):
+    return max(p[0], q[0]) > r["x"] and min(p[0], q[0]) < r["x"] + r["w"] and \
+        max(p[1], q[1]) > r["y"] and min(p[1], q[1]) < r["y"] + r["h"]
+
+
+def in_box(pt, r):
+    return r["x"] < pt[0] < r["x"] + r["w"] and r["y"] < pt[1] < r["y"] + r["h"]
+
+
+@unittest.skipUnless(NODE, "node is not installed")
+class RouteEdgeTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        row = [box("v", 0, 0), box("s", 140, 0), box("w", 280, 0)]
+        below = [box("v", 0, 0), box("s", 140, 0), box("w", 280, 0), box("x", 140, 120)]
+        cases = {
+            "gap": {"a": row[0], "b": row[2], "boxes": row},
+            "below": {"a": below[0], "b": below[2], "boxes": below},
+            "adj": {"a": row[0], "b": row[1], "boxes": row},
+        }
+        p = subprocess.run([NODE, "-e", ROUTE_SCRIPT, WEB], input=json.dumps(cases), capture_output=True, text=True,
+                           timeout=60)
+        if p.returncode:
+            raise RuntimeError(p.stderr)
+        cls.out = json.loads(p.stdout)
+
+    def test_skip_middle_box_and_label_outside(self):
+        r = self.out["gap"]
+        pts = r["pts"]
+        self.assertTrue(r["ortho"])
+        for p, q in zip(pts, pts[1:]):
+            self.assertFalse(hits_box(p, q, box("s", 140, 0)), (p, q))
+        for b in (box("v", 0, 0), box("s", 140, 0), box("w", 280, 0)):
+            self.assertFalse(in_box(r["mid"], b), r["mid"])
+        self.assertEqual(pts[0], [50, 50])
+        self.assertEqual(pts[-1], [330, 50])
+
+    def test_label_in_gap_below_row(self):
+        r = self.out["below"]
+        self.assertTrue(r["ortho"])
+        self.assertEqual(r["mid"][1], 85)
+        for p, q in zip(r["pts"], r["pts"][1:]):
+            self.assertFalse(hits_box(p, q, box("x", 140, 120)))
+
+    def test_adjacent_is_side_to_side(self):
+        r = self.out["adj"]
+        self.assertFalse(r["ortho"])
+        self.assertEqual(r["pts"], [[100, 25], [140, 25]])
+        self.assertEqual(r["mid"], [120, 25])
+
+
 if __name__ == "__main__":
     unittest.main()
