@@ -49,10 +49,19 @@ def _read(root, rel):
         return None
 
 
+SKIP_DIRS = {"tests", "test", "fixtures", "__tests__", "examples"}
+SKIP_NAME_RE = re.compile(r"^test_.*\.py$|_test\.py$|\.(?:test|spec)\.[cm]?[jt]sx?$")
+
+
+def _is_fixture(rel):
+    parts = rel.split("/")
+    return any(p in SKIP_DIRS for p in parts[:-1]) or bool(SKIP_NAME_RE.search(parts[-1]))
+
+
 def _paths(files):
     out = []
     for rel in files or []:
-        if isinstance(rel, str) and rel not in out:
+        if isinstance(rel, str) and rel not in out and not _is_fixture(rel):
             out.append(rel)
         if len(out) >= MAX_FILES:
             break
