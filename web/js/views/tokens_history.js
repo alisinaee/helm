@@ -351,7 +351,8 @@ function xTicks(slots) {
 // ------------------------------------------------------------------ accounts (R11.8)
 // GET /api/v1/usage/accounts -> services/usage_accounts.list_status(); POST /api/v1/usage/accounts/<id>/<action> with
 // action connect | disconnect | switch | check | login (login opens Terminal; the person finishes it in the browser).
-// Login and logout run the existing CLI flow; the page never sees a password or token. E-mails are masked.
+// Login and logout run the existing CLI flow; the page never sees a password or token. E-mails are masked on the
+// phone listener only (it may be reached over a tunnel); the main listener shows the full address.
 const acct = { data: null, at: 0, loading: false, error: false, busy: "", note: "" };
 
 function loadAccounts() {
@@ -409,8 +410,8 @@ export function acctPanelHtml() {
   };
   const rows = acct.data.accounts.map(function (a) {
     const who = a.identity || {};
-    const name = who.loggedIn === false ? "not logged in" : [who.emailMasked, who.plan].filter(Boolean).join(" · ") ||
-      MISSING;
+    const name = who.loggedIn === false ? "not logged in" :
+      [who.email || who.emailMasked, who.plan].filter(Boolean).join(" · ") || MISSING;
     const nameTitle = name === MISSING ? "Not known until the account is checked" : (who.orgName || "");
     const r = a.reading || {};
     const btns = [a.active ? "" : acctButton(a.id, "switch", "Use", a.label),
