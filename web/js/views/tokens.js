@@ -6,7 +6,7 @@
 
 import { bannerHtml, esc } from "../dom.js";
 import { MISSING, fmtPercent, fmtResets, fmtTokens } from "../format.js";
-import { TABS, activeTab, acctPanelHtml, historyHtml, overviewHtml } from "./tokens_history.js";
+import { TABS, activeTab, acctPanelHtml, headerMetaHtml, historyHtml, overviewHtml } from "./tokens_history.js";
 import { copyButton, refSummary } from "../ref.js";
 import { pageState } from "./inbox.js";
 import { tokensByHtml } from "./tokens_by.js";
@@ -128,7 +128,8 @@ export function sectionView(vm) {
     account: sectionCard("tk-acct", "Claude accounts", "", acctPanelHtml()),
     limits: usage + stop + share + limit + spend + accuracy,
   };
-  return head + notice + tabsHtml() + TABS.map(function (t) {
+  const bar = '<div class="tk-bar">' + tabsHtml() + headerMetaHtml(refPid || "", title) + "</div>";
+  return head + notice + bar + TABS.map(function (t) {
     return '<div class="tk-panel" role="tabpanel" id="tk-p-' + t[0] + '" aria-labelledby="tk-t-' + t[0] + '"' +
       (t[0] === activeTab() ? "" : " hidden") + ">" + panels[t[0]] + "</div>";
   }).join("");

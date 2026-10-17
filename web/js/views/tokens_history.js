@@ -19,7 +19,7 @@ const FRESH_MS = 30000;
 const MAX_DAYS = 180;
 const TOP_N = 10;
 
-const ui = { tab: "overview", range: "30", metric: "units", off: new Set(), data: null, key: null, at: 0,
+const ui = { tab: "limits", range: "30", metric: "units", off: new Set(), data: null, key: null, at: 0,
   loading: false, error: false };
 
 function rerender() {
@@ -57,6 +57,30 @@ export function ensureHistory(pid) {
 
 export function activeTab() {
   return ui.tab;
+}
+
+// The header row above the tabs (R11.141): the active account, always, and the all-time measured tokens for the page's
+// project (or all projects). Reads the same data the tabs use, so no extra request is made.
+export function headerMetaHtml(pid, label) {
+  ensureHistory(pid);
+  ensureAccounts();
+  const active = acct.data && Array.isArray(acct.data.accounts) ? acct.data.accounts.find(function (a) {
+    return a.active;
+  }) : null;
+  let who = "";
+  if (active) {
+    const id = active.identity || {};
+    const mail = id.email || id.emailMasked || "";
+    who = esc(active.label) + (mail ? " · " + esc(mail) : "");
+  }
+  const d = ui.data;
+  let total = "";
+  if (d && ui.key === pid && d.totals && d.totals.all) {
+    const t = d.totals.all;
+    total = fmtN(t.in + t.out + t.cacheRead + t.cacheWrite);
+  }
+  return '<span class="tk-bar-who">' + (who || esc("No account")) + "</span>" +
+    '<span class="tk-bar-total">' + esc(label) + ' <strong class="num">' + (total || MISSING) + "</strong></span>";
 }
 
 function cellValue(c, metric) {
