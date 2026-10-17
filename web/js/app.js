@@ -8,7 +8,7 @@ import { bannerHtml, emptyHtml, esc, patch, setHidden, skeletonHtml } from "./do
 import { buildViewModel, createStore, isSheetWidth, loadPrefs, loadTheme, loadUi, nextTheme, normalizeSnapshot,
   panelIsOpen, saveTheme, savePrefs, sectionOpenState, updateUi } from "./state.js";
 import { currentRoute, onRouteChange } from "./router.js";
-import { fullRouteOf, loadSection, sectionById } from "./routes.js";
+import { fullRouteOf, fullSystemOf, loadSection, sectionById } from "./routes.js";
 import { configureCommands, pendingValue, run } from "./cmd.js";
 import { initKeys, setKeyHooks } from "./keys.js";
 import { featureLinkChange } from "./views/details.js";
@@ -222,11 +222,44 @@ function renderFull(pid) {
   });
 }
 
+let sysFull = false;
+function renderFullSystem(pid) {
+  sysFull = true;
+  root.hidden = true;
+  let host = document.getElementById("full-view");
+  if (!host) {
+    host = document.createElement("div");
+    host.id = "full-view";
+    document.body.appendChild(host);
+  }
+  host.hidden = false;
+  document.title = "System";
+  import("./views/system.js").then(function (mod) {
+    mod.mountFull(host, pid);
+  });
+}
+
 function render() {
   const started = Date.now();
+  if (sysFull && !fullSystemOf(window.location.hash)) {
+    sysFull = false;
+    const fh = document.getElementById("full-view");
+    if (fh) {
+      fh.textContent = "";
+      fh.style.cssText = "";
+    }
+    import("./views/system.js").then(function (mod) {
+      mod.leaveFull();
+    });
+  }
   const fullPid = fullRouteOf(window.location.hash);
   if (fullPid) {
     renderFull(fullPid);
+    return;
+  }
+  const sysPid = fullSystemOf(window.location.hash);
+  if (sysPid) {
+    renderFullSystem(sysPid);
     return;
   }
   root.hidden = false;

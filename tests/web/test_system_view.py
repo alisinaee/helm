@@ -112,5 +112,41 @@ class SystemViewTest(unittest.TestCase):
         self.assertIn('id: "system"', read("js", "routes.js"))
 
 
+class SystemFullScreenTest(unittest.TestCase):
+    """A7: #/full/<pid>/system shows the diagram alone (no nav) with a slim bar; Close or Esc returns."""
+
+    def test_route_is_parsed_and_distinct_from_the_workflow_one(self):
+        node = shutil.which("node")
+        if node is None:
+            raise unittest.SkipTest("node is not installed")
+        routes = "file://" + os.path.join(WEB, "js", "routes.js")
+        hashes = ["#/full/rb-site/system", "#/full/p1/system?x=1", "#/full/a/workflow", "#/p/a/system", "#/full/Bad/system"]
+        script = ("import { fullSystemOf, fullRouteOf } from " + json.dumps(routes) + ";\n"
+                  "process.stdout.write(JSON.stringify(" + json.dumps(hashes) +
+                  ".map((h) => [fullSystemOf(h), fullRouteOf(h)])));\n")
+        proc = subprocess.run([node, "--input-type=module", "-e", script], capture_output=True, text=True,
+                              check=False, timeout=60)
+        self.assertEqual(proc.returncode, 0, proc.stderr[-400:])
+        self.assertEqual([["rb-site", None], ["p1", None], [None, "a"], [None, None], [None, None]],
+                         json.loads(proc.stdout))
+
+    def test_app_hides_the_shell_and_mounts_the_system(self):
+        src = read("js", "app.js")
+        self.assertIn("fullSystemOf(window.location.hash)", src)
+        self.assertIn("mod.mountFull(host, pid);", src)
+        self.assertIn("mod.leaveFull();", src)
+
+    def test_bar_has_full_screen_and_close_and_esc_leaves(self):
+        src = read("js", "views", "system.js")
+        self.assertIn('op("full", "Open full screen", "Full screen")', src)
+        self.assertIn('op("exit", "Close full screen (Esc)", "Close")', src)
+        self.assertIn('return "#/full/" + pid + "/system";', src)
+        self.assertIn("else if (fullHost) closeFull();", src)
+        self.assertIn("export function mountFull(host, pid)", src)
+
+    def test_full_screen_adds_no_css(self):
+        self.assertNotIn("sys-full", read("css", "system.css"))
+
+
 if __name__ == "__main__":
     unittest.main()

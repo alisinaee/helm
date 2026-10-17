@@ -30,7 +30,7 @@ const MATRIX_EDGES = 16;
 const PAD = 12;
 const store = new Map();
 const reading = new Set();
-const mounted = new WeakSet();
+let mounted = new WeakSet();
 const taps = { last: null };
 let lastVm = null;
 let current = readPref("rb.sys.view", "components");
@@ -202,9 +202,14 @@ function svgWrap(inner, w, h, label) {
     Math.ceil(w) + '" data-h="' + Math.ceil(h) + '">' + markers() + '<g id="sys-vp">' + inner + "</g></svg>";
 }
 
+// The canvas: in full screen the one inside #full-view (the hidden shell may still hold another).
+function svgEl() {
+  return fullHost ? fullHost.querySelector("#sys-svg") : document.getElementById("sys-svg");
+}
+
 // Width over height of the canvas (the last one drawn, else the window less the bars), for the band columns.
 function canvasAspect() {
-  const svg = typeof document !== "undefined" && document.getElementById ? document.getElementById("sys-svg") : null;
+  const svg = typeof document !== "undefined" && document.getElementById ? svgEl() : null;
   const r = svg && svg.getBoundingClientRect ? svg.getBoundingClientRect() : null;
   if (r && r.width > 0 && r.height > 0) return r.width / r.height;
   const w = globalThis.innerWidth || 0;
@@ -325,6 +330,7 @@ function stage(pid, arch) {
 }
 
 function toolbarHtml(arch) {
+  const fs = fullHost !== null;
   const seg = VIEWS.map((m) => '<button type="button" class="btn btn-small" data-sys-view="' + m[0] +
     '" aria-pressed="' + (current === m[0]) + '" title="' + esc(m[2]) + '">' + m[1] + "</button>").join("");
   const op = (name, label, text) => '<button type="button" class="btn btn-small" data-sys-op="' + name +
@@ -335,7 +341,9 @@ function toolbarHtml(arch) {
   return '<div class="wfg-bar" role="toolbar" aria-label="System views"><span class="wfg-chips" role="group" ' +
     'aria-label="View">' + seg + '</span><span class="wfg-chips" role="group" aria-label="Zoom">' +
     op("out", "Zoom out", "−") + op("in", "Zoom in", "+") + op("fit", "Fit to screen", "Fit") +
-    op("sys", "Show the system summary", "Summary") + "</span>" + count + "</div>";
+    op("sys", "Show the system summary", "Summary") + "</span>" + (fs ? "" : count) + '<span class="wfg-chips" ' +
+    'role="group" aria-label="Screen">' + (fs ? op("exit", "Close full screen (Esc)", "Close") :
+    op("full", "Open full screen", "Full screen")) + "</span></div>";
 }
 
 function retryHtml() {
@@ -376,7 +384,20 @@ function sectionHtml(vm) {
     bodyHtml(pid, store.get(pid)) + "</div>";
 }
 
+// A7: "#/full/<pid>/system" shows the same module state alone in #full-view (no nav); Close or Esc goes back.
+let fullHost = null;
+let seq = 0;
+export function fullHash(pid) {
+  return "#/full/" + pid + "/system";
+}
+
 function redraw() {
+  if (fullHost && lastVm) {
+    const pid = lastVm.route.id;
+    patch(fullHost.firstChild.id, '<div class="sys">' + bodyHtml(pid, store.get(pid)) + "</div>");
+    mountSoon();
+    return;
+  }
   if (!lastVm) return;
   patch("main", sectionHtml(lastVm));
   mountSoon();
@@ -420,13 +441,14 @@ export function openingView(box, size) {
 }
 
 function mountNow() {
-  const svg = typeof document !== "undefined" ? document.getElementById("sys-svg") : null;
+  const svg = typeof document !== "undefined" ? svgEl() : null;
   if (!svg || mounted.has(svg)) return;
   mounted.add(svg);
+  if (fullHost) svg.style.height = Math.max(240, innerHeight - svg.getBoundingClientRect().top - 8) + "px";
   const box = { w: Number(svg.getAttribute("data-w")) || 1, h: Number(svg.getAttribute("data-h")) || 1 };
   const r = svg.getBoundingClientRect();
   const size = { w: r.width || box.w, h: r.height || box.h };
-  api = mountViewport(svg, document.getElementById("sys-vp"), {
+  api = mountViewport(svg, svg.querySelector("#sys-vp"), {
     view: auto || !view ? openingView(box, size) : view, box: box, taps: taps, fit: false,
     onTap: (el) => select(el.getAttribute("data-sys")),
     onClear: () => {
@@ -466,7 +488,55 @@ function onKey(event) {
   if ((event.key === "Enter" || event.key === " ") && t && t.getAttribute && t.getAttribute("data-sys")) {
     event.preventDefault();
     select(t.getAttribute("data-sys"));
-  } else if (event.key === "Escape" && selected) select(null);
+  } else if (event.key === "Escape") {
+    if (selected) select(null);
+    else if (fullHost) closeFull();
+  }
+}
+
+function closeFull() {
+  const pid = lastVm ? lastVm.route.id : "";
+  const prev = fullHost && fullHost.getAttribute("data-from");
+  window.location.hash = prev || "#/p/" + pid + "/system";
+}
+
+function openFull() {
+  if (!lastVm || lastVm.route.name !== "project") return;
+  from = window.location.hash;
+  window.location.hash = fullHash(lastVm.route.id);
+}
+
+// Called by app.js on every render of the full route; the section's state (view, selection, zoom) carries over.
+export function mountFull(host, pid) {
+  if (!lastVm || lastVm.route.id !== pid) lastVm = { route: { name: "project", id: pid } };
+  if (!bound) bindDoc();
+  if (!store.has(pid) && !reading.has(pid)) load(pid);
+  if (fullHost !== host || !host.firstChild) {
+    host.textContent = "";
+    const box = document.createElement("div");
+    box.id = "sys-full-" + (seq += 1);
+    host.appendChild(box);
+    host.style.setProperty("--h-top", "0px");
+    host.style.padding = "8px";
+    host.style.minHeight = "100vh";
+    host.style.boxSizing = "border-box";
+    host.style.background = "var(--surface-0)";
+    host.setAttribute("data-from", from);
+    fullHost = host;
+    if (api) api.destroy();
+    api = null;
+  }
+  redraw();
+}
+
+// Leaves full-screen mode (app.js calls it when the hash is no longer the full route).
+export function leaveFull() {
+  if (!fullHost) return;
+  fullHost = null;
+  if (api) api.destroy();
+  api = null;
+  mounted = new WeakSet();
+  redraw();
 }
 
 function onClick(event) {
@@ -503,7 +573,9 @@ function onClick(event) {
     store.delete(lastVm.route.id);
     load(lastVm.route.id);
     redraw();
-  } else if (op === "fit") {
+  } else if (op === "full") openFull();
+  else if (op === "exit") closeFull();
+  else if (op === "fit") {
     auto = true;
     view = null;
     redraw();
@@ -514,6 +586,13 @@ function onClick(event) {
 }
 
 let bound = false;
+let from = "";
+function bindDoc() {
+  bound = true;
+  document.addEventListener("click", onClick);
+  document.addEventListener("keydown", onKey);
+}
+
 export function sectionView(vm) {
   if (lastVm && lastVm.route.id !== vm.route.id) {
     selected = null;
@@ -523,9 +602,7 @@ export function sectionView(vm) {
   }
   lastVm = vm;
   if (!bound && typeof document !== "undefined" && document.addEventListener) {
-    bound = true;
-    document.addEventListener("click", onClick);
-    document.addEventListener("keydown", onKey);
+    bindDoc();
   }
   if (vm.route.name === "project" && !store.has(vm.route.id) && !reading.has(vm.route.id)) load(vm.route.id);
   mountSoon();
