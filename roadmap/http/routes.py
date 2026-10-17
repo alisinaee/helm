@@ -21,7 +21,7 @@ from roadmap.errors import (EXIT_CONFLICT, EXIT_ERROR, EXIT_EXTERNAL, EXIT_INVAL
                             EXIT_USAGE, RoadmapError)
 from roadmap import log as rlog
 from roadmap.http import security
-from roadmap.services import agentguard, commands, control, loader, usage
+from roadmap.services import agentguard, commands, control, loader, usage, usage_accounts
 from roadmap.services import git as git_service
 from roadmap.services import head as head_service
 from roadmap.services import history as history_service
@@ -285,6 +285,34 @@ def usage_sync(app, req, match):
         headpanel.record(panel_dir, "usage.sync", "usage Update pressed: a fresh usage reading was asked for",
                          src=src)
     return json_reply(200, usage.show())
+
+
+ACCOUNT_ACTIONS = ("connect", "disconnect", "switch", "check", "login")
+
+
+def usage_accounts_get(app, req, match):
+    """GET /api/v1/usage/accounts: the Tokens page Account tab's rows, emails masked. Read only."""
+    return json_reply(200, usage_accounts.list_status(full_email=False))
+
+
+def usage_accounts_action(app, req, match):
+    """POST /api/v1/usage/accounts/{id}/{action}: connect, disconnect, switch, check or login one account.
+    The write guard runs first. An unknown action or account id gives a 404 error envelope."""
+    _write_guard(app, req)
+    account_id, action = match.group("id"), match.group("action")
+    if action not in ACCOUNT_ACTIONS:
+        raise RoadmapError("not_found", "no account action '%s'" % action[:40], EXIT_NOT_FOUND)
+    if action == "check":
+        result = usage_accounts.check(account_id)
+    elif action == "login":
+        result = usage_accounts.open_login(account_id, src="ui")
+    elif action == "connect":
+        result = usage_accounts.connect(account_id, src="ui")
+    elif action == "disconnect":
+        result = usage_accounts.disconnect(account_id, src="ui")
+    else:
+        result = usage_accounts.switch(account_id, src="ui")
+    return json_reply(200, result)
 
 
 def cmd(app, req, match):
@@ -914,6 +942,8 @@ ROUTES = (
     (re.compile(r"/api/v1/tokens/history"), ("GET",), tokens_history),
     (re.compile(r"/api/v1/usage"), ("GET",), usage_get),
     (re.compile(r"/api/v1/usage/sync"), ("POST",), usage_sync),
+    (re.compile(r"/api/v1/usage/accounts"), ("GET",), usage_accounts_get),
+    (re.compile(r"/api/v1/usage/accounts/(?P<id>[^/]+)/(?P<action>[a-z]+)"), ("POST",), usage_accounts_action),
     (re.compile(r"/api/v1/cmd"), ("POST",), cmd),
     (re.compile(r"/api/v1/log"), ("POST",), log_post),
     (re.compile(r"/api/v1/log/status"), ("GET",), log_status),
