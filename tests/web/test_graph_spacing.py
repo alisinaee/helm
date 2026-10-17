@@ -50,8 +50,8 @@ const out = {
   dep1: dep(1), dep2: dep(2),
   road1: ro(1), road2: ro(2), roadDef: ro(undefined),
   roadText1: JSON.stringify(ro(1)), roadTextDef: JSON.stringify(ro(undefined)),
-  spaceOf: [L.spacingOf(0.1), L.spacingOf(3), L.spacingOf("x"), L.stepSpacing(2.5, 1), L.stepSpacing(0.6, -1),
-    L.stepSpacing(1, 1)],
+  spaceOf: [L.spacingOf(0.1), L.spacingOf(6), L.spacingOf("x"), L.stepSpacing(6, 1), L.stepSpacing(0.2, -1),
+    L.stepSpacing(1, 1), L.stepSpacing(3, 1), L.stepSpacing(3.5, -1)],
 };
 console.log(JSON.stringify(out));
 """
@@ -89,7 +89,9 @@ class SpacingLayoutTests(unittest.TestCase):
 
     def test_flow_factor_is_clamped_and_one_is_the_default(self):
         self.assertEqual(self.out["flowDef"], self.out["flow1"])
-        self.assertEqual(self.out["flowHigh"], self.out["flow25"])
+        self.assertNotEqual(self.out["flowHigh"], self.out["flow25"])
+        self.assertGreater(self.out["flowHigh"]["b"]["x"] - self.out["flowHigh"]["a"]["x"],
+                           self.out["flow25"]["b"]["x"] - self.out["flow25"]["a"]["x"])
         low = self.out["flowLow"]["b"]["x"] - self.out["flowLow"]["a"]["x"]
         self.assertLess(low, self.out["flow1"]["b"]["x"] - self.out["flow1"]["a"]["x"])
 
@@ -116,13 +118,15 @@ class SpacingLayoutTests(unittest.TestCase):
         self.assertEqual(self.out["roadTextDef"], self.out["roadText1"])
 
     def test_spacing_helpers_clamp_and_step(self):
-        low, high, bad, up_at_top, down_at_bottom, one_up = self.out["spaceOf"]
-        self.assertEqual(low, 0.6)
-        self.assertEqual(high, 2.5)
+        low, high, bad, up_at_top, down_at_bottom, one_up, three_up, down_from_35 = self.out["spaceOf"]
+        self.assertEqual(low, 0.2)
+        self.assertEqual(high, 6)
         self.assertEqual(bad, 1)
-        self.assertEqual(up_at_top, 2.5)
-        self.assertEqual(down_at_bottom, 0.6)
+        self.assertEqual(up_at_top, 6.5)
+        self.assertEqual(down_at_bottom, 0.2)
         self.assertEqual(one_up, 1.2)
+        self.assertEqual(three_up, 3.5)
+        self.assertEqual(down_from_35, 3)
 
 
 class SpacingSourceTests(unittest.TestCase):

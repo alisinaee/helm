@@ -308,9 +308,9 @@ export function anchorShift(before, after, id) {
   return { dx: b.x - a.x, dy: b.y - a.y };
 }
 
-// Spacing factor (0.6 .. 2.5) scales gaps and padding only, never box sizes.
-export const SP_MIN = 0.6;
-export const SP_MAX = 2.5;
+// Spacing factor (0.2 .. no upper limit) scales gaps and padding only, never box sizes.
+export const SP_MIN = 0.2;
+export const SP_MAX = Infinity;
 export function clampSpace(x) {
   const n = Number(x);
   return Number.isFinite(n) && n > 0 ? Math.min(SP_MAX, Math.max(SP_MIN, n)) : 1;

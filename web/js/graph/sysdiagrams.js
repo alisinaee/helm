@@ -37,7 +37,7 @@ function ctx(opts) {
   const sp = Number(o.space);
   return { sel: o.selected == null ? null : String(o.selected), near: o.near instanceof Set ? o.near : null,
     edges: ["off", "selected", "all"].includes(o.edges) ? o.edges : "selected",
-    sp: Number.isFinite(sp) && sp > 0 ? Math.min(2.5, Math.max(0.6, sp)) : 1 };
+    sp: Number.isFinite(sp) && sp > 0 ? Math.max(0.2, sp) : 1 };
 }
 
 const DEFS = "<defs>" +

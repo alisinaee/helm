@@ -7,7 +7,7 @@
 //
 // opts: { status: all|open|doing|blocked|hold|done, model: "" or a model name, open: {pid: bool},
 // showDone: {pid: bool}, deps: [[from, to], ...], running: {taskId: true}, blocked: [taskId, ...], spacing: 1 }.
-// spacing (R11.115, 0.6 .. 2.5) scales the gap between columns and between cards; box sizes never change.
+// spacing (R11.115, 0.2 .. no upper limit) scales the gap between columns and between cards; box sizes never change.
 
 import { spacingOf } from "./layout.js";
 

@@ -21,10 +21,11 @@ export const PILL_W = 52;
 export const PILL_H = 20;
 
 // Spacing factor (R11.115): scales the gaps and the group padding of a layout, never a node box or a font. 1 is the
-// default; the Map's − and + buttons step it by SPACE_STEP between SPACE_MIN and SPACE_MAX.
-export const SPACE_MIN = 0.6;
-export const SPACE_MAX = 2.5;
+// default; the Map's − and + buttons step it between SPACE_MIN and no upper limit.
+export const SPACE_MIN = 0.2;
+export const SPACE_MAX = Infinity;
 export const SPACE_STEP = 0.2;
+export const SPACE_STEP_BIG = 0.5;
 export const SPACE_DEF = 1;
 
 export function spacingOf(v) {
@@ -33,9 +34,16 @@ export function spacingOf(v) {
   return Math.min(SPACE_MAX, Math.max(SPACE_MIN, n));
 }
 
+// The step size at factor v: 0.2 up to 3×, 0.5 above 3× so large factors are reached quickly.
+export function spacingStep(v, dir) {
+  const n = spacingOf(v);
+  return (dir > 0 ? n >= 3 : n > 3) ? SPACE_STEP_BIG : SPACE_STEP;
+}
+
 // The next factor one step up (dir 1) or down (dir -1), rounded to one decimal.
 export function stepSpacing(v, dir) {
-  return spacingOf(Math.round((spacingOf(v) + dir * SPACE_STEP) * 10) / 10);
+  const next = Math.round((spacingOf(v) + dir * spacingStep(v, dir)) * 10) / 10;
+  return Math.max(SPACE_MIN, Math.min(SPACE_MAX, next));
 }
 
 // The saved factor under key (localStorage, per map). Storage can be missing or blocked: the default then.

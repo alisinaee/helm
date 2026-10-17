@@ -325,7 +325,7 @@ SPACE_SCRIPT = r"""
   const r1 = m.layeredLayout(v2, { space: 1, aspect: 0.2 });
   const r2 = m.layeredLayout(v2, { space: 2, aspect: 0.2 });
   console.log(JSON.stringify({ rk1: rk(r1), rk2: rk(r2), lab: r2.edges.every((e) => e.lx !== null), g1: gap(one), g2: gap(two), w1: one.nodes[0].w, w2: two.nodes[0].w,
-    clamp: [m.clampSpace(9), m.clampSpace(0.1), m.clampSpace("x")] }));
+    clamp: [m.clampSpace(6), m.clampSpace(0.1), m.clampSpace("x")] }));
 })();
 """
 
@@ -339,7 +339,7 @@ class SpaceFactor(unittest.TestCase):
         self.assertEqual(r["rk2"], 2 * r["rk1"])
         self.assertTrue(r["lab"])
         self.assertEqual(r["w1"], r["w2"])
-        self.assertEqual(r["clamp"], [2.5, 0.6, 1])
+        self.assertEqual(r["clamp"], [6, 0.2, 1])
 
 
 BUNDLE_SCRIPT = r"""

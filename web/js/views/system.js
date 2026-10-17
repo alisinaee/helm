@@ -11,7 +11,7 @@ import { run } from "../cmd.js";
 import { copyButton, refOf } from "../ref.js";
 import { bannerHtml, chipHtml, emptyHtml, esc, patch, skeletonHtml } from "../dom.js";
 import { mountViewport } from "../graph/viewport.js";
-import { clampSpace, LABEL_MAX, layeredLayout, matrixLayout, MX_COL, MX_HEAD, MX_LEFT, MX_ROW, sequenceLayout,
+import { clampSpace, SP_MIN, LABEL_MAX, layeredLayout, matrixLayout, MX_COL, MX_HEAD, MX_LEFT, MX_ROW, sequenceLayout,
   weak, labelWidth } from
   "../graph/syslayout.js";
 import { human, panelHtml } from "./system-panel.js";
@@ -85,6 +85,7 @@ function readPref(key, dflt) {
 
 // Spacing factor per view (gaps and padding only), kept in localStorage.
 const SP_STEP = 0.2;
+const SP_STEP_BIG = 0.5;
 let keepCentre = null;
 
 function spaceKey() {
@@ -125,7 +126,8 @@ function setSpace(next) {
 }
 
 function spaceStep(dir) {
-  setSpace(spaceNow() + dir * SP_STEP);
+  const cur = spaceNow();
+  setSpace(Math.max(SP_MIN, cur + dir * ((dir > 0 ? cur >= 3 : cur > 3) ? SP_STEP_BIG : SP_STEP)));
 }
 
 const memSpace = new Map();
