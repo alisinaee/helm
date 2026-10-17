@@ -89,8 +89,12 @@ def load(project_root, use_cache=True):
         specs, layers = _with_others(specs, layers, scan["files"])
         source = "file" if not dropped and len(specs) == len(declared[0]) else "merged"
     comps = _materialize(specs, scan["files"], scan["bins"])
-    return {"source": source, "warnings": warnings, "layers": layers, "components": comps, "edges": edges,
-            "sha": scan["sha"], "fileCount": len(scan["files"]), "truncated": scan["truncated"]}
+    out = {"source": source, "warnings": warnings, "layers": layers, "components": comps, "edges": edges,
+           "sha": scan["sha"], "fileCount": len(scan["files"]), "truncated": scan["truncated"]}
+    views = _declared_views(root) if declared is not None else []
+    if views:
+        out["views"] = views
+    return out
 
 
 def assign_files(paths, components):
@@ -383,11 +387,15 @@ def _materialize(specs, files, bins):
                 entries.append(path)
         entries.extend(b for b in bins if b in mine_set)
         entries = list(dict.fromkeys(entries))[:MAX_ENTRIES]
-        out.append({"id": spec["id"], "name": spec.get("name") or spec["id"], "layer": spec["layer"],
-                    "kind": spec.get("kind", "module"), "files": list(spec.get("files", [])),
-                    "entry": entries[0] if entries else None, "entries": entries,
-                    "notes": spec.get("notes"), "owner": spec.get("owner"),
-                    "language": _language(mine), "fileCount": len(mine)})
+        comp = {"id": spec["id"], "name": spec.get("name") or spec["id"], "layer": spec["layer"],
+                "kind": spec.get("kind", "module"), "files": list(spec.get("files", [])),
+                "entry": entries[0] if entries else None, "entries": entries,
+                "notes": spec.get("notes"), "owner": spec.get("owner"),
+                "language": _language(mine), "fileCount": len(mine)}
+        for key in ("tasks", "work"):
+            if spec.get(key):
+                comp[key] = list(spec[key])
+        out.append(comp)
     return out
 
 
@@ -491,7 +499,35 @@ def _check_component(item, layers, seen, dropped, index):
         entry = None
     spec = {"id": cid, "name": name.strip(), "layer": layer, "kind": kind, "files": files, "notes": notes,
             "owner": owner, "entry": entry}
+    for key in ("tasks", "work"):
+        ids = _id_list(item.get(key))
+        if ids:
+            spec[key] = ids
     return spec
+
+
+def _id_list(value):
+    """Declared task / Work ids (short plain strings, at most 100); anything else is ignored."""
+    if not isinstance(value, list):
+        return []
+    out = []
+    for x in value:
+        if isinstance(x, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,19}", x) and x not in out:
+            out.append(x)
+    return out[:100]
+
+
+def _declared_views(root):
+    """The top-level "views" list of docs/system.json (view ids, pinned order), or []. Never raises."""
+    try:
+        raw = _read_confined(root, "docs/" + SYSTEM_FILE)
+        data = json.loads(raw.decode("utf-8")) if raw else {}
+    except (ValueError, UnicodeDecodeError, _Bad, _Refuse):
+        return []
+    views = data.get("views") if isinstance(data, dict) else None
+    if not isinstance(views, list):
+        return []
+    return [v for v in views if isinstance(v, str) and ID_RE.fullmatch(v)][:20]
 
 
 def _check_edge(item, ids):
