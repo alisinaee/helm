@@ -227,6 +227,14 @@ class RoadmapMapSourceTests(unittest.TestCase):
         self.assertIn(".rmm-stage{position:relative;flex:1", self.css)
         self.assertIn(".rmm-page.is-full{position:fixed;inset:0", self.css)
 
+    def test_actions_overlay_the_map_box_top_right(self):
+        self.assertIn("'<div class=\"rmm-stage\">' + overlayHtml() +", self.js)
+        self.assertIn('class="rmm-ov"', self.js)
+        self.assertIn(".rmm-ov{position:absolute;z-index:4;top:var(--sp-2);right:var(--sp-2)", self.css)
+        self.assertIn(".rmm-ov .btn{height:var(--h-small)", self.css)
+        self.assertIn("line-height:var(--h-small)", self.css)
+        self.assertIn("gap:var(--sp-2)", self.css)
+
     def test_reduced_motion_and_tokens_only(self):
         self.assertIn("@media (prefers-reduced-motion:reduce)", self.css)
         self.assertNotRegex(self.css, r"#[0-9a-fA-F]{3,8}\b")
