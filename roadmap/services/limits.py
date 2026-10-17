@@ -20,7 +20,7 @@ import time
 
 from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.log import get_logger
-from roadmap.services import budget, jobs, ledger, records, usage
+from roadmap.services import budget, jobs, ledger, limits_v2, records, usage
 from roadmap.store import config as config_store, lock, schema
 
 SCOPES = ("global", "project")
@@ -202,6 +202,7 @@ class _Context(object):
         self.pid = project_id
         self.now = moment
         self.weekly, fresh = _usage_state(moment)
+        self.v2 = {}
         self.doc, self.ledger_status = ledger.read()
         self.pct_ok = fresh and self.ledger_status == "ok"
         self.spent_total = None
@@ -218,6 +219,9 @@ def _measure(row, ctx):
         if ctx.ledger_status == "corrupt":
             return None, False
         return ledger.tokens_k(ctx.doc, ctx.pid if scope == "project" else None, window, ctx.now), False
+    if row.get("src") == "limits2":
+        pct, _, fresh = limits_v2._reading(row["measure"], ctx.now)
+        return (pct if fresh else None), False
     if not ctx.pct_ok:
         return None, False
     if kind == "acct":
@@ -249,7 +253,7 @@ def _state(used, ratio, action):
 def _pace_at(row, used, ctx):
     """The local time the measured usage reaches the limit at the pace of the last two hours, or None. It is counted
     from the newest reading, not from now, so the value does not move between readings."""
-    if used is None or row["kind"] == "tok" or ctx.ledger_status != "ok":
+    if used is None or row["kind"] == "tok" or row.get("src") == "limits2" or ctx.ledger_status != "ok":
         return None
     if row["kind"] == "pct" and row["scope"] == "project":
         return None  # an estimate has no pace of its own
@@ -283,6 +287,10 @@ def _evaluate_rows(project, moment):
                   % (project.get("id"), type(exc).__name__))
         doc, stored, bud, auto = None, [], None, None
     rows = global_rows() + stored + [row for row in (bud, auto) if row is not None]
+    try:
+        rows += limits_v2.gate_rows(moment)
+    except Exception as exc:
+        _log_once("limits: the v2 stops cannot be read (%s); skipped" % type(exc).__name__)
     ctx = _Context(project["id"], doc, moment)
     out = []
     for row in rows:
@@ -319,6 +327,9 @@ def evaluate(project, now=None):
 
 def describe(row):
     """The reason line of a row that warns or blocks (the words the hooks and the status show)."""
+    if row.get("src") == "limits2":
+        verb = "reached" if row["state"] == "block" else "at"
+        return "%s usage %s the stop at %g%%" % (limits_v2.FIELDS[row["measure"]][3], verb, row["value"])
     if row["id"] == AUTO_ID:
         if row["state"] == "block":
             return "weekly usage %d%% reached stopAtPercent %d%%" % (int(row["used"]), int(row["limit"]))

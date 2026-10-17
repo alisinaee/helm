@@ -1045,7 +1045,19 @@ def _stop_gate(payload, project, data_dir, now):
     _log("gate block " + str(len(items)) + " items" + (" idle" if idle else ""))
     head_text = "roadmap head: continue with: " + "; ".join(items) if items else ""
     refresh = "usage refresh requested" if asked else ""
-    return {"decision": "block", "reason": " ".join(part for part in (idle, head_text, refresh) if part)}
+    return {"decision": "block",
+            "reason": " ".join(part for part in (idle, head_text, refresh, _stops_line()) if part)}
+
+
+def _stops_line():
+    """The usage line of the head brief when a stop is set: 'usage: 5h 49% / stop 50% | W 20% / stop off' (R11.126)."""
+    try:
+        from roadmap.services import limits_v2
+        if not any(info["on"] for info in limits_v2.load().values()):
+            return ""
+        return "usage: " + limits_v2.brief_line()
+    except Exception:  # best effort: the brief must go out without it
+        return ""
 
 
 def _idle_text(data_dir, rows, running, moment):

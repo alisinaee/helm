@@ -222,3 +222,25 @@
   .tk-acct-num { text-align: left }
   .tk-acct-actions { justify-content: flex-start }
 }
+
+/* Limits v2 (R11.126): one card per window, a usage bar with a draggable stop handle */
+.lv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3) }
+.lv-card { display: grid; gap: var(--sp-2); min-width: 0 }
+.lv-top, .lv-head, .lv-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) }
+.lv-head .btn { margin-left: auto }
+.lv-bar { position: relative; height: 20px; margin: var(--sp-3) 6px 0; background: var(--track); border-radius: 4px; touch-action: none; cursor: pointer }
+.lv-fill, .lv-zone { position: absolute; top: 0; left: 0; height: 100%; border-radius: 4px }
+.lv-fill { background: var(--accent); opacity: .9 }
+.lv-zone { background: none; border-right: 2px solid var(--text-1) }
+.lv-zone.is-budget { background: var(--sel) }
+.lv-bar.tone-warning .lv-fill { background: var(--warning) }
+.lv-bar.tone-danger .lv-fill { background: var(--danger) }
+.lv-bar.is-off .lv-zone { border-right-style: dashed; opacity: .6 }
+.lv-handle { position: absolute; right: -9px; top: -4px; width: 16px; height: 28px; background: var(--text-1); border: 2px solid var(--surface-0); border-radius: 6px; cursor: ew-resize; box-sizing: border-box; z-index: 1 }
+.lv-handle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px }
+.lv-scale { display: flex; justify-content: space-between; margin: 0 6px; color: var(--text-3); font-size: var(--fs-11); font-variant-numeric: tabular-nums }
+.lv-label { font-variant-numeric: tabular-nums; color: var(--text-2); font-size: var(--fs-13) }
+.lv-numwrap { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-1) }
+.lv-num { width: 4.5rem }
+.lv-unit, .lv-once { color: var(--text-2); font-size: var(--fs-12) }
+@media (max-width: 899px) { .lv-grid { grid-template-columns: minmax(0, 1fr) } }

@@ -10,7 +10,7 @@ import sys
 
 from roadmap.commands import usage_accounts as usage_accounts_cmd
 from roadmap.errors import EXIT_EXTERNAL, RoadmapError
-from roadmap.services import usage
+from roadmap.services import limits_v2, usage
 from roadmap.store import config as config_store
 
 
@@ -27,7 +27,55 @@ def register(sub, common):
     line.add_argument("--then", metavar="CMD", default=None,
                       help="status line command to run after storing (gets the same JSON on stdin; its output is shown)")
     line.set_defaults(handler=handle_statusline)
+    actions.add_parser("stops", parents=[common], help="show the effective stops (5h and week)"
+                       ).set_defaults(handler=handle_stops)
+    stop = actions.add_parser("stop", parents=[common], help="set the 5h or week stop (budget or cap)")
+    stop.add_argument("--window", required=True, choices=sorted(WINDOW_WORDS), help="5h, week or weekly")
+    stop.add_argument("--mode", choices=limits_v2.MODES, default=None,
+                      help="budget (use at most VALUE%% more from now) or cap (stop at VALUE%%)")
+    stop.add_argument("--value", type=float, default=None, help="percent 1..100")
+    stop.add_argument("--once", action="store_true", help="a budget that does not repeat on the window reset")
+    stop.add_argument("--off", action="store_true", help="switch the stop off")
+    stop.set_defaults(handler=handle_stop)
     usage_accounts_cmd.register(actions, common)
+
+
+WINDOW_WORDS = {"5h": "five_hour", "five_hour": "five_hour", "week": "week", "weekly": "week"}
+
+
+def _stops_text(info):
+    lines = []
+    for window in limits_v2.WINDOWS:
+        row = info[window]
+        pct = "n/a" if row["percent"] is None else "%g%%" % row["percent"]
+        if row["stop"] is None:
+            lines.append("%-9s %s, stop off" % (window, pct))
+        else:
+            how = ("budget +%g%% from %g%%" % (row["value"], row["base"])) if row["mode"] == "budget" else "cap"
+            lines.append("%-9s %s, stop at %g%% (%s)" % (window, pct, row["stop"], how))
+    return "\n".join(lines)
+
+
+def handle_stops(args):
+    """Print the effective stop of each window."""
+    info = limits_v2.stops()
+    if not _json_mode(args):
+        print(_stops_text(info))
+    return {"windows": info}
+
+
+def handle_stop(args):
+    """Set one window: --mode and --value turn it on; --off turns it off."""
+    window = WINDOW_WORDS[args.window]
+    patch = {"on": False} if args.off else {"on": True}
+    if args.mode:
+        patch["mode"] = args.mode
+    if args.value is not None:
+        patch["value"] = args.value
+    if args.once:
+        patch["once"] = True
+    limits_v2.set_window(window, patch)
+    return handle_stops(args)
 
 
 def _json_mode(args):
@@ -94,6 +142,11 @@ def _short_line(payload):
         parts.append("5h %s%%" % limits["fiveHourPercent"])
     if limits.get("weeklyPercent") is not None:
         parts.append("week %s%%" % limits["weeklyPercent"])
+    try:
+        if any(info["on"] for info in limits_v2.load().values()):
+            parts.append("stops: " + limits_v2.brief_line())
+    except Exception:  # the status line must always print
+        pass
     return " | ".join(parts)
 
 
