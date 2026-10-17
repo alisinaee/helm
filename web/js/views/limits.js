@@ -108,7 +108,7 @@ export function weeklyStopHtml(vm) {
   const shown = on ? Number(row.limit) : 95;
   const chip = on ? '<span class="chip chip-' + esc(STATE_TONE[stateKey(row)]) + '">' +
     esc(STATE_WORDS[stateKey(row)]) + "</span>" : "";
-  const toggle = '<button type="button" class="btn" role="switch" aria-checked="' + (on ? "true" : "false") +
+  const toggle = '<button type="button" class="btn sw" role="switch" aria-checked="' + (on ? "true" : "false") +
     '" aria-label="' + (on ? "Weekly stop, on" : "Weekly stop, off") + '" data-action="lim-weekly" data-row="' +
     esc(on ? row.id : "") + '" data-focus="weekly-toggle">' + (on ? "On" : "Off") + "</button>";
   const copy = copyButton("section", "tokens.weekly", "Weekly stop", { project: pid,

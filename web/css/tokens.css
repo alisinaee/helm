@@ -244,3 +244,17 @@
 .lv-num { width: 4.5rem }
 .lv-unit, .lv-once { color: var(--text-2); font-size: var(--fs-12) }
 @media (max-width: 899px) { .lv-grid { grid-template-columns: minmax(0, 1fr) } }
+
+/* R11.135: on/off switch (track and knob), green when on, neutral when off; the On/Off word stays for a11y */
+.btn.sw { position: relative; min-width: 4.5rem; padding-inline: 1.9rem .6rem; border-radius: 999px; font-weight: 600;
+  transition: background-color .15s, border-color .15s, color .15s }
+.btn.sw::before { content: ""; position: absolute; top: 50%; left: 4px; width: .9rem; height: .9rem; border-radius: 50%;
+  background: var(--text-3); transform: translateY(-50%); transition: transform .15s, background-color .15s }
+.btn.sw[aria-checked="false"] { background: var(--surface-2); color: var(--text-3) }
+.btn.sw[aria-checked="true"] { background: color-mix(in srgb, var(--success) 22%, var(--surface-2));
+  border-color: var(--success); color: var(--success); padding-inline: .6rem 1.9rem }
+.btn.sw[aria-checked="true"]::before { background: var(--success); left: auto; right: 4px }
+/* the chosen On of an On/Off radio pair reads green too */
+.rule-tabs .btn[role="radio"][data-value="on"][aria-checked="true"] { border-color: var(--success); color: var(--success);
+  background: color-mix(in srgb, var(--success) 22%, var(--surface-2)) }
+@media (prefers-reduced-motion: reduce) { .btn.sw, .btn.sw::before { transition: none } }
