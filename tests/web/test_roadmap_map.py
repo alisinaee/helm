@@ -234,6 +234,7 @@ class RoadmapMapSourceTests(unittest.TestCase):
         self.assertIn(".rmm-ov .btn{height:var(--h-small)", self.css)
         self.assertIn("line-height:var(--h-small)", self.css)
         self.assertIn("gap:var(--sp-2)", self.css)
+        self.assertIn(".rmm-host{flex:1;min-width:0;min-height:0;display:flex;box-sizing:border-box;", self.css)
 
     def test_reduced_motion_and_tokens_only(self):
         self.assertIn("@media (prefers-reduced-motion:reduce)", self.css)
