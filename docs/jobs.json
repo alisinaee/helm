@@ -8601,8 +8601,84 @@
       "model": "sonnet",
       "task": "R11.112",
       "effort": "low",
-      "status": "running",
+      "status": "done",
       "started": "2026-10-17T09:11:52+03:30",
+      "ended": "2026-10-17T09:13:16+03:30",
+      "tokens": {
+        "in": 26,
+        "out": 9752,
+        "cacheRead": 827612,
+        "cacheWrite": 45555,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1076",
+      "title": "sonnet: R11.112 follow-up shelf layout",
+      "model": "sonnet",
+      "task": "R11.112",
+      "status": "done",
+      "started": "2026-10-17T09:13:37+03:30",
+      "ended": "2026-10-17T09:14:36+03:30",
+      "refs": [
+        "commit:8199b782e33d7b332359f479c5f8389758cf0ae1"
+      ]
+    },
+    {
+      "id": "j1077",
+      "title": "sonnet: R11.112 follow-up",
+      "model": "sonnet",
+      "task": "R11.112",
+      "status": "done",
+      "started": "2026-10-17T09:13:42+03:30",
+      "ended": "2026-10-17T09:14:32+03:30",
+      "tokens": {
+        "in": 42,
+        "out": 14282,
+        "cacheRead": 1388880,
+        "cacheWrite": 55157,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1078",
+      "title": "haiku: R11.112 class diagram edges backend",
+      "model": "haiku",
+      "task": "R11.112",
+      "status": "done",
+      "started": "2026-10-17T09:15:02+03:30",
+      "ended": "2026-10-17T09:15:56+03:30",
+      "tokens": {
+        "in": 24,
+        "out": 6689,
+        "cacheRead": 716786,
+        "cacheWrite": 39501,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1079",
+      "title": "haiku: R11.113 route class edges around boxes",
+      "model": "haiku",
+      "task": "R11.113",
+      "status": "done",
+      "started": "2026-10-17T09:16:37+03:30",
+      "ended": "2026-10-17T09:18:18+03:30",
+      "tokens": {
+        "in": 30,
+        "out": 18012,
+        "cacheRead": 973410,
+        "cacheWrite": 52612,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1080",
+      "title": "haiku: R11.109 fix old timeline tests",
+      "model": "haiku",
+      "task": "R11.109",
+      "status": "running",
+      "started": "2026-10-17T09:21:52+03:30",
       "ended": null
     }
   ]

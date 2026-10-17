@@ -44,12 +44,12 @@
     {
       "id": "R10",
       "name": "Head reset 2026-10-16 (H182)",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "R11",
       "name": "Helm v2: System, panel, Activity, Roadmap map, Tokens, head channel",
-      "status": "partial"
+      "status": "done"
     }
   ],
   "tasks": [
@@ -4442,7 +4442,7 @@
       "id": "R10.28",
       "phase": "R10",
       "title": "Top bar usage: show age of reading, stale state, and the weekly stop (H203)",
-      "status": "partial",
+      "status": "done",
       "tokensK": 3,
       "thinking": "low",
       "model": "haiku",
@@ -4450,7 +4450,10 @@
       "check": "none",
       "checkK": 0,
       "note": "topbar.js",
-      "verify": true
+      "verify": true,
+      "at": {
+        "done": "2026-10-17T09:18:52+03:30"
+      }
     },
     {
       "id": "R10.29",
@@ -4923,13 +4926,39 @@
       "id": "R11.112",
       "phase": "R11",
       "title": "System v2 Classes diagram: collapse by module by default, readable at fit (200+ classes render at 20%)",
-      "status": "partial",
+      "status": "done",
       "tokensK": 0,
       "thinking": "low",
       "model": "haiku",
       "needsUser": false,
       "check": "none",
-      "checkK": 0
+      "checkK": 0,
+      "refs": [
+        "commit:8199b782e33d7b332359f479c5f8389758cf0ae1",
+        "commit:ffe4bd5e588d9c2f0fa0a3bc0e0c8518585c4c97",
+        "commit:3d18c66d6bb325464c8dbde7a7cc5e929ea81346"
+      ],
+      "at": {
+        "done": "2026-10-17T09:16:26+03:30"
+      }
+    },
+    {
+      "id": "R11.113",
+      "phase": "R11",
+      "title": "System Classes: route module edges around boxes (Views-Web shell edge crosses Services, count label overlaps title)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T09:18:24+03:30"
+      },
+      "refs": [
+        "commit:02844c1b330e621651b9195d56d41d26b59204d4"
+      ]
     }
   ],
   "schemaVersion": 1

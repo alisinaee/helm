@@ -658,5 +658,20 @@
     "task": "R11.112",
     "title": "sonnet: R11.112 Classes diagram readable",
     "model": "sonnet"
+  },
+  "af87d2f78154da046": {
+    "task": "R11.112",
+    "title": "haiku: R11.112 class diagram edges backend",
+    "model": "haiku"
+  },
+  "a8cc01169d128d903": {
+    "task": "R11.113",
+    "title": "haiku: R11.113 route class edges around boxes",
+    "model": "haiku"
+  },
+  "ae4ea9f1b41566081": {
+    "task": "R11.109",
+    "title": "haiku: R11.109 fix old timeline tests",
+    "model": "haiku"
   }
 }
