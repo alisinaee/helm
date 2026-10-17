@@ -44,6 +44,7 @@ const DIAGRAMS = {
 const RENDERERS = Object.assign(Object.fromEntries(VIEWS.map((m) => [m[0], m])),
   Object.fromEntries(Object.keys(DIAGRAMS).map((k) => [k, DIAGRAMS[k].slice(0, 3)])));
 const collapsed = new Set();
+const clsOpen = new Set();
 let drill = [];
 let lastLay = null;
 let anchorId = null;
@@ -380,7 +381,7 @@ function stage(pid, arch) {
     }
     const has = item && (spec[4] === "items" ? true : Array.isArray(item[spec[4]]) && item[spec[4]].length);
     if (!has) return { html: emptyHtml("Nothing found for " + spec[1] + ". Try another view."), note: note };
-    const out = spec[3](item, { selected: selected });
+    const out = spec[3](item, { selected: selected, open: clsOpen, aspect: canvasAspect() });
     svg = svgWrap(out.inner, out.w + 2 * PAD, out.h + 2 * PAD, spec[1] + " diagram").replace('<g id="sys-vp">',
       '<g id="sys-vp"><g transform="translate(' + PAD + " " + PAD + ')">').replace(/<\/g><\/svg>$/, "</g></g></svg>");
   } else {
@@ -767,6 +768,13 @@ function onClick(event) {
 }
 
 function toggleGroup(id) {
+  if (String(id).startsWith("cls:")) {
+    const g = String(id).slice(4);
+    if (clsOpen.has(g)) clsOpen.delete(g);
+    else clsOpen.add(g);
+    redraw();
+    return;
+  }
   anchorId = id;
   if (collapsed.has(id)) collapsed.delete(id);
   else collapsed.add(id);
