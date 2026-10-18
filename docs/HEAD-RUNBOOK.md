@@ -59,6 +59,29 @@
 > `ListAgents`'s actual live subagents — a "running" job with no matching live agent and no fresh commit is stale
 > and must be failed/relaunched on sight, not left for the person to notice first.
 
+> 2026-10-18 R11.157 (root cause: split-net P7.38 showed as both j591 and j593 even after jobs_auto.py was fully
+> removed from the hook chain): NOT a hooks.py bug and NOT a hardcoded-letter task-id regex — `task_regex`/
+> `DEFAULT_PATTERN` (`^[A-Z]+[0-9]+(\.[0-9]+)?$`) already matches any single-or-multi-letter prefix, and
+> `hooks.log` shows `_adoptable` correctly adopting j593 (`adopt j593 agent task P7.38`) for the real Agent tool
+> call. j591 was a SECOND, separate manual `bin/roadmap job start` for the same task, 18s before the one that got
+> adopted; adoption only ever merges the single newest unowned running job per task, so an earlier extra `job
+> start` for a task that already has one running is orphaned, not merged. RULE: before `job start`-ing a task,
+> check `bin/roadmap job list` for an already-running job on that same task (head or worker side) — never issue a
+> second manual `job start` for a task that already has one running; reuse/adopt it instead.
+>
+> Also R11.157: split-net's Head section showed "not claimed" / "Nothing logged yet" even after `/head`'s resume
+> steps. Root cause: split-net's `docs/roadmap.config.json` does not exist (unlike this repo's, which has
+> `{"headCapture": true}`), so `hooks.py`'s `_head_on()` gate is false and the UserPromptSubmit/SessionStart/Stop
+> hooks' claim-capture and prompt-logging (`_head_claim`, `_prompt_capture`, `_head_reply_capture`) all fail-open
+> and do nothing — this is separate from, and unrelated to, "claimed" status; it is purely the per-project
+> `headCapture` config flag. Manually-run `bin/roadmap head log`/`head t` CLI calls are NOT gated by this flag
+> (they write the ledger directly), which is why only hand-logged entries ever showed up. `claim` itself is a
+> deliberate, explicit CLI step by design (`roadmap head claim`, see `roadmap/commands/head.py`), not meant to be
+> silent/automatic — but it must actually be RUN, not just implied by the skill text: no `head-claim-split-net.json`
+> or `docs/head.jsonl` ever existed for split-net, so the resume flow never actually called it. `~/.claude/skills/
+> head/SKILL.md` resume steps 1c/3 now self-heal the config flag and say to actually run `head claim`, not just
+> mention it.
+
 # Head runbook (how the head works here; read after HANDOVER.md)
 
 Product renamed to Helm (2026-10-16): repo alisinaee/helm, dir ~/Works/helm; use `bin/helm` or `bin/roadmap` (same). Project id stays `roadmap-board`.
