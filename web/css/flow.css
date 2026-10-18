@@ -5,7 +5,10 @@
 .page-title { margin: 0; font-size: var(--fs-17) }
 .page-note, .ov-sum, .ov-more { margin: 0; color: var(--text-3); font-size: var(--fs-12) }
 .ov { display: grid; gap: var(--sp-4); min-width: 0 }
-.banner + .ov { margin-top: var(--sp-2) }
+.ov-banners { display: grid; gap: var(--sp-2); min-width: 0; margin: 0 0 var(--sp-2) }
+.ov-banners > .banner, .ov-banners > .banner + .banner { margin: 0; grid-template-columns: minmax(0, 1fr); padding: var(--sp-3) var(--sp-4) }
+.ov-banners .banner > p { margin: 0 }
+.ov-banners .banner .ov-actions { margin: var(--sp-2) 0 0 }
 .ov-main, .ov-side, .grp, .ov-card { display: grid; gap: var(--sp-3); min-width: 0; align-content: start }
 .ov .kpi-row { grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)) }
 .ov-card { padding: var(--sp-3) var(--sp-4); background: var(--surface-1); border-radius: var(--r-card) }

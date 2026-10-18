@@ -73,6 +73,12 @@ function limitBanner(worst, inProject) {
     '</p><p class="banner-detail">' + esc(detail) + "</p>" + button + "</div>";
 }
 
+// Every Overview banner goes through one stack, so all of them share the same left edge, padding and grid.
+function bannerStack(parts) {
+  const items = parts.filter(Boolean);
+  return items.length ? '<div class="ov-banners">' + items.join("") + "</div>" : "";
+}
+
 // Running or Stopped. Stopped keeps its Resume button; Running has no button here (the top bar holds Stop).
 function controlBanner(vm) {
   const c = vm.control;
@@ -198,7 +204,7 @@ function projectOverview(vm) {
   // Legend. Each one is a section-header from the section modules, so it folds like the rest.
   const phases = phasesSection(vm) + '<p class="ov-more"><a href="#/p/' + esc(vm.route.id) +
     '/roadmap">Open Roadmap</a></p>';
-  const main = controlBanner(vm) + headChip(snap) + kpiView(vm) +
+  const main = headChip(snap) + kpiView(vm) +
     cardHtml("inbox", "Inbox", "", inboxPreviewHtml(vm, PREVIEW_MAX) +
       '<p class="ov-more"><a href="' + esc(inboxHash(vm)) + '">Open Inbox</a></p>',
     { project: snap.id, count: snap.needUser }) + runningSection(vm) + phases;
@@ -206,7 +212,7 @@ function projectOverview(vm) {
   const side = cardHtml("meters", "Meters", "", metersBody(snap), { project: snap.id, count: meterCount }) +
     blockersHtml(snap) + activityHtml(snap, now) +
     nextSection(vm) + recentSection(vm) + extrasSection(vm) + legendSection(vm);
-  return limitBanner(worstLimit(scopes), true) +
+  return bannerStack([limitBanner(worstLimit(scopes), true), controlBanner(vm)]) +
     '<div class="ov"><div class="ov-main">' + main + '</div><div class="ov-side">' + side + "</div></div>";
 }
 
@@ -214,7 +220,7 @@ function allOverview(vm) {
   const scopes = scopeSnapshots(vm);
   const inbox = cardHtml("inbox", "Inbox", "", inboxPreviewHtml(vm, PREVIEW_MAX) +
     '<p class="ov-more"><a href="#/all/inbox">Open Inbox</a></p>');
-  return limitBanner(worstLimit(scopes), false) +
+  return bannerStack([limitBanner(worstLimit(scopes), false)]) +
     '<div class="ov"><div class="ov-main">' + homeView(vm) + '</div><div class="ov-side">' + inbox + "</div></div>";
 }
 
