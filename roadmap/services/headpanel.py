@@ -12,8 +12,10 @@ or the hook; the line simply waits for the next event.
 """
 
 import datetime
+import json
 import os
 import re
+import time
 
 from roadmap.store import atomic, jsonl, lock
 
@@ -32,6 +34,7 @@ REF_KEYS = ("id", "task", "activity", "into", "rule", "issue", "feature")
 _ID_RE = re.compile(r"^P(\d+)$")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
 STATES = ("sent", "seen", "acted")
+COALESCE_S = 5.0           # a repeated stop change of the same key within this many seconds updates its line
 
 
 def _path(data_dir, name):
@@ -92,16 +95,72 @@ def read(data_dir):
     return [o for o in objs if _num(o.get("id"))]
 
 
-def record(data_dir, op, summary, src="gui", ref="", now=None, timeout=1.0):
-    """Append one panel line and return it, or None when the lock is busy or the write fails (never raises)."""
+def _epoch(now=None):
+    if isinstance(now, bool) or now is None:
+        return time.time()
+    if isinstance(now, (int, float)):
+        return float(now)
+    if isinstance(now, datetime.datetime):
+        return now.timestamp()
+    return time.time()
+
+
+def _line_epoch(obj):
+    if isinstance(obj.get("epoch"), (int, float)):
+        return float(obj["epoch"])
+    moment = _parse(obj.get("ts"))
+    return moment.timestamp() if moment is not None else None
+
+
+def _update_line(data_dir, prev, op, summary, src, moment):
+    """Rewrite the panel line prev in place with the newest value; the head sees it again (its seen and acted marks
+    are cleared, so the last value is what reaches it). Returns the updated line."""
+    path = _path(data_dir, FILE)
+    raw = jsonl.raw_lines(path)
+    for index in range(len(raw) - 1, -1, -1):
+        try:
+            obj = json.loads(raw[index])
+        except ValueError:
+            continue
+        if isinstance(obj, dict) and obj.get("id") == prev["id"]:
+            line = dict(obj)
+            line.update({"op": _flat(op, 40), "sum": _flat(summary, SUM_MAX), "ts": _iso(moment),
+                         "epoch": moment, "src": src})
+            raw[index] = json.dumps(line, ensure_ascii=False, separators=(",", ":"))
+            atomic.write_text(path, "\n".join(raw) + "\n")
+            doc = _load_seen(data_dir)
+            doc["seen"].pop(prev["id"], None)
+            doc["acted"].pop(prev["id"], None)
+            _save_seen(data_dir, doc, read(data_dir))
+            return line
+    return None
+
+
+def record(data_dir, op, summary, src="gui", ref="", now=None, timeout=1.0, key=None):
+    """Append one panel line and return it, or None when the lock is busy or the write fails (never raises).
+    With key (a stop, e.g. 'five_hour'): when the newest line with that key is at most COALESCE_S seconds old, that
+    line is updated in place instead (last value wins) and no line is added."""
     try:
         if src not in PERSON_SOURCES:
             return None
         path = _path(data_dir, FILE)
+        moment = _epoch(now)
         with lock.locked(data_dir, timeout):
-            last = max([_num(o.get("id")) for o in read(data_dir)] or [0])
+            lines = read(data_dir)
+            if key:
+                keyed = [o for o in lines if o.get("key") == key and o.get("op") == op]
+                if keyed:
+                    prev = keyed[-1]
+                    before = _line_epoch(prev)
+                    if before is not None and 0 <= moment - before <= COALESCE_S:
+                        updated = _update_line(data_dir, prev, op, summary, src, moment)
+                        if updated is not None:
+                            return updated
+            last = max([_num(o.get("id")) for o in lines] or [0])
             line = {"id": "P%d" % (last + 1), "ts": _iso(now), "src": src, "op": _flat(op, 40),
-                    "sum": _flat(summary, SUM_MAX), "ref": _flat(ref, 40)}
+                    "sum": _flat(summary, SUM_MAX), "ref": _flat(ref, 40), "epoch": moment}
+            if key:
+                line["key"] = _flat(key, 40)
             jsonl.append_line(path, line)
             jsonl.keep_newest(path, KEEP)
         return line

@@ -310,7 +310,8 @@ def limits_put(app, req, match):
     line = None
     panel_dir = _panel_dir()
     if panel_dir:
-        line = headpanel.record(panel_dir, "limits.set", limits_v2.summary(window, after), src=src)
+        line = headpanel.record(panel_dir, "limits.set", limits_v2.summary(window, after), src=src,
+                                     key=window)
     reply = {"windows": limits_v2.stops(persist=False)}
     if panel_dir:
         _to_head(panel_dir, reply, line)
