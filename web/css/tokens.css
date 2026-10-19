@@ -328,3 +328,45 @@
   --field-c: rgba(120, 230, 210, 0.30);
   --glass-ink-soft: rgba(21, 25, 31, 0.10);
 }
+
+/* Obsidian & Lime (R10.37, docs/ux/DESIGN-SYSTEM.md). Dark only, the default. Contrast values from the proposal;
+   --defer and --m-* keep the dark values (all pass 4.5:1 on these darker surfaces, checked by tools/contrast.py). */
+:root[data-theme="obsidian"] {
+  color-scheme: dark;
+  --surface-0: #000000;
+  --surface-1: #0c0c0c;
+  --surface-2: #1a1a1a;
+  --line: #6e6e6e;
+  --track: #262626;
+  --text-1: #ebebeb;
+  --text-2: #999999;
+  --text-3: #8c8c8c;
+  --accent: #ccff00;
+  --on-accent: #000000;
+  --focus: #ccff00;
+  --success: #10b981;
+  --warning: #f5c04a;
+  --danger: #ff7b7b;
+  --info: #7cc8f5;
+  --unknown: #8c8c8c;
+  --sel: rgba(204, 255, 0, 0.14);
+  --drop: rgba(204, 255, 0, 0.7);
+  --glass-fill: rgba(255, 255, 255, 0.03);
+  --glass-fill-strong: rgba(255, 255, 255, 0.07);
+  --glass-edge: rgba(255, 255, 255, 0.1);
+  --glass-hi: rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 var(--glass-hi);
+  --glass-blur: blur(16px) saturate(140%);
+  --glass-r: 1.5rem;
+  --r-shell: 2.5rem;
+  --field-a: rgba(204, 255, 0, 0.14);
+  --field-b: rgba(16, 185, 129, 0.14);
+  --field-c: rgba(204, 255, 0, 0.08);
+  --grid-line: rgba(255, 255, 255, 0.04);
+  --glow: rgba(204, 255, 0, 0.3);
+  --glow-sphere: rgba(204, 255, 0, 0.35);
+  --glass-ink-soft: rgba(0, 0, 0, 0.4);
+  --ease-ob: cubic-bezier(0.4, 0, 0.2, 1);
+  --font-ui: "Space Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
+}

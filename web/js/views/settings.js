@@ -10,6 +10,7 @@ import { loadUi, saveTheme, updateUi } from "../state.js";
 import { showToast } from "./toast.js";
 
 const THEMES = [
+  { id: "obsidian", label: "Obsidian & Lime" },
   { id: "auto", label: "Match system" },
   { id: "dark", label: "Dark" },
   { id: "light", label: "Light" },

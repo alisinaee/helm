@@ -19,7 +19,7 @@ export const VIEW_SECTIONS = {
 };
 
 export const VIEW_DEFAULT_MODE = { home: "expanded", project: "minimal" };
-export const THEME_ORDER = ["auto", "dark", "light"];
+export const THEME_ORDER = ["obsidian", "auto", "dark", "light"];
 // One freshness rule (R7.63): a usage reading older than 90 minutes (maxUsageAgeMin) is stale. The server sends
 // maxAgeS; these constants are only the fallback. Very old is twice stale.
 export const STALE_AFTER_S = 90 * 60;
@@ -81,7 +81,7 @@ export function defaultUi() {
     workView: "board",
     filters: {},
     density: "comfortable",
-    theme: "auto",
+    theme: "obsidian",
     lastProject: null,
   };
 }
@@ -145,7 +145,7 @@ export function loadTheme() {
 
 export function saveTheme(value) {
   updateUi(function (ui) {
-    ui.theme = THEME_ORDER.indexOf(value) >= 0 ? value : "auto";
+    ui.theme = THEME_ORDER.indexOf(value) >= 0 ? value : "obsidian";
   });
 }
 

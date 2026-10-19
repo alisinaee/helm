@@ -1,8 +1,8 @@
-"""Check the colour tokens in web/css/tokens.css against WCAG contrast for both themes.
+"""Check the colour tokens in web/css/tokens.css against WCAG contrast for the dark, light and obsidian themes.
 
 Text pairs need 4.5:1; graphics (control borders, focus ring, meter fills) need 3:1. The dark theme is the
 :root default. The light theme is the set of overrides under prefers-color-scheme and data-theme="light", laid over
-the dark values. Exit 0 when every pair passes, 1 otherwise. Stdlib only.
+the dark values; the obsidian block overrides the dark ones. Exit 0 when every pair passes, 1 otherwise. Stdlib only.
 """
 
 import os
@@ -24,21 +24,25 @@ HEX = re.compile(r"^#([0-9a-fA-F]{6})$")
 
 
 def parse_blocks(text):
-    """Return (dark, light): the custom-property values of the dark default and of the light overrides."""
-    dark, light = {}, {}
+    """Return (dark, light, obsidian): the dark default, the light overrides and the obsidian overrides, each resolved."""
+    dark, light, obsidian = {}, {}, {}
     text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
     for selector, body in BLOCK.findall(text):
         sel = " ".join(selector.split())
         values = {name: value.strip() for name, value in DECL.findall(body)}
         if not values:
             continue
-        if 'data-theme="light"' in sel or ':not([data-theme="dark"])' in sel:
+        if 'data-theme="obsidian"' in sel:
+            obsidian.update(values)
+        elif 'data-theme="light"' in sel or ':not([data-theme="dark"])' in sel:
             light.update(values)
         else:
             dark.update(values)
     resolved_light = dict(dark)
     resolved_light.update(light)
-    return dark, resolved_light
+    resolved_obsidian = dict(dark)
+    resolved_obsidian.update(obsidian)
+    return dark, resolved_light, resolved_obsidian
 
 
 def luminance(hex_value):
@@ -98,9 +102,9 @@ def check(values, theme):
 def main():
     """Print every ratio and return the exit code."""
     with open(TOKENS, encoding="utf-8") as fh:
-        dark, light = parse_blocks(fh.read())
-    failures = check(dark, "dark") + check(light, "light")
-    for theme, values in (("dark", dark), ("light", light)):
+        dark, light, obsidian = parse_blocks(fh.read())
+    failures = check(dark, "dark") + check(light, "light") + check(obsidian, "obsidian")
+    for theme, values in (("dark", dark), ("light", light), ("obsidian", obsidian)):
         worst = min(ratio(values[fg], values[bg]) for fg, bg, _, _ in pairs() if fg in values and bg in values)
         print("%s: %d pairs checked, lowest %.2f:1" % (theme, len(pairs()), worst))
     for line in failures:

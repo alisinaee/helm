@@ -13,7 +13,7 @@ import { panelIsOpen } from "../state.js";
 import { showToast } from "./toast.js";
 import { weeklyStopRow } from "./limits.js";
 
-const THEME_LABEL = { auto: "Auto", dark: "Dark", light: "Light" };
+const THEME_LABEL = { obsidian: "Obsidian", auto: "Auto", dark: "Dark", light: "Light" };
 const MARK_LABEL = "I am seeing a bug here";
 const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\])$/;
 

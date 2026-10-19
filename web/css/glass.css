@@ -270,3 +270,82 @@ select:hover {
   background: var(--glass-fill-strong);
   box-shadow: inset 0 1px 0 var(--glass-hi), 0 1px 3px var(--glass-ink-soft);
 }
+
+/* Obsidian & Lime (R10.37): grid + noise backdrop, floating shell, mono labels, pill nav, neon primary. */
+:root[data-theme="obsidian"] body::before {
+  inset: 0;
+  filter: none;
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 60px 60px,
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 60px 60px,
+    radial-gradient(40% 45% at 85% 5%, var(--glow-sphere), transparent 70%),
+    radial-gradient(40% 45% at 10% 100%, var(--field-b), transparent 70%);
+}
+:root[data-theme="obsidian"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.15;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@media (min-width: 641px) {
+  :root[data-theme="obsidian"] .app {
+    margin: var(--sp-3);
+    padding: var(--sp-3);
+    border: 1px solid var(--track);
+    border-radius: var(--r-shell);
+    background: var(--glass-fill);
+    min-height: calc(100vh - 2 * var(--sp-3));
+  }
+}
+:root[data-theme="obsidian"] .main { border-radius: var(--r-shell); }
+:root[data-theme="obsidian"] h1,
+:root[data-theme="obsidian"] h2,
+:root[data-theme="obsidian"] h3 { letter-spacing: -0.06em; }
+:root[data-theme="obsidian"] .chip,
+:root[data-theme="obsidian"] .lim-label,
+:root[data-theme="obsidian"] .lv-scale {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+:root[data-theme="obsidian"] .nav-i,
+:root[data-theme="obsidian"] .bnav-i { border-radius: 999px; }
+:root[data-theme="obsidian"] .nav-i[aria-current="page"],
+:root[data-theme="obsidian"] .bnav-i[aria-current="page"] {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 0 20px var(--glow);
+}
+:root[data-theme="obsidian"] .btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+  font-weight: 700;
+  border-radius: 999px;
+  box-shadow: 0 0 30px var(--glow);
+  transition: transform 0.2s var(--ease-ob), box-shadow 0.2s var(--ease-ob);
+}
+:root[data-theme="obsidian"] .btn-primary:hover {
+  background: var(--accent);
+  transform: scale(1.05);
+}
+:root[data-theme="obsidian"] .btn-primary:focus-visible {
+  outline: 2px solid var(--text-1);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme="obsidian"] .btn-primary,
+  :root[data-theme="obsidian"] .btn-primary:hover { transition: none; transform: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-theme="obsidian"] body::after { display: none; }
+  :root[data-theme="obsidian"] body::before { background: none; }
+  :root[data-theme="obsidian"] .btn-primary,
+  :root[data-theme="obsidian"] .nav-i[aria-current="page"],
+  :root[data-theme="obsidian"] .bnav-i[aria-current="page"] { box-shadow: none; }
+  :root[data-theme="obsidian"] .app { background: var(--surface-1); }
+}
