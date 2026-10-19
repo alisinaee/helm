@@ -203,7 +203,7 @@
 
 /* R11.8 accounts: one table. The list owns the tracks; header and rows take them through subgrid. */
 .spend-list.tk-acct-list {
-  --acct-cols: minmax(120px, 1fr) minmax(150px, 1.2fr) 7ch 6ch 6ch 5ch 20.75rem;
+  --acct-cols: minmax(120px, 1fr) minmax(150px, 1.2fr) 7ch 6ch 6ch 8ch 20.75rem;
   display: grid; grid-template-columns: var(--acct-cols); gap: var(--sp-2) var(--sp-3); width: 100%; min-width: 0 }
 .tk-acct-head, .tk-acct-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid;
   column-gap: var(--sp-3); align-items: center; min-width: 0; margin: 0; padding: 0 }
