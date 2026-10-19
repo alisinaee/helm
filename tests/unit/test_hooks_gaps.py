@@ -33,16 +33,16 @@ class ReapRuleTests(unittest.TestCase):
     def entry(self, watch="", age=0.0):
         return {"job": "j1", "started": NOW - age, "watch": watch}
 
-    def test_agent_without_a_watch_file_is_done_only_past_the_max_age(self):
+    def test_agent_without_a_watch_file_is_stale_only_past_the_max_age(self):
         det = hooks.AgentDetector()
         self.assertIsNone(det.reap(self.entry(age=10), NOW))
-        self.assertEqual(det.reap(self.entry(age=hooks.MAX_AGE_S + 1), NOW), "done")
+        self.assertEqual(det.reap(self.entry(age=hooks.MAX_AGE_S + 1), NOW), "stale")
 
-    def test_agent_with_a_missing_watch_file_is_done_only_past_the_max_age(self):
+    def test_agent_with_a_missing_watch_file_is_stale_only_past_the_max_age(self):
         det = hooks.AgentDetector()
         gone = os.path.join(self.tmp, "no-such.output")
         self.assertIsNone(det.reap(self.entry(watch=gone, age=10), NOW))
-        self.assertEqual(det.reap(self.entry(watch=gone, age=hooks.MAX_AGE_S + 1), NOW), "done")
+        self.assertEqual(det.reap(self.entry(watch=gone, age=hooks.MAX_AGE_S + 1), NOW), "stale")
 
     def test_agent_output_quiet_longer_than_idle_is_done(self):
         det = hooks.AgentDetector()

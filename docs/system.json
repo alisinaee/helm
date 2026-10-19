@@ -38,7 +38,7 @@
     {"id": "tools", "name": "Tools", "layer": "tooling", "kind": "tool",
      "files": ["tools/**", "Makefile", ".editorconfig", ".gitignore"], "notes": "make check, lint and UI smoke scripts."},
     {"id": "docs", "name": "Docs", "layer": "docs", "kind": "store",
-     "files": ["docs/**", "changes/**", "CLAUDE.md", "README.md", "CONTRIBUTING.md", "CHANGELOG.md", "LICENSE"],
+     "files": ["docs/**", "changes/**", "CLAUDE.md", "README.md", "CONTRIBUTING.md", "CHANGELOG.md", "LICENSE", ".claude/skills/**"],
      "notes": "Specs, runbooks, the handover and change notes.", "tasks": ["R11.111"]}
   ],
   "edges": [
