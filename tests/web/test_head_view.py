@@ -30,7 +30,7 @@ CSS_DIR = os.path.join(WEB, "css")
 SHELL_TEST = os.path.join(TESTS, "web", "test_shell.py")
 RENDER = os.path.join(TESTS, "web", "render_head.mjs")
 FIXTURE = os.path.join(REPO, "fixtures", "demo", "alpha", "docs", "head.jsonl")
-HEAD_CSS_MAX = 7424  # raised 2026-10-15 for spec 13 (cards) and the List table view; again for R10.16 (reply column, questions group); again 2026-10-19 for the phone pass (header cells not offset, state chip shrinks)
+HEAD_CSS_MAX = 7424  # raised 2026-10-15 for spec 13 (cards) and the List table view; again for R10.16 (reply column, questions group); again 2026-10-19 for the phone pass and the one-row Head header (H393)
 TRACKS = "20px 60px minmax(0,1fr) 32px"
 ROW_ID = re.compile(r'<div class="row-grid hd-row" data-id="(H\d+)"')
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=|<script', re.IGNORECASE)

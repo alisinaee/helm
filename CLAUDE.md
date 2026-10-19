@@ -3,7 +3,7 @@
 > **mjp-labs Linux server (branch mahdi-remote-control):** this checkout is ~/StudioProjects/helm, served at
 > https://helm.mjplabs.ir by `helm.service` (systemd --user). The board was emptied on 2026-10-19, so the
 > HANDOVER/RUNBOOK history below is Ali's old Mac setup, kept for reference only. On `/head` follow
-> `~/.claude/skills/head/SKILL.md` (source: deploy/linux/skills/head/SKILL.md): usage is read automatically, so do not
+> `~/.claude/skills/head/SKILL.md` (source: .claude/skills/head/SKILL.md): usage is read automatically, so do not
 > ask for percentages; hooks are installed. Server details: deploy/linux/README.md.
 
 

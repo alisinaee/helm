@@ -686,8 +686,11 @@ function piecesOf(vm, opts) {
   const allOpen = rows.length > 0 && rows.every(function (row) {
     return open.indexOf(String(row.id)) >= 0;
   });
-  const top = '<div class="hd-top">' + nowHtml(head) +
-    (rows.length && tab !== "q" ? '<button type="button" class="btn hd-all" data-action="head-expand-all">' +
+  const chat = tab !== "q";
+  const tabsOf = tabsHtml(rows.length, qn, tab);
+  // One header row (model chip, tabs, alerts, Expand all) instead of one row per piece: more room for the table.
+  const top = '<div class="hd-top">' + nowHtml(head) + tabsOf[0] + (chat ? alertsHtml(counts) : "") + tabsOf[1] +
+    (rows.length && chat ? '<button type="button" class="btn hd-all" data-action="head-expand-all">' +
       (allOpen ? "Collapse all" : "Expand all") + "</button>" : "") + "</div>";
   const cards = o.view === "cards";
   const list = {
@@ -700,14 +703,9 @@ function piecesOf(vm, opts) {
       }).join("") + "</ul></div>";
     },
   };
-  // Header, tabs, then the active tab: Chat (filter bar, rows, load more) or Questions.
-  const chat = tab !== "q";
-  const tabsOf = tabsHtml(rows.length, qn, tab);
+  // Header row, then the active tab: Chat (filter bar, rows, load more) or Questions.
   return [
     { name: "top", html: top },
-    { name: "tabs", html: tabsOf[0] },
-    { name: "banner", html: tabsOf[1] },
-    { name: "alerts", html: chat ? alertsHtml(counts) : "" },
     { name: "bar", html: chat ? barHtml(vm, o) : "" },
     chat ? list : { name: "none", html: "" },
     { name: "pager", html: chat ? pagerHtml(o.pager) : "" },

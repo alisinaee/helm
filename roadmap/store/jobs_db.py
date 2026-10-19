@@ -73,7 +73,8 @@ def _after_finish(data_dir, conn, job, status):
         return
     doc = {"jobs": _all(conn)}
     if status == "failed":
-        jobs._reset_partial(data_dir, doc, task)
+        if not str(job.get("reason") or "").startswith(jobs.STALE_PREFIX):
+            jobs._reset_partial(data_dir, doc, task)
     else:
         jobs._mark_verify(data_dir, doc, task)
 

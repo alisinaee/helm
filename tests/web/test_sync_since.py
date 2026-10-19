@@ -89,6 +89,14 @@ class RefreshSinceTests(unittest.TestCase):
         self.assertRegex(self.app, r"const\s+SKIP_RENDER_MAX_MS\s*=\s*\d+;")
         self.assertIn("Date.now() - lastRenderAt >= SKIP_RENDER_MAX_MS", self.loop)
 
+    def test_loop_always_reschedules_even_when_render_throws(self):
+        self.assertRegex(self.loop, r"\}\s*finally\s*\{\s*const again = followUp;[\s\S]*schedule\(")
+
+    def test_get_requests_time_out(self):
+        api = read(API)
+        self.assertIn("GET_TIMEOUT_MS", api)
+        self.assertIn("AbortController", api)
+
     def test_no_sse_added(self):
         self.assertNotIn("EventSource", self.app)
         self.assertNotIn("EventSource", read(API))

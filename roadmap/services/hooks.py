@@ -31,7 +31,7 @@ IDLE_S = 180          # an agent output file untouched this long counts as finis
 MAX_AGE_S = 7200      # a job with no readable output after this long is closed
 LOG_FILE = "hooks.log"
 _AGENT_ID_RE = re.compile(r'agentId[:\s"]+([0-9a-zA-Z]{8,})')
-_OUTPUT_RE = re.compile(r'output_file[:\s"]+(\S+?\.output)')
+_OUTPUT_RE = re.compile(r'output_?[fF]ile[:\s"]+(\S+?\.output)')
 _RESULT_RE = re.compile(r"result file[^:]*:\s*(\S+\.result\.md)")
 _COMPANION_RE = re.compile(r'companion\.mjs"?\s+(\w+)')
 _CONTROL_RE = re.compile(r"\b(wait|observe|cancel)\b")
@@ -47,6 +47,10 @@ AGENTS_MAP_FILE = "agents-map.json"  # agentId -> {task, title, model} of the ag
 AGENTS_MAP_MAX = 200                 # the newest entries kept in the agents map
 FOLLOWUP_MAX_S = 1800                # a follow-up job with no SubagentStop after this long is closed as done
 ORPHAN_AGE_S = 600                   # R11.144: a running job no hook owns, older than this, is surfaced at Stop
+AGENT_STALE_S = 900                  # R11.159: an agent job whose transcript was quiet this long is closed as stale
+STOPPED_FILE = "hooks-%s-stopped.json"  # SubagentStop payloads that came before their job was registered
+STOPPED_MAX = 100
+STOPPED_TTL_S = 3600
 IDLE_LAUNCH_N = 3                    # task ids named in the idle alert of the Stop gate
 
 
@@ -100,13 +104,26 @@ class AgentDetector:
     def reap(self, entry, now):
         age = now - float(entry.get("started") or now)
         watch = entry.get("watch") or ""
+        quiet = _quiet_s(entry.get("transcript"), now)
+        if quiet is not None and quiet > AGENT_STALE_S:
+            return "stale"  # R11.159: no agent activity: the job is closed as stale, never as done
         if not watch:
-            return "done" if age > MAX_AGE_S else None
+            return "stale" if age > MAX_AGE_S else None
         try:
             quiet = now - os.path.getmtime(watch)
         except OSError:
-            return "done" if age > MAX_AGE_S else None
+            return "stale" if age > MAX_AGE_S else None
         return "done" if quiet > IDLE_S else None
+
+
+def _quiet_s(path, now):
+    """Seconds since the agent transcript was last written, or None when the path is unknown or unreadable."""
+    if not path:
+        return None
+    try:
+        return now - os.path.getmtime(path)
+    except OSError:
+        return None
 
 
 class _FileDetector:
@@ -375,16 +392,27 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
                     entry = detector.on_tool(tool, tool_input, payload.get("tool_response"),
                                              session_model=session_model)
                     if entry is not None:
+                        if detector.name == "agent" and entry.get("agent"):
+                            entry["transcript"] = jobtokens.transcript_path(
+                                {"agent_id": entry["agent"], "transcript_path": payload.get("transcript_path")}) or ""
                         new = _start(data_dir, detector, entry, regex, known, now,
                                      owned={e.get("job") for e in snapshot})
                         if new is not None:
-                            started.append(new)
                             if detector.name == "agent" and new.get("agent"):
                                 _remember_agent(data_dir, new)
+                            # R11.159: a foreground call returns after the agent ended, and its SubagentStop came
+                            # before this job existed: close the job now, matched by its agentId.
+                            if _closed_at_start(project, data_dir, new, payload.get("tool_response")):
+                                closed.append(new["job"])
+                            else:
+                                started.append(new)
                 if tool == "SendMessage":
                     new = _followup_start(data_dir, tool_input, now)
                     if new is not None:
-                        started.append(new)
+                        if _closed_at_start(project, data_dir, new, None):
+                            closed.append(new["job"])
+                        else:
+                            started.append(new)
             elif event == "SubagentStop":
                 agent_id = str(payload.get("agent_id") or "")
                 if agent_id:
@@ -393,6 +421,8 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
                     closed += stopped
                     for job_id in stopped:  # R10.32: measured tokens from the subagent transcript, fail-open
                         jobtokens.capture_for_agent(data_dir, job_id, payload)
+                    if not stopped:  # no job yet (a foreground call): its PostToolUse will find this stop
+                        _stopped_note(project["id"], payload, now)
             left = [e for e in snapshot if e.get("job") not in set(closed)]
             closed += _close_some(data_dir, left, _verdict_of(now))
         except RoadmapError as exc:
@@ -1335,7 +1365,8 @@ def _start(data_dir, detector, entry, regex, known, now, owned=frozenset()):
         return None
     _log("%s %s %s task %s" % ("adopt" if adopted else "start", job["id"], detector.name, task))
     return {"job": job["id"], "detector": detector.name, "kind": entry["kind"], "agent": entry["agent"],
-            "watch": entry["watch"], "started": now, "task": task, "title": title, "model": entry["model"]}
+            "watch": entry["watch"], "started": now, "task": task, "title": title, "model": entry["model"],
+            "transcript": entry.get("transcript") or ""}
 
 
 def _agents_map_read(data_dir):
@@ -1419,6 +1450,77 @@ def _commit_candidates(project, data_dir, payload, tool_input, now):
     return bound
 
 
+def _stopped_path(project_id):
+    return os.path.join(paths.state_dir(), STOPPED_FILE % project_id)
+
+
+def _stopped_read(project_id):
+    data = atomic.read_json(_stopped_path(project_id), default={}) if os.path.exists(_stopped_path(project_id)) else {}
+    return data if isinstance(data, dict) else {}
+
+
+def _stopped_note(project_id, payload, now):
+    """Remember a SubagentStop that closed no job, by agent id (newest STOPPED_MAX, STOPPED_TTL_S old at most). A busy
+    lock or a problem goes to the log."""
+    agent_id = str(payload.get("agent_id") or "")
+    if not agent_id:
+        return
+    try:
+        info = {"at": now}
+        for key in ("agent_transcript_path", "transcript_path"):
+            if isinstance(payload.get(key), str):
+                info[key] = payload[key]
+        with lock.locked(paths.state_dir(), timeout=HOOK_LOCK_TIMEOUT_S):
+            kept = {k: v for k, v in _stopped_read(project_id).items()
+                    if isinstance(v, dict) and now - float(v.get("at") or 0) < STOPPED_TTL_S}
+            kept.pop(agent_id, None)
+            kept[agent_id] = info
+            atomic.write_json(_stopped_path(project_id), dict(list(kept.items())[-STOPPED_MAX:]))
+    except RoadmapError as exc:
+        _log("stopped note skipped: " + exc.code)
+    except Exception as exc:
+        _log("stopped note error " + type(exc).__name__)
+
+
+def _stopped_take(project_id, agent_id):
+    """The remembered stop of an agent (and forget it), or None."""
+    if not agent_id:
+        return None
+    try:
+        with lock.locked(paths.state_dir(), timeout=HOOK_LOCK_TIMEOUT_S):
+            mapping = _stopped_read(project_id)
+            info = mapping.pop(agent_id, None)
+            if info is not None:
+                atomic.write_json(_stopped_path(project_id), mapping)
+            return info if isinstance(info, dict) else None
+    except Exception as exc:
+        _log("stopped take skipped: " + type(exc).__name__)
+        return None
+
+
+def _is_completed(tool_response):
+    """True when an Agent tool response says the agent has finished (a foreground call)."""
+    return isinstance(tool_response, dict) and tool_response.get("status") == "completed"
+
+
+def _closed_at_start(project, data_dir, new, tool_response):
+    """Close a job just registered when its agent is already over: a remembered SubagentStop for the same agentId, or a
+    completed foreground Agent response. Returns True when the job was closed (it must not enter the state)."""
+    agent_id = str(new.get("agent") or "")
+    stop = _stopped_take(project["id"], agent_id)
+    if stop is None and not _is_completed(tool_response):
+        return False
+    if not _close(data_dir, new, "done"):
+        return False
+    source = dict(stop or {})
+    source["agent_id"] = agent_id
+    source.setdefault("transcript_path", new.get("transcript_path"))
+    if new.get("transcript") and "agent_transcript_path" not in source:
+        source["agent_transcript_path"] = new["transcript"]
+    jobtokens.capture_for_agent(data_dir, new["job"], source)
+    return True
+
+
 def _close_some(data_dir, entries, verdict):
     """Close each entry whose verdict gives a status ("done" or "failed"). Returns the job ids closed. Stops at the
     first busy project lock, so one event never waits on many locks in a row."""
@@ -1437,13 +1539,17 @@ def _close(data_dir, entry, status):
     """Finish the job of a state entry. Returns False when the project lock is busy (the entry stays in the state),
     otherwise True: the entry may be dropped from the state."""
     try:
-        jobs.finish_job(data_dir, entry["job"], status)
+        if status == "stale":  # R11.159: no activity: closed as failed with a "stale:" reason, not as done
+            jobs.finish_job(data_dir, entry["job"], "failed",
+                            reason=jobs.STALE_PREFIX + " no agent activity for %d min" % (AGENT_STALE_S // 60))
+        else:
+            jobs.finish_job(data_dir, entry["job"], status)
     except RoadmapError as exc:
         if exc.code == "locked":
             return False  # try again on the next event
         _log("drop " + str(entry.get("job")) + ": " + exc.message)
         return True  # the job is gone, or it was finished by hand
-    _log(("fail " if status == "failed" else "done ") + entry["job"])
+    _log({"failed": "fail ", "stale": "stale "}.get(status, "done ") + entry["job"])
     return True
 
 

@@ -199,6 +199,9 @@ def _mark_partial(data_dir, task_id):
             return
 
 
+STALE_PREFIX = "stale:"  # R11.159: a failed job whose reason starts so was a ghost; it does not reset its task
+
+
 def finish_job(data_dir, job_id, status, note=None, tokens_k=None, reason=None):
     """Mark a running job done or failed, with an optional note and thousands of tokens used.
     Finishing a job that is not running is a conflict (exit 4); an unknown id is not_found (exit 3).
@@ -233,7 +236,7 @@ def finish_job(data_dir, job_id, status, note=None, tokens_k=None, reason=None):
         if clean_reason:
             job["reason"] = clean_reason
         _write_doc(data_dir, doc)
-        if status == "failed" and job.get("task"):
+        if status == "failed" and job.get("task") and not clean_reason.startswith(STALE_PREFIX):
             _reset_partial(data_dir, doc, job["task"])
         if status == "done" and job.get("task"):
             _mark_verify(data_dir, doc, job["task"])

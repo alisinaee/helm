@@ -56,17 +56,25 @@ export function sinceUrl(url, rev) {
 // and changed:false, so the caller keeps what it stored (no re-normalize, no new fetch time). A 304 with no kept body
 // (a since= request whose URL was never fetched here) resolves with data:null and changed:false, so the caller
 // keeps its own stored copy.
+const GET_TIMEOUT_MS = 15000;
+
 export async function getJson(url) {
   const cached = etagCache.get(url);
   const headers = { Accept: "application/json" };
   if (cached) headers["If-None-Match"] = cached.etag;
   let response;
   const started = Date.now();
+  // A request that never answers must not stall the poll loop: give up after GET_TIMEOUT_MS and let it retry.
+  const abort = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = abort ? setTimeout(function () { abort.abort(); }, GET_TIMEOUT_MS) : 0;
   try {
-    response = await fetch(url, { headers: headers, credentials: "same-origin" });
+    response = await fetch(url, {
+      headers: headers, credentials: "same-origin", signal: abort ? abort.signal : undefined });
   } catch (err) {
     noteRequest("GET", url, 0, started);
     throw new ApiError(0, "network", "Could not reach the server. Retrying.");
+  } finally {
+    clearTimeout(timer);
   }
   noteRequest("GET", url, response.status, started);
   if (response.status === 304) {
