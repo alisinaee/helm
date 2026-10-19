@@ -645,6 +645,13 @@ function boot() {
   document.addEventListener("click", onClick);
   document.addEventListener("change", onChange);
   document.addEventListener("rb:render", render);
+  document.addEventListener("rb:limits", function (e) {
+    if (!e.detail || typeof e.detail !== "object") return;
+    const prev = JSON.stringify(topLimits.windows);
+    topLimits.windows = e.detail;
+    topLimits.at = Date.now();
+    if (JSON.stringify(topLimits.windows) !== prev) document.dispatchEvent(new Event("rb:render"));
+  });
   document.addEventListener("pointerover", onPointerOver);
   document.addEventListener("pointerout", onPointerOut);
   document.addEventListener("focusin", onPointerOver);

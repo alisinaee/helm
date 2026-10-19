@@ -30,12 +30,17 @@ function clamp(n, lo, hi) {
   return Math.min(hi, Math.max(lo, n));
 }
 
+function announce(w) {
+  document.dispatchEvent(new CustomEvent("rb:limits", { detail: w }));
+}
+
 function load() {
   if (L.loading || typeof fetch === "undefined") return;
   L.loading = true;
   getJson("/api/v1/limits").then(function (res) {
     if (!res || res.status !== 200 || !res.data || !res.data.windows) throw new Error("limits");
     L.data = res.data.windows;
+    announce(L.data);
     L.error = false;
   }).catch(function () {
     L.error = true;
@@ -188,7 +193,7 @@ function save(w) {
   const d = L.draft[w];
   if (!d) return;
   postJson("/api/v1/limits", { window: w, on: d.on, mode: d.mode, value: d.value, once: d.once }).then(function (res) {
-    if (res && res.data && res.data.windows) L.data = res.data.windows;
+    if (res && res.data && res.data.windows) { L.data = res.data.windows; announce(L.data); }
     if (!L.timers[w]) delete L.draft[w];
     L.at = Date.now();
     showToast({ text: WINDOWS[w].title + " stop saved.", tone: "success" });
