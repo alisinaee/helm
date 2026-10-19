@@ -444,15 +444,14 @@ export function acctPanelHtml() {
       [who.email || who.emailMasked, who.plan].filter(Boolean).join(" · ") || MISSING;
     const nameTitle = name === MISSING ? "Not known until the account is checked" : (who.orgName || "");
     const r = a.reading || {};
-    const slot = function (html) {
-      return html || "<span></span>";
-    };
-    const btns = slot(a.active ? "" : acctButton(a.id, "switch", "Use", a.label)) +
+    const more = '<details class="tk-menu"><summary class="btn" aria-label="More actions for ' + esc(a.label) +
+      '" title="More actions">\u22ef</summary><div class="tk-menu-list">' +
       acctButton(a.id, "login", "Log in", a.label) +
       acctButton(a.id, "check", "Check", a.label) +
       (a.enabled ? acctButton(a.id, "disconnect", "Disconnect", a.label) :
         acctButton(a.id, "connect", "Connect", a.label)) +
-      slot(a.active ? "" : acctButton(a.id, "remove", "Remove", a.label));
+      (a.active ? "" : acctButton(a.id, "remove", "Remove", a.label)) + "</div></details>";
+    const btns = (a.active ? "<span></span>" : acctButton(a.id, "switch", "Use", a.label)) + more;
     const stCls = a.status === "ok" ? "tk-st-ok" : (a.status === "idle" || a.status === "unknown" ||
       a.status === "disconnected" ? "" : "tk-st-bad");
     return '<li class="tk-acct-row' + (a.active ? " tk-acct-on" : "") + '">' +
@@ -489,7 +488,8 @@ function acctSlug(label) {
 
 function acctAddForm() {
   if (!acct.adding) {
-    return '<p><button type="button" class="btn tk-acct-new" data-tk="acct" data-act="add-open">+ Add account</button></p>';
+    return '<p><button type="button" class="btn tk-acct-new" data-tk="acct" data-act="add-open">' +
+      "+ Add account</button></p>";
   }
   const slug = acctSlug(acct.lastLabel || "");
   const defaultPath = slug ? "~/.claude-" + slug : "";
