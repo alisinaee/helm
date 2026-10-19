@@ -159,6 +159,8 @@ function enterHtml(vm) {
 // there is none, the weekly stop. Null when no stop is set.
 function stopFor(vm, win) {
   const rows = limitRows(vm.meterRows) || [];
+  const w = vm.limits && vm.limits.windows ? vm.limits.windows[win === "five" ? "five_hour" : "week"] : null;
+  if (w && typeof w.stop === "number" && isFinite(w.stop)) return w.stop;
   const stops = vm.limits && vm.limits.stops ? vm.limits.stops : (vm.stops || null);
   if (stops && typeof stops[win] === "number") return stops[win];
   if (win === "five") {

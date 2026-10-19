@@ -189,6 +189,21 @@ function meterRowsFor(snapshots) {
   return null;
 }
 
+// Limits windows (stop per window) for the top bar ticks, from /api/v1/limits; refreshed at most every 30 s.
+let topLimits = { windows: null, at: 0 };
+function topLimitsFor() {
+  if (Date.now() - topLimits.at > 30000) {
+    topLimits.at = Date.now();
+    getJson("/api/v1/limits").then(function (res) {
+      if (res && res.status === 200 && res.data && res.data.windows) {
+        topLimits.windows = res.data.windows;
+        document.dispatchEvent(new Event("rb:render"));
+      }
+    }).catch(function () {});
+  }
+  return topLimits.windows ? { windows: topLimits.windows } : null;
+}
+
 function buildShellVm(route, now) {
   const vm = buildViewModel(store, route, prefsFor(route), now);
   const snapshots = snapshotsInScope(route);
@@ -196,6 +211,7 @@ function buildShellVm(route, now) {
   vm.theme = vm.ui.theme;
   vm.snapshotList = snapshots;
   vm.meterRows = meterRowsFor(snapshots);
+  vm.limits = topLimitsFor();
   vm.control = controlFor(route, route.name === "project" ? store.snapshots[route.id] : null, now);
   return vm;
 }
