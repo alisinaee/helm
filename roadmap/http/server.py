@@ -6,6 +6,7 @@ status and milliseconds. The query string is dropped as soon as the request line
 routing or the log.
 """
 
+import ipaddress
 import os
 import socketserver
 import stat
@@ -25,6 +26,18 @@ from roadmap.store import config as config_store
 from roadmap.store import paths
 
 BIND_HOST = "127.0.0.1"
+# ROADMAP_BIND_HOST moves the main listener off loopback (for a reverse proxy on another interface). Only an IPv4
+# address is taken; the phone listener stays on 127.0.0.1.
+BIND_HOST_ENV = "ROADMAP_BIND_HOST"
+
+
+def main_bind_host():
+    """The main listener's address: ROADMAP_BIND_HOST when it is a valid IPv4 address, else 127.0.0.1."""
+    value = (os.environ.get(BIND_HOST_ENV) or "").strip()
+    try:
+        return str(ipaddress.IPv4Address(value)) if value else BIND_HOST
+    except ValueError:
+        return BIND_HOST
 WEB_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "web")
 DEFAULT_PHONE_PORT = 8766
 SLOW_API_MS = 1000
@@ -124,7 +137,7 @@ class App:
     def handle(self, req):
         """The Reply for a request: Host check first, then API routes, then static pages."""
         if not security.host_allowed(req.headers.get("Host"), self.port):
-            return routes.error_reply(421, "misdirected_request", "this server answers only on 127.0.0.1 or localhost")
+            return routes.error_reply(421, "misdirected_request", "this server answers only on 127.0.0.1, localhost or its public host")
         reply = routes.match(self, req)
         if reply is not None:
             return reply
@@ -379,7 +392,7 @@ class RoadmapServer(ThreadingHTTPServer):
     daemon_threads = True
 
     def __init__(self, port, token, sync, static_files, supervise=False):
-        super().__init__((BIND_HOST, int(port)), _Handler)
+        super().__init__((main_bind_host(), int(port)), _Handler)
         self.app = App(self.server_address[1], token, sync, static_files)
         self._supervise = supervise
         self._supervisor_stop = threading.Event()
@@ -398,7 +411,7 @@ class RoadmapServer(ThreadingHTTPServer):
     def server_bind(self):
         # skip HTTPServer.server_bind: it resolves the host name, which may touch the network
         socketserver.TCPServer.server_bind(self)
-        self.server_name = BIND_HOST
+        self.server_name = self.server_address[0]
         self.server_port = self.server_address[1]
 
     def server_close(self):

@@ -7,6 +7,7 @@ Nothing here touches sockets or the filesystem. The server calls these functions
 import collections
 import hmac
 import json
+import os
 import re
 import secrets
 import threading
@@ -29,6 +30,16 @@ PHONE_COOKIE_MAX_AGE_S = 7 * 24 * 3600
 PHONE_FAIL_LIMIT = 10
 PHONE_FAIL_WINDOW_S = 60
 _PLAIN_PATH_RE = re.compile(r"/(?!/)[A-Za-z0-9._~/-]*")
+# A reverse proxy in front of the server (for example nginx with a login wall) may serve it under one public HTTPS
+# name. ROADMAP_PUBLIC_HOST names it; the Host and Origin checks then also accept that name. Unset: loopback only.
+PUBLIC_HOST_ENV = "ROADMAP_PUBLIC_HOST"
+_HOST_NAME_RE = re.compile(r"[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+")
+
+
+def public_host():
+    """The public host name from ROADMAP_PUBLIC_HOST (lower case), or None when unset or not a plain DNS name."""
+    value = (os.environ.get(PUBLIC_HOST_ENV) or "").strip().lower()
+    return value if _HOST_NAME_RE.fullmatch(value) else None
 
 
 def new_token():
@@ -49,7 +60,11 @@ def host_allowed(host, port):
     """True when the Host header names this server on 127.0.0.1 or localhost (DNS rebinding guard)."""
     if not isinstance(host, str):
         return False
-    return host.strip().lower() in ("127.0.0.1:%d" % port, "localhost:%d" % port)
+    value = host.strip().lower()
+    public = public_host()
+    if public and value in (public, public + ":443"):
+        return True
+    return value in ("127.0.0.1:%d" % port, "localhost:%d" % port)
 
 
 def phone_host_allowed(host, port, tunnel_host):
@@ -63,8 +78,10 @@ def phone_host_allowed(host, port, tunnel_host):
 
 
 def origins(port):
-    """The two origins this server answers to."""
-    return ("http://127.0.0.1:%d" % port, "http://localhost:%d" % port)
+    """The origins this server answers to: the two loopback ones, plus https://<public host> when one is set."""
+    local = ("http://127.0.0.1:%d" % port, "http://localhost:%d" % port)
+    public = public_host()
+    return local + ("https://" + public,) if public else local
 
 
 def write_refusal(headers, token, port):
