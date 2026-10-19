@@ -27,7 +27,7 @@ INLINE = re.compile(r"""\sstyle\s*=|\son[a-z]{3,}\s*=""", re.IGNORECASE)
 FLOW_CSS_MAX = 5.5 * 1024  # flow.css: Overview, Inbox, Activity and the question card (5.3 KB on 2026-10-16)
 CSS_TOTAL_MAX = 192 * 1024  # the one shared web/css total cap, imported by the other CSS tests. 2026-10-17: sections grow (System v2, Activity, Roadmap map, Tokens); cap raised from 80 KB so work is not blocked. Keep per-file budgets in their own tests.
 SHELL_CSS_MAX = 10 * 1024  # R11.129/R11.125: usage mini bars, rail count badges
-ICONS_MAX = 5 * 1024
+ICONS_MAX = 6 * 1024  # raised from 5 KB for the R12.1 icon set (22 symbols)
 SHELL_FILES = ("shell.css", "panel.css", "work.css", "plan.css", "admin.css", "flow.css")
 
 
