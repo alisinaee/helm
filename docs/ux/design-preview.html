@@ -57,6 +57,43 @@ code { font-family: var(--font-mono); font-size: 11px; color: var(--text-2); ove
   *, *::before, *::after { animation: none !important; transition: none !important }
   #rm-note::after { content: " (reduced motion ON: animations disabled)" }
 }
+
+/* ===== Obsidian & Lime (R10.36 proposal). Raw hex lives ONLY in this token block. ===== */
+/* Fonts: stacks only, NO external font link. Helm is local-first and assumes no network; Space Grotesk / JetBrains Mono render only if installed locally. */
+[data-theme="obsidian"] {
+  --surface-0: #000000; --surface-1: #0c0c0c; --surface-2: #1a1a1a;
+  --line: #6e6e6e; --track: #262626;
+  --text-1: #ebebeb; --text-2: #999999; --text-3: #8c8c8c;
+  --accent: #ccff00; --on-accent: #000000; --focus: #ccff00;
+  --success: #10b981; --warning: #f5c04a; --danger: #ff7b7b; --info: #7cc8f5;
+  --glass-bg: rgba(255,255,255,.03); --glass-line: rgba(255,255,255,.1); --glow: rgba(204,255,0,.3); --glow-sphere: rgba(204,255,0,.35); --grid-line: rgba(255,255,255,.04);
+  --r-shell: 2.5rem; --r-glass: 1.5rem;
+  --f-head: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --f-tech: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --ease-ob: cubic-bezier(.4,0,.2,1)
+}
+.ob-wrap { background: var(--surface-0); color: var(--text-1); border-radius: var(--r-shell); padding: 16px; position: relative; overflow: hidden; isolation: isolate; border: 1px solid var(--track) }
+.ob-switch { display: flex; gap: 8px; margin: 0 0 12px; flex-wrap: wrap }
+.ob-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px); background-size: 60px 60px }
+.ob-bg::after { content: ""; position: absolute; inset: 0; opacity: .15;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E") }
+.glow-sphere { position: absolute; width: 220px; height: 220px; border-radius: 50%; right: -60px; top: -60px; background: radial-gradient(circle, var(--glow-sphere), transparent 70%); filter: blur(120px); z-index: -1; pointer-events: none }
+.ob-wrap h3, .ob-wrap h2 { font-family: var(--f-head); letter-spacing: -.06em }
+.ob-wrap p, .ob-wrap .glass { font-family: var(--f-head); font-weight: 400 }
+.glass { background: var(--glass-bg); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid var(--glass-line); border-radius: var(--r-glass); padding: 16px; max-width: 320px }
+.glass.float { animation: ob-float 6s ease-in-out infinite }
+@keyframes ob-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-10px) } }
+@keyframes ob-pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+.neon { background: var(--accent); color: var(--on-accent); font-weight: 700; border: 0; border-radius: 999px; padding: 0 24px; height: 44px; font-family: var(--f-head); cursor: pointer;
+  box-shadow: 0 0 30px var(--glow); transition: transform .2s var(--ease-ob), box-shadow .2s var(--ease-ob) }
+.neon:hover { transform: scale(1.05) }
+.neon:focus-visible { outline: 2px solid var(--text-1); outline-offset: 3px }
+.neon.pulse { animation: ob-pulse 2s infinite }
+.tag { display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-tech); font-size: 11px; text-transform: uppercase; letter-spacing: .2em; color: var(--text-2) }
+.tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: ob-pulse 2s infinite }
+.ob-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 12px 0 }
+@media (prefers-reduced-transparency: reduce) { .glass { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--surface-1); border-color: var(--line) } .glow-sphere, .ob-bg::after { display: none } }
 </style>
 </head>
 <body>
@@ -123,9 +160,23 @@ code { font-family: var(--font-mono); font-size: 11px; color: var(--text-2); ove
 <button class="btn" id="tb">Show toast</button>
 <span id="tw"></span>
 </div>
+<h2>Obsidian &amp; Lime (proposal R10.36)</h2>
+<div class="ob-wrap" id="ob" data-theme="obsidian">
+<div class="ob-bg"></div><div class="glow-sphere"></div>
+<div class="ob-switch" role="group" aria-label="Theme"><button class="btn" id="ob-on" aria-pressed="true">Obsidian</button><button class="btn" id="ob-off" aria-pressed="false">Helm default</button></div>
+<h3>Glass floating card</h3>
+<div class="glass float"><p>Backdrop blur 16px, 3% white fill, 10% white edge, 1.5rem radius. Floats 6s.</p></div>
+<div class="ob-row"><button class="neon pulse">Neon pulse button</button><span class="tag">System online</span></div>
+<h4>Existing components in this theme</h4>
+<div class="ob-row"><button class="btn">Default</button><button class="btn btn-primary">Primary</button><button class="btn btn-danger">Danger</button><button class="btn" disabled>Disabled</button>
+<span class="sw"><span class="chip" style="background:var(--success)"></span><code>success</code></span><span class="sw"><span class="chip" style="background:var(--warning)"></span><code>warning</code></span><span class="sw"><span class="chip" style="background:var(--danger)"></span><code>danger</code></span><span class="sw"><span class="chip" style="background:var(--info)"></span><code>info</code></span>
+<svg class="i"><use href="#i-check"/></svg><svg class="i"><use href="#i-warning"/></svg></div>
+<p><code>Grid 60px + noise 15% + glow sphere 120px blur are the backdrop of this block.</code></p>
+</div>
 </main>
 <script>
 document.getElementById('tb').addEventListener('click',function(){var w=document.getElementById('tw');w.innerHTML='<span class="toast in" role="status"><svg class="i"><use href="#i-check"/></svg>Saved</span>';});
+(function(){var w=document.getElementById('ob'),a=document.getElementById('ob-on'),b=document.getElementById('ob-off');function set(t){if(t)w.setAttribute('data-theme','obsidian');else w.removeAttribute('data-theme');a.setAttribute('aria-pressed',t);b.setAttribute('aria-pressed',!t);}a.onclick=function(){set(true)};b.onclick=function(){set(false)};})();
 </script>
 </body>
 </html>
