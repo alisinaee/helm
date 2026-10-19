@@ -51,6 +51,26 @@ check that the right account is active, then press **Sync now**.
 
 Details: [USAGE-SOURCES.md](USAGE-SOURCES.md).
 
+## 3b. Skills in the repository
+
+The project skills live in `.claude/skills/` and travel with the repository, so Claude Code finds them when you
+open the Helm folder (no copying into `~/.claude`):
+
+| Skill | Use |
+|---|---|
+| `/head` | act as the project head: resume from `docs/HANDOVER.md`, plan, run workers, verify, commit. `/head save` before you stop. `/head status` for a short state. |
+| `roadmap-dashboard` | install and run the dashboard for a project, keep usage and jobs in sync |
+| `roadmap-plan-new` | research first, then fill the board for a new project |
+| `roadmap-update` | record task progress on the board |
+
+If `/head` is "not found": open Claude Code in the Helm repository folder itself (the one that holds `bin/roadmap`),
+pull the latest `main`, and start a new Claude Code session. Skills are read when a session starts.
+
+`ui-ux-pro-max` (UI design search, used by the UI rules in `docs/UI-CHECKLIST.md`) is a third-party skill and is not
+in the repository. Install it in your own `~/.claude/skills` if you do UI work.
+
+`/head` writes your own board data and hooks, so run it in your own clone, not in someone else's.
+
 ## 4. The workflow
 
 1. Start from the latest `main`: `git pull`, then `git switch -c <short-name>`.
