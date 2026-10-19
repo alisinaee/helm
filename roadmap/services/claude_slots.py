@@ -338,8 +338,18 @@ def _after_switch(account_id):
         if usage_accounts.config_dir_of(usage_accounts._find(cfg, usage_accounts.active_id(cfg))) is None:
             from roadmap.services import usage
             usage.account_switched(usage_accounts.last_reading(account_id), config=cfg)
+            if "unittest" not in sys.modules:  # a fresh reading of the new login, off the request path
+                threading.Thread(target=_sync_quietly, name="usage-after-switch", daemon=True).start()
     except Exception as exc:
         log.warning("usage store not updated after the login switch: %s", type(exc).__name__)
+
+
+def _sync_quietly():
+    try:
+        from roadmap.services import usage
+        usage.sync_all(background=True)
+    except Exception as exc:
+        log.warning("usage sync after the login switch failed: %s", type(exc).__name__)
 
 
 # ---------------------------------------------------------------- web login (pseudo terminal)

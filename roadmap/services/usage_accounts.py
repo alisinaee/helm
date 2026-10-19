@@ -486,11 +486,29 @@ def list_status(cfg=None, full_email=True, now=None):
             "switchable": _slots_supported()}
 
 
+def live_account_id(cfg=None):
+    """Linux: the id of the stored account whose login plain claude uses now, judged by who the live token belongs
+    to (Anthropic profile, cached) and else by ~/.claude.json. None when no stored account matches."""
+    if not _slots_supported():
+        return None
+    from roadmap.services import claude_slots
+    owner = claude_slots.token_owner(None)
+    uuid = owner["accountUuid"] if owner else claude_slots.live_uuid()
+    if not uuid:
+        return None
+    for account in accounts(cfg):
+        folder = config_dir_of(account)
+        if folder and claude_slots.account_uuid(folder) == uuid:
+            return account["id"]
+    return None
+
+
 def _fold_live(rows):
     """Linux: the default row is the login plain claude uses, which is also one of the stored ~/.claude-<name>
-    accounts. Show that account once: the stored row stays (marked In use) and takes the default row's live
-    reading and status when the default row feeds the board; the default row is dropped. Nothing changes when no
-    stored account is the one in use."""
+    accounts. Show that account once: the stored row stays (marked In use, Active when the default row feeds the
+    board) with its own reading, and the default row is dropped. Readings are kept per real account (see
+    live_account_id), so a switch never shows one account's numbers on another. Nothing changes when no stored
+    account is the one in use."""
     if not _slots_supported():
         return rows
     default = next((r for r in rows if r["source"] == "keychain" and not r["path"]), None)
@@ -498,8 +516,6 @@ def _fold_live(rows):
     if default is None or stored is None:
         return rows
     if default["active"]:
-        for key in ("status", "reason", "statusAt", "reading"):
-            stored[key] = default[key]
         stored["active"] = True
     from roadmap.services import claude_slots
     if claude_slots.token_mismatch(None, fetch=False):

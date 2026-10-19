@@ -135,12 +135,17 @@ class ReadAllTest(SlotsCase):
         live["claudeAiOauth"]["accessToken"] = "tok-b-fresh"
         write(os.path.join(self.home, ".claude", ".credentials.json"), live)
         seen = []
-        # the board follows the default login, which is "work" now: work is not fetched a second time
-        usage_accounts.note_reading("default", {"weeklyPercent": 33})
-        usage.sync_others(fetch=lambda t: seen.append(t) or {})
+        # the board follows the default login, which is "work" now: sync_once files its reading on "work" too,
+        # and sync_others does not fetch it a second time
+        payload = {"five_hour": {"utilization": 5, "resets_at": None}, "seven_day": {"utilization": 33,
+                                                                                     "resets_at": None}}
+        usage.sync_once(fetch=lambda t: seen.append(t) or payload)
+        self.assertEqual(seen, ["tok-b-fresh"])
+        self.assertEqual(usage_accounts.last_reading("work")["weeklyPercent"], 33)
+        seen.clear()
+        usage.sync_others(fetch=lambda t: seen.append(t) or payload)
         self.assertNotIn("tok-b-fresh", seen)
         self.assertNotIn("tok-b", seen)
-        self.assertEqual(usage_accounts.last_reading("work")["weeklyPercent"], 33)
         # with the board on another account, the in-use login is read from ~/.claude (its freshest copy)
         usage_accounts.switch("alice")
         seen.clear()
@@ -149,14 +154,15 @@ class ReadAllTest(SlotsCase):
         self.assertNotIn("tok-b", seen)
 
     def test_in_use_account_is_listed_once(self):
+        usage_accounts.note_reading("work", {"weeklyPercent": 12})
+        usage_accounts.note_reading("default", {"weeklyPercent": 41})  # alice's numbers, before the switch
         claude_slots.use_in_claude("work")
-        usage_accounts.note_reading("default", {"weeklyPercent": 41})
         rows = usage_accounts.list_status()["accounts"]
         self.assertNotIn("default", [r["id"] for r in rows])
         work = {r["id"]: r for r in rows}["work"]
         self.assertTrue(work["inClaude"])
         self.assertTrue(work["active"])
-        self.assertEqual(work["reading"]["weeklyPercent"], 41)
+        self.assertEqual(work["reading"]["weeklyPercent"], 12)  # its own numbers, never the previous login's
 
 
 class MismatchTest(SlotsCase):

@@ -521,6 +521,12 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
                            keychainRetryAfter=None)
             stored, mirrors = _commit(changes, cfg)
             usage_accounts.note_reading(account["id"], stored)
+            if where is None and own_login:
+                # The default login is one of the stored accounts (Linux): keep the reading on that real account
+                # too, so its row is right after the next switch.
+                owner_id = usage_accounts.live_account_id(cfg)
+                if owner_id:
+                    usage_accounts.note_reading(owner_id, stored)
             result = _result(stored, cfg, mirrors)
             _control_after_write()
             return result
@@ -555,12 +561,8 @@ def sync_others(config=None, fetch=None, get_token=None):
         try:
             where = usage_accounts.read_location(account)
             if where is None and default_active:
-                # The login in use is the active (default) one, read by sync_once a moment ago: reading it again
-                # only costs a request (the endpoint answers 429 to quick repeats). Keep that reading instead.
-                kept = usage_accounts.last_reading(active)
-                if kept:
-                    usage_accounts.note_reading(account["id"], kept)
-                    out[account["id"]] = "ok"
+                # The login in use is the active (default) one: sync_once read it a moment ago and filed the
+                # reading on this account. Reading it again only costs a request (429 on quick repeats).
                 continue
             folder = usage_accounts.config_dir_of(account)
             if where is not None and folder and _wrong_login(folder):
