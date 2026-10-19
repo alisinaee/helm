@@ -10,7 +10,7 @@
 .lane-act>.ref-copy{grid-column:6;justify-self:end}
 .lane-stats>.chip{grid-column:2/-1;grid-row:2;justify-self:end}
 .lane-head .num{font-variant-numeric:tabular-nums}
-.rc-move{display:grid}
+.rc-move{display:grid;align-self:end;--rg:1fr 1fr 2rem}
 .rc-move>.btn{width:100%;margin:0}
 .lane-toggle{display:grid;grid-template-columns:24px 48px minmax(0,1fr);align-items:center;gap:var(--sp-2);min-height:var(--h-row);padding:0;border:0;background:none;color:var(--text-1);font:inherit;text-align:left;cursor:pointer}
 .lane-id{font-family:var(--font-mono);font-weight:600}
@@ -24,7 +24,7 @@
 .rc.is-blocked{border-color:var(--danger)}
 .rc-title{margin:0;color:var(--text-1);font-size:var(--fs-13);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .tl-row{display:grid;gap:var(--sp-1)}
-.tl-track{height:0.75rem;background:var(--surface-2);border-radius:var(--r-control);overflow:hidden}
+.tl-track{height:.75rem;background:var(--surface-2);border-radius:var(--r-control);overflow:hidden}
 .tl-bar{height:100%;max-width:100%;background:var(--track);border-radius:var(--r-control)}
 .tl-spent{height:100%;max-width:100%;background:var(--accent)}
 .plan-views a,.iss-filters a{display:inline-flex;align-items:center;min-height:var(--h-control);padding:0 var(--sp-3);border:1px solid var(--line);border-radius:var(--r-control);color:var(--text-1);text-decoration:none}
