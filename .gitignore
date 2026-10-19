@@ -8,3 +8,4 @@ docs/reviews/agy-out/
 docs/head-spool.jsonl
 docs/roadmap.db*
 graphify-out/
+.claude/settings.local.json

@@ -53,3 +53,11 @@ claude auth login` makes). Plain `claude` uses `~/.claude/.credentials.json` + `
 - **Log in** (row action) appears when a stored login expired or is signed out; it re-logs that folder.
 
 CLI: `bin/roadmap usage account list`, `bin/roadmap service status|restart|logs` (systemd --user on Linux).
+
+## /head and hooks
+
+- Hooks: `bin/roadmap hooks install helm` wrote `.claude/settings.local.json` (git-ignored). Every Claude Code chat
+  opened in this folder now reports to Helm: presence, the person's prompts into the Head ledger, Agent calls as
+  jobs, and the usage-stop gate.
+- `/head`: the skill is `deploy/linux/skills/head/SKILL.md`; install it with
+  `mkdir -p ~/.claude/skills/head && cp deploy/linux/skills/head/SKILL.md ~/.claude/skills/head/`.

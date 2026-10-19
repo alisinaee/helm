@@ -22,7 +22,7 @@ REPO = os.path.dirname(TESTS)
 WEB = os.path.join(REPO, "web")
 RENDER = os.path.join(TESTS, "web", "render_workflow.mjs")
 FIXTURE = os.path.join(TESTS, "fixtures", "workflow_snapshot.json")
-MAP_CSS_MAX = 4.5 * 1024
+MAP_CSS_MAX = 5.25 * 1024  # 5.25 KB since the phone-width rules (mahdi-mobile-optimize)
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=', re.IGNORECASE)
 OPEN_TAG = re.compile(r"<(g|rect|path|a|button)\b[^>]*data-wf-item=[^>]*>")
 
