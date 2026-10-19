@@ -1033,11 +1033,11 @@ def _stop_gate(payload, project, data_dir, now):
         rows = head_svc.rows(data_dir, now=moment)
         queue = [e.get("task") for e in queue_service.list_queue(data_dir)]
         running = [j for j in jobs.list_jobs(data_dir) if j.get("status") == "running"]
-        dirty, unpushed = _git_counts(project["path"])
+        dirty, unpushed = _git_counts(project["path"], data_dir)
         data, error = schema.read_data("usage", paths.usage_file())
         usage = data if error is None and isinstance(data, dict) else None
         items = head_svc.gate(rows, queue=queue, running=running, dirty=dirty, unpushed=unpushed, usage=usage,
-                              now=moment)
+                              now=moment, audit_tools=audit_tools(cfg))
         idle = "" if head_svc._at_stop(usage) else _idle_text(data_dir, rows, running, moment)
         from roadmap.services import usage as usage_svc  # local, as in _usage_auto
         asked = usage_svc.refresh_requested(moment)  # a manual sync asked for a fresh usage reading
@@ -1101,12 +1101,31 @@ def _idle_text(data_dir, rows, running, moment):
     return "idle: 0 running, %d free tasks; launch now: %s." % (len(ranked), ", ".join(ranked[:IDLE_LAUNCH_N]))
 
 
-def _git_counts(folder):
-    """(uncommitted entries, unpushed commits), None for a count git cannot give. Read-only git with a short timeout."""
+def audit_tools(head_cfg):
+    """The audit tools the gate may nag about (roadmap.config.json head.auditTools), or None for all of them."""
+    tools = head_cfg.get("auditTools") if isinstance(head_cfg, dict) else None
+    return [str(t) for t in tools] if isinstance(tools, list) else None
+
+
+def _board_file(path, rel_data):
+    """True for the board's own runtime files (a .json/.jsonl directly in the data folder): the service and the
+    hooks rewrite them all the time, so they are not uncommitted work."""
+    path = path.strip().strip('"')
+    folder, name = os.path.split(path)
+    return folder == rel_data and name.endswith((".json", ".jsonl"))
+
+
+def _git_counts(folder, data_dir=None):
+    """(uncommitted entries, unpushed commits), None for a count git cannot give. Read-only git with a short timeout.
+    With data_dir, the board's own runtime files in it are not counted."""
     dirty = unpushed = None
+    rel_data = None
+    if data_dir:
+        rel = os.path.relpath(os.path.realpath(data_dir), os.path.realpath(folder))
+        rel_data = None if rel.startswith("..") else rel
     try:
         dirty = len([line for line in git.run(folder, ["status", "--porcelain"], timeout=GATE_GIT_S).splitlines()
-                     if line.strip()])
+                     if line.strip() and not (rel_data and _board_file(line[3:], rel_data))])
     except RoadmapError:
         dirty = None
     try:

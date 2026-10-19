@@ -9,3 +9,10 @@ docs/head-spool.jsonl
 docs/roadmap.db*
 graphify-out/
 .claude/settings.local.json
+.idea/
+# Head ledger: the person's own prompts and replies (public repo: keep local)
+docs/head.jsonl
+docs/head-text.jsonl
+docs/head-panel.jsonl
+docs/head-panel-seen.json
+docs/head-gate.json

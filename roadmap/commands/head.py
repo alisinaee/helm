@@ -536,11 +536,11 @@ def _gate_items(project, data_dir, now):
     rows = store.rows(data_dir, now=now)
     queue = [e.get("task") for e in queue_service.list_queue(data_dir)]
     running = [j for j in jobs.list_jobs(data_dir) if j.get("status") == "running"]
-    dirty, unpushed = hooks._git_counts(project["path"])
+    dirty, unpushed = hooks._git_counts(project["path"], data_dir)
     data, error = schema.read_data("usage", paths.usage_file())
     usage = data if error is None and isinstance(data, dict) else None
     return store.gate(rows, queue=queue, running=running, dirty=dirty, unpushed=unpushed, usage=usage,
-                      paused=paused, now=now)
+                      paused=paused, now=now, audit_tools=hooks.audit_tools(cfg))
 
 
 def _gate(project, data_dir):

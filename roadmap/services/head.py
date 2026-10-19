@@ -775,7 +775,7 @@ def _age_min(ts, now):
 
 
 def gate(rows, *, queue=(), running=(), dirty=None, unpushed=None, usage=None, paused=False, now=None,
-         limit=GATE_LIMIT):
+         limit=GATE_LIMIT, audit_tools=None):
     """The autopilot continue items (HEAD-SPEC section 11), at most `limit` short lines, most urgent first: open
     asks oldest first, then queued tasks, then idle cursor and agy (only when there is other work), then
     uncommitted files and unpushed commits. Empty when paused, at a usage stop or when nothing waits.
@@ -795,7 +795,10 @@ def gate(rows, *, queue=(), running=(), dirty=None, unpushed=None, usage=None, p
     tools = []
     names = [str(j.get("title", "")) + " " + str(j.get("model", "")) for j in running or () if isinstance(j, dict)]
     text = " ".join(names).lower()
+    wanted = None if audit_tools is None else {str(t).lower() for t in audit_tools}
     for word, line in _IDLE_TOOLS:
+        if wanted is not None and word not in wanted:
+            continue  # the project's head.auditTools leaves this tool out (not installed there)
         if word not in text:
             tools.append(line)
     work = []
