@@ -54,10 +54,11 @@ claude auth login` makes). Plain `claude` uses `~/.claude/.credentials.json` + `
 
 CLI: `bin/roadmap usage account list`, `bin/roadmap service status|restart|logs` (systemd --user on Linux).
 
-## /head and hooks
+## /helm and hooks
 
 - Hooks: `bin/roadmap hooks install helm` wrote `.claude/settings.local.json` (git-ignored). Every Claude Code chat
   opened in this folder now reports to Helm: presence, the person's prompts into the Head ledger, Agent calls as
   jobs, and the usage-stop gate.
-- `/head`: the skill is `.claude/skills/head/SKILL.md`; install it with
-  `mkdir -p ~/.claude/skills/head && cp .claude/skills/head/SKILL.md ~/.claude/skills/head/`.
+- `/helm` (not `/head`: that name belongs to the head mod in home-server-head): the skill is
+  `.claude/skills/helm/SKILL.md`, loaded in chats opened in this folder; for other folders install it with
+  `mkdir -p ~/.claude/skills/helm && cp .claude/skills/helm/SKILL.md ~/.claude/skills/helm/`.

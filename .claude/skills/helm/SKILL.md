@@ -1,9 +1,12 @@
 ---
-name: head
-description: Act as the project head on the Helm board (helm.mjplabs.ir on the mjp-labs server) - plan, launch workers, register every job, keep tasks and the Head ledger in sync, verify, commit, push. `/head save` writes the checkpoint before a switch; `/head` in a new chat resumes from it; `/head status` reports.
+name: helm
+description: Helm head for this server (use /helm; /head is the separate head mod). Act as the project head on the Helm board (helm.mjplabs.ir on the mjp-labs server) - plan, launch workers, register every job, keep tasks and the Head ledger in sync, verify, commit, push. `/helm save` writes the checkpoint before a switch; `/helm` in a new chat resumes from it; `/helm status` reports.
 ---
 
-# /head (mjp-labs Linux server)
+# /helm: the Helm head (mjp-labs Linux server)
+
+`/head` on this machine is a different tool (the head mod in ~/StudioProjects/home-server-head/mods/head);
+this skill is `/helm`.
 
 Args: (none = resume) | `save` | `status`.
 
@@ -15,7 +18,7 @@ work must show up there. Answer in the person's language (usually Persian), shor
 H=~/StudioProjects/helm/bin/roadmap
 ```
 
-## /head (resume, first thing in a new chat)
+## /helm (resume, first thing in a new chat)
 
 1. Project = the folder of this chat if registered (`$H project list`), else ask. New project: `$H init <path>` (or
    `$H project add <path>`), then step 2.
@@ -58,15 +61,15 @@ H=~/StudioProjects/helm/bin/roadmap
 The head plans and verifies; workers edit. Parallel workers only on disjoint files. Ask the person all questions once,
 at the start, then decide alone. Never idle: when a worker returns, verify -> commit -> push -> launch the next.
 
-## /head save (before switching account, near the context limit, or before stopping)
+## /helm save (before switching account, near the context limit, or before stopping)
 
 1. Stop launching; let running workers finish or note them (job id, task, files).
 2. Commit finished work by path, push. No job left "running" without a worker.
-3. `$H head log` one state note: done, open, WIP files, next step, usage now. The next `/head` gets it back from
+3. `$H head log` one state note: done, open, WIP files, next step, usage now. The next `/helm` gets it back from
    `head claim` / `head brief`.
-4. Reply in at most 8 lines: last commit, open items, and the first message for the new chat: `/head`.
+4. Reply in at most 8 lines: last commit, open items, and the first message for the new chat: `/helm`.
 
-## /head status
+## /helm status
 
 Short: running jobs, WIP files, last commit, usage. Nothing is launched.
 
