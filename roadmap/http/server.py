@@ -390,6 +390,9 @@ class RoadmapServer(ThreadingHTTPServer):
     """The server. Binds 127.0.0.1 only; the port argument 0 asks the system for a free one."""
 
     daemon_threads = True
+    # A page load asks for some 60 files at once. Behind a reverse proxy each one is its own connection, and the
+    # socketserver default backlog of 5 makes the kernel reset the rest (the proxy then answers 502).
+    request_queue_size = 128
 
     def __init__(self, port, token, sync, static_files, supervise=False):
         super().__init__((main_bind_host(), int(port)), _Handler)

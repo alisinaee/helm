@@ -37,6 +37,11 @@ class PublicHostTest(unittest.TestCase):
             self.assertEqual(security.write_refusal(headers, "t", 8780), "origin")
 
 
+class BacklogTest(unittest.TestCase):
+    def test_listen_backlog_takes_a_page_load(self):
+        self.assertGreaterEqual(server.RoadmapServer.request_queue_size, 64)
+
+
 class BindHostTest(unittest.TestCase):
     def test_default_and_override(self):
         with mock.patch.dict(os.environ, {}, clear=True):

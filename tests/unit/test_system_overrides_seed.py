@@ -30,7 +30,6 @@ class SystemOverridesSeed(unittest.TestCase):
         with open(os.path.join(REPO, "docs", "system.json"), encoding="utf-8") as fh:
             data = json.load(fh)
         bound = [tid for comp in data["components"] for tid in comp.get("tasks", [])]
-        self.assertTrue(bound)
         self.assertEqual([tid for tid in bound if tid not in known], [])
 
     def test_override_keys_have_the_expected_shape(self):

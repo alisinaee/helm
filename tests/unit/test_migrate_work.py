@@ -1,7 +1,7 @@
 """Tests for the R7 Work item migration (roadmap/store/migrate.py, docs/work-map-R7.json).
 
-Reads the real docs/tasks.json, docs/head.jsonl and docs/work-map-R7.json and copies them into a temp dir.
-The real docs/ files and docs/roadmap.db are never written.
+Reads a frozen copy of the R7 board (tests/fixtures/board-r7: tasks.json, head.jsonl, work-map-R7.json) and copies
+it into a temp dir. The repo board was emptied on 2026-10-19; the fixture keeps the data these tests were written for.
 """
 
 import json
@@ -14,7 +14,7 @@ import unittest
 from roadmap.store import db, migrate
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-REAL_DOCS = os.path.join(REPO, "docs")
+REAL_DOCS = os.path.join(REPO, "tests", "fixtures", "board-r7")
 FIXTURES = os.path.join(REPO, "tests", "fixtures")
 SOURCES = ("tasks.json", "jobs.json", "head.jsonl", "work-map-R7.json")
 

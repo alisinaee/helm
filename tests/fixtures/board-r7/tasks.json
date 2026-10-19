@@ -1,0 +1,5743 @@
+{
+  "updated": "2026-10-19",
+  "phases": [
+    {
+      "id": "R1",
+      "name": "Core product (store, core, API, service)",
+      "status": "done"
+    },
+    {
+      "id": "R2",
+      "name": "UI and quality gates",
+      "status": "done"
+    },
+    {
+      "id": "R3",
+      "name": "Security and release",
+      "status": "partial"
+    },
+    {
+      "id": "R4",
+      "name": "Agent interface and research workflow",
+      "status": "done"
+    },
+    {
+      "id": "R5",
+      "name": "Interactive project manager MVP",
+      "status": "done"
+    },
+    {
+      "id": "R6",
+      "name": "App shell UI and usage limits",
+      "status": "partial"
+    },
+    {
+      "id": "R7",
+      "name": "Remaining work",
+      "status": "partial"
+    },
+    {
+      "id": "R9",
+      "name": "Sonnet leftovers (queued 2026-10-16)",
+      "status": "partial"
+    },
+    {
+      "id": "R10",
+      "name": "Head reset 2026-10-16 (H182)",
+      "status": "done"
+    },
+    {
+      "id": "R11",
+      "name": "Helm v2: System, panel, Activity, Roadmap map, Tokens, head channel",
+      "status": "partial"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "R1.1",
+      "phase": "R1",
+      "title": "roadmap-board WP1: Skeleton: repo, CLI shell, Makefile, lint tools",
+      "status": "done",
+      "tokensK": 70,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP1 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 111k tokens, commit 30ce8d6 in ~/Works/roadmap-board",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F17"
+      ]
+    },
+    {
+      "id": "R1.2",
+      "phase": "R1",
+      "title": "roadmap-board WP2: Store: paths, atomic write, locks, config, schema migrations, backups",
+      "status": "done",
+      "tokensK": 110,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP2 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 106k tokens, commit 1c41c65",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F17"
+      ]
+    },
+    {
+      "id": "R1.3",
+      "phase": "R1",
+      "title": "roadmap-board WP3: Core move: pure parsers, snapshot, extras, format + golden test",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP3 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 116k tokens, commit f2c7146; golden test equals old server output",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F1"
+      ]
+    },
+    {
+      "id": "R1.4",
+      "phase": "R1",
+      "title": "roadmap-board WP4: Jobs and hooks services + commands",
+      "status": "done",
+      "tokensK": 130,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP4 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 157k tokens, commit 4caa8ce",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F1"
+      ]
+    },
+    {
+      "id": "R1.5",
+      "phase": "R1",
+      "title": "roadmap-board WP5: HTTP server and API v1 (ETag, static allowlist)",
+      "status": "done",
+      "tokensK": 140,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP5 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 186k tokens, commit ae85b9d, 264 tests",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F1"
+      ]
+    },
+    {
+      "id": "R1.6",
+      "phase": "R1",
+      "title": "roadmap-board WP6: Usage service: collector move, global usage.json, mirror, backoff",
+      "status": "done",
+      "tokensK": 100,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP6 | spec: docs/roadmap-board-architecture.md section 6 | 2026-10-13 built, 47 tests, commit c026314; test_cli stub list needs update; run_loop wiring in WP5/WP11 | lint fixed, commit c3d6ca1; run_loop wired later (WP5/WP11)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F10"
+      ]
+    },
+    {
+      "id": "R1.7",
+      "phase": "R1",
+      "title": "roadmap-board WP7: Web shell and design system (tokens, pipeline, topbar, usage, kpi)",
+      "status": "done",
+      "tokensK": 140,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP7 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 209k tokens, commit f8cfcf2",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F18"
+      ]
+    },
+    {
+      "id": "R1.8",
+      "phase": "R1",
+      "title": "roadmap-board WP10: Projects and hooks installer",
+      "status": "done",
+      "tokensK": 110,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP10 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 156k tokens, commit 4861e52",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F17"
+      ]
+    },
+    {
+      "id": "R1.9",
+      "phase": "R1",
+      "title": "roadmap-board WP11: launchd service and doctor",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP11 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 185k tokens, commit 79b15a8 (+serve wiring), 350 tests",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F17"
+      ]
+    },
+    {
+      "id": "R2.1",
+      "phase": "R2",
+      "title": "roadmap-board WP8: Web sections (phases, tasks, running, needs-you, next, recent, extras, legend)",
+      "status": "done",
+      "tokensK": 140,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP8 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 231k tokens, commit e941c50",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F3"
+      ]
+    },
+    {
+      "id": "R2.2",
+      "phase": "R2",
+      "title": "roadmap-board WP9: UI smoke and a11y gate",
+      "status": "done",
+      "tokensK": 80,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP9 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 135k tokens, commit a92b174; make check-ui runs headless Chrome",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F19"
+      ]
+    },
+    {
+      "id": "R2.3",
+      "phase": "R2",
+      "title": "roadmap-board WP12: Docs and skill update",
+      "status": "done",
+      "tokensK": 80,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP12 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 241k tokens, commit 8d48fe5, 366 tests; skill draft in repo docs/skill-draft | agy verification done 2026-10-13 commit f937de3: fixtures accepted, changelog/architecture corrected, 22 gap tests; 2 real limits.py bugs record",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F15"
+      ]
+    },
+    {
+      "id": "R3.1",
+      "phase": "R3",
+      "title": "roadmap-board WP13: Security hardening (host/CSRF/CSP, phone listener, redaction)",
+      "status": "done",
+      "tokensK": 140,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP13 | spec: docs/roadmap-board-architecture.md section 6 | done 2026-10-13, 223k tokens, commit f118183 + 79dd854 (serve phone listener, open, redaction)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F20",
+        "F22"
+      ]
+    },
+    {
+      "id": "R3.2",
+      "phase": "R3",
+      "title": "roadmap-board WP14: Gate R1 review, release 1.0.0, split-net cutover",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": true,
+      "note": "WP14 | R7.3a done dbcc846",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F17",
+        "F22"
+      ],
+      "at": {
+        "done": "2026-10-16T12:02:25+03:30"
+      }
+    },
+    {
+      "id": "R4.1",
+      "phase": "R4",
+      "title": "agent-first token-lean interface + new-project research workflow (Opus design)",
+      "status": "done",
+      "tokensK": 100,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "note": "WP15 | person request 2026-10-13: separate general project, research-first onboarding, very low token cost for agents | done 2026-10-13, 53k tokens; design in roadmap-board/docs/AGENT-INTERFACE.md; UI kit decision: keep own design system",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F14",
+        "F16"
+      ]
+    },
+    {
+      "id": "R4.2",
+      "phase": "R4",
+      "title": "build token-lean CLI (task/plan/status) + compact formats",
+      "status": "done",
+      "tokensK": 150,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP16 | person request 2026-10-13: separate general project, research-first onboarding, very low token cost for agents | 16.1 done 166k tokens commit 8238e5f, 534 tests; 16.2 commands next | 16.2 done 120k tokens commit 609102a, 564 tests",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F5",
+        "F14"
+      ]
+    },
+    {
+      "id": "R4.3",
+      "phase": "R4",
+      "title": "agent skills (roadmap-init research-to-plan, roadmap-update cheap edits) + onboarding",
+      "status": "done",
+      "tokensK": 140,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP17 | person request 2026-10-13: separate general project, research-first onboarding, very low token cost for agents | done 2026-10-13, 129k tokens commit f9b7f3e, 607 tests; skills are drafts in roadmap-board/docs/skill-draft (install at cutover)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F15",
+        "F16"
+      ]
+    },
+    {
+      "id": "R4.4",
+      "phase": "R4",
+      "title": "Opus final review (low effort)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "note": "WP18 | Opus final review: blockers = GUI start gate (fixed 07b69bc), RELEASE.md port (fixed), cutover pending",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R5.1",
+      "phase": "R5",
+      "title": "product scope as a light Jira for AI agents (Opus design)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "note": "WP19 | person request 2026-10-13: planner, progress, tasks/subtasks/phases, issues, overall, token manager, agent+subagent rules, Claude rules | done 2026-10-13, 187k tokens in 3 Opus runs; spec in roadmap-board/docs/PRODUCT-SPEC.md",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "R5.2",
+      "phase": "R5",
+      "title": "data + snapshot (issues, questions, comments, budget, queue, activity, subs)",
+      "status": "done",
+      "tokensK": 160,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP20 | spec: roadmap-board/docs/PRODUCT-SPEC.md section 6 | done 2026-10-13, 186k tokens commit ef02f4a, 648 tests",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F5",
+        "F7",
+        "F9"
+      ]
+    },
+    {
+      "id": "R5.3",
+      "phase": "R5",
+      "title": "command layer + CLI (ask/answer/issue/inbox/stop/budget/undo)",
+      "status": "done",
+      "tokensK": 150,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP21 | spec: roadmap-board/docs/PRODUCT-SPEC.md section 6 | done 2026-10-13, 242k tokens commit 5c50c6e, 726 tests at HEAD",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F1",
+        "F7",
+        "F8"
+      ]
+    },
+    {
+      "id": "R5.4",
+      "phase": "R5",
+      "title": "control hooks (PreToolUse deny, SessionStart, Stop pickup) + rules",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP22 | spec: roadmap-board/docs/PRODUCT-SPEC.md section 6 | built 2026-10-13, 263k tokens commit cbc8594, 819 tests; Cursor Auto review of enforcement pending | R2 review (Cursor) 8 findings fixed commit 6697f19 (220k tokens), 981 tests | R3 (Cursor /cmd+limits) 10 findings + 4 known bugs fixed comm",
+      "check": "sonnet",
+      "checkK": 15,
+      "feats": [
+        "F11",
+        "F12"
+      ]
+    },
+    {
+      "id": "R5.5",
+      "phase": "R5",
+      "title": "/cmd route + security",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP23 | spec: roadmap-board/docs/PRODUCT-SPEC.md section 6 | done 2026-10-13, 187k tokens commit d977030, 856 tests; gaps: undo of task tokens does not reverse budget spend; rules.rm undo re-adds under new id",
+      "check": "sonnet",
+      "checkK": 15,
+      "feats": [
+        "F1"
+      ]
+    },
+    {
+      "id": "R5.6",
+      "phase": "R5",
+      "title": "UI shell re-plan (left nav, right project/general panel, Jira/Trello-style) by Opus",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "note": "WP26 | person request 2026-10-13: sidebar left for sections, right panel for projects/general, modern Jira/Trello feel; replaces WP24/WP25 scope | done, 2 Opus runs 119k tokens; spec roadmap-board/docs/UI-SPEC.md; person decisions: all 4 Opus recommendations accepted",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "R6.1",
+      "phase": "R6",
+      "title": "usage ledger + limits service (daily/weekly, global+project) + CLI + ops",
+      "status": "done",
+      "tokensK": 110,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP27 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 321k tokens commit 2b70408, 908 tests",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F10"
+      ]
+    },
+    {
+      "id": "R6.2",
+      "phase": "R6",
+      "title": "roadmap-board UI: app shell, router, command layer, nav/topbar/toast",
+      "status": "done",
+      "tokensK": 110,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP28 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 300k tokens commit 83f0d72, 907 tests",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F18"
+      ]
+    },
+    {
+      "id": "R6.3",
+      "phase": "R6",
+      "title": "roadmap-board UI: right panel (Projects, Details)",
+      "status": "done",
+      "tokensK": 110,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP29 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 265k tokens commit 53e0466, 981 tests; gaps: Enter binding, lock glyph, questions/blockers only for loaded project, rules/DoD hidden (not in snapshot)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F18"
+      ]
+    },
+    {
+      "id": "R6.4",
+      "phase": "R6",
+      "title": "roadmap-board UI: Overview, Inbox, Activity",
+      "status": "done",
+      "tokensK": 90,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP30 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 254k tokens commit 358435b, 981 tests; gap: question.answer has no inverse (no Undo toast); Overview lost Phases/Next/Recent/Extras/Legend/usage band until Roadmap (WP32)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F4",
+        "F8"
+      ]
+    },
+    {
+      "id": "R6.5",
+      "phase": "R6",
+      "title": "roadmap-board UI: Work (Board, List, Tree) with drag and drop",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP31 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 296k tokens commit 85b46af, 1039 tests; CSS total 52214/52224 bytes (budget almost used)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "R6.6",
+      "phase": "R6",
+      "title": "roadmap-board UI: Roadmap lanes/timeline and Issues",
+      "status": "done",
+      "tokensK": 90,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP32 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 291k tokens commit d4ed638, 1039 tests; gaps: real mouse DnD not verified (dispatched events), plan.move refuses cross-phase, light/1440 not visually verified",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F3",
+        "F7"
+      ]
+    },
+    {
+      "id": "R6.7",
+      "phase": "R6",
+      "title": "roadmap-board UI: Tokens + limits editor, Rules, Settings",
+      "status": "done",
+      "tokensK": 110,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP33 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 295k tokens commit dd5c5ff, 1039 tests; limit editor read-only until snapshot has action+rules (WP33b done 1e27aa7: snapshot now has meters.limits[].action and rules[])",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F10"
+      ]
+    },
+    {
+      "id": "R6.8",
+      "phase": "R6",
+      "title": "roadmap-board UI: Agents live, Research, final responsive pass",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP34 | spec: roadmap-board/docs/UI-SPEC.md section 5 | done 2026-10-13, 226k tokens commit eaf0fd5, 1122 tests; CSS budget exceeded 52990>52224 (trim in responsive pass); Lighthouse not run",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F20"
+      ]
+    },
+    {
+      "id": "R6.9",
+      "phase": "R6",
+      "title": "roadmap-board UI: final responsive + visual pass, ui_smoke for the new shell",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP35 | 6e11fff + 0adc52d (WP35b): CSS budget met, ui_smoke rewritten for the new shell (81 page runs, 65 screenshots ok), 3 visual fixes; left cosmetic: agents Stop wrap, tokens cap input offset, roadmap approve on finished phases; 1124 tests",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F19"
+      ]
+    },
+    {
+      "id": "R6.10",
+      "phase": "R6",
+      "title": "roadmap-board UI: wide screens + cosmetic leftovers",
+      "status": "done",
+      "tokensK": 100,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP36 | 092a44e + aee47ad (rule 0 row alignment on 8 lists); CSS cap raised to 64 KB; Activity/Limits rows not visually verified (no fixture data)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F18"
+      ]
+    },
+    {
+      "id": "R6.11",
+      "phase": "R6",
+      "title": "release 1.0 prep (changelog, version, README polish, skill install script)",
+      "status": "done",
+      "tokensK": 80,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP37 | done 2026-10-14, 132k tokens commit b420703; version 1.0.0 set (not tagged); release checklist docs/RELEASE.md; legacy.html removal needs http/static.py+security.py changes",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R6.12",
+      "phase": "R6",
+      "title": "end-to-end integration tests (agent <-> GUI loop, stop/resume hook, limits)",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP38 | done 2026-10-14, 199k tokens commit f2a51f8, 22 integration tests; bug found: commands.py:589-590 logs agent-shell ask as source cli (expectedFailure)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F11"
+      ]
+    },
+    {
+      "id": "R6.13",
+      "phase": "R6",
+      "title": "Opus gap analysis vs the vision + backlog",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "note": "WP39 | done 2026-10-14, 48.6k tokens; roadmap-board/docs/GAP-ANALYSIS.md: 8 improvements + cutover rollout order",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R6.14",
+      "phase": "R6",
+      "title": "desktop notifications (queue/question/limit) + `roadmap watch` long-poll",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP40 | done 2026-10-14, 165k tokens commit a22d346, 22 tests; gap: `watch` not in hooks.ALLOWED_WHILE_BLOCKED (add in fix pass)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F8"
+      ]
+    },
+    {
+      "id": "R6.15",
+      "phase": "R6",
+      "title": "rules + definition of done attached to Stop/SessionStart pickups",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP41 | done 2026-10-14, 102k tokens commit ee25bdf, 11 tests",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F12"
+      ]
+    },
+    {
+      "id": "R6.16",
+      "phase": "R6",
+      "title": "Haiku-sized skills (<=3.2 KB) + `roadmap skills install`",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP42 | done 2026-10-14, 116k tokens commit f5bd522, 24 tests; skills 2299/2436 bytes; --target DIR = project folder (skills go to DIR/.claude/skills/)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F15"
+      ]
+    },
+    {
+      "id": "R6.17",
+      "phase": "R6",
+      "title": "default port 8780 + doctor port warning",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP43 | done 2026-10-14, 103k tokens commit 803d4f4, 12 tests; default port 8780, doctor warns on foreign 8765",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F17"
+      ]
+    },
+    {
+      "id": "R6.18",
+      "phase": "R6",
+      "title": "`project new --research` + live job progress tokens + stale-usage pill",
+      "status": "hold",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP44 | spec: roadmap-board/docs/GAP-ANALYSIS.md section 2",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F4",
+        "F10",
+        "F16"
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R6.19",
+      "phase": "R6",
+      "title": "command palette (Cmd-K)",
+      "status": "hold",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "cursor",
+      "needsUser": false,
+      "note": "WP45 | spec: roadmap-board/docs/GAP-ANALYSIS.md section 2",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F6",
+        "F21"
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R6.20",
+      "phase": "R6",
+      "title": "Workflow map section (visual map + timeline) - Opus design",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "note": "WP46 | done 2026-10-14, 49k tokens; spec roadmap-board/docs/WORKFLOW-SPEC.md; decisions: lanes by role/model, add task `after`, CSS cap 64 KB",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R6.21",
+      "phase": "R6",
+      "title": "workflow data (job history 200, task at/after, snapshot.workflow, auto parent job)",
+      "status": "done",
+      "tokensK": 75,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP47 | done 2026-10-14, 154k tokens commit 4e0ece3, 24 tests, suite 1254 OK",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R6.22",
+      "phase": "R6",
+      "title": "roadmap-board UI: Workflow section (timeline, map, table)",
+      "status": "hold",
+      "tokensK": 115,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP48 | commit b4a72b0 (SVG timeline/map/table, 18 tests, ui_smoke ok); light mode, 500px, keyboard, Stop/Start click not verified; direction may change: Opus WP70 diagram engine decision pending",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R6.23",
+      "phase": "R6",
+      "title": "Planner section (features/epics -> tasks traceability) - Opus design",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "note": "WP49 | done 2026-10-14, 55k tokens; docs/PLANNER-SPEC.md; decisions: own section, feats<=3, only person accepts",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R6.24",
+      "phase": "R6",
+      "title": "roadmap-board Planner B1: core features.py + schema + task feats",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP50 | done 2026-10-14, 102k tokens commit 19fb451, 31 tests",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R6.25",
+      "phase": "R6",
+      "title": "roadmap-board Planner B2: plan format F/L records",
+      "status": "done",
+      "tokensK": 35,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP51 | c3070bb, 1fcf076 plan export emits F lines; round-trip tests 2a46b26",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R6.26",
+      "phase": "R6",
+      "title": "roadmap-board Planner B3: features service, ops, CLI",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP52 | done 2026-10-14 commit 2f2326a (WP52+54 together), 216k tokens, 1398 tests; snapshot features ~15.8 KB for 60 rows (spec said 6 KB): decide to drop acc/tasks from rows; feature accept needs --yes if not done",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R6.27",
+      "phase": "R6",
+      "title": "roadmap-board Planner V1: planner.js + planner.css",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP53 | 42b408b + 5a5b9ab planner fixes (?f= opens feature, global Pick a project, phone filter/FAB, snapshot ~14 KB for 60 features)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R6.28",
+      "phase": "R6",
+      "title": "roadmap-board Planner B4: snapshot features key",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP54 | done 2026-10-14 commit 2f2326a (WP52+54 together), 216k tokens, 1398 tests; snapshot features ~15.8 KB for 60 rows (spec said 6 KB): decide to drop acc/tasks from rows; feature accept needs --yes if not done",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R6.29",
+      "phase": "R6",
+      "title": "roadmap-board Planner V2: wire-up + Work drawer chip",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP55 | commit fc722cf: Planner route, nav, drawer feature chip + link select, ui_smoke includes planner; gaps: ?f= does not open the feature (planner.js), global scope copy 'Planner belongs to one project'",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R6.30",
+      "phase": "R6",
+      "title": "roadmap-board Planner S1: seed 22 features for roadmap-board + docs",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP56 | commit 99ed112: 22 features seeded, 0 uncovered; sync keeps feats (split-net 73e5bf9); F11b folded into F11",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R6.31",
+      "phase": "R6",
+      "title": "Workflow diagram engine decision (Opus)",
+      "status": "done",
+      "tokensK": 49,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "note": "WP70 | done, 49k tokens; own SVG engine, nothing vendored",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R6.32",
+      "phase": "R6",
+      "title": "roadmap-board Workflow diagram A: graph model + layered layout (new files)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP71 | done 2026-10-14 commit a6d4bf0 (graph model+layout, 18 tests, suite 1416 OK)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R6.33",
+      "phase": "R6",
+      "title": "roadmap-board Workflow diagram B: renderer + pan/zoom/pinch + integration",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "note": "WP72 | commit 4c81b34 diagram renderer (SVG map, pan/pinch/wheel/tap, focus mode, CSP clean) + test fixes; route is /workflow/map (not ?v=map); router.js FILTER_KEYS change not done; ui_smoke flaky under load",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R6.34",
+      "phase": "R6",
+      "title": "roadmap-board Workflow diagram C: touch/mouse/CSP verification",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "note": "WP73 | 3f71920 verify; 51de26b canvas focus fix (keys from canvas not browser-rechecked)",
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R7.1",
+      "phase": "R7",
+      "title": "GUI Start wakes a session (presence, watch, hooks, launcher, queue, snapshot, GUI)",
+      "status": "done",
+      "tokensK": 649,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F11"
+      ]
+    },
+    {
+      "id": "R7.2",
+      "phase": "R7",
+      "title": "Measure full-cycle agent token cost",
+      "status": "done",
+      "tokensK": 67,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F14"
+      ]
+    },
+    {
+      "id": "R7.3",
+      "phase": "R7",
+      "title": "Inline task title edit (task.rename op + double-click/F2)",
+      "status": "done",
+      "tokensK": 175,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F5",
+        "F6"
+      ]
+    },
+    {
+      "id": "R7.4",
+      "phase": "R7",
+      "title": "Planner plan-format round-trip and gap tests",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R7.5",
+      "phase": "R7",
+      "title": "Row alignment (rule 0): tokens/phases done; tree/list/overview squeeze left",
+      "status": "hold",
+      "tokensK": 281,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F19"
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R7.6",
+      "phase": "R7",
+      "title": "Docs match the real commands (README, interface, release, API, security, changelog)",
+      "status": "done",
+      "tokensK": 242,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.7",
+      "phase": "R7",
+      "title": "Plain-words wording pass over the GUI views",
+      "status": "done",
+      "tokensK": 247,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F14",
+        "F19"
+      ]
+    },
+    {
+      "id": "R7.12",
+      "phase": "R7",
+      "title": "Copy reference icon on rows and sections + roadmap ref command (docs/skills step left)",
+      "status": "hold",
+      "tokensK": 1150,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-14: paste a unique ref to the agent; spec docs/R7.12-SPEC.md",
+      "feats": [
+        "F23"
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R7.13",
+      "phase": "R7",
+      "title": "Planner v2: project structure and plan tree (design done, waits for decisions)",
+      "status": "hold",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-14; spec docs/PLANNER-V2-SPEC.md",
+      "feats": [
+        "F2"
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R7.14",
+      "phase": "R7",
+      "title": "Workflow map v2: FigJam-style flow from start to now",
+      "status": "done",
+      "tokensK": 1015,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-14; spec docs/WORKFLOW-V2-SPEC.md",
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R7.16",
+      "phase": "R7",
+      "title": "Full UI and core event log + roadmap logs + Mark bug button",
+      "status": "hold",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-15; spec docs/LOGGING-SPEC.md",
+      "feats": [
+        "F22"
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R7.17",
+      "phase": "R7",
+      "title": "Workflow map: no text selection while dragging; clean collapsed arrows",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person bug report 2026-10-15",
+      "feats": [
+        "F19"
+      ],
+      "at": {
+        "done": "2026-10-15T08:19:05+03:30"
+      }
+    },
+    {
+      "id": "R3.3",
+      "phase": "R3",
+      "title": "Planner backend review (Cursor) and fixes: person-only accept, plan import order",
+      "status": "done",
+      "tokensK": 340,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R3.4",
+      "phase": "R3",
+      "title": "R7.1 security review (Cursor) and hardening",
+      "status": "done",
+      "tokensK": 203,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R3.5",
+      "phase": "R3",
+      "title": "Loader treats empty or null project path as no folder",
+      "status": "done",
+      "tokensK": 62,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.8",
+      "phase": "R7",
+      "title": "Gap tests from verified agy lists (presence, launcher, guard, queue, rename, planfmt)",
+      "status": "done",
+      "tokensK": 521,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.9",
+      "phase": "R7",
+      "title": "Aria fixes and audits (views a-z)",
+      "status": "done",
+      "tokensK": 290,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F19"
+      ]
+    },
+    {
+      "id": "R7.10",
+      "phase": "R7",
+      "title": "Smaller snapshot feature rows",
+      "status": "done",
+      "tokensK": 96,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ]
+    },
+    {
+      "id": "R7.11",
+      "phase": "R7",
+      "title": "status keeps the features line with many jobs",
+      "status": "done",
+      "tokensK": 72,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F14"
+      ]
+    },
+    {
+      "id": "R7.18",
+      "phase": "R7",
+      "title": "Lint clean (lint_py, lint_js)",
+      "status": "done",
+      "tokensK": 147,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.19",
+      "phase": "R7",
+      "title": "agy audit verification batches and next-wave planning",
+      "status": "done",
+      "tokensK": 530,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.20",
+      "phase": "R7",
+      "title": "GUI Start gated in an unapproved phase",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F11"
+      ]
+    },
+    {
+      "id": "R3.6",
+      "phase": "R3",
+      "title": "Cursor (grok 4.7 xhigh) review of the web code: graph, refs, views, log client",
+      "status": "hold",
+      "tokensK": 120,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person: go full power; cursor grok xhigh allowed",
+      "feats": [
+        "F22"
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R3.7",
+      "phase": "R3",
+      "title": "Cursor (grok 4.7 xhigh) review of the logging endpoint and core log",
+      "status": "done",
+      "tokensK": 100,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "after R7.16 steps 2-3",
+      "feats": [
+        "F22"
+      ],
+      "at": {
+        "partial": "2026-10-15T15:45:28+03:30",
+        "done": "2026-10-15T22:07:47+03:30"
+      },
+      "refs": [
+        "commit:e6cb5c0f3266989eabfa21b98f437ec97aac6256"
+      ]
+    },
+    {
+      "id": "R7.21",
+      "phase": "R7",
+      "title": "Finish plan: remaining work to 1.0.0 in waves (Opus advice)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "planner clean-up: WAVE-PLAN committed 02b8a1b (R7.21)",
+      "feats": [
+        "F22"
+      ],
+      "at": {
+        "done": "2026-10-15T21:19:56+03:30"
+      }
+    },
+    {
+      "id": "R7.22",
+      "phase": "R7",
+      "title": "Backlog: status, section, CLI, board column (ideas not yet committed)",
+      "status": "hold",
+      "tokensK": 250,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "backlog steps 1-3 committed (e107bdd, 09160f5, 0dfb2f9); board column left",
+      "feats": [
+        "F5",
+        "F6"
+      ],
+      "at": {
+        "partial": "2026-10-15T21:19:56+03:30",
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R7.23",
+      "phase": "R7",
+      "title": "Always-visible button to reopen the closed right side panel",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person bug report 2026-10-15",
+      "feats": [
+        "F18"
+      ],
+      "at": {
+        "done": "2026-10-15T08:34:36+03:30"
+      }
+    },
+    {
+      "id": "R7.24",
+      "phase": "R7",
+      "title": "Work section v2: complete the board like Trello (cards, quick add, drag, filters, swimlanes)",
+      "status": "hold",
+      "tokensK": 400,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "work v2 ops committed f6e0128; swimlanes, filters, quick add UI left",
+      "feats": [
+        "F6",
+        "F5"
+      ],
+      "refs": [
+        "commit:f6e0128833cd17bae55cae6f27677e88665e5433"
+      ],
+      "at": {
+        "partial": "2026-10-15T21:19:56+03:30",
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R7.25",
+      "phase": "R7",
+      "title": "Issues become part of Work/board; Work is interactive: + Add anything (task, issue, idea, question, subtask, comment)",
+      "status": "hold",
+      "tokensK": 300,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-15; spec docs/WORK-UNIFIED-SPEC.md",
+      "feats": [
+        "F7",
+        "F6"
+      ],
+      "at": {
+        "partial": "2026-10-15T15:45:28+03:30",
+        "hold": "2026-10-16T13:08:41+03:30"
+      },
+      "refs": [
+        "commit:f6e0128833cd17bae55cae6f27677e88665e5433"
+      ]
+    },
+    {
+      "id": "R7.26",
+      "phase": "R7",
+      "title": "UX audit with ui-ux-pro-max across all sections + recurring UX routine",
+      "status": "hold",
+      "tokensK": 80,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-15",
+      "feats": [
+        "F19"
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R7.27",
+      "phase": "R7",
+      "title": "Usage sync: honest message, back-off, manual usage entry (no keychain token on this Mac)",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person bug report 2026-10-15",
+      "feats": [
+        "F10"
+      ],
+      "at": {
+        "done": "2026-10-15T08:47:21+03:30"
+      }
+    },
+    {
+      "id": "R7.28",
+      "phase": "R7",
+      "title": "Tokens and limits: one simple screen (stop at % weekly, optional share per project), remove per-task/preset knobs",
+      "status": "done",
+      "tokensK": 150,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person: no limit for each tiny section; spec docs/LIMITS-SIMPLE-SPEC.md",
+      "feats": [
+        "F10"
+      ],
+      "at": {
+        "done": "2026-10-15T15:32:51+03:30"
+      }
+    },
+    {
+      "id": "R7.29",
+      "phase": "R7",
+      "title": "Git section: status, history, branches, commit/push policy, roadmap git commands",
+      "status": "hold",
+      "tokensK": 600,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "git read, write ops, GUI and policy committed (f9e77ff, b345cde, c56daa5, 294f9d1); commit policy left",
+      "at": {
+        "partial": "2026-10-15T21:19:56+03:30",
+        "hold": "2026-10-16T13:08:41+03:30"
+      },
+      "feats": [
+        "F24"
+      ]
+    },
+    {
+      "id": "R7.31",
+      "phase": "R7",
+      "title": "HEAD section: ledger of what the person asks and decides, bound to tasks/issues/reviews, with status",
+      "status": "partial",
+      "tokensK": 600,
+      "thinking": "high",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "HIGHEST PRIORITY (person): all other work yields to HEAD H1-H12, spec docs/HEAD-SPEC.md",
+      "feats": [
+        "F25"
+      ],
+      "at": {
+        "partial": "2026-10-15T09:18:31+03:30"
+      },
+      "verify": true
+    },
+    {
+      "id": "R7.30",
+      "phase": "R7",
+      "title": "Workflow map: Open in new tab (full-screen view, left nav hidden) with node tap showing Details in the side panel",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "person request 2026-10-15",
+      "feats": [
+        "F13"
+      ],
+      "at": {
+        "done": "2026-10-15T22:22:36+03:30"
+      },
+      "refs": [
+        "commit:52f26537c7c584242f3c61f31ceff6bc371da018"
+      ]
+    },
+    {
+      "id": "R7.32",
+      "phase": "R7",
+      "title": "P1 list-cut fix review (head ledger rows, newest first)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:10:15+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.33",
+      "phase": "R7",
+      "title": "P2 verify sync findings in cursor-sync-grok",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "opencode",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:25:38+03:30"
+      },
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.34",
+      "phase": "R7",
+      "title": "P3 bind head asks to real tasks (headops, planfmt)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "opencode",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:10:15+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.35",
+      "phase": "R7",
+      "title": "P4 secrets redaction finish and verify",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "opencode",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:10:15+03:30"
+      },
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.36",
+      "phase": "R7",
+      "title": "P5 ledger hygiene: triage H51 H59 H67, close H36 H49",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:25:38+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.37",
+      "phase": "R7",
+      "title": "P6 head GUI audit (alignment, 375px, reply blocks)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "low",
+      "model": "agy",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:16:17+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.38",
+      "phase": "R7",
+      "title": "Agents list shows opencode model and effort (H54)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "opencode",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:10:15+03:30"
+      },
+      "feats": [
+        "F1"
+      ]
+    },
+    {
+      "id": "R7.39",
+      "phase": "R7",
+      "title": "Agents effort and model audit at max effort (H53)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "opencode",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:10:15+03:30"
+      },
+      "feats": [
+        "F1"
+      ]
+    },
+    {
+      "id": "R7.40",
+      "phase": "R7",
+      "title": "Fix sync findings from Cursor P2 review (ETag, usage poll, dom patch)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:18:13+03:30"
+      },
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.41",
+      "phase": "R7",
+      "title": "Agents: fix effort and model mismatches from docs/reviews/head-agents-effort-audit.md (H84)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:23:22+03:30"
+      },
+      "feats": [
+        "F1"
+      ]
+    },
+    {
+      "id": "R7.42",
+      "phase": "R7",
+      "title": "CSS total back under the cap (test_ref_polish)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:15:49+03:30"
+      },
+      "feats": [
+        "F19"
+      ]
+    },
+    {
+      "id": "R7.43",
+      "phase": "R7",
+      "title": "Head view: card numbers in fixed columns; no horizontal scroll at 375px (agy P6)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:23:22+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.44",
+      "phase": "R7",
+      "title": "Head: show every ledger item (paged API + lazy load in head.js), no missing rows (H105)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:28:36+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.45",
+      "phase": "R7",
+      "title": "Sections not syncing: root cause across server+client, permanent fix plan (H105)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "high",
+      "model": "cursor",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:31:40+03:30"
+      },
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.46",
+      "phase": "R7",
+      "title": "Audit Head ledger: list asks never handled, file tasks for them (H107)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:25:38+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.47",
+      "phase": "R7",
+      "title": "agy audit wave: views at 375px, rule 0 alignment, test gaps for today commits (H109)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "high",
+      "model": "agy",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:18:17+03:30"
+      },
+      "feats": [
+        "F19"
+      ]
+    },
+    {
+      "id": "R7.48",
+      "phase": "R7",
+      "title": "Cursor grok review of commits 2b83d5b..a36834f for bugs (H109)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "high",
+      "model": "cursor",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:18:17+03:30"
+      },
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.49",
+      "phase": "R7",
+      "title": "Head pager: styles for hd-pager/hd-more; refresh paged rows when the snapshot changes",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:31:23+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.50",
+      "phase": "R7",
+      "title": "Sync root fix server: one revision per project, cached build, usage on snapshot (cursor-sync-root.md)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:39:29+03:30"
+      },
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.51",
+      "phase": "R7",
+      "title": "Sync root fix client: 304 keeps state, one body for all sections, usage from snapshot",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:39:29+03:30"
+      },
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.52",
+      "phase": "R7",
+      "title": "Sync root fix: dom patch keeps focus but paints; head full cache keyed by rev",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T14:39:29+03:30"
+      },
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.53",
+      "phase": "R7",
+      "title": "Fix real bugs from Cursor review of today commits (cursor-commits-review.md)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:32:51+03:30"
+      },
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.54",
+      "phase": "R7",
+      "title": "Fix verified 375px and rule 0 findings from agy view audits (agy-375-*.md)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:25:56+03:30"
+      },
+      "feats": [
+        "F19"
+      ]
+    },
+    {
+      "id": "R7.55",
+      "phase": "R7",
+      "title": "agy audit wave 2: new routes security, API.md drift, README CLI drift",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "high",
+      "model": "agy",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "agy audits: routes security, API/README drift in 6ceab3c",
+      "at": {
+        "done": "2026-10-15T21:19:56+03:30"
+      },
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.56",
+      "phase": "R7",
+      "title": "375px deferred: mobile row wrap, agents nesting, overview blocker slots, list flags, workflow mobile numbers",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:41:30+03:30"
+      },
+      "feats": [
+        "F19"
+      ]
+    },
+    {
+      "id": "R7.57",
+      "phase": "R7",
+      "title": "Repaint keeps scroll position (Head list jumps to top every poll); skip identical writes (H118)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:30:20+03:30"
+      },
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.58",
+      "phase": "R7",
+      "title": "UI log posts rejected by CSRF guard: client sends the token (no UI events logged)",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:32:16+03:30"
+      },
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.59",
+      "phase": "R7",
+      "title": "Cursor grok xhigh: full UI and responsive review of every section; file each issue as a task (H119)",
+      "status": "hold",
+      "tokensK": 0,
+      "thinking": "high",
+      "model": "cursor",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F19"
+      ],
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R7.60",
+      "phase": "R7",
+      "title": "Agents: keep all job history (no auto-prune); person selects and removes history rows (H120)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:a46cc9c82d3918ff247ecfb50153fa5da70158f3"
+      ],
+      "at": {
+        "done": "2026-10-15T16:12:31+03:30"
+      },
+      "feats": [
+        "F1"
+      ]
+    },
+    {
+      "id": "R7.61",
+      "phase": "R7",
+      "title": "api.js writes: after a CSRF 403 re-read the token and retry once (stale tab after restart)",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:33:39+03:30"
+      },
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.62",
+      "phase": "R7",
+      "title": "Workflow map out of sync / wrong: find why and fix (H121)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-15T15:45:28+03:30",
+        "done": "2026-10-15T16:02:57+03:30"
+      },
+      "refs": [
+        "commit:ad044549b996e11d055df7c646fd20a3b7731a08"
+      ],
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R7.63",
+      "phase": "R7",
+      "title": "Tokens + top bar: show stale usage clearly with Enter usage action; expire 5h reading after its reset; one source for limit state (H123)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:50:30+03:30"
+      },
+      "refs": [
+        "commit:4acc30a6779fb16e0be741a5feba8f45c920288e"
+      ],
+      "feats": [
+        "F10"
+      ]
+    },
+    {
+      "id": "R7.64",
+      "phase": "R7",
+      "title": "Head agent v2 design: any model (Haiku, Cursor, Gemini) can be head; token-lean loop driven by the tool (H124)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:42:26+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.65",
+      "phase": "R7",
+      "title": "UI pattern: action buttons with long labels wrap and overflow (Activity Undo); short labels + nowrap in every view (H126)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-15T15:45:28+03:30",
+        "done": "2026-10-15T15:48:06+03:30"
+      },
+      "refs": [
+        "commit:3ea1f57d4993fc3fc68cea39e4f5dea3ea521deb"
+      ],
+      "feats": [
+        "F19"
+      ]
+    },
+    {
+      "id": "R7.67",
+      "phase": "R7",
+      "title": "Head v2 A1: one limits source + budget guard in job start",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:45:37+03:30"
+      },
+      "refs": [
+        "commit:dcaffd8803fcc5d92b4fcd846fd8196a79bcf7a3"
+      ],
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.68",
+      "phase": "R7",
+      "title": "Head v2 A2: event-driven status (job start doing, commit refs, asks auto-close)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-15T15:45:28+03:30",
+        "done": "2026-10-15T15:53:12+03:30"
+      },
+      "refs": [
+        "commit:daa315ed10b4385b9bbf98ad55d1f6c02ad30d7e"
+      ],
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.69",
+      "phase": "R7",
+      "title": "Head v2 A3: ask-close guard (real ref, rate limit, no umbrella)",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T16:02:57+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.70",
+      "phase": "R7",
+      "title": "Head v2 A4: runners take task id; fail reasons; engine unavailable",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:57:32+03:30"
+      },
+      "refs": [
+        "commit:27695618e1bec63779852eddf3ba00246207b725"
+      ],
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.71",
+      "phase": "R7",
+      "title": "Head v2 A5: Agent jobs always bound to a task",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:48:21+03:30"
+      },
+      "refs": [
+        "commit:a21a08202951841c3f9b5d10385b450c37f73dba"
+      ],
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.72",
+      "phase": "R7",
+      "title": "Head v2 A6: compact output contract (<=15 lines)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:55:09+03:30"
+      },
+      "refs": [
+        "commit:9fe89ce1cb1442a77b6c563550c9e919dd2756ff"
+      ],
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.73",
+      "phase": "R7",
+      "title": "Head v2 B/C: brief, verify, head next/done, gate prints commands, new skill",
+      "status": "hold",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "autopilot brief/pause/resume committed 41ece44; verify, next/done, skill left",
+      "at": {
+        "partial": "2026-10-15T21:19:56+03:30",
+        "hold": "2026-10-16T13:08:41+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.66",
+      "phase": "R7",
+      "title": "Head section: clear states (queue, doing, done, failed, needs you, blocked), kind colors, agent questions with answer UI (H127)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-15T15:45:28+03:30",
+        "done": "2026-10-15T15:53:12+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.74",
+      "phase": "R7",
+      "title": "Workflow timeline: drag/pan + zoom, readable bars, engine lanes (cursor, opencode), now label, tokens column (H129)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T16:02:57+03:30"
+      },
+      "refs": [
+        "commit:ad044549b996e11d055df7c646fd20a3b7731a08"
+      ],
+      "feats": [
+        "F13"
+      ]
+    },
+    {
+      "id": "R7.75",
+      "phase": "R7",
+      "title": "Git GUI follow-up: a11y label on git.js field, section registry, failing web tests",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T15:50:40+03:30"
+      },
+      "refs": [
+        "commit:c5446011157a345ff0ebf52721931800a5415a5c"
+      ],
+      "feats": [
+        "F24"
+      ]
+    },
+    {
+      "id": "R7.76",
+      "phase": "R7",
+      "title": "usage sync: clear error when the keychain has no claude.ai login (desktop app); point to usage push",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "no keychain login = unavailable message, commit 90ae7df (R7.100 covers)",
+      "at": {
+        "done": "2026-10-15T21:19:56+03:30"
+      },
+      "feats": [
+        "F10"
+      ]
+    },
+    {
+      "id": "R7.77",
+      "phase": "R7",
+      "title": "Usage band: automatic live usage source (no manual entry), one stop value everywhere (top bar says 95, limit is 85) (H132)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:a46cc9c82d3918ff247ecfb50153fa5da70158f3",
+        "commit:6144de0ae396098287a3caaed012b86455220280"
+      ],
+      "at": {
+        "done": "2026-10-15T16:14:24+03:30"
+      },
+      "feats": [
+        "F10"
+      ]
+    },
+    {
+      "id": "R7.78",
+      "phase": "R7",
+      "title": "Work Doing = tasks with a live job; job end moves task back (done candidate or todo) automatically (H134)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:a46cc9c82d3918ff247ecfb50153fa5da70158f3"
+      ],
+      "at": {
+        "done": "2026-10-15T16:12:31+03:30"
+      },
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "R7.79",
+      "phase": "R7",
+      "title": "Architecture diagram (UI + core service, data flow) as a page + list of core issues to fix (H135)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T16:12:31+03:30"
+      },
+      "refs": [
+        "commit:d900903d9d8b88132b7f80aa6eaf7fc9e30fd7df"
+      ],
+      "feats": [
+        "F22"
+      ]
+    },
+    {
+      "id": "R7.80",
+      "phase": "R7",
+      "title": "Head list: update rows in place (keyed), no full list replace, render < 50 ms; wheel never stalls (H136)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T16:22:25+03:30"
+      },
+      "refs": [
+        "commit:3cb53d1036fe88d1f5821e64036331c25e2bc356"
+      ],
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.81",
+      "phase": "R7",
+      "title": "Head asks that need the person appear in the Inbox (needs-you asks as inbox items with answer actions) (H138)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:49:36+03:30"
+      },
+      "refs": [
+        "commit:4d3820c37f0dca1456f882aef30b5ebaa6e4c7a0"
+      ],
+      "feats": [
+        "F8",
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.82",
+      "phase": "R7",
+      "title": "Head v3: reliable core service (watcher, auto-continue, no duplicates, no conflicts, priorities, best sync, light) — Opus + Cursor grok xhigh joint research and plan (H140, top priority)",
+      "status": "hold",
+      "tokensK": 200,
+      "thinking": "high",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:30248571f34d1a7c91a7c715a338fff791458a08",
+        "commit:e6cb5c0f3266989eabfa21b98f437ec97aac6256",
+        "commit:cc9afbb6a9199a3b1342a1642223ebaa23570082"
+      ],
+      "note": "v3 waves W0-W3, S1 committed; watcher, auto-continue, SSE left",
+      "at": {
+        "partial": "2026-10-15T21:19:56+03:30",
+        "hold": "2026-10-16T13:08:41+03:30"
+      },
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.83",
+      "phase": "R7",
+      "title": "v3 W0.H1: snapshot dup as {id, score} so Merge shows",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:20:52+03:30"
+      },
+      "refs": [
+        "commit:8a2a4fb220ef59de47d3fa729dbae71c06fa3461"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.84",
+      "phase": "R7",
+      "title": "v3 W0.H2: job done -> task verify; commit bind -> task done",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:25:01+03:30"
+      },
+      "refs": [
+        "commit:cb5b2e60050afd1fa740a0c7e81cc1223e5780ea"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.85",
+      "phase": "R7",
+      "title": "v3 W0.H3: loader revision stamps head-text, spool, gate, undo",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:21:14+03:30"
+      },
+      "refs": [
+        "commit:a73c922bd9c53626a351a534dfb633403340594d"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.86",
+      "phase": "R7",
+      "title": "v3 Wave 1 P1: roadmap/store/db.py (WAL, schema, txn) + migrate.py (JSON -> db, idempotent)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:47:44+03:30"
+      },
+      "refs": [
+        "commit:4182de84cf7c18d212f717074d54b8308d87af25"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.87",
+      "phase": "R7",
+      "title": "v3 Wave 1 P2: roadmap/store/events.py (append in txn, rev, since-query)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:49:52+03:30"
+      },
+      "refs": [
+        "commit:9319061799f2c03fcb1b6e84ba632b692b16dc43"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.88",
+      "phase": "R7",
+      "title": "v3 Wave 1 P3: roadmap/store/export.py deterministic JSON export",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:49:52+03:30"
+      },
+      "refs": [
+        "commit:9319061799f2c03fcb1b6e84ba632b692b16dc43"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.89",
+      "phase": "R7",
+      "title": "Head: SendMessage follow-ups register as jobs (no hidden work); rule in skill",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:13c828c26083c91cedea4cf121b9c4a87e1baa9b"
+      ],
+      "at": {
+        "done": "2026-10-15T20:52:44+03:30"
+      },
+      "feats": [
+        "F25"
+      ]
+    },
+    {
+      "id": "R7.90",
+      "phase": "R7",
+      "title": "Agent questions: 2-6 selectable options + always a free-text answer, in Inbox and Head (H149)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:56:16+03:30"
+      },
+      "refs": [
+        "commit:fac2f0cdd4a79771872a215d9b38883b252cef88"
+      ],
+      "feats": [
+        "F8"
+      ]
+    },
+    {
+      "id": "R7.91",
+      "phase": "R7",
+      "title": "v3 Wave 2 W1: jobs on the db behind a backend flag (claim, single-flight, files required)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true,
+      "at": {
+        "done": "2026-10-15T21:02:26+03:30"
+      },
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.92",
+      "phase": "R7",
+      "title": "v3 Wave 2 W3: head on the db behind a backend flag (spool table, ask fingerprint: same text twice -> one Hn)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:54:17+03:30"
+      },
+      "refs": [
+        "commit:3908441bac023d457b36f83500ba1863e1f93418"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.93",
+      "phase": "R7",
+      "title": "v3 Wave 2 W2: commands.run in one db txn with activity + undo (behind switch)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:58:24+03:30"
+      },
+      "refs": [
+        "commit:5a156f462528176cf1c9f80d035fd3c036874b2f"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.94",
+      "phase": "R7",
+      "title": "v3 Wave 2 W4: snapshot built from the db in one read txn, integer rev (behind switch)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T20:58:08+03:30"
+      },
+      "refs": [
+        "commit:dbbf1cf5ab286aff10347feb2387d5b58210371e"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.95",
+      "phase": "R7",
+      "title": "job list compact: running first, then newest; never hide running jobs",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:02:26+03:30"
+      },
+      "refs": [
+        "commit:7dacc79b59eab8b8cdcd4abc034b6c24b329d562"
+      ],
+      "feats": [
+        "F1"
+      ]
+    },
+    {
+      "id": "R7.96",
+      "phase": "R7",
+      "title": "v3: one db file and one connection helper for tasks, jobs, head (jobs_db, head_db, loader disagree on files); Opus review",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:05:40+03:30"
+      },
+      "refs": [
+        "commit:4028be512e885691ae2964dc2185e2748a87937d"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.97",
+      "phase": "R7",
+      "title": "Work board: issue cards in Work, Kind filter, blocker badge; remove the Issues section from nav (H128, WORK-UNIFIED-SPEC)",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:07:36+03:30"
+      },
+      "refs": [
+        "commit:d00b7ef5f09f24ddc1133cddff33fd12995fcb61"
+      ],
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "R7.98",
+      "phase": "R7",
+      "title": "Full suite green again: 10 failures + 5 setUpClass errors after today commits",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:8fbdb1879c1cb7f683a24d17aef547a30820f428"
+      ],
+      "feats": [
+        "F22"
+      ],
+      "at": {
+        "done": "2026-10-15T21:24:17+03:30"
+      }
+    },
+    {
+      "id": "R7.99",
+      "phase": "R7",
+      "title": "v3 Wave 3 S1: supervisor + leases (reap, expiry, fold, queue order, retry/backoff, single runner); Opus review",
+      "status": "done",
+      "tokensK": 80,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:09:48+03:30"
+      },
+      "refs": [
+        "commit:a59d9f97fbce6faf1141a6f320986be4ff17fb36"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.100",
+      "phase": "R7",
+      "title": "Usage Sync button: no false \"Sync failed\" when this Mac has no keychain login; say the head updates usage, and ask the head for a fresh reading (H150)",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:16:18+03:30"
+      },
+      "refs": [
+        "commit:90ae7df36de2efbfc2a723b1b0e3f874fc8b3b05"
+      ],
+      "feats": [
+        "F10"
+      ]
+    },
+    {
+      "id": "R7.101",
+      "phase": "R7",
+      "title": "Model split: human Work items (Jira-like) vs agent tasks (packages/jobs); one Work item -> many agent tasks; general rule across the product (H151)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:13:16+03:30"
+      },
+      "refs": [
+        "commit:f99f0d315d19c6155ef12f57d07df900e44d0656"
+      ],
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "R7.102",
+      "phase": "R7",
+      "title": "Supervisor: fix Opus review findings (fold after retry, retry only lost/unavailable, leases in one txn and released on finish, dup launches, bad heartbeat, backoff 2/10 min)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T21:16:36+03:30"
+      },
+      "refs": [
+        "commit:7cd98b1b10fc27e54cf2b8d8890876a9225c3c7c"
+      ],
+      "feats": [
+        "F26"
+      ]
+    },
+    {
+      "id": "R7.103",
+      "phase": "R7",
+      "title": "Rules pipeline: rule-kind Head items -> head proposes rule (merged/deduped) -> Inbox one-click Accept/Edit/Reject -> Rules section; Head row shows rule state (H152)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F12"
+      ],
+      "at": {
+        "done": "2026-10-15T21:24:17+03:30"
+      },
+      "refs": [
+        "commit:6888288bb6165e5b111ad3a75c8b056f12574237",
+        "commit:b469dbdbdd5eac31f3486466234af532de08e586"
+      ]
+    },
+    {
+      "id": "R7.104",
+      "phase": "R7",
+      "title": "Work model M2: pure Work item status roll-up (core/workstatus.py)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true,
+      "at": {
+        "done": "2026-10-15T21:15:06+03:30"
+      },
+      "feats": [
+        "F6"
+      ]
+    },
+    {
+      "id": "R7.105",
+      "phase": "R7",
+      "title": "Work model M1: store v4 work_items + agent_tasks with work_id",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true,
+      "feats": [
+        "F6"
+      ],
+      "at": {
+        "done": "2026-10-15T21:24:17+03:30"
+      }
+    },
+    {
+      "id": "R7.106",
+      "phase": "R7",
+      "title": "Planner clean-up: features state from real work, remove unrelated, link orphan tasks, sync with workflow (H154)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "feats": [
+        "F2"
+      ],
+      "verify": true,
+      "at": {
+        "done": "2026-10-15T21:28:46+03:30"
+      }
+    },
+    {
+      "id": "R7.107",
+      "phase": "R7",
+      "title": "Work model M3: migrate R7 rows into 15 Work items (docs/work-map-R7.json), lift ask binds",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:03:42+03:30"
+      },
+      "refs": [
+        "commit:367557a5bba2938738c9d0ddc395ca68e4400d57"
+      ]
+    },
+    {
+      "id": "R7.108",
+      "phase": "R7",
+      "title": "Work model M4: work ops (add, link, set status, accept, reopen) with undo and events",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:07:05+03:30"
+      },
+      "refs": [
+        "commit:ad285dc4be7cb093231224a1b197ee26aa823f1f"
+      ]
+    },
+    {
+      "id": "R7.109",
+      "phase": "R7",
+      "title": "Planner UI like the Head section: filter bar, aligned rows with state/kind chips, expandable rows, in-place updates (H156)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:9ed028783fc22ec0f36eb5f89abebaa1dbef1709"
+      ],
+      "at": {
+        "done": "2026-10-15T22:09:52+03:30"
+      }
+    },
+    {
+      "id": "R7.110",
+      "phase": "R7",
+      "title": "Roadmap section: verify data is in sync (phases, progress, tasks) and make the UI clear (H157)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:fab0fe7a3354ae90777857bc2732f82d498cbcc7"
+      ],
+      "at": {
+        "done": "2026-10-15T22:04:36+03:30"
+      }
+    },
+    {
+      "id": "R7.111",
+      "phase": "R7",
+      "title": "Inbox redesign: modern, calm, one clear list with sections, Head-style rows and actions (H158)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:10:16+03:30"
+      },
+      "refs": [
+        "commit:7a06bda12fe2e82f1d8da46e141bcdf8a29426e6"
+      ]
+    },
+    {
+      "id": "R7.112",
+      "phase": "R7",
+      "title": "Workflow: You are here = live running jobs only; Open map in new tab full screen with side-panel details (R7.30) (H159)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:22:36+03:30"
+      },
+      "refs": [
+        "commit:52f26537c7c584242f3c61f31ceff6bc371da018",
+        "commit:efa232ca169d77142478b57392c1b15c5fb0a8d7"
+      ]
+    },
+    {
+      "id": "R7.113",
+      "phase": "R7",
+      "title": "System design section: plan (Opus) the project architecture map view; subtasks for Haiku (H159)",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:09:52+03:30"
+      },
+      "refs": [
+        "commit:57496b93b2106e063ace452038f59851a368dd44",
+        "commit:61d5cbfa2f0eec6d434cda816789cfecdb474f0c"
+      ]
+    },
+    {
+      "id": "R7.114",
+      "phase": "R7",
+      "title": "Workflow Table: one row per task (needs you, running, failed, queued, done) with next action; split into wf_table.js",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:22:36+03:30"
+      },
+      "refs": [
+        "commit:52f26537c7c584242f3c61f31ceff6bc371da018"
+      ]
+    },
+    {
+      "id": "R7.115",
+      "phase": "R7",
+      "title": "Workflow Timeline: fix the 8 UI/UX issues in SYSTEM-DESIGN-SECTION.md B-3",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-15T22:29:22+03:30"
+      },
+      "refs": [
+        "commit:cbc3f7e83fb6e7b05b523ef408b5fc733e3e820a"
+      ]
+    },
+    {
+      "id": "R9.4",
+      "phase": "R9",
+      "title": "Work CLI roadmap work and head next (Q4)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-16T11:48:29+03:30",
+        "done": "2026-10-16T11:52:10+03:30"
+      },
+      "refs": [
+        "commit:0989ae364c9b92b93ba1dc4074b10eedc37a4e51"
+      ]
+    },
+    {
+      "id": "R9.5",
+      "phase": "R9",
+      "title": "Work M6: all agent tasks done moves Work to Review (Q5)",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.20",
+      "phase": "R9",
+      "title": "P column on Head, Work and Overview (Q20)",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.24",
+      "phase": "R9",
+      "title": "Handover leftovers: unapproved-phase gate in task status (Q24)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-16T11:48:29+03:30",
+        "done": "2026-10-16T11:49:17+03:30"
+      },
+      "verify": true
+    },
+    {
+      "id": "R9.19",
+      "phase": "R9",
+      "title": "Sync push: SSE stream plus snapshot since, client patching (Q19)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-16T11:48:29+03:30",
+        "done": "2026-10-16T11:50:48+03:30"
+      },
+      "verify": true
+    },
+    {
+      "id": "R9.3",
+      "phase": "R9",
+      "title": "head set prio and repeat-capture bump (Q3 remainder)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-16T11:48:29+03:30",
+        "done": "2026-10-16T11:51:28+03:30"
+      },
+      "verify": true
+    },
+    {
+      "id": "R9.23",
+      "phase": "R9",
+      "title": "Work M8-M10 UI: no agent cards, grouped Agents and Workflow (Q23)",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.30",
+      "phase": "R9",
+      "title": "Inbox: answer by choice (a/b/c buttons) with free-text fallback, like agent questions (H171)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:9bb53f942f5ddb3ec004600637179e85795356d4"
+      ],
+      "at": {
+        "done": "2026-10-16T12:00:58+03:30"
+      }
+    },
+    {
+      "id": "R9.31",
+      "phase": "R9",
+      "title": "Head asks carry options: head t/ask accepts --opt a,b,c and the Inbox renders them (H171)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:defce22b2e750531278b856c104e5c1950379659"
+      ],
+      "at": {
+        "done": "2026-10-16T12:03:08+03:30"
+      }
+    },
+    {
+      "id": "R9.40",
+      "phase": "R9",
+      "title": "375: top bar clipped, side-panel toggle off-screen",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Collapse Stop/Enter usage/Auto/? into an overflow menu below 480px; keep toggle inside 375",
+      "refs": [
+        "commit:1d18d84dd2def503bb43652a20fafe868d42786f",
+        "commit:1afb7ef3a116777d0cb81a9c5c5427ad5e1b1874"
+      ]
+    },
+    {
+      "id": "R9.41",
+      "phase": "R9",
+      "title": "375 Rules: rule text column collapses to zero width",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Stack rule text full width above actions on narrow screens; min width on text column",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.42",
+      "phase": "R9",
+      "title": "1440 Rules: red Offline panel on brief reconnect; console errors and a 403",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Quiet reconnecting state with backoff; find the 403 source and name it in the log",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.43",
+      "phase": "R9",
+      "title": "375 Workflow: table columns squeezed to 1-2 characters, Open clipped",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Under 480px show a card list instead of the table; set min column widths",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.44",
+      "phase": "R9",
+      "title": "1440 Workflow: blank Loading state with no text or timeout",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Spinner with text, timeout and retry; render Table while Map loads",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.45",
+      "phase": "R9",
+      "title": "1440 Workflow Map: right side empty, labels cut, 41 items hidden by default",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Fit map to frame on load; full label on hover; show all items or say why not",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.46",
+      "phase": "R9",
+      "title": "Work: persisted Issue filter hides every card; Issues route redirects silently",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Active-filter line with a visible reset; drop persisted filter on navigation or make Issues a real route",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.47",
+      "phase": "R9",
+      "title": "1440 Work: filter chips take a third of the page; board columns too narrow",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Collapse filters into one toolbar row or popover; widen columns",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.48",
+      "phase": "R9",
+      "title": "375 Planner: Accept column clipped; Unlink placement inconsistent",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Sticky ID/Title with sideways scroll; Unlink in the same grid column on every row",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.49",
+      "phase": "R9",
+      "title": "1440 Planner: orphan Assign buttons not in a fixed column, no headers (rule 0)",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Fixed grid ID | title | Assign with a header row",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.50",
+      "phase": "R9",
+      "title": "1440 Planner: linked-task list cut off at box bottom",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Let list grow or scroll inside the box with bottom padding",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.51",
+      "phase": "R9",
+      "title": "1440 Head: summary cut mid-word; unclear state labels done? and rule to review",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Cut at word boundary with full text on hover; clearer state labels",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.52",
+      "phase": "R9",
+      "title": "375 Head: Kind and Bound-to columns hidden with no toggle",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Show kind as a badge inside the summary cell on narrow widths",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.53",
+      "phase": "R9",
+      "title": "375 Roadmap: Approve floats mid-card; open count wraps inconsistently",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Fixed lane header grid: title | progress | open | Approve | copy",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.54",
+      "phase": "R9",
+      "title": "1440 Roadmap: status legend is one dense glyph line",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Collapsible Legend with one entry per row",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.55",
+      "phase": "R9",
+      "title": "375 Tokens: Spend table loses project name",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Stack each project as a card with the name on its own line",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.56",
+      "phase": "R9",
+      "title": "1440 Tokens: % wraps in Weekly stop field; Week meter shows bare dash",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Keep field and % on one line; show unknown text in the Week meter",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.57",
+      "phase": "R9",
+      "title": "1440 Agents: Job truncated, Tokens not yet/unknown unexplained, checkbox misaligned",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Wider Job column with hover; legend for not yet and unknown; align checkbox",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.58",
+      "phase": "R9",
+      "title": "Activity: no-op rows read done->done; Undo shown inconsistently",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Hide no-op transitions or label re-confirmed; Undo only where it works",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.59",
+      "phase": "R9",
+      "title": "1440 Settings: keyboard chip for section jumps unreadable",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "One line per shortcut, e.g. g o Overview, g i Inbox",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.60",
+      "phase": "R9",
+      "title": "375 Inbox: summaries cut to about 3 characters",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Summary on its own full-width line under the ID row",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.61",
+      "phase": "R9",
+      "title": "1440 Research: empty lower half, oversized empty Notes card",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Shrink empty state to content height or show notes above it",
+      "refs": [
+        "commit:1d18d84dd2def503bb43652a20fafe868d42786f",
+        "commit:1afb7ef3a116777d0cb81a9c5c5427ad5e1b1874"
+      ]
+    },
+    {
+      "id": "R9.62",
+      "phase": "R9",
+      "title": "Phone 375: top bar overflows, page scrolls sideways on every section",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Let .top-tools wrap or scroll inside its box; keep top bar and .side-tabs within 375 px (docs/reviews/ui-ux-tester-v2.md #1)",
+      "refs": [
+        "commit:d39843a50879f62f02f17a960301b0b0c0cf5190"
+      ]
+    },
+    {
+      "id": "R9.63",
+      "phase": "R9",
+      "title": "Roadmap phase cards: action column moves across cards",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Fixed grid track or equal card widths so the action cell sits at one offset on every card row (4 of 20 rows off) (#2)",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.64",
+      "phase": "R9",
+      "title": "Overview phase count column is 222px for 19px text",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Narrow .ph-count track to about 56px, right-aligned (#3)",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.65",
+      "phase": "R9",
+      "title": "Agents effort column is 191px for 26-42px text",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Fixed .ag-effort track of about 72px at desktop and phone (#4, #8)",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.66",
+      "phase": "R9",
+      "title": "Tokens title column 437px holds 51-95px text",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Shrink the .rg-t track or give the space to the numbers (#5)",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.67",
+      "phase": "R9",
+      "title": "Tokens spend row and limit bar overflow card at 375",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Reduce inner padding or wrap .tk-spend at phone width so scrollWidth fits 311px (#6)",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.68",
+      "phase": "R9",
+      "title": "Agents phone rows show no field labels (header collapses to 0px)",
+      "status": "hold",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Show a label per field in stacked rows at 375 (#7)",
+      "at": {
+        "hold": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R9.69",
+      "phase": "R9",
+      "title": "Workflow phone icons clipped (93px SVG in 64px box)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "Give the SVG its own size or let it scroll inside its box (#9)",
+      "refs": [
+        "commit:d39843a50879f62f02f17a960301b0b0c0cf5190"
+      ]
+    },
+    {
+      "id": "R9.70",
+      "phase": "R9",
+      "title": "Inbox question options: letter and label overlap, boxes full width, Other row cramped (H179)",
+      "status": "done",
+      "tokensK": 10,
+      "thinking": "medium",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:adc97a66abaf5165c96c6250f8260a8c368d392a"
+      ],
+      "at": {
+        "done": "2026-10-16T12:17:56+03:30"
+      }
+    },
+    {
+      "id": "R10.1",
+      "phase": "R10",
+      "title": "Audits: project map, ledger digest, git libs, core service",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "agy",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "docs/reviews/agy-*",
+      "refs": [
+        "commit:5bb7a20b64510b3b63aa8e5ba8efc1564e284c31"
+      ]
+    },
+    {
+      "id": "R10.2",
+      "phase": "R10",
+      "title": "UI/UX full audit per section from screenshots",
+      "status": "done",
+      "tokensK": 8,
+      "thinking": "low",
+      "model": "agy",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "docs/reviews/ux-*",
+      "refs": [
+        "commit:ecf9aca12bc4f00648d87ca934ba91311fea0528",
+        "commit:530dcb53162d28c9963588777b26516a0d158d3f",
+        "commit:c7a4faf9a7cdeb69dc3337a9e99d8e08f9360f8b"
+      ]
+    },
+    {
+      "id": "R10.3",
+      "phase": "R10",
+      "title": "Resizable left/right side panels with mouse drag",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web/js/views/panel.js, nav.js, css",
+      "refs": [
+        "commit:3b518eeaa856957d69298ad23eb591505c488585",
+        "commit:d256037506bfebf63113d61a5b865e14a3fa06d5"
+      ],
+      "at": {
+        "done": "2026-10-16T13:34:23+03:30"
+      }
+    },
+    {
+      "id": "R10.4",
+      "phase": "R10",
+      "title": "Tables and lists aligned on grid columns in every section",
+      "status": "done",
+      "tokensK": 8,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web/js/views, css",
+      "refs": [
+        "commit:83267e78a3aba715152dad739ff4af382ef9c3ec",
+        "commit:85de6eb4404f72475b81b8c703d1975a392c4109",
+        "commit:fe677557267968301d43ac4992a7dcb12f26a3c4",
+        "commit:e16a0f69916d03edee9400705e0cc734145fdf62"
+      ],
+      "at": {
+        "done": "2026-10-16T15:10:38+03:30"
+      }
+    },
+    {
+      "id": "R10.5",
+      "phase": "R10",
+      "title": "Scroll behaviour: one scroll container per section, sticky headers",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web/css",
+      "at": {
+        "partial": "2026-10-16T14:56:00+03:30"
+      },
+      "refs": [
+        "commit:2e87ac6c55b3a932759e2df12ac7de2968e21e0c"
+      ]
+    },
+    {
+      "id": "R10.6",
+      "phase": "R10",
+      "title": "Responsive 375-2560: no horizontal page scroll",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web/css",
+      "refs": [
+        "commit:7664df75568703b3aed8581e4c6040023abc4fce"
+      ],
+      "at": {
+        "done": "2026-10-16T14:56:00+03:30"
+      }
+    },
+    {
+      "id": "R10.7",
+      "phase": "R10",
+      "title": "Merge Planner into Work (one section, planner as view)",
+      "status": "done",
+      "tokensK": 8,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "planner.js, work.js",
+      "refs": [
+        "commit:d94d09ee438eb524e87a09eec0bc7117795f369c"
+      ],
+      "at": {
+        "done": "2026-10-16T13:48:43+03:30"
+      }
+    },
+    {
+      "id": "R10.8",
+      "phase": "R10",
+      "title": "Delete Research section (view, routes, tests, nav)",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "research.js",
+      "refs": [
+        "commit:270d82ff48c054ec77e95c95af298243f32a5430"
+      ],
+      "at": {
+        "done": "2026-10-16T13:07:52+03:30"
+      }
+    },
+    {
+      "id": "R10.9",
+      "phase": "R10",
+      "title": "Git section rebuilt on vendored MIT libs (graph + diff)",
+      "status": "done",
+      "tokensK": 8,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "git.js, web/vendor",
+      "refs": [
+        "commit:81ca110028947ed4b50014636ce4e49880ab63ca",
+        "commit:f2028191f15059f81652561df0d065d897f97601",
+        "commit:0a17a01d64b241d6fc22a95b3f19eceab7a7234a",
+        "commit:14ad9b2dc29beb9a1e8d1f5c869e5cc9cafe2661"
+      ],
+      "at": {
+        "done": "2026-10-16T13:53:41+03:30"
+      }
+    },
+    {
+      "id": "R10.10",
+      "phase": "R10",
+      "title": "Core sync root causes (jobs/tasks/work/head not in sync)",
+      "status": "done",
+      "tokensK": 8,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "roadmap/",
+      "refs": [
+        "commit:96994fb5b69ea2a07dc69c77dd5fa31d993c167e",
+        "commit:84e7108aef1bf6a3402ab3fa51f23bae9ddd48b7",
+        "commit:b5ff4e890a1976a69abda378814b15c6a6bed508"
+      ]
+    },
+    {
+      "id": "R10.11",
+      "phase": "R10",
+      "title": "Init flow: /head on a new project starts service, registers, empty state",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "bin, skill",
+      "refs": [
+        "commit:0b5ae1e63e0b11b34eafb0c22ec00620492098cb"
+      ],
+      "at": {
+        "done": "2026-10-16T13:59:13+03:30"
+      }
+    },
+    {
+      "id": "R10.12",
+      "phase": "R10",
+      "title": "Archive old open board tasks, keep done history",
+      "status": "done",
+      "tokensK": 2,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "docs/tasks.json",
+      "at": {
+        "done": "2026-10-16T13:08:41+03:30"
+      }
+    },
+    {
+      "id": "R10.13",
+      "phase": "R10",
+      "title": "Modernize old sections (minimal design) per R10.2 findings",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web",
+      "refs": [
+        "commit:e675a2710e49b5180cb567c6342c580625d8bdf7",
+        "commit:99aea1ca3fc2b22a6d0b05d650181a751e0994eb",
+        "commit:4ad51917fcd3fa670677ede5637c962863766110"
+      ],
+      "at": {
+        "done": "2026-10-16T15:27:03+03:30"
+      }
+    },
+    {
+      "id": "R10.14",
+      "phase": "R10",
+      "title": "Panel: smart use of space; Inbox section fixes (H169,H170,H178)",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "inbox.js, panel.js",
+      "refs": [
+        "commit:9fb649a7e57741f255bf76cdf49ac4f1393b8c6b",
+        "commit:03ef9026712dcdfaffe523c580e5df6b55b00a23",
+        "commit:3315c701ebadbe6eeb37180062c69f61cd31726d",
+        "commit:b59c0503f1ebd756878b982a7d4587dfe4f7b56d",
+        "commit:8f8f361fff5538a050122adcbbc372589cc4f28a"
+      ],
+      "at": {
+        "done": "2026-10-16T13:14:56+03:30",
+        "partial": "2026-10-16T15:21:42+03:30"
+      }
+    },
+    {
+      "id": "R10.16",
+      "phase": "R10",
+      "title": "Head section shows the chat: person messages and AI replies (H187)",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "roadmap/services/head*.py, hooks.py, head.js",
+      "refs": [
+        "commit:a58e165a751d4c59e14df8faab6133694399422a",
+        "commit:975cb0bb32c56e10c719dc42de8731886a619c6b",
+        "commit:df73618fd5d1f0893305e0e41741b6f481aebb83"
+      ],
+      "at": {
+        "done": "2026-10-16T13:44:00+03:30",
+        "partial": "2026-10-16T14:38:28+03:30"
+      }
+    },
+    {
+      "id": "R10.15",
+      "phase": "R10",
+      "title": "Green baseline: fix failing usage/migrate/sync tests",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "roadmap/services/usage*, tests/unit",
+      "refs": [
+        "commit:efa232ca169d77142478b57392c1b15c5fb0a8d7",
+        "commit:8b54f2ce02811000ab39f065ff4b81558cbe58cf",
+        "commit:7c53ab47612a12e9abd817b05eac0ee7e57f8ee2"
+      ],
+      "at": {
+        "done": "2026-10-16T13:37:35+03:30"
+      }
+    },
+    {
+      "id": "R10.17",
+      "phase": "R10",
+      "title": "Static assets never stale after a service restart (cache-busting / no-cache)",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "roadmap/http/static*, web/index.html",
+      "refs": [
+        "commit:1a35494510c0885b5b255a2dd2feb289d6555a93",
+        "commit:7d40d2729a876095aed372311355643542bb6547"
+      ],
+      "at": {
+        "done": "2026-10-16T14:05:34+03:30"
+      }
+    },
+    {
+      "id": "R10.18",
+      "phase": "R10",
+      "title": "Agents panel layout + CSS under one budget constant",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web/css, agents.js"
+    },
+    {
+      "id": "R10.19",
+      "phase": "R10",
+      "title": "System map A1: system.json load/validate + auto baseline",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "docs/SYSTEM-DESIGN-SECTION.md",
+      "refs": [
+        "commit:17840b91e5c78eb5e8cc7f84e361e2d731402514"
+      ],
+      "at": {
+        "done": "2026-10-16T14:19:18+03:30"
+      }
+    },
+    {
+      "id": "R10.20",
+      "phase": "R10",
+      "title": "System map A2: heat from git log + jobs + work",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "systemheat.py",
+      "refs": [
+        "commit:75c87a1b64c68f75c558add0cb2aa8339f8b4ead"
+      ],
+      "at": {
+        "done": "2026-10-16T15:21:03+03:30"
+      }
+    },
+    {
+      "id": "R10.21",
+      "phase": "R10",
+      "title": "System map A3: API endpoint + schema",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "routes.py",
+      "refs": [
+        "commit:d208dde434abd4c530af0935b4e8ad7517fcdcdf"
+      ],
+      "at": {
+        "done": "2026-10-16T16:37:44+03:30"
+      }
+    },
+    {
+      "id": "R10.22",
+      "phase": "R10",
+      "title": "System map A4: layered layout",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "web/js/graph/syslayout.js",
+      "refs": [
+        "commit:b25c4857583e3d96eb8b50bf60e9e0721b002e2c"
+      ],
+      "at": {
+        "done": "2026-10-16T14:31:30+03:30"
+      }
+    },
+    {
+      "id": "R10.23",
+      "phase": "R10",
+      "title": "System map A5: System view (toolbar, canvas, heat)",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "system.js",
+      "refs": [
+        "commit:92f3fe4e97341f5d54aeda2b810133ee0b748fa8"
+      ],
+      "at": {
+        "done": "2026-10-16T16:39:43+03:30"
+      }
+    },
+    {
+      "id": "R10.24",
+      "phase": "R10",
+      "title": "System map A6: side panel content",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "system-panel.js",
+      "refs": [
+        "commit:5df85baa31d1e1b354eeb0de52114531ac500560",
+        "commit:0e62089e425f9ad5663c480687c722e9257a3931"
+      ],
+      "at": {
+        "done": "2026-10-16T16:48:27+03:30"
+      }
+    },
+    {
+      "id": "R10.25",
+      "phase": "R10",
+      "title": "System map A7: full-screen route",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "fullmap.js",
+      "refs": [
+        "commit:26aabcd6e6001dfbceb4a74fd752d7a6567879ac"
+      ]
+    },
+    {
+      "id": "R10.26",
+      "phase": "R10",
+      "title": "System map A8: CLI + seed docs/system.json",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "cli",
+      "verify": true,
+      "at": {
+        "done": "2026-10-16T16:39:43+03:30"
+      }
+    },
+    {
+      "id": "R10.27",
+      "phase": "R10",
+      "title": "Ledger: binding a new ask to an already-done task must not auto-close it (H194,H200,H201 closed at once)",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "roadmap/services/head.py fold",
+      "refs": [
+        "commit:cb9fc27b4dda5dac11a5c2ea977038bd7ca88236",
+        "commit:50d6361956a43f49bc02cbed86a8970d5c5cc9bf",
+        "commit:2d71c084c6450adbab90b4fe283f37aece41010a",
+        "commit:d2a72085afc6a6dc0ba28de36cd66188e1eeea15"
+      ]
+    },
+    {
+      "id": "R10.28",
+      "phase": "R10",
+      "title": "Top bar usage: show age of reading, stale state, and the weekly stop (H203)",
+      "status": "done",
+      "tokensK": 3,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "topbar.js",
+      "at": {
+        "done": "2026-10-17T09:18:52+03:30"
+      },
+      "refs": [
+        "commit:9bde8a841c793dd8a80fc4979cbbd81707278b28"
+      ]
+    },
+    {
+      "id": "R10.29",
+      "phase": "R10",
+      "title": "Usage auto-fetch by the background service like 3rd-party apps (H204)",
+      "status": "done",
+      "tokensK": 8,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "roadmap/services/usage*",
+      "refs": [
+        "commit:25d3049e61c81501336f3fed1b2b2b92bd3d8492",
+        "commit:1fa09f138c597a657234d0f0b5614d4b5b788023"
+      ],
+      "at": {
+        "done": "2026-10-16T15:43:28+03:30"
+      }
+    },
+    {
+      "id": "R10.30",
+      "phase": "R10",
+      "title": "Tokens page redesign: compact stop control, aligned spend table (H205)",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "limits.js, usage.js",
+      "refs": [
+        "commit:8514dd4f122bda7d248b767aaae6a2c970a62a45",
+        "commit:bc35a95cd801f8f143386d4450f1d9fb0b975344"
+      ]
+    },
+    {
+      "id": "R10.31",
+      "phase": "R10",
+      "title": "Workflow map: loads, visible arrows, aligned labels, no overflow (H207)",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "workflow.js, graph/*",
+      "refs": [
+        "commit:a3dce707d326db9591a25cfda5da0e3ded9b73ee",
+        "commit:127b3f494901eaaad4d9669dacd9bec18a4da6a5"
+      ]
+    },
+    {
+      "id": "R10.32",
+      "phase": "R10",
+      "title": "Per-task usage from subagent transcripts on SubagentStop + backfill + weighted % (docs/TOKENS-PER-TASK.md, H209 H210)",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "hooks.py, jobs, tokens",
+      "refs": [
+        "commit:e4e30d72ec68e448583f94473313b8937e233fda",
+        "commit:74bed8724934514b02bc993cb5900124456a18dd",
+        "commit:922a437cf7da6c1ae245be3809d9e205a30b396a",
+        "commit:568376077e35438e8340ddb3fe97ff2adbce5a35"
+      ]
+    },
+    {
+      "id": "R10.33",
+      "phase": "R10",
+      "title": "System map: fit on first render; wrap 9 layer columns into a 2-3 row grid so cards stay readable when fitted; untangle ui->api edges",
+      "status": "done",
+      "tokensK": 5,
+      "thinking": "low",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "note": "system.js, syslayout.js",
+      "refs": [
+        "commit:796d4bf93240b6b1ed15bd519fae51017925b091"
+      ]
+    },
+    {
+      "id": "R10.34",
+      "phase": "R10",
+      "title": "helm is good do the task for change all things to our new bran name \"Helm\" aslo i want to see that…",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:3896c8c9ba8c46defc5d8a933f51324ff758ee93"
+      ]
+    },
+    {
+      "id": "R11.0",
+      "phase": "R11",
+      "title": "CSS budget: raise shared web/css cap so sections can grow (test_shell)",
+      "status": "done",
+      "tokensK": 20,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:6d4cbfd06cc454af1fb2e82a2aa75a65f2893868"
+      ],
+      "at": {
+        "done": "2026-10-17T08:38:05+03:30"
+      }
+    },
+    {
+      "id": "R11.1",
+      "phase": "R11",
+      "title": "System v2: research diagram types, spec, subtasks, zoom/fullscreen/context menu/expand/task binding/timeline",
+      "status": "done",
+      "tokensK": 400,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:5846b27529c7b684f0f2d1cf9b98b768527a328b"
+      ]
+    },
+    {
+      "id": "R11.2",
+      "phase": "R11",
+      "title": "Core: does a panel interaction reach the head agent? audit + close every gap",
+      "status": "done",
+      "tokensK": 150,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": true,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T09:04:33+03:30",
+        "done": "2026-10-17T09:06:46+03:30"
+      },
+      "refs": [
+        "commit:eec5ff1352c2b3559cfa0e2a04aa3a94e7477223"
+      ]
+    },
+    {
+      "id": "R11.3",
+      "phase": "R11",
+      "title": "Drag-resize handles on every section/panel divider",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:820d841bc3e5f719802d6d39dfb6183769a93dfe"
+      ]
+    },
+    {
+      "id": "R11.4",
+      "phase": "R11",
+      "title": "Activity redesign: full project history with filters and time",
+      "status": "done",
+      "tokensK": 150,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:4ef9235968b90d86fcc51c3130bed844460e2f9c"
+      ],
+      "at": {
+        "done": "2026-10-17T09:04:33+03:30"
+      }
+    },
+    {
+      "id": "R11.5",
+      "phase": "R11",
+      "title": "Roadmap map: visual diagram (research best approach, build)",
+      "status": "done",
+      "tokensK": 150,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:6ba66d5beb18ced947d3e13590d9277dd0dbac85"
+      ],
+      "at": {
+        "done": "2026-10-17T09:04:33+03:30"
+      }
+    },
+    {
+      "id": "R11.6",
+      "phase": "R11",
+      "title": "Tokens: total used, remaining estimate per section, model history charts",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T09:04:33+03:30",
+        "done": "2026-10-17T09:06:29+03:30"
+      },
+      "refs": [
+        "commit:eec5ff1352c2b3559cfa0e2a04aa3a94e7477223"
+      ]
+    },
+    {
+      "id": "R11.7",
+      "phase": "R11",
+      "title": "Toolbars/filters: collapse into compact bar + Filters disclosure on every section (save space)",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:9c5252f362660c81bad7e8244c7dd3960c1adfad"
+      ]
+    },
+    {
+      "id": "R11.101",
+      "phase": "R11",
+      "title": "System v2 backend: bind board tasks + Work items to components, progress, catalog (system_tasks/system_v2)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T08:47:26+03:30"
+      },
+      "refs": [
+        "commit:5846b27529c7b684f0f2d1cf9b98b768527a328b",
+        "commit:1766d195eea926723cfd62e188d34e63f49be542"
+      ]
+    },
+    {
+      "id": "R11.102",
+      "phase": "R11",
+      "title": "System v2: ER/EER + state machines derived from schemas and stores (system_data.py)",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T08:46:39+03:30"
+      },
+      "refs": [
+        "commit:ba39d0890afa69c7bdab53995e71c34179a5618d",
+        "commit:6ace67aa60c44fd14ba21c3983dcd4f2b7e5c1bd"
+      ]
+    },
+    {
+      "id": "R11.103",
+      "phase": "R11",
+      "title": "System v2: class, deployment, use-case, activity diagrams derived from code (system_behave.py)",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T08:47:03+03:30"
+      },
+      "refs": [
+        "commit:cbbae478cc045022bd0f0e921339684d3e40c741"
+      ]
+    },
+    {
+      "id": "R11.104",
+      "phase": "R11",
+      "title": "System v2 UI core: fill viewport no scroll, true fit, zoom %, full screen, grouped switcher, Copy id, Update diagrams",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30"
+      },
+      "refs": [
+        "commit:a98b48b7bae82938141ead7791a653cf5be3fa86",
+        "commit:1609b369ba54272e8d7df50d4e9db66b0f7eecf0",
+        "commit:6590b2348472b045ac5ecfbbc95165e1a7791b35"
+      ]
+    },
+    {
+      "id": "R11.105",
+      "phase": "R11",
+      "title": "System v2: right-click context menu module (system-menu.js)",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T08:46:31+03:30"
+      },
+      "refs": [
+        "commit:2c8b246fe7d1696637544075670fcd409b156a97"
+      ]
+    },
+    {
+      "id": "R11.106",
+      "phase": "R11",
+      "title": "System v2: side panel shows board tasks, Work items, progress, copy, ask Head",
+      "status": "done",
+      "tokensK": 30,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T08:46:39+03:30"
+      },
+      "refs": [
+        "commit:cf3da9ba4199ce9f6b9395bc590d2b0eed867be8"
+      ]
+    },
+    {
+      "id": "R11.107",
+      "phase": "R11",
+      "title": "System v2: SVG renderers for ER, state, use-case, activity, deployment, class (sysdiagrams.js)",
+      "status": "done",
+      "tokensK": 60,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T09:04:33+03:30"
+      }
+    },
+    {
+      "id": "R11.108",
+      "phase": "R11",
+      "title": "System v2: expandable groups and drill subgraph in syslayout.js",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T08:43:48+03:30",
+        "done": "2026-10-17T08:47:34+03:30"
+      },
+      "refs": [
+        "commit:6dd6c2385d6d8591769368c23894b15f3bb711ac"
+      ]
+    },
+    {
+      "id": "R11.109",
+      "phase": "R11",
+      "title": "Workflow timeline: drag/scroll through time, zoom spans, Now",
+      "status": "done",
+      "tokensK": 40,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T09:04:33+03:30",
+        "done": "2026-10-17T09:06:29+03:30"
+      },
+      "refs": [
+        "commit:01a6555985e32e94f59891a335aac1bf84106b9b",
+        "commit:ab20dc77d76c4643662d31d176194aed334a87fb"
+      ]
+    },
+    {
+      "id": "R11.110",
+      "phase": "R11",
+      "title": "System v2 integration: wire menu, expand/drill, breadcrumb, new diagram kinds into system.js",
+      "status": "done",
+      "tokensK": 50,
+      "thinking": "medium",
+      "model": "sonnet",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T09:11:10+03:30"
+      },
+      "refs": [
+        "commit:251befee4834f886d400b9a319d3404ac9fffd63"
+      ]
+    },
+    {
+      "id": "R11.111",
+      "phase": "R11",
+      "title": "System v2: seed docs/system.json overrides (tasks, work, machines) and update views spec",
+      "status": "done",
+      "tokensK": 15,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true,
+      "at": {
+        "done": "2026-10-17T09:12:04+03:30"
+      }
+    },
+    {
+      "id": "R11.8",
+      "phase": "R11",
+      "title": "Tokens: show logged-in account(s), login/logout buttons, multi-account usage auth",
+      "status": "done",
+      "tokensK": 120,
+      "thinking": "medium",
+      "model": "opus",
+      "needsUser": true,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T09:04:33+03:30",
+        "done": "2026-10-17T09:06:46+03:30"
+      },
+      "refs": [
+        "commit:eec5ff1352c2b3559cfa0e2a04aa3a94e7477223",
+        "commit:aae9ff102aa1c4d247c9b1d919ec5f5a95b12d71",
+        "commit:dcc33b4cb3a5bd5ddee1bd251f6f58f9b796efe7"
+      ]
+    },
+    {
+      "id": "R11.112",
+      "phase": "R11",
+      "title": "System v2 Classes diagram: collapse by module by default, readable at fit (200+ classes render at 20%)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:8199b782e33d7b332359f479c5f8389758cf0ae1",
+        "commit:ffe4bd5e588d9c2f0fa0a3bc0e0c8518585c4c97",
+        "commit:3d18c66d6bb325464c8dbde7a7cc5e929ea81346",
+        "commit:9bde8a841c793dd8a80fc4979cbbd81707278b28"
+      ],
+      "at": {
+        "done": "2026-10-17T09:16:26+03:30"
+      }
+    },
+    {
+      "id": "R11.113",
+      "phase": "R11",
+      "title": "System Classes: route module edges around boxes (Views-Web shell edge crosses Services, count label overlaps title)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T09:18:24+03:30"
+      },
+      "refs": [
+        "commit:02844c1b330e621651b9195d56d41d26b59204d4",
+        "commit:9bde8a841c793dd8a80fc4979cbbd81707278b28"
+      ]
+    },
+    {
+      "id": "R11.114",
+      "phase": "R11",
+      "title": "System: diagram actions (zoom, fit, full screen, copy, update, legend) inside the diagram box; toggle overlaps label",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T09:49:43+03:30"
+      },
+      "refs": [
+        "commit:2cf64fbfac1a5b1cb1786dad4f141d3dcc02493e",
+        "commit:c246cdab9b89a30bc451ad3dfca1a8fdcb22a895"
+      ]
+    },
+    {
+      "id": "R11.115",
+      "phase": "R11",
+      "title": "Diagram spacing control (Space - / +) for System, Workflow map and Roadmap map",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T09:49:50+03:30",
+        "done": "2026-10-17T09:55:04+03:30"
+      },
+      "refs": [
+        "commit:685c93dcfe8464adc265562ac479cf4e95d6f62b",
+        "commit:1220199f38154ea8a2f04b86d9a4093765e670cf"
+      ]
+    },
+    {
+      "id": "R11.116",
+      "phase": "R11",
+      "title": "Git section redesign: modern layout (file list, diff preview, commit panel) per ui-ux-pro-max",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T09:52:46+03:30"
+      },
+      "refs": [
+        "commit:7a63b11b06240fa0efd69c789faf4a5a317123d9"
+      ]
+    },
+    {
+      "id": "R11.117",
+      "phase": "R11",
+      "title": "Activity: replace top per-day chart with a horizontal timeline; selected item shown as a point on it",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:5def8227bda1fe12555b7f728dadfc9b1abab6a6",
+        "commit:9edbfa6edc4534c901c992290eeb9198e91f3910"
+      ],
+      "at": {
+        "done": "2026-10-17T09:56:50+03:30"
+      }
+    },
+    {
+      "id": "R11.118",
+      "phase": "R11",
+      "title": "Git: diff preview endpoint for uncommitted files + render in the right pane",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T09:57:16+03:30"
+      },
+      "refs": [
+        "commit:06a50957d08a66575ea9ba0a2192c3f28a68f7c5",
+        "commit:c246cdab9b89a30bc451ad3dfca1a8fdcb22a895"
+      ]
+    },
+    {
+      "id": "R11.119",
+      "phase": "R11",
+      "title": "Apply shared collapsible toolbar (Filters disclosure) to every section with filters",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T10:23:24+03:30",
+        "done": "2026-10-17T10:30:30+03:30"
+      },
+      "refs": [
+        "commit:abbe364af64789bea588de961f29341e0e4057f4"
+      ]
+    },
+    {
+      "id": "R11.120",
+      "phase": "R11",
+      "title": "Roadmap map: align header row; zoom/Fit/Now/Full screen/Spacing inside the map box on one baseline",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:40b81ca312383a8bc0e905b5ad6d0457f1f1efdc",
+        "commit:e6f08eae887f2f05ae87a3f292010985c56082e0"
+      ],
+      "at": {
+        "done": "2026-10-17T10:26:55+03:30"
+      }
+    },
+    {
+      "id": "R11.121",
+      "phase": "R11",
+      "title": "Toolbar narrow width: row wraps, search min width, no horizontal scroll (+ verified agy audit fixes)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:51:31+03:30"
+      },
+      "refs": [
+        "commit:0abcaa26f4e252f6c9eacc69c76fef5a91f7f59f",
+        "commit:8f8904a397046dbbfe92ff28415388882ca23715"
+      ]
+    },
+    {
+      "id": "R11.122",
+      "phase": "R11",
+      "title": "Live refresh flicker: open items (details/menus) flicker or close on UI update; fix root in shared render",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:e58ea3bd86273b422d452b5db9cf5adfab7c6a65",
+        "commit:c96d248cc60098f6740184ae8e0dfe75a03a1b53"
+      ],
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:57:17+03:30"
+      }
+    },
+    {
+      "id": "R11.123",
+      "phase": "R11",
+      "title": "System Classes: open all modules expanded by default (person answered Q10: Yes)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:51:06+03:30"
+      },
+      "refs": [
+        "commit:6b8b9727fbc83a7f008675963c2a1a2417563606"
+      ]
+    },
+    {
+      "id": "R11.124",
+      "phase": "R11",
+      "title": "Overview Activity card shows NaN:NaN/change: adapt to new activityRowHtml(e, ctx) shape",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T10:36:08+03:30"
+      },
+      "refs": [
+        "commit:ad764cefaf33218a83a4a9a414c708ba235315d3"
+      ]
+    },
+    {
+      "id": "R11.125",
+      "phase": "R11",
+      "title": "Side rail badges: show counts in collapsed rail, new-since-seen state, clear tones/legend; fix stale Agents count",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:50:46+03:30"
+      },
+      "refs": [
+        "commit:83238fcb39cdfd25f43dba64d5573e045f1f498d"
+      ]
+    },
+    {
+      "id": "R11.126",
+      "phase": "R11",
+      "title": "Limits: 5-hour stop control in panel; head reads its caps from board stops; top bar stop state matches",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:c0277f5e8f0245e981b17c5ff79d2e711cfd21b9",
+        "commit:ec9f6b648e5527e90eb9fd271ce8f4dd28b6fa5f"
+      ],
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:58:57+03:30"
+      }
+    },
+    {
+      "id": "R11.127",
+      "phase": "R11",
+      "title": "Side rail Collapse button: icon must flip to expand (>>) when collapsed; label Expand",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:50:46+03:30"
+      },
+      "refs": [
+        "commit:83238fcb39cdfd25f43dba64d5573e045f1f498d",
+        "commit:bf4676d6d15a02faac8d9345362beb7261f20a6f"
+      ]
+    },
+    {
+      "id": "R11.128",
+      "phase": "R11",
+      "title": "Finish Helm rebrand: project id roadmap-board -> helm (URLs, tab title, launchd label, paths) with data migration",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:6ec0a8b26e1495484ec439d3b6f507a4d5d3bd1a"
+      ]
+    },
+    {
+      "id": "R11.129",
+      "phase": "R11",
+      "title": "Top bar: compact visual usage (5h/W mini bars + stop tick, account), remove Mark/⌘K buttons",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:c0277f5e8f0245e981b17c5ff79d2e711cfd21b9",
+        "commit:83238fcb39cdfd25f43dba64d5573e045f1f498d",
+        "commit:19bc58e602c59ee938cf884830f5302a5825d3cd"
+      ],
+      "at": {
+        "partial": "2026-10-17T10:48:55+03:30",
+        "done": "2026-10-17T10:50:46+03:30"
+      }
+    },
+    {
+      "id": "R3.8",
+      "phase": "R3",
+      "title": "Update System diagrams and check them (roadmap-board)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "partial": "2026-10-17T10:57:52+03:30",
+        "done": "2026-10-17T11:01:41+03:30"
+      }
+    },
+    {
+      "id": "R11.130",
+      "phase": "R11",
+      "title": "System spacing: scale horizontal gaps too; edge labels never overlap boxes; readable overlay controls",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:c49f719479782ce6a1b51ddb2a526658e61d00e3",
+        "commit:5ae9ee9660583c4b6a49668be84a3aad885912e5",
+        "commit:8f8904a397046dbbfe92ff28415388882ca23715"
+      ],
+      "at": {
+        "done": "2026-10-17T11:01:41+03:30"
+      }
+    },
+    {
+      "id": "R11.131",
+      "phase": "R11",
+      "title": "Panel: coalesce repeated stop changes from one drag into one head line (last value wins within 5 s)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true,
+      "at": {
+        "done": "2026-10-18T11:24:59+03:30"
+      }
+    },
+    {
+      "id": "R11.132",
+      "phase": "R11",
+      "title": "Workflow map empty: dom morph strips JS-mounted children of host elements (regression of R11.122)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true,
+      "at": {
+        "done": "2026-10-17T11:18:29+03:30"
+      }
+    },
+    {
+      "id": "R11.133",
+      "phase": "R11",
+      "title": "Diagram spacing: remove the 2.5x upper limit (all maps)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T11:16:16+03:30"
+      },
+      "refs": [
+        "commit:1e3c5d55dcc961022d52df264ff9031074d5564d"
+      ]
+    },
+    {
+      "id": "R11.134",
+      "phase": "R11",
+      "title": "Tokens Account tab: full e-mail on the main listener (R11.134)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "at": {
+        "done": "2026-10-17T13:08:12+03:30"
+      },
+      "refs": [
+        "commit:246b62bc30e82fa3a876f3b593e8b828fb0b846f",
+        "commit:8e96a373037581b7001f1725d087b904ffdcfbe7"
+      ]
+    },
+    {
+      "id": "R11.135",
+      "phase": "R11",
+      "title": "On/off switches: style 5h/weekly stop + settings toggles as real switches (color-coded)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:755b66f2ffbd8edbb0cefeab83cdbab6a4c16ae3"
+      ]
+    },
+    {
+      "id": "R11.136",
+      "phase": "R11",
+      "title": "Usage accounts: support adding/switching multiple already-authed Claude accounts from the UI",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:bb8d4134f7f4dec1254263db303ad8f80933aa65"
+      ]
+    },
+    {
+      "id": "R11.137",
+      "phase": "R11",
+      "title": "Head section: show loading state before opening an item, not after",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:8f6d332d834993c8c52b0ae0193c3ac949f2c5e2"
+      ]
+    },
+    {
+      "id": "R11.138",
+      "phase": "R11",
+      "title": "UI: cut duplicate section title row, move +Log into the stat/filter row, tighten header space across sections",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:5919f7aca4b4cae5ff12849204f7f80681b2da8e",
+        "commit:7225f64def345904fa3b79ec5462035df047a5e6",
+        "commit:4cb31af55078eaba2043cf9c1f09e2ec762dde3d"
+      ]
+    },
+    {
+      "id": "R11.139",
+      "phase": "R11",
+      "title": "UI: shrink oversized toolbar buttons (Workflow Timeline/Map/Table + filter row) to compact, content-sized controls",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:a4756f86c9039e85ef7d4c490ae41751b2e7d141"
+      ]
+    },
+    {
+      "id": "R11.140",
+      "phase": "R11",
+      "title": "Workflow Timeline: Today range wastes space past 'now' (full-day window, nothing to show after now)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:e28a2f99501fc5f7ef0e2997fd798c98a84d973d"
+      ]
+    },
+    {
+      "id": "R11.141",
+      "phase": "R11",
+      "title": "Tokens page: default tab Limits; always show account name; 'Tokens for Helm' total on the right",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:d61565a7d0f9a75d4570d662015df0676016d348"
+      ]
+    },
+    {
+      "id": "R11.142",
+      "phase": "R11",
+      "title": "Inbox: add a Remove/Dismiss option per row (not every ask needs an answer)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:1fc955ccd56061551d0642cc5e5f8ee14f269bed"
+      ]
+    },
+    {
+      "id": "R11.143",
+      "phase": "R11",
+      "title": "Add account form: just a Label field by default; auto-derive path/type, hide Type+Path behind Advanced",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:9d026493e6b50589ed3cb655b38274a8e1241ded"
+      ]
+    },
+    {
+      "id": "R11.144",
+      "phase": "R11",
+      "title": "Head process: structural fix (hook/mod) so head can't skip job-close, dispatch, or restart steps again",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:bbc163b078fb947d8920129837f117bd491dc3bd"
+      ]
+    },
+    {
+      "id": "R11.145",
+      "phase": "R11",
+      "title": "Add-account form: fix broken layout (stacked buttons, browser autofill dropdown overlap)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:c03313d536652ced264cb506e7e9eeaa586faca3",
+        "commit:ef70139e9f3171f7a3a5938f69a727374a3e5103"
+      ]
+    },
+    {
+      "id": "R11.146",
+      "phase": "R11",
+      "title": "Workflow Map: page freezes/unresponsive rendering with large item counts (275+ shown)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:43cb007279aa156f1e032a4b7030dd8e29123aff"
+      ]
+    },
+    {
+      "id": "R11.147",
+      "phase": "R11",
+      "title": "Overview banners: inconsistent left padding/alignment between stacked banner rows",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true,
+      "at": {
+        "done": "2026-10-18T11:25:11+03:30"
+      }
+    },
+    {
+      "id": "R11.148",
+      "phase": "R11",
+      "title": "Add-account: show a Copy button next to the 'run this in a terminal' login command",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:fb76d62c81dd919af1322e9b19ce270737692267"
+      ]
+    },
+    {
+      "id": "R11.149",
+      "phase": "R11",
+      "title": "Overview: no gap between the limit banner and the Running/Stopped banner below it (not true DOM siblings)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:7c1d482ed661c47f4dac2d7e5c8d0afd25215e46"
+      ]
+    },
+    {
+      "id": "R11.150",
+      "phase": "R11",
+      "title": "Inbox: adopt the Head section's table/list UI style",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:c305503dab7611203c0238359a9ea59d3dd6242b",
+        "commit:86f60459435e2d0dbfeba7e9b7de55e74d2de668",
+        "commit:9f29d95ba61f3f2bdd49eb5dc4ffb9292baa39fe"
+      ]
+    },
+    {
+      "id": "R11.151",
+      "phase": "R11",
+      "title": "Top bar usage bars don't visually match the Limits panel bars (same % label, different fill proportion)",
+      "status": "partial",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true
+    },
+    {
+      "id": "R11.152",
+      "phase": "R11",
+      "title": "System diagram: side panel overlays wrong + selected node jumps position on open",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:44d0bb0f0fa0c4d5ecb83e62d9049ccff28cc830",
+        "commit:a2f5b89bf36615af007d1c5b366a51e8418c92fa"
+      ]
+    },
+    {
+      "id": "R11.153",
+      "phase": "R11",
+      "title": "Head detail panel: [object Object] shown instead of formatted text in one field",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:9d2b0dd948067674dbbd7f15db44fab3230a3971"
+      ]
+    },
+    {
+      "id": "R11.154",
+      "phase": "R11",
+      "title": "Head List table: You-wrote/Head-replied too narrow, other columns waste dead space",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:3f735395eb82f1b73c67044f24a5f4aa40b3a1d7"
+      ]
+    },
+    {
+      "id": "R11.155",
+      "phase": "R11",
+      "title": "Usage accounts: auto-check active account on startup, no manual Check after each restart",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:0d35f258dc19a72a1c57185c93548ee7c3c6beff"
+      ]
+    },
+    {
+      "id": "R11.156",
+      "phase": "R11",
+      "title": "split-net: remove duplicate job registration (jobs_auto.py + Helm hook both fire)",
+      "status": "partial",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "verify": true
+    },
+    {
+      "id": "R11.157",
+      "phase": "R11",
+      "title": "split-net: Helm AgentDetector still double-registers jobs; Head section never claims/logs",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:2fa7096b3145215fa5e454ac298d556359fdf34d"
+      ]
+    },
+    {
+      "id": "R11.158",
+      "phase": "R11",
+      "title": "Head: Chat/Questions tabs overlap the model-badge row (regression from 5919f7a title removal)",
+      "status": "done",
+      "tokensK": 0,
+      "thinking": "low",
+      "model": "haiku",
+      "needsUser": false,
+      "check": "none",
+      "checkK": 0,
+      "refs": [
+        "commit:9c728617cc31178027041b63939707e10277f10e"
+      ]
+    }
+  ],
+  "schemaVersion": 1
+}

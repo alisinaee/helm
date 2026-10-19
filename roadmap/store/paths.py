@@ -1,6 +1,7 @@
 """Locations of the config, state and log directories. Setting ROADMAP_HOME redirects every path under one root."""
 
 import os
+import sys
 import re
 
 from roadmap.errors import EXIT_USAGE, RoadmapError
@@ -31,6 +32,12 @@ def _home():
     return os.path.expanduser("~")
 
 
+def _xdg_state():
+    """$XDG_STATE_HOME, else ~/.local/state (Linux and other non-macOS systems)."""
+    value = os.environ.get("XDG_STATE_HOME", "").strip()
+    return value if value and os.path.isabs(value) else os.path.join(_home(), ".local", "state")
+
+
 def config_dir():
     """Config directory (config.json, phone.token)."""
     root = _root()
@@ -44,7 +51,9 @@ def state_dir():
     root = _root()
     if root is not None:
         return os.path.join(root, "state")
-    return os.path.join(_home(), "Library", "Application Support", "roadmap-board")
+    if sys.platform == "darwin":
+        return os.path.join(_home(), "Library", "Application Support", "roadmap-board")
+    return os.path.join(_xdg_state(), "roadmap-board")
 
 
 def logs_dir():
@@ -52,7 +61,9 @@ def logs_dir():
     root = _root()
     if root is not None:
         return os.path.join(root, "logs")
-    return os.path.join(_home(), "Library", "Logs", "roadmap-board")
+    if sys.platform == "darwin":
+        return os.path.join(_home(), "Library", "Logs", "roadmap-board")
+    return os.path.join(_xdg_state(), "roadmap-board", "logs")
 
 
 def config_file():
