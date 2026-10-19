@@ -186,3 +186,87 @@ body::before {
     background: var(--surface-1);
   }
 }
+
+/* Existing controls in the same language: pills, glass fills, a soft inner edge, press feedback.
+   Same elements and behaviour as before; only the look changes. */
+.btn,
+.tb-view-select,
+select {
+  border-radius: 999px;
+  background: var(--glass-fill);
+  border-color: var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-hi);
+  transition: background var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
+}
+.btn:hover,
+.tb-view-select:hover,
+select:hover {
+  background: var(--glass-fill-strong);
+}
+.btn:active,
+.tb-view-select:active {
+  transform: scale(0.97);
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--m-sonnet));
+  color: var(--on-accent);
+  border-color: transparent;
+  box-shadow: inset 0 1px 0 var(--glass-hi), 0 4px 14px var(--glass-ink-soft);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--accent), var(--m-sonnet));
+  filter: brightness(1.06);
+}
+.btn[aria-pressed="true"] {
+  background: var(--glass-fill-strong);
+  border-color: var(--accent);
+}
+
+/* Segmented control: one pill with a glass thumb under the active item. */
+.tb-seg {
+  border-radius: 999px;
+  background: var(--glass-fill);
+  border-color: var(--glass-edge);
+  padding: 2px;
+  gap: 2px;
+}
+.tb-seg-btn {
+  border-radius: 999px;
+  background: transparent;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.tb-seg-btn + .tb-seg-btn { border-left: 0; }
+.tb-seg-btn[aria-pressed="true"] {
+  background: var(--glass-fill-strong);
+  color: var(--text-1);
+  box-shadow: inset 0 1px 0 var(--glass-hi), 0 1px 3px var(--glass-ink-soft);
+}
+
+/* Search field: a wide pill with a glass well. */
+.tb-search {
+  border-radius: 999px;
+  background: var(--glass-fill);
+  border-color: var(--glass-edge);
+  box-shadow: inset 0 1px 2px var(--glass-ink-soft);
+  padding: 0 var(--sp-3);
+}
+.tb-search:focus {
+  background: var(--glass-fill-strong);
+}
+
+/* Chips and tags: small pills. */
+.chip,
+.tb-chip,
+.tk-chip {
+  border-radius: 999px;
+  background: var(--glass-fill);
+  border-color: var(--glass-edge);
+}
+
+/* Nav and rows: the selected item gets the glass thumb. */
+.nav-i[aria-current="page"],
+.bnav-i[aria-current="page"],
+.p-row[aria-current="page"] {
+  background: var(--glass-fill-strong);
+  box-shadow: inset 0 1px 0 var(--glass-hi), 0 1px 3px var(--glass-ink-soft);
+}
