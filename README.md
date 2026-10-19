@@ -353,6 +353,7 @@ To remove roadmap's own state, delete these folders by hand. Nothing else on you
 
 ## Development
 
+New to the team? Start with [docs/COLLABORATION.md](docs/COLLABORATION.md) (access, setup, workflow).
 See [CONTRIBUTING.md](CONTRIBUTING.md) for `make check`, the layering rule, change fragments and the definition of
 done. The design is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The HTTP contract is in
 [docs/API.md](docs/API.md), and the threat model is in [docs/SECURITY.md](docs/SECURITY.md).

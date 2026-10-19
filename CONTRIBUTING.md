@@ -1,6 +1,7 @@
 # Contributing
 
 Thanks for working on Helm. This file says how to check a change, what the rules are, and what "done" means.
+New to the team: [docs/COLLABORATION.md](docs/COLLABORATION.md) covers access, setup and the pull request flow.
 The design is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The HTTP contract is in [docs/API.md](docs/API.md).
 
 ## Setup
@@ -9,7 +10,7 @@ You need macOS, Python 3.9 or newer, and `make`. Nothing else. There are no pack
 network access is needed for the checks.
 
 ```sh
-git clone <this repo> ~/Works/helm
+git clone https://github.com/alisinaee/helm.git ~/Works/helm
 cd ~/Works/helm
 make check
 ```
