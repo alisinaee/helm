@@ -250,11 +250,16 @@ function panelToggleHtml(vm) {
 }
 
 // More menu (native details): the theme cycle lives here. Cmd+K and m stay keys and palette commands.
+function themeIcon(theme) {
+  const id = theme === "light" ? "i-sun" : theme === "auto" ? "i-theme" : "i-moon";
+  return '<svg class="ico theme-ico" data-state="' + esc(theme) + '" aria-hidden="true" focusable="false"><use href="/icons.svg#' + id + '"></use></svg>';
+}
+
 function moreHtml(theme) {
   return '<details class="top-more"><summary class="btn" aria-label="More" title="More">' +
     '<svg class="ico" aria-hidden="true" focusable="false"><use href="/icons.svg#i-more"></use></svg></summary>' +
     '<div class="top-menu"><button type="button" class="btn" data-action="cycle-theme" data-focus="theme"' +
-    ' aria-label="Change theme">Theme: ' + esc(themeLabel(theme)) + "</button></div></details>";
+    ' aria-label="Change theme" title="Change theme">' + themeIcon(theme) + "Theme: " + esc(themeLabel(theme)) + "</button></div></details>";
 }
 
 export function topbarView(vm) {
