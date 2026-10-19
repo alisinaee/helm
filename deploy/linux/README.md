@@ -20,6 +20,9 @@ browser --https--> helm.mjplabs.ir (Cloudflare DNS, A 84.241.9.114, not proxied)
     (`https://helm.mjplabs.ir`). Any other Host still gets 421.
 - `npm-helm.conf`: the server block appended to NPM's `/data/nginx/custom/http.conf` (hand-written, not in the NPM
   UI, like studio.mjplabs.ir). Reload with `docker exec npm nginx -t && docker exec npm nginx -s reload`.
+- Firewall (ufw): the NPM container reaches the host from the docker range, so 8780 must be open to it (else
+  NPM answers 504 after the Authelia login):
+  `sudo ufw allow from 172.16.0.0/12 to any port 8780 proto tcp comment 'Helm from docker (NPM)'`
 - Authelia: `helm.mjplabs.ir` is in the `one_factor` domain list of `/srv/docker/authelia/config/configuration.yml`
   (default policy is deny). Restart with `docker restart authelia` after changes.
 
