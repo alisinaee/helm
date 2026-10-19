@@ -19,6 +19,7 @@ sign-in URL to the page, and types the code the person pastes back. Nothing here
 a log line or an error text. macOS keeps the login in the keychain, so the switch is Linux only there.
 """
 
+import hashlib
 import json
 import os
 import pty
@@ -30,6 +31,8 @@ import sys
 import tempfile
 import threading
 import time
+import urllib.error
+import urllib.request
 
 from roadmap.errors import EXIT_CONFLICT, EXIT_ERROR, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.log import get_logger
@@ -53,7 +56,11 @@ _CODE_RE = re.compile(r"[A-Za-z0-9#_.~-]{8,512}")
 _ANSI_RE = re.compile(r"\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b\[[0-9;?]*[A-Za-z]")
 _SLUG_RE = re.compile(r"[^a-z0-9-]+")
 
+PROFILE_URL = "https://api.anthropic.com/api/oauth/profile"
+PROFILE_TIMEOUT_S = 10
+
 _lock = threading.RLock()
+_owners = {}   # sha256(access token)[:16] -> owner dict (in memory only)
 _logins = {}   # key -> {"pid", "fd", "folder", "accountId", "label", "url", "started", "out"}
 
 
@@ -128,6 +135,60 @@ def _oauth(folder=None):
     data = _read_json(credentials_path(folder))
     block = data.get(OAUTH_KEY) if data else None
     return block if isinstance(block, dict) and block.get("accessToken") else None
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _fetch_profile(token):
+    """Who an access token belongs to, from Anthropic: {"accountUuid", "emailAddress", "organizationUuid",
+    "organizationName"}. The token goes only to api.anthropic.com over HTTPS. None under unittest (tests patch
+    FETCH_PROFILE) and on any failure."""
+    if "unittest" in sys.modules:
+        return None
+    req = urllib.request.Request(PROFILE_URL, headers={
+        "Authorization": "Bearer " + token, "anthropic-beta": "oauth-2025-04-20", "User-Agent": "roadmap-dashboard",
+        "Accept": "application/json"})
+    try:
+        with urllib.request.build_opener(_NoRedirect).open(req, timeout=PROFILE_TIMEOUT_S) as resp:
+            data = json.loads(resp.read(MAX_BYTES).decode("utf-8"))
+    except (urllib.error.URLError, OSError, ValueError):
+        return None
+    account = data.get("account") if isinstance(data, dict) else None
+    org = data.get("organization") if isinstance(data, dict) else None
+    if not isinstance(account, dict) or not account.get("uuid"):
+        return None
+    org = org if isinstance(org, dict) else {}
+    return {"accountUuid": account["uuid"], "emailAddress": account.get("email") or account.get("email_address"),
+            "organizationUuid": org.get("uuid"), "organizationName": org.get("name")}
+
+
+FETCH_PROFILE = _fetch_profile
+
+
+def token_owner(folder=None, fetch=True):
+    """The owner (see _fetch_profile) of a config folder's access token, or None when unknown. Cached per token;
+    fetch=False answers from the cache only (no network)."""
+    oauth = _oauth(folder)
+    if not oauth:
+        return None
+    key = hashlib.sha256(oauth["accessToken"].encode("utf-8")).hexdigest()[:16]
+    if key not in _owners:
+        if not fetch:
+            return None
+        owner = FETCH_PROFILE(oauth["accessToken"])
+        if owner is None:
+            return None
+        _owners[key] = owner
+    return _owners[key]
+
+
+def token_mismatch(folder=None, fetch=True):
+    """True when a folder's token belongs to another account than its .claude.json says (a mixed-up login)."""
+    owner, uuid = token_owner(folder, fetch), account_uuid(folder)
+    return bool(owner and uuid and owner["accountUuid"] != uuid)
 
 
 def identity(folder=None):
@@ -218,7 +279,13 @@ def save_live(cfg=None, src="cli", data_dir=None):
     block, oauth = oauth_account(None), _oauth(None)
     if not block or not oauth:
         return None
+    owner = token_owner(None)
+    if owner and owner["accountUuid"] != block["accountUuid"]:
+        # ~/.claude.json names one account but the token is another's: file the token under its real owner.
+        block = dict(block, **{k: v for k, v in owner.items() if v})
     folder = folder_of_uuid(block["accountUuid"], cfg)
+    if folder is not None and oauth_account(folder):
+        block = dict(oauth_account(folder), accountUuid=block["accountUuid"])
     if folder is None:
         email = block.get("emailAddress") if isinstance(block.get("emailAddress"), str) else ""
         taken = {a["id"] for a in usage_accounts.accounts(cfg)}
@@ -246,7 +313,10 @@ def use_in_claude(account_id, src="cli", data_dir=None):
         block, oauth = oauth_account(folder), _oauth(folder)
         if not block or not oauth:
             raise RoadmapError("conflict", "'%s' is not logged in: log in first" % account_id, EXIT_CONFLICT)
-        if block["accountUuid"] == live_uuid():
+        if token_mismatch(folder):
+            raise RoadmapError("conflict", "'%s' holds another account's token: use Log in on that row first"
+                               % account_id, EXIT_CONFLICT)
+        if block["accountUuid"] == live_uuid() and not token_mismatch(None):
             return usage_accounts.list_status()
         save_live(cfg, src=src, data_dir=data_dir)
         os.makedirs(os.path.dirname(credentials_path(None)), mode=0o700, exist_ok=True)
@@ -373,7 +443,7 @@ def login_start(account_id=None, label=None, spawn=None, now_s=None):
         env.pop("DISPLAY", None)
         pid, fd = spawn([_claude(), "auth", "login"], env)
         entry = {"pid": pid, "fd": fd, "folder": folder, "accountId": account_id, "label": name, "key": key,
-                 "url": None, "started": now, "out": ""}
+                 "url": None, "started": now, "out": "", "liveBefore": _raw(credentials_path(None)) if folder else None}
         _logins[key] = entry
         timer = threading.Timer(LOGIN_TTL_S, _expire, args=(key, pid))
         timer.daemon = True
@@ -416,6 +486,7 @@ def login_code(key, code, src="ui", data_dir=None):
         except OSError:
             pass
         folder = entry["folder"]
+        _keep_live(entry)
         if status != 0 or not oauth_account(folder) or not _oauth(folder):
             raise RoadmapError("error", "the login was not accepted (wrong or old code): start it again", EXIT_ERROR)
         cfg = config_store.load()
@@ -436,6 +507,33 @@ def login_code(key, code, src="ui", data_dir=None):
     result = usage_accounts.list_status()
     result["loggedIn"] = account_id
     return result
+
+
+def _raw(path):
+    try:
+        with open(path, "rb") as handle:
+            return handle.read(MAX_BYTES)
+    except OSError:
+        return None
+
+
+def _keep_live(entry):
+    """A login for another folder must not change the login plain claude uses. If ~/.claude/.credentials.json changed
+    while it ran, put the old bytes back."""
+    before = entry.get("liveBefore")
+    path = credentials_path(None)
+    if before is None or _raw(path) == before:
+        return
+    try:
+        mode = stat.S_IMODE(os.stat(path).st_mode)
+        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".helm-", suffix=".tmp")
+        os.fchmod(fd, mode)
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(before)
+        os.replace(tmp, path)
+        log.warning("claude auth login changed ~/.claude/.credentials.json; restored it")
+    except OSError as exc:
+        log.warning("could not restore ~/.claude/.credentials.json after a login: %s", type(exc).__name__)
 
 
 def login_cancel(key):

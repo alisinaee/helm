@@ -453,12 +453,13 @@ export function acctPanelHtml() {
         acctButton(a.id, "connect", "Connect", a.label)) +
       (a.active ? "" : acctButton(a.id, "remove", "Remove", a.label)) + "</div></details>";
     const linux = !!acct.data.switchable;
-    const signedOut = who.loggedIn === false || a.status === "signed_out" || a.status === "expired";
+    const signedOut = who.loggedIn === false || a.status === "signed_out" || a.status === "expired" ||
+      a.status === "wrong_login";
     const primary = linux ? (a.enabled && signedOut ? acctButton(a.id, "login", "Log in", a.label) :
       a.canUse ? acctButton(a.id, "use", "Switch", "Claude Code to " + a.label) : "<span></span>") :
       (a.active ? "<span></span>" : acctButton(a.id, "switch", "Use", a.label));
-    const btns = primary + (linux ? more.replace("</div></details>", (a.active ? "" :
-      acctButton(a.id, "switch", "Show on board", a.label)) + "</div></details>") : more);
+    // Linux: the board follows the login in use, so Switch is the only choice; no separate "show on board".
+    const btns = primary + more;
     const stCls = a.status === "ok" ? "tk-st-ok" : (a.status === "idle" || a.status === "unknown" ||
       a.status === "disconnected" ? "" : "tk-st-bad");
     return '<li class="tk-acct-row' + (a.active ? " tk-acct-on" : "") + '">' +

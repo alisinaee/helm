@@ -38,6 +38,8 @@ class SlotsCase(HomeCase):
         patcher = mock.patch.object(sys, "platform", "linux")
         patcher.start()
         self.addCleanup(patcher.stop)
+        claude_slots._owners.clear()
+        self.addCleanup(claude_slots._owners.clear)
         self.home = os.environ["HOME"]
         os.makedirs(self.home)
         login(os.path.join(self.home, ".claude", ".credentials.json"), os.path.join(self.home, ".claude.json"),
@@ -133,9 +135,65 @@ class ReadAllTest(SlotsCase):
         live["claudeAiOauth"]["accessToken"] = "tok-b-fresh"
         write(os.path.join(self.home, ".claude", ".credentials.json"), live)
         seen = []
+        # the board follows the default login, which is "work" now: work is not fetched a second time
+        usage_accounts.note_reading("default", {"weeklyPercent": 33})
+        usage.sync_others(fetch=lambda t: seen.append(t) or {})
+        self.assertNotIn("tok-b-fresh", seen)
+        self.assertNotIn("tok-b", seen)
+        self.assertEqual(usage_accounts.last_reading("work")["weeklyPercent"], 33)
+        # with the board on another account, the in-use login is read from ~/.claude (its freshest copy)
+        usage_accounts.switch("alice")
+        seen.clear()
         usage.sync_others(fetch=lambda t: seen.append(t) or {})
         self.assertIn("tok-b-fresh", seen)
         self.assertNotIn("tok-b", seen)
+
+    def test_in_use_account_is_listed_once(self):
+        claude_slots.use_in_claude("work")
+        usage_accounts.note_reading("default", {"weeklyPercent": 41})
+        rows = usage_accounts.list_status()["accounts"]
+        self.assertNotIn("default", [r["id"] for r in rows])
+        work = {r["id"]: r for r in rows}["work"]
+        self.assertTrue(work["inClaude"])
+        self.assertTrue(work["active"])
+        self.assertEqual(work["reading"]["weeklyPercent"], 41)
+
+
+class MismatchTest(SlotsCase):
+    def owners(self, table):
+        patcher = mock.patch.object(claude_slots, "FETCH_PROFILE", lambda token: table.get(token))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        claude_slots._owners.clear()
+
+    def test_switch_refuses_a_folder_holding_another_accounts_token(self):
+        self.owners({"tok-b": {"accountUuid": "uuid-a", "emailAddress": "alice@example.com"}})
+        with self.assertRaises(RoadmapError):
+            claude_slots.use_in_claude("work")
+        self.assertEqual(self.live_creds()["claudeAiOauth"]["accessToken"], "tok-a")
+
+    def test_live_token_is_saved_under_its_real_owner(self):
+        # ~/.claude.json says alice, but the live token is bob's (work)
+        self.owners({"tok-a": {"accountUuid": "uuid-b", "emailAddress": "bob@example.com"}})
+        claude_slots.save_live()
+        self.assertEqual(read(os.path.join(self.work, ".credentials.json"))["claudeAiOauth"]["accessToken"], "tok-a")
+        self.assertEqual(read(os.path.join(self.work, ".claude.json"))["oauthAccount"]["accountUuid"], "uuid-b")
+        self.assertFalse(os.path.exists(os.path.join(self.home, ".claude-alice")))
+
+    def test_sync_marks_a_mixed_up_folder(self):
+        self.owners({"tok-b": {"accountUuid": "uuid-a"}})
+        payload = {"five_hour": {"utilization": 1, "resets_at": None}, "seven_day": {"utilization": 2, "resets_at": None}}
+        out = usage.sync_others(fetch=lambda t: payload)
+        self.assertEqual(out, {"work": "mismatch"})
+        row = {r["id"]: r for r in usage_accounts.list_status()["accounts"]}["work"]
+        self.assertEqual(row["status"], "wrong_login")
+
+    def test_login_restores_the_live_file_if_it_changed(self):
+        path = os.path.join(self.home, ".claude", ".credentials.json")
+        entry = {"liveBefore": open(path, "rb").read()}
+        write(path, {"claudeAiOauth": {"accessToken": "intruder"}})
+        claude_slots._keep_live(entry)
+        self.assertEqual(self.live_creds()["claudeAiOauth"]["accessToken"], "tok-a")
 
 
 class WebLoginTest(SlotsCase):

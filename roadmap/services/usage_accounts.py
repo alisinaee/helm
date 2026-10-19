@@ -68,7 +68,8 @@ ST_ERROR = "error"                # network or endpoint failure
 ST_DISCONNECTED = "disconnected"  # Helm does not read this login (the person disconnected it)
 ST_IDLE = "idle"                  # connected but not active: not read live, the last reading is kept
 ST_UNKNOWN = "unknown"            # active, never synced yet
-_CODE_STATUS = {"no_item": ST_SIGNED_OUT, "no_token": ST_SIGNED_OUT, "expired": ST_EXPIRED, "denied": ST_DENIED,
+ST_WRONG = "wrong_login"           # the stored token belongs to another account: log in again
+_CODE_STATUS = {"mismatch": ST_WRONG, "no_item": ST_SIGNED_OUT, "no_token": ST_SIGNED_OUT, "expired": ST_EXPIRED, "denied": ST_DENIED,
                 "net": ST_ERROR, "other": ST_ERROR}
 _EMAIL = re.compile(r"([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
@@ -479,9 +480,31 @@ def list_status(cfg=None, full_email=True, now=None):
     cfg = cfg if cfg is not None else config_store.load()
     state = _read_state()["accounts"]
     rows = [_row(a, cfg, state.get(a["id"]) or {}, full_email, now) for a in accounts(cfg)]
+    rows = _fold_live(rows)
     return {"active": active_id(cfg), "accounts": rows, "found": discover(cfg),
             "note": NOTE_SWITCH if _slots_supported() else NOTE_PLAIN,
             "switchable": _slots_supported()}
+
+
+def _fold_live(rows):
+    """Linux: the default row is the login plain claude uses, which is also one of the stored ~/.claude-<name>
+    accounts. Show that account once: the stored row stays (marked In use) and takes the default row's live
+    reading and status when the default row feeds the board; the default row is dropped. Nothing changes when no
+    stored account is the one in use."""
+    if not _slots_supported():
+        return rows
+    default = next((r for r in rows if r["source"] == "keychain" and not r["path"]), None)
+    stored = next((r for r in rows if r is not default and r["inClaude"]), None)
+    if default is None or stored is None:
+        return rows
+    if default["active"]:
+        for key in ("status", "reason", "statusAt", "reading"):
+            stored[key] = default[key]
+        stored["active"] = True
+    from roadmap.services import claude_slots
+    if claude_slots.token_mismatch(None, fetch=False):
+        stored["status"], stored["reason"] = ST_WRONG, "the login in use holds another account's token: Log in again"
+    return [r for r in rows if r is not default]
 
 
 # ---------------------------------------------------------------- changes

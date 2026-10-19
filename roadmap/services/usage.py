@@ -549,9 +549,26 @@ def sync_others(config=None, fetch=None, get_token=None):
     except Exception as exc:
         log.warning("other accounts not read: %s", type(exc).__name__)
         return out
+    default_active = usage_accounts.config_dir_of(next((a for a in usage_accounts.accounts(cfg)
+                                                         if a["id"] == active), {"source": "keychain"})) is None
     for account in rows:
         try:
             where = usage_accounts.read_location(account)
+            if where is None and default_active:
+                # The login in use is the active (default) one, read by sync_once a moment ago: reading it again
+                # only costs a request (the endpoint answers 429 to quick repeats). Keep that reading instead.
+                kept = usage_accounts.last_reading(active)
+                if kept:
+                    usage_accounts.note_reading(account["id"], kept)
+                    out[account["id"]] = "ok"
+                continue
+            folder = usage_accounts.config_dir_of(account)
+            if where is not None and folder and _wrong_login(folder):
+                # Checked before the usage read: it would only report the other account's numbers.
+                usage_accounts.note_failure(account["id"], "mismatch",
+                                            "this login holds another account's token: Log in again")
+                out[account["id"]] = "mismatch"
+                continue
             token = get_token or (read_keychain_token if where is None else
                                   functools.partial(read_keychain_token, allow_refresh=False, location=where))
             reading = collect(get_token=token, fetch=fetch or http_fetch)
@@ -567,12 +584,21 @@ def sync_others(config=None, fetch=None, get_token=None):
     return out
 
 
+def _wrong_login(folder):
+    try:
+        from roadmap.services import claude_slots
+        return claude_slots.supported() and claude_slots.token_mismatch(folder)
+    except Exception:
+        return False
+
+
 def sync_all(config=None, background=False):
     """sync_once for the board, then sync_others for the Account tab. The board's result (or its error) is kept."""
     try:
         return sync_once(config, background=background)
     finally:
         sync_others(config)
+        _wrong_login(None)  # look up who the login in use really is (cached per token) for the Account tab
 
 
 def _fallbacks(cfg, moment):
