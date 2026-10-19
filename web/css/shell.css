@@ -93,7 +93,8 @@
 .app[data-nav="mini"] .bnav-i .nav-l{position:static;width:auto;height:auto;clip:auto;overflow:hidden}
 .bnav-i .ico{stroke-width:2.2}
 .top{padding:0 var(--sp-3);gap:var(--sp-2)}
-.top-meters,.conn,.crumb-part,.crumb-sep{display:none}
+.top-meters,.conn,.crumb-part,.crumb-sep,.top-age,.top-tools>[data-action=help-open],.top-tools>.pill.is-wait{display:none}
+.top-tools{gap:var(--sp-1)}
 .main{padding:var(--sp-3) var(--sp-4) var(--sp-6)}
 .side{position:fixed;inset:0;width:100%;border-left:0}
 .toasts{right:var(--sp-3);bottom:calc(var(--h-bnav) + var(--sp-3))}

@@ -33,7 +33,7 @@
 .d-sec{display:grid;gap:var(--sp-2);padding-top:var(--sp-3);border-top:1px solid var(--track)}
 .d-h{font-size:var(--fs-12);font-weight:600;color:var(--text-2)}
 .d-list{display:grid;gap:var(--sp-1)}
-.d-list li{overflow-wrap:anywhere}
+.d-list li{overflow-wrap:anywhere;min-width:0}.d-sec>*{min-width:0}.d-list .chip{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .d-btns{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
 .d-form{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2)}
 .d-form label{flex:1 0 100%;font-size:var(--fs-12);color:var(--text-2)}
