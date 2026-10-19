@@ -205,7 +205,8 @@ class MigrateTests(unittest.TestCase):
         self.assertEqual(summary["checksums"]["tasks"]["rows"], 0)
         self.assertIsNone(summary["sources"]["tasks.json"])
 
-    @unittest.skipUnless(os.path.exists(os.path.join(REAL_DOCS, "tasks.json")), "no real docs/")
+    @unittest.skipUnless(os.path.exists(os.path.join(REAL_DOCS, "tasks.json")),
+                         "board data is local and git-ignored")
     def test_smoke_real_docs_read_only(self):
         real_before = _sha(os.path.join(REAL_DOCS, "tasks.json"))
         summary = migrate.migrate_project(self.path, REAL_DOCS)

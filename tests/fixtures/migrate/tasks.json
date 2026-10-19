@@ -1,0 +1,9 @@
+{"phases": [{"id": "P1", "name": "Example phase", "status": "doing"}, {"id": "R7", "name": "Example R7", "status": "doing"}],
+ "tasks": [
+  {"id": "P1.1", "phase": "P1", "title": "Example task one", "status": "done"},
+  {"id": "P1.2", "phase": "P1", "title": "Example task two", "status": "todo"},
+  {"id": "R7.1", "phase": "R7", "title": "Example R7 one", "status": "done"},
+  {"id": "R7.2", "phase": "R7", "title": "Example R7 two", "status": "done"},
+  {"id": "R7.3", "phase": "R7", "title": "Example R7 three", "status": "todo"},
+  {"id": "R7.4", "phase": "R7", "title": "Example R7 four", "status": "doing"}
+ ]}

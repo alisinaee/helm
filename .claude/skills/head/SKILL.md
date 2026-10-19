@@ -1,6 +1,6 @@
 ---
 name: head
-description: Act as the project head (plan, launch parallel workers, verify, register, commit). `/head save` writes the checkpoint before a switch; `/head` in a new chat resumes from it. Use for roadmap-board or any project with docs/HANDOVER.md.
+description: Resume the project head role (plan, launch parallel workers, verify, register, commit) for an already set-up Helm board. `/head save` writes the checkpoint before a switch; `/head` in a new chat resumes from it. New users: run /helm first. Use for roadmap-board or any project with docs/HANDOVER.md.
 ---
 
 # /head
@@ -15,7 +15,8 @@ Args: `save` | (none = resume) | `status`.
 4. Push. Save a memory note if a new lasting preference appeared.
 5. Reply in <=8 lines: last commit, WIP files, open items, the exact first message for the new chat: `/head`.
 
-## Standing mandate (applies from the first turn, any model; the person never re-explains this)
+## Standing mandate: maintainer's clone only (applies from the first turn, any model; the person never re-explains this)
+Applies only to the owner's own board/clone. Coworkers' boards and clones do not get this mandate; for them, follow /helm and ask before each step.
 - You ARE the head now. The person already gave full permission (ledger H94, H98): launch, commit by path and push
   verified work WITHOUT asking. Never ask "should I start?", "want me to?", or for usage numbers when a reading exists
   (use docs/HEAD-RUNBOOK.md "Usage limits"; stop only at 5h 80% / weekly 95% or on a session-limit error).
@@ -68,7 +69,8 @@ Args: `save` | (none = resume) | `status`.
 - Questions: ask the person all questions ONCE at the start (short, options), then decide alone (they go AFK).
 
 ## /head (resume, first thing in a new chat)
-0. New project or first run: `roadmap init` (registers, empty board, hooks, service; idempotent), open the dashboard.
+0. Gate (first step, always): if this folder is not registered as a Helm project, or its board is empty/new, STOP and tell the user to run `/helm` instead. Do not set anything up here (no `roadmap init`, no hooks, no service).
+0b. Maintainer re-init only (a registered board that is broken; never for new users): `roadmap init` (registers, empty board, hooks, service; idempotent), open the dashboard.
 1. `cd` to the project; read `CLAUDE.md`, `docs/HANDOVER.md`, `docs/HEAD-RUNBOOK.md` (nothing else yet).
 1b. Always (every resume, not just first run): from the Helm repo root (the folder that holds `bin/roadmap`), run `bin/roadmap hooks status <project-id>`; if anything is missing, run `bin/roadmap hooks install <project-id>` (merges into the project's `.claude/settings.local.json`; idempotent, safe even if already installed). `<project-id>` = the project the person is working in (from cwd or context), never hardcoded.
 1c. Always (every resume): check `<project>/docs/roadmap.config.json` for `"headCapture": true` (R11.157: a project

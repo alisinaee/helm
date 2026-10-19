@@ -24,6 +24,8 @@ class SystemOverridesSeed(unittest.TestCase):
         self.assertNotEqual(out["source"], "baseline")
         self.assertFalse([w for w in out["warnings"] if w.startswith("system.json")], out["warnings"])
 
+    @unittest.skipUnless(os.path.exists(os.path.join(REPO, "docs", "tasks.json")),
+                         "board data is local and git-ignored")
     def test_bound_tasks_exist_on_the_board(self):
         with open(os.path.join(REPO, "docs", "tasks.json"), encoding="utf-8") as fh:
             known = {t["id"] for t in json.load(fh)["tasks"]}

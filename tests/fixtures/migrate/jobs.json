@@ -1,0 +1,4 @@
+{"jobs": [
+  {"id": "j1", "title": "haiku: example job", "model": "haiku", "task": "P1.1", "status": "done", "started": "2026-01-01T10:00:00+00:00", "ended": "2026-01-01T10:05:00+00:00", "tokensK": 10},
+  {"id": "j2", "title": "sonnet: example job", "model": "sonnet", "task": "R7.3", "status": "running", "started": "2026-01-02T10:00:00+00:00", "tokensK": 5}
+]}

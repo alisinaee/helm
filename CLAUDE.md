@@ -1,5 +1,7 @@
 # CLAUDE.md for Helm (formerly roadmap-board; repo alisinaee/helm, dir ~/Works/helm; CLI `bin/helm` = `bin/roadmap`) (read docs/HANDOVER.md first)
 
+This file is the maintainer's working notes. Coworkers start with docs/COLLABORATION.md and the /helm skill. Board data under docs/ is local and git-ignored.
+
 You are continuing a project the person has been building across a very long chat. docs/HANDOVER.md has every feature, rule, decision, state and open item. Key rules in short:
 - Answer short and spartan (the person has limited tokens and likes only the answer). Top-priority new feature: the HEAD section (docs/HEAD-SECTION-REQUEST.md, R7.31).
 - NEW CHAT / NEW ACCOUNT: the person sends `/head` (skill in ~/.claude/skills/head). Then read docs/HANDOVER.md section 0 (state, WIP, queue), docs/HEAD-RUNBOOK.md, docs/FINISH-PLAN.md and act as the head: parallel workers on disjoint files, verify, register jobs (`bin/roadmap job start|done`), commit, push. FIRST ask the person for the current 5-hour and weekly usage % (hard stops: 5h 90%, weekly 95%; usage is not automatic here).

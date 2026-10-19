@@ -7,3 +7,24 @@ build/
 docs/reviews/agy-out/
 docs/head-spool.jsonl
 docs/roadmap.db*
+
+# Local board data (never commit; a fresh clone starts with an empty board)
+docs/tasks.json
+docs/jobs.json
+docs/head.jsonl
+docs/head-text.jsonl
+docs/head-gate.json
+docs/head-panel.jsonl
+docs/head-panel-seen.json
+docs/activity.jsonl
+docs/undo.jsonl
+docs/budget.json
+docs/autonomy.json
+docs/questions.json
+docs/features.json
+docs/rules-proposals.json
+docs/rules.txt
+docs/agents-map.json
+docs/work-map-R7.json
+docs/roadmap.config.json
+docs/facts/

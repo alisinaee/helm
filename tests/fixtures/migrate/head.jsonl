@@ -1,0 +1,2 @@
+{"t": "ask", "id": "h1", "ts": "2026-01-01T09:00:00Z", "kind": "ask", "text": "example question", "link": ["task:R7.1", "task:R7.2", "task:P1.1"]}
+{"t": "ask", "id": "h2", "ts": "2026-01-01T09:30:00Z", "kind": "ask", "text": "example question two", "link": ["task:R7.3"]}
