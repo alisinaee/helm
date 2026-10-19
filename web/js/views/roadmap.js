@@ -92,7 +92,7 @@ function cardHtml(project, snap, task, pos, count, doing) {
     esc(task.id + " " + task.title + ", " + word + (blocked ? ", blocked" : "")) + '">' +
     '<p class="rc-top"><span class="rc-glyph" aria-hidden="true">' + esc(glyph) + '</span>' +
     '<span class="rc-id">' + id + '</span><span class="rc-word">' + esc(word) + "</span></p>" +
-    '<p class="rc-title">' + esc(task.title) + "</p>" +
+    '<p class="rc-title" title="' + esc(task.title) + '">' + esc(task.title) + "</p>" +
     '<p class="rc-meta">' + (task.model ? modelChip(task.model) : "") +
     '<span class="num">' + esc(sizeText(task.tokensK)) + "</span>" + badges + "</p>" +
     '<p class="rc-move row-grid"><button type="button" class="btn btn-small" data-action="plan-move" data-task="' + id +
@@ -120,7 +120,7 @@ function laneHtml(vm, snap, phase, doing) {
   const cards = shown.map(function (t, i) {
     return cardHtml(vm.route.id, snap, t, i, tasks.length, doing);
   }).join("");
-  const more = tasks.length > LONG_LANE ? '<li class="lane-empty"><button type="button" class="btn btn-small"' +
+  const more = tasks.length > LONG_LANE ? '<li class="lane-empty lane-more"><button type="button" class="btn btn-small"' +
     ' data-action="toggle-item" data-item="more:' + id + '" aria-controls="lane-' + id + '-body" aria-expanded="' +
     all + '">' +
     (all ? "Show first " + SHOW_FIRST : "Show " + fmtCount(tasks.length - SHOW_FIRST) + " more") +
@@ -134,16 +134,17 @@ function laneHtml(vm, snap, phase, doing) {
     : '<button type="button" class="btn btn-primary btn-small" data-action="phase-approve" data-phase="' + id +
       '" aria-label="Approve ' + id + " " + esc(phase.name) + '">Approve</button>';
   const stats = '<div class="lane-stats"><span class="lane-state">' + esc(STATE_WORD[phase.state] || phase.state) +
-    "</span>" + '<span class="num">' + esc(fmtCount(phase.done) + "/" + fmtCount(phase.total)) + " done</span>" +
-    '<div class="lane-meter">' + meterHtml(pct, phase.state === "done" ? "success" : "accent") + "</div>" +
-    '<span class="num">' + esc(fmtCount(tasks.length)) + " open</span>" +
+    "</span>" + '<div class="lane-prog"><span class="num">' +
+    esc(fmtCount(phase.done) + "/" + fmtCount(phase.total)) + " done</span>" +
+    '<div class="lane-meter">' + meterHtml(pct, phase.state === "done" ? "success" : "accent") + "</div></div>" +
+    '<span class="num lane-open">' + esc(fmtCount(tasks.length)) + " open</span>" +
     (nowDoing ? chipHtml("▶ " + fmtCount(nowDoing) + " doing", "success") : "") + "</div>";
   const body = (cards + more) || '<li class="lane-empty">No open tasks in this phase.</li>';
   return '<li class="lane"><div class="lane-head"><button type="button" class="lane-toggle" aria-expanded="' + open +
     '" aria-controls="lane-' + id + '-body" data-action="toggle-item" data-item="lane:' + id +
     '" data-focus="item-lane:' + id + '"><span class="lane-caret" aria-hidden="true">' + (open ? "▾" : "▸") +
-    '</span><span class="lane-id">' + id + '</span><span class="lane-name">' + esc(phase.name) + "</span></button>" +
-    '<div class="lane-act row-grid">' + act + phaseCopyHtml(vm.route.id, phase) + "</div>" + stats + "</div>" +
+    '</span><span class="lane-id">' + id + '</span><span class="lane-name" title="' + esc(phase.name) + '">' + esc(phase.name) + "</span></button>" +
+    '<div class="lane-act row-grid"><span class="lane-appr">' + act + "</span>" + phaseCopyHtml(vm.route.id, phase) + "</div>" + stats + "</div>" +
     '<ol class="lane-cards" id="lane-' + id + '-body" data-lane="' + id + '" aria-label="Tasks in ' + id + '"' +
     (open ? "" : " hidden") + ">" + body + "</ol></li>";
 }
