@@ -460,13 +460,14 @@ border: 0; border-radius: var(--r-card); color: var(--text-2); cursor: pointer; 
 .ag-foot-btns { display: flex; gap: var(--sp-2); }
 .row-grid.rg-head { display: none; }
 @media (min-width: 640px) { .row-grid.rg-head { display: grid; } }
+/* Phone: line 1 = lead, title, action; line 2 = model, task, effort, elapsed, tokens (wraps, tokens right). */
 @media (max-width: 639px) {
-.row-grid.rg-agent { grid-template-columns: 1.5rem auto minmax(0, 1fr) auto auto 1.75rem; row-gap: var(--sp-1); }
+.row-grid.rg-agent { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-3); }
 .row-grid.rg-head { display: none; }
-.rg-agent>:nth-child(1) { grid-column: 1; grid-row: 1 } .rg-agent>:nth-child(2) { grid-column: 2; grid-row: 1 }
-.rg-agent>:nth-child(3) { grid-column: 3 / 6; grid-row: 1 } .rg-agent>:nth-child(8) { grid-column: 6; grid-row: 1 }
-.rg-agent>:nth-child(4) { grid-column: 2; grid-row: 2 } .rg-agent>:nth-child(5) { grid-column: 3; grid-row: 2 }
-.rg-agent>:nth-child(6) { grid-column: 4; grid-row: 2 } .rg-agent>:nth-child(7) { grid-column: 5; grid-row: 2 }
+.rg-agent>:nth-child(1) { order: 0; flex: none; width: 1.5rem } .rg-agent>:nth-child(3) { order: 1; flex: 1 1 calc(100% - 6rem) }
+.rg-agent>:nth-child(8) { order: 2; flex: none }
+.row-grid.rg-agent>:nth-child(n+2):nth-child(-n+7):not(:nth-child(3)) { order: 3; flex: none; display: inline-flex; align-items: baseline; gap: 4px; max-width: 100% }
+.rg-agent>:nth-child(2) { margin-left: calc(1.5rem + var(--sp-3)) } .rg-agent>:nth-child(7) { margin-left: auto }
 .rg-agent>:nth-child(n+5):nth-child(-n+7)::before { color: var(--text-3); font-size: var(--fs-11) }
 .rg-agent>:nth-child(5)::before { content: "Effort " }
 .rg-agent>:nth-child(6)::before { content: "Elapsed " }

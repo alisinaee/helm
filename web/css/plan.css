@@ -29,3 +29,4 @@
 /* Work > Planner: linked and orphan rows on the Board/List/Tree grid */
 .wk .hd-link{width:100%;display:grid;grid-template-columns:4.5rem 6rem minmax(0,1fr) 6.5rem;column-gap:var(--sp-2);align-items:center}
 .wk .hd-link>.btn{width:100%}
+@media (max-width:599px){.wk .hd-link{grid-template-columns:auto auto minmax(0,1fr) 6rem;row-gap:var(--sp-1);padding:var(--sp-1) 0;border-bottom:1px solid var(--track)}.wk .hd-link>.hd-lbl{grid-column:1/-1;grid-row:2}.wk .hd-link>.btn{grid-column:4;grid-row:1}}

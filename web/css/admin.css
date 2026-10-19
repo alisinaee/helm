@@ -36,4 +36,6 @@
 .lim-select, .lim-num, .lim-text, .rule-input, .step { min-height: 44px; font-size: var(--fs-15) }
 .lim-range { width: 100%; }
 .rule-text { white-space: normal; }
+.rule-row { grid-template-columns: minmax(0, 1fr) auto 5.5rem var(--ref-col); row-gap: var(--sp-1) }
+.rule-row > .rule-main { grid-column: 1 / -1; white-space: normal; align-items: flex-start }
 }
