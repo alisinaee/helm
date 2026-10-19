@@ -792,7 +792,9 @@ def run_loop(stop_event, config=None, sync=None, wait=None):
     Failures are logged with the plain reason only."""
     cfg = _config(config)
     interval = _interval(cfg)
-    run_sync = sync if sync is not None else (lambda: sync_once(cfg, background=True))
+    # With no injected config, read it fresh each round: the active account can change while the service runs.
+    run_sync = sync if sync is not None else (lambda: sync_once(config if config is not None else None,
+                                                                background=True))
     pause = wait if wait is not None else stop_event.wait
     failures = 0
     while not pause(usage_wait_s(failures, interval)):

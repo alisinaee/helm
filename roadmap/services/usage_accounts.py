@@ -399,13 +399,40 @@ def logout_command(config_dir=None):
     return prefix + "claude auth logout"
 
 
+def discover(cfg=None, home=None):
+    """Logged-in ~/.claude-* folders Helm does not list yet (a login done in a terminal). Only checks that the
+    folder's .claude.json has an oauthAccount entry; no token or e-mail is read or returned."""
+    cfg = cfg if cfg is not None else config_store.load()
+    home = home or os.path.expanduser("~")
+    known = {a.get("path") for a in accounts(cfg) if a.get("path")}
+    ids = {a["id"] for a in accounts(cfg)}
+    found = []
+    try:
+        names = sorted(os.listdir(home))
+    except OSError:
+        return found
+    for name in names:
+        slug = name[len(".claude-"):] if name.startswith(".claude-") else ""
+        full = os.path.join(home, name)
+        if not slug or not paths.valid_id(slug) or slug in ids or full in known or not os.path.isdir(full):
+            continue
+        try:
+            with open(os.path.join(full, ".claude.json"), encoding="utf-8") as fh:
+                logged = isinstance(json.load(fh).get("oauthAccount"), dict)
+        except (OSError, ValueError, AttributeError):
+            continue
+        if logged:
+            found.append({"id": slug, "label": slug, "path": _home_short(full)})
+    return found[:MAX_ACCOUNTS]
+
+
 def list_status(cfg=None, full_email=True, now=None):
     """Every account with its status, masked identity and last reading. Reads no credentials and runs nothing.
     full_email=False (the phone listener) leaves the full e-mail out."""
     cfg = cfg if cfg is not None else config_store.load()
     state = _read_state()["accounts"]
     rows = [_row(a, cfg, state.get(a["id"]) or {}, full_email, now) for a in accounts(cfg)]
-    return {"active": active_id(cfg), "accounts": rows,
+    return {"active": active_id(cfg), "accounts": rows, "found": discover(cfg),
             "note": "Only the active account is read live; the others keep their last reading."}
 
 

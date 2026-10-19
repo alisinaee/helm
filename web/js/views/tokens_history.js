@@ -444,23 +444,34 @@ export function acctPanelHtml() {
       [who.email || who.emailMasked, who.plan].filter(Boolean).join(" · ") || MISSING;
     const nameTitle = name === MISSING ? "Not known until the account is checked" : (who.orgName || "");
     const r = a.reading || {};
-    const btns = [a.active ? "" : acctButton(a.id, "switch", "Use", a.label),
-      acctButton(a.id, "login", "Log in", a.label),
-      acctButton(a.id, "check", "Check", a.label),
-      a.enabled ? acctButton(a.id, "disconnect", "Disconnect", a.label) :
-        acctButton(a.id, "connect", "Connect", a.label),
-      a.active ? "" : acctButton(a.id, "remove", "Remove", a.label)]
-      .join("");
-    return '<li class="tk-acct-row">' +
-      cell("Account", "", esc(a.label) + (a.active ? " (active)" : ""), a.path || "") +
+    const slot = function (html) {
+      return html || "<span></span>";
+    };
+    const btns = slot(a.active ? "" : acctButton(a.id, "switch", "Use", a.label)) +
+      acctButton(a.id, "login", "Log in", a.label) +
+      acctButton(a.id, "check", "Check", a.label) +
+      (a.enabled ? acctButton(a.id, "disconnect", "Disconnect", a.label) :
+        acctButton(a.id, "connect", "Connect", a.label)) +
+      slot(a.active ? "" : acctButton(a.id, "remove", "Remove", a.label));
+    const stCls = a.status === "ok" ? "tk-st-ok" : (a.status === "idle" || a.status === "unknown" ||
+      a.status === "disconnected" ? "" : "tk-st-bad");
+    return '<li class="tk-acct-row' + (a.active ? " tk-acct-on" : "") + '">' +
+      cell("Account", "", esc(a.label) + (a.active ? ' <span class="chip chip-success">Active</span>' : ""),
+        a.path || "") +
       cell("Logged in as", "", esc(name), nameTitle) +
-      cell("Status", "", esc(a.status), a.reason || "") +
+      cell("Status", stCls, esc(a.status), a.reason || "") +
       cell("Weekly", "tk-acct-num", esc(pct(r.weeklyPercent))) +
       cell("5 hour", "tk-acct-num", esc(pct(r.fiveHourPercent))) +
       cell("Read", "tk-acct-num", esc(acctAge(r.ageS))) +
       cell("Actions", "tk-acct-actions", btns) + "</li>";
   }).join("");
-  return '<ul class="spend-list tk-acct-list" aria-label="Claude accounts">' + head + rows + "</ul>" +
+  const found = (acct.data.found || []).map(function (f) {
+    return '<p class="page-note">Found a logged-in account in <code>' + esc(f.path) + "</code>. " +
+      '<button type="button" class="btn" data-tk="acct" data-act="add-found" data-id="' + esc(f.id) +
+      '" data-path="' + esc(f.path) + '" data-label="' + esc(f.label) + '"' + (acct.busy ? " disabled" : "") +
+      ">Add account</button></p>";
+  }).join("");
+  return '<ul class="spend-list tk-acct-list" aria-label="Claude accounts">' + head + rows + "</ul>" + found +
     acctAddForm() +
     '<p class="page-note" role="status">' + acctNoteHtml(acct.note || acct.data.note || "") + "</p>";
 }
@@ -478,7 +489,7 @@ function acctSlug(label) {
 
 function acctAddForm() {
   if (!acct.adding) {
-    return '<p><button type="button" class="btn" data-tk="acct" data-act="add-open">+ Add account</button></p>';
+    return '<p><button type="button" class="btn tk-acct-new" data-tk="acct" data-act="add-open">+ Add account</button></p>';
   }
   const slug = acctSlug(acct.lastLabel || "");
   const defaultPath = slug ? "~/.claude-" + slug : "";
@@ -549,6 +560,20 @@ function acctAction(el) {
     acct.at = 0;
     acct.error = false;
     rerender();
+    return;
+  }
+  if (act === "add-found" && !acct.busy) {
+    acct.busy = "add";
+    postJson("/api/v1/usage/accounts", {id: id, label: el.getAttribute("data-label") || id, source: "config-dir",
+      path: el.getAttribute("data-path")}).then(function () {
+      acct.note = "Done: added " + id + ".";
+    }).catch(function (err) {
+      acct.note = "Failed: " + (err && err.message ? err.message : "add");
+    }).finally(function () {
+      acct.busy = "";
+      acct.at = 0;
+      rerender();
+    });
     return;
   }
   if (acct.busy || !/^(connect|disconnect|switch|check|login|remove)$/.test(act) || !id) return;
