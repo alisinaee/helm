@@ -10,7 +10,7 @@ import { copyButton, refSummary } from "../ref.js";
 import { showToast } from "./toast.js";
 
 const SAVE_MS = 400;
-const FRESH_MS = 30000;
+const FRESH_MS = 10000;
 const WINDOWS = {
   five_hour: { title: "5 hours", short: "5h", sliderLabel: "5 hours stop", numLabel: "5 hours stop percent, 1 to 100",
     switchOn: "5 hours stop, on", switchOff: "5 hours stop, off" },
@@ -46,7 +46,20 @@ function load() {
   });
 }
 
+// While the card is mounted (ensureLimits ran in the last 3 intervals), poll on its own; skipped when the tab is hidden.
+let lastEnsure = 0;
+let pollId = null;
+function startPoll() {
+  if (pollId || typeof window === "undefined") return;
+  pollId = window.setInterval(function () {
+    if (document.hidden || Date.now() - lastEnsure > FRESH_MS * 3) return;
+    if (!L.drag && !Object.keys(L.timers).length && Date.now() - L.at >= FRESH_MS - 500) load();
+  }, FRESH_MS);
+}
+
 function ensureLimits() {
+  lastEnsure = Date.now();
+  startPoll();
   if (L.data && Date.now() - L.at < FRESH_MS) return;
   if (L.error && Date.now() - L.at < FRESH_MS) return;
   setTimeout(load, 0);

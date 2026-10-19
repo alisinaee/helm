@@ -189,15 +189,16 @@ function meterRowsFor(snapshots) {
   return null;
 }
 
-// Limits windows (stop per window) for the top bar ticks, from /api/v1/limits; refreshed at most every 30 s.
+// Limits windows (stop per window) for the top bar ticks, from /api/v1/limits; refreshed at most every 10 s.
 let topLimits = { windows: null, at: 0 };
 function topLimitsFor() {
-  if (Date.now() - topLimits.at > 30000) {
+  if (!document.hidden && Date.now() - topLimits.at > 10000) {
     topLimits.at = Date.now();
     getJson("/api/v1/limits").then(function (res) {
       if (res && res.status === 200 && res.data && res.data.windows) {
+        const prev = JSON.stringify(topLimits.windows);
         topLimits.windows = res.data.windows;
-        document.dispatchEvent(new Event("rb:render"));
+        if (JSON.stringify(topLimits.windows) !== prev) document.dispatchEvent(new Event("rb:render"));
       }
     }).catch(function () {});
   }
@@ -421,6 +422,7 @@ async function loop() {
   // The next pass is always scheduled, also when a view throws while rendering: one bad render must not end the
   // live updates (the page would then only change after a manual reload).
   const due = Date.now() - lastRenderAt >= SKIP_RENDER_MAX_MS;
+  topLimitsFor();
   try {
     if (changed || followUp || due) {
       render();
