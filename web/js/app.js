@@ -402,14 +402,22 @@ async function loop() {
     busy = false;
   }
   // Nothing new from the server: keep the page as it is. A render still runs at least every SKIP_RENDER_MAX_MS.
+  // The next pass is always scheduled, also when a view throws while rendering: one bad render must not end the
+  // live updates (the page would then only change after a manual reload).
   const due = Date.now() - lastRenderAt >= SKIP_RENDER_MAX_MS;
-  if (changed || followUp || due) {
-    render();
-    lastRenderAt = Date.now();
+  try {
+    if (changed || followUp || due) {
+      render();
+      lastRenderAt = Date.now();
+    }
+  } catch (err) {
+    store.conn = { ok: store.conn.ok, lastOkAt: store.conn.lastOkAt, error: String(err) };
+    if (typeof console !== "undefined") console.error("render failed", err);
+  } finally {
+    const again = followUp;
+    followUp = false;
+    schedule(again ? 0 : document.hidden ? SLOW_MS : FAST_MS);
   }
-  const again = followUp;
-  followUp = false;
-  schedule(again ? 0 : document.hidden ? SLOW_MS : FAST_MS);
 }
 
 function schedule(delay) {
