@@ -49,7 +49,7 @@ supervisor_log = get_logger("supervisor")
 
 
 def _default_sync():
-    usage.sync_once()
+    usage.sync_all()
 
 
 def supervisor_pass(now=None):

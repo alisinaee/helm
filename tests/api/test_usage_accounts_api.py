@@ -60,11 +60,25 @@ class UsageAccountsRoutes(ServerCase):
         check.assert_called_once_with("acct-1")
 
         opened = {"opened": True, "command": "claude auth login"}
-        with mock.patch("roadmap.services.usage_accounts.open_login", return_value=opened) as login:
+        with mock.patch("roadmap.services.claude_slots.supported", return_value=False), \
+                mock.patch("roadmap.services.usage_accounts.open_login", return_value=opened) as login:
             res = self.post("acct-1", "login")
         self.assertEqual(res.status, 200)
         self.assertEqual(res.json(), opened)
         login.assert_called_once_with("acct-1", src="ui")
+
+    def test_linux_login_and_use(self):
+        started = {"key": "acct-1", "url": "https://claude.com/x", "folder": "~/.claude-acct-1"}
+        with mock.patch("roadmap.services.claude_slots.supported", return_value=True), \
+                mock.patch("roadmap.services.claude_slots.login_start", return_value=started) as start:
+            res = self.post("acct-1", "login")
+        self.assertEqual(res.status, 200)
+        self.assertEqual(res.json(), started)
+        start.assert_called_once_with("acct-1")
+        with mock.patch("roadmap.services.claude_slots.use_in_claude", return_value=ROW) as use:
+            res = self.post("acct-1", "use")
+        self.assertEqual(res.status, 200)
+        use.assert_called_once_with("acct-1", src="ui")
 
     def test_unknown_action_is_404(self):
         with mock.patch("roadmap.services.usage_accounts.connect") as connect:

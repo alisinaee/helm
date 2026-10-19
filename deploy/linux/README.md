@@ -33,3 +33,20 @@ systemctl --user restart helm      # load new code after git pull
 
 State lives in the default places (`~/.config/roadmap-board`, `~/.local/state/...`); the project registered is this
 checkout (`bin/roadmap project add .`).
+
+## Several Claude accounts on this server (Tokens > Account)
+
+Each login lives in its own config folder (`~/.claude-<name>`, the same layout `CLAUDE_CONFIG_DIR=~/.claude-<name>
+claude auth login` makes). Plain `claude` uses `~/.claude/.credentials.json` + `~/.claude.json`.
+
+- **+ Log in another account**: give it a name. Helm runs `claude auth login` for `~/.claude-<name>` on the server,
+  shows the sign-in link; sign in with the account you want, copy the code the page shows and paste it back. The
+  account is added and read live from then on.
+- **Switch**: moves that stored login into plain `claude` (marked **In use**), no new login. The login that was in
+  use is first saved back to its own folder (a new `~/.claude-<name>` is made and added when it had none), with the
+  freshest token pair. New Claude Code sessions use the new login; sessions already open keep theirs.
+- **Weekly / 5 hour** columns: every connected account is read every sync, not only the starred one. The board's
+  own usage (top bar, stops) follows the **Active** account, which is the in-use login by default.
+- **Log in** (row action) appears when a stored login expired or is signed out; it re-logs that folder.
+
+CLI: `bin/roadmap usage account list`, `bin/roadmap service status|restart|logs` (systemd --user on Linux).

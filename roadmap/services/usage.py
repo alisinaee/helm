@@ -537,6 +537,44 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
     return _unavailable(cfg)
 
 
+def sync_others(config=None, fetch=None, get_token=None):
+    """Read every other connected account once (no token refresh, no fallbacks) and keep each reading on its account
+    row, so the Account tab shows all logins. The board's own usage stays the active account's. Returns
+    {account id: "ok" | reason code}. Never raises."""
+    out = {}
+    try:
+        cfg = _config(config)
+        active = usage_accounts.active_id(cfg)
+        rows = [a for a in usage_accounts.accounts(cfg) if a["enabled"] and a["id"] != active]
+    except Exception as exc:
+        log.warning("other accounts not read: %s", type(exc).__name__)
+        return out
+    for account in rows:
+        try:
+            where = usage_accounts.read_location(account)
+            token = get_token or (read_keychain_token if where is None else
+                                  functools.partial(read_keychain_token, allow_refresh=False, location=where))
+            reading = collect(get_token=token, fetch=fetch or http_fetch)
+        except UsageError as exc:
+            usage_accounts.note_failure(account["id"], exc.code, str(exc))
+            out[account["id"]] = exc.code
+        except Exception as exc:
+            usage_accounts.note_failure(account["id"], CODE_OTHER, type(exc).__name__)
+            out[account["id"]] = CODE_OTHER
+        else:
+            usage_accounts.note_reading(account["id"], usage_record(reading, SOURCE_ENDPOINT))
+            out[account["id"]] = "ok"
+    return out
+
+
+def sync_all(config=None, background=False):
+    """sync_once for the board, then sync_others for the Account tab. The board's result (or its error) is kept."""
+    try:
+        return sync_once(config, background=background)
+    finally:
+        sync_others(config)
+
+
 def _fallbacks(cfg, moment):
     """The sources after the endpoint: a fresh status line sidecar reading, then the transcript estimate. Returns
     the sync result when one stored a reading, else None. Never raises."""
@@ -793,8 +831,8 @@ def run_loop(stop_event, config=None, sync=None, wait=None):
     cfg = _config(config)
     interval = _interval(cfg)
     # With no injected config, read it fresh each round: the active account can change while the service runs.
-    run_sync = sync if sync is not None else (lambda: sync_once(config if config is not None else None,
-                                                                background=True))
+    run_sync = sync if sync is not None else (lambda: sync_all(config if config is not None else None,
+                                                               background=True))
     pause = wait if wait is not None else stop_event.wait
     failures = 0
     while not pause(usage_wait_s(failures, interval)):
