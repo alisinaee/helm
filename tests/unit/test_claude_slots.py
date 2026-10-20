@@ -165,6 +165,30 @@ class ReadAllTest(SlotsCase):
         self.assertEqual(work["reading"]["weeklyPercent"], 12)  # its own numbers, never the previous login's
 
 
+class StoredRefreshTest(SlotsCase):
+    def test_stored_login_is_refreshed_when_expired(self):
+        path = os.path.join(self.work, ".credentials.json")
+        creds = read(path)
+        creds["claudeAiOauth"]["expiresAt"] = 1000  # long expired
+        write(path, creds)
+        posted = []
+
+        def post(url, body):
+            posted.append(body["refresh_token"])
+            return {"access_token": "tok-b-new", "refresh_token": "r-new", "expires_in": 3600}
+        from roadmap.services import usage_sources
+        seen = []
+        payload = {"five_hour": {"utilization": 1, "resets_at": None}, "seven_day": {"utilization": 2, "resets_at": None}}
+        with mock.patch.object(usage_sources, "_post_json", post):
+            out = usage.sync_others(fetch=lambda t: seen.append(t) or payload)
+        self.assertEqual(out, {"work": "ok"})
+        self.assertEqual(posted, ["r-tok-b"])
+        self.assertEqual(seen, ["tok-b-new"])
+        self.assertEqual(read(path)["claudeAiOauth"]["refreshToken"], "r-new")
+        # the login in use is never refreshed by Helm
+        self.assertEqual(self.live_creds()["claudeAiOauth"]["accessToken"], "tok-a")
+
+
 class MismatchTest(SlotsCase):
     def owners(self, table):
         patcher = mock.patch.object(claude_slots, "FETCH_PROFILE", lambda token: table.get(token))

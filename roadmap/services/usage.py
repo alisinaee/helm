@@ -571,9 +571,14 @@ def sync_others(config=None, fetch=None, get_token=None):
                                             "this login holds another account's token: Log in again")
                 out[account["id"]] = "mismatch"
                 continue
+            # A stored login (another config folder, not the one plain claude uses) is used by nobody but Helm,
+            # so Helm may refresh its token pair: nothing else rotates it, and without this it expires in hours.
+            # The login in use stays Claude Code's to refresh (usageTokenRefresh decides, as before).
+            stored = where is not None and _stored_login(account)
             token = get_token or (read_keychain_token if where is None else
-                                  functools.partial(read_keychain_token, allow_refresh=False, location=where))
-            reading = collect(get_token=token, fetch=fetch or http_fetch)
+                                  functools.partial(read_keychain_token, allow_refresh=stored, location=where))
+            again = (functools.partial(_force_refresh, location=where) if stored and get_token is None else None)
+            reading = collect(get_token=token, fetch=fetch or http_fetch, refresh=again)
         except UsageError as exc:
             usage_accounts.note_failure(account["id"], exc.code, str(exc))
             out[account["id"]] = exc.code
@@ -584,6 +589,17 @@ def sync_others(config=None, fetch=None, get_token=None):
             usage_accounts.note_reading(account["id"], usage_record(reading, SOURCE_ENDPOINT))
             out[account["id"]] = "ok"
     return out
+
+
+def _stored_login(account):
+    """True for a Linux ~/.claude-<name> login that plain claude does not use now."""
+    try:
+        from roadmap.services import claude_slots
+        folder = usage_accounts.config_dir_of(account)
+        return bool(claude_slots.supported() and folder
+                    and claude_slots.account_uuid(folder) != claude_slots.live_uuid())
+    except Exception:
+        return False
 
 
 def _wrong_login(folder):
