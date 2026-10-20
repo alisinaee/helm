@@ -41,8 +41,8 @@ class TemplateTests(unittest.TestCase):
     def setUp(self):
         self.templates = dict(skills.templates())
 
-    def test_both_skills_are_packaged(self):
-        self.assertEqual(sorted(self.templates), ["roadmap-lead", "roadmap-worker"])
+    def test_all_skills_are_packaged(self):
+        self.assertEqual(sorted(self.templates), ["helm", "roadmap-lead", "roadmap-worker"])
 
     def test_every_skill_is_at_most_3200_bytes(self):
         for name, folder in self.templates.items():

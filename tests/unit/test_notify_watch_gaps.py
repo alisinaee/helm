@@ -186,7 +186,7 @@ class SkillsGapTests(ProjectCase):
         code, out, _ = run_cli(["skills", "list", "--project", "demo"])
         self.assertEqual(code, 0)
         lines = [line for line in out.splitlines() if line.strip()]
-        self.assertEqual(len(lines), 2)
+        self.assertEqual(len(lines), 3)
         self.assertTrue(all(line.endswith("not installed") for line in lines), lines)
 
     def test_plain_dry_run_prints_a_conflict_line_and_writes_nothing(self):

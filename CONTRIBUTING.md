@@ -83,6 +83,8 @@ forbids them), every `var(--x)` is defined in `web/css/tokens.css`, and no colou
   live port or stdin are run with `--help` only; the list is `HELP_ONLY` in `tools/check_docs.py`. Use the
   placeholder `<project-path>` for a project folder. Show examples that are not meant to run in another block
   language or inline.
+- **Board data is local.** The board files in `docs/` (`tasks.json`, `jobs.json`, `activity.jsonl` and the rest) are
+  git-ignored. Never commit or push them; see [docs/COLLABORATION.md](docs/COLLABORATION.md), section 5.
 - **Write what you change.** A change to a command, a route, a file or a setting updates the doc that describes it
   (README for users, API.md for routes, ARCHITECTURE.md for layout, SKILL draft for the skill).
 

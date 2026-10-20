@@ -24,12 +24,17 @@ class SystemOverridesSeed(unittest.TestCase):
         self.assertNotEqual(out["source"], "baseline")
         self.assertFalse([w for w in out["warnings"] if w.startswith("system.json")], out["warnings"])
 
+    @unittest.skipUnless(os.path.exists(os.path.join(REPO, "docs", "tasks.json")),
+                         "board data is local and git-ignored")
     def test_bound_tasks_exist_on_the_board(self):
         with open(os.path.join(REPO, "docs", "tasks.json"), encoding="utf-8") as fh:
             known = {t["id"] for t in json.load(fh)["tasks"]}
         with open(os.path.join(REPO, "docs", "system.json"), encoding="utf-8") as fh:
             data = json.load(fh)
         bound = [tid for comp in data["components"] for tid in comp.get("tasks", [])]
+        self.assertTrue(bound)
+        if not known & set(bound):  # a coworker's own (empty) board: the maintainer's task ids are not there
+            self.skipTest("this board is not the maintainer's board")
         self.assertEqual([tid for tid in bound if tid not in known], [])
 
     def test_override_keys_have_the_expected_shape(self):

@@ -1,5 +1,7 @@
 # CLAUDE.md for Helm (formerly roadmap-board; repo alisinaee/helm, dir ~/Works/helm; CLI `bin/helm` = `bin/roadmap`) (read docs/HANDOVER.md first)
 
+This file is the maintainer's working notes. Coworkers start with docs/COLLABORATION.md and the /helm skill. Board data under docs/ is local and git-ignored.
+
 > **mjp-labs Linux server (branch mahdi-remote-control):** this checkout is ~/StudioProjects/helm, served at
 > https://helm.mjplabs.ir by `helm.service` (systemd --user). The board was emptied on 2026-10-19, so the
 > HANDOVER/RUNBOOK history below is Ali's old Mac setup, kept for reference only. On `/helm` follow

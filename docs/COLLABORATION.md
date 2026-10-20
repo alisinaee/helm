@@ -58,7 +58,8 @@ open the Helm folder (no copying into `~/.claude`):
 
 | Skill | Use |
 |---|---|
-| `/head` | act as the project head: resume from `docs/HANDOVER.md`, plan, run workers, verify, commit. `/head save` before you stop. `/head status` for a short state. |
+| `/helm` | everyone: set up Helm and ask how far to go. It never duplicates an existing setup. |
+| `/head` | maintainer: resume from `docs/HANDOVER.md`, plan, run workers, verify, commit. `/head save` before you stop. `/head status` for a short state. |
 | `roadmap-dashboard` | install and run the dashboard for a project, keep usage and jobs in sync |
 | `roadmap-plan-new` | research first, then fill the board for a new project |
 | `roadmap-update` | record task progress on the board |
@@ -87,14 +88,13 @@ controls, no dead space.
 
 ## 5. Board files in `docs/`
 
-This repository keeps its own board in `docs/` (`tasks.json`, `jobs.json`, `activity.jsonl`, `head*.jsonl`,
-`budget.json` and similar). Helm rewrites them every time it runs, so they change on every machine and cause merge
-conflicts.
+The board files in `docs/` (`tasks.json`, `jobs.json`, `activity.jsonl`, `head*.jsonl`, `budget.json` and similar)
+are local to each Mac. They are git-ignored, so they are never committed and never pushed.
 
-- Do not commit them in a feature pull request. Before you commit, check `git status` and leave them out:
-  `git add <your files>` by path, never `git add -A`.
-- To drop your local changes to one: `git checkout -- docs/tasks.json`.
-- Only the board owner commits board state, in a separate commit named "Board state".
+- A fresh clone starts with an empty board. Run the setup skill `/helm`, or `bin/roadmap init`.
+- If you cloned an older version and saw someone else's board, run `git pull`. Then remove that project from your
+  board with `bin/roadmap project remove <id>`, typed by hand (it is not run by the docs check).
+- Add your files by path (`git add <your files>`), never `git add -A`.
 
 ## 6. Where things are
 

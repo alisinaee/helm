@@ -27,7 +27,7 @@ class SkillsListTests(HomeCase):
         code, body, _ = _json(["skills", "list"])
         self.assertEqual(code, 0)
         names = [row["name"] for row in body["data"]["skills"]]
-        self.assertEqual(names, ["roadmap-lead", "roadmap-worker"])
+        self.assertEqual(names, ["helm", "roadmap-lead", "roadmap-worker"])
         for row in body["data"]["skills"]:
             self.assertGreater(row["bytes"], 0)
             self.assertLessEqual(row["bytes"], 3200)
@@ -43,9 +43,9 @@ class SkillsListTests(HomeCase):
         code, out, _ = run_cli(["skills", "list"])
         self.assertEqual(code, 0)
         lines = [line for line in out.splitlines() if line.strip()]
-        self.assertEqual(len(lines), 2)
-        self.assertIn("roadmap-worker", lines[1])
-        self.assertIn("bytes", lines[1])
+        self.assertEqual(len(lines), 3)
+        self.assertIn("roadmap-worker", lines[2])
+        self.assertIn("bytes", lines[2])
 
 
 class SkillsInstallTests(HomeCase):
@@ -59,7 +59,7 @@ class SkillsInstallTests(HomeCase):
         code, body, err = _json(["skills", "install", "--target", self.target])
         self.assertEqual(code, 0, err)
         self.assertFalse(body["data"]["dry_run"])
-        self.assertEqual([row["action"] for row in body["data"]["skills"]], ["create", "create"])
+        self.assertEqual([row["action"] for row in body["data"]["skills"]], ["create", "create", "create"])
         for name, folder in skills.templates():
             copied = _read(os.path.join(self.dest, name, "SKILL.md"))
             self.assertEqual(copied, _read(os.path.join(folder, "SKILL.md")))
@@ -96,7 +96,7 @@ class SkillsInstallTests(HomeCase):
         code, body, _ = _json(["skills", "install", "--target", self.target, "--dry-run"])
         self.assertEqual(code, 0)
         self.assertTrue(body["data"]["dry_run"])
-        self.assertEqual([row["action"] for row in body["data"]["skills"]], ["create", "create"])
+        self.assertEqual([row["action"] for row in body["data"]["skills"]], ["create", "create", "create"])
         self.assertFalse(os.path.exists(os.path.join(self.target, ".claude")))
 
     def test_dry_run_reports_a_conflict_but_exits_zero_and_writes_nothing(self):
@@ -152,7 +152,7 @@ class SkillsProjectTests(ProjectCase):
         _json(["skills", "install", "--project", "demo"])
         code, body, _ = _json(["skills", "list", "--project", "demo"])
         self.assertEqual(code, 0)
-        self.assertEqual([row["installed"] for row in body["data"]["skills"]], [True, True])
+        self.assertEqual([row["installed"] for row in body["data"]["skills"]], [True, True, True])
 
     def test_unknown_project_is_not_found(self):
         code, body, _ = _json(["skills", "install", "--project", "nobody"])

@@ -1,7 +1,6 @@
 """Tests for the R7 Work item migration (roadmap/store/migrate.py, docs/work-map-R7.json).
 
-Reads a frozen copy of the R7 board (tests/fixtures/board-r7: tasks.json, head.jsonl, work-map-R7.json) and copies
-it into a temp dir. The repo board was emptied on 2026-10-19; the fixture keeps the data these tests were written for.
+Reads synthetic fixtures from tests/fixtures/migrate/ (the real board files are git-ignored) and copies them into a temp dir.
 """
 
 import json
@@ -14,7 +13,7 @@ import unittest
 from roadmap.store import db, migrate
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-REAL_DOCS = os.path.join(REPO, "tests", "fixtures", "board-r7")
+REAL_DOCS = os.path.join(REPO, "tests", "fixtures", "migrate")
 FIXTURES = os.path.join(REPO, "tests", "fixtures")
 SOURCES = ("tasks.json", "jobs.json", "head.jsonl", "work-map-R7.json")
 
@@ -45,9 +44,8 @@ class MigrateWorkTests(unittest.TestCase):
         return migrate.migrate(self.conn, self.docs)
 
     def _r7_ids(self):
-        """The R7 ids the map was built against (a fixture snapshot, so later live rows do not break this test)."""
-        with open(os.path.join(FIXTURES, "r7_work_map_ids.json"), encoding="utf-8") as fh:
-            return set(json.load(fh)["ids"])
+        """The R7 ids of the synthetic fixture board."""
+        return {t["id"] for t in self.tasks if t["id"].startswith("R7.")}
 
     def test_every_r7_row_mapped(self):
         self.assertEqual(set(self.map["tasks"]), self._r7_ids())
@@ -56,7 +54,7 @@ class MigrateWorkTests(unittest.TestCase):
         self.assertLessEqual(self._r7_ids(), live, "map references an R7 row that no longer exists")
         for tid, wid in self.map["tasks"].items():
             self.assertIn(wid, self.map["items"], tid)
-        self.assertEqual(len(self.map["items"]), 15)
+        self.assertEqual(len(self.map["items"]), 2)
         for wid, item in self.map["items"].items():
             self.assertLessEqual(len(item["title"]), 60, wid)
             self.assertTrue(item.get("outcome"), wid)
@@ -132,9 +130,9 @@ class MigrateWorkTests(unittest.TestCase):
     def test_person_accept_survives_rerun(self):
         self._migrate()
         self.conn.execute("UPDATE work_items SET status = 'Done', accepted_at = '2026-10-16T09:00:00Z'"
-                          " WHERE id = 'W5'")
+                          " WHERE id = 'W2'")
         self._migrate()
-        row = self.conn.execute("SELECT accepted_at FROM work_items WHERE id = 'W5'").fetchone()
+        row = self.conn.execute("SELECT accepted_at FROM work_items WHERE id = 'W2'").fetchone()
         self.assertEqual(row[0], "2026-10-16T09:00:00Z")
 
     def test_refuses_map_with_unknown_task(self):

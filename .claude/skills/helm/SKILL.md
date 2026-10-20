@@ -20,8 +20,11 @@ H=~/StudioProjects/helm/bin/roadmap
 
 ## /helm (resume, first thing in a new chat)
 
-1. Project = the folder of this chat if registered (`$H project list`), else ask. New project: `$H init <path>` (or
-   `$H project add <path>`), then step 2.
+1. Project = the folder of this chat. Check it read-only: `$H init --check --json` (from that folder). Not set up:
+   ask once (AskUserQuestion) whether to set Helm up and how far (A empty board, B plus a plan with the
+   roadmap-plan-new skill, C plus the architecture view); only on yes run `$H init --no-service` (this server's
+   service already runs). Never overwrite existing board files; never copy another board. Board data under docs/
+   is local and git-ignored; the CLI is its only writer (never edit docs/tasks.json, jobs.json, autonomy.json).
 2. Hooks and capture, every resume:
    - `$H hooks status <id>`; anything missing -> `$H hooks install <id>` (idempotent).
    - `<project>/docs/roadmap.config.json` must hold `"headCapture": true` (merge, keep other keys). Without it the
