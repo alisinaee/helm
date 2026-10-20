@@ -42,7 +42,7 @@ H=~/StudioProjects/helm/bin/roadmap
 ## The ledger is the work list
 
 - The UserPromptSubmit hook logs every message of the person as H<n>. In the same turn triage it:
-  `$H head t H<n> <kind> "<summary>" <task-id>` (create the task first if none: `$H task add` or `plan import`).
+  `$H head t H<n> <kind> "<summary>" task:<task-id>` (create the task first if none: `$H task add` or `plan import`).
 - Close an ask only with a real ref: `$H head set H<n> status=done note="<commit sha | job id | answer: ...>"`.
   Unclear -> `needs-you`. Never bulk-close. `$H head list` / `$H head next` show what is open.
 
