@@ -47,7 +47,7 @@
   border-top: 1px solid var(--track)}
 .tb-applied {display: flex;flex-wrap: wrap;align-items: center;gap: var(--sp-1)}
 .tb-chip {display: inline-flex;align-items: center;gap: var(--sp-1);height: var(--h-small);padding: 0 var(--sp-2);
-  border: 1px solid var(--accent);border-radius: 12px;background: var(--sel);color: var(--text-1);font: inherit;
+  border: 1px solid var(--accent);border-radius: 9px;background: var(--sel);color: var(--text-1);font: inherit;
   font-size: var(--fs-12);cursor: pointer}
 .tb-x {color: var(--text-2)}
 .tb-clear-link {height: var(--h-small);padding: 0 var(--sp-2);border: 0;background: none;color: var(--accent);

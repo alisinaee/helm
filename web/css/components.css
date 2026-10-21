@@ -661,3 +661,9 @@ display: none;
 .nav-logo {flex: none; width: 24px; height: 24px; background-color: var(--text-1);
   -webkit-mask: url("/logo.png") center / contain no-repeat; mask: url("/logo.png") center / contain no-repeat}
 .app[data-nav="mini"] .nav-brand {justify-content: center; padding-inline: 0}
+
+/* Cards that are direct siblings in a page (Rules, and any view that returns several .ov-card in a row) get the page gap. */
+.main > .ov-card + .ov-card, .main > .ov-card + .tb + .ov-card { margin-top: var(--sp-4) }
+
+/* Agents rows: a title cell never spills out of its own column (it was drawn over Task and Effort at tablet widths). */
+.rg-agent > .rg-main { max-width: 100%; justify-self: stretch }

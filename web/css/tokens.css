@@ -46,8 +46,8 @@
   --h-small: 24px;
   --h-control: 28px;
   --h-row: 32px;
-  --r-control: 10px;
-  --r-card: 14px;
+  --r-control: 7px;
+  --r-card: 10px;
   --rg: minmax(0, 1fr) auto;
   --w-nav: 232px;
   --w-rail: 56px;
@@ -154,7 +154,7 @@
 .tk-svg-d { width: 120px; flex: none }
 .tk-svg-s { max-width: 360px }
 .tk-gl { stroke: var(--track); stroke-width: 1 }
-.tk-ax, .tk-lb { fill: var(--text-3); font-size: 10px; font-family: var(--font-ui) }
+.tk-ax, .tk-lb { fill: var(--text-3); font-size: 11px; font-family: var(--font-ui) }
 .tk-lb { fill: var(--text-2); font-size: 11px }
 .tk-val { font-variant-numeric: tabular-nums }
 .tk-hit { fill: transparent }
@@ -303,7 +303,7 @@
   --glass-hi: rgba(255, 255, 255, 0.22);
   --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--glass-hi);
   --glass-blur: blur(28px) saturate(180%);
-  --glass-r: 18px;
+  --glass-r: 13px;
   --field-a: rgba(94, 140, 255, 0.28);
   --field-b: rgba(190, 120, 255, 0.22);
   --field-c: rgba(80, 220, 200, 0.16);
@@ -360,10 +360,10 @@
   --glass-fill-strong: rgba(255, 255, 255, 0.07);
   --glass-edge: rgba(255, 255, 255, 0.1);
   --glass-hi: rgba(255, 255, 255, 0.06);
-  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 var(--glass-hi);
+  --glass-shadow: 0 12px 36px rgba(0, 0, 0, 0.38), inset 0 1px 0 var(--glass-hi);
   --glass-blur: blur(16px) saturate(140%);
-  --glass-r: 1.5rem;
-  --r-shell: 2.5rem;
+  --glass-r: 1.0625rem;
+  --r-shell: 1.8rem;
   --field-a: rgba(204, 255, 0, 0.14);
   --field-b: rgba(16, 185, 129, 0.14);
   --field-c: rgba(204, 255, 0, 0.08);
@@ -407,8 +407,8 @@
   --glass-hi: rgba(255, 255, 255, 0.95);
   --glass-shadow: 0 10px 30px rgba(20, 23, 10, 0.12), inset 0 1px 0 var(--glass-hi);
   --glass-blur: blur(16px) saturate(140%);
-  --glass-r: 1.5rem;
-  --r-shell: 2.5rem;
+  --glass-r: 1.0625rem;
+  --r-shell: 1.8rem;
   --field-a: rgba(77, 102, 0, 0.1);
   --field-b: rgba(11, 122, 85, 0.1);
   --field-c: rgba(77, 102, 0, 0.06);
@@ -446,10 +446,10 @@
   --field-b: transparent;
   --field-c: transparent;
   --glass-ink-soft: rgba(0, 0, 0, 0.4);
-  --r-control: 4px;
-  --r-card: 6px;
-  --glass-r: 6px;
-  --r-shell: 6px
+  --r-control: 3px;
+  --r-card: 4px;
+  --glass-r: 4px;
+  --r-shell: 4px
 }
 
 /* Black, light mode: same flat rules on white. Status, model and defer colours are the classic light values. */
@@ -492,10 +492,10 @@
   --field-b: transparent;
   --field-c: transparent;
   --glass-ink-soft: rgba(0, 0, 0, 0.08);
-  --r-control: 4px;
-  --r-card: 6px;
-  --glass-r: 6px;
-  --r-shell: 6px
+  --r-control: 3px;
+  --r-card: 4px;
+  --glass-r: 4px;
+  --r-shell: 4px
 }
 
 /* Nav rail (glass.css): the label shimmer colours and where the drag handles sit relative to the floating cards

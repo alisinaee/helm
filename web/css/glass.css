@@ -127,6 +127,8 @@ body::before {
   background: transparent;
   border-bottom-color: var(--track);
 }
+/* Rows share one dark grey (no zebra); opaque so the sticky columns hide what scrolls under them. */
+.hd-tbl td { background: var(--surface-1) }
 .hd-tbl th {
   background: var(--glass-fill-strong);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -166,7 +168,7 @@ body::before {
     height: var(--h-bnav);
     background: var(--glass-fill-strong);
     border: 1px solid var(--glass-edge);
-    border-radius: 22px;
+    border-radius: 16px;
     box-shadow: var(--glass-shadow);
     overflow: hidden;
   }
@@ -303,15 +305,17 @@ select:hover {
 :root[data-theme="obsidian"] .main { border-radius: var(--r-shell); }
 :root[data-theme="obsidian"] h1,
 :root[data-theme="obsidian"] h2,
-:root[data-theme="obsidian"] h3 { letter-spacing: -0.06em; }
+:root[data-theme="obsidian"] h3 { letter-spacing: -0.02em; }
+/* Labels and chips: sentence case at a readable size (the old tracked uppercase mono at 11px was hard to read). Only the
+   axis scale keeps the mono face, because it holds numbers that line up. */
 :root[data-theme="obsidian"] .chip,
 :root[data-theme="obsidian"] .lim-label,
 :root[data-theme="obsidian"] .lv-scale {
-  font-family: var(--font-mono);
-  font-size: var(--fs-11);
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
+  font-size: var(--fs-12);
+  text-transform: none;
+  letter-spacing: 0.01em;
 }
+:root[data-theme="obsidian"] .lv-scale { font-family: var(--font-mono); letter-spacing: 0 }
 :root[data-theme="obsidian"] .nav-i,
 :root[data-theme="obsidian"] .bnav-i { border-radius: 999px; }
 :root[data-theme="obsidian"] .nav-i[aria-current="page"],
@@ -326,7 +330,7 @@ select:hover {
   border-color: var(--accent);
   font-weight: 700;
   border-radius: 999px;
-  box-shadow: 0 0 16px var(--glow);
+  box-shadow: 0 6px 18px -6px var(--glow);
   transition: transform 0.2s var(--ease-ob), box-shadow 0.2s var(--ease-ob);
 }
 :root[data-theme="obsidian"] .btn-primary:hover {
@@ -592,8 +596,7 @@ select {
 .hx-page .hx-cols { border-bottom-color: var(--divider); background: color-mix(in srgb, var(--surface-0) 82%, transparent);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px) }
 .hx-page .hx-scroll { border-top-color: var(--divider) }
-.hx-page .hx-day { top: 0; border-bottom: 0; background: color-mix(in srgb, var(--surface-0) 72%, transparent);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); padding: 16px var(--sp-2) 8px; color: var(--text-2); font-size: var(--fs-12);
+.hx-page .hx-day { border-bottom: 0; padding: 16px var(--sp-2) 8px; color: var(--text-2); font-size: var(--fs-12);
   font-weight: 600; letter-spacing: .02em }
 .hx-page .hx-day::after { content: ""; position: absolute; left: var(--sp-2); right: var(--sp-2); bottom: 0; height: 1px;
   background: linear-gradient(90deg, var(--line), transparent 85%); opacity: .45 }
@@ -601,3 +604,70 @@ select {
 .hx-page .hx-list > .act-row { border-bottom: 1px solid var(--divider); border-radius: 0 }
 .hx-page .hx-list > .act-row:last-child { border-bottom-color: transparent }
 .hx-page .hx-list > .act-row:hover { background: var(--glass-fill) }
+
+/* Top bar: the status pill, the usage meters and the links share one row that has to fit the card, whether or not the side
+   panel is open. The card is a size container; the least important items drop out as it narrows, and the breadcrumb keeps a
+   readable minimum instead of collapsing to "O...". Widths measured at 1440 px: crumb 251, pill 228, meters 259, age 46,
+   Enter usage 98, connection 33, three buttons 121. */
+.top { container: topbar / inline-size }
+.crumb { min-width: 9rem }
+.top-tools .pill { min-width: 0; max-width: 15rem; overflow: hidden; text-overflow: ellipsis }
+@container topbar (max-width: 1100px) {
+  .conn, .top-age { display: none }
+  .top-tools .pill { max-width: 11.5rem }
+}
+@container topbar (max-width: 860px) {
+  .top-enter { display: none }
+}
+@container topbar (max-width: 700px) {
+  .top-meters { display: none }
+}
+
+/* Browser surfaces (impeccable's craft floor): what the browser draws by default now follows the palette. Selection, native
+   controls, scrollbars, balanced headings and tabular figures. */
+:root { accent-color: var(--accent) }
+::selection { background: color-mix(in srgb, var(--accent) 32%, transparent); color: inherit }
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--text-3) 55%, transparent) transparent }
+h1, h2, h3, .page-title, .qc-text { text-wrap: balance }
+.num, td, th, .meter + *, .tk-ax, .tk-lb { font-variant-numeric: tabular-nums }
+
+/* Activity table: the "What" column is the identity column, so it gets the width. The fixed columns are trimmed, and when the
+   page is narrow (the side panel is open) the mostly-empty Model and Tokens columns drop out. The selectors carry .hx-scroll
+   to outrank activity.css, which loads after this file. */
+.hx-page { container: hxpage / inline-size }
+.hx-page.hx-all .hx-scroll .row-grid.act-row { grid-template-columns: 3rem 6rem 4.25rem 4.75rem minmax(0, 1fr) 5rem 3.25rem 3rem 1.5rem }
+.hx-page:not(.hx-all) .hx-scroll .row-grid.act-row { grid-template-columns: 3rem 4.25rem 4.75rem minmax(0, 1fr) 5rem 3.25rem 3rem 1.5rem }
+@container hxpage (max-width: 860px) {
+  .hx-page.hx-all .hx-scroll .row-grid.act-row { grid-template-columns: 3rem 6rem 4.25rem 4.75rem minmax(0, 1fr) 5rem 1.5rem }
+  .hx-page.hx-all .hx-scroll .row-grid.act-row > :is(:nth-child(7), :nth-child(8)) { display: none }
+  .hx-page:not(.hx-all) .hx-scroll .row-grid.act-row { grid-template-columns: 3rem 4.25rem 4.75rem minmax(0, 1fr) 5rem 1.5rem }
+  .hx-page:not(.hx-all) .hx-scroll .row-grid.act-row > :is(:nth-child(6), :nth-child(7)) { display: none }
+}
+
+/* A selected row (the checkbox is ticked) takes the theme's selection tint, so the choice shows at a glance. */
+.ag-row { border-radius: var(--r-control); transition: background-color 140ms cubic-bezier(.22, 1, .36, 1) }
+.ag-row:has(input[data-agent="select"]:checked) { background: var(--sel) }
+.ag-row:has(input[data-agent="select"]:checked) .ag-title { color: var(--text-1); font-weight: 600 }
+@media (prefers-reduced-motion: reduce) { .ag-row { transition: none } }
+
+/* Choice groups (Settings: theme, mode, density, switches): no empty slot beside the unselected labels. Only the chosen
+   option shows its tick, and it also takes the selection tint and an accent edge so the choice never rests on the tick alone. */
+[role="radiogroup"] > .btn[role="radio"] { padding-inline: 16px; justify-content: center }
+[role="radiogroup"] > .btn[role="radio"]:not([aria-checked="true"]) > .ico { display: none }
+[role="radiogroup"] > .btn[role="radio"][aria-checked="true"] { background: var(--sel); color: var(--text-1);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent) }
+
+/* Activity surfaces (fifth pass): no solid black bands. The list sits on one matte frosted panel; the column header and the
+   day headers are lighter tints of the text colour over a blur, so they follow every theme and mode (a pale tint on dark,
+   a soft grey on light). Classic is flat, so it uses plain tone steps instead of blur. */
+.hx-page .hx-scroll { background: var(--glass-fill); border: 1px solid var(--glass-edge); border-radius: var(--glass-r);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur) }
+/* The two sticky headers must be opaque (rows scroll under them), so their tint is mixed into the surface instead of laid over it. */
+.hx-page .hx-cols { background: color-mix(in srgb, var(--text-1) 9%, var(--surface-1)); border-bottom: 1px solid var(--divider) }
+.hx-page .hx-day { background: color-mix(in srgb, var(--text-1) 6%, var(--surface-1)) }
+.hx-page .hx-tl-svg { background: var(--glass-fill); border: 1px solid var(--glass-edge); border-radius: var(--r-card);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur) }
+:root[data-theme="black"] .hx-page .hx-scroll, :root[data-theme="black"] .hx-page .hx-tl-svg { background: var(--surface-1);
+  -webkit-backdrop-filter: none; backdrop-filter: none }
+:root[data-theme="black"] .hx-page .hx-cols, :root[data-theme="black"] .hx-page .hx-day { background: var(--surface-2);
+  -webkit-backdrop-filter: none; backdrop-filter: none }
