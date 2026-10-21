@@ -42,6 +42,7 @@
 .wfg-s-defer{opacity:.55}
 .wfg-s-defer .wfg-glyph{fill:var(--defer)}
 .wfg-end .wfg-pill-box{stroke:var(--accent)}
+.wfg-pill rect{fill:var(--surface-2)}
 .wfg-pill.wfg-m-opus rect{stroke:var(--m-opus)}
 .wfg-pill.wfg-m-sonnet rect{stroke:var(--m-sonnet)}
 .wfg-pill.wfg-m-haiku rect{stroke:var(--m-haiku)}

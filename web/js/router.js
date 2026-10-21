@@ -9,7 +9,7 @@ const PROJECT_ID = /^[a-z0-9][a-z0-9-]{0,39}$/;
 const SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,59}$/;
 const FILTER_KEYS = ["f", "g"];
 // The Head section keeps its own query keys (see views/head.js hashOf); no other section gets them.
-const HEAD_FILTER_KEYS = ["f", "q", "kind", "sid", "id"];
+const HEAD_FILTER_KEYS = ["f", "q", "kind", "sid", "sort", "id", "view"];
 const FILTER_MAX = 200;
 
 function splitHash(hash) {
