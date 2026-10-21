@@ -18,6 +18,8 @@ border: 1px solid var(--line);
 border-radius: var(--r-control);
 cursor: pointer;
 white-space: nowrap;
+min-width: 0;
+max-width: 100%;
 }
 .btn:hover {background: var(--surface-2)}
 .btn[aria-pressed="true"] {background: var(--surface-2);color: var(--accent);border-color: var(--accent)}
@@ -25,7 +27,7 @@ white-space: nowrap;
 .btn-primary:hover {background: var(--accent);filter: brightness(1.08)}
 .btn:disabled {color: var(--text-3);cursor: default;background: var(--surface-1)}
 .btn-small {height: var(--h-small);padding: 0 var(--sp-2)}
-.seg {display: inline-flex;gap: var(--sp-1)}
+.seg {display: inline-flex;flex-wrap: wrap;max-width: 100%;gap: var(--sp-1)}
 .live {display: inline-flex;align-items: center;gap: var(--sp-1);color: var(--success);font-size: var(--fs-12);font-variant-numeric: tabular-nums;white-space: nowrap}
 .live::before {content: "";width: 8px;height: 8px;border-radius: 50%;background: currentColor;animation: live-pulse 2s ease-in-out infinite}
 .live.is-wait {color: var(--text-2)}
@@ -114,7 +116,7 @@ cursor: pointer
 .section-summary {min-width: 0;margin-left: auto;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;color: var(--text-2);font-size: var(--fs-12)}
 .chev {color: var(--text-2);font-size: var(--fs-12);line-height: 1}
 .section-body {padding: 0 var(--sp-4) var(--sp-4)}
-.chip {display: inline-flex;align-items: center;height: var(--h-small);padding: 0 var(--sp-2);background: var(--surface-2);color: var(--text-2);border-radius: var(--r-control);font-size: var(--fs-11);font-weight: 500;white-space: nowrap}
+.chip {display: inline-flex;align-items: center;max-width: 100%;min-width: 0;height: var(--h-small);padding: 0 var(--sp-2);background: var(--surface-2);color: var(--text-2);border-radius: var(--r-control);font-size: var(--fs-11);font-weight: 500;white-space: nowrap}
 .chip-haiku {color: var(--m-haiku)}
 .chip-sonnet {color: var(--m-sonnet)}
 .chip-opus {color: var(--m-opus)}
@@ -457,7 +459,7 @@ border: 0; border-radius: var(--r-card); color: var(--text-2); cursor: pointer; 
 .ag-icon:disabled { opacity: .35; cursor: default; }
 .ag-icon .ico { width: 14px; height: 14px; }
 .ag-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; }
-.ag-foot-btns { display: flex; gap: var(--sp-2); }
+.ag-foot-btns { display: flex; flex-wrap: wrap; gap: var(--sp-2); min-width: 0; max-width: 100%; }
 .row-grid.rg-head { display: none; }
 @media (min-width: 640px) { .row-grid.rg-head { display: grid; } }
 @media (max-width: 639px) {
@@ -486,7 +488,7 @@ display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; 
 .rg-agent > span:nth-child(7) { display: flex; align-items: center; justify-content: center; }
 .rg-agent > :nth-child(-n+4) { justify-self: start; text-align: left }
 .rg-agent > :nth-child(5), .rg-agent > :nth-child(6) { justify-self: end; text-align: right }
-.rg-agent > :nth-child(7) { justify-self: center }}
+.rg-agent > :nth-child(7) { justify-self: center }
 .rg-fin { --rg: 4.5rem minmax(0, 1fr) 4rem }
 .run-item {--rg: 10rem minmax(0, 1fr) 4.5rem;min-height: var(--h-row);padding: var(--sp-1) 0;border-top: 1px solid var(--track)}
 .run-id {font-weight: 600;font-variant-numeric: tabular-nums}
@@ -611,3 +613,51 @@ display: none;
 }
 
 .tk-by{--rg:minmax(0,1fr) 3.5rem 6rem 6rem 5.5rem}
+/* Responsive (R-responsive): tablet rows shrink their fixed tracks instead of overflowing the page. */
+@media (min-width: 640px) and (max-width: 1023px) {
+.task-row {grid-template-columns: minmax(0, 56px) minmax(0, 1fr) minmax(0, 56px) minmax(0, 64px) minmax(0, 72px) minmax(0, 96px) minmax(0, 92px)}
+}
+/* Phone (< 640px): labels wrap inside their button, tap targets >= 36px, button rows wrap, fixed-track rows scroll inside themselves. */
+@media (max-width: 639px) {
+.btn,
+.btn-small,
+.chip,
+.job-chip,
+.theme-switch,
+.ref-copy {min-width: 0; max-width: 100%}
+.btn,
+.btn-small {height: auto; min-height: 36px; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; text-align: center; justify-content: center}
+.row-grid > .btn {white-space: nowrap; overflow: hidden; text-overflow: ellipsis}
+.chip {height: auto; min-height: var(--h-control); white-space: normal; overflow-wrap: anywhere; line-height: 1.25; text-align: center}
+.job-chip {height: auto; min-height: 36px; white-space: normal; overflow-wrap: anywhere; line-height: 1.25}
+.theme-switch, .ref-copy {min-width: 36px; min-height: 36px}
+.section-title {min-width: 0; white-space: normal; overflow-wrap: anywhere}
+.legend-list dt {white-space: normal; overflow-wrap: anywhere}
+.seg, .ag-foot-btns, .band-actions {flex-wrap: wrap}
+.tk-by, .tk-spend, .rg-share, .rg-weekly, .run-item, .fin-row, .run-row {overflow-x: auto}
+.bnav-i {min-width: 0; max-width: 100%}
+.bnav-i .nav-l {overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%}
+}
+
+/* Top bar at phone width: the status pill shrinks with an ellipsis so the "?", theme and panel buttons stay on screen. */
+@media (max-width: 640px) {
+  .top-tools {flex: 1 1 0; min-width: 0; justify-content: flex-end}
+  .top-tools .pill {flex: 1 1 0; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; justify-content: flex-start}
+  .top-tools .btn, .top-tools .top-age {flex: none}
+  .crumb {flex: 0 1 auto; max-width: 34%}
+}
+
+/* Theme choice colour dot (Settings > Appearance). The ring keeps the dark half visible on dark surfaces. */
+.theme-sw {display: inline-block; flex: none; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--line)}
+.theme-sw.sw-obsidian {background: var(--sw-obsidian)}
+.theme-sw.sw-midnight {background: var(--sw-midnight)}
+.theme-sw.sw-classic {background: var(--sw-classic)}
+
+/* Settings: the cards stack with a gap instead of touching. */
+.set-stack {display: grid; gap: var(--sp-4); min-width: 0; align-content: start}
+
+/* Brand: the Helm logo (web/logo.png, a black-on-transparent mask) coloured by the theme, with the name beside it. */
+.nav-brand {display: flex; align-items: center; gap: var(--sp-2); letter-spacing: .01em}
+.nav-logo {flex: none; width: 24px; height: 24px; background-color: var(--text-1);
+  -webkit-mask: url("/logo.png") center / contain no-repeat; mask: url("/logo.png") center / contain no-repeat}
+.app[data-nav="mini"] .nav-brand {justify-content: center; padding-inline: 0}

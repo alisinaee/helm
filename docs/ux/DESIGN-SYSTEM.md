@@ -3,7 +3,7 @@
 Status key: **[exists]** already in `web/css/tokens.css`, `components.css` or `web/icons.svg`; **[proposed]** new, not wired into the app. Preview: `docs/ux/design-preview.html` (open from file://).
 
 ## Palette
-Dark is the default; light applies via `prefers-color-scheme: light` or `data-theme="light"`. All **[exists]**; no new hues.
+The table is the classic palette (`:root` dark, `:root[data-mode="light"]` light). Each of the 3 palettes has its own light mode (see Themes below). All **[exists]**; no new hues.
 
 | Role | Token | Dark | Light |
 |---|---|---|---|
@@ -65,8 +65,15 @@ Also **[exists]**: `--scrim`, `--sel`, `--drop`, shadows, spacing `--sp-*`, radi
 - Layout: 16px gutter on phone, no horizontal scroll at 375px.
 - Wiring plan (later task): add `.btn-ghost/.btn-danger/.btn-icon` and motion tokens to `tokens.css`/`components.css`, then migrate pages one by one.
 
-## Theme: Obsidian & Lime (proposal)
-Status: **[proposed]**, not wired into `web/css`. Dark only. Preview: section "Obsidian & Lime" in `docs/ux/design-preview.html` (`[data-theme="obsidian"]` token block). No external font link: Space Grotesk and JetBrains Mono are stacks with system fallbacks (Helm is local-first, no network assumed).
+## Themes
+3 palettes x 2 modes = 6 looks. Two attributes on `<html>`, set by JS:
+- `data-theme`: `obsidian` (Obsidian & Lime, the default), `classic` (the blue look, `:root`), `black` (plain black, flat glass).
+- `data-mode`: `dark` (default) or `light`. `auto` (match system) is resolved by JS, so the CSS only sees dark or light.
+
+Selectors in `web/css/tokens.css`: `:root` = classic dark; `:root[data-mode="light"]` = classic light; `:root[data-theme="obsidian"]` and `...[data-mode="light"]`; `:root[data-theme="black"]` and `...[data-mode="light"]`. With no JS, `@media (prefers-color-scheme: light) { :root:not([data-mode]) }` gives classic light. `web/css/glass.css` softens the obsidian glow on light and makes `black` flat (no blur, no colour fields, 1px edges). `python3 tools/contrast.py` checks all 6 looks (text 4.5:1, line and focus 3:1).
+
+## Theme: Obsidian & Lime
+Status: **[exists]** in `web/css/tokens.css` and `glass.css`, dark and light (light: `--accent` #4d6600 on warm white #f2f4ea). The dark values are below. Preview: section "Obsidian & Lime" in `docs/ux/design-preview.html` (`[data-theme="obsidian"]` token block). No external font link: Space Grotesk and JetBrains Mono are stacks with system fallbacks (Helm is local-first, no network assumed).
 
 | Role | Token | Value | Spec |
 |---|---|---|---|
@@ -117,4 +124,4 @@ Changes from the spec: `--text-3` 30% white (#4d4d4d, 2.48:1 on #000) became #8c
 - (d) Backdrop blur and noise count against the 72 KB CSS budget (`tests/web/test_shell.py` `CSS_TOTAL_MAX`); keep the noise data URI tiny, and add fallbacks: `prefers-reduced-transparency` (opaque `--surface-1`, no blur, no noise, no glow) and `prefers-reduced-motion` (no float, pulse or scale).
 - (e) Glass border at 10% white is under 3:1 for control borders: inputs and buttons use the stronger `--line`; focus ring is lime `--focus`.
 - (f) Hero 7.5rem type and the light "methodology" section are landing-page parts and do not apply to the dashboard.
-- (g) Lime on light surfaces fails contrast: the theme is dark only, no light variant.
+- (g) Lime on light surfaces fails contrast: resolved by a separate light mode with olive `--accent` #4d6600 (4.5:1+ on the light surfaces), not by lime.

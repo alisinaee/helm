@@ -1,8 +1,13 @@
-"""Check the colour tokens in web/css/tokens.css against WCAG contrast for the dark, light and obsidian themes.
+"""Check the colour tokens in web/css/tokens.css against WCAG contrast for the 6 looks.
 
-Text pairs need 4.5:1; graphics (control borders, focus ring, meter fills) need 3:1. The dark theme is the
-:root default. The light theme is the set of overrides under prefers-color-scheme and data-theme="light", laid over
-the dark values; the obsidian block overrides the dark ones. Exit 0 when every pair passes, 1 otherwise. Stdlib only.
+Looks = 3 palettes x 2 modes: classic, obsidian and black (data-theme), each in dark and light (data-mode).
+Text pairs need 4.5:1; graphics (control borders, focus ring, meter fills) need 3:1.
+
+The cascade is modelled as the CSS applies it: :root is the base (classic dark); :root[data-mode="light"] is the
+classic light set; :root[data-theme="X"] is palette X; :root[data-theme="X"][data-mode="light"] is palette X in light.
+Specificity order is base < mode < palette < palette+mode, ties keep file order. The no-JS fallback
+(:root:not([data-mode]) under prefers-color-scheme) is not a look and is not checked. Exit 0 when every pair of
+every look passes, 1 otherwise. Stdlib only.
 """
 
 import os
@@ -23,26 +28,51 @@ DECL = re.compile(r"--([a-z0-9-]+)\s*:\s*([^;]+);")
 HEX = re.compile(r"^#([0-9a-fA-F]{6})$")
 
 
+PALETTES = ("classic", "obsidian", "black")
+MODES = ("dark", "light")
+LOOKS = [(p, m) for p in PALETTES for m in MODES]
+THEME_ATTR = re.compile(r'data-theme="([a-z]+)"')
+
+
+def layer_of(selector):
+    """(rank, palette, light) for a selector, or None for the no-JS fallback and anything unknown.
+
+    rank: 0 base (:root), 1 mode (data-mode="light"), 2 palette, 3 palette in light. Higher rank wins.
+    """
+    if ":not([data-mode])" in selector:
+        return None
+    theme = THEME_ATTR.search(selector)
+    light = 'data-mode="light"' in selector
+    if theme is None:
+        return (1, None, True) if light else (0, None, False)
+    return (3 if light else 2), theme.group(1), light
+
+
 def parse_blocks(text):
-    """Return (dark, light, obsidian): the dark default, the light overrides and the obsidian overrides, each resolved."""
-    dark, light, obsidian = {}, {}, {}
+    """Return the ordered list of (rank, palette, light, values) for every token block in the file."""
+    layers = []
     text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
     for selector, body in BLOCK.findall(text):
         sel = " ".join(selector.split())
         values = {name: value.strip() for name, value in DECL.findall(body)}
         if not values:
             continue
-        if 'data-theme="obsidian"' in sel:
-            obsidian.update(values)
-        elif 'data-theme="light"' in sel or ':not([data-theme="dark"])' in sel:
-            light.update(values)
-        else:
-            dark.update(values)
-    resolved_light = dict(dark)
-    resolved_light.update(light)
-    resolved_obsidian = dict(dark)
-    resolved_obsidian.update(obsidian)
-    return dark, resolved_light, resolved_obsidian
+        info = layer_of(sel)
+        if info is None:
+            continue
+        rank, palette, light = info
+        layers.append((rank, palette, light, values))
+    return layers
+
+
+def resolve(layers, palette, mode):
+    """The token values one look sees: the layers that apply to it, lowest rank first, file order within a rank."""
+    chosen = [layer for layer in layers
+              if (layer[1] is None or layer[1] == palette) and (not layer[2] or mode == "light")]
+    out = {}
+    for layer in sorted(chosen, key=lambda layer: layer[0]):
+        out.update(layer[3])
+    return out
 
 
 def luminance(hex_value):
@@ -100,11 +130,14 @@ def check(values, theme):
 
 
 def main():
-    """Print every ratio and return the exit code."""
+    """Print every ratio for the 6 looks and return the exit code."""
     with open(TOKENS, encoding="utf-8") as fh:
-        dark, light, obsidian = parse_blocks(fh.read())
-    failures = check(dark, "dark") + check(light, "light") + check(obsidian, "obsidian")
-    for theme, values in (("dark", dark), ("light", light), ("obsidian", obsidian)):
+        layers = parse_blocks(fh.read())
+    failures = []
+    for palette, mode in LOOKS:
+        theme = "%s %s" % (palette, mode)
+        values = resolve(layers, palette, mode)
+        failures += check(values, theme)
         worst = min(ratio(values[fg], values[bg]) for fg, bg, _, _ in pairs() if fg in values and bg in values)
         print("%s: %d pairs checked, lowest %.2f:1" % (theme, len(pairs()), worst))
     for line in failures:

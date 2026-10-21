@@ -5,6 +5,7 @@
 // in place (no re-render), so a live refresh cannot drop the handle. Widths come from data-pct (applyMeters).
 
 import { getJson, postJson } from "../api.js";
+import { withBusy } from "../busy.js";
 import { applyMeters, esc } from "../dom.js";
 import { copyButton, refSummary } from "../ref.js";
 import { showToast } from "./toast.js";
@@ -192,7 +193,9 @@ function scheduleSave(w) {
 function save(w) {
   const d = L.draft[w];
   if (!d) return;
-  postJson("/api/v1/limits", { window: w, on: d.on, mode: d.mode, value: d.value, once: d.once }).then(function (res) {
+  // The save runs after a short pause, so the window's On switch is read now; it shows loading while the stop is saved.
+  const sw = document.querySelector('[data-lv="on"][data-win="' + w + '"]');
+  withBusy(sw, postJson("/api/v1/limits", { window: w, on: d.on, mode: d.mode, value: d.value, once: d.once })).then(function (res) {
     if (res && res.data && res.data.windows) { L.data = res.data.windows; announce(L.data); }
     if (!L.timers[w]) delete L.draft[w];
     L.at = Date.now();

@@ -3,6 +3,7 @@
 // itself so its toast can say what changed. Rules belong to one project, so All projects shows a pointer instead.
 
 import { postJson } from "../api.js";
+import { withBusy } from "../busy.js";
 import { bannerHtml, chipHtml, emptyHtml, esc } from "../dom.js";
 import { run } from "../cmd.js";
 import { pageState } from "./inbox.js";
@@ -199,10 +200,11 @@ function formValues(el) {
   };
 }
 
-// Sync posts directly so the toast can report the counts that the op returns.
-async function syncRules() {
+// Sync posts directly so the toast can report the counts that the op returns. el is the pressed button (loading).
+async function syncRules(el) {
   try {
-    const reply = await postJson("/api/v1/cmd", { op: "rules.sync", args: { dryRun: false }, project: projectNow });
+    const reply = await withBusy(el, postJson("/api/v1/cmd", { op: "rules.sync", args: { dryRun: false },
+      project: projectNow }));
     const result = (reply.data && reply.data.data) || {};
     showToast({ text: syncSummary(result), tone: "success" });
   } catch (err) {
@@ -224,10 +226,17 @@ export function ruleAction(action, el) {
     tab = el.getAttribute("data-tab") || "all";
     return true;
   }
+  // rule-rm and rule-add return false: run() re-renders at once and then marks the button busy (busyEl), so a second
+  // render here would drop the spinner.
   if (action === "rule-rm") {
     const id = el.getAttribute("data-id");
-    run("rules.rm", { id: id }, { project: projectNow, label: "Rule " + id + " deleted" });
-    return true;
+    run("rules.rm", { id: id }, { project: projectNow, label: "Rule " + id + " deleted",
+      busyEl: function () {
+        return Array.from(document.querySelectorAll('[data-action="rule-rm"]')).find(function (b) {
+          return b.getAttribute("data-id") === id;
+        }) || null;
+      } });
+    return false;
   }
   if (action === "rule-add") {
     const form = el.closest(".rules-form");
@@ -242,12 +251,15 @@ export function ruleAction(action, el) {
       if (field) field.focus();
       return false;
     }
-    run("rules.add", v, { project: projectNow, label: "Rule added" });
-    return true;
+    run("rules.add", v, { project: projectNow, label: "Rule added",
+      busyEl: function () {
+        return document.querySelector('[data-action="rule-add"]');
+      } });
+    return false;
   }
   if (action === "rule-sync") {
-    syncRules();
-    return true;
+    syncRules(el);
+    return false;
   }
   return false;
 }

@@ -5,11 +5,12 @@
 
 import { getJson, postJson, sinceUrl } from "./api.js";
 import { bannerHtml, emptyHtml, esc, patch, setHidden, skeletonHtml } from "./dom.js";
-import { buildViewModel, createStore, isSheetWidth, loadPrefs, loadTheme, loadUi, nextTheme, normalizeSnapshot,
-  panelIsOpen, saveTheme, savePrefs, sectionOpenState, updateUi } from "./state.js";
+import { buildViewModel, createStore, isSheetWidth, loadMode, loadPrefs, loadTheme, loadUi, normalizeSnapshot,
+  panelIsOpen, resolveMode, saveMode, savePrefs, sectionOpenState, updateUi } from "./state.js";
 import { currentRoute, onRouteChange } from "./router.js";
 import { fullRouteOf, fullSystemOf, loadSection, sectionById } from "./routes.js";
 import { configureCommands, pendingValue, run } from "./cmd.js";
+import { withBusy } from "./busy.js";
 import { initKeys, setKeyHooks } from "./keys.js";
 import { featureLinkChange } from "./views/details.js";
 import { bnavView, navView, toggleMore } from "./views/nav.js";
@@ -22,7 +23,7 @@ import { initPanel, panelView } from "./views/panel.js";
 import { initResize } from "./resize.js";
 import { initSplitters } from "./splitter.js";
 import { initToolbars } from "./toolbar.js";
-import { topbarView } from "./views/topbar.js";
+import { isLightNow, topbarView } from "./views/topbar.js";
 import { dismissToast, setToastHold, setToastListener, toastsHtml, undoToast } from "./views/toast.js";
 import { copyRef } from "./ref.js";
 import { installLog, logAction, noteRender, noteRoute } from "./log.js";
@@ -68,13 +69,48 @@ function updatePrefs(route, change) {
   savePrefs(prefsKey(route), prefs);
 }
 
-function applyTheme(theme) {
+// data-theme is the palette; data-mode is always dark or light (auto is resolved here, see resolveMode).
+function applyTheme(theme, mode) {
   const html = document.documentElement;
-  if (theme === "auto") {
-    html.removeAttribute("data-theme");
-  } else {
-    html.setAttribute("data-theme", theme);
+  html.setAttribute("data-theme", theme);
+  html.setAttribute("data-mode", resolveMode(mode));
+}
+
+// While the mode is auto, a change of the system preference re-applies the look.
+function watchSystemMode() {
+  if (typeof matchMedia !== "function") return;
+  const query = matchMedia("(prefers-color-scheme: light)");
+  const onChange = () => {
+    if (loadMode() !== "auto") return;
+    applyTheme(loadTheme(), "auto");
+    render();
+  };
+  if (query.addEventListener) query.addEventListener("change", onChange);
+}
+
+// The sun/moon button flips the mode (dark <-> light). The new mode spreads out as a circle from the switch button
+// (View Transitions API). Browsers without it, and reduced-motion users, get the change at once.
+function switchMode(next, origin) {
+  const apply = () => {
+    saveMode(next);
+    applyTheme(loadTheme(), next);
+    render();
+  };
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!document.startViewTransition || reduce) {
+    apply();
+    return;
   }
+  const box = origin ? origin.getBoundingClientRect() : null;
+  const x = box ? box.left + box.width / 2 : window.innerWidth - 40;
+  const y = box ? box.top + box.height / 2 : 40;
+  const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+  const transition = document.startViewTransition(apply);
+  transition.ready.then(() => {
+    document.documentElement.animate(
+      { clipPath: ["circle(0px at " + x + "px " + y + "px)", "circle(" + radius + "px at " + x + "px " + y + "px)"] },
+      { duration: 620, easing: "cubic-bezier(.2,.8,.2,1)", pseudoElement: "::view-transition-new(root)" });
+  });
 }
 
 function errorHtml(sectionId, err) {
@@ -210,6 +246,7 @@ function buildShellVm(route, now) {
   const snapshots = snapshotsInScope(route);
   vm.ui = loadUi();
   vm.theme = vm.ui.theme;
+  vm.mode = vm.ui.mode;
   vm.snapshotList = snapshots;
   vm.meterRows = meterRowsFor(snapshots);
   vm.limits = topLimitsFor();
@@ -448,7 +485,8 @@ async function syncUsage() {
   store.sync = { state: "running", message: "Syncing usage." };
   render();
   try {
-    await postJson("/api/v1/usage/sync", {});
+    // render() drew the sync button again: mark that new node busy while the sync request runs.
+    await withBusy(document.querySelector('[data-action="sync-usage"]'), postJson("/api/v1/usage/sync", {}));
     store.sync = { state: "ok", message: "Usage synced." };
     render();
     // The new reading and meters come in the next snapshot (snap.usage, snap.meters): read it now.
@@ -519,11 +557,8 @@ function onClick(event) {
     toggleItem(route, el);
   } else if (action === "set-mode") {
     setMode(route, el.getAttribute("data-mode"));
-  } else if (action === "cycle-theme") {
-    const next = nextTheme(loadTheme());
-    saveTheme(next);
-    applyTheme(next);
-    render();
+  } else if (action === "theme-toggle") {
+    switchMode(isLightNow(loadMode()) ? "dark" : "light", el);
   } else if (action === "sync-usage") {
     syncUsage();
   } else if (action === "control") {
@@ -607,7 +642,8 @@ function onPointerOut(event) {
 
 function boot() {
   installLog();
-  applyTheme(loadTheme());
+  applyTheme(loadTheme(), loadMode());
+  watchSystemMode();
   setKeyHooks({
     rerender: render,
     openHelp: openHelp,

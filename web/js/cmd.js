@@ -4,6 +4,7 @@
 // rev changes after the reply (the new generation has the write). A poll that finds the same rev does not settle it.
 
 import { postJson } from "./api.js";
+import { withBusy } from "./busy.js";
 import { logAction } from "./log.js";
 import { showToast } from "./views/toast.js";
 
@@ -75,7 +76,8 @@ async function undoActivity(activity, project, opts, key) {
 }
 
 // opts: label (toast text), project (id; default the current project), apply and revert (local state),
-// key and value (a pending value for the snapshot-backed control, see pendingValue).
+// key and value (a pending value for the snapshot-backed control, see pendingValue), busyEl (a function that returns
+// the button to show loading, called after the optimistic re-render, which replaces the pressed button).
 export async function run(op, args, opts) {
   const o = opts || {};
   const label = o.label || op;
@@ -91,7 +93,8 @@ export async function run(op, args, opts) {
   rerender();
   let reply;
   try {
-    reply = await postOp(op, args, project);
+    const busyOn = typeof o.busyEl === "function" ? o.busyEl() : null;
+    reply = await withBusy(busyOn, postOp(op, args, project));
   } catch (err) {
     if (key) pending.delete(key);
     if (typeof o.revert === "function") o.revert();

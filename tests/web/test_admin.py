@@ -56,6 +56,12 @@ class AdminFiles(unittest.TestCase):
         self.assertIn("limitAction(action, el)", app)
         self.assertIn("settingsAction(action, el)", app)
 
+    def test_app_applies_palette_and_mode(self):
+        app = read(os.path.join(JS, "app.js"))
+        self.assertIn('setAttribute("data-mode"', app)
+        self.assertIn("(prefers-color-scheme: light)", app)
+        self.assertIn("applyTheme(loadTheme(), loadMode())", app)
+
     def test_new_files_have_no_hex_colour_or_inline_markup(self):
         for name in NEW_VIEWS:
             text = read(os.path.join(VIEWS, name))
@@ -127,6 +133,7 @@ class AdminRender(unittest.TestCase):
     def test_settings_have_theme_density_and_phone_note(self):
         html = self.out["settings"]
         self.assertIn('data-action="set-theme"', html)
+        self.assertIn('data-action="set-color-mode"', html)
         self.assertIn('data-action="set-density"', html)
         self.assertIn("Read only on a phone", html)
         self.assertIn('data-action="help-open"', html)

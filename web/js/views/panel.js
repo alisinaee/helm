@@ -38,7 +38,7 @@ export function panelView(vm) {
   const body = tab === "details" ? detailsView(vm) : projectsView(vm);
   return '<div class="side-tabs" role="tablist" aria-label="Panel">' +
     tabButton("projects", "Projects", tab) + tabButton("details", "Details", tab) +
-    '<button type="button" class="btn-small side-close" data-action="panel-close" aria-label="Close panel" ' +
+    '<button type="button" class="btn btn-small side-close" data-action="panel-close" aria-label="Close panel" ' +
     'data-focus="side-close">Close</button></div>' +
     '<div class="side-body" id="side-body" role="tabpanel" aria-labelledby="tab-' + esc(tab) + '">' + body + "</div>";
 }

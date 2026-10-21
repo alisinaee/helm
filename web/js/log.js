@@ -450,7 +450,8 @@ export function installLog() {
     const nav = typeof navigator !== "undefined" ? navigator : {};
     record("ui.load", "INFO", "page load", {
       viewport: window.innerWidth + "x" + window.innerHeight,
-      theme: document.documentElement.getAttribute("data-theme") || "auto",
+      theme: document.documentElement.getAttribute("data-theme") || "obsidian",
+      mode: document.documentElement.getAttribute("data-mode") || "dark",
       dpr: window.devicePixelRatio,
       ua: cut(nav.userAgent || "", 80),
     });

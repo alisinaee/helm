@@ -1,5 +1,8 @@
 :root {
   --ref-col: 1.5rem;
+  --sw-obsidian: linear-gradient(135deg, #0c0c0c 50%, #ccff00 50%);
+  --sw-midnight: linear-gradient(135deg, #161b22 50%, #8ab4ff 50%);
+  --sw-classic: linear-gradient(135deg, #000000 50%, #ffffff 50%);
   --split-git: 26rem;
   --split-: 26rem;
   color-scheme: dark;
@@ -60,7 +63,7 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
 }
 @media (prefers-color-scheme: light) {
-:root:not([data-theme="dark"]) {
+:root:not([data-mode]) {
   color-scheme: light;
   --surface-0: #f4f5f7;
   --surface-1: #ffffff;
@@ -91,7 +94,7 @@
   --shadow-2: 0 8px 24px rgba(21, 25, 31, 0.18)
 }
 }
-:root[data-theme="light"] {
+:root[data-mode="light"] {
   color-scheme: light;
   --surface-0: #f4f5f7;
   --surface-1: #ffffff;
@@ -121,10 +124,6 @@
   --shadow-1: 0 1px 2px rgba(21, 25, 31, 0.12);
   --shadow-2: 0 8px 24px rgba(21, 25, 31, 0.18)
 }
-:root[data-theme="dark"] {
-  color-scheme: dark
-}
-
 /* Tokens page (R11.6): tabs, controls, charts. Colours only from the tokens above. */
 .tk-panel[hidden], .tk-tip[hidden] { display: none }
 .tk-panel { display: grid; gap: var(--sp-3); min-width: 0; align-content: start }
@@ -203,7 +202,7 @@
 
 /* R11.8 accounts: one table. The list owns the tracks; header and rows take them through subgrid. */
 .spend-list.tk-acct-list {
-  --acct-cols: minmax(120px, 1fr) minmax(150px, 1.2fr) 7ch 6ch 6ch 8ch 6.5rem;
+  --acct-cols: minmax(120px, 1fr) minmax(150px, 1.2fr) 12ch 6ch 6ch 8ch max-content;
   display: grid; grid-template-columns: var(--acct-cols); gap: var(--sp-2) var(--sp-3); width: 100%; min-width: 0 }
 .tk-acct-head, .tk-acct-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid;
   column-gap: var(--sp-3); align-items: center; min-width: 0; margin: 0; padding: 0 }
@@ -212,9 +211,15 @@
 .tk-acct-cell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .tk-acct-head .tk-acct-cell { overflow: visible }
 .tk-acct-num { text-align: right; font-variant-numeric: tabular-nums }
-.tk-acct-actions { display: grid; grid-template-columns: 3.5rem 2.25rem; justify-content: end; align-items: center; gap: var(--sp-1); overflow: visible }
-.tk-acct-actions .btn { width: 100%; min-width: 0; margin: 0; padding-inline: var(--sp-1); white-space: nowrap }
-.tk-acct-actions .btn[data-act="switch"] { color: var(--accent); border-color: var(--accent) }
+.tk-acct-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: var(--sp-1); overflow: visible }
+.tk-acct-actions .btn { margin: 0; min-width: 0; white-space: nowrap }
+.tk-acct-actions .btn-primary { font-weight: 600 }
+.tk-acct-actions .btn.tk-act-on { color: var(--accent); border-color: var(--accent) }
+.tk-acct-actions .btn.tk-act-off { color: var(--warning); border-color: var(--warning) }
+.tk-acct-actions .btn.tk-act-del { color: var(--danger); border-color: var(--danger) }
+.tk-acct-actions .btn.tk-act-del:disabled { color: var(--text-3); border-color: var(--line) }
+.tk-acct-actions .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.tk-acct-actions .btn[data-act="refresh"][disabled] { opacity: .7 }
 .tk-menu { position: relative }
 .tk-menu > summary { list-style: none; display: flex; align-items: center; justify-content: center; cursor: pointer }
 .tk-menu > summary::-webkit-details-marker { display: none }
@@ -250,7 +255,7 @@
   .tk-acct-cell::before { content: attr(data-label); flex: 0 0 6.5rem; color: var(--text-3); font-size: var(--fs-11) }
   .tk-acct-num { text-align: left }
   .tk-acct-actions { justify-content: flex-start }
-  .tk-acct-actions > span { display: none }
+  .tk-acct-actions .btn { min-height: 36px }
   .tk-menu-list { right: auto; left: 0 }
 }
 
@@ -305,7 +310,7 @@
   --glass-ink-soft: rgba(0, 0, 0, 0.12);
 }
 @media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
+  :root:not([data-mode]) {
     --glass-fill: rgba(255, 255, 255, 0.55);
     --glass-fill-strong: rgba(255, 255, 255, 0.72);
     --glass-edge: rgba(255, 255, 255, 0.8);
@@ -317,7 +322,7 @@
     --glass-ink-soft: rgba(21, 25, 31, 0.10);
   }
 }
-:root[data-theme="light"] {
+:root[data-mode="light"] {
   --glass-fill: rgba(255, 255, 255, 0.55);
   --glass-fill-strong: rgba(255, 255, 255, 0.72);
   --glass-edge: rgba(255, 255, 255, 0.8);
@@ -329,8 +334,8 @@
   --glass-ink-soft: rgba(21, 25, 31, 0.10);
 }
 
-/* Obsidian & Lime (R10.37, docs/ux/DESIGN-SYSTEM.md). Dark only, the default. Contrast values from the proposal;
-   --defer and --m-* keep the dark values (all pass 4.5:1 on these darker surfaces, checked by tools/contrast.py). */
+/* Obsidian & Lime (R10.37, docs/ux/DESIGN-SYSTEM.md). Dark is the default; the light mode is below. Contrast values from
+   the proposal; --defer and --m-* keep the dark values (all pass 4.5:1 on these darker surfaces, checked by tools/contrast.py). */
 :root[data-theme="obsidian"] {
   color-scheme: dark;
   --surface-0: #000000;
@@ -370,3 +375,135 @@
   --font-ui: "Space Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
 }
+
+/* Obsidian & Lime, light mode (theme plan): lime-olive on warm white. Sets every colour and glass token the dark block
+   sets; the glow and grid tokens are softened so the backdrop stays quiet on white. */
+:root[data-theme="obsidian"][data-mode="light"] {
+  color-scheme: light;
+  --surface-0: #f2f4ea;
+  --surface-1: #ffffff;
+  --surface-2: #e8ebdd;
+  --line: #6b7060;
+  --track: #d9ddcc;
+  --text-1: #14170a;
+  --text-2: #4a4f3a;
+  --text-3: #5a5f4a;
+  --accent: #4d6600;
+  --on-accent: #ffffff;
+  --focus: #4d6600;
+  --success: #0b7050;
+  --warning: #8a5a00;
+  --danger: #b42318;
+  --info: #0b6a9e;
+  --unknown: #5a5f4a;
+  --scrim: rgba(20, 23, 10, 0.35);
+  --sel: rgba(77, 102, 0, 0.14);
+  --drop: rgba(77, 102, 0, 0.7);
+  --shadow-1: 0 1px 2px rgba(20, 23, 10, 0.12);
+  --shadow-2: 0 8px 24px rgba(20, 23, 10, 0.18);
+  --glass-fill: rgba(255, 255, 255, 0.6);
+  --glass-fill-strong: rgba(255, 255, 255, 0.8);
+  --glass-edge: rgba(77, 102, 0, 0.16);
+  --glass-hi: rgba(255, 255, 255, 0.95);
+  --glass-shadow: 0 10px 30px rgba(20, 23, 10, 0.12), inset 0 1px 0 var(--glass-hi);
+  --glass-blur: blur(16px) saturate(140%);
+  --glass-r: 1.5rem;
+  --r-shell: 2.5rem;
+  --field-a: rgba(77, 102, 0, 0.1);
+  --field-b: rgba(11, 122, 85, 0.1);
+  --field-c: rgba(77, 102, 0, 0.06);
+  --grid-line: rgba(20, 23, 10, 0.05);
+  --glow: rgba(77, 102, 0, 0.14);
+  --glow-sphere: rgba(77, 102, 0, 0.1);
+  --glass-ink-soft: rgba(20, 23, 10, 0.1);
+  --ease-ob: cubic-bezier(0.4, 0, 0.2, 1)
+}
+
+/* Black (theme plan): plain black, white accent, flat glass (no blur, no colour fields). Status, model and defer colours
+   inherit the classic dark values from :root. */
+:root[data-theme="black"] {
+  color-scheme: dark;
+  --surface-0: #000000;
+  --surface-1: #0a0a0a;
+  --surface-2: #161616;
+  --line: #6e6e6e;
+  --track: #222222;
+  --text-1: #f2f2f2;
+  --text-2: #a0a0a0;
+  --text-3: #8c8c8c;
+  --accent: #ffffff;
+  --on-accent: #000000;
+  --focus: #ffffff;
+  --sel: rgba(255, 255, 255, 0.14);
+  --drop: rgba(255, 255, 255, 0.7);
+  --glass-fill: rgba(255, 255, 255, 0.04);
+  --glass-fill-strong: rgba(255, 255, 255, 0.07);
+  --glass-edge: rgba(255, 255, 255, 0.12);
+  --glass-hi: rgba(255, 255, 255, 0.06);
+  --glass-shadow: inset 0 1px 0 var(--glass-hi);
+  --glass-blur: none;
+  --field-a: transparent;
+  --field-b: transparent;
+  --field-c: transparent;
+  --glass-ink-soft: rgba(0, 0, 0, 0.4);
+  --r-control: 4px;
+  --r-card: 6px;
+  --glass-r: 6px;
+  --r-shell: 6px
+}
+
+/* Black, light mode: same flat rules on white. Status, model and defer colours are the classic light values. */
+:root[data-theme="black"][data-mode="light"] {
+  color-scheme: light;
+  --surface-0: #f5f5f5;
+  --surface-1: #ffffff;
+  --surface-2: #ebebeb;
+  --line: #707070;
+  --track: #dcdcdc;
+  --text-1: #0a0a0a;
+  --text-2: #4d4d4d;
+  --text-3: #5c5c5c;
+  --accent: #111111;
+  --on-accent: #ffffff;
+  --focus: #111111;
+  --success: #13703a;
+  --warning: #7a4d00;
+  --danger: #b3261e;
+  --info: #0a5f8f;
+  --defer: #5b3fb8;
+  --m-haiku: #0b6b5f;
+  --m-sonnet: #1f4fa8;
+  --m-opus: #8a2b9e;
+  --m-cursor: #7a4a00;
+  --m-agy: #3d6e12;
+  --unknown: #5f6878;
+  --scrim: rgba(10, 10, 10, 0.35);
+  --sel: rgba(17, 17, 17, 0.1);
+  --drop: rgba(17, 17, 17, 0.7);
+  --shadow-1: 0 1px 2px rgba(10, 10, 10, 0.12);
+  --shadow-2: 0 8px 24px rgba(10, 10, 10, 0.18);
+  --glass-fill: rgba(255, 255, 255, 0.6);
+  --glass-fill-strong: rgba(255, 255, 255, 0.85);
+  --glass-edge: rgba(0, 0, 0, 0.12);
+  --glass-hi: rgba(255, 255, 255, 0.9);
+  --glass-shadow: inset 0 1px 0 var(--glass-hi);
+  --glass-blur: none;
+  --field-a: transparent;
+  --field-b: transparent;
+  --field-c: transparent;
+  --glass-ink-soft: rgba(0, 0, 0, 0.08);
+  --r-control: 4px;
+  --r-card: 6px;
+  --glass-r: 6px;
+  --r-shell: 6px
+}
+
+/* Nav rail (glass.css): the label shimmer colours and where the drag handles sit relative to the floating cards
+   (frame padding + half the gap - half the 6px handle; Obsidian's frame has an extra margin and border). */
+:root { --rz-off: 12px; --nav-sh-base: var(--text-1); --nav-sh-peak: var(--accent) }
+:root[data-theme="obsidian"] { --rz-off: 27px }
+:root[data-theme="black"] { --nav-sh-base: var(--text-2) }
+
+/* Toolbar height and soft list dividers (glass.css): one hairline colour for rows and group headers. */
+:root { --tb-h: 38px; --divider: color-mix(in srgb, var(--line) 20%, transparent) }
+@media (max-width: 640px) { :root { --tb-h: 40px } }
