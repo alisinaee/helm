@@ -122,18 +122,22 @@ def _normalise(entry):
 
 
 def accounts(cfg=None):
-    """The configured accounts, normalised. No list (or an empty one) gives the implicit default account."""
+    """The configured accounts, normalised. No list gives the implicit default account. A list the person emptied
+    (the last account removed) stays empty: Helm then reads no login until one is added."""
     cfg = cfg if cfg is not None else config_store.load()
     raw = cfg.get(LIST_KEY) if isinstance(cfg, dict) else None
+    if isinstance(raw, list) and not raw:
+        return []
     out = [a for a in (_normalise(e) for e in (raw if isinstance(raw, list) else [])) if a is not None]
     return out or [default_account()]
 
 
 def active_id(cfg=None):
+    """The id of the account the sync reads, or None when the list is empty."""
     cfg = cfg if cfg is not None else config_store.load()
     ids = [a["id"] for a in accounts(cfg)]
     chosen = cfg.get(ACTIVE_KEY) if isinstance(cfg, dict) else None
-    return chosen if chosen in ids else ids[0]
+    return chosen if chosen in ids else (ids[0] if ids else None)
 
 
 def _not_found(account_id):
@@ -184,6 +188,8 @@ def active_for_sync(cfg=None):
     account, so the sync behaves as before R11.8."""
     try:
         cfg = cfg if cfg is not None else config_store.load()
+        if not accounts(cfg):  # the person removed every account: the sync reads nothing
+            return {"id": DEFAULT_ID, "location": None, "connected": False}
         account = _find(cfg, active_id(cfg))
         return {"id": account["id"], "location": location(account), "connected": account["enabled"]}
     except Exception as exc:  # the sync must keep working with the old single login
@@ -441,11 +447,11 @@ def list_status(cfg=None, full_email=True, now=None):
 def _materialise(cfg):
     """The config's account list, written out with the implicit default the first time it is changed."""
     raw = cfg.get(LIST_KEY)
-    if not isinstance(raw, list) or not [e for e in raw if _normalise(e) is not None]:
+    if not isinstance(raw, list) or (raw and not [e for e in raw if _normalise(e) is not None]):
         cfg[LIST_KEY] = [default_account()]
-    else:
+    else:  # an empty list stays empty (every account was removed)
         cfg[LIST_KEY] = [e for e in (_normalise(x) for x in raw) if e is not None]
-    if cfg.get(ACTIVE_KEY) not in [e["id"] for e in cfg[LIST_KEY]]:
+    if cfg[LIST_KEY] and cfg.get(ACTIVE_KEY) not in [e["id"] for e in cfg[LIST_KEY]]:
         cfg[ACTIVE_KEY] = cfg[LIST_KEY][0]["id"]
     return cfg[LIST_KEY]
 
@@ -567,6 +573,8 @@ def add(account_id, label=None, source="config-dir", path=None, keychain_service
         if any(location(r) == location(entry) for r in rows):
             raise RoadmapError("conflict", "another usage account already reads that login", EXIT_CONFLICT)
         rows.append(entry)
+        if cfg.get(ACTIVE_KEY) not in [r["id"] for r in rows]:  # the first account added to an emptied list
+            cfg[ACTIVE_KEY] = entry["id"]
         return cfg
     cfg = config_store._update(mutate)
     _event("add", account_id, src, data_dir)
@@ -574,19 +582,27 @@ def add(account_id, label=None, source="config-dir", path=None, keychain_service
 
 
 def remove(account_id, src="cli", data_dir=None):
-    """Forget a login place (its kept reading too). The active account cannot be removed: switch first. Nothing of
-    Claude Code's own login is touched."""
+    """Forget a login place (its kept reading too). Removing the active account makes the first remaining one active.
+    Removing the last account leaves an empty list: Helm then reads no login (the sync reports disconnected) until
+    an account is added again. Nothing of Claude Code's own login is touched."""
     def mutate(cfg):
         rows = _materialise(cfg)
         if not any(r["id"] == account_id for r in rows):
             raise _not_found(account_id)
-        if cfg.get(ACTIVE_KEY) == account_id:
-            raise RoadmapError("conflict", "'%s' is the active account: switch to another one first" % account_id,
-                               EXIT_CONFLICT)
+        was_active = cfg.get(ACTIVE_KEY) == account_id
         cfg[LIST_KEY] = [r for r in rows if r["id"] != account_id]
-        return cfg
-    cfg = config_store._update(mutate)
+        if not cfg[LIST_KEY]:
+            cfg.pop(ACTIVE_KEY, None)
+            return cfg, "", True
+        if was_active:
+            cfg[ACTIVE_KEY] = cfg[LIST_KEY][0]["id"]
+        return cfg, (cfg[ACTIVE_KEY] if was_active else ""), False
+    cfg, now_active, emptied = config_store._update(mutate)
     _drop_state(account_id)
+    if emptied:
+        _usage_after("disconnect", account_id, cfg)
+    elif now_active:
+        _usage_after("switch", now_active, cfg)
     _event("remove", account_id, src, data_dir)
     return list_status(cfg)
 

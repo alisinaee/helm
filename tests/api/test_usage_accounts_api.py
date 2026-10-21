@@ -52,6 +52,33 @@ class UsageAccountsRoutes(ServerCase):
             self.assertEqual(res.json()["action"], action)
             fn.assert_called_once_with("acct-1", src="ui")
 
+    def test_refresh_connects_switches_checks_and_syncs(self):
+        # Refresh after a login: connect, make it the account the sync reads, read its login, take one usage reading.
+        listed = {"active": "acct-1", "accounts": [{"id": "acct-1", "label": "Work", "status": "ok"}], "found": []}
+        with mock.patch("roadmap.services.usage_accounts.connect", return_value=ROW) as connect, \
+                mock.patch("roadmap.services.usage_accounts.switch", return_value=ROW) as switch, \
+                mock.patch("roadmap.services.usage_accounts.check", return_value=ROW) as check, \
+                mock.patch("roadmap.services.usage_accounts.list_status", return_value=listed):
+            res = self.post("acct-1", "refresh")
+        self.assertEqual(res.status, 200, res.body[:200])
+        self.assertEqual(res.json(), listed)
+        connect.assert_called_once_with("acct-1", src="ui")
+        switch.assert_called_once_with("acct-1", src="ui")
+        check.assert_called_once_with("acct-1")
+        self.assertEqual(self.sync.calls, 1)
+
+    def test_refresh_keeps_a_failed_reading_on_the_row(self):
+        # A usage error is stored on the row by usage.sync_once; the refresh still answers 200 with the rows.
+        from roadmap.services import usage
+        self.sync.error = usage.UsageError("the login expired", "expired")
+        with mock.patch("roadmap.services.usage_accounts.connect", return_value=ROW), \
+                mock.patch("roadmap.services.usage_accounts.switch", return_value=ROW), \
+                mock.patch("roadmap.services.usage_accounts.check", return_value=ROW), \
+                mock.patch("roadmap.services.usage_accounts.list_status", return_value={"accounts": []}):
+            res = self.post("acct-1", "refresh")
+        self.assertEqual(res.status, 200, res.body[:200])
+        self.assertEqual(self.sync.calls, 1)
+
     def test_check_and_login(self):
         with mock.patch("roadmap.services.usage_accounts.check", return_value=ROW) as check:
             res = self.post("acct-1", "check")
@@ -103,6 +130,29 @@ class UsageAccountsRoutes(ServerCase):
             res = self.post("acct-1", "remove")
         self.assertEqual(res.status, 200, res.body[:200])
         rm.assert_called_once_with("acct-1", src="ui")
+
+    def test_remove_drops_the_active_account_and_the_last_one_leaves_an_empty_list(self):
+        import os
+        from roadmap.services import usage_accounts
+        folder = os.path.join(self.tmp, "claude-work")
+        os.makedirs(folder)
+        usage_accounts.add("work", label="Work", source="config-dir", path=folder)
+        with mock.patch("roadmap.services.usage.account_switched"), \
+                mock.patch("roadmap.services.usage.account_login_reset"):
+            res = self.post("default", "remove")  # the active account: the next one becomes active
+            self.assertEqual(res.status, 200, res.body[:200])
+            body = res.json()
+            self.assertEqual([a["id"] for a in body["accounts"]], ["work"])
+            self.assertEqual(body["active"], "work")
+            last = self.post("work", "remove")  # the last one: the list stays empty, the default does not return
+            self.assertEqual(last.status, 200, last.body[:200])
+            self.assertEqual(last.json()["accounts"], [])
+            self.assertIsNone(last.json()["active"])
+            self.assertFalse(usage_accounts.active_for_sync()["connected"])
+            # The Claude Code login can be added again; it becomes the active account.
+            back = usage_accounts.add("default", label="Claude Code", source="keychain")
+            self.assertEqual(back["active"], "default")
+            self.assertTrue(usage_accounts.active_for_sync()["connected"])
 
     def test_phone_listener_is_denied_add_and_remove(self):
         from roadmap.errors import RoadmapError
