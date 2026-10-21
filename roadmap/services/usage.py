@@ -478,7 +478,12 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
     disconnected = not account["connected"]
     if disconnected and store.get("syncError") != CODE_DISCONNECTED:
         _update_store({"syncError": CODE_DISCONNECTED, "lastError": None})
-    skip = disconnected or (background and _in_future(store.get("keychainRetryAfter"), moment))
+    backoff = background and _in_future(store.get("keychainRetryAfter"), moment)
+    if backoff and store.get("keychainStamp") and usage_sources.keychain_stamp() != store.get("keychainStamp"):
+        # The keychain item was rewritten since the failure (a new `claude auth login`): try it now, not in 6 hours.
+        _update_store({"keychainRetryAfter": None, "keychainStamp": None})
+        backoff = False
+    skip = disconnected or backoff
     oauth_error = None
     if not background and not disconnected:
         if store.get("syncError") in KEYCHAIN_CODES:
@@ -516,6 +521,8 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
             else:
                 _record_error(str(exc), exc.code, retry)
                 oauth_error = exc
+            if retry is not None and where is None:
+                _update_store({"keychainStamp": usage_sources.keychain_stamp()})
         else:
             changes = dict(usage_record(reading, SOURCE_ENDPOINT), lastError=None, syncError=None,
                            keychainRetryAfter=None)
