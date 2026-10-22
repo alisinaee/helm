@@ -124,7 +124,7 @@ class HeadRouteFilters(unittest.TestCase):
             self.skipTest("node is not installed")
         script = (
             "const r = await import(process.argv[1]);"
-            "const hashes = ['#head?f=unhandled&q=api%20fix&kind=task&sid=alpha&id=H1', '#/all/roadmap?f=state:todo&q=x'];"
+            "const hashes = ['#head?f=unhandled&q=api%20fix&kind=task&sid=alpha&sort=old&id=H1&view=cards', '#/all/roadmap?f=state:todo&q=x'];"
             "const out = hashes.map((h) => { const p = r.parseRoute(h); return {section: p.section, filters: p.filters, redirect: p.redirect || null}; });"
             "console.log(JSON.stringify(out));"
         )
@@ -134,7 +134,9 @@ class HeadRouteFilters(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         head, roadmap = json.loads(proc.stdout)
         self.assertEqual(head["section"], "head")
-        self.assertEqual(head["filters"], {"f": "unhandled", "q": "api fix", "kind": "task", "sid": "alpha", "id": "H1"})
+        self.assertEqual(head["filters"], {"f": "unhandled", "q": "api fix", "kind": "task", "sid": "alpha", "sort": "old",
+                                          "id": "H1", "view": "cards"})
+        self.assertIn("view=cards", head["redirect"])
         self.assertIn("q=api+fix", head["redirect"])
         self.assertIn("kind=task", head["redirect"])
         self.assertEqual(roadmap["section"], "roadmap")

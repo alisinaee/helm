@@ -123,7 +123,16 @@ class CspTests(unittest.TestCase):
         self.assertEqual(problems, [])
 
     def test_no_uppercase_transform(self):
-        problems = [rel(p) for p in web_text_files() if p.endswith(".css") and "uppercase" in read(p)]
+        # R10.37: only the Obsidian palette (mono status labels, any mode) may uppercase, and only in rules scoped to it
+        problems = []
+        for p in web_text_files():
+            if not p.endswith(".css"):
+                continue
+            for selector, body in re.findall(r"([^{}]+)\{([^{}]*)\}", read(p)):
+                if "uppercase" in body and not all('[data-theme="obsidian"]' in part
+                                                   for part in selector.split(",")):
+                    problems.append(rel(p))
+                    break
         self.assertEqual(problems, [])
 
 

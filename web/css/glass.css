@@ -1,0 +1,673 @@
+/* Liquid-glass layer (loaded last). Surfaces become translucent, blurred panels floating over a soft colour field.
+   Overrides only: no markup or script changes. Every colour and glass value comes from the tokens in tokens.css. */
+
+/* The colour field behind everything, so the glass has something to refract. */
+body {
+  position: relative;
+  min-height: 100vh;
+  background-color: var(--surface-0);
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 45% at 18% 12%, var(--field-a), transparent 70%),
+    radial-gradient(38% 42% at 86% 18%, var(--field-b), transparent 70%),
+    radial-gradient(45% 50% at 62% 92%, var(--field-c), transparent 70%);
+  filter: blur(20px);
+}
+
+/* Floating frame on wide screens: the rail, the top bar and the side panel become inset glass cards. */
+@media (min-width: 641px) {
+  .app { padding: 10px; gap: 10px; }
+}
+
+.nav,
+.top,
+.side,
+.bnav,
+.sheet,
+.toast,
+.help {
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+.nav {
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--glass-r);
+  box-shadow: var(--glass-shadow);
+  padding: var(--sp-3) var(--sp-2);
+}
+.nav-foot { border-top-color: var(--glass-edge); }
+
+.top {
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--glass-r);
+  box-shadow: var(--glass-shadow);
+  padding: 0 var(--sp-4);
+}
+
+.side {
+  background: var(--glass-fill-strong);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--glass-r);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+}
+.side-tabs { border-bottom-color: var(--glass-edge); }
+
+.main { border-radius: var(--glass-r); }
+
+/* Nav items: soft pills, no hard edges. */
+.nav-i,
+.bnav-i,
+.nav-collapse {
+  border-radius: var(--r-control);
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.nav-i:hover,
+.bnav-i:hover,
+.nav-collapse:hover {
+  background: var(--glass-fill-strong);
+}
+.nav-i[aria-current="page"],
+.bnav-i[aria-current="page"] {
+  background: var(--glass-fill-strong);
+  box-shadow: inset 0 1px 0 var(--glass-hi), 0 1px 4px var(--glass-ink-soft);
+}
+
+/* Controls: rounder, lighter, glass on hover, a little press feedback. */
+.btn,
+.side-tab,
+.tk-chip {
+  border-radius: 999px;
+  transition: background var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+}
+.btn:hover,
+.side-tab:hover,
+.tk-chip:hover {
+  background: var(--glass-fill-strong);
+}
+.btn:active,
+.side-tab:active,
+.tk-chip:active {
+  transform: scale(0.97);
+}
+.side-tab[aria-selected="true"],
+.tk-chip[aria-pressed="true"] {
+  background: var(--glass-fill-strong);
+  box-shadow: inset 0 1px 0 var(--glass-hi), 0 1px 3px var(--glass-ink-soft);
+}
+
+.p-row,
+.hd-row {
+  border-radius: var(--r-card);
+  transition: background var(--t-fast);
+}
+.p-row:hover,
+.hd-row:hover,
+.is-open > .hd-row {
+  background: var(--glass-fill);
+}
+.p-row[aria-current="page"] {
+  background: var(--glass-fill-strong);
+  box-shadow: inset 0 1px 0 var(--glass-hi);
+}
+
+/* Tables and toolbars sit on glass instead of flat fills. */
+.hd-tbl th,
+.hd-tbl td {
+  background: transparent;
+  border-bottom-color: var(--track);
+}
+/* Rows share one dark grey (no zebra); opaque so the sticky columns hide what scrolls under them. */
+.hd-tbl td { background: var(--surface-1) }
+.hd-tbl th {
+  background: var(--glass-fill-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+.tb { background: transparent; }
+
+/* Floating layers: sheet, toasts, help dialog. */
+.sheet,
+.toast,
+.help {
+  background: var(--glass-fill-strong);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--glass-r);
+  box-shadow: var(--glass-shadow);
+}
+.help::backdrop {
+  background: var(--scrim);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.scrim {
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+/* Phones: the top bar and the bottom nav float as glass pills. */
+@media (max-width: 640px) {
+  .top {
+    margin: var(--sp-2) var(--sp-2) 0;
+    border-radius: var(--glass-r);
+  }
+  .bnav {
+    left: var(--sp-2);
+    right: var(--sp-2);
+    bottom: var(--sp-2);
+    height: var(--h-bnav);
+    background: var(--glass-fill-strong);
+    border: 1px solid var(--glass-edge);
+    border-radius: 16px;
+    box-shadow: var(--glass-shadow);
+    overflow: hidden;
+  }
+  .bnav-i { border-radius: var(--r-card); margin: 2px; }
+  .main { border-radius: 0; }
+  .toasts {
+    right: var(--sp-3);
+    bottom: calc(var(--h-bnav) + 20px);
+  }
+}
+
+/* Reduced transparency: solid surfaces, no blur. */
+@media (prefers-reduced-transparency: reduce) {
+  .nav, .top, .side, .bnav, .sheet, .toast, .help {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--surface-1);
+  }
+}
+
+/* Existing controls in the same language: pills, glass fills, a soft inner edge, press feedback.
+   Same elements and behaviour as before; only the look changes. */
+.btn,
+.tb-view-select,
+select {
+  border-radius: 999px;
+  background: var(--glass-fill);
+  border-color: var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-hi);
+  transition: background var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
+}
+.btn:hover,
+.tb-view-select:hover,
+select:hover {
+  background: var(--glass-fill-strong);
+}
+.btn:active,
+.tb-view-select:active {
+  transform: scale(0.97);
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--m-sonnet));
+  color: var(--on-accent);
+  border-color: transparent;
+  box-shadow: inset 0 1px 0 var(--glass-hi), 0 4px 14px var(--glass-ink-soft);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--accent), var(--m-sonnet));
+  filter: brightness(1.06);
+}
+.btn[aria-pressed="true"] {
+  background: var(--glass-fill-strong);
+  border-color: var(--accent);
+}
+
+/* Segmented control: one pill with a glass thumb under the active item. */
+.tb-seg {
+  border-radius: 999px;
+  background: var(--glass-fill);
+  border-color: var(--glass-edge);
+  padding: 2px;
+  gap: 2px;
+}
+.tb-seg-btn {
+  border-radius: 999px;
+  background: transparent;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.tb-seg-btn + .tb-seg-btn { border-left: 0; }
+.tb-seg-btn[aria-pressed="true"] {
+  background: var(--glass-fill-strong);
+  color: var(--text-1);
+  box-shadow: inset 0 1px 0 var(--glass-hi), 0 1px 3px var(--glass-ink-soft);
+}
+
+/* Search field: a wide pill with a glass well. */
+.tb-search {
+  border-radius: 999px;
+  background: var(--glass-fill);
+  border-color: var(--glass-edge);
+  box-shadow: inset 0 1px 2px var(--glass-ink-soft);
+  padding: 0 var(--sp-3);
+}
+.tb-search:focus {
+  background: var(--glass-fill-strong);
+}
+
+/* Chips and tags: small pills. */
+.chip,
+.tb-chip,
+.tk-chip {
+  border-radius: 999px;
+  background: var(--glass-fill);
+  border-color: var(--glass-edge);
+}
+
+/* Nav and rows: the selected item gets the glass thumb. */
+.nav-i[aria-current="page"],
+.bnav-i[aria-current="page"],
+.p-row[aria-current="page"] {
+  background: var(--glass-fill-strong);
+  box-shadow: inset 0 1px 0 var(--glass-hi), 0 1px 3px var(--glass-ink-soft);
+}
+
+/* Obsidian & Lime (R10.37): grid + noise backdrop, floating shell, mono labels, pill nav, neon primary. */
+:root[data-theme="obsidian"] body::before {
+  inset: 0;
+  filter: none;
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 60px 60px,
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 60px 60px,
+    radial-gradient(40% 45% at 85% 5%, var(--glow-sphere), transparent 70%),
+    radial-gradient(40% 45% at 10% 100%, var(--field-b), transparent 70%);
+}
+:root[data-theme="obsidian"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.15;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@media (min-width: 641px) {
+  :root[data-theme="obsidian"] .app {
+    margin: var(--sp-3);
+    padding: var(--sp-3);
+    border: 1px solid var(--track);
+    border-radius: var(--r-shell);
+    background: var(--glass-fill);
+    min-height: calc(100vh - 2 * var(--sp-3));
+  }
+}
+:root[data-theme="obsidian"] .main { border-radius: var(--r-shell); }
+:root[data-theme="obsidian"] h1,
+:root[data-theme="obsidian"] h2,
+:root[data-theme="obsidian"] h3 { letter-spacing: -0.02em; }
+/* Labels and chips: sentence case at a readable size (the old tracked uppercase mono at 11px was hard to read). Only the
+   axis scale keeps the mono face, because it holds numbers that line up. */
+:root[data-theme="obsidian"] .chip,
+:root[data-theme="obsidian"] .lim-label,
+:root[data-theme="obsidian"] .lv-scale {
+  font-size: var(--fs-12);
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+:root[data-theme="obsidian"] .lv-scale { font-family: var(--font-mono); letter-spacing: 0 }
+:root[data-theme="obsidian"] .nav-i,
+:root[data-theme="obsidian"] .bnav-i { border-radius: 999px; }
+:root[data-theme="obsidian"] .nav-i[aria-current="page"],
+:root[data-theme="obsidian"] .bnav-i[aria-current="page"] {
+  background: var(--glass-fill-strong);
+  color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+:root[data-theme="obsidian"] .btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+  font-weight: 700;
+  border-radius: 999px;
+  box-shadow: 0 6px 18px -6px var(--glow);
+  transition: transform 0.2s var(--ease-ob), box-shadow 0.2s var(--ease-ob);
+}
+:root[data-theme="obsidian"] .btn-primary:hover {
+  background: var(--accent);
+  transform: scale(1.05);
+}
+:root[data-theme="obsidian"] .btn-primary:focus-visible {
+  outline: 2px solid var(--text-1);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme="obsidian"] .btn-primary,
+  :root[data-theme="obsidian"] .btn-primary:hover { transition: none; transform: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-theme="obsidian"] body::after { display: none; }
+  :root[data-theme="obsidian"] body::before { background: none; }
+  :root[data-theme="obsidian"] .btn-primary,
+  :root[data-theme="obsidian"] .nav-i[aria-current="page"],
+  :root[data-theme="obsidian"] .bnav-i[aria-current="page"] { box-shadow: none; }
+  :root[data-theme="obsidian"] .app { background: var(--surface-1); }
+}
+/* Obsidian light: the grid and colour fields are softened in tokens.css; here the neon glow shadows go quiet on white. */
+:root[data-theme="obsidian"][data-mode="light"] body::after { opacity: 0.06; }
+:root[data-theme="obsidian"][data-mode="light"] .btn-primary,
+:root[data-theme="obsidian"][data-mode="light"] .nav-i[aria-current="page"],
+:root[data-theme="obsidian"][data-mode="light"] .bnav-i[aria-current="page"] {
+  box-shadow: 0 1px 3px var(--glass-ink-soft);
+}
+
+/* Black (flat): no colour fields, no blur, no glow. Panels are solid surface-1 with a 1px edge, in both modes. */
+:root[data-theme="black"] body::before,
+:root[data-theme="black"] body::after { display: none; }
+:root[data-theme="black"] .nav,
+:root[data-theme="black"] .top,
+:root[data-theme="black"] .side,
+:root[data-theme="black"] .bnav,
+:root[data-theme="black"] .sheet,
+:root[data-theme="black"] .toast,
+:root[data-theme="black"] .help {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--surface-1);
+  border: 1px solid var(--glass-edge);
+  box-shadow: none;
+}
+:root[data-theme="black"] .help::backdrop,
+:root[data-theme="black"] .scrim {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-theme="black"] .btn-primary,
+:root[data-theme="black"] .btn-primary:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+  box-shadow: none;
+  filter: none;
+}
+:root[data-theme="black"] .nav-i[aria-current="page"],
+:root[data-theme="black"] .bnav-i[aria-current="page"],
+:root[data-theme="black"] .p-row[aria-current="page"],
+:root[data-theme="black"] .side-tab[aria-selected="true"],
+:root[data-theme="black"] .tb-seg-btn[aria-pressed="true"] {
+  box-shadow: none;
+}
+:root[data-theme="black"] .btn,
+:root[data-theme="black"] .chip,
+:root[data-theme="black"] .tb-seg,
+:root[data-theme="black"] .tb-seg-btn,
+:root[data-theme="black"] .tb-search,
+:root[data-theme="black"] .tb-view-select,
+:root[data-theme="black"] select,
+:root[data-theme="black"] .nav-i,
+:root[data-theme="black"] .bnav-i,
+:root[data-theme="black"] .side-tab,
+:root[data-theme="black"] .p-row,
+:root[data-theme="black"] .tk-chip {
+  border-radius: var(--r-control);
+}
+
+/* Motion and focus (second message): one visible focus ring for every control, smooth state changes, and none of
+   the motion under prefers-reduced-motion. :where() keeps the ring at zero specificity so theme rules can still change it. */
+:where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.btn,
+.chip,
+.tb-seg-btn,
+.side-tab,
+.nav-i,
+.bnav-i,
+.p-row,
+.tb-search,
+.tb-view-select,
+select {
+  transition: background-color var(--t-fast), border-color var(--t-fast), color var(--t-fast),
+    box-shadow var(--t-fast), transform var(--t-fast);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .btn:active,
+  .side-tab:active,
+  .tb-view-select:active,
+  .btn-primary:hover {
+    transform: none !important;
+  }
+}
+
+/* Text fields (third pass): every input, textarea and select shares one soft, modern look that follows the theme:
+   --r-control gives the corner (sharp in Classic, rounder in the others), --surface-0 recesses the field inside its card
+   in every look and mode, and --focus tints the border and a soft ring (lime/olive in Obsidian, blue in Midnight,
+   white/ink in Classic). Visual properties only: each form keeps its own width, height and padding. The :root prefix
+   outranks the older per-form rules without !important. */
+:root :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="button"], [type="submit"], [type="reset"], [type="image"]), textarea, select:not(.tb-view-select, .rmm-select)) {
+  background-color: var(--surface-0);
+  color: var(--text-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  box-shadow: none;
+  caret-color: var(--focus);
+  transition: border-color 140ms cubic-bezier(.22, 1, .36, 1), box-shadow 140ms cubic-bezier(.22, 1, .36, 1),
+    background-color 140ms cubic-bezier(.22, 1, .36, 1);
+}
+:root :is(input, textarea)::placeholder { color: var(--text-3); opacity: 1 }
+:root :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="button"], [type="submit"], [type="reset"], [type="image"]), textarea, select:not(.tb-view-select, .rmm-select)):hover:not(:disabled, :focus) {
+  border-color: var(--text-3);
+}
+:root :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="button"], [type="submit"], [type="reset"], [type="image"]), textarea, select:not(.tb-view-select, .rmm-select)):focus-visible {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 26%, transparent);
+  outline: 2px solid transparent;
+  outline-offset: 0;
+}
+:root :is(input, textarea, select)[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+:root :is(input, textarea, select):disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+:root textarea {
+  padding: var(--sp-2) var(--sp-3);
+  line-height: 1.5;
+  resize: vertical;
+}
+:root :is(input[type="text"], input[type="search"], input[type="number"], input[type="email"], input[type="url"], input:not([type]), input[type="password"]) {
+  padding-inline: var(--sp-3);
+}
+:root[data-theme="black"] :is(input, textarea, select):focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus) 40%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root :is(input, textarea, select) { transition: none }
+}
+
+/* Navigation rail (fourth pass). Selected item: a soft accent wash, a glowing indicator bar and a slow shimmer sweeping
+   over the label; hover nudges the row. Everything comes from the theme tokens (--accent, --text-*), so Midnight is
+   blue, Obsidian lime/olive and Classic white/ink. In Classic (flat) the glow is off and the sweep runs gray to white.
+   The selector carries data-theme and .nav so it outranks the older per-theme rules above without !important. */
+.nav-list { gap: 4px }
+.nav-i, .nav-collapse { transition: background-color 140ms cubic-bezier(.22, 1, .36, 1), color 140ms cubic-bezier(.22, 1, .36, 1),
+  transform 200ms cubic-bezier(.22, 1, .36, 1), box-shadow 200ms cubic-bezier(.22, 1, .36, 1) }
+.nav .nav-i:hover:not([aria-current="page"]) { transform: translateX(2px) }
+.nav .nav-i .ico { transition: transform 200ms cubic-bezier(.22, 1, .36, 1), color 140ms cubic-bezier(.22, 1, .36, 1) }
+.nav .nav-i:hover .ico { transform: scale(1.08) }
+:root[data-theme] .nav .nav-i[aria-current="page"] {
+  color: var(--text-1);
+  font-weight: 600;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 20%, transparent),
+    color-mix(in srgb, var(--accent) 5%, transparent) 72%, transparent);
+  /* The indicator is an inset edge on the item itself, so it follows the rounded border: a crescent that fills the
+     left curve of the pill (a plain bar in Classic, whose corners are nearly square), with a soft inner glow. */
+  box-shadow: inset 3px 0 0 var(--accent), inset 12px 0 14px -12px color-mix(in srgb, var(--accent) 60%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+:root[data-theme] .nav .nav-i[aria-current="page"] .ico { color: var(--accent) }
+:root[data-theme="black"] .nav .nav-i[aria-current="page"] {
+  box-shadow: inset 3px 0 0 var(--accent), inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+:root[data-theme] .nav .nav-i[aria-current="page"] .nav-l {
+  background-image: linear-gradient(100deg, var(--nav-sh-base) 0%, var(--nav-sh-base) 36%, var(--nav-sh-peak) 50%,
+    var(--nav-sh-base) 64%, var(--nav-sh-base) 100%);
+  background-color: var(--nav-sh-base);
+  background-size: 260% 100%;
+  background-repeat: repeat-x;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: nav-shimmer 3.8s ease-in-out infinite;
+}
+@keyframes nav-shimmer {
+  0% { background-position: 130% 0 }
+  100% { background-position: -30% 0 }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme] .nav .nav-i[aria-current="page"] .nav-l {
+    animation: none;
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--text-1);
+  }
+  .nav .nav-i:hover:not([aria-current="page"]), .nav .nav-i:hover .ico { transform: none }
+}
+
+/* Drag handles (nav and side panel): no full-height coloured bar. A small grip appears at the edge of the floating card
+   on hover, focus and drag. The offset skips the frame padding so the handle sits in the gap between the cards. */
+.rz { background: transparent }
+.rz:hover, .rz:focus-visible, .rz-drag { background: transparent; opacity: 1 }
+.rz::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 48px;
+  margin: -24px 0 0 -2px;
+  border-radius: 4px;
+  background: var(--line);
+  opacity: 0;
+  transition: opacity 140ms cubic-bezier(.22, 1, .36, 1), height 140ms cubic-bezier(.22, 1, .36, 1),
+    margin 140ms cubic-bezier(.22, 1, .36, 1), background-color 140ms cubic-bezier(.22, 1, .36, 1);
+}
+.rz:hover::after, .rz:focus-visible::after { opacity: .9 }
+.rz-drag::after { opacity: 1; height: 80px; margin-top: -40px; background: var(--accent) }
+@media (min-width: 1200px) {
+  .rz-nav { left: calc(var(--w-nav) + var(--rz-off)) }
+  .rz-side { right: calc(var(--w-side) + var(--rz-off)) }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rz::after { transition: none }
+}
+
+/* Section toolbar (fifth pass): larger and minimal. One 38px height for the search, the view select and every button;
+   ghost buttons and a quiet field with a hairline border that firms up on hover and focus (the focus ring comes from
+   the text-field block above). Corner radii stay the theme's own. */
+.tb-row { gap: 8px var(--sp-3); min-height: var(--tb-h) }
+:root .tb :is(.tb-search, .tb-view-select, .btn, .tb-seg-btn, .tb-more) { height: var(--tb-h); font-size: var(--fs-13) }
+:root .tb .btn { padding-inline: 18px; background: transparent; box-shadow: none; color: var(--text-2); font-weight: 500;
+  border: 1px solid color-mix(in srgb, var(--line) 45%, transparent) }
+:root .tb .btn:hover:not(:disabled) { background: var(--glass-fill-strong); color: var(--text-1); border-color: var(--line) }
+:root .tb .tb-more { padding-inline: 0; width: var(--tb-h) }
+:root .tb .tb-search { flex: 1 1 240px; max-width: 440px; padding-inline: 18px; background: var(--glass-fill);
+  border-color: color-mix(in srgb, var(--line) 45%, transparent) }
+:root .tb .tb-view-select { padding-inline: 16px 12px; background: transparent; box-shadow: none; color: var(--text-2);
+  border: 1px solid color-mix(in srgb, var(--line) 45%, transparent) }
+:root .tb .tb-view-select:hover { background: var(--glass-fill-strong); color: var(--text-1); border-color: var(--line) }
+:root .tb .tb-seg { border-color: color-mix(in srgb, var(--line) 45%, transparent) }
+:root .tb .tb-seg-btn { padding-inline: 16px; background: transparent }
+:root .tb .tb-seg-btn[aria-pressed="true"] { background: var(--glass-fill-strong); color: var(--accent) }
+:root .tb .tb-count { margin-left: var(--sp-2) }
+
+/* List dividers: hairlines that fade instead of heavy edge-to-edge bars. Day headers are small quiet labels with a
+   fading rule under them and a count pill; rows get a soft separator and a rounded hover fill. */
+.hx-page .hx-cols { border-bottom-color: var(--divider); background: color-mix(in srgb, var(--surface-0) 82%, transparent);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px) }
+.hx-page .hx-scroll { border-top-color: var(--divider) }
+.hx-page .hx-day { border-bottom: 0; padding: 16px var(--sp-2) 8px; color: var(--text-2); font-size: var(--fs-12);
+  font-weight: 600; letter-spacing: .02em }
+.hx-page .hx-day::after { content: ""; position: absolute; left: var(--sp-2); right: var(--sp-2); bottom: 0; height: 1px;
+  background: linear-gradient(90deg, var(--line), transparent 85%); opacity: .45 }
+.hx-page .hx-day .hx-cnt { padding: 1px 9px; border-radius: 999px; background: var(--glass-fill); letter-spacing: 0 }
+.hx-page .hx-list > .act-row { border-bottom: 1px solid var(--divider); border-radius: 0 }
+.hx-page .hx-list > .act-row:last-child { border-bottom-color: transparent }
+.hx-page .hx-list > .act-row:hover { background: var(--glass-fill) }
+
+/* Top bar: the status pill, the usage meters and the links share one row that has to fit the card, whether or not the side
+   panel is open. The card is a size container; the least important items drop out as it narrows, and the breadcrumb keeps a
+   readable minimum instead of collapsing to "O...". Widths measured at 1440 px: crumb 251, pill 228, meters 259, age 46,
+   Enter usage 98, connection 33, three buttons 121. */
+.top { container: topbar / inline-size }
+.crumb { min-width: 9rem }
+.top-tools .pill { min-width: 0; max-width: 15rem; overflow: hidden; text-overflow: ellipsis }
+@container topbar (max-width: 1100px) {
+  .conn, .top-age { display: none }
+  .top-tools .pill { max-width: 11.5rem }
+}
+@container topbar (max-width: 860px) {
+  .top-enter { display: none }
+}
+@container topbar (max-width: 700px) {
+  .top-meters { display: none }
+}
+
+/* Browser surfaces (impeccable's craft floor): what the browser draws by default now follows the palette. Selection, native
+   controls, scrollbars, balanced headings and tabular figures. */
+:root { accent-color: var(--accent) }
+::selection { background: color-mix(in srgb, var(--accent) 32%, transparent); color: inherit }
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--text-3) 55%, transparent) transparent }
+h1, h2, h3, .page-title, .qc-text { text-wrap: balance }
+.num, td, th, .meter + *, .tk-ax, .tk-lb { font-variant-numeric: tabular-nums }
+
+/* Activity table: the "What" column is the identity column, so it gets the width. The fixed columns are trimmed, and when the
+   page is narrow (the side panel is open) the mostly-empty Model and Tokens columns drop out. The selectors carry .hx-scroll
+   to outrank activity.css, which loads after this file. */
+.hx-page { container: hxpage / inline-size }
+.hx-page.hx-all .hx-scroll .row-grid.act-row { grid-template-columns: 3rem 6rem 4.25rem 4.75rem minmax(0, 1fr) 5rem 3.25rem 3rem 1.5rem }
+.hx-page:not(.hx-all) .hx-scroll .row-grid.act-row { grid-template-columns: 3rem 4.25rem 4.75rem minmax(0, 1fr) 5rem 3.25rem 3rem 1.5rem }
+@container hxpage (max-width: 860px) {
+  .hx-page.hx-all .hx-scroll .row-grid.act-row { grid-template-columns: 3rem 6rem 4.25rem 4.75rem minmax(0, 1fr) 5rem 1.5rem }
+  .hx-page.hx-all .hx-scroll .row-grid.act-row > :is(:nth-child(7), :nth-child(8)) { display: none }
+  .hx-page:not(.hx-all) .hx-scroll .row-grid.act-row { grid-template-columns: 3rem 4.25rem 4.75rem minmax(0, 1fr) 5rem 1.5rem }
+  .hx-page:not(.hx-all) .hx-scroll .row-grid.act-row > :is(:nth-child(6), :nth-child(7)) { display: none }
+}
+
+/* A selected row (the checkbox is ticked) takes the theme's selection tint, so the choice shows at a glance. */
+.ag-row { border-radius: var(--r-control); transition: background-color 140ms cubic-bezier(.22, 1, .36, 1) }
+.ag-row:has(input[data-agent="select"]:checked) { background: var(--sel) }
+.ag-row:has(input[data-agent="select"]:checked) .ag-title { color: var(--text-1); font-weight: 600 }
+@media (prefers-reduced-motion: reduce) { .ag-row { transition: none } }
+
+/* Choice groups (Settings: theme, mode, density, switches): no empty slot beside the unselected labels. Only the chosen
+   option shows its tick, and it also takes the selection tint and an accent edge so the choice never rests on the tick alone. */
+[role="radiogroup"] > .btn[role="radio"] { padding-inline: 16px; justify-content: center }
+[role="radiogroup"] > .btn[role="radio"]:not([aria-checked="true"]) > .ico { display: none }
+[role="radiogroup"] > .btn[role="radio"][aria-checked="true"] { background: var(--sel); color: var(--text-1);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent) }
+
+/* Activity surfaces (fifth pass): no solid black bands. The list sits on one matte frosted panel; the column header and the
+   day headers are lighter tints of the text colour over a blur, so they follow every theme and mode (a pale tint on dark,
+   a soft grey on light). Classic is flat, so it uses plain tone steps instead of blur. */
+.hx-page .hx-scroll { background: var(--glass-fill); border: 1px solid var(--glass-edge); border-radius: var(--glass-r);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur) }
+/* The two sticky headers must be opaque (rows scroll under them), so their tint is mixed into the surface instead of laid over it. */
+.hx-page .hx-cols { background: color-mix(in srgb, var(--text-1) 9%, var(--surface-1)); border-bottom: 1px solid var(--divider) }
+.hx-page .hx-day { background: color-mix(in srgb, var(--text-1) 6%, var(--surface-1)) }
+.hx-page .hx-tl-svg { background: var(--glass-fill); border: 1px solid var(--glass-edge); border-radius: var(--r-card);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur) }
+:root[data-theme="black"] .hx-page .hx-scroll, :root[data-theme="black"] .hx-page .hx-tl-svg { background: var(--surface-1);
+  -webkit-backdrop-filter: none; backdrop-filter: none }
+:root[data-theme="black"] .hx-page .hx-cols, :root[data-theme="black"] .hx-page .hx-day { background: var(--surface-2);
+  -webkit-backdrop-filter: none; backdrop-filter: none }

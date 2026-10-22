@@ -322,7 +322,7 @@ def limits_route(app, req, match):
     return limits_get(app, req, match) if req.method == "GET" else limits_put(app, req, match)
 
 
-ACCOUNT_ACTIONS = ("connect", "disconnect", "switch", "check", "login", "remove", "use")
+ACCOUNT_ACTIONS = ("connect", "disconnect", "switch", "check", "login", "remove", "use", "refresh")
 
 
 def usage_accounts_get(app, req, match):
@@ -341,6 +341,8 @@ def usage_accounts_action(app, req, match):
         raise RoadmapError("not_found", "no account action '%s'" % action[:40], EXIT_NOT_FOUND)
     if action == "check":
         result = usage_accounts.check(account_id)
+    elif action == "refresh":
+        result = _refresh_account(app, account_id)
     elif action == "login" and claude_slots.supported():
         result = claude_slots.login_start(account_id)
     elif action == "login":
@@ -356,6 +358,20 @@ def usage_accounts_action(app, req, match):
     else:
         result = usage_accounts.switch(account_id, src="ui")
     return json_reply(200, result)
+
+
+def _refresh_account(app, account_id):
+    """Refresh one account after a login: connect it when Helm does not read it yet, make it the account the sync
+    reads, read who is logged in there and take a fresh usage reading. A failed reading is kept on the row (its
+    status and reason), so it is not raised here."""
+    usage_accounts.connect(account_id, src="ui")
+    usage_accounts.switch(account_id, src="ui")
+    usage_accounts.check(account_id)
+    try:
+        app.sync()
+    except usage.UsageError:
+        pass
+    return usage_accounts.list_status(full_email=app.cmd_source != "phone")
 
 
 def _phone_refuse(app):

@@ -1,0 +1,73 @@
+/* Motion and loading layer (docs/MOTION-PLAN.md, CSS worker). Loaded last: it only overrides, no markup or script changes.
+   Durations quick 140ms, med 260ms, slow 380ms; easings out cubic-bezier(.22,1,.36,1), in-out cubic-bezier(.65,0,.35,1).
+   Rules use the literal values: test_assets only accepts custom properties that tokens.css defines. No colours here. */
+:root {--ease-out: cubic-bezier(.22,1,.36,1);--ease-in-out: cubic-bezier(.65,0,.35,1);--t-quick: 140ms;--t-med: 260ms;--t-slow: 380ms;}
+
+/* 1. Side panel. Closed keeps its box so the slide can run; visibility goes off at the end of the close, so the closed
+   panel is not focusable or hit-testable. */
+.side {transition: transform 260ms cubic-bezier(.22,1,.36,1), opacity 260ms cubic-bezier(.22,1,.36,1), visibility 0s,
+  background-color 260ms cubic-bezier(.22,1,.36,1), border-color 260ms cubic-bezier(.22,1,.36,1)}
+.app[data-panel="closed"] .side {display: flex; opacity: 0; visibility: hidden;
+  transition: transform 260ms cubic-bezier(.22,1,.36,1), opacity 260ms cubic-bezier(.22,1,.36,1),
+    visibility 0s linear 260ms, background-color 260ms cubic-bezier(.22,1,.36,1), border-color 260ms cubic-bezier(.22,1,.36,1)}
+.scrim {opacity: 1; transition: opacity 260ms cubic-bezier(.22,1,.36,1), display 260ms allow-discrete}
+.scrim[hidden] {opacity: 0}
+@starting-style {.scrim:not([hidden]) {opacity: 0}}
+
+/* 1 + 2. Wide screens: the grid columns animate, so the panel pushes the content and the rail narrows without a jump.
+   Lengths only (tokens --w-*), so the browser can interpolate the tracks. Labels fade out while the rail narrows. */
+@media (min-width: 1200px) {
+  .app {grid-template-columns: var(--w-nav) minmax(0, 1fr) var(--w-side); transition: grid-template-columns 260ms cubic-bezier(.22,1,.36,1)}
+  .app[data-nav="mini"] {grid-template-columns: var(--w-rail) minmax(0, 1fr) var(--w-side)}
+  .app[data-panel="closed"] {grid-template-columns: var(--w-nav) minmax(0, 1fr) 0px}
+  .app[data-nav="mini"][data-panel="closed"] {grid-template-columns: var(--w-rail) minmax(0, 1fr) 0px}
+  .side {width: auto}
+  .nav .nav-l {transition: opacity 140ms cubic-bezier(.22,1,.36,1)}
+  .app[data-nav="mini"] .nav .nav-l {opacity: 0}
+}
+
+/* 3. Menus, popovers, the help sheet and toasts: fade, 6px lift and slight scale in; the reverse out. */
+.tb-pop, .tb-menu, .top-menu, .sheet, .toast, .help {
+  transition: opacity 140ms cubic-bezier(.22,1,.36,1), transform 140ms cubic-bezier(.22,1,.36,1),
+    display 140ms allow-discrete, overlay 140ms allow-discrete}
+.tb-pop[hidden], .tb-menu[hidden], .sheet[hidden], .help:not([open]) {opacity: 0; transform: translateY(6px) scale(.98)}
+.help[open]::backdrop {transition: background-color 140ms cubic-bezier(.22,1,.36,1)}
+@starting-style {
+  .tb-pop:not([hidden]), .tb-menu:not([hidden]), .sheet:not([hidden]), .top-menu, .toast, .help[open] {opacity: 0; transform: translateY(6px) scale(.98)}
+  .help[open]::backdrop {background-color: transparent}
+}
+@keyframes motion-pop {from {opacity: 0; transform: translateY(6px) scale(.98)}}
+.tk-menu[open] > .tk-menu-list, .top-more[open] > .top-menu {animation: motion-pop 140ms cubic-bezier(.22,1,.36,1)}
+
+/* 4. Buttons: quick feedback on hover, focus and press. Theme change: body and panels cross-fade at med. */
+.btn, .btn-small, .seg button, .side-tab, .tb-seg-btn, .nav-i, .bnav-i {
+  transition: background-color 140ms cubic-bezier(.22,1,.36,1), border-color 140ms cubic-bezier(.22,1,.36,1),
+    color 140ms cubic-bezier(.22,1,.36,1), box-shadow 140ms cubic-bezier(.22,1,.36,1), transform 140ms cubic-bezier(.22,1,.36,1)}
+.btn:active:not(:disabled), .btn-small:active:not(:disabled), .seg button:active:not(:disabled), .side-tab:active {transform: scale(.98)}
+body {transition: background-color 260ms cubic-bezier(.22,1,.36,1), color 260ms cubic-bezier(.22,1,.36,1)}
+.nav, .top, .bnav {transition: background-color 260ms cubic-bezier(.22,1,.36,1), border-color 260ms cubic-bezier(.22,1,.36,1)}
+
+/* 5. Loading: aria-busy="true" (busy.js also sets disabled). The label stays and dims. The spinner sits in the left
+   padding, which grows only while busy, so the label does not run under it. */
+.btn[aria-busy="true"], .btn-small[aria-busy="true"], .btn-primary[aria-busy="true"], .seg button[aria-busy="true"] {
+  position: relative; min-width: max-content; padding-left: calc(var(--sp-3) + 18px);
+  pointer-events: none; opacity: .55; color: var(--text-2); cursor: progress}
+.btn-primary[aria-busy="true"] {background: var(--accent); color: var(--on-accent)}
+.btn[aria-busy="true"]::before, .btn-small[aria-busy="true"]::before, .btn-primary[aria-busy="true"]::before,
+.seg button[aria-busy="true"]::before {content: ""; position: absolute; left: var(--sp-3); top: 50%; width: 14px; height: 14px;
+  margin-top: -7px; box-sizing: border-box; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
+  animation: motion-spin .7s linear infinite}
+@keyframes motion-spin {to {transform: rotate(360deg)}}
+.chip[aria-busy="true"], .theme-switch[aria-busy="true"] {pointer-events: none; opacity: .6; cursor: progress}
+
+/* 6. Reduced motion: near-zero durations, no delays (the side closes at once), no menu transforms. The spinner becomes a
+   static "..." so loading stays visible. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {transition-duration: .01ms !important; transition-delay: 0s !important;
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important}
+  .btn:active, .btn-small:active, .seg button:active, .side-tab:active, .tb-pop, .tb-menu, .top-menu, .sheet, .toast, .help {transform: none !important}
+  .btn[aria-busy="true"]::before, .btn-small[aria-busy="true"]::before, .btn-primary[aria-busy="true"]::before,
+  .seg button[aria-busy="true"]::before {content: none; animation: none}
+  .btn[aria-busy="true"]::after, .btn-small[aria-busy="true"]::after, .btn-primary[aria-busy="true"]::after,
+  .seg button[aria-busy="true"]::after {content: "\2026"; position: absolute; left: var(--sp-3); top: 50%; line-height: 1; margin-top: -.5em}
+}

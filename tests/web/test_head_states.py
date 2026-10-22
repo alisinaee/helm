@@ -169,7 +169,7 @@ class StateSource(unittest.TestCase):
     def test_tones_keep_4_5_to_1_contrast_in_dark_and_light(self):
         components = read(COMPONENTS)
         tones = {tone for _, _, tone in state_table(self.src).values()} | set(kind_table(self.src).values())
-        for name, selector in (("dark", ":root {"), ("light", ':root[data-theme="light"]')):
+        for name, selector in (("dark", ":root {"), ("light", ':root[data-mode="light"]')):
             colours = theme_tokens(TOKENS, selector)
             for tone in tones - {"neutral"}:
                 ratio = contrast(colours[chip_colour_token(components, tone)], colours["--surface-2"])

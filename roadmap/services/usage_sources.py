@@ -90,6 +90,18 @@ def _keychain_account(service=KEYCHAIN_SERVICE):
     return found.group(1) if found else (os.environ.get("USER") or "")
 
 
+def keychain_stamp(service=KEYCHAIN_SERVICE):
+    """The keychain item's modification time (metadata only, no -w), or "" when it cannot be read. A new login or a
+    token refresh rewrites the item, so a changed stamp means a stored keychain failure is out of date."""
+    try:
+        proc = subprocess.run(["security", "find-generic-password", "-s", service],
+                              capture_output=True, text=True, timeout=KEYCHAIN_TIMEOUT_S)
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    found = re.search(r'"mdat"<timestamp>="([^"\n]*)"', proc.stdout or "")
+    return found.group(1) if found else ""
+
+
 def _keychain_write(text, service=KEYCHAIN_SERVICE):
     """Replace the keychain item's data, keeping its account. The secret goes hex encoded through stdin."""
     account = _keychain_account(service)

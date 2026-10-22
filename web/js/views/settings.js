@@ -6,13 +6,20 @@ import { esc } from "../dom.js";
 import { csrfToken, getJson } from "../api.js";
 import { helpRows, setSingleKeys, singleKeysOn } from "../keys.js";
 import { setEnabled, status as logStatusNow } from "../log.js";
-import { loadUi, saveTheme, updateUi } from "../state.js";
+import { loadUi, MODE_ORDER, resolveMode, saveMode, saveTheme, THEME_ORDER, updateUi } from "../state.js";
 import { showToast } from "./toast.js";
 
+// The ids are the data-theme values (docs/THEMES-PLAN.md). Labels: "classic" is the blue palette, shown as Midnight;
+// "black" is the plain black palette, shown as Classic. sw is the colour dot class (tokens.css --sw-*).
 const THEMES = [
-  { id: "auto", label: "Match system" },
+  { id: "obsidian", label: "Obsidian & Lime", sw: "sw-obsidian" },
+  { id: "classic", label: "Midnight", sw: "sw-midnight" },
+  { id: "black", label: "Classic", sw: "sw-classic" },
+];
+const MODES = [
   { id: "dark", label: "Dark" },
   { id: "light", label: "Light" },
+  { id: "auto", label: "Match system" },
 ];
 const DENSITIES = [
   { id: "comfortable", label: "Comfortable" },
@@ -47,7 +54,8 @@ function choiceHtml(name, options, current, action) {
     return '<button type="button" class="btn btn-small" role="radio" aria-checked="' + (on ? "true" : "false") +
       '" tabindex="' + (on ? "0" : "-1") + '" data-action="' + esc(action) + '" data-value="' + esc(o.id) +
       '" data-focus="' + esc(action) + "-" + esc(o.id) + '"><svg class="ico" aria-hidden="true" focusable="false">' +
-      '<use href="/icons.svg#' + (on ? "i-check" : "i-blank") + '"></use></svg>' + esc(o.label) + "</button>";
+      '<use href="/icons.svg#' + (on ? "i-check" : "i-blank") + '"></use></svg>' +
+      (o.sw ? '<span class="theme-sw ' + esc(o.sw) + '" aria-hidden="true"></span>' : "") + esc(o.label) + "</button>";
   }).join("") + "</div>";
 }
 
@@ -155,10 +163,11 @@ export function sectionView() {
   // The phone page carries no CSRF value and records nothing, so it has no Logging section.
   const logging = typeof document !== "undefined" && csrfToken() ? loggingHtml() : "";
   if (logging) maybeRefreshLogStatus();
-  return '<div class="page-head">' +
+  return '<div class="set-stack"><div class="page-head">' +
     '<p class="page-note">Browser preferences only; projects keep separate settings.</p></div>' +
     '<section class="ov-card" aria-labelledby="set-look"><h3 id="set-look" class="lim-h">Appearance</h3>' +
     '<p class="lim-label">Theme</p>' + choiceHtml("Theme", THEMES, ui.theme, "set-theme") +
+    '<p class="lim-label">Mode</p>' + choiceHtml("Mode", MODES, ui.mode, "set-color-mode") +
     '<p class="lim-label">Density</p>' + choiceHtml("Density", DENSITIES, ui.density, "set-density") +
     "</section>" +
     '<section class="ov-card" aria-labelledby="set-phone"><h3 id="set-phone" class="lim-h">Phone</h3>' +
@@ -172,7 +181,7 @@ export function sectionView() {
     '<section class="ov-card" aria-labelledby="set-data"><h3 id="set-data" class="lim-h">Data</h3>' +
     '<p class="page-note">Global limits, the usage ledger and the global config live in the roadmap home folder. ' +
     "Each project keeps its rules in docs/rules.txt and its budget in budget.json. Run roadmap doctor to see the " +
-    "exact paths.</p></section>";
+    "exact paths.</p></section></div>";
 }
 
 // Show the report text in a read-only field inside the toast, selected, when the clipboard is not available.
@@ -222,16 +231,27 @@ async function copyReport() {
   copyReportText(text);
 }
 
-// Theme, density, log switch and report actions. Returns true when handled (app.js re-renders).
+// Palette and mode apply at once and are saved; app.js re-renders after a handled action.
+function applyLook(theme, mode) {
+  const root = document.documentElement;
+  root.setAttribute("data-theme", theme);
+  root.setAttribute("data-mode", resolveMode(mode));
+}
+
+// Theme, mode, density, log switch and report actions. Returns true when handled (app.js re-renders).
 export function settingsAction(action, el) {
   if (action === "set-theme") {
     const value = el.getAttribute("data-value");
+    if (THEME_ORDER.indexOf(value) < 0) return true;
     saveTheme(value);
-    if (value === "auto") {
-      document.documentElement.removeAttribute("data-theme");
-    } else {
-      document.documentElement.setAttribute("data-theme", value);
-    }
+    applyLook(value, loadUi().mode);
+    return true;
+  }
+  if (action === "set-color-mode") {
+    const value = el.getAttribute("data-value");
+    if (MODE_ORDER.indexOf(value) < 0) return true;
+    saveMode(value);
+    applyLook(loadUi().theme, value);
     return true;
   }
   if (action === "set-density") {

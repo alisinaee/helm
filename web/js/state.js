@@ -19,7 +19,9 @@ export const VIEW_SECTIONS = {
 };
 
 export const VIEW_DEFAULT_MODE = { home: "expanded", project: "minimal" };
-export const THEME_ORDER = ["auto", "dark", "light"];
+// Palette (ui.theme) and mode (ui.mode) are independent (docs/THEMES-PLAN.md). THEME_ORDER lists the palettes.
+export const THEME_ORDER = ["obsidian", "classic", "black"];
+export const MODE_ORDER = ["dark", "light", "auto"];
 // One freshness rule (R7.63): a usage reading older than 90 minutes (maxUsageAgeMin) is stale. The server sends
 // maxAgeS; these constants are only the fallback. Very old is twice stale.
 export const STALE_AFTER_S = 90 * 60;
@@ -72,6 +74,13 @@ const PANEL_TABS = ["projects", "details"];
 const WORK_VIEWS = ["board", "list", "tree"];
 const DENSITIES = ["comfortable", "compact"];
 const PROJECT_ID_RE = /^[a-z0-9][a-z0-9-]{0,39}$/;
+// The single theme value of the first release maps to a palette and a mode (docs/THEMES-PLAN.md).
+const LEGACY_THEME = {
+  dark: { theme: "classic", mode: "dark" },
+  light: { theme: "classic", mode: "light" },
+  auto: { theme: "classic", mode: "auto" },
+  obsidian: { theme: "obsidian", mode: "dark" },
+};
 
 export function defaultUi() {
   return {
@@ -81,7 +90,8 @@ export function defaultUi() {
     workView: "board",
     filters: {},
     density: "comfortable",
-    theme: "auto",
+    theme: "obsidian",
+    mode: "dark",
     lastProject: null,
   };
 }
@@ -94,7 +104,13 @@ function sanitizeUi(raw) {
   if (PANEL_TABS.indexOf(raw.panelTab) >= 0) ui.panelTab = raw.panelTab;
   if (WORK_VIEWS.indexOf(raw.workView) >= 0) ui.workView = raw.workView;
   if (DENSITIES.indexOf(raw.density) >= 0) ui.density = raw.density;
-  if (THEME_ORDER.indexOf(raw.theme) >= 0) ui.theme = raw.theme;
+  if (Object.prototype.hasOwnProperty.call(LEGACY_THEME, raw.theme) && MODE_ORDER.indexOf(raw.mode) < 0) {
+    ui.theme = LEGACY_THEME[raw.theme].theme;
+    ui.mode = LEGACY_THEME[raw.theme].mode;
+  } else {
+    if (THEME_ORDER.indexOf(raw.theme) >= 0) ui.theme = raw.theme;
+    if (MODE_ORDER.indexOf(raw.mode) >= 0) ui.mode = raw.mode;
+  }
   if (typeof raw.lastProject === "string" && PROJECT_ID_RE.test(raw.lastProject)) ui.lastProject = raw.lastProject;
   if (raw.filters && typeof raw.filters === "object") {
     for (const key of Object.keys(raw.filters).slice(0, 20)) {
@@ -145,8 +161,26 @@ export function loadTheme() {
 
 export function saveTheme(value) {
   updateUi(function (ui) {
-    ui.theme = THEME_ORDER.indexOf(value) >= 0 ? value : "auto";
+    ui.theme = THEME_ORDER.indexOf(value) >= 0 ? value : "obsidian";
   });
+}
+
+export function loadMode() {
+  return loadUi().mode;
+}
+
+export function saveMode(value) {
+  updateUi(function (ui) {
+    ui.mode = MODE_ORDER.indexOf(value) >= 0 ? value : "dark";
+  });
+}
+
+// The mode the page shows: "auto" resolves through the system preference, dark or light only.
+export function resolveMode(mode) {
+  if (mode === "auto") {
+    return typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  }
+  return mode === "light" ? "light" : "dark";
 }
 
 export function nextTheme(value) {

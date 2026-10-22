@@ -35,10 +35,9 @@
 @media (max-width:599px){.hd-row.row-grid{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-2)}.hd-chev{order:0}.hd-id{order:1}.hd-copy{order:2;margin-left:auto}.hd-sum{order:3;flex:1 1 100%}.hd-meta{order:4;grid-column:auto;flex:1 1 100%}.hd-panel{padding-left:0}.hd-foot{justify-content:stretch}.hd-foot .btn{flex:1 1 auto}}
 .hd-list{flex:1 1 auto;min-height:0;min-width:0;overflow:auto}
 .hd-tbl{border-collapse:separate;border-spacing:0;width:100%;text-align:left}
-.hd-tbl th,.hd-tbl td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;background:var(--surface-0)}
+.hd-tbl th,.hd-tbl td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;background:var(--surface-1)}
 .hd-tbl .is-open>.hd-row>td{border-bottom:0}
 .hd-tbl th{position:sticky;top:0;z-index:2;background:var(--surface-2);color:var(--text-3);font-size:var(--fs-12);font-weight:600;white-space:nowrap}
-.hd-tbl tbody:nth-of-type(even)>tr>td{background:var(--surface-1)}
 .hd-tbl tbody>tr:hover>td,.hd-tbl .is-open>.hd-row>td{background:var(--surface-2)}
 .hd-tbl .hd-row{cursor:pointer}
 .hd-tbl .hd-hit{display:inline;position:static;width:auto;height:auto;padding:0;margin:0;border:0;background:none;color:inherit;font:inherit;font-variant-numeric:tabular-nums;cursor:pointer}

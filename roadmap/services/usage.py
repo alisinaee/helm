@@ -460,7 +460,7 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
     1. the OAuth usage endpoint with the Claude Code login (refreshed before it expires and retried once after a 401
        only when usageTokenRefresh is true; otherwise an expired login is code expired and the sources below run);
     2. a fresh Claude Code rate_limits reading (status line sidecar), when the endpoint gave nothing;
-    3. an estimate from the local transcripts, when the last real reading is older than ESTIMATE_AFTER_S.
+    (R10.40: no transcript estimate; without a real reading the view is unknown.)
 
     On an endpoint failure the stored values stay and lastError/syncError are set. A real failure (network, HTTP)
     raises UsageError after the fallbacks had their turn, unless one of them stored a reading. No usable login is not
@@ -478,7 +478,12 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
     disconnected = not account["connected"]
     if disconnected and store.get("syncError") != CODE_DISCONNECTED:
         _update_store({"syncError": CODE_DISCONNECTED, "lastError": None})
-    skip = disconnected or (background and _in_future(store.get("keychainRetryAfter"), moment))
+    backoff = background and _in_future(store.get("keychainRetryAfter"), moment)
+    if backoff and store.get("keychainStamp") and usage_sources.keychain_stamp() != store.get("keychainStamp"):
+        # The keychain item was rewritten since the failure (a new `claude auth login`): try it now, not in 6 hours.
+        _update_store({"keychainRetryAfter": None, "keychainStamp": None})
+        backoff = False
+    skip = disconnected or backoff
     oauth_error = None
     if not background and not disconnected:
         if store.get("syncError") in KEYCHAIN_CODES:
@@ -516,6 +521,8 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
             else:
                 _record_error(str(exc), exc.code, retry)
                 oauth_error = exc
+            if retry is not None and where is None:
+                _update_store({"keychainStamp": usage_sources.keychain_stamp()})
         else:
             changes = dict(usage_record(reading, SOURCE_ENDPOINT), lastError=None, syncError=None,
                            keychainRetryAfter=None)
@@ -628,11 +635,8 @@ def _fallbacks(cfg, moment):
             return dict(_result(_load_store(), cfg, []), status=None, reason=None)
     except Exception as exc:  # a fallback must never break the sync
         log.warning("usage sidecar skipped: %s", type(exc).__name__)
-    try:
-        return estimate_once(cfg, moment)
-    except Exception as exc:
-        log.warning("usage estimate skipped: %s", type(exc).__name__)
-        return None
+    # R10.40: estimates removed, site shows real readings only (estimate_once is kept but never called here)
+    return None
 
 
 def estimate_once(cfg, moment, roots=None):

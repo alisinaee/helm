@@ -153,7 +153,9 @@ export function navView(vm) {
   const list = SECTIONS.map(function (s) {
     return linkHtml(vm, s, counts);
   }).join("");
-  return '<p class="nav-brand" title="Helm">' + (mini ? "H" : "Helm") + "</p>" +
+  // The logo is a mask coloured by the theme (components.css .nav-logo); in the narrow rail only the logo shows.
+  return '<p class="nav-brand" title="Helm"><span class="nav-logo" aria-hidden="true"></span>' +
+    (mini ? '<span class="sr-only">Helm</span>' : "<span>Helm</span>") + "</p>" +
     '<div class="nav-list">' + list + "</div>" +
     '<div class="nav-foot">' + linkHtml(vm, SETTINGS, counts) +
     '<button type="button" class="nav-collapse" data-action="' + (narrow ? "nav-over" : "nav-mini") + '" aria-label="' +

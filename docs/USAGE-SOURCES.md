@@ -8,7 +8,6 @@ usage by itself. **Sync now** runs the same chain at once. The band shows the so
 |---|--------|-------|-------|
 | 1 | OAuth usage endpoint `GET https://api.anthropic.com/api/oauth/usage` | synced | a Claude Code CLI login |
 | 2 | Claude Code `rate_limits` (status line command, hooks, token-optimizer sidecar) | from Claude Code | the status line below (CLI sessions) |
-| 3 | Estimate from `~/.claude/projects/**/*.jsonl` (read only) | estimated from local transcripts, `~` | one earlier real reading |
 | - | `roadmap usage push` / Enter usage by hand | by the head / entered by you | nothing |
 
 ## 1. OAuth endpoint (what CodexBar, Claude HUD, Usagebar do)
@@ -43,11 +42,7 @@ line with the same input. **Do once** (not installed automatically), in `~/.clau
 
 Desktop-app sessions do not run a status line, so this only helps when you use the `claude` CLI.
 
-## 3. Transcript estimate (last resort)
-When the last real reading is older than 10 min and 1-2 found nothing, the service sums the tokens of each window
-in the local transcripts (input + output + cache writes + 10% of cache reads, one count per message) and scales
-them by the tokens-per-percent of the last real reading. Marked `estimate`, never written to the ledger, and any
-real reading replaces it. Desktop sessions are in the transcripts too, so this follows them between readings.
+The site shows unknown until a real reading exists (R10.40: no transcript estimates).
 
 ## Not used
 - claude.ai `sessionKey` cookie + `claude.ai/api/organizations/{id}/usage` (web menubar apps): needs browser or

@@ -8,6 +8,7 @@
 // vendored in web/vendor and loaded only when this section first renders.
 
 import { getJson, postJson } from "../api.js";
+import { withBusy } from "../busy.js";
 import { bannerHtml, chipHtml, emptyHtml, esc, patch, skeletonHtml } from "../dom.js";
 import { relTime } from "../format.js";
 import { copyButton } from "../ref.js";
@@ -45,11 +46,12 @@ function toast(text, tone) {
 }
 
 // Reads status, the newest 30 commits and the branches. A failure (no repo, git missing) is kept as the error.
+// Returns the promise of the read (resolved at once when one is already in flight), so Refresh can wait on it.
 function load(pid) {
-  if (reading.has(pid)) return;
+  if (reading.has(pid)) return Promise.resolve();
   reading.add(pid);
   const base = gitBase(pid);
-  Promise.all([getJson(base + "status"), getJson(base + "log?n=100"), getJson(base + "branches")])
+  return Promise.all([getJson(base + "status"), getJson(base + "log?n=100"), getJson(base + "branches")])
     .then(function (replies) {
       store.set(pid, { status: replies[0].data, rows: replies[1].data.rows || [],
         branches: replies[2].data.branches || [], error: null });
@@ -65,9 +67,10 @@ function load(pid) {
     });
 }
 
-async function send(op, args, pid, okText) {
+// el is the pressed button: it shows loading while the write runs.
+async function send(op, args, pid, okText, el) {
   try {
-    await postJson("/api/v1/cmd", { op: op, args: args, project: pid });
+    await withBusy(el, postJson("/api/v1/cmd", { op: op, args: args, project: pid }));
     toast(okText, "success");
     load(pid);
   } catch (err) {
@@ -85,7 +88,9 @@ function commit(form, pid) {
   if (!message) return toast("Write a commit message first.", "warning");
   const args = { paths: paths, message: message };
   if (task) args.task = task;
-  return send("git.commit", args, pid, "Committed " + paths.length + (paths.length === 1 ? " file." : " files."));
+  const button = form.querySelector('button[type="submit"]');
+  return send("git.commit", args, pid, "Committed " + paths.length + (paths.length === 1 ? " file." : " files."),
+    button);
 }
 
 // diff2html is loaded once, when the section first renders; a failure leaves the plain patch text.
@@ -325,7 +330,7 @@ function onClick(event) {
     tab = el.getAttribute("data-tab") || "changes";
     repaint();
   } else if (kind === "refresh") {
-    load(pid);
+    withBusy(el, load(pid));
   } else if (kind === "pick") {
     pickCommit(pid, el.getAttribute("data-sha"));
   } else if (kind === "file") {
@@ -336,7 +341,7 @@ function onClick(event) {
     sel.mode = el.getAttribute("data-mode") === "line-by-line" ? "line-by-line" : "side-by-side";
     repaint();
   } else if (kind === "push") {
-    send("git.push", {}, pid, "Pushed.");
+    send("git.push", {}, pid, "Pushed.", el);
   }
 }
 

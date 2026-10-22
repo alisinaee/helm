@@ -259,5 +259,35 @@ class UsageSetTests(CmdCase):
             self.op("usage.restore", {"weeklyPercent": 1})
 
 
+class KeychainRewriteTests(UsageCase):
+    """A keychain failure waits 6 hours, but a rewritten keychain item (a new `claude auth login`) ends the wait."""
+
+    def cfg(self):
+        return self.config_with([])
+
+    def fail_once(self, stamp):
+        with mock.patch.object(uc, "read_keychain_token", denied_keychain()), \
+                mock.patch.object(uc.usage_sources, "keychain_stamp", return_value=stamp):
+            with self.assertRaises(uc.UsageError):
+                uc.sync_once(self.cfg(), now=at(0))
+
+    def test_background_skips_keychain_while_item_is_unchanged(self):
+        self.fail_once("2026-10-19 10:00:00")
+        keychain = denied_keychain()
+        with mock.patch.object(uc, "read_keychain_token", keychain), \
+                mock.patch.object(uc.usage_sources, "keychain_stamp", return_value="2026-10-19 10:00:00"):
+            self.assertIsNone(uc.sync_once(self.cfg(), background=True, now=at(120)))
+        keychain.assert_not_called()
+
+    def test_background_reads_keychain_again_once_item_was_rewritten(self):
+        self.fail_once("2026-10-19 10:00:00")
+        keychain = denied_keychain()
+        with mock.patch.object(uc, "read_keychain_token", keychain), \
+                mock.patch.object(uc.usage_sources, "keychain_stamp", return_value="2026-10-19 10:05:00"):
+            with self.assertRaises(uc.UsageError):
+                uc.sync_once(self.cfg(), background=True, now=at(120))
+        keychain.assert_called()
+
+
 if __name__ == "__main__":
     unittest.main()

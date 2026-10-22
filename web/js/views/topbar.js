@@ -13,7 +13,7 @@ import { panelIsOpen } from "../state.js";
 import { showToast } from "./toast.js";
 import { weeklyStopRow } from "./limits.js";
 
-const THEME_LABEL = { auto: "Auto", dark: "Dark", light: "Light" };
+const THEME_LABEL = { obsidian: "Obsidian & Lime", classic: "Midnight", black: "Classic" };
 const MARK_LABEL = "I am seeing a bug here";
 const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\])$/;
 
@@ -35,7 +35,7 @@ export function markBug() {
 }
 
 export function themeLabel(theme) {
-  return THEME_LABEL[theme] || "Auto";
+  return THEME_LABEL[theme] || THEME_LABEL.obsidian;
 }
 
 function crumbHtml(vm) {
@@ -159,6 +159,8 @@ function enterHtml(vm) {
 // there is none, the weekly stop. Null when no stop is set.
 function stopFor(vm, win) {
   const rows = limitRows(vm.meterRows) || [];
+  const w = vm.limits && vm.limits.windows ? vm.limits.windows[win === "five" ? "five_hour" : "week"] : null;
+  if (w && typeof w.stop === "number" && isFinite(w.stop)) return w.stop;
   const stops = vm.limits && vm.limits.stops ? vm.limits.stops : (vm.stops || null);
   if (stops && typeof stops[win] === "number") return stops[win];
   if (win === "five") {
@@ -247,19 +249,26 @@ function panelToggleHtml(vm) {
     '<use href="/icons.svg#i-panel"></use></svg></button>';
 }
 
-// More menu (native details): the theme cycle lives here. Cmd+K and m stay keys and palette commands.
-function moreHtml(theme) {
-  return '<details class="top-more"><summary class="btn" aria-label="More" title="More">' +
-    '<svg class="ico" aria-hidden="true" focusable="false"><use href="/icons.svg#i-more"></use></svg></summary>' +
-    '<div class="top-menu"><button type="button" class="btn" data-action="cycle-theme" data-focus="theme"' +
-    ' aria-label="Change theme">Theme: ' + esc(themeLabel(theme)) + "</button></div></details>";
+// Light/dark switch in the top bar: one click flips the mode. Auto resolves to the mode it shows now, so the
+// first click always changes the look. The icon shows the mode a click switches to (moon while light, sun while dark).
+export function isLightNow(mode) {
+  return mode === "light" || (mode === "auto" && typeof matchMedia === "function" &&
+    matchMedia("(prefers-color-scheme: light)").matches);
+}
+
+function themeToggleHtml(mode) {
+  const light = isLightNow(mode);
+  const label = light ? "Switch to dark theme" : "Switch to light theme";
+  return '<button type="button" class="btn theme-switch" data-action="theme-toggle" data-focus="theme-toggle"' +
+    ' aria-label="' + label + '" title="' + label + '"><svg class="ico theme-ico" aria-hidden="true"' +
+    ' focusable="false"><use href="/icons.svg#' + (light ? "i-moon" : "i-sun") + '"></use></svg></button>';
 }
 
 export function topbarView(vm) {
-  const theme = vm.theme || "auto";
+  const mode = vm.mode || "dark";
   return '<div class="top-row">' + crumbHtml(vm) +
     '<div class="top-tools">' + controlHtml(vm) + metersHtml(vm) + connHtml(vm.conn) +
     '<button type="button" class="btn" data-action="help-open" data-focus="help" aria-haspopup="dialog"' +
-    ' aria-label="Keyboard shortcuts">?</button>' + panelToggleHtml(vm) + moreHtml(theme) +
+    ' aria-label="Keyboard shortcuts">?</button>' + themeToggleHtml(mode) + panelToggleHtml(vm) +
     "</div></div>";
 }

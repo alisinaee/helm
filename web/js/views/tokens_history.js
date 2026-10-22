@@ -375,13 +375,15 @@ function xTicks(slots) {
 
 // ------------------------------------------------------------------ accounts (R11.8)
 // GET /api/v1/usage/accounts -> services/usage_accounts.list_status(); POST /api/v1/usage/accounts/<id>/<action> with
-// action connect | disconnect | switch | check | login (login opens Terminal; the person finishes it in the browser).
+// action connect | disconnect | switch | check | login | remove | refresh (login opens Terminal; the person finishes
+// it in the browser, then presses Refresh: refresh connects the account, makes it active, reads it and takes a usage
+// reading).
 // Login and logout run the existing CLI flow; the page never sees a password or token. E-mails are masked on the
 // phone listener only (it may be reached over a tunnel); the main listener shows the full address.
 const ACCT_LOGIN_NOTE = "Added nothing yet: run this in a terminal, then click Add again:";
 const acct = {
   data: null, at: 0, loading: false, error: false,
-  busy: "", note: "", loginCmd: "",
+  busy: "", busyId: "", note: "", loginCmd: "",
   adding: false, advanced: false,
   login: null,  // Linux web login waiting for its code: {key, url, label}
 };
@@ -414,11 +416,23 @@ function acctAge(s) {
     Math.round(s / 86400) + "d ago";
 }
 
-function acctButton(id, action, label, extra) {
-  const text = esc(label);
-  return '<button type="button" class="btn" data-tk="acct" data-id="' + esc(id) + '" data-act="' + action +
-    '" aria-label="' + esc(label + " " + (extra || "")) + '"' + (acct.busy ? " disabled" : "") + ">" +
-    text + "</button>";
+// aria-busy on the one button whose request is running (acct.busy is its action, acct.busyId its account or form).
+function busyAttr(act, id) {
+  return acct.busy === act && acct.busyId === id ? ' aria-busy="true"' : "";
+}
+
+function acctButton(id, action, label, extra, cls, text) {
+  return '<button type="button" class="btn' + (cls ? " " + cls : "") + '" data-tk="acct" data-id="' + esc(id) +
+    '" data-act="' + action + '" aria-label="' + esc(label + " " + (extra || "")) + '"' +
+    busyAttr(action, id) + (acct.busy ? " disabled" : "") + ">" + esc(text || label) + "</button>";
+}
+
+// Remove forgets the account in Helm's list only; Claude Code's own login is not touched. Removing the last one
+// leaves the empty state below, from which the Claude Code login can be connected again.
+function removeButton(a) {
+  return '<button type="button" class="btn tk-act-del" data-tk="acct" data-id="' + esc(a.id) +
+    '" data-act="remove" aria-label="Remove ' + esc(a.label) + '" title="Remove this account from the list ' +
+    '(the Claude login itself stays)"' + busyAttr("remove", a.id) + (acct.busy ? " disabled" : "") + ">Remove</button>";
 }
 
 export function acctPanelHtml() {
@@ -445,27 +459,26 @@ export function acctPanelHtml() {
       [who.email || who.emailMasked, who.plan].filter(Boolean).join(" · ") || MISSING;
     const nameTitle = name === MISSING ? "Not known until the account is checked" : (who.orgName || "");
     const r = a.reading || {};
-    const more = '<details class="tk-menu"><summary class="btn" aria-label="More actions for ' + esc(a.label) +
-      '" title="More actions">\u22ef</summary><div class="tk-menu-list">' +
-      acctButton(a.id, "login", "Log in", a.label) +
-      acctButton(a.id, "check", "Check", a.label) +
-      (a.enabled ? acctButton(a.id, "disconnect", "Disconnect", a.label) :
-        acctButton(a.id, "connect", "Connect", a.label)) +
-      (a.active ? "" : acctButton(a.id, "remove", "Remove", a.label)) + "</div></details>";
     const linux = !!acct.data.switchable;
-    const signedOut = who.loggedIn === false || a.status === "signed_out" || a.status === "expired" ||
-      a.status === "wrong_login";
-    const primary = linux ? (a.enabled && signedOut ? acctButton(a.id, "login", "Log in", a.label) :
-      a.canUse ? acctButton(a.id, "use", "Switch", "Claude Code to " + a.label) : "<span></span>") :
-      (a.active ? "<span></span>" : acctButton(a.id, "switch", "Use", a.label));
-    // Linux: the board follows the login in use, so Switch is the only choice; no separate "show on board".
-    const btns = primary + more;
+    const refreshing = acct.busy === "refresh" && acct.busyId === a.id;
+    // Refresh is the one primary action: after a login it connects the account, reads who is logged in and takes a
+    // fresh reading. Connect and Disconnect are the same switch in both directions, so only one of them shows.
+    const btns = acctButton(a.id, "refresh", "Refresh", a.label, "btn-primary tk-act-refresh",
+        refreshing ? "Refreshing\u2026" : "Refresh") +
+      (a.enabled ? acctButton(a.id, "disconnect", "Disconnect", a.label, "tk-act-off") :
+        acctButton(a.id, "connect", "Connect", a.label, "tk-act-on")) +
+      acctButton(a.id, "login", "Log in", a.label) +
+      removeButton(a) +
+      (linux ? (a.canUse ? acctButton(a.id, "use", "Switch", "Claude Code to " + a.label) : "") :
+        a.active ? "" : '<details class="tk-menu"><summary class="btn" aria-label="More actions for ' + esc(a.label) +
+        '" title="More actions">\u22ef</summary><div class="tk-menu-list">' +
+        acctButton(a.id, "switch", "Use", a.label) + "</div></details>");
     const stCls = a.status === "ok" ? "tk-st-ok" : (a.status === "idle" || a.status === "unknown" ||
       a.status === "disconnected" ? "" : "tk-st-bad");
-    return '<li class="tk-acct-row' + (a.active ? " tk-acct-on" : "") + '">' +
+    return '<li class="tk-acct-row' + (a.live ? " tk-acct-on" : "") + '">' +
       cell("Account", "", esc(a.label) + (linux && a.inClaude ?
         ' <span class="chip chip-success" title="The login plain claude uses now">In use</span>' :
-        a.active ? ' <span class="chip chip-success">Active</span>' : ""), a.path || "") +
+        a.live ? ' <span class="chip chip-success">Active</span>' : ""), a.path || "") +
       cell("Logged in as", "", esc(name), nameTitle) +
       cell("Status", stCls, esc(a.status), a.reason || "") +
       cell("Weekly", "tk-acct-num", esc(pct(r.weeklyPercent))) +
@@ -476,10 +489,15 @@ export function acctPanelHtml() {
   const found = (acct.data.found || []).map(function (f) {
     return '<p class="page-note">Found a logged-in account in <code>' + esc(f.path) + "</code>. " +
       '<button type="button" class="btn" data-tk="acct" data-act="add-found" data-id="' + esc(f.id) +
-      '" data-path="' + esc(f.path) + '" data-label="' + esc(f.label) + '"' + (acct.busy ? " disabled" : "") +
-      ">Add account</button></p>";
+      '" data-path="' + esc(f.path) + '" data-label="' + esc(f.label) + '"' + busyAttr("add", f.id) +
+      (acct.busy ? " disabled" : "") + ">Add account</button></p>";
   }).join("");
-  return '<ul class="spend-list tk-acct-list" aria-label="Claude accounts">' + head + rows + "</ul>" + found +
+  const table = acct.data.accounts.length ?
+    '<ul class="spend-list tk-acct-list" aria-label="Claude accounts">' + head + rows + "</ul>" :
+    '<p class="page-note">No accounts: Helm is not reading any Claude login. ' +
+    '<button type="button" class="btn btn-primary" data-tk="acct" data-act="add-default"' +
+    busyAttr("add", "default") + (acct.busy ? " disabled" : "") + ">Connect Claude Code login</button></p>";
+  return table + found +
     (acct.login ? acctLoginForm() : acct.data.switchable ? acctNewLoginForm() : acctAddForm()) +
     '<p class="page-note" role="status">' + acctNoteHtml(acct.note || acct.data.note || "") + "</p>";
 }
@@ -570,7 +588,7 @@ function acctAddForm() {
     '<label>Label <input type="text" name="label" required autocomplete="off" value="' +
       esc(acct.lastLabel || "") + '"></label>' +
     advanced +
-    '<button type="submit" class="btn">Add</button> ' +
+    '<button type="submit" class="btn"' + busyAttr("add", "form") + (acct.busy ? " disabled" : "") + '>Add</button> ' +
     '<button type="button" class="btn" data-tk="acct" data-act="add-cancel">Cancel</button></form>';
 }
 
@@ -583,6 +601,7 @@ function acctAdd(form) {
   const path = acct.advanced && f.path ? f.path.value.trim() : "~/.claude-" + id;
   acct.lastLabel = label;
   acct.busy = "add";
+  acct.busyId = "form";
   const payload = {id: id, label: label, source: source, path: path};
   postJson("/api/v1/usage/accounts", payload)
     .then(function () {
@@ -629,8 +648,25 @@ function acctAction(el) {
     rerender();
     return;
   }
+  if (act === "add-default" && !acct.busy) {
+    acct.busy = "add";
+    acct.busyId = "default";
+    postJson("/api/v1/usage/accounts", {id: "default", label: "Claude Code", source: "keychain"}).then(function () {
+      return postJson("/api/v1/usage/accounts/default/refresh", {});
+    }).then(function () {
+      acct.note = "Done: connected the Claude Code login.";
+    }).catch(function (err) {
+      acct.note = "Failed: " + (err && err.message ? err.message : "add");
+    }).finally(function () {
+      acct.busy = "";
+      acct.at = 0;
+      rerender();
+    });
+    return;
+  }
   if (act === "add-found" && !acct.busy) {
     acct.busy = "add";
+    acct.busyId = id;
     postJson("/api/v1/usage/accounts", {id: id, label: el.getAttribute("data-label") || id, source: "config-dir",
       path: el.getAttribute("data-path")}).then(function () {
       acct.note = "Done: added " + id + ".";
@@ -650,7 +686,7 @@ function acctAction(el) {
     rerender();
     return;
   }
-  if (acct.busy || !/^(connect|disconnect|switch|check|login|remove|use)$/.test(act) || !id) return;
+  if (acct.busy || !/^(connect|disconnect|switch|check|login|remove|use|refresh)$/.test(act) || !id) return;
   if (act === "login" && acct.data && acct.data.switchable) {
     acct.busy = "login";
     acct.note = "Starting the login.";
@@ -667,15 +703,26 @@ function acctAction(el) {
     return;
   }
   acct.busy = act;
+  acct.busyId = id;
   postJson("/api/v1/usage/accounts/" + encodeURIComponent(id) + "/" + act, {}).then(function (res) {
     const d = res && res.data || {};
-    acct.note = act === "login" ? (d.opened ? "Terminal opened: finish the login in the browser." :
-      "Run in a terminal: " + (d.command || "claude auth login")) : act === "use" ?
-      "Done: new Claude Code sessions now use this login (open ones keep theirs)." : "Done: " + act + ".";
+    if (act === "refresh") {
+      const row = (d.accounts || []).find(function (x) {
+        return x.id === id;
+      });
+      acct.note = row && row.status !== "ok" ? "Refreshed " + row.label + ": " + row.status +
+        (row.reason ? ". " + row.reason : ".") : "Refreshed " + (row ? row.label : id) + ".";
+    } else {
+      acct.note = act === "login" ? (d.opened ?
+        "Terminal opened: finish the login in the browser, then press Refresh." :
+        "Run in a terminal: " + (d.command || "claude auth login") + ", then press Refresh.") : act === "use" ?
+        "Done: new Claude Code sessions now use this login (open ones keep theirs)." : "Done: " + act + ".";
+    }
   }).catch(function (err) {
     acct.note = "Failed: " + (err && err.message ? err.message : act);
   }).finally(function () {
     acct.busy = "";
+    acct.busyId = "";
     acct.at = 0;
     rerender();
   });

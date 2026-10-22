@@ -174,45 +174,36 @@ class EstimateTests(HomeCase):
         uc._update_store({"updated": at.isoformat(), "lastReal": dict(uc._load_store()["lastReal"],
                                                                         updated=at.isoformat())})
 
-    def test_the_estimate_scales_tokens_by_the_last_real_reading(self):
-        t0 = self.now - timedelta(minutes=30)
-        self.transcript([line(self.now - timedelta(hours=2), 10000, "a"),
-                         line(self.now - timedelta(hours=2), 10000, "a")])  # one message written twice
-        self.real_reading(t0)
-        self.transcript([line(self.now - timedelta(minutes=10), 10000, "b")])
-        result = uc.estimate_once(CONFIG, self.now)
-        self.assertEqual(result["status"], "estimate")
-        store = uc._load_store()
-        self.assertTrue(store["estimate"])
-        self.assertEqual(store["source"], uc.SOURCE_ESTIMATE)
-        self.assertEqual(store["fiveHourPercent"], 20)   # 1000 tokens per percent, 20000 tokens
-        self.assertEqual(store["weeklyPercent"], 40)
-        self.assertEqual(store["lastReal"]["fiveHourPercent"], 10)  # the real base is kept
-
-    def test_no_estimate_while_the_real_reading_is_fresh(self):
-        self.transcript([line(self.now - timedelta(hours=1), 10000, "a")])
-        self.real_reading(self.now - timedelta(minutes=5))
-        self.assertIsNone(uc.estimate_once(CONFIG, self.now))
-
-    def test_a_real_reading_replaces_an_estimate(self):
+    def test_sync_never_stores_an_estimate(self):
+        # R10.40: estimates removed, site shows real readings only
         self.transcript([line(self.now - timedelta(hours=1), 10000, "a")])
         self.real_reading(self.now - timedelta(minutes=30))
-        uc.estimate_once(CONFIG, self.now)
+
+        def no_login():
+            raise uc.UsageError("keychain entry has no usable token", uc.CODE_NO_TOKEN)
+        with mock.patch.object(uc, "estimate_once") as est:
+            uc.sync_once(CONFIG, get_token=no_login, fetch=mock.Mock(), background=True, now=self.now)
+        est.assert_not_called()
+        self.assertFalse(uc._load_store().get("estimate"))
+
+    def test_unknown_when_there_is_no_real_reading(self):
+        self.transcript([line(self.now - timedelta(hours=1), 10000, "a")])
+
+        def no_login():
+            raise uc.UsageError("keychain entry has no usable token", uc.CODE_NO_TOKEN)
+        uc.sync_once(CONFIG, get_token=no_login, fetch=mock.Mock(), background=True, now=self.now)
+        store = uc._load_store()
+        self.assertIsNone(store.get("fiveHourPercent"))
+        self.assertNotEqual(store.get("source"), uc.SOURCE_ESTIMATE)
+
+    def test_a_real_reading_is_not_marked_estimate(self):
+        self.real_reading(self.now - timedelta(minutes=30))
         later = (self.now + timedelta(seconds=30)).astimezone()
         source = uc.auto_update({"rate_limits": {"five_hour": {"used_percentage": 33}}}, later, CONFIG)
         self.assertEqual(source, uc.SOURCE_HOOK)
         store = uc._load_store()
         self.assertFalse(store["estimate"])
         self.assertEqual(store["fiveHourPercent"], 33)
-
-    def test_background_sync_without_a_login_falls_back_to_the_estimate(self):
-        self.transcript([line(self.now - timedelta(hours=1), 10000, "a")])
-        self.real_reading(self.now - timedelta(minutes=30))
-
-        def no_login():
-            raise uc.UsageError("keychain entry has no usable token", uc.CODE_NO_TOKEN)
-        result = uc.sync_once(CONFIG, get_token=no_login, fetch=mock.Mock(), background=True, now=self.now)
-        self.assertEqual(result["status"], "estimate")
 
 
 class StatuslineTests(HomeCase):

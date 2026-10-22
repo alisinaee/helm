@@ -5,12 +5,13 @@
 // in place (no re-render), so a live refresh cannot drop the handle. Widths come from data-pct (applyMeters).
 
 import { getJson, postJson } from "../api.js";
+import { withBusy } from "../busy.js";
 import { applyMeters, esc } from "../dom.js";
 import { copyButton, refSummary } from "../ref.js";
 import { showToast } from "./toast.js";
 
 const SAVE_MS = 400;
-const FRESH_MS = 30000;
+const FRESH_MS = 10000;
 const WINDOWS = {
   five_hour: { title: "5 hours", short: "5h", sliderLabel: "5 hours stop", numLabel: "5 hours stop percent, 1 to 100",
     switchOn: "5 hours stop, on", switchOff: "5 hours stop, off" },
@@ -30,12 +31,17 @@ function clamp(n, lo, hi) {
   return Math.min(hi, Math.max(lo, n));
 }
 
+function announce(w) {
+  document.dispatchEvent(new CustomEvent("rb:limits", { detail: w }));
+}
+
 function load() {
   if (L.loading || typeof fetch === "undefined") return;
   L.loading = true;
   getJson("/api/v1/limits").then(function (res) {
     if (!res || res.status !== 200 || !res.data || !res.data.windows) throw new Error("limits");
     L.data = res.data.windows;
+    announce(L.data);
     L.error = false;
   }).catch(function () {
     L.error = true;
@@ -46,7 +52,21 @@ function load() {
   });
 }
 
+// While the card is mounted (ensureLimits ran in the last 3 intervals), poll on its own; skipped when the tab is
+// hidden.
+let lastEnsure = 0;
+let pollId = null;
+function startPoll() {
+  if (pollId || typeof window === "undefined") return;
+  pollId = window.setInterval(function () {
+    if (document.hidden || Date.now() - lastEnsure > FRESH_MS * 3) return;
+    if (!L.drag && !Object.keys(L.timers).length && Date.now() - L.at >= FRESH_MS - 500) load();
+  }, FRESH_MS);
+}
+
 function ensureLimits() {
+  lastEnsure = Date.now();
+  startPoll();
   if (L.data && Date.now() - L.at < FRESH_MS) return;
   if (L.error && Date.now() - L.at < FRESH_MS) return;
   setTimeout(load, 0);
@@ -174,8 +194,11 @@ function scheduleSave(w) {
 function save(w) {
   const d = L.draft[w];
   if (!d) return;
-  postJson("/api/v1/limits", { window: w, on: d.on, mode: d.mode, value: d.value, once: d.once }).then(function (res) {
-    if (res && res.data && res.data.windows) L.data = res.data.windows;
+  // The save runs after a short pause, so the window's On switch is read now; it shows loading while the stop is saved.
+  const sw = document.querySelector('[data-lv="on"][data-win="' + w + '"]');
+  const body = { window: w, on: d.on, mode: d.mode, value: d.value, once: d.once };
+  withBusy(sw, postJson("/api/v1/limits", body)).then(function (res) {
+    if (res && res.data && res.data.windows) { L.data = res.data.windows; announce(L.data); }
     if (!L.timers[w]) delete L.draft[w];
     L.at = Date.now();
     showToast({ text: WINDOWS[w].title + " stop saved.", tone: "success" });

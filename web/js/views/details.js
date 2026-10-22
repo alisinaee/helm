@@ -68,7 +68,7 @@ export function commentsFor(snap, on, now) {
 }
 
 function backHtml() {
-  return '<div class="d-back"><button type="button" class="btn-small" data-side="back" data-focus="side-back">' +
+  return '<div class="d-back"><button type="button" class="btn btn-small" data-side="back" data-focus="side-back">' +
     "Back to Projects</button></div>";
 }
 

@@ -94,17 +94,17 @@ class RoadmapLanesTest(unittest.TestCase):
     def test_approve_has_a_fixed_column_on_the_header_line(self):
         # R8.9: the header is name | Approve column; the stats span the row below.
         plan = read(CSS, "plan.css")
-        self.assertIn(".lane-head { display: grid; grid-template-columns: minmax(0, 1fr) auto;", plan)
-        self.assertIn(".lane-act { --rg: 6.5rem; }", plan)
-        self.assertIn("grid-column: 1 / -1;", plan)
+        self.assertIn(".lane-head{display:grid;grid-template-columns:minmax(0,1fr) 96px 180px 72px 96px 32px;", plan)
+        self.assertIn(".lane-act,.lane-stats{display:contents}", plan)
+        self.assertIn(".lane-appr{grid-column:5;justify-self:end}", plan)
 
     def test_chevron_is_a_24_px_target(self):
-        self.assertIn(".lane-caret { width: 24px;", read(CSS, "plan.css"))
+        self.assertIn(".lane-toggle{display:grid;grid-template-columns:24px 48px minmax(0,1fr);", read(CSS, "plan.css"))
 
     def test_up_and_down_keep_their_own_columns_on_phone(self):
         plan = read(CSS, "plan.css")
-        self.assertIn(".rc-move { display: grid; }", plan)
-        self.assertIn(".rc-move > .btn { width: 100%; margin: 0; }", plan)
+        self.assertIn(".rc-move{display:grid;align-self:end;--rg:1fr 1fr 2rem}", plan)
+        self.assertIn(".rc-move>.btn{width:100%;margin:0}", plan)
 
     def test_up_and_down_are_disabled_at_the_ends(self):
         # R8.9 (already in place): the first card's Up and the last card's Down are disabled.

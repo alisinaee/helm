@@ -100,3 +100,11 @@
 .toasts{right:var(--sp-3);bottom:calc(var(--h-bnav) + var(--sp-3))}
 }
 .nav-brand{margin:0;padding:var(--sp-2);font-weight:700}
+.pill.is-run .dot{animation:run-blink 1.2s ease-in-out infinite}
+@keyframes run-blink{0%,100%{opacity:1;box-shadow:0 0 0 0 var(--success)}50%{opacity:.35;box-shadow:0 0 0 5px transparent}}
+.theme-switch{transition:transform .3s}
+.theme-switch:hover{transform:scale(1.08)}
+.theme-ico{animation:theme-in .42s cubic-bezier(.2,.8,.2,1)}
+@keyframes theme-in{from{transform:rotate(-120deg) scale(.4);opacity:0}to{transform:none;opacity:1}}
+::view-transition-old(root),::view-transition-new(root){animation:none}
+@media (prefers-reduced-motion:reduce){.pill.is-run .dot,.theme-ico{animation:none}.theme-switch{transition:none}.theme-switch:hover{transform:none}}
