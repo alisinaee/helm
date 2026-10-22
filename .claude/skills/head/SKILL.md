@@ -15,11 +15,14 @@ Args: `save` | (none = resume) | `status`.
 4. Push. Save a memory note if a new lasting preference appeared.
 5. Reply in <=8 lines: last commit, WIP files, open items, the exact first message for the new chat: `/head`.
 
+## USAGE LIMITS
+Single source of truth: the only limits are the board's usage stops, shown by `bin/roadmap usage stops` (Tokens > Limits). A stop that is `off` means NO limit: never apply a number from this file, the runbook or memory, and never ask the person for usage numbers or whether to continue. Stop launching Claude workers only when a stop that is ON is reached, or on a session-limit error.
+
 ## Standing mandate: maintainer's clone only (applies from the first turn, any model; the person never re-explains this)
 Applies only to the owner's own board/clone. Coworkers' boards and clones do not get this mandate; for them, follow /helm and ask before each step.
 - You ARE the head now. The person already gave full permission (ledger H94, H98): launch, commit by path and push
   verified work WITHOUT asking. Never ask "should I start?", "want me to?", or for usage numbers when a reading exists
-  (use docs/HEAD-RUNBOOK.md "Usage limits"; stop only at 5h 80% / weekly 95% or on a session-limit error).
+  (see USAGE LIMITS above).
 - The head only plans and verifies; workers do the work (Haiku 5.5 subagents for edits; agy and Cursor unlimited for
   audits/reviews; OpenCode only with credit; Opus/Sonnet low-medium only for hard review). Save Claude tokens:
   short replies, read diffs and test tails only.
@@ -31,7 +34,7 @@ Applies only to the owner's own board/clone. Coworkers' boards and clones do not
 - Usage (the board cannot read it itself: the keychain entry holds no claude.ai login when the person uses the
   desktop app): each turn call the `get_usage` tool (mcp ccd_session_mgmt) and push it:
   `echo '{"rateLimits":[{"kind":"five_hour","percentUsed":P5,"resetsAt":"R5"},{"kind":"seven_day","percentUsed":PW,"resetsAt":"RW"}]}' | bin/roadmap usage push`.
-  Stop launching Claude workers at 5h 80% / weekly 85%.
+  Stop launching Claude workers only per USAGE LIMITS above.
 - Follow-ups sent to an existing worker (SendMessage) are NOT registered by the hook: run
   `bin/roadmap job start "<model>: <task> follow-up" <model> <TASK>` before sending, and `job done` after. Keep the
   number of running jobs at the wave size: when one finishes, launch the next free package in the same turn.
@@ -46,8 +49,7 @@ Applies only to the owner's own board/clone. Coworkers' boards and clones do not
 - agy-first: every read-only job (audit, survey, search, summary, research of OSS libs, doc drafts, review tables,
   UI string/aria checks) goes to agy; Haiku verifies 2-3 rows. Edits by Haiku (1-3 files) or Sonnet (wider).
   Learn: log in docs/AGY-PLAYBOOK.md which agy jobs were good/bad after each verify.
-- Budget: Claude usage cap per head run is given by the person (default: stop at +8% weekly over the reading at
-  start; run of 2026-10-16: 15% weekly per H202). Check get_usage each wave; at the cap: stop launching Claude workers, agy may continue.
+- Budget: no default cap. Only a stop that is ON on the board limits the run (see USAGE LIMITS); a cap the person gives in chat overrides it.
 - Workers run only their module tests; the head runs the full suite once per wave (parallel full suites hang).
 - Worker prompts must forbid git stash/checkout --/reset (a worker stashed the shared tree 2026-10-16).
 - Conflicts: before each launch list running jobs (`bin/roadmap job list`) and their file lists; never two workers on
@@ -81,12 +83,12 @@ Applies only to the owner's own board/clone. Coworkers' boards and clones do not
     continuing. This is a plain project-config toggle, not a code or product edit, so the head may write it directly.
 2. `git status -sb`, `git log --oneline -5`; list WIP (uncommitted files = a worker was cut off: inspect the diff, finish or
    revert with the person's OK). Run the test command from CLAUDE.md once.
-3. Check the board (`bin/roadmap status` or the project's equivalent) and usage vs the stop limit.
+3. Check the board (`bin/roadmap status` or the project's equivalent) and `bin/roadmap usage stops` (a stop that is off = no limit).
    Head rule: log every person message (`head log`), triage and bind it to tasks in the same turn (`head t <id> --kind K --sum S --bind task:ID`; create the task if none), keep it current. Then actually RUN `bin/roadmap head claim --model "<model>"` now (not just note that it should happen — R11.157 found a split-net session that skipped this step while believing it had run it, so the project never got a claim record at all) and `bin/roadmap head brief --gate`: open asks and what the head is missing (idle cursor/agy, free tasks) come from the ledger, not memory. On /head save also run `head brief` and list new rules/decisions as asks.
 4. Then act as head: launch every non-overlapping task in parallel (Haiku edits; agy audits + Cursor reviews when the VPN
    is on; Opus low effort only for design/review), verify each result, register jobs, close with tokens, commit, push,
    show the board. Do not idle, do not ask permission per step. Honour any "stop" the person gave.
-5. Stop and report when usage reaches the limit, or an API session-limit error appears (workers die mid-edit: check
+5. Stop and report when a board stop that is ON is reached, or an API session-limit error appears (workers die mid-edit: check
    `git status` for WIP after it).
 
 ## /head status
