@@ -57,6 +57,9 @@ LOGIN_GAP_S = 30
 READING_FIELDS = ("weeklyPercent", "fiveHourPercent", "weeklyResetsAt", "fiveHourResetsAt", "updated", "source")
 IDENTITY_FIELDS = ("loggedIn", "authMethod", "emailMasked", "orgName", "plan", "checkedAt", "via")
 # Status of one account in the list.
+NOTE_PLAIN = "Every connected account is read live. The starred one feeds the board's usage."
+NOTE_SWITCH = ("Every connected account is read live. Switch moves a stored login into plain `claude` (In use) "
+               "with no new login; sessions already open keep theirs.")
 ST_OK = "ok"                      # the last sync read this login
 ST_EXPIRED = "expired"            # the login token has expired (use Claude Code once, or log in again)
 ST_SIGNED_OUT = "signed_out"      # no Claude Code login at this place
@@ -65,7 +68,8 @@ ST_ERROR = "error"                # network or endpoint failure
 ST_DISCONNECTED = "disconnected"  # Helm does not read this login (the person disconnected it)
 ST_IDLE = "idle"                  # connected but not active: not read live, the last reading is kept
 ST_UNKNOWN = "unknown"            # active, never synced yet
-_CODE_STATUS = {"no_item": ST_SIGNED_OUT, "no_token": ST_SIGNED_OUT, "expired": ST_EXPIRED, "denied": ST_DENIED,
+ST_WRONG = "wrong_login"           # the stored token belongs to another account: log in again
+_CODE_STATUS = {"mismatch": ST_WRONG, "no_item": ST_SIGNED_OUT, "no_token": ST_SIGNED_OUT, "expired": ST_EXPIRED, "denied": ST_DENIED,
                 "net": ST_ERROR, "other": ST_ERROR}
 _EMAIL = re.compile(r"([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
@@ -366,25 +370,69 @@ def _row(account, cfg, entry, full_email, now=None):
     active = account["id"] == active_id(cfg)
     if not account["enabled"]:
         status = ST_DISCONNECTED
-    elif not active:
-        status = ST_IDLE
     else:
-        status = entry.get("status") or ST_UNKNOWN
+        status = entry.get("status") or (ST_UNKNOWN if active else ST_IDLE)
     identity = {k: (entry.get("identity") or {}).get(k) for k in IDENTITY_FIELDS}
     if full_email:
         with _memory_lock:
             identity["email"] = _memory.get(account["id"])
+    folder = config_dir_of(account)
+    slot = _slot_identity(folder) if account["enabled"] else None
+    if slot:
+        for key in ("emailMasked", "orgName", "plan"):
+            identity[key] = identity.get(key) or slot.get(key)
+        if full_email and not identity.get("email"):
+            identity["email"] = slot.get("email")
+    live_uuid = _live_uuid()
+    in_claude = folder is None or bool(live_uuid and _slot_uuid(folder) == live_uuid)
     reading = entry.get("reading") if isinstance(entry.get("reading"), dict) else {}
     reading = {k: reading.get(k) for k in READING_FIELDS}
     reading["ageS"] = _age_s(reading.get("updated"), now)
-    folder = config_dir_of(account)
     return {
         "id": account["id"], "label": account["label"], "source": account["source"],
         "path": _home_short(account.get("path")), "enabled": account["enabled"], "active": active,
-        "live": active and account["enabled"], "status": status, "reason": entry.get("reason"),
+        "live": account["enabled"], "status": status, "reason": entry.get("reason"),
+        "inClaude": in_claude, "canUse": bool(_slots_supported() and folder and not in_claude and slot),
         "statusAt": entry.get("statusAt"), "identity": identity, "reading": reading,
         "login": login_command(folder), "logout": logout_command(folder),
     }
+
+
+def _slots_supported():
+    from roadmap.services import claude_slots
+    return claude_slots.supported()
+
+
+def _slot_identity(folder):
+    """Who is logged in at a config folder (None: plain claude), from Claude Code's own files. Linux only."""
+    if not _slots_supported():
+        return None
+    from roadmap.services import claude_slots
+    try:
+        return claude_slots.identity(folder)
+    except Exception:
+        return None
+
+
+def _slot_uuid(folder):
+    if not _slots_supported():
+        return None
+    from roadmap.services import claude_slots
+    return claude_slots.account_uuid(folder)
+
+
+def _live_uuid():
+    return _slot_uuid(None)
+
+
+def read_location(account):
+    """Where the sync reads this account's token: the login plain claude uses when this account is the one in it
+    (that copy is the freshest), else the account's own place."""
+    folder = config_dir_of(account)
+    uuid = _slot_uuid(folder) if folder else None
+    if uuid and uuid == _live_uuid():
+        return None
+    return location(account)
 
 
 def login_command(config_dir=None):
@@ -432,8 +480,47 @@ def list_status(cfg=None, full_email=True, now=None):
     cfg = cfg if cfg is not None else config_store.load()
     state = _read_state()["accounts"]
     rows = [_row(a, cfg, state.get(a["id"]) or {}, full_email, now) for a in accounts(cfg)]
+    rows = _fold_live(rows)
     return {"active": active_id(cfg), "accounts": rows, "found": discover(cfg),
-            "note": "Only the active account is read live; the others keep their last reading."}
+            "note": NOTE_SWITCH if _slots_supported() else NOTE_PLAIN,
+            "switchable": _slots_supported()}
+
+
+def live_account_id(cfg=None):
+    """Linux: the id of the stored account whose login plain claude uses now, judged by who the live token belongs
+    to (Anthropic profile, cached) and else by ~/.claude.json. None when no stored account matches."""
+    if not _slots_supported():
+        return None
+    from roadmap.services import claude_slots
+    owner = claude_slots.token_owner(None)
+    uuid = owner["accountUuid"] if owner else claude_slots.live_uuid()
+    if not uuid:
+        return None
+    for account in accounts(cfg):
+        folder = config_dir_of(account)
+        if folder and claude_slots.account_uuid(folder) == uuid:
+            return account["id"]
+    return None
+
+
+def _fold_live(rows):
+    """Linux: the default row is the login plain claude uses, which is also one of the stored ~/.claude-<name>
+    accounts. Show that account once: the stored row stays (marked In use, Active when the default row feeds the
+    board) with its own reading, and the default row is dropped. Readings are kept per real account (see
+    live_account_id), so a switch never shows one account's numbers on another. Nothing changes when no stored
+    account is the one in use."""
+    if not _slots_supported():
+        return rows
+    default = next((r for r in rows if r["source"] == "keychain" and not r["path"]), None)
+    stored = next((r for r in rows if r is not default and r["inClaude"]), None)
+    if default is None or stored is None:
+        return rows
+    if default["active"]:
+        stored["active"] = True
+    from roadmap.services import claude_slots
+    if claude_slots.token_mismatch(None, fetch=False):
+        stored["status"], stored["reason"] = ST_WRONG, "the login in use holds another account's token: Log in again"
+    return [r for r in rows if r is not default]
 
 
 # ---------------------------------------------------------------- changes

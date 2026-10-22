@@ -51,6 +51,8 @@ let followUp = false;
 const SKIP_RENDER_MAX_MS = 10000;
 let lastRenderAt = 0;
 let lastOk = null;
+let lastSheetItem = null;
+let sheetAuto = false;
 
 function prefsKey(route) {
   return route.name === "project" ? "project:" + route.id : "home";
@@ -272,6 +274,20 @@ function render() {
     window.location.replace(route.redirect);
     return;
   }
+  // Below 1200 px the item details live in the floating panel: opening a new item shows that sheet.
+  // Leaving the item (Back, or a link to a list) closes a sheet that was opened this way.
+  if (route.item && route.item !== lastSheetItem && isSheetWidth()) {
+    sheetAuto = true;
+    updateUi(function (ui) {
+      ui.panelOpen = true;
+    });
+  } else if (!route.item && lastSheetItem && sheetAuto) {
+    sheetAuto = false;
+    updateUi(function (ui) {
+      ui.panelOpen = null;
+    });
+  }
+  lastSheetItem = route.item || null;
   const vm = buildShellVm(route, Date.now());
   document.title = vm.title;
   applyLayout(vm.ui);

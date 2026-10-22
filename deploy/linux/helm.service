@@ -1,0 +1,15 @@
+[Unit]
+Description=Helm dashboard (helm.mjplabs.ir via NPM + Authelia)
+After=network-online.target
+
+[Service]
+WorkingDirectory=/home/mjplabs/StudioProjects/helm
+Environment=ROADMAP_BIND_HOST=192.168.31.50
+Environment=ROADMAP_PUBLIC_HOST=helm.mjplabs.ir
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/mjplabs/StudioProjects/helm/bin/roadmap serve --no-phone
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

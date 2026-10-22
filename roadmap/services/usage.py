@@ -521,6 +521,12 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
                            keychainRetryAfter=None)
             stored, mirrors = _commit(changes, cfg)
             usage_accounts.note_reading(account["id"], stored)
+            if where is None and own_login:
+                # The default login is one of the stored accounts (Linux): keep the reading on that real account
+                # too, so its row is right after the next switch.
+                owner_id = usage_accounts.live_account_id(cfg)
+                if owner_id:
+                    usage_accounts.note_reading(owner_id, stored)
             result = _result(stored, cfg, mirrors)
             _control_after_write()
             return result
@@ -535,6 +541,82 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
         return {"ok": True, "status": STATUS_DISCONNECTED, "reason": DISCONNECTED_REASON,
                 "usage": view(_load_store(), max_age_s(cfg)), "mirrors": []}
     return _unavailable(cfg)
+
+
+def sync_others(config=None, fetch=None, get_token=None):
+    """Read every other connected account once (no token refresh, no fallbacks) and keep each reading on its account
+    row, so the Account tab shows all logins. The board's own usage stays the active account's. Returns
+    {account id: "ok" | reason code}. Never raises."""
+    out = {}
+    try:
+        cfg = _config(config)
+        active = usage_accounts.active_id(cfg)
+        rows = [a for a in usage_accounts.accounts(cfg) if a["enabled"] and a["id"] != active]
+    except Exception as exc:
+        log.warning("other accounts not read: %s", type(exc).__name__)
+        return out
+    default_active = usage_accounts.config_dir_of(next((a for a in usage_accounts.accounts(cfg)
+                                                         if a["id"] == active), {"source": "keychain"})) is None
+    for account in rows:
+        try:
+            where = usage_accounts.read_location(account)
+            if where is None and default_active:
+                # The login in use is the active (default) one: sync_once read it a moment ago and filed the
+                # reading on this account. Reading it again only costs a request (429 on quick repeats).
+                continue
+            folder = usage_accounts.config_dir_of(account)
+            if where is not None and folder and _wrong_login(folder):
+                # Checked before the usage read: it would only report the other account's numbers.
+                usage_accounts.note_failure(account["id"], "mismatch",
+                                            "this login holds another account's token: Log in again")
+                out[account["id"]] = "mismatch"
+                continue
+            # A stored login (another config folder, not the one plain claude uses) is used by nobody but Helm,
+            # so Helm may refresh its token pair: nothing else rotates it, and without this it expires in hours.
+            # The login in use stays Claude Code's to refresh (usageTokenRefresh decides, as before).
+            stored = where is not None and _stored_login(account)
+            token = get_token or (read_keychain_token if where is None else
+                                  functools.partial(read_keychain_token, allow_refresh=stored, location=where))
+            again = (functools.partial(_force_refresh, location=where) if stored and get_token is None else None)
+            reading = collect(get_token=token, fetch=fetch or http_fetch, refresh=again)
+        except UsageError as exc:
+            usage_accounts.note_failure(account["id"], exc.code, str(exc))
+            out[account["id"]] = exc.code
+        except Exception as exc:
+            usage_accounts.note_failure(account["id"], CODE_OTHER, type(exc).__name__)
+            out[account["id"]] = CODE_OTHER
+        else:
+            usage_accounts.note_reading(account["id"], usage_record(reading, SOURCE_ENDPOINT))
+            out[account["id"]] = "ok"
+    return out
+
+
+def _stored_login(account):
+    """True for a Linux ~/.claude-<name> login that plain claude does not use now."""
+    try:
+        from roadmap.services import claude_slots
+        folder = usage_accounts.config_dir_of(account)
+        return bool(claude_slots.supported() and folder
+                    and claude_slots.account_uuid(folder) != claude_slots.live_uuid())
+    except Exception:
+        return False
+
+
+def _wrong_login(folder):
+    try:
+        from roadmap.services import claude_slots
+        return claude_slots.supported() and claude_slots.token_mismatch(folder)
+    except Exception:
+        return False
+
+
+def sync_all(config=None, background=False):
+    """sync_once for the board, then sync_others for the Account tab. The board's result (or its error) is kept."""
+    try:
+        return sync_once(config, background=background)
+    finally:
+        sync_others(config)
+        _wrong_login(None)  # look up who the login in use really is (cached per token) for the Account tab
 
 
 def _fallbacks(cfg, moment):
@@ -793,8 +875,8 @@ def run_loop(stop_event, config=None, sync=None, wait=None):
     cfg = _config(config)
     interval = _interval(cfg)
     # With no injected config, read it fresh each round: the active account can change while the service runs.
-    run_sync = sync if sync is not None else (lambda: sync_once(config if config is not None else None,
-                                                                background=True))
+    run_sync = sync if sync is not None else (lambda: sync_all(config if config is not None else None,
+                                                               background=True))
     pause = wait if wait is not None else stop_event.wait
     failures = 0
     while not pause(usage_wait_s(failures, interval)):

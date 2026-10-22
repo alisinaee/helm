@@ -1,6 +1,8 @@
 """Tests for store paths: ROADMAP_HOME redirects every location, defaults match the spec, dirs are created 0700."""
 
 import os
+from unittest import mock
+import sys
 import unittest
 
 from roadmap.errors import RoadmapError
@@ -25,8 +27,12 @@ class PathRedirectTests(HomeCase):
         del os.environ["ROADMAP_HOME"]
         home = os.environ["HOME"]
         self.assertEqual(paths.config_dir(), os.path.join(home, ".config", "roadmap-board"))
-        self.assertEqual(paths.state_dir(), os.path.join(home, "Library", "Application Support", "roadmap-board"))
-        self.assertEqual(paths.logs_dir(), os.path.join(home, "Library", "Logs", "roadmap-board"))
+        with mock.patch.object(sys, "platform", "darwin"):
+            self.assertEqual(paths.state_dir(), os.path.join(home, "Library", "Application Support", "roadmap-board"))
+            self.assertEqual(paths.logs_dir(), os.path.join(home, "Library", "Logs", "roadmap-board"))
+        with mock.patch.object(sys, "platform", "linux"), mock.patch.dict(os.environ, {"XDG_STATE_HOME": ""}):
+            self.assertEqual(paths.state_dir(), os.path.join(home, ".local", "state", "roadmap-board"))
+            self.assertEqual(paths.logs_dir(), os.path.join(home, ".local", "state", "roadmap-board", "logs"))
 
     def test_blank_roadmap_home_counts_as_unset(self):
         os.environ["ROADMAP_HOME"] = "   "

@@ -1,17 +1,24 @@
-"""Command group service: the launchd lifecycle of the background server (WP11).
+"""Command group service: the background server (WP11). On macOS it is a launchd agent (services/launchd), on Linux a
+systemd --user unit (services/systemd). backend() picks one at call time, from sys.platform.
 
-install writes the plist and loads it; uninstall unloads it and removes the plist (logs and config stay). start,
-stop, restart and status use launchctl through services/launchd. logs prints the tail of server.log, and -f follows
-it. Every command takes --json. The launchctl runner is looked up in services/launchd at call time.
+install writes the plist (launchd) or unit (systemd) and loads it; uninstall unloads it and removes the file (logs and
+config stay). start, stop, restart and status use the backend's lifecycle calls. logs prints the tail of server.log,
+and -f follows it. Every command takes --json. The backend's runner is looked up at call time too.
 """
 
 import os
+import sys
 
 from roadmap.log import SERVER_LOG
-from roadmap.services import launchd
+from roadmap.services import launchd, systemd
 from roadmap.store import paths
 
 LOG_TAIL_LINES = 100
+
+
+def backend():
+    """The service backend for this platform: launchd on macOS, systemd --user elsewhere. Read at call time."""
+    return launchd if sys.platform == "darwin" else systemd
 
 
 def register(sub, common):
@@ -19,8 +26,8 @@ def register(sub, common):
     group = sub.add_parser("service", parents=[common], help="manage the background service")
     actions = group.add_subparsers(dest="action", metavar="ACTION", required=True)
     for name, text in (
-        ("install", "install the launchd agent"),
-        ("uninstall", "remove the launchd agent"),
+        ("install", "install the background service (launchd on macOS, systemd --user on Linux)"),
+        ("uninstall", "remove the background service (launchd agent or systemd unit)"),
         ("start", "start the service"),
         ("stop", "stop the service"),
         ("restart", "restart the service"),
@@ -42,16 +49,17 @@ def _wants_json(args):
 
 
 def _install(args):
-    path = launchd.install()
-    state = launchd.status()
+    path = backend().install()
+    state = backend().status()
     if not _wants_json(args):
         print("installed " + path + (" and loaded it" if state["loaded"] else ""))
     return {"plist": path, "loaded": state["loaded"]}
 
 
 def _uninstall(args):
-    removed = launchd.uninstall()
-    path = launchd.plist_path()
+    svc = backend()
+    removed = svc.uninstall()
+    path = svc.plist_path()
     if not _wants_json(args):
         print(("removed " + path) if removed else "nothing to remove (no plist at " + path + ")")
     return {"plist": path, "removed": removed}
@@ -60,18 +68,19 @@ def _uninstall(args):
 PAST = {"start": "started", "stop": "stopped", "restart": "restarted"}
 
 
-def _acting(verb, call):
+def _acting(verb):
     def handler(args):
+        svc = backend()
         if verb == "restart" and getattr(args, "if_stale", False):
-            check = launchd.stale()
+            check = svc.stale()
             if not check["stale"]:
-                state = launchd.status()
+                state = svc.status()
                 if not _wants_json(args):
                     print("skipped: no change under web/, roadmap/http/ or roadmap/services/ since the service "
                           "started (pid " + str(check["pid"]) + ")")
                 return {"action": "restart", "skipped": True, "loaded": state["loaded"], "pid": state["pid"]}
-        call()
-        state = launchd.status()
+        getattr(svc, verb)()
+        state = svc.status()
         if not _wants_json(args):
             print("service " + PAST[verb] + (" (loaded)" if state["loaded"] else " (not loaded)"))
         return {"action": verb, "loaded": state["loaded"], "pid": state["pid"]}
@@ -80,12 +89,15 @@ def _acting(verb, call):
 
 
 def _status(args):
-    state = launchd.status()
-    check = launchd.stale() if state["loaded"] else {"stale": False}
+    svc = backend()
+    state = svc.status()
+    check = svc.stale() if state["loaded"] else {"stale": False}
     state["stale"] = check["stale"]
     if not _wants_json(args):
+        unit_word = "unit" if svc is systemd else "plist"
         print("label    " + state["label"])
-        print("plist    " + state["plist"] + (" (installed)" if state["plistInstalled"] else " (not installed)"))
+        print(unit_word.ljust(8) + " " + state["plist"]
+              + (" (installed)" if state["plistInstalled"] else " (not installed)"))
         print("loaded   " + ("yes" if state["loaded"] else "no"))
         if state["loaded"]:
             print("state    " + str(state["state"]) + ", pid " + str(state["pid"])
@@ -97,11 +109,12 @@ def _status(args):
 
 
 def _logs(args):
+    svc = backend()
     path = os.path.join(paths.logs_dir(), SERVER_LOG)
     if getattr(args, "follow", False):
         _follow(path)
         return None
-    lines = launchd.tail_lines(path, LOG_TAIL_LINES)
+    lines = svc.tail_lines(path, LOG_TAIL_LINES)
     if not _wants_json(args):
         for line in lines:
             print(line)
@@ -115,7 +128,7 @@ def _follow(path):
         print(line, flush=True)
 
     try:
-        launchd.follow(path, emit, should_stop=lambda: False)
+        backend().follow(path, emit, should_stop=lambda: False)
     except KeyboardInterrupt:
         return
 
@@ -123,9 +136,9 @@ def _follow(path):
 _HANDLERS = {
     "install": _install,
     "uninstall": _uninstall,
-    "start": _acting("start", launchd.start),
-    "stop": _acting("stop", launchd.stop),
-    "restart": _acting("restart", launchd.restart),
+    "start": _acting("start"),
+    "stop": _acting("stop"),
+    "restart": _acting("restart"),
     "status": _status,
     "logs": _logs,
 }

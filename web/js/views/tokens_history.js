@@ -383,6 +383,7 @@ const acct = {
   data: null, at: 0, loading: false, error: false,
   busy: "", note: "", loginCmd: "",
   adding: false, advanced: false,
+  login: null,  // Linux web login waiting for its code: {key, url, label}
 };
 
 function loadAccounts() {
@@ -451,12 +452,20 @@ export function acctPanelHtml() {
       (a.enabled ? acctButton(a.id, "disconnect", "Disconnect", a.label) :
         acctButton(a.id, "connect", "Connect", a.label)) +
       (a.active ? "" : acctButton(a.id, "remove", "Remove", a.label)) + "</div></details>";
-    const btns = (a.active ? "<span></span>" : acctButton(a.id, "switch", "Use", a.label)) + more;
+    const linux = !!acct.data.switchable;
+    const signedOut = who.loggedIn === false || a.status === "signed_out" || a.status === "expired" ||
+      a.status === "wrong_login";
+    const primary = linux ? (a.enabled && signedOut ? acctButton(a.id, "login", "Log in", a.label) :
+      a.canUse ? acctButton(a.id, "use", "Switch", "Claude Code to " + a.label) : "<span></span>") :
+      (a.active ? "<span></span>" : acctButton(a.id, "switch", "Use", a.label));
+    // Linux: the board follows the login in use, so Switch is the only choice; no separate "show on board".
+    const btns = primary + more;
     const stCls = a.status === "ok" ? "tk-st-ok" : (a.status === "idle" || a.status === "unknown" ||
       a.status === "disconnected" ? "" : "tk-st-bad");
     return '<li class="tk-acct-row' + (a.active ? " tk-acct-on" : "") + '">' +
-      cell("Account", "", esc(a.label) + (a.active ? ' <span class="chip chip-success">Active</span>' : ""),
-        a.path || "") +
+      cell("Account", "", esc(a.label) + (linux && a.inClaude ?
+        ' <span class="chip chip-success" title="The login plain claude uses now">In use</span>' :
+        a.active ? ' <span class="chip chip-success">Active</span>' : ""), a.path || "") +
       cell("Logged in as", "", esc(name), nameTitle) +
       cell("Status", stCls, esc(a.status), a.reason || "") +
       cell("Weekly", "tk-acct-num", esc(pct(r.weeklyPercent))) +
@@ -471,7 +480,7 @@ export function acctPanelHtml() {
       ">Add account</button></p>";
   }).join("");
   return '<ul class="spend-list tk-acct-list" aria-label="Claude accounts">' + head + rows + "</ul>" + found +
-    acctAddForm() +
+    (acct.login ? acctLoginForm() : acct.data.switchable ? acctNewLoginForm() : acctAddForm()) +
     '<p class="page-note" role="status">' + acctNoteHtml(acct.note || acct.data.note || "") + "</p>";
 }
 
@@ -480,6 +489,64 @@ function acctNoteHtml(note) {
   if (note !== ACCT_LOGIN_NOTE || !acct.loginCmd) return esc(note);
   return esc(note) + " <code>" + esc(acct.loginCmd) + "</code> " +
     refButtonHtml(acct.loginCmd, "login command", "");
+}
+
+// Linux web login: the server runs `claude auth login`, the page opens its sign-in link and sends back the code.
+function acctLoginForm() {
+  const l = acct.login;
+  return '<form class="tk-acct-add" data-act="login-form" autocomplete="off">' +
+    "<span>Log in " + esc(l.label || "") + ": 1. " +
+    '<a href="' + esc(l.url) + '" target="_blank" rel="noopener noreferrer">open the sign-in page</a>' +
+    ", 2. paste the code here:</span> " +
+    '<label>Code <input type="text" id="tk-acct-code" name="code" value="" required autocomplete="off" ' +
+      'spellcheck="false"></label> ' +
+    '<button type="submit" class="btn"' + (acct.busy ? " disabled" : "") + ">Finish login</button> " +
+    '<button type="button" class="btn" data-tk="acct" data-act="login-cancel">Cancel</button></form>';
+}
+
+function acctNewLoginForm() {
+  if (!acct.adding) {
+    return '<p><button type="button" class="btn tk-acct-new" data-tk="acct" data-act="add-open">' +
+      "+ Log in another account</button></p>";
+  }
+  return '<form class="tk-acct-add" data-act="new-login-form" autocomplete="off">' +
+    '<label>Name <input type="text" id="tk-acct-name" name="label" required autocomplete="off" placeholder="work" ' +
+      'value="' +
+      esc(acct.lastLabel || "") + '"></label> ' +
+    '<button type="submit" class="btn"' + (acct.busy ? " disabled" : "") + ">Start login</button> " +
+    '<button type="button" class="btn" data-tk="acct" data-act="add-cancel">Cancel</button></form>';
+}
+
+function acctLoginPost(body, done) {
+  if (acct.busy) return;
+  // The page refresh keeps a focused field in place; let go of it so the next form step replaces this one.
+  if (typeof document !== "undefined" && document.activeElement && document.activeElement.blur) {
+    document.activeElement.blur();
+  }
+  acct.busy = "login";
+  acct.note = body.code ? "Finishing the login." : "Starting the login.";
+  rerender();
+  postJson("/api/v1/usage/login", body).then(function (res) {
+    done(res && res.data || {});
+  }).catch(function (err) {
+    acct.note = "Failed: " + (err && err.message ? err.message : "login");
+    if (body.code) acct.login = null;  // the server ended that login; the next try starts a fresh one
+  }).finally(function () {
+    acct.busy = "";
+    acct.at = 0;
+    rerender();
+  });
+}
+
+function acctStartLogin(d, label) {
+  if (!d.url || !d.key) {
+    acct.note = "Failed: no sign-in link";
+    return;
+  }
+  acct.login = {key: d.key, url: d.url, label: label};
+  acct.adding = false;
+  acct.lastLabel = "";
+  acct.note = "Open the sign-in page, sign in with the account you want, then paste the code it shows.";
 }
 
 function acctSlug(label) {
@@ -576,12 +643,35 @@ function acctAction(el) {
     });
     return;
   }
-  if (acct.busy || !/^(connect|disconnect|switch|check|login|remove)$/.test(act) || !id) return;
+  if (act === "login-cancel") {
+    if (acct.login) postJson("/api/v1/usage/login", {key: acct.login.key, cancel: true}).catch(function () {});
+    acct.login = null;
+    acct.note = "";
+    rerender();
+    return;
+  }
+  if (acct.busy || !/^(connect|disconnect|switch|check|login|remove|use)$/.test(act) || !id) return;
+  if (act === "login" && acct.data && acct.data.switchable) {
+    acct.busy = "login";
+    acct.note = "Starting the login.";
+    rerender();
+    postJson("/api/v1/usage/accounts/" + encodeURIComponent(id) + "/login", {}).then(function (res) {
+      acctStartLogin(res && res.data || {}, el.getAttribute("aria-label").replace(/^Log in /, ""));
+    }).catch(function (err) {
+      acct.note = "Failed: " + (err && err.message ? err.message : "login");
+    }).finally(function () {
+      acct.busy = "";
+      acct.at = 0;
+      rerender();
+    });
+    return;
+  }
   acct.busy = act;
   postJson("/api/v1/usage/accounts/" + encodeURIComponent(id) + "/" + act, {}).then(function (res) {
     const d = res && res.data || {};
     acct.note = act === "login" ? (d.opened ? "Terminal opened: finish the login in the browser." :
-      "Run in a terminal: " + (d.command || "claude auth login")) : "Done: " + act + ".";
+      "Run in a terminal: " + (d.command || "claude auth login")) : act === "use" ?
+      "Done: new Claude Code sessions now use this login (open ones keep theirs)." : "Done: " + act + ".";
   }).catch(function (err) {
     acct.note = "Failed: " + (err && err.message ? err.message : act);
   }).finally(function () {
@@ -657,12 +747,35 @@ if (typeof document !== "undefined" && typeof document.addEventListener === "fun
   document.addEventListener("click", click);
   document.addEventListener("submit", function (event) {
     const form = event.target;
-    if (form && form.getAttribute && form.getAttribute("data-act") === "add-form") {
+    const formAct = form && form.getAttribute ? form.getAttribute("data-act") : "";
+    if (formAct === "add-form") {
       event.preventDefault();
       acctAdd(form);
+    } else if (formAct === "new-login-form") {
+      event.preventDefault();
+      const label = form.elements.label.value.trim();
+      acct.lastLabel = label;
+      acctLoginPost({label: label}, function (d) { acctStartLogin(d, label); });
+    } else if (formAct === "login-form" && acct.login) {
+      event.preventDefault();
+      const code = form.elements.code.value.trim();
+      acctLoginPost({key: acct.login.key, code: code}, function (d) {
+        acct.login = null;
+        acct.note = "Done: logged in" + (d.loggedIn ? " as " + d.loggedIn : "") + ".";
+        if (d.accounts) acct.data = d;
+      });
     }
   });
   document.addEventListener("keydown", keys);
+  // Enter in a login field sends its form (implicit submission is not reliable in every embedded browser).
+  document.addEventListener("keydown", function (event) {
+    const form = event.key === "Enter" && event.target && event.target.form;
+    const act = form && form.getAttribute ? form.getAttribute("data-act") : "";
+    if ((act === "new-login-form" || act === "login-form") && typeof form.requestSubmit === "function") {
+      event.preventDefault();
+      form.requestSubmit();
+    }
+  });
   document.addEventListener("pointerover", tip);
   document.addEventListener("pointermove", tip);
   document.addEventListener("pointerleave", function () {

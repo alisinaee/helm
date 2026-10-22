@@ -117,7 +117,7 @@ def handle_show(args):
 def handle_sync(args):
     """Read usage from the keychain and the endpoint now. A failed read exits 6 and keeps the last good values."""
     try:
-        result = usage.sync_once(config_store.load())
+        result = usage.sync_all(config_store.load())
     except usage.UsageError as exc:
         raise RoadmapError("external", "could not read usage: " + str(exc), EXIT_EXTERNAL)
     _emit_text(args, result)

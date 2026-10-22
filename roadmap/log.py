@@ -14,6 +14,7 @@ import json
 import logging
 import math
 import os
+import sys
 import re
 import stat
 import threading
@@ -146,7 +147,11 @@ def _state_base():
     root = os.environ.get("ROADMAP_HOME", "").strip()
     if root:
         return os.path.join(os.path.abspath(os.path.expanduser(root)), "state")
-    return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "roadmap-board")
+    if sys.platform == "darwin":
+        return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "roadmap-board")
+    xdg = os.environ.get("XDG_STATE_HOME", "").strip()
+    base = xdg if xdg and os.path.isabs(xdg) else os.path.join(os.path.expanduser("~"), ".local", "state")
+    return os.path.join(base, "roadmap-board")
 
 
 def _cut(text, limit):

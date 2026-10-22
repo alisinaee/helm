@@ -5,6 +5,7 @@ import contextlib
 import io
 import json
 import os
+import sys
 from unittest import mock
 
 from roadmap.cli import main
@@ -76,6 +77,10 @@ class LaunchdCase(HomeCase):
         self._saved_agents = os.environ.get(launchd.LAUNCH_AGENTS_ENV)
         os.environ[launchd.LAUNCH_AGENTS_ENV] = self.agents
         self.addCleanup(self._restore_agents)
+        # These tests drive the launchd backend; commands/service.py picks it on macOS only.
+        platform = mock.patch.object(sys, "platform", "darwin")
+        platform.start()
+        self.addCleanup(platform.stop)
         self.logs = os.path.join(self.tmp, "home", "logs")
 
     def _restore_agents(self):

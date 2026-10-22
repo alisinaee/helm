@@ -70,7 +70,9 @@ class PhoneTableTests(unittest.TestCase):
     def test_below_480px_no_column_is_sticky_or_offset(self):
         self.assertIn(".hd-n,.hd-sumc,.hd-stc{position:static}", self.block)
         self.assertNotIn("position:sticky", self.block)
-        self.assertNotIn("left:", self.block)
+        # The 599px block offsets the sticky columns with left:Npx; below 480px every cell resets to left:auto.
+        self.assertIn("left:auto", self.block)
+        self.assertIsNone(re.search(r"left:\d", self.block))
 
     def test_below_480px_columns_shrink_to_fit_the_phone_width(self):
         self.assertIn(".hd-n,.hd-sumc{width:auto;min-width:0}", self.block)

@@ -21,7 +21,7 @@ from roadmap.errors import (EXIT_CONFLICT, EXIT_ERROR, EXIT_EXTERNAL, EXIT_INVAL
                             EXIT_USAGE, RoadmapError)
 from roadmap import log as rlog
 from roadmap.http import security
-from roadmap.services import agentguard, commands, control, loader, usage, usage_accounts
+from roadmap.services import agentguard, claude_slots, commands, control, loader, usage, usage_accounts
 from roadmap.services import git as git_service
 from roadmap.services import head as head_service
 from roadmap.services import history as history_service
@@ -322,7 +322,7 @@ def limits_route(app, req, match):
     return limits_get(app, req, match) if req.method == "GET" else limits_put(app, req, match)
 
 
-ACCOUNT_ACTIONS = ("connect", "disconnect", "switch", "check", "login", "remove")
+ACCOUNT_ACTIONS = ("connect", "disconnect", "switch", "check", "login", "remove", "use")
 
 
 def usage_accounts_get(app, req, match):
@@ -341,8 +341,12 @@ def usage_accounts_action(app, req, match):
         raise RoadmapError("not_found", "no account action '%s'" % action[:40], EXIT_NOT_FOUND)
     if action == "check":
         result = usage_accounts.check(account_id)
+    elif action == "login" and claude_slots.supported():
+        result = claude_slots.login_start(account_id)
     elif action == "login":
         result = usage_accounts.open_login(account_id, src="ui")
+    elif action == "use":
+        result = claude_slots.use_in_claude(account_id, src="ui")
     elif action == "connect":
         result = usage_accounts.connect(account_id, src="ui")
     elif action == "disconnect":
@@ -372,6 +376,27 @@ def usage_accounts_add(app, req, match):
     result = usage_accounts.add(body.get("id"), label=body.get("label"), source=body.get("source") or "config-dir",
                                 path=body.get("path"), keychain_service=body.get("keychainService"), src="ui")
     return json_reply(200, result)
+
+
+def usage_login(app, req, match):
+    """POST /api/v1/usage/login (Linux): {"label"} starts `claude auth login` for a new account and returns the
+    sign-in URL; {"key", "code"} finishes it; {"key", "cancel": true} stops it. Main listener only."""
+    _phone_refuse(app)
+    _write_guard(app, req)
+    try:
+        body = security.strict_json_loads(req.read_body().decode("utf-8"))
+    except ValueError:
+        raise RoadmapError("invalid_input", "the body must be JSON", EXIT_USAGE)
+    if not isinstance(body, dict):
+        raise RoadmapError("invalid_input", "the body must be a JSON object", EXIT_USAGE)
+    key = body.get("key")
+    if key is not None and not isinstance(key, str):
+        raise RoadmapError("invalid_input", "key must be text", EXIT_USAGE)
+    if key and body.get("cancel") is True:
+        return json_reply(200, claude_slots.login_cancel(key))
+    if key:
+        return json_reply(200, claude_slots.login_code(key, body.get("code"), src="ui"))
+    return json_reply(200, claude_slots.login_start(label=body.get("label")))
 
 
 def usage_accounts_route(app, req, match):
@@ -1019,6 +1044,7 @@ ROUTES = (
     (re.compile(r"/api/v1/limits"), ("GET", "PUT", "POST"), limits_route),
     (re.compile(r"/api/v1/usage/sync"), ("POST",), usage_sync),
     (re.compile(r"/api/v1/usage/accounts"), ("GET", "POST"), usage_accounts_route),
+    (re.compile(r"/api/v1/usage/login"), ("POST",), usage_login),
     (re.compile(r"/api/v1/usage/accounts/(?P<id>[^/]+)/(?P<action>[a-z]+)"), ("POST",), usage_accounts_action),
     (re.compile(r"/api/v1/cmd"), ("POST",), cmd),
     (re.compile(r"/api/v1/log"), ("POST",), log_post),

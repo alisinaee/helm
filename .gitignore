@@ -7,6 +7,9 @@ build/
 docs/reviews/agy-out/
 docs/head-spool.jsonl
 docs/roadmap.db*
+graphify-out/
+.claude/settings.local.json
+.idea/
 
 # Local board data (never commit; a fresh clone starts with an empty board)
 docs/tasks.json

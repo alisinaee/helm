@@ -31,7 +31,8 @@ class PhoneRowsTest(unittest.TestCase):
         start = css.index("@media (max-width: 639px) {\n.row-grid.rg-agent {")
         block = css[start:start + 1200]
         self.assertIn(".row-grid.rg-head { display: none; }", block)
-        self.assertIn(".rg-agent>:nth-child(8) { grid-column: 6; grid-row: 1 }", block)
+        self.assertIn(".row-grid.rg-agent { display: flex; flex-wrap: wrap;", block)
+        self.assertIn(".rg-agent>:nth-child(8) { order: 2; flex: none }", block)
         self.assertIn('content: "Elapsed "', block)
 
     def test_nested_workers_indent_once_on_a_phone(self):
