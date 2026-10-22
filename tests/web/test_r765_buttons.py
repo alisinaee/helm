@@ -21,7 +21,7 @@ ALLOWED = {
     ("board.js", 341): "task state word from a fixed table",
     ("git.js", 564): "git tab name from a fixed list",
     ("settings.js", 58): "option label from a fixed list",
-    ("tokens_history.js", 425): "account action word (Refresh, Connect, Log in...) passed by fixed callers",
+    ("tokens_history.js", 427): "account action word (Refresh, Connect, Log in...) passed by fixed callers",
     ("workflow.js", 898): "control text passed by fixed callers",
     ("details.js", 394): "the user's own answer option, full text, aria-label names the question",
 }
