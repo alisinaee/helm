@@ -72,8 +72,9 @@ class LimitsFlowTests(unittest.TestCase):
         # the sentinel stays (it follows the block); the override makes the gate let the work through
         self.assertIsNone(sb.hook("Edit", {"file_path": "x.md"}))
 
-    def test_stale_usage_fails_open_even_with_a_sentinel_from_a_fresh_reading(self):
-        sb, srv = self.sandbox, self.server
+    def test_stale_usage_blocks_an_on_stop_with_a_sync_hint(self):
+        # R11.160: an ON stop no longer goes quiet when the reading turns stale (it used to fail open)
+        sb = self.sandbox
         push(sb, 100)
         self.assertTrue(os.path.exists(sb.sentinel))
         self.assertIsNotNone(sb.hook("Edit", {"file_path": "x.md"}))
@@ -87,9 +88,9 @@ class LimitsFlowTests(unittest.TestCase):
             json.dump(reading, fh)
 
         self.assertIn("L1 global week ?/100% unknown", sb.cli(["limit", "show"]).stdout)
-        self.assertIsNone(sb.hook("Edit", {"file_path": "x.md"}))
-        self.assertFalse(os.path.exists(sb.sentinel))
-        self.assertEqual(meter(srv.snapshot(sb.pid), "L1")["state"], "unknown")
+        denied = sb.hook("Edit", {"file_path": "x.md"})
+        self.assertIsNotNone(denied)
+        self.assertIn("usage is stale", denied["hookSpecificOutput"]["permissionDecisionReason"])
 
 
 if __name__ == "__main__":
