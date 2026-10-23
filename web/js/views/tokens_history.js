@@ -477,10 +477,10 @@ export function acctPanelHtml() {
       (!linux && !a.active ? acctButton(a.id, "switch", "Use", a.label) : "") + "</div></details>";
     const stCls = a.status === "ok" ? "tk-st-ok" : (a.status === "idle" || a.status === "unknown" ||
       a.status === "disconnected" ? "" : "tk-st-bad");
-    return '<li class="tk-acct-row' + (a.live ? " tk-acct-on" : "") + '">' +
+    return '<li class="tk-acct-row' + (a.active ? " tk-acct-on" : "") + '">' +
       cell("Account", "", esc(a.label) + (linux && a.inClaude ?
         ' <span class="chip chip-success" title="The login plain claude uses now">In use</span>' :
-        a.live ? ' <span class="chip chip-success">Active</span>' : ""), a.path || "") +
+        a.active ? ' <span class="chip chip-success">Active</span>' : ""), a.path || "") +
       cell("Logged in as", "", esc(name), nameTitle) +
       cell("Status", stCls, esc(a.status), a.reason || "") +
       cell("Weekly", "tk-acct-num", esc(pct(r.weeklyPercent))) +

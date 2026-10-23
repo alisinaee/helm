@@ -266,3 +266,15 @@ class WebLoginTest(SlotsCase):
     def test_code_for_unknown_login(self):
         with self.assertRaises(RoadmapError):
             claude_slots.login_code("nope", "abcdefghij")
+
+
+class MacFullEmailTest(SlotsCase):
+    def test_full_email_comes_from_files_on_mac_and_active_marks_one_row(self):
+        with mock.patch.object(sys, "platform", "darwin"):
+            rows = {r["id"]: r for r in usage_accounts.list_status(full_email=True)["accounts"]}
+            masked = usage_accounts.list_status(full_email=False)["accounts"]
+        main = [r for r in rows.values() if r["source"] != "config-dir"][0]
+        self.assertEqual(main["identity"]["email"], "alice@example.com")
+        self.assertEqual(rows["work"]["identity"]["email"], "bob@example.com")
+        self.assertEqual([r["active"] for r in rows.values()].count(True), 1)
+        self.assertTrue(all(r["identity"].get("email") is None for r in masked))

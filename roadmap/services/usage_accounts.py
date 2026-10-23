@@ -389,6 +389,8 @@ def _row(account, cfg, entry, full_email, now=None):
             identity[key] = identity.get(key) or slot.get(key)
         if full_email and not identity.get("email"):
             identity["email"] = slot.get("email")
+    if full_email and not identity.get("email") and account["enabled"] and status != ST_SIGNED_OUT:
+        identity["email"] = _file_email(folder)
     live_uuid = _live_uuid()
     in_claude = folder is None or bool(live_uuid and _slot_uuid(folder) == live_uuid)
     reading = entry.get("reading") if isinstance(entry.get("reading"), dict) else {}
@@ -416,6 +418,15 @@ def _slot_identity(folder):
     from roadmap.services import claude_slots
     try:
         return claude_slots.identity(folder)
+    except Exception:
+        return None
+
+
+def _file_email(folder):
+    """The full e-mail from Claude Code's own files (any OS); shown only, never stored."""
+    from roadmap.services import claude_slots
+    try:
+        return (claude_slots.identity(folder) or {}).get("email")
     except Exception:
         return None
 
