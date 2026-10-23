@@ -463,16 +463,18 @@ export function acctPanelHtml() {
     const refreshing = acct.busy === "refresh" && acct.busyId === a.id;
     // Refresh is the one primary action: after a login it connects the account, reads who is logged in and takes a
     // fresh reading. Connect and Disconnect are the same switch in both directions, so only one of them shows.
+    const slot = function (html) {
+      return html || "<span></span>";
+    };
     const btns = acctButton(a.id, "refresh", "Refresh", a.label, "btn-primary tk-act-refresh",
         refreshing ? "Refreshing\u2026" : "Refresh") +
       (a.enabled ? acctButton(a.id, "disconnect", "Disconnect", a.label, "tk-act-off") :
         acctButton(a.id, "connect", "Connect", a.label, "tk-act-on")) +
-      acctButton(a.id, "login", "Log in", a.label) +
-      removeButton(a) +
-      (linux ? (a.canUse ? acctButton(a.id, "use", "Switch", "Claude Code to " + a.label) : "") :
-        a.active ? "" : '<details class="tk-menu"><summary class="btn" aria-label="More actions for ' + esc(a.label) +
-        '" title="More actions">\u22ef</summary><div class="tk-menu-list">' +
-        acctButton(a.id, "switch", "Use", a.label) + "</div></details>");
+      (linux ? slot(a.canUse ? acctButton(a.id, "use", "Switch", "Claude Code to " + a.label) : "") : "") +
+      '<details class="tk-menu"><summary class="btn" aria-label="More actions for ' + esc(a.label) +
+      '" title="More actions">\u22ef</summary><div class="tk-menu-list">' +
+      acctButton(a.id, "login", "Log in", a.label) + removeButton(a) +
+      (!linux && !a.active ? acctButton(a.id, "switch", "Use", a.label) : "") + "</div></details>";
     const stCls = a.status === "ok" ? "tk-st-ok" : (a.status === "idle" || a.status === "unknown" ||
       a.status === "disconnected" ? "" : "tk-st-bad");
     return '<li class="tk-acct-row' + (a.live ? " tk-acct-on" : "") + '">' +
@@ -493,7 +495,8 @@ export function acctPanelHtml() {
       (acct.busy ? " disabled" : "") + ">Add account</button></p>";
   }).join("");
   const table = acct.data.accounts.length ?
-    '<ul class="spend-list tk-acct-list" aria-label="Claude accounts">' + head + rows + "</ul>" :
+    '<ul class="spend-list tk-acct-list' + (acct.data.switchable ? " tk-acct-sw" : "") +
+      '" aria-label="Claude accounts">' + head + rows + "</ul>" :
     '<p class="page-note">No accounts: Helm is not reading any Claude login. ' +
     '<button type="button" class="btn btn-primary" data-tk="acct" data-act="add-default"' +
     busyAttr("add", "default") + (acct.busy ? " disabled" : "") + ">Connect Claude Code login</button></p>";
