@@ -1,10 +1,10 @@
 .wk{display:grid;gap:var(--sp-3);min-width:0}
-.wk-top,.wk-filters,.wk-groupbar,.wk-bulk,.wk-chips,.wk-card-top,.wk-acts,.wk-field{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
+.wk-top,.wk-active,.wk-filters,.wk-groupbar,.wk-bulk,.wk-chips,.wk-card-top,.wk-acts,.wk-field{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
 .wk-views button,.wk-tab,.wk-chip,.wk-sort,.wk-phase-btn,.wk-menu summary{font:inherit;color:var(--text-2);background:var(--surface-1);border:1px solid var(--line);border-radius:var(--r-control);min-height:var(--h-control);padding:0 var(--sp-2);cursor:pointer}
 .wk-views button[aria-pressed=true],.wk-tab[aria-pressed=true],.wk-chip[aria-pressed=true]{background:var(--sel);color:var(--accent);border-color:var(--accent)}
 .wk :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .wk-hint,.wk-word,.wk-count,.wk-meta,.wk-none,.wk-chips-label{color:var(--text-3)}
-.wk-hint,.wk-meta,.wk-chips-label{margin:0;font-size:var(--fs-11)}
+.wk-hint,.wk-meta,.wk-chips-label,.wk-active{margin:0;font-size:var(--fs-11)}
 .wk-tabs{display:none}
 .wk-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-2);align-items:start}
 .wk-col{background:var(--surface-2);border-radius:var(--r-card);padding:var(--sp-2);min-width:0}
@@ -34,7 +34,7 @@
 .wk-table{table-layout:fixed}
 .wk-table .wk-c-title a{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-1);text-decoration:none}
 .wk-c-sel{width:1.75rem}.wk-c-id{width:4rem}.wk-c-phase{width:3rem}.wk-c-status{width:4.25rem}.wk-c-model{width:4.75rem}
-.wk-c-est,.wk-c-spent,.wk-c-cap{width:3.75rem;text-align:right}.wk-table .wk-c-est,.wk-table .wk-c-spent,.wk-table .wk-c-cap{text-align:right}.wk-c-flags{width:6rem}
+.wk-c-est,.wk-c-spent,.wk-c-cap{width:3.75rem;text-align:right}.wk-c-flags{width:6rem}
 .wk-c-ref,.wk-table th.wk-c-ref{width:var(--ref-col);padding:0}
 .wk-sort{min-height:var(--h-small);border:0;background:none;padding:0;color:var(--text-3)}
 .wk-group-head th{background:var(--surface-2);color:var(--text-1)}

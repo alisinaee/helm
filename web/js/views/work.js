@@ -177,8 +177,11 @@ function headHtml(ctx) {
     views: VIEWS.map(function (v) {
       return { id: v, label: VIEW_LABEL[v], current: ctx.view === v };
     }) });
+  const tags = ctx.view === "planner" ? "" : splitFeat(ctx.filters ? ctx.filters.f : "").rest;
+  const active = tags ? '<p class="wk-active" role="status"><span>Filtered: ' + esc(tags.split(",").join(" · ")) +
+    '</span><button type="button" class="btn btn-small" data-wk="clear" data-focus="wk-reset">Reset</button></p>' : "";
   return '<div class="page-head"><p class="page-note">' + esc(note) + "</p></div>" +
-    bar;
+    bar + active;
 }
 
 // The issue cards that pass the filters (the Board shows them; none inside a feature scope).
