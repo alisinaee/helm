@@ -206,12 +206,12 @@ class CapsAndErrorsTests(unittest.TestCase):
                          "2026-10-14")
         self.assertIsNone(features.derive([feat("F1", accepted="")], [], [])["rows"][0]["accepted"])
 
-    def test_cap_of_sixty_features(self):
-        raw = [feat("F" + str(n)) for n in range(1, 62)]
+    def test_cap_of_ninety_nine_features(self):
+        raw = [feat("F" + str(n)) for n in range(1, 102)]
         result = features.derive(raw, [], [])
-        self.assertEqual(len(result["rows"]), 60)
-        self.assertEqual(result["counts"]["total"], 60)
-        self.assertTrue(any("beyond the first 60" in e for e in result["errors"]))
+        self.assertEqual(len(result["rows"]), 99)
+        self.assertEqual(result["counts"]["total"], 99)
+        self.assertTrue(any("beyond the first 99" in e for e in result["errors"]))
 
     def test_valid_features_have_no_errors(self):
         self.assertEqual(features.validate([feat("F1"), feat("F2", parent="F1")]), [])

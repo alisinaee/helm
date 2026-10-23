@@ -16,7 +16,7 @@ CHECKS = ("none", "sonnet", "opus")
 SET_KEYS = ("status", "tokensK", "model", "thinking", "needsUser", "check", "checkK", "note", "title", "after")
 AFTER_MAX = 5                          # most task ids in a task's after list
 FEAT_MAX_PER_TASK = 3                  # most feature ids in a task's feats list
-FEATURES_MAX = 60                      # most features in docs/features.json
+FEATURES_MAX = 99                      # most features in docs/features.json
 FEAT_TITLE_MAX = 80
 FEAT_ACC_MAX = 160
 FEAT_LEVELS = 3                        # levels of the plan tree: phase > sub plan > item (parent chain <= 2)

@@ -1,9 +1,9 @@
-"""R7.10, R7.13 H3: the snapshot features block for 60 features stays under size bounds, and carries no key the
+"""R7.10, R7.13 H3: the snapshot features block for 99 features stays under size bounds, and carries no key the
 Planner does not read (running, hold, and empty parent/phase/accepted). Rows are the slim rows of core/features.py:
 label, ask and gaps appear only when they apply, and acc stays until the person accepts the feature.
 Pure in-memory data; no files are read or written.
 
-Spec target (PLANNER-V2-SPEC section 6) is 8 KB for 60 items. It is NOT reached: each row keeps id, title, label,
+Spec target (PLANNER-V2-SPEC section 6) is 8 KB for 99 items. It is NOT reached: each row keeps id, title, label,
 done, total, blocked, state and acc (the Planner renders done/total and blocked), which costs about 110 bytes a row
 before any text. The bounds below are the measured sizes with headroom; the gap is an open decision for the person.
 """
@@ -16,10 +16,10 @@ from roadmap.core.snapshot import build_snapshot
 
 PINNED = datetime(2026, 10, 14, 12, 0, 0, tzinfo=timezone.utc)
 SPEC_TARGET_BYTES = 8 * 1024
-# Measured 13 KB for typical text (titles about 30 characters, acc about 50), a plan tree and asks. Bound with headroom.
-TYPICAL_BOUND_BYTES = 13 * 1024
-# Measured 18.3 KB for the worst case (titles 80, acc 120, flat). The title and acc text alone is about 12 KB here.
-WORST_BOUND_BYTES = 19 * 1024
+# Measured 17.7 KB (99 items; titles ~30 chars, acc ~50, a tree and asks). Bound has headroom.
+TYPICAL_BOUND_BYTES = 19 * 1024
+# Measured 31.1 KB for the worst case (titles 80, acc 120, flat). The title and acc text alone is about 12 KB here.
+WORST_BOUND_BYTES = 33 * 1024
 
 
 def _features(count, title_len=80, acc_len=120):
@@ -53,16 +53,16 @@ def _snapshot_features(feature_list):
 
 class SnapshotFeaturesSizeTests(unittest.TestCase):
     def setUp(self):
-        self.features = _snapshot_features(_features(60))
+        self.features = _snapshot_features(_features(99))
 
-    def test_sixty_features_worst_case_under_bound(self):
-        self.assertEqual(len(self.features["rows"]), 60)
+    def test_ninety_nine_features_worst_case_under_bound(self):
+        self.assertEqual(len(self.features["rows"]), 99)
         size = len(json.dumps(self.features))
         self.assertLessEqual(size, WORST_BOUND_BYTES, "features block is %d bytes" % size)
 
-    def test_sixty_typical_features_under_bound(self):
-        features = _snapshot_features(_typical_features(60))
-        self.assertEqual(len(features["rows"]), 60)
+    def test_ninety_nine_typical_features_under_bound(self):
+        features = _snapshot_features(_typical_features(99))
+        self.assertEqual(len(features["rows"]), 99)
         size = len(json.dumps(features))
         self.assertLessEqual(size, TYPICAL_BOUND_BYTES, "typical features block is %d bytes" % size)
         self.assertGreater(SPEC_TARGET_BYTES, 0)

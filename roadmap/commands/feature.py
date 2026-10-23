@@ -11,7 +11,7 @@ from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.services import commands, features, tasks
 
 NEXT_LIST = "roadmap feature list"
-TREE_MAX = 60                       # outline lines printed before the "+N more" line (R7.13 H4)
+TREE_MAX = 99                       # outline lines printed before the "+N more" line (R7.13 H4)
 
 
 def _project_option():
@@ -42,7 +42,7 @@ def register(sub, common):
     listing.set_defaults(handler=_list)
 
     tree = actions.add_parser("tree", parents=[common, project],
-                              help="the plan outline: one line per item (at most 60 lines)")
+                              help="the plan outline: one line per item (at most 99 lines)")
     tree.set_defaults(handler=_tree)
 
     update = actions.add_parser("set", parents=[common, project], help="change a feature's ask flag")

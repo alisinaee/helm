@@ -22,7 +22,7 @@ roadmap plan import docs/plan.txt --dry-run
 roadmap plan import docs/plan.txt
 roadmap plan export --phase P2
 ```
-Read the dry-run diff before the real import. Plan lines: `P <id> <status> | <name>` and `T <id> <status> <tokensK> <model>/<thinking> | <title>`.
+Read the dry-run diff before the real import. Plan lines: `P <id> <status> | <name>` and `T <id> <status> <tokensK> <model>/<thinking> | <title>`. Plan items: `F <id> <-|hold> <1|2|3> <phase|-> <parent|-> [ask] | <title> [# <acceptance>]` (3 levels: phase, sub plan, item; at most 99; `ask` only for what the person asked for) and `L <featureId> <taskId>...` links tasks.
 
 ## 2. Rules (budget 1k tokens)
 ```

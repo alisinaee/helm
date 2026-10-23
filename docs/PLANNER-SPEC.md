@@ -19,7 +19,7 @@
   "parent":"F2"|null, "phase":"R6"|null, "hold":false, "accepted":"2026-10-14"|null}]}
 ```
 
-- **Ids:** `F1`–`F99`, with at most 60 features. A sub-plan is just a feature with a `parent`. Only one level is allowed (a parent cannot itself have a parent).
+- **Ids:** `F1`–`F99`, with at most 99 features. A sub-plan is a feature with a `parent`. The tree has 3 levels (phase, sub plan, item): a parent may itself have one parent, never two. `ask` marks an item the person asked for.
 - **Tasks:** gain an optional `feats:[≤3 ids]`, and the first id is the primary one. Use a list rather than a single `feat`. Shared tasks are a real pattern here (R5.3 builds questions, comments and issues in one go), and with a single field you would get false "uncovered" flags. Global totals still count each task once. Only the per-feature figures count a shared task in each of its features.
 
 **Derived in a new pure module, `roadmap/core/features.py`.** The snapshot gets one new key:
@@ -42,7 +42,7 @@ F F3 - 2 R6 F2 | Roadmap visual # lanes, timeline, approve; usable at 1440 and 3
 L F3 R6.6 R2.1                      ; appends feats on those tasks (≤3 each)
 ```
 
-- Field order is `F id status(-|hold) prio phase|- parent|- | title # acc`.
+- Field order is `F id status(-|hold) prio phase|- parent|- [ask] | title # acc`.
 - `plan export` emits the F lines, then the P and T lines. Each T line gets an optional ` f:F3,F7` token before the `|`.
 - Haiku agents normally only need L lines, which cost about 10 tokens each.
 
@@ -150,7 +150,7 @@ Import text, in the format shown in section 2: `F F1 - 1 R1 - | Agent↔GUI brid
 | B1 | Core | new `roadmap/core/features.py`, `roadmap/store/schema.py` (+features kind), `roadmap/core/parsers.py` (task `feats`) | Pure `derive()` gives states, rollup, uncovered and orphans; caps enforced; unit tests | 50k | Now. Touch parsers.py only after the workflow worker's `after` change lands; check `git log` first. |
 | B2 | Plan format | `roadmap/core/planfmt.py`, `roadmap/services/tasks.py` | F/L records parse and export round-trip; `--dry-run` shows `+F3 ~R6.6` | 35k | Parallel with B1 |
 | B3 | Service, ops, CLI | new `roadmap/services/features.py`, new `roadmap/services/featops.py` (imported by one line in `cmdops.py`), new `roadmap/commands/feature.py`, `roadmap/cli.py`, `roadmap/commands/status.py` | 6 ops with locks and undo; `feature accept` refused for agents on the phone path; status line ≤1 | 50k | After B1 |
-| B4 | Snapshot hook | `roadmap/core/snapshot.py` (+1 key) | `features` is in the snapshot and adds ≤6 KB for 60 features | 10k | After the workflow-data worker merges |
+| B4 | Snapshot hook | `roadmap/core/snapshot.py` (+1 key) | `features` is in the snapshot and adds ≤6 KB for 60 features (superseded: see PLANNER-V2-SPEC section 6) | 10k | After the workflow-data worker merges |
 | V1 | View | new `web/js/views/planner.js`, new `web/css/planner.css` (≤3 KB) | Layout as in section 3; ui_smoke passes at 1440 and 375; numbers tabular | 60k | Parallel with B3, against a fixture |
 | V2 | Wire-up | `web/js/routes.js`, `web/index.html`, icon, Work drawer feature chip | Nav entry, deep link to Work | 15k | After row-alignment finishes and after B4 |
 | S1 | Seed + docs | import section 4 into the project; `docs/AGENT-INTERFACE.md` grammar; skill gets 3 lines | `status` shows the features line | 15k | Last |

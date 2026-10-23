@@ -138,7 +138,7 @@ def apply_records(data_dir, recs, dry_run=False):
 # ---------------------------------------------------------------- feature writes
 
 def add(data_dir, title, acc="", prio=2, phase=None, parent=None, ask=False):
-    """Create a feature with the next free id. Returns the derived row. Refused at 60 features or past F99. ask is
+    """Create a feature with the next free id. Returns the derived row. Refused at 99 features or past F99. ask is
     "the person asked for this"; it never marks acceptance."""
     records.require_dir(data_dir)
     with lock.locked(data_dir):

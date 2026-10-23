@@ -26,7 +26,7 @@ The screens are Overview, Roadmap, Work, Issues, Tokens and Rules.
   - The person sees phases as lanes and tasks as cards, drawn with plain CSS grid.
   - Each lane shows its progress bar, estimated vs spent tokens, and the budget.
   - The person can move tasks with ↑/↓ buttons (or `Alt+↑/↓`) and approve a phase with one button.
-  - Agents plan through research notes and `plan import/export`. They read `plan view` (≤15 lines) and work only on approved phases.
+  - Agents plan through research notes and `plan import/export`. They read `plan view` (≤15 lines) and work only on approved phases. Plan items use `F <id> <-|hold> <prio> <phase|-> <parent|-> [ask] | <title>`: a 3-level tree, at most 99 items, `ask` marks what the person asked for.
 - **Progress manager.**
   - Progress shows on the Overview and Roadmap screens and as jobs in each task's drawer.
   - Agents record it with `task done|start` and `job done --tokens K`.

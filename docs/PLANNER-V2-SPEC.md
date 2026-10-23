@@ -15,7 +15,7 @@ A plan item is a feature (`docs/features.json`); everything existing stays.
 | `ask: true` | Optional: "the person asked for this". Omitted when false. |
 | Outline | Derived in the view, never stored: `P0`, `P0.0`, `P0.0.1`, 0-based like the person's P0. Refs keep F ids. |
 | Rollup, `gaps` | A parent covers its descendants' tasks; `gaps` counts the uncovered ones. |
-| Caps | Unchanged: 60 items, title 80, acc 160, 3 `feats` per task. |
+| Caps | 60 items raised to 99 (section 8), title 80, acc 160, 3 `feats` per task. |
 
 **Plan text.** An F line takes an optional `ask` token before `|`. A parent may be defined earlier in the same import. T lines already accept `f:`. One import builds everything (about 15 tokens per line):
 
@@ -64,7 +64,7 @@ Plan [State▾] [□ Asked only] [□ Waiting for your OK]           [+ Plan pha
 
 ## 6. Budgets
 - CSS: planner.css goes from 3.2 to ≤5.5 KB, so the total stays ≤67.5 of 72 KB.
-- Snapshot rows add `ask` and `gaps` only when set and carry `acc` until accepted. They drop `estK`, `spentK` and `prio` (`feature show` keeps them). Target ≤8 KB for 60 items, asserted in `tests/unit/test_snapshot_features_size.py`.
+- Snapshot rows add `ask` and `gaps` only when set and carry `acc` until accepted. They drop `estK`, `spentK` and `prio` (`feature show` keeps them). Target ≤8 KB for 60 items (not reached; 99 items measure about 18 KB typical, bounds in the test), asserted in `tests/unit/test_snapshot_features_size.py`.
 
 ## 7. Packages (Haiku; each worker stages only its own files)
 | # | Files | Accept | When |
@@ -84,10 +84,10 @@ agy audits (read-only, the head verifies):
 - A2 (after H5): rows against the grid, the copy column, aria, no hover-only actions.
 - A3 (after H7): the docs, the template and PLAN_ALLOWED agree.
 
-## 8. Risks and questions for the person
-1. Outline labels follow order, so a move renumbers them. F ids stay. OK, or store a fixed label?
-2. Is a 60-item cap enough, or raise it to 99?
-3. Regroup the 23 current features into P0..Pn now? (The head drafts the import.)
-4. Drop the Est/Spent/Pri columns from Planner?
-5. May agents mark `ask` items from your messages?
+## 8. Decisions (head, 2026-10-23)
+1. Labels follow order; a move renumbers them. F ids stay fixed.
+2. The cap is raised to 99 items.
+3. The 26 features were regrouped into five groups: P0 Board and planning (F27), P1 Agents and the head (F28), P2 Usage and limits (F29), P3 App shell and UI (F30), P4 Platform and release (F31).
+4. The Est/Spent/Pri columns are dropped from the Planner screen (Work and Tokens show them).
+5. Agents may mark `ask` items from the person's messages.
 - Risk: old code drops `ask` on rewrite; land H1+H3 before using it.

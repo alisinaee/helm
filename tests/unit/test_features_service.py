@@ -73,8 +73,8 @@ class OpsAndUndo(FeatureCase):
             self.add("Fourth level", parent="F3")
         self.assertIn("4th level", ctx.exception.message)
 
-    def test_sixty_features_is_the_most(self):
-        recs = [features.record_of("F%d" % n, "feature %d" % n) for n in range(1, 61)]
+    def test_ninety_nine_features_is_the_most(self):
+        recs = [features.record_of("F%d" % n, "feature %d" % n) for n in range(1, 100)]
         with lock.locked(self.data):
             features.apply_records(self.data, recs)
         with self.assertRaises(RoadmapError) as ctx:
@@ -238,16 +238,16 @@ class ViewsAndStatus(FeatureCase):
         self.assertEqual(view["tasks"][0]["id"], first)
         self.assertEqual(view["errors"], [])
 
-    def test_sixty_features_snapshot_size_stays_near_measured_size(self):
+    def test_ninety_nine_features_snapshot_size_stays_near_measured_size(self):
         """WP53b: the rows drop the task id list and keep acc only for features that are not done. The 14 fixed keys
-        cost about 190 bytes a row, so 60 rows cannot reach 6 KB or 8 KB; they measure about 14 KB here (was 15.9 KB).
+        cost about 190 bytes a row, so 99 rows cannot reach 6 KB or 8 KB; they measure about 23 KB here.
         This test guards that measured size (a regression bound) and the row shape."""
         with open(os.path.join(FIXTURE_DIR, "tasks.json"), encoding="utf-8") as fh:
             text = fh.read()
         task_ids = [t["id"] for t in json.loads(text)["tasks"]][:120]
         tasks_doc = json.loads(text)
         feats = []
-        for n in range(1, 61):
+        for n in range(1, 100):
             feats.append({"id": "F%d" % n, "title": "Feature %d planner" % n,
                           "acc": "Acceptance for feature %d" % n, "prio": 1 + n % 3, "parent": None,
                           "phase": None, "hold": False, "accepted": None})
@@ -258,7 +258,7 @@ class ViewsAndStatus(FeatureCase):
         files_with = dict(files_without, **{"features.json": json.dumps({"schemaVersion": 1, "features": feats})})
         base = build_snapshot(files_without, {"id": "splitnet"}, PINNED_NOW)
         full = build_snapshot(files_with, {"id": "splitnet"}, PINNED_NOW)
-        self.assertEqual(len(full["features"]["rows"]), 60)
+        self.assertEqual(len(full["features"]["rows"]), 99)
         size = len(json.dumps(full["features"], separators=(",", ":")))
         self.assertEqual(set(base) | {"features"}, set(full))
         self.assertLessEqual(size, 15 * 1024, "features key is %d bytes" % size)

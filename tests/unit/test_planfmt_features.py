@@ -182,21 +182,19 @@ class ApplyTests(ApplyCase):
         self.assertIn("line 1: M1.1 already has 3 features (allowed: up to 3 per task)", ctx.exception.errors)
         self.assertEqual(self.task("M1.1")["feats"], ["F1", "F2", "F3"])
 
-    def test_feature_cap_is_sixty(self):
+    def test_feature_cap_is_ninety_nine(self):
         self.seed()
-        lines = "\n".join("F F" + str(i) + " - 2 - - | Feature " + str(i) for i in range(1, 62)) + "\n"
-        records, errors = planfmt.parse_plan(lines)
-        self.assertEqual(errors, [])
-        with self.assertRaises(tasks.PlanError) as ctx:
-            tasks.apply(self.docs, records, project_id=PROJECT_ID)
-        self.assertIn("line 1: the file would have 61 features (allowed: up to 60)", ctx.exception.errors[0])
+        # ids stop at F99, so a 100th feature is refused at parse time
+        lines = "\n".join("F F" + str(i) + " - 2 - - | Feature " + str(i) for i in range(1, 101)) + "\n"
+        _records, errors = planfmt.parse_plan(lines)
+        self.assertEqual(errors, ["line 100: feature id 'F100' must look like F3 (allowed: F1 to F99)"])
         self.assertFalse(os.path.exists(self.features_file))
 
-    def test_sixty_features_is_allowed(self):
+    def test_ninety_nine_features_is_allowed(self):
         self.seed()
-        lines = "\n".join("F F" + str(i) + " - 2 - - | Feature " + str(i) for i in range(1, 61)) + "\n"
+        lines = "\n".join("F F" + str(i) + " - 2 - - | Feature " + str(i) for i in range(1, 100)) + "\n"
         self.run_plan(lines)
-        self.assertEqual(len(self.feature_doc()["features"]), 60)
+        self.assertEqual(len(self.feature_doc()["features"]), 99)
 
     def test_validation_errors_name_the_line_and_write_nothing(self):
         self.seed()

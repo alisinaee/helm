@@ -5,7 +5,7 @@ roadmap.services.features.load), the parsed tasks (parse_tasks), the parsed jobs
 It never raises. A feature that fails a rule is left out of rows and named in errors. validate(features) returns the
 same error strings.
 
-Rules (spec section 2): ids F1..F99, at most 60 features, title <= 80, acc <= 160, prio 1..3, a parent chain of at most
+Rules (spec section 2): ids F1..F99, at most 99 features, title <= 80, acc <= 160, prio 1..3, a parent chain of at most
 2 parents (3 levels: phase, sub plan, item), no cycles. ask is an optional bool ("the person asked for this").
 A parent covers the tasks of all its descendants; gaps counts its direct children that have no tasks.
 Outline labels (P0, P0.0, P0.0.1) are derived from file order by outline_labels and never stored.
@@ -20,7 +20,7 @@ from roadmap.core.planfmt import PHASE_ID_RE
 
 FEATURES_FILE = "features.json"
 DATE_RE = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
-MAX_FEATURES = 60
+MAX_FEATURES = 99
 MAX_ANCESTORS = 2
 TITLE_MAX = 80
 ACC_MAX = 160
