@@ -16,7 +16,7 @@ CONFIG = {"projects": []}
 
 def block(week=80, five=67):
     return {"five_hour": {"used_percentage": five, "resets_at": 1800000000},
-            "seven_day": {"used_percentage": week, "resets_at": "2026-10-19T05:59:59Z"}}
+            "seven_day": {"used_percentage": week, "resets_at": "2030-10-19T05:59:59Z"}}
 
 
 class AutoCase(HomeCase):
@@ -32,7 +32,7 @@ class AutoCase(HomeCase):
         changes = uc.parse_rate_limits(block())
         self.assertEqual(changes["weeklyPercent"], 80)
         self.assertEqual(changes["fiveHourPercent"], 67)
-        self.assertEqual(changes["weeklyResetsAt"], "2026-10-19T05:59:59Z")
+        self.assertEqual(changes["weeklyResetsAt"], "2030-10-19T05:59:59Z")
         self.assertTrue(changes["fiveHourResetsAt"])
         self.assertEqual(uc.parse_rate_limits({"seven_day": {"used_percentage": 140}}), {})
         self.assertEqual(uc.parse_rate_limits(None), {})

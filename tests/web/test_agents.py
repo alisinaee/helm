@@ -3,7 +3,7 @@
 Checks: a worker sits in a nested list under its lead; each running row has a Stop button (disabled when the job has no
 task); the blocked badge and the 'handed to' chip appear; only the last 10 finished jobs are listed; the empty state
 reads 'No agents running.'; every data-action the views emit is handled by app.js; the routes register the agents
-module; and flow.css stays within its 4 KB budget. The node checks are skipped when node is not installed.
+module; and flow.css stays within its 6 KB budget. The node checks are skipped when node is not installed.
 """
 
 import json
