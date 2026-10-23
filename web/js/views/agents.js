@@ -192,7 +192,8 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     (handed || "");
   const elapsed = '<span class="rg-num num" data-started-ms="' +
     esc(String(job.startedMs == null ? "" : job.startedMs)) + '">' + esc(elapsedText(job, now)) + "</span>";
-  const tokenCell = '<span class="rg-num num" title="Out tokens · weighted units">' + esc(tokens) + "</span>";
+  const tokenCell = '<span class="rg-num num" title="' + (tokens === MISSING ? "Unknown: not measured yet" :
+    "Out tokens · weighted units") + '">' + esc(tokens) + "</span>";
   const row = '<li class="ag-row" data-depth="' + depth + '"><div class="row-grid rg-agent">' +
     agentCells('<span class="ag-dot" role="img" aria-label="Running" title="Running"></span>', model, title, taskHtml,
       effort, elapsed, tokenCell,
@@ -231,7 +232,8 @@ function finishedHtml(job, pid) {
   const title = '<span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
     chipHtml(word, kind);
   const elapsed = '<span class="rg-num num">' + esc(fmtDuration(job.elapsedS)) + "</span>";
-  const tokenCell = '<span class="rg-num num" title="Out tokens · weighted units">' + esc(tokens) + "</span>";
+  const tokenCell = '<span class="rg-num num" title="' + (tokens === MISSING ? "Unknown: not measured yet" :
+    "Out tokens · weighted units") + '">' + esc(tokens) + "</span>";
   return '<li class="ag-row"><div class="row-grid rg-agent">' +
     agentCells(check, model, title, task, effort, elapsed, tokenCell,
       copyButton("job", job.id, label, { project: pid, sum: refSummary("job", job) })) + "</div></li>";
@@ -291,7 +293,10 @@ export function sectionView(vm) {
   const now = Date.now();
   const showName = vm.route.name !== "project";
   const note = "Live. Workers sit under the job that started them. The square stops that task.";
-  return '<div class="page-head"><p class="page-note">' + esc(note) + "</p></div>" +
+  const legend = "Tokens: out · weighted units. " + MISSING + " = unknown, not measured yet. Effort " + MISSING +
+    " = engine default.";
+  return '<div class="page-head"><p class="page-note">' + esc(note) + '</p><p class="page-note ag-legend">' +
+    esc(legend) + "</p></div>" +
     scopes.map(function (entry) {
       return projectBlock(entry, now, showName);
     }).join("");

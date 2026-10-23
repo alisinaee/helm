@@ -61,8 +61,9 @@ function spendTableHtml(vm, snaps) {
     const share = week.estPts == null ? MISSING : "≈ " + fmtPercent(week.estPts);
     const name = names[snap.id] || snap.title || snap.id;
     return '<li class="row-grid tk-spend"><span class="rg-t" title="' + esc(name) + '">' + esc(name) +
-      '</span><span class="rg-num num">' + esc(fmtTokens(week.tokK)) + '</span><span class="rg-num num">' +
-      esc(share) + '</span><span class="rg-num num" title="' + esc(resetTitle) + '">' +
+      '</span><span class="rg-num num">' + esc(fmtTokens(week.tokK)) +
+      '</span><span class="rg-num num">' + esc(share) +
+      '</span><span class="rg-num num" title="' + esc(resetTitle) + '">' +
       esc(reset) + "</span></li>";
   }).join("");
   return '<ul class="spend-list" aria-label="Spend per project this week">' + head + rows + "</ul>";

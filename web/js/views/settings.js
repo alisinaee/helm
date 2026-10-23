@@ -89,10 +89,27 @@ function singleKeysHtml() {
 }
 
 // The shortcut list from keys.js, the same rows as the ? help: one line per shortcut, so it wraps on a phone.
+const GO_KEYS = [["o", "Overview"], ["i", "Inbox"], ["r", "Roadmap"], ["w", "Work"], ["u", "Issues"],
+  ["a", "Agents"], ["t", "Tokens"], ["e", "Rules"], ["v", "Activity"], [",", "Settings"]];
+
+// The section-jump row of keys.js becomes one line per shortcut ("g o  Overview"); the rest pass through.
+function keyRows() {
+  const out = [];
+  for (const row of helpRows()) {
+    if (/^g then o i/.test(row[0])) {
+      for (const k of GO_KEYS) out.push(["g " + k[0], k[1]]);
+    } else {
+      out.push(row);
+    }
+  }
+  return out;
+}
+
 function keysHtml() {
-  return helpRows().map(function (row) {
-    return '<p class="page-note"><span class="kbd">' + esc(row[0]) + "</span> " + esc(row[1]) + "</p>";
-  }).join("");
+  return '<div class="set-keys">' + keyRows().map(function (row) {
+    return '<span class="set-key"><span class="kbd">' + esc(row[0]) + '</span></span><span class="page-note">' +
+      esc(row[1]) + "</span>";
+  }).join("") + "</div>";
 }
 
 function applyDensity(value) {

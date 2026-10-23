@@ -193,9 +193,9 @@
   background: var(--surface-2); color: var(--text-1); border: 1px solid var(--line); border-radius: var(--r-control);
   box-shadow: var(--shadow-2); font-size: var(--fs-12) }
 .row-grid.tk-tot, .row-grid.tk-proj, .row-grid.tk-rem { grid-template-columns: var(--rg) }
-.tk-tot { --rg: minmax(0, 1fr) 6rem 6rem 6rem; min-height: var(--h-row) }
-.tk-proj { --rg: minmax(0, 1fr) 4rem 6rem 6rem 6rem 6rem; min-height: var(--h-row) }
-.tk-rem { --rg: minmax(0, 1fr) 3.5rem 5.5rem 5.5rem 6.5rem; min-height: var(--h-row) }
+.tk-tot { --rg: minmax(0, 1.2fr) repeat(3, minmax(6rem, 1fr)); min-height: var(--h-row) }
+.tk-proj { --rg: minmax(0, 1.4fr) minmax(4rem, .6fr) repeat(4, minmax(6rem, 1fr)); min-height: var(--h-row) }
+.tk-rem { --rg: minmax(0, 1.4fr) minmax(3.5rem, .6fr) minmax(5.5rem, 1fr) minmax(5.5rem, 1fr) minmax(6.5rem, 1fr); min-height: var(--h-row) }
 .tk-sum { font-weight: 600; border-top: 1px solid var(--track) }
 .spend-list .tk-spend > :last-child { white-space: nowrap; overflow-wrap: normal }
 @media (prefers-reduced-motion: no-preference) { .tk-seg, .tk-dot { transition: all var(--t-fast) } }
@@ -509,3 +509,27 @@
 /* Toolbar height and soft list dividers (glass.css): one hairline colour for rows and group headers. */
 :root { --tb-h: 38px; --divider: color-mix(in srgb, var(--line) 20%, transparent) }
 @media (max-width: 640px) { :root { --tb-h: 40px } }
+
+/* R9.59: one line per shortcut, keys in a fixed column */
+.set-keys { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: var(--sp-1) var(--sp-2); align-items: baseline }
+.set-key { white-space: nowrap }
+@media (max-width: 599px) { .set-keys { grid-template-columns: 7rem minmax(0, 1fr) } }
+/* R9.55/R9.66/R9.67 spend: numbers share the width with the name; phone stacks each project as a card */
+.spend-list .tk-spend { --rg: minmax(0, 1.4fr) minmax(5.5rem, 1fr) minmax(6.5rem, 1fr) minmax(5rem, 1fr) }
+.spend-list .tk-spend > :last-child { white-space: nowrap }
+.row-grid.tk-by { --rg: minmax(0, 1.4fr) minmax(3.5rem, .6fr) minmax(6rem, 1fr) minmax(6rem, 1fr) minmax(5.5rem, 1fr) }
+@media (max-width: 599px) {
+  .spend-list .tk-spend.rg-head { display: none }
+  .spend-list .tk-spend { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: var(--sp-1); overflow-x: visible;
+    padding: var(--sp-2) 0; border-bottom: 1px solid var(--track) }
+  .spend-list .tk-spend > .rg-t { grid-column: 1 / -1; font-weight: 600; white-space: normal; overflow-wrap: anywhere }
+  .spend-list .tk-spend > .rg-num { display: grid; justify-items: start; text-align: left; white-space: normal }
+  .spend-list .tk-spend > .rg-num::before { color: var(--text-3); font-size: var(--fs-11) }
+  .spend-list .tk-spend > :nth-child(2)::before { content: "Tokens used" }
+  .spend-list .tk-spend > :nth-child(3)::before { content: "Share of weekly" }
+  .spend-list .tk-spend > :nth-child(4)::before { content: "Resets" }
+  .ov-card, .tk-panel { min-width: 0 }
+}
+.lv-numwrap, .lv-unit { white-space: nowrap }
+.ag-legend { margin: 0 }
+.rg-agent > .ag-lead > input { margin: 0 }
