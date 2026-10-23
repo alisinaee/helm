@@ -269,11 +269,25 @@ def _pace_at(row, used, ctx):
 def _judge(row, used, est, ctx):
     ratio = None if used is None else _ratio(used, float(row["value"]))
     out = dict(row)
+    state = _state(used, ratio or 0.0, row["action"])
+    if used is None and row.get("src") == "limits2":
+        # an ON stop never goes quiet because its reading is stale or missing (R11.160)
+        state = "block" if row["action"] == "block" else "warn"
+        out["stale"] = True
     out.update({"used": None if used is None else round(used, 1), "limit": row["value"],
-                "pct": None if ratio is None else round(ratio, 1), "state": _state(used, ratio or 0.0,
-                                                                                     row["action"]),
+                "pct": None if ratio is None else round(ratio, 1), "state": state,
                 "est": bool(est), "paceAt": _pace_at(row, used, ctx)})
     return out
+
+
+def _stale_age_text():
+    try:
+        age = usage.show().get("ageS")
+    except Exception:
+        age = None
+    if not _num(age) or age < 0:
+        return "no recent reading"
+    return "last reading %dm ago" % (int(age) // 60)
 
 
 def _evaluate_rows(project, moment):
@@ -327,6 +341,9 @@ def evaluate(project, now=None):
 
 def describe(row):
     """The reason line of a row that warns or blocks (the words the hooks and the status show)."""
+    if row.get("src") == "limits2" and row.get("used") is None:
+        return "%s stop at %g%%: usage is stale (%s): sync usage before starting new work" % (
+            limits_v2.FIELDS[row["measure"]][3], row["value"], _stale_age_text())
     if row.get("src") == "limits2":
         verb = "reached" if row["state"] == "block" else "at"
         return "%s usage %s the stop at %g%%" % (limits_v2.FIELDS[row["measure"]][3], verb, row["value"])

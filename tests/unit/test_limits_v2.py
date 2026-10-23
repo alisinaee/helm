@@ -91,6 +91,27 @@ class Gate(V2Base):
         self.assertEqual(states, {"S5H": "block", "SWK": "ok"})
         self.assertIn("5 hours usage reached the stop at 25%", limits.describe(judged[0]))
 
+    def _judged(self, window):
+        ctx = mock.Mock(now=None, pct_ok=True, weekly=20.0)
+        return [limits._judge(r, *limits._measure(r, ctx), ctx) for r in limits_v2.gate_rows()
+                if r["window"] == window]
+
+    def test_stale_reading_with_stop_on_blocks_with_a_reason(self):
+        limits_v2.set_window("five_hour", {"on": True, "mode": "cap", "value": 50})
+        self.reading["five_hour"] = (30.0, NOW, False)
+        row = self._judged("five_hour")[0]
+        self.assertEqual(row["state"], "block")
+        self.assertIn("usage is stale", limits.describe(row))
+        self.assertIn("sync usage", limits.describe(row))
+
+    def test_stale_reading_with_stop_off_never_blocks(self):
+        self.reading["five_hour"] = (30.0, NOW, False)
+        self.assertEqual(limits_v2.gate_rows(), [])
+
+    def test_fresh_reading_is_unchanged(self):
+        limits_v2.set_window("five_hour", {"on": True, "mode": "cap", "value": 50})
+        self.assertEqual(self._judged("five_hour")[0]["state"], "ok")
+
     def test_brief_line(self):
         limits_v2.set_window("five_hour", {"on": True, "mode": "cap", "value": 50})
         self.assertEqual(limits_v2.brief_line(), "5h 30% / stop 50% | W 20% / stop off")
