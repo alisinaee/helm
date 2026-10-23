@@ -38,8 +38,11 @@ H=$(ls ~/Works/helm/bin/roadmap ~/StudioProjects/helm/bin/roadmap 2>/dev/null | 
 6. Usage is read automatically from Anthropic: `$H usage show`, `$H usage stops`, `$H usage account list`. Do not
    ask the person for percentages. Stop launching at the stops set in Tokens > Limits (the PreToolUse hook also
    blocks then); with no stop set, stop at 5h 90% / weekly 95%.
-7. Empty board (`$H plan view` shows nothing): ask the person what the project is for, write a plan
-   (`$H plan template`, `$H plan import < plan.txt`) before any work.
+7. The head owns the plan (there is no Planner screen to fill by hand). Empty board (`$H plan view` shows
+   nothing): ask the person once what the project is for, then write the plan yourself (`$H plan template`,
+   `$H plan import < plan.txt`, groups with `$H feature add` / `feature move --parent`). On every resume keep it
+   current: new asks become tasks under the right feature, finished groups close, design questions in specs are
+   decided by you and written into the spec.
 8. Then act as head (below) until the open asks and free tasks are done or a stop is reached.
 
 ## The ledger is the work list
@@ -48,6 +51,8 @@ H=$(ls ~/Works/helm/bin/roadmap ~/StudioProjects/helm/bin/roadmap 2>/dev/null | 
   `$H head t H<n> <kind> "<summary>" task:<task-id>` (create the task first if none: `$H task add` or `plan import`).
 - Close an ask only with a real ref: `$H head set H<n> status=done note="<commit sha | job id | answer: ...>"`.
   Unclear -> `needs-you`. Never bulk-close. `$H head list` / `$H head next` show what is open.
+- Review `needs-you` asks on every resume and decide them yourself with your best choice (note the decision);
+  keep `needs-you` only for destructive or irreversible acts (deleting folders, projects, data) and logins.
 
 ## Job loop (every unit of work, one step, never split)
 
