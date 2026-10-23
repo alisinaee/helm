@@ -755,6 +755,7 @@ GATE_WEEK_STOP = 95
 GATE_PAUSE_FILE = "head-pause"   # a file in the data dir: its presence pauses the gate
 GATE_STAMP_FILE = "head-gate.json"
 GATE_OPEN = ("new", "understood", "bound", "doing")
+GATE_MAX_AGE_MIN = 24 * 60   # open asks older than this are counted in a "+N older asks" line, not listed
 _IDLE_TOOLS = (("cursor", "cursor idle: run the review audit"), ("agy", "agy idle: run an audit"))
 
 
@@ -786,11 +787,18 @@ def gate(rows, *, queue=(), running=(), dirty=None, unpushed=None, usage=None, p
         return []
     now = now or datetime.now(timezone.utc)
     asks = []
+    older = 0
     for r in sorted(rows or [], key=lambda x: str(x.get("ts") or "")):
         if r.get("status") not in GATE_OPEN or _kind(r) in ("decision", "rule"):
             continue
+        age = _age_min(r.get("ts"), now)
+        if age > GATE_MAX_AGE_MIN:
+            older += 1
+            continue
         label = "unanswered" if r["status"] in ("new", "understood") else r["status"]
-        asks.append("%s %s %s: %s" % (r["id"], label, _age_text(_age_min(r.get("ts"), now)), r.get("sum", "")[:50]))
+        asks.append("%s %s %s: %s" % (r["id"], label, _age_text(age), r.get("sum", "")[:50]))
+    if older:
+        asks.append("+%d older asks: roadmap head list" % older)
     tasks = ["task %s queued, not started" % str(task) for task in queue or ()]
     tools = []
     names = [str(j.get("title", "")) + " " + str(j.get("model", "")) for j in running or () if isinstance(j, dict)]

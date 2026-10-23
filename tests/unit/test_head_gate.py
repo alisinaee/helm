@@ -71,6 +71,35 @@ class GatePure(unittest.TestCase):
         self.assertTrue(items[0].startswith("H1 "))
 
 
+class GateAgeLimit(unittest.TestCase):
+    OLD_TS = "2026-10-13T09:30:00Z"  # two days before NOW
+
+    def test_ask_two_days_old_is_not_listed_but_counted(self):
+        rows = [row("H1", ts=self.OLD_TS), row("H2", ts="2026-10-15T09:00:00Z", sum_text="recent")]
+        items = head_svc.gate(rows, now=NOW)
+        self.assertEqual(items[0], "H2 unanswered 1h: recent")
+        self.assertEqual(items[1], "+1 older asks: roadmap head list")
+        self.assertFalse(any(item.startswith("H1 ") for item in items))
+
+    def test_ask_one_hour_old_is_listed(self):
+        items = head_svc.gate([row("H1", ts="2026-10-15T08:30:00Z")], now=NOW)
+        self.assertEqual(items, ["H1 unanswered 1h: do the thing", "cursor idle: run the review audit",
+                                 "agy idle: run an audit"])
+
+    def test_no_older_asks_means_no_plus_item(self):
+        items = head_svc.gate([row("H1")], now=NOW)
+        self.assertFalse(any(item.startswith("+") for item in items))
+
+    def test_only_old_asks_still_count_and_keep_idle_lines(self):
+        items = head_svc.gate([row("H1", ts=self.OLD_TS), row("H2", ts=self.OLD_TS)], now=NOW)
+        self.assertEqual(items, ["+2 older asks: roadmap head list", "cursor idle: run the review audit",
+                                 "agy idle: run an audit"])
+
+    def test_unknown_age_is_kept(self):
+        items = head_svc.gate([row("H1", ts="yesterday-ish")], now=NOW)
+        self.assertEqual(items[0], "H1 unanswered 0m: do the thing")
+
+
 class GateHook(ControlCase):
     def setUp(self):
         super().setUp()
