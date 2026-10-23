@@ -58,7 +58,7 @@ function crumbHtml(vm) {
 
 function controlHtml(vm) {
   if (vm.route.name !== "project") {
-    return '<span class="pill is-wait">Choose a project to stop or resume it</span>';
+    return '<span class="pill is-wait" title="Choose a project to stop or resume it">Pick a project to stop it</span>';
   }
   const c = vm.control;
   if (!c || !c.known) {
