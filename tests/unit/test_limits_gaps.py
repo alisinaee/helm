@@ -182,7 +182,7 @@ class LimitsGapTests(ControlCase):
         limits.add(self.project, "project", "week", "tok", 50, now=self.now)   # L2, budget.json limitRows
         budget.set_project_limit(self.docs, 200)                               # BUD
         rows = limits.list_rows(self.project)
-        self.assertEqual(sorted(row["id"] for row in rows), ["AUTO", "BUD", "L1", "L2"])
+        self.assertEqual(sorted(row["id"] for row in rows), ["BUD", "L1", "L2"])
         self.assertTrue(all("state" not in row for row in rows))
 
     def test_add_returns_the_prior_row_and_keeps_the_id_of_the_replaced_row(self):

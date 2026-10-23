@@ -2,9 +2,8 @@
   "schemaVersion": 2,
   "limit": {
     "kind": "weekly",
-    "stopAtPercent": 100,
     "setBy": "",
     "setOn": "",
-    "note": "Lower stopAtPercent to make agents stop at this weekly usage."
+    "note": "Usage stops are set in Tokens > Limits."
   }
 }

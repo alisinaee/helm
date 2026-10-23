@@ -1,5 +1,6 @@
-"""Budget guard: budget.guard() reads only docs/autonomy.json. job start refuses at a stop (exit 3) and warns on stale
-usage (never refuses for it). Uses the temp ROADMAP_HOME of the CMD case; nothing touches the keychain or port 8780."""
+"""Budget guard (R11.164): the stops come only from Tokens > Limits (limits_v2); the usage reading comes from
+docs/autonomy.json usage. job start refuses at a stop (exit 3) and warns on stale usage when no stop is on.
+Uses a temp ROADMAP_HOME; nothing touches the keychain or port 8780."""
 
 import datetime
 import json
@@ -7,8 +8,9 @@ import os
 import tempfile
 import unittest
 
-from roadmap.services import budget, jobs
+from roadmap.services import budget, jobs, limits_v2
 from tests.unit.test_cmd_support import CmdCase
+from tests.unit.test_store_support import HomeCase
 
 NOW = datetime.datetime.now(datetime.timezone.utc)  # relative times, so the CLI tests (real clock) agree
 
@@ -16,7 +18,7 @@ NOW = datetime.datetime.now(datetime.timezone.utc)  # relative times, so the CLI
 def _autonomy(weekly=82, five=34, updated=None, extra=None):
     stamp = updated or (NOW - datetime.timedelta(minutes=5)).isoformat().replace("+00:00", "Z")
     doc = {"schemaVersion": 2, "maxUsageAgeMin": 90,
-           "limit": {"kind": "weekly", "stopAtPercent": 85, "fiveHourStopAtPercent": 80},
+           "limit": {"kind": "weekly", "stopAtPercent": 85, "fiveHourStopAtPercent": 80},  # legacy keys: ignored
            "usage": {"weeklyPercent": weekly, "fiveHourPercent": five, "updated": stamp}}
     doc.update(extra or {})
     return doc
@@ -27,25 +29,63 @@ def _write(folder, doc):
         json.dump(doc, fh)
 
 
-class GuardServiceTests(unittest.TestCase):
+def _stops(week=None, five=None):
+    """Set the Limits windows: a cap percent, or None for off."""
+    for window, value in (("week", week), ("five_hour", five)):
+        patch = {"on": False} if value is None else {"on": True, "mode": "cap", "value": value}
+        limits_v2.set_window(window, patch)
+
+
+class GuardServiceTests(HomeCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.folder = self.tmp.name
+        super().setUp()
+        self.folder = os.path.join(self.tmp, "docs")
+        os.makedirs(self.folder)
 
-    def tearDown(self):
-        self.tmp.cleanup()
-
-    def test_weekly_at_the_stop_is_a_stop(self):
+    def test_weekly_at_the_limits_stop_is_a_stop(self):
+        _stops(week=85)
         _write(self.folder, _autonomy(weekly=86))
         self.assertEqual(budget.guard(self.folder, NOW), ("stop: weekly 86% >= 85%", None))
 
     def test_weekly_below_the_stop_is_allowed(self):
+        _stops(week=85)
         _write(self.folder, _autonomy(weekly=84))
         self.assertEqual(budget.guard(self.folder, NOW), (None, None))
 
     def test_five_hour_stop_is_checked_too(self):
+        _stops(week=95, five=80)
         _write(self.folder, _autonomy(weekly=10, five=81))
         self.assertEqual(budget.guard(self.folder, NOW), ("stop: 5-hour 81% >= 80%", None))
+
+    def test_legacy_five_hour_80_with_limits_off_is_allowed(self):
+        _stops(week=None, five=None)
+        _write(self.folder, _autonomy(weekly=99, five=86))
+        self.assertEqual(budget.guard(self.folder, NOW), (None, None))
+
+    def test_limits_week_cap_20_with_25_percent_fresh_is_blocked(self):
+        _stops(week=20, five=None)
+        _write(self.folder, _autonomy(weekly=25, five=10))
+        self.assertEqual(budget.guard(self.folder, NOW), ("stop: weekly 25% >= 20%", None))
+
+    def test_a_stale_reading_on_an_on_stop_blocks_with_the_stale_hint(self):
+        _stops(week=20)
+        stamp = (NOW - datetime.timedelta(hours=5)).isoformat().replace("+00:00", "Z")
+        _write(self.folder, _autonomy(weekly=5, updated=stamp))
+        stop, warn = budget.guard(self.folder, NOW)
+        self.assertIn("stop: weekly stop at 20%: usage is stale", stop)
+        self.assertIn("sync usage before starting new work", stop)
+        self.assertIsNone(warn)
+
+    def test_cleanup_drops_the_legacy_keys_and_keeps_a_note(self):
+        _write(self.folder, _autonomy())
+        budget.guard(self.folder, NOW)
+        with open(os.path.join(self.folder, budget.AUTONOMY_FILE), encoding="utf-8") as fh:
+            limit = json.load(fh)["limit"]
+        self.assertNotIn("stopAtPercent", limit)
+        self.assertNotIn("fiveHourStopAtPercent", limit)
+        self.assertEqual(limit["note"], "moved to Tokens > Limits (R11.164)")
+        self.assertFalse(budget.drop_legacy_stops(self.folder))  # second run: nothing to do
+        self.assertFalse(limits_v2.load()["five_hour"]["on"])  # the 5h value is not migrated
 
     def test_missing_file_gives_no_stop_and_no_warning(self):
         self.assertEqual(budget.guard(self.folder, NOW), (None, None))
@@ -72,11 +112,6 @@ class GuardServiceTests(unittest.TestCase):
         _write(self.folder, _autonomy(updated=stamp, extra={"maxUsageAgeMin": 30}))
         self.assertEqual(budget.guard(self.folder, NOW)[1], "usage 31 min old: run usage push")
 
-    def test_a_stop_is_not_hidden_by_a_stale_warning(self):
-        stamp = (NOW - datetime.timedelta(hours=5)).isoformat().replace("+00:00", "Z")
-        _write(self.folder, _autonomy(weekly=90, updated=stamp))
-        self.assertEqual(budget.guard(self.folder, NOW), ("stop: weekly 90% >= 85%", None))
-
     def test_unreadable_file_warns_and_does_not_refuse(self):
         with open(os.path.join(self.folder, budget.AUTONOMY_FILE), "w", encoding="utf-8") as fh:
             fh.write("{not json")
@@ -88,6 +123,7 @@ class JobStartGuardTests(CmdCase):
         _write(self.data, _autonomy(**kwargs))
 
     def test_job_start_refused_at_a_weekly_stop_with_exit_3(self):
+        _stops(week=85)
         self._limits(weekly=86)
         code, out, err = self.cli(["job", "start", "x", "haiku", "P1.1"])
         self.assertEqual(code, 3, err)
@@ -95,7 +131,14 @@ class JobStartGuardTests(CmdCase):
         self.assertEqual(out, "")
         self.assertEqual(jobs.list_jobs(self.data), [])
 
+    def test_legacy_five_hour_80_with_limits_off_starts(self):
+        _stops(week=None, five=None)
+        self._limits(weekly=40, five=86)
+        code, out, err = self.cli(["job", "start", "x", "haiku", "P1.1"])
+        self.assertEqual((code, out.strip()), (0, "j1"), err)
+
     def test_job_start_allowed_at_84(self):
+        _stops(week=85)
         self._limits(weekly=84)
         code, out, err = self.cli(["job", "start", "x", "haiku", "P1.1"])
         self.assertEqual((code, out.strip()), (0, "j1"), err)

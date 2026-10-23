@@ -62,8 +62,8 @@ class LimitsFlowTests(unittest.TestCase):
         push(sb, 100)
         self.assertIn("L1 global week 100/100% BLOCK", sb.cli(["limit", "show"]).stdout)
         self.assertEqual(meter(srv.snapshot(sb.pid), "L1")["state"], "block")
-        self.assertIn("weekly usage 100%", sb.hook("Edit", {"file_path": "x.md"})["hookSpecificOutput"][
-            "permissionDecisionReason"])
+        reason = sb.hook("Edit", {"file_path": "x.md"})["hookSpecificOutput"]["permissionDecisionReason"]
+        self.assertIn("global week limit L1 reached at 100%", reason)
 
         overridden = sb.cli(["override", "--hours", "1"])
         self.assertEqual(overridden.returncode, 0, overridden.stderr)

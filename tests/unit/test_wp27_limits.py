@@ -12,7 +12,7 @@ from unittest import mock
 
 from roadmap.core.snapshot import build_snapshot
 from roadmap.errors import RoadmapError
-from roadmap.services import budget, control, hooks, ledger, limits
+from roadmap.services import budget, control, hooks, ledger, limits, limits_v2
 from roadmap.services import commands as command_layer
 from roadmap.store import config
 from tests.unit.test_control_support import ROADMAP_CONFIG, TASKS, ControlCase, read_json, write_json
@@ -187,14 +187,16 @@ class LimitMatrixTests(ControlCase):
         self.assertIsNone(state["block"])
         self.assertEqual(state["warn"], ["project budget at 100%"])
 
-    def test_the_weekly_stop_blocks_and_a_warn_action_only_warns(self):
+    def week_stop(self, value=100):
+        limits_v2.set_window("week", {"on": True, "mode": "cap", "value": value})
+
+    def test_the_weekly_stop_is_the_limits_week_window(self):
         self.reading(101)
-        self.assertIn("weekly usage 101% reached stopAtPercent 100%",
+        self.assertIsNone(control.recompute("demo", now=self.now)["block"])  # Limits week is off: no stop
+        self.week_stop(100)
+        self.assertIn("week usage reached the stop at 100%",
                       control.recompute("demo", now=self.now)["block"]["reason"])
-        self.set_row("project", "week", "acct", 100, "warn")
-        state = control.recompute("demo", now=self.now)
-        self.assertIsNone(state["block"])
-        self.assertIn("weekly usage at 101%", state["warn"])
+        self.assertNotIn("AUTO", self.rows())
 
     def test_a_global_week_pct_uses_the_measured_weekly_percent(self):
         self.reading(62, minutes_before_now=5)
@@ -204,26 +206,32 @@ class LimitMatrixTests(ControlCase):
 
     def test_stale_usage_makes_pct_and_acct_unknown_but_tok_still_enforces(self):
         self.reading(105, minutes_before_now=120)  # older than 90 minutes
+        self.week_stop(100)
         pct = self.set_row("global", "day", "pct", 10)
         tok = self.set_row("project", "day", "tok", 20)
         ledger.record_spend("demo", 25, now=at(13, 30))
         rows = self.rows()
         self.assertEqual(rows[pct]["state"], "unknown")
-        self.assertEqual(rows["AUTO"]["state"], "unknown")
+        self.assertEqual(rows["SWK"]["state"], "block")  # an ON stop with a stale reading blocks (R11.160)
         self.assertEqual(rows[tok]["state"], "block")
         self.assertEqual(limits.evaluate(self.project, now=self.now)["state"], "block")
 
-    def test_stale_usage_alone_is_unknown_and_never_blocks(self):
+    def test_stale_usage_alone_never_blocks_when_limits_are_off(self):
         self.reading(105, minutes_before_now=120)
-        self.assertEqual(self.rows()["AUTO"]["state"], "unknown")
-        self.assertEqual(limits.evaluate(self.project, now=self.now)["state"], "unknown")
+        self.assertNotIn("AUTO", self.rows())
         self.assertIsNone(control.recompute("demo", now=self.now)["block"])
+
+    def test_stale_usage_blocks_an_on_week_stop(self):
+        self.reading(105, minutes_before_now=120)
+        self.week_stop(100)
+        self.assertEqual(self.rows()["SWK"]["state"], "block")
 
     def test_a_corrupt_ledger_leaves_pct_and_acct_unknown(self):
         self.reading(105, minutes_before_now=2)
+        pct = self.set_row("global", "day", "pct", 10)
         with open(ledger.path(), "w", encoding="utf-8") as fh:
             fh.write("garbage")
-        self.assertEqual(self.rows()["AUTO"]["state"], "unknown")
+        self.assertEqual(self.rows()[pct]["state"], "unknown")
         self.assertIsNone(control.recompute("demo", now=self.now)["block"])
 
     def test_a_failing_evaluation_is_ok_and_does_not_break_the_recompute(self):
@@ -241,7 +249,7 @@ class LimitMatrixTests(ControlCase):
                 limits.check_spec(scope, window, kind, value)
             self.assertEqual(ctx.exception.code, "usage")
 
-    def test_an_autonomy_only_project_shows_its_weekly_stop_and_its_files_stay_byte_identical(self):
+    def test_an_autonomy_stop_is_ignored_and_the_file_is_not_touched_by_reading_rows(self):
         old = self.make_project("old")
         old_docs = os.path.join(old, "docs")
         write_json(os.path.join(old_docs, "autonomy.json"),
@@ -252,8 +260,7 @@ class LimitMatrixTests(ControlCase):
         self.reading(100, minutes_before_now=3)
         control.recompute_all(self.now)
         rows = limits.evaluate_rows(config.get_project("old"), now=self.now, strict=True)
-        self.assertEqual([(r["window"], r["kind"], r["used"], r["limit"], r["state"], r["src"]) for r in rows],
-                         [("week", "acct", 100.0, 100, "block", "autonomy")])
+        self.assertEqual([r for r in rows if r["src"] == "autonomy"], [])  # R11.164: Limits is the only source
         self.assertEqual(digest(os.path.join(old_docs, "autonomy.json")), before)
 
 
@@ -345,7 +352,9 @@ class CliTests(ControlCase):
     def test_the_old_form_still_sets_the_weekly_stop(self):
         code, out, _ = run_cli(["limit", "set", "60"])
         self.assertEqual((code, out.strip()), (0, "weekly stop at 60%"))
-        self.assertEqual(read_json(os.path.join(self.docs, "autonomy.json"))["limit"]["stopAtPercent"], 60)
+        self.assertEqual(limits_v2.load()["week"]["value"], 60)
+        self.assertTrue(limits_v2.load()["week"]["on"])
+        self.assertNotIn("stopAtPercent", read_json(os.path.join(self.docs, "autonomy.json"))["limit"])
 
     def test_an_agent_shell_is_refused_for_set_and_rm(self):
         self._env("CLAUDECODE", "1")
@@ -371,11 +380,12 @@ class CliTests(ControlCase):
 
     def test_removing_the_weekly_stop_is_undone_by_its_set(self):
         self.set_usage(10)
+        run_cli(["limit", "set", "70"])
         _, body, _ = self.envelope(["limit", "rm", "AUTO"])
         activity = body["data"]["activity"]
-        self.assertNotIn("stopAtPercent", read_json(os.path.join(self.docs, "autonomy.json"))["limit"])
+        self.assertFalse(limits_v2.load()["week"]["on"])
         self.assertEqual(run_cli(["undo", activity])[0], 0)
-        self.assertEqual(read_json(os.path.join(self.docs, "autonomy.json"))["limit"]["stopAtPercent"], 100)
+        self.assertEqual((limits_v2.load()["week"]["on"], limits_v2.load()["week"]["value"]), (True, 70))
 
     def test_a_project_total_row_is_the_budget_and_shows_as_bud(self):
         code, out, _ = run_cli(["limit", "set", "--window", "total", "--tokens", "200"])

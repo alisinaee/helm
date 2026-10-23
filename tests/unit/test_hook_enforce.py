@@ -12,7 +12,7 @@ import time
 import unittest
 from unittest import mock
 
-from roadmap.services import control, hooks, hooks_install, queue, questions
+from roadmap.services import control, hooks, hooks_install, limits_v2, queue, questions
 from tests.unit.test_control_support import ControlCase, read_json, write_json
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -79,10 +79,11 @@ class DenyMatrixTests(GateCase):
         self.assertIsNone(self.fire("Edit"))
 
     def test_budget_block_names_the_limit_and_an_override_lets_it_through_until_it_expires(self):
+        limits_v2.set_window("week", {"on": True, "mode": "cap", "value": 100})
         self.set_usage(120)
         control.recompute("demo", now=MOMENT)
         reason = self.deny_reason(self.fire("Edit"))
-        self.assertEqual(reason, "roadmap: blocked: weekly usage 120% reached stopAtPercent 100%" + TAIL)
+        self.assertEqual(reason, "roadmap: blocked: week usage reached the stop at 100%" + TAIL)
         control.override("demo", 1, now=MOMENT)
         self.assertIsNone(self.fire("Edit", now=MOMENT.timestamp() + 30 * 60))
         # two hours on, the usage reading is fresh again and still over the limit: the recompute denies once more

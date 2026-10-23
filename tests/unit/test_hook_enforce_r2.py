@@ -20,7 +20,7 @@ from unittest import mock
 
 from roadmap.errors import RoadmapError
 from roadmap.commands import hooks as hooks_cmd
-from roadmap.services import agentguard, budget, control, hooks, hooks_install, jobs, questions, rules
+from roadmap.services import agentguard, budget, control, hooks, hooks_install, jobs, limits_v2, questions, rules
 from roadmap.store import config, lock, paths
 from tests.unit.test_control_support import ControlCase, read_json, write_json
 from tests.unit.test_hook_enforce import MOMENT, SHIM
@@ -80,6 +80,7 @@ class Finding1ProjectFromCwdOnly(Base):
 
 class Finding2StaleLimitAndOneLock(Base):
     def test_a_limit_that_has_moved_is_recomputed_before_the_deny(self):
+        limits_v2.set_window("week", {"on": True, "mode": "cap", "value": 100})
         self.set_usage(120)
         control.recompute("demo", now=MOMENT)
         self.assertTrue(self.sentinel())
@@ -89,6 +90,7 @@ class Finding2StaleLimitAndOneLock(Base):
         self.assertIsNone(control.read_state("demo")["block"])
 
     def test_a_recompute_that_fails_fails_open_and_removes_the_stale_sentinel(self):
+        limits_v2.set_window("week", {"on": True, "mode": "cap", "value": 100})
         self.set_usage(120)
         control.recompute("demo", now=MOMENT)
         self.assertTrue(self.sentinel())
@@ -97,6 +99,7 @@ class Finding2StaleLimitAndOneLock(Base):
         self.assertFalse(self.sentinel())
 
     def test_an_expired_override_is_checked_against_a_fresh_recompute(self):
+        limits_v2.set_window("week", {"on": True, "mode": "cap", "value": 100})
         self.set_usage(120)
         control.override("demo", 1, now=MOMENT)
         self.set_usage(120, updated=(MOMENT + datetime.timedelta(hours=2)).isoformat())
@@ -187,6 +190,7 @@ class Finding4BlockedAllowlist(Base):
         self.reason(self.bash("roadmap status; roadmap resume"))
 
     def test_a_limit_block_applies_the_same_allowlist(self):
+        limits_v2.set_window("week", {"on": True, "mode": "cap", "value": 100})
         self.set_usage(120)
         control.recompute("demo", now=MOMENT)
         self.assertIsNone(self.bash("roadmap status"))

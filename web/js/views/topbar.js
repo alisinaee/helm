@@ -79,9 +79,9 @@ function controlHtml(vm) {
     esc(c.id) + '" data-focus="control"' + offline + ">Stop</button>";
 }
 
-// The weekly stop shown in the top bar: the lowest weekly stop row, the project's own (autonomy.json
-// limit.stopAtPercent, an acct row, also when its action is warn) or the global percent on the week. The lower one is
-// the real stop (R7.77). A warn-only stop still has a value, so it shows as "stop 15%". Else the Tokens rule.
+// The weekly stop shown in the top bar: the lowest weekly stop row, the Limits week stop (an acct row, R11.164) or
+// the global percent on the week. The lower one is the real stop (R7.77). A warn-only stop still has a value, so it
+// shows as "stop 15%". Else the Tokens rule.
 export function bindingStopRow(rows) {
   if (!Array.isArray(rows)) return null;
   const weekly = rows.filter(function (r) {

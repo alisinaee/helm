@@ -9,7 +9,7 @@ import unittest
 from unittest import mock
 
 from roadmap.errors import RoadmapError
-from roadmap.services import agentguard, budget, commands, tasks
+from roadmap.services import agentguard, budget, commands, limits_v2, tasks
 from roadmap.store import config as config_store
 from tests.api.support import FIXTURE, PROJECT_ID
 
@@ -105,7 +105,8 @@ class ActivityAndUndo(OpsCase):
         self.run_op("undo", {"activity": second["activity"]})
         import json
         with open(os.path.join(self.data_dir, "autonomy.json"), encoding="utf-8") as fh:
-            self.assertEqual(json.load(fh)["limit"]["stopAtPercent"], 40)
+            self.assertNotIn("stopAtPercent", json.load(fh)["limit"])
+        self.assertEqual(limits_v2.load()["week"]["value"], 40)
 
     def test_rules_add_then_undo_removes_the_rule(self):
         added = self.run_op("rules.add", {"scope": "all", "kind": "do", "text": "run tests first"})

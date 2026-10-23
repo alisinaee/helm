@@ -14,7 +14,7 @@ import math
 import os
 
 from roadmap.errors import EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
-from roadmap.services import commands, control, jobs, limits, rules, usage
+from roadmap.services import commands, control, jobs, limits, limits_v2, rules, usage
 from roadmap.services import budget as budget_service
 from roadmap.store import config as config_store
 from roadmap.store import schema
@@ -129,12 +129,8 @@ def _check_limit_set(a):
 
 
 def _weekly_prior(data_dir):
-    path = os.path.join(data_dir, "autonomy.json")
-    data, error = schema.read_data("autonomy", path)
-    if error is not None or not isinstance(data, dict):
-        return None
-    limit = data.get("limit") or {}
-    return limit.get("stopAtPercent") if isinstance(limit, dict) else None
+    """The Limits week stop now (a cap percent), or None when it is off."""
+    return limits_v2.effective_stop(limits_v2.load()["week"])
 
 
 def _row_args(row):

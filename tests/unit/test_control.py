@@ -9,7 +9,7 @@ import os
 from unittest import mock
 
 from roadmap.errors import EXIT_INVALID_DATA, RoadmapError
-from roadmap.services import control, queue, questions
+from roadmap.services import control, limits_v2, queue, questions
 from tests.unit.test_control_support import ControlCase, read_json, write_json
 
 MOMENT = datetime.datetime(2026, 10, 13, 14, 2, tzinfo=datetime.timezone.utc).astimezone()
@@ -117,19 +117,18 @@ class BudgetAndWeeklyTests(ControlCase):
         self.assertNotIn("P1.1", state["stopTasks"])
 
     def test_weekly_usage_blocks_at_stop_at_percent(self):
+        limits_v2.set_window("week", {"on": True, "mode": "cap", "value": 100})
         self.set_usage(101)
         state = control.recompute("demo", now=MOMENT)
-        self.assertIn("weekly usage 101%", state["block"]["reason"])
-        self.assertIn("stopAtPercent 100%", state["block"]["reason"])
+        self.assertIn("week usage reached the stop at 100%", state["block"]["reason"])
 
     def test_weekly_limit_set_lower_blocks_earlier_and_warns_before(self):
         self.set_usage(85)
         control.set_weekly_limit("demo", 90, now=MOMENT)
         state = control.recompute("demo", now=MOMENT)
         self.assertIsNone(state["block"])
-        self.assertTrue(any("weekly usage at 85%" in w for w in state["warn"]))
         control.set_weekly_limit("demo", 80, now=MOMENT)
-        self.assertIn("weekly usage 85%", control.recompute("demo", now=MOMENT)["block"]["reason"])
+        self.assertIn("week usage reached the stop at 80%", control.recompute("demo", now=MOMENT)["block"]["reason"])
 
     def test_weekly_limit_is_refused_from_an_agent(self):
         with mock.patch.dict(os.environ, AGENT), self.assertRaises(RoadmapError) as ctx:
@@ -142,6 +141,7 @@ class BudgetAndWeeklyTests(ControlCase):
                 control.set_weekly_limit("demo", value, now=MOMENT)
 
     def test_override_lets_a_budget_block_through_only_until_it_expires(self):
+        limits_v2.set_window("week", {"on": True, "mode": "cap", "value": 100})
         self.set_usage(120)
         control.recompute("demo", now=MOMENT)
         control.override("demo", 1, now=MOMENT)

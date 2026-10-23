@@ -33,13 +33,10 @@ class LimitActionTests(ControlCase):
         limits.add(self.project, "project", "week", "tok", 100, action="block")     # stored project row, block
         limits.add(self.project, "project", "week", "tok", 50, action="warn")       # same key replaces: warn
         limits.add(self.project, "project", "total", "tok", 200, action="warn")     # BUD, read from budget.json
-        write_json(os.path.join(self.docs, "autonomy.json"), {"schemaVersion": 2, "limit": {
-            "kind": "weekly", "stopAtPercent": 90, "action": "warn"}})               # AUTO, warn
         rows = {r["id"]: r for r in self.limit_rows()}
         self.assertEqual(rows["L1"]["action"], "warn")
         self.assertEqual(rows["L2"]["action"], "warn")
         self.assertEqual(rows["BUD"]["action"], "warn")
-        self.assertEqual(rows["AUTO"]["action"], "warn")
         for row in rows.values():
             self.assertIn(row["action"], ("block", "warn"))
 
@@ -47,7 +44,7 @@ class LimitActionTests(ControlCase):
         limits.add(self.project, "project", "total", "tok", 200)                    # default action block
         rows = {r["id"]: r for r in self.limit_rows()}
         self.assertEqual(rows["BUD"]["action"], "block")
-        self.assertEqual(rows["AUTO"]["action"], "block")   # ControlCase writes stopAtPercent 100, no action key
+        self.assertNotIn("AUTO", rows)   # R11.164: autonomy.json no longer holds a stop
 
     def test_old_fields_are_unchanged_and_action_is_added(self):
         limits.add(self.project, "global", "day", "pct", 2, action="block")
@@ -60,7 +57,6 @@ class LimitActionTests(ControlCase):
         self.assertEqual(by_id["L1"]["kind"], "pct")
         self.assertEqual(by_id["L1"]["scope"], "global")
         self.assertEqual(by_id["BUD"]["src"], "budget")
-        self.assertEqual(by_id["AUTO"]["src"], "autonomy")
         self.assertEqual(by_id["BUD"]["limit"], 200)
 
 

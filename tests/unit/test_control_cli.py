@@ -4,7 +4,7 @@ import json
 import os
 from unittest import mock
 
-from roadmap.services import control
+from roadmap.services import control, limits_v2
 from tests.unit.test_control_support import ControlCase, read_json
 from tests.unit.test_jobs_support import run_cli
 
@@ -45,7 +45,8 @@ class ControlCliTests(ControlCase):
     def test_limit_set_and_budget_commands(self):
         code, out, _ = run_cli(["limit", "set", "90"])
         self.assertEqual((code, out.strip()), (0, "weekly stop at 90%"))
-        self.assertEqual(read_json(os.path.join(self.docs, "autonomy.json"))["limit"]["stopAtPercent"], 90)
+        self.assertNotIn("stopAtPercent", read_json(os.path.join(self.docs, "autonomy.json"))["limit"])
+        self.assertEqual(limits_v2.load()["week"]["value"], 90)
         code, body, _ = self.envelope(["limit", "budget", "task", "P0.2", "40"])
         self.assertEqual(code, 0)
         self.assertEqual(body["data"]["limit"], "task P0.2")

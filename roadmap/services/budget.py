@@ -22,37 +22,101 @@ AUTONOMY_FILE = "autonomy.json"
 MAX_USAGE_AGE_MIN = 90
 
 
-def guard(data_dir, now=None):
-    """Check the usage limits in docs/autonomy.json (the only source; no keychain, no usage sync). Returns (stop, warn).
-    stop is one line such as "stop: weekly 86% >= 85%" when weekly or 5-hour usage is at or past its stop percent,
-    else None. warn is a note when the usage reading is older than maxUsageAgeMin (default 90) or the file cannot be
-    read, else None. A missing autonomy.json gives (None, None)."""
+LEGACY_STOP_KEYS = ("stopAtPercent", "fiveHourStopAtPercent")
+MOVED_NOTE = "moved to Tokens > Limits (R11.164)"
+WINDOW_NAMES = {"five_hour": "5-hour", "week": "weekly"}
+
+
+def drop_legacy_stops(data_dir, locked=False):
+    """One-time cleanup (R11.164): Tokens > Limits is the only source of usage stops, so the two legacy stop keys in
+    docs/autonomy.json limit are dropped (and a note kept). Returns True when something was dropped. Best effort: an
+    unreadable file or a failed write leaves it alone. locked=True when the caller already holds the folder lock."""
     path = os.path.join(data_dir, AUTONOMY_FILE)
     if not os.path.exists(path):
-        return None, None
+        return False
     try:
-        with open(path, encoding="utf-8") as fh:
-            doc = json.load(fh)
-    except (OSError, ValueError):
-        return None, "autonomy.json unreadable: limits not checked"
-    if not isinstance(doc, dict):
-        return None, "autonomy.json is not an object: limits not checked"
-    limit = doc.get("limit") if isinstance(doc.get("limit"), dict) else {}
+        if locked:
+            return _drop_legacy(path)
+        with lock.locked(data_dir):
+            return _drop_legacy(path)
+    except Exception as exc:  # the cleanup is optional; the guard must still answer
+        log.warning("legacy stop keys not dropped: %s", type(exc).__name__)
+        return False
+
+
+def _drop_legacy(path):
+    from roadmap.store import schema
+    data, error = schema.read_data("autonomy", path)
+    if error is not None or not isinstance(data, dict) or not isinstance(data.get("limit"), dict):
+        return False
+    if not any(key in data["limit"] for key in LEGACY_STOP_KEYS):
+        return False
+    doc = dict(data)
+    limit = dict(doc["limit"])
+    for key in LEGACY_STOP_KEYS:
+        limit.pop(key, None)
+    limit["note"] = MOVED_NOTE
+    doc["limit"] = limit
+    schema.write_data("autonomy", path, doc)
+    return True
+
+
+def guard(data_dir, now=None):
+    """Check the usage stops. The stops come only from Tokens > Limits (limits_v2; R11.164): each window that is on
+    with a stop blocks when its fresh reading is at or past it ("stop: weekly 86% >= 80%"); a stale or missing reading
+    on an on stop blocks with the stale hint. Off windows never block. The reading is the one in docs/autonomy.json
+    usage when it is fresh, else the global usage. Returns (stop, warn): stop is one line or None; warn is a note when
+    the usage reading is older than maxUsageAgeMin (default 90) or autonomy.json cannot be read, else None."""
+    from roadmap.services import limits_v2
+    drop_legacy_stops(data_dir)
+    doc, warn = {}, None
+    path = os.path.join(data_dir, AUTONOMY_FILE)
+    if os.path.exists(path):
+        try:
+            with open(path, encoding="utf-8") as fh:
+                doc = json.load(fh)
+        except (OSError, ValueError):
+            doc, warn = {}, "autonomy.json unreadable: limits not checked"
+        if not isinstance(doc, dict):
+            doc, warn = {}, "autonomy.json is not an object: limits not checked"
     usage = doc.get("usage") if isinstance(doc.get("usage"), dict) else {}
-    stop = _stop_reason(limit, usage)
-    return stop, None if stop else _stale_warning(doc, usage, now)
+    local_fresh = bool(usage) and _stale_warning(doc, usage, now) is None
+    try:
+        windows = limits_v2.stops(now, persist=False)
+    except Exception as exc:  # a broken config must not block work by itself
+        log.warning("limits not read: %s", type(exc).__name__)
+        return None, warn
+    stop = _stop_reason(windows, usage, local_fresh)
+    if stop:
+        return stop, None
+    if warn or not os.path.exists(path):
+        return None, warn
+    return None, _stale_warning(doc, usage, now)
 
 
 def _is_number(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
-def _stop_reason(limit, usage):
+_LOCAL_KEYS = {"week": "weeklyPercent", "five_hour": "fiveHourPercent"}
+
+
+def _stop_reason(windows, usage, local_fresh):
     """The first stop reached (weekly, then 5-hour), as the refusal line, or None."""
-    checks = (("weekly", usage.get("weeklyPercent"), limit.get("stopAtPercent")),
-              ("5-hour", usage.get("fiveHourPercent"), limit.get("fiveHourStopAtPercent")))
-    for name, reading, stop_at in checks:
-        if _is_number(reading) and _is_number(stop_at) and reading >= stop_at:
+    for window in ("week", "five_hour"):
+        info = windows[window]
+        stop_at = info.get("stop")
+        if not info.get("on") or not _is_number(stop_at):
+            continue
+        reading = usage.get(_LOCAL_KEYS[window]) if local_fresh else None
+        if not _is_number(reading) and info.get("fresh"):
+            reading = info.get("percent")
+        name = WINDOW_NAMES[window]
+        if not _is_number(reading):
+            from roadmap.services import limits
+            return "stop: %s stop at %g%%: usage is stale (%s): sync usage before starting new work" % (
+                name, stop_at, limits._stale_age_text())
+        if reading >= stop_at:
             return "stop: %s %g%% >= %g%%" % (name, reading, stop_at)
     return None
 

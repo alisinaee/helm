@@ -4,10 +4,10 @@ A row is {id, scope: global|project, window: day|week|total, kind: pct|tok|acct,
     pct  percentage points of the account's weekly allowance used by the scope in a day or week (measured for
          global rows, estimated from tracked tokens for project rows; services/ledger.py)
     tok  thousands of tokens, exact from `job done --tokens` (day or week; a project total is window total)
-    acct the stop on the whole-account weekly meter (autonomy.json limit.stopAtPercent)
+    acct the stop on the whole-account weekly meter (Tokens > Limits week window)
 
 Where rows live: global rows in the global config under "limits"; project rows in budget.json under "limitRows".
-Two rows are read through from their own stores and are not copied: AUTO (autonomy.json stopAtPercent) and BUD (the
+Two rows are read through from their own stores and are not copied: AUTO (the Limits week window) and BUD (the
 project budget in budget.json). evaluate() gives each row a state: ok, warn (80% or more), block (100% or more, only
 for action block) or unknown. Unknown never blocks. A failure of the whole evaluation is ok and is logged once a minute.
 """
@@ -134,13 +134,13 @@ def _bud_row(value, action):
             "action": action, "src": "budget"}
 
 
-def _auto_row(limit):
-    """The autonomy stop as a row, from the limit block of autonomy.json, or None when it is not set."""
-    if not isinstance(limit, dict) or not _num(limit.get("stopAtPercent")):
+def _auto_row(rec):
+    """The weekly stop as the AUTO row, from the limits_v2 week record (Tokens > Limits, R11.164), or None when off."""
+    stop = limits_v2.effective_stop(rec)
+    if stop is None:
         return None
-    action = "warn" if limit.get("action") == "warn" else "block"
-    return {"id": AUTO_ID, "scope": "project", "window": "week", "kind": "acct", "value": limit["stopAtPercent"],
-            "action": action, "src": "autonomy"}
+    return {"id": AUTO_ID, "scope": "project", "window": "week", "kind": "acct", "value": stop,
+            "action": "block", "src": "limits2"}
 
 
 def label(row):
@@ -172,11 +172,9 @@ def _project_state(data_dir):
 
 
 def _autonomy_row(data_dir):
-    path = os.path.join(data_dir, "autonomy.json")
-    data, error = schema.read_data("autonomy", path)
-    if error is not None:
-        raise RoadmapError("newer_schema", error["message"], EXIT_INVALID_DATA)
-    return _auto_row((data or {}).get("limit"))
+    """Always None: Tokens > Limits is the only source of usage stops (R11.164). The week stop is a limits_v2 window
+    and gates through its own rows; autonomy.json no longer holds a stop."""
+    return None
 
 
 def _usage_state(moment):
@@ -514,25 +512,12 @@ def _autonomy_path(data_dir):
 
 
 def _write_autonomy(data_dir, spec, moment):
-    """The weekly stop: autonomy.json limit.stopAtPercent (as `limit set <pct>` always wrote it). A warn action adds
-    limit.action; a block leaves the file exactly as before."""
+    """The weekly stop (`limit set <pct>`, kind acct): sets the limits_v2 week window to on, cap, value (R11.164).
+    A warn action is not kept: Limits stops only block."""
     records.require_dir(data_dir)
-    path = _autonomy_path(data_dir)
-    with lock.locked(data_dir):
-        data, error = schema.read_data("autonomy", path)
-        if error is not None:
-            raise RoadmapError("newer_schema", error["message"], EXIT_INVALID_DATA)
-        doc = dict(data or {})
-        limit = dict(doc.get("limit") or {})
-        prior = _auto_row(limit)
-        limit.update({"stopAtPercent": spec["value"], "setBy": "roadmap", "setOn": moment.date().isoformat()})
-        if spec["action"] == "warn":
-            limit["action"] = "warn"
-        else:
-            limit.pop("action", None)
-        doc["limit"] = limit
-        schema.write_data("autonomy", path, doc)
-    return prior, _auto_row(limit)
+    before, after = limits_v2.set_window("week", {"on": True, "mode": "cap", "value": spec["value"]})
+    budget.drop_legacy_stops(data_dir)
+    return _auto_row(before), _auto_row(after)
 
 
 def _write_budget(data_dir, spec):
@@ -580,19 +565,10 @@ def remove_row(project, data_dir, row_id, now=None):
 
 
 def _remove_autonomy(data_dir, row_id):
-    path = _autonomy_path(data_dir)
-    with lock.locked(data_dir):
-        data, error = schema.read_data("autonomy", path)
-        if error is not None:
-            raise RoadmapError("newer_schema", error["message"], EXIT_INVALID_DATA)
-        doc = dict(data or {})
-        limit = dict(doc.get("limit") or {})
-        prior = _auto_row(limit)
-        if prior is None:
-            raise RoadmapError("not_found", "no weekly stop to remove " + row_id, EXIT_NOT_FOUND,
-                               next="roadmap limit show")
-        limit.pop("stopAtPercent", None)
-        limit.pop("action", None)
-        doc["limit"] = limit
-        schema.write_data("autonomy", path, doc)
+    """AUTO removal turns the limits_v2 week stop off."""
+    before, _ = limits_v2.set_window("week", {"on": False})
+    prior = _auto_row(before)
+    if prior is None:
+        raise RoadmapError("not_found", "no weekly stop to remove " + row_id, EXIT_NOT_FOUND,
+                           next="roadmap limit show")
     return prior

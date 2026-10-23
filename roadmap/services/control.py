@@ -15,7 +15,8 @@ import datetime
 import os
 
 from roadmap.errors import EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
-from roadmap.services import activity, agentguard, budget, jobs, limits, notify, queue, questions, records, tasks
+from roadmap.services import activity, agentguard, budget, jobs, limits, limits_v2, notify, queue, questions
+from roadmap.services import records, tasks
 from roadmap.log import get_logger
 from roadmap.store import atomic, config, lock, paths, schema
 
@@ -437,7 +438,7 @@ def summary_line(project_id, now=None):
 # ------------------------------------------------------------------ limits and phase approval
 
 def set_weekly_limit(project_id, pct, now=None, source=None):
-    """Set autonomy.json limit.stopAtPercent (1 to 100). Always refused from an agent."""
+    """Set the Tokens > Limits week stop (cap, 1 to 100; R11.164). Always refused from an agent."""
     agentguard.refuse_if_agent("limit.set", source)
     value = _number(pct)
     if value is None or not 1 <= value <= 100:
@@ -445,17 +446,10 @@ def set_weekly_limit(project_id, pct, now=None, source=None):
     project, data_dir = _project(project_id)
     records.require_dir(data_dir)
     moment = _now(now)
-    path = os.path.join(data_dir, "autonomy.json")
     with lock.locked(data_dir):
-        data, error = schema.read_data("autonomy", path)
-        if error is not None:
-            raise RoadmapError("newer_schema", error["message"], EXIT_INVALID_DATA)
-        doc = dict(data or {})
-        limit = dict(doc.get("limit") or {})
-        limit.update({"stopAtPercent": int(value) if value == int(value) else value, "setBy": "roadmap",
-                      "setOn": moment.date().isoformat()})
-        doc["limit"] = limit
-        schema.write_data("autonomy", path, doc)
+        limits_v2.set_window("week", {"on": True, "mode": "cap",
+                                      "value": int(value) if value == int(value) else value})
+        budget.drop_legacy_stops(data_dir, locked=True)
         state = _mutate(project, lambda manual: None, moment)
     _log(data_dir, source or agentguard.source_name(), "limit.set", "weekly stop at %g%%" % value, moment)
     return state
