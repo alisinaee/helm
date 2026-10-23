@@ -671,3 +671,11 @@ h1, h2, h3, .page-title, .qc-text { text-wrap: balance }
   -webkit-backdrop-filter: none; backdrop-filter: none }
 :root[data-theme="black"] .hx-page .hx-cols, :root[data-theme="black"] .hx-page .hx-day { background: var(--surface-2);
   -webkit-backdrop-filter: none; backdrop-filter: none }
+
+/* Mini rail: square items, so the active one is a perfect circle (ring + soft glow, no left edge). */
+.app[data-nav="mini"] .nav .nav-i { width: 36px; height: 36px; min-height: 36px; margin-inline: auto; border-radius: 50% }
+.app[data-nav="mini"] .nav .nav-i .ico { margin-right: 0 }
+:root[data-theme] .app[data-nav="mini"] .nav .nav-i[aria-current="page"] {
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), color-mix(in srgb, var(--accent) 6%, transparent) 70%);
+  box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 10px color-mix(in srgb, var(--accent) 35%, transparent) }
+.app[data-nav="mini"] .nav .nav-i:hover:not([aria-current="page"]) { transform: none }
