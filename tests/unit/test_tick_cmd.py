@@ -1,4 +1,5 @@
-"""The tick command (one supervisor pass with serve down), the serve-side supervisor pass, and the lock shared by both."""
+"""The tick command (one supervisor pass with serve down), the serve-side supervisor pass, and the lock shared by
+both."""
 
 import json
 import os
@@ -10,7 +11,8 @@ from unittest import mock
 
 from roadmap.http import server
 from roadmap.services import supervisor
-from roadmap.store import db, jobs_db
+from roadmap.services import jobs_db
+from roadmap.store import db
 from tests.unit.test_project_support import ProjectCase, run_cli
 
 

@@ -57,7 +57,8 @@ class GetJsonNotModifiedTests(unittest.TestCase):
         self.assertRegex(self.body, r"if\s*\(\s*cached\s*\)\s*return\s*\{[^}]*changed:\s*false")
 
     def test_304_without_kept_body_is_unchanged_with_null_data(self):
-        self.assertRegex(self.body, r"return\s*\{\s*status:\s*304,\s*data:\s*null,\s*etag:\s*null,\s*changed:\s*false\s*\}")
+        self.assertRegex(self.body,
+            r"return\s*\{\s*status:\s*304,\s*data:\s*null,\s*etag:\s*null,\s*changed:\s*false\s*\}")
 
     def test_304_is_handled_before_the_ok_check(self):
         self.assertLess(self.body.find("response.status === 304"), self.body.find("!response.ok"))

@@ -62,7 +62,8 @@ def register(sub, common):
 
     log = add("log", "log one message verbatim (redacted), with its kind and summary")
     log.add_argument("text", help="the message")
-    log.add_argument("--kind", default=None, metavar="K", help="ask, decision, rule, bug, preference, question, review, info")
+    log.add_argument("--kind", default=None, metavar="K",
+        help="ask, decision, rule, bug, preference, question, review, info")
     log.add_argument("--sum", default=None, metavar="S", help="the one-line summary (the heuristic when left out)")
     log.add_argument("--bind", nargs="+", default=None, metavar="REF", help="links such as task:R7.31")
     log.set_defaults(handler=_log)

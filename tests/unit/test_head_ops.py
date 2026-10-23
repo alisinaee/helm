@@ -1,4 +1,5 @@
-"""HEAD-SPEC H4: the head ops through commands.run. Log, triage, set, bind, unbind, split, merge, convert, review, accept,
+"""HEAD-SPEC H4: the head ops through commands.run. Log, triage, set, bind, unbind, split, merge, convert, review,
+accept,
 forget, and undo. Accept, review and forget are the person's only: refused for an agent, the phone and a non-TTY shell.
 Runs in a temp ROADMAP_HOME with a copy of the fixture project."""
 

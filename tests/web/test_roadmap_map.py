@@ -58,7 +58,8 @@ const out = {
 const raw = { project: { id: "x", title: "x" }, summary: {}, overall: { project: { done: 3, total: 8 } },
   phases: phases, tasks: tasks, jobs: [], blocked: [] };
 const s = state.createStore();
-s.projects = [{ id: "x", name: "x", progress: 0, tasks_left: 5, running: 0, need_user: 0, errors_count: 0, stale: false }];
+s.projects = [{ id: "x", name: "x", progress: 0, tasks_left: 5, running: 0, need_user: 0, errors_count: 0,
+stale: false }];
 s.snapshots.x = state.normalizeSnapshot(raw, 0);
 function html(view) {
   const vm = state.buildViewModel(s, { name: "project", id: "x", section: "roadmap", view: view, item: null,

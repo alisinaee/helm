@@ -22,8 +22,8 @@ import math
 import time
 import uuid
 
-from roadmap.services import head, jobs, leases
-from roadmap.store import db, events, jobs_db
+from roadmap.services import head, jobs, jobs_db, leases
+from roadmap.store import db, events
 
 HEARTBEAT_TTL_S = 180.0
 MAX_RETRIES = 2

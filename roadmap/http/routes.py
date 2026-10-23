@@ -189,7 +189,8 @@ def _now_iso():
 
 def _guard_refused(app, reason, path):
     """Record one guard refusal (core.guard): the reason code and the path only. Never a header value or a body.
-    The lines share a per-minute budget, so a flood of refused requests cannot push the real WARN and ERROR lines out."""
+    The lines share a per-minute budget, so a flood of refused requests cannot push the real WARN and ERROR lines
+    out."""
     if not app.guard_lines.take(1):
         return
     rlog.debug_event("core", "WARN", "core.guard", msg=reason, route=path, data={"reason": reason})
@@ -718,7 +719,8 @@ def _same_page_read(headers, port):
 
 
 def _head_history(records, eid):
-    """The last lines of one entry's history: when it was logged, and each update (set, link, note). Text is not here."""
+    """The last lines of one entry's history: when it was logged, and each update (set, link, note). Text is not
+    here."""
     out = []
     for rec in records:
         if rec.get("id") != eid:

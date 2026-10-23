@@ -385,7 +385,8 @@ def _derive_entities(root, paths):
         text = _read(root, rel)
         if text is None:
             continue
-        if ext in ("sql", "py", "js", "ts", "mjs", "cjs", "jsx", "tsx") and re.search(r"CREATE\s+(?:\w+\s+)*TABLE", text, re.I):
+        if ext in ("sql", "py", "js", "ts", "mjs", "cjs", "jsx", "tsx") and re.search(r"CREATE\s+(?:\w+\s+)*TABLE",
+            text, re.I):
             found.extend(_sql_entities(rel, text))
         if ext == "py":
             found.extend(_dataclass_entities(rel, text))
@@ -516,7 +517,8 @@ def er(root, files, mapped=None):
 
 NAME_RE = re.compile(r"STATUS|STATE")
 JS_EXTS = ("js", "mjs", "cjs", "ts", "jsx", "tsx")
-JS_DECL_RE = re.compile(r"(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:Object\.freeze\(\s*)?\[([^\]]*)\]")
+JS_DECL_RE = re.compile(r"(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:Object\.freeze\(\s*)?\[([^\]]*)"
+                        r"\]")
 JS_STR_RE = re.compile(r"""^\s*(?:'([^']*)'|"([^"]*)"|`([^`$]*)`)\s*$""")
 
 
@@ -625,7 +627,8 @@ def _py_machines(rel, text):
 
 def _js_chunks(text):
     starts = [m.start() for m in re.finditer(
-        r"^[ \t]*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\b|^[ \t]*(?:export\s+)?(?:const|let)\s+\w+\s*=\s*(?:async\s*)?\([^)]*\)\s*=>",
+        r"^[ \t]*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\b|^[ \t]*(?:export\s+)?(?:const|let)"
+        r"\s+\w+\s*=\s*(?:async\s*)?\([^)]*\)\s*=>",
         text, re.M)]
     if not starts:
         return [text]

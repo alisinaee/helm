@@ -22,7 +22,8 @@ const raw = { project: { id: "x", title: "x" }, summary: {}, overall: { project:
            { id: "B", name: "Beta", state: "partial", done: 0, total: 1, progress: 0.5 }],
   tasks: tasks, jobs: [{ id: "j1", task: "B.1", status: "running" }], blocked: [] };
 const s = state.createStore();
-s.projects = [{ id: "x", name: "x", progress: 0, tasks_left: 16, running: 1, need_user: 0, errors_count: 0, stale: false }];
+s.projects = [{ id: "x", name: "x", progress: 0, tasks_left: 16, running: 1, need_user: 0, errors_count: 0,
+stale: false }];
 s.snapshots.x = state.normalizeSnapshot(raw, 0);
 function html(open) {
   const vm = state.buildViewModel(s, { name: "project", id: "x", section: "roadmap", view: null, item: null,

@@ -1,4 +1,5 @@
-"""Checks for Settings > Logging (R7.16 step 5a) in web/js/views/settings.js: the switch goes through log.js setEnabled(),
+"""Checks for Settings > Logging (R7.16 step 5a) in web/js/views/settings.js: the switch goes through log.js
+setEnabled(),
 the status line reads GET /api/v1/log/status, the copy button reads GET /api/v1/log/report?n=30 as text, the log
 folder is not opened from here, the Mark button is not added, and the markup follows the CSP and dom.js rules.
 The checks read the source only (no browser, no network).

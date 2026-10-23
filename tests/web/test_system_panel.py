@@ -27,7 +27,8 @@ const mod = { kind: "module", title: "web/js", fileCount: 3, lines: 90, files: [
 const st = { kind: "store", title: "jobs.json", tracked: ["docs/jobs.json"], tables: [],
   readers: [{ path: "roadmap/services/jobs.py", mode: "reads, writes" }] };
 const board = [];
-for (let i = 1; i <= 17; i++) board.push({ id: "R" + i, title: "Task " + i, status: i === 1 ? "done" : "doing", model: "haiku" });
+for (let i = 1; i <= 17; i++) board.push({ id: "R" + i, title: "Task " + i, status: i === 1 ? "done" : "doing",
+model: "haiku" });
 board[1] = { id: "R2", title: "Evil <b>x</b>", status: "hold", model: "opus" };
 const bound = { kind: "component", title: 'Board "C"', progress: { done: 1, total: 17, pct: 6 }, board,
   work: [{ id: "W3", title: "Human <card>", status: "todo", kind: "feature" }] };
@@ -35,7 +36,8 @@ const bare = { kind: "component", title: "Bare" };
 const cont = { kind: "container", title: "Box", progress: { done: 0, total: 1, pct: 0 },
   board: [{ id: "R9", title: "T", status: "todo", model: "" }], work: [], refId: "box-1" };
 console.log(JSON.stringify({ bound: m.panelHtml("my-pid", "c:api", bound), bare: m.panelHtml("my-pid", "c:bare", bare),
-  cont: m.panelHtml("my-pid", "k:box", cont), full: m.panelHtml("my pid", "c:api", comp), mod: m.panelHtml("p", "m:web/js", mod),
+  cont: m.panelHtml("my-pid", "k:box", cont), full: m.panelHtml("my pid", "c:api", comp), mod: m.panelHtml("p",
+  "m:web/js", mod),
   store: m.panelHtml("p", "s:jobs", st), none: m.panelHtml("p", null, null), missing: m.panelHtml("p", "x", null),
   human: [m.human(999), m.human(1600), m.human(-1)] }));
 """

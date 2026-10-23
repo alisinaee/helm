@@ -2,7 +2,8 @@
 project's autonomy.json, the background loop with backoff, manual push and show.
 
 The service fetches usage by itself (R10.29, docs/USAGE-SOURCES.md), in this order: the OAuth usage endpoint with the
-Claude Code login (refreshed only when usageTokenRefresh is true, else an expired login is reported), Claude Code's own rate_limits (status line / hooks / sidecar), and
+Claude Code login (refreshed only when usageTokenRefresh is true, else an expired login is reported), Claude Code's own
+rate_limits (status line / hooks / sidecar), and
 last an estimate from the local transcripts, labelled as one. Sources live in services/usage_sources.py.
 
 Python 3 standard library only. The OAuth token is read from the macOS keychain (through `security`, no shell),
@@ -835,7 +836,8 @@ def read_sidecar(path=None, now=None):
 
 def auto_update(payload=None, now=None, config=None, sidecar=None, source=SOURCE_HOOK):
     """Store usage from a hook payload's rate_limits block, else from the status line sidecar. At most once per
-    AUTO_GAP_S (counted from the stored reading); a reading not newer than the stored one is skipped. Returns the source stored, or None. Never raises
+    AUTO_GAP_S (counted from the stored reading); a reading not newer than the stored one is skipped. Returns the source
+    stored, or None. Never raises
     for a missing or bad reading."""
     now = (now or datetime.now().astimezone()).replace(microsecond=0)
     block = payload.get("rate_limits") if isinstance(payload, dict) else None

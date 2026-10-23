@@ -1,9 +1,11 @@
-"""Head ops (HEAD-SPEC sections 4 and 10): the registry entries behind `roadmap head ...`, run through commands.run like the
+"""Head ops (HEAD-SPEC sections 4 and 10): the registry entries behind `roadmap head ...`, run through commands.run like
+the
 feature ops. Each op returns (data, summary, inverse), so commands.run logs one activity line and undo can replay the
 inverse.
 
 Public: head.log, head.triage, head.set, head.bind, head.unbind, head.split, head.merge, head.convert, head.review,
-head.accept, head.forget. Internal: head.restore, the inverse that undo replays (a snapshot of the fields an op changed).
+head.accept, head.forget. Internal: head.restore, the inverse that undo replays (a snapshot of the fields an op
+changed).
 
 Person only (agentguard.person_context, the rule feature.accept uses): head.review, head.accept and head.forget. An
 agent, the phone and a bare non-TTY shell are refused with "ask the person". The head may set done (head.set
@@ -227,7 +229,8 @@ def _next_number(doc, phase):
 
 
 def _new_task(data_dir, phase, title, status):
-    """Add one task to a phase (the Backlog phase is created on first use), with the records of `roadmap backlog add`."""
+    """Add one task to a phase (the Backlog phase is created on first use), with the records of `roadmap backlog
+    add`."""
     doc = tasks.load(data_dir)
     phase_ids = [p.get("id") for p in doc["phases"] if isinstance(p, dict)]
     records = []
@@ -516,7 +519,8 @@ def _h_restore(data_dir, a, now):
 
 # ---------------------------------------------------------------- registration
 
-# ---------------------------------------------------------------- notices (services/notify, the existing osascript path)
+# ---------------------------------------------------------------- notices (services/notify, the existing osascript
+# path)
 
 STALE_MIN_DEFAULT = 120         # config head.staleMin (HEAD-SPEC section 3): the done-not-accepted wait before a notice
 NEEDS_YOU_KIND = "head-needs-you"

@@ -100,7 +100,8 @@ def parse_doc(path, sections=None):
 
 
 def _line_sum(text):
-    """The item's first line whole, up to SUM_MAX characters; a longer one is cut at a word boundary with an ellipsis."""
+    """The item's first line whole, up to SUM_MAX characters; a longer one is cut at a word boundary with an
+    ellipsis."""
     line = " ".join(str(text or "").split())
     if len(line) <= head.SUM_MAX:
         return line

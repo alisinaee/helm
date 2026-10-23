@@ -1,4 +1,5 @@
-"""HEAD-SPEC H7: GET /api/v1/projects/{pid}/head. Checks: the rows and counts for f=open|all and n, bad query values give
+"""HEAD-SPEC H7: GET /api/v1/projects/{pid}/head. Checks: the rows and counts for f=open|all and n, bad query values
+give
 400, an unregistered project gives 404, full=H.. needs the same-origin page (403 otherwise) and then gives the verbatim
 text and history, an unknown id gives 404, and the phone listener never gets text or history. Runs on an ephemeral
 port in a temp ROADMAP_HOME; the head store is written with the H3 service."""

@@ -52,14 +52,19 @@ ER = {"entities": [
                   {"from": "task", "to": "task", "label": "blocks", "card": "1-1"},
                   {"from": "task", "to": "ghost"}]}
 STATES = {"id": "m", "name": "m", "states": ["todo", "doing", "done", "stuck"], "initial": "todo",
-          "transitions": [{"from": "todo", "to": "doing", "label": "start"}, {"from": "doing", "to": "done", "label": "ok"},
+          "transitions": [{"from": "todo", "to": "doing", "label": "start"}, {"from": "doing", "to": "done",
+              "label": "ok"},
                           {"from": "doing", "to": "doing", "label": "tick", "guessed": True},
-                          {"from": "doing", "to": "todo", "label": "back"}, {"from": "todo", "to": "doing", "label": "again"}]}
-UC = {"actors": [{"id": "person", "label": "Person", "kind": "person"}, {"id": "agent", "label": "Agent <x>", "kind": "agent"}],
+                          {"from": "doing", "to": "todo", "label": "back"}, {"from": "todo", "to": "doing",
+                              "label": "again"}]}
+UC = {"actors": [{"id": "person", "label": "Person", "kind": "person"}, {"id": "agent", "label": "Agent <x>",
+    "kind": "agent"}],
       "groups": [{"id": "cli", "label": "CLI"}, {"id": "http", "label": "HTTP API"}],
-      "cases": [{"id": "uc1", "label": "Add a task to the board quickly", "group": "cli"}, {"id": "uc2", "label": "List", "group": "cli"},
+      "cases": [{"id": "uc1", "label": "Add a task to the board quickly", "group": "cli"}, {"id": "uc2",
+          "label": "List", "group": "cli"},
                 {"id": "uc3", "label": "GET /api/tasks", "group": "http"}, {"id": "uc4", "label": "Loose"}],
-      "links": [{"actor": "person", "case": "uc1"}, {"actor": "agent", "case": "uc3"}, {"actor": "agent", "case": "nope"}]}
+      "links": [{"actor": "person", "case": "uc1"}, {"actor": "agent", "case": "uc3"}, {"actor": "agent",
+          "case": "nope"}]}
 ACT = {"id": "a", "steps": [
     {"id": "s", "kind": "start", "label": "start"}, {"id": "a1", "kind": "action", "label": "Read file"},
     {"id": "d", "kind": "decision", "label": "valid?"}, {"id": "a2", "kind": "action", "label": "Parse"},
@@ -76,16 +81,19 @@ DEP = {"groups": [{"id": "mac", "label": "Mac"}, {"id": "cloud", "label": "Cloud
        "edges": [{"from": "srv", "to": "db", "label": "writes"}, {"from": "free", "to": "srv", "label": "http"},
                  {"from": "srv", "to": "api"}]}
 CLS = {"groups": [{"id": "core", "label": "Core"}, {"id": "web", "label": "Web"}],
-       "nodes": [{"id": "Base", "label": "Base", "kind": "class", "group": "core", "attrs": ["a", "b"], "methods": ["run()"]},
+       "nodes": [{"id": "Base", "label": "Base", "kind": "class", "group": "core", "attrs": ["a", "b"],
+           "methods": ["run()"]},
                  {"id": "Child", "label": "Child <T>", "kind": "class", "group": "core",
                   "attrs": ["x%d" % i for i in range(12)], "methods": ["m%d()" % i for i in range(3)]},
                  {"id": "fn", "label": "helper", "kind": "function", "group": "web", "attrs": [], "methods": []}],
-       "edges": [{"from": "Child", "to": "Base", "kind": "extends"}, {"from": "fn", "to": "Child", "kind": "uses", "label": "calls"}]}
+       "edges": [{"from": "Child", "to": "Base", "kind": "extends"}, {"from": "fn", "to": "Child", "kind": "uses",
+           "label": "calls"}]}
 
 
 def big_er(n=60):
     ents = [{"id": "e%d" % i, "label": "Entity %d" % i,
-             "attrs": [{"name": "col_%d" % j, "type": "text", "pk": j == 0, "fk": j == 1} for j in range(6)]} for i in range(n)]
+             "attrs": [{"name": "col_%d" % j, "type": "text", "pk": j == 0,
+                 "fk": j == 1} for j in range(6)]} for i in range(n)]
     rels = [{"from": "e%d" % i, "to": "e%d" % ((i * 7 + 3) % n), "label": "r", "card": "1-n"} for i in range(n)]
     return {"entities": ents, "relations": rels}
 
@@ -131,14 +139,16 @@ IDS = {"er": ["task", "project", "item", "log"], "state": ["todo", "doing", "don
 
 
 def overlap(a, b):
-    return a["x"] < b["x"] + b["w"] and b["x"] < a["x"] + a["w"] and a["y"] < b["y"] + b["h"] and b["y"] < a["y"] + a["h"]
+    return (a["x"] < b["x"] + b["w"] and b["x"] < a["x"] + a["w"]
+            and a["y"] < b["y"] + b["h"] and b["y"] < a["y"] + a["h"])
 
 
 @unittest.skipUnless(NODE, "node is not installed")
 class SysDiagramsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        p = subprocess.run([NODE, "-e", SCRIPT, WEB], input=json.dumps(CASES), capture_output=True, text=True, timeout=60)
+        p = subprocess.run([NODE, "-e", SCRIPT, WEB], input=json.dumps(CASES), capture_output=True, text=True,
+            timeout=60)
         if p.returncode:
             raise RuntimeError(p.stderr)
         cls.out = json.loads(p.stdout)
@@ -153,7 +163,8 @@ class SysDiagramsTest(unittest.TestCase):
                 self.assertIn('data-sys="%s"' % i, r["inner"], name)
             self.assertEqual(len(ids), len(set(ids)), name)
             for a in r["boxes"]:
-                self.assertTrue(a["x"] >= 0 and a["y"] >= 0 and a["x"] + a["w"] <= r["w"] and a["y"] + a["h"] <= r["h"], (name, a))
+                self.assertTrue(a["x"] >= 0 and a["y"] >= 0 and a["x"] + a["w"] <= r["w"] and a["y"] + a["h"] <= r["h"],
+                    (name, a))
             for i, a in enumerate(r["boxes"]):
                 for b in r["boxes"][i + 1:]:
                     self.assertFalse(overlap(a, b), (name, a, b))

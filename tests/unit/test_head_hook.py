@@ -367,7 +367,8 @@ class AssetTests(HeadHookCase):
     """HEAD-SPEC section 13: the attachment names of a prompt are stored with the text (names only, at most 20)."""
 
     def test_prompt_assets_finds_names_paths_and_at_refs(self):
-        names = hooks.prompt_assets("see @docs/plan.md and the shot.png, then /tmp/out/build.log and https://x.io/a.png")
+        names = hooks.prompt_assets(
+            "see @docs/plan.md and the shot.png, then /tmp/out/build.log and https://x.io/a.png")
         self.assertEqual(names, ["docs/plan.md", "shot.png", "/tmp/out/build.log"])
 
     def test_prompt_assets_is_empty_for_plain_text_and_non_text(self):

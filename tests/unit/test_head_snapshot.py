@@ -336,7 +336,8 @@ class HeadLinkedProgAskOf(unittest.TestCase):
                                                 "status": "partial",
                                                 "jobs": [{"id": "j1", "model": "Haiku", "state": "running"}]})
         self.assertEqual(by_ref["task:R1"]["jobs"], [])
-        self.assertEqual(by_ref["issue:I4"], {"ref": "issue:I4", "status": "open", "jobs": []})  # title only on the first
+        # title only on the first
+        self.assertEqual(by_ref["issue:I4"], {"ref": "issue:I4", "status": "open", "jobs": []})
         self.assertEqual(by_ref["job:j1"]["jobs"], [{"id": "j1", "model": "Haiku", "state": "running"}])
         self.assertEqual(row["links"], ["task:R7.31", "task:R1", "issue:I4"])
         self.assertEqual(row["status"], "doing")

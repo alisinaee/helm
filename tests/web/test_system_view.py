@@ -100,7 +100,8 @@ class SystemViewTest(unittest.TestCase):
 
     def test_toolbar_has_zoom_readout_copy_id_and_update(self):
         html = self.out["ok"]
-        self.assertRegex(html, r'data-sys-op="out"[^>]*>[^<]*</button><button[^>]*data-sys-op="actual"[^>]*>100%</button>'
+        self.assertRegex(html,
+            r'data-sys-op="out"[^>]*>[^<]*</button><button[^>]*data-sys-op="actual"[^>]*>100%</button>'
                                r'<button[^>]*data-sys-op="in"')
         self.assertIn("sys-zoom", html)
         self.assertIn('data-action="copy-ref"', html)
@@ -128,7 +129,8 @@ class SystemViewTest(unittest.TestCase):
         self.assertRegex(css, r"\.sys\{[^}]*height:100%[^}]*min-height:0")
         self.assertRegex(css, r"\.sys-canvas\{flex:1;min-height:0")
         self.assertRegex(css, r"\.sys-canvas>\.wfg-svg\{[^}]*height:100%")
-        # R11.152: the panel docks as a real flex child of .sys-row beside .sys-box, not an absolute overlay on top of it.
+        # R11.152: the panel docks as a real flex child of .sys-row beside .sys-box, not an absolute overlay on top of
+        # it.
         self.assertRegex(css, r"\.sys-row\{display:flex;flex:1;min-height:0")
         self.assertRegex(css, r"\.sys-box\{position:relative;flex:1;min-height:0;min-width:0")
         self.assertRegex(css, r"\.sys-panel\{position:static;flex:none;width:min\(400px,100%\)[^}]*overflow:auto")
@@ -164,7 +166,8 @@ class SystemFullScreenTest(unittest.TestCase):
         if node is None:
             raise unittest.SkipTest("node is not installed")
         routes = "file://" + os.path.join(WEB, "js", "routes.js")
-        hashes = ["#/full/rb-site/system", "#/full/p1/system?x=1", "#/full/a/workflow", "#/p/a/system", "#/full/Bad/system"]
+        hashes = ["#/full/rb-site/system", "#/full/p1/system?x=1", "#/full/a/workflow", "#/p/a/system",
+            "#/full/Bad/system"]
         script = ("import { fullSystemOf, fullRouteOf } from " + json.dumps(routes) + ";\n"
                   "process.stdout.write(JSON.stringify(" + json.dumps(hashes) +
                   ".map((h) => [fullSystemOf(h), fullRouteOf(h)])));\n")

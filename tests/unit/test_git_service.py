@@ -151,7 +151,8 @@ class ParserTests(unittest.TestCase):
         text = ("aaa111\x00\x00Ali\x001700000000\x00First\0First\n\nTask: R7.12\nJob: j12\0\n"
                 "bbb222\x00aaa1111\x00Ali\x00text\0Plain\0Plain\0\n")
         rows = git.parse_log(text)
-        self.assertEqual(rows[0], {"sha": "aaa111", "parents": [], "author": "Ali", "time": 1700000000, "subject": "First",
+        self.assertEqual(rows[0], {"sha": "aaa111", "parents": [], "author": "Ali", "time": 1700000000,
+            "subject": "First",
                                    "task": "R7.12", "job": "j12"})
         self.assertEqual(rows[1]["parents"], ["aaa1111"])
         self.assertEqual((rows[1]["time"], rows[1]["task"], rows[1]["job"]), (None, None, None))

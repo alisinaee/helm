@@ -44,7 +44,8 @@ class SplitterTest(unittest.TestCase):
         code = (
             "import('" + os.path.join(WEB, "js", "splitter.js") + "').then(m=>{"
             "const s={dataset:{min:'320',max:'720'}};"
-            "console.log(m.clampWidth(s,1000,900),m.clampWidth(s,1000,100),m.clampWidth(s,2000,900),m.clampWidth(s,0,500));})"
+            "console.log(m.clampWidth(s,1000,900),m.clampWidth(s,1000,100),m.clampWidth(s,2000,900),m.clampWidth(s,0,"
+            "500));})"
         )
         out = subprocess.run(["node", "-e", code], capture_output=True, text=True, timeout=30)
         self.assertEqual(out.stdout.split(), ["680", "320", "720", "500"], out.stderr)

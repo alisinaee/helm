@@ -1,4 +1,5 @@
-"""HEAD-SPEC H1: the pure fold, the status rules, age/stale/carried, and the stdlib heuristics in roadmap/core/head.py."""
+"""HEAD-SPEC H1: the pure fold, the status rules, age/stale/carried, and the stdlib heuristics in
+roadmap/core/head.py."""
 
 import json
 import unittest

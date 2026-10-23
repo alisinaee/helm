@@ -211,7 +211,8 @@ class QuestionsRender(unittest.TestCase):
 
     def test_questions_are_their_own_tab_with_a_badge_and_a_banner(self):
         screen = self.out["screen"]
-        self.assertIn('data-action="head-tab" data-tab="q" aria-selected="false">Questions <span class="hd-tn hd-tbadge">1</span>', screen)
+        self.assertIn('data-action="head-tab" data-tab="q" aria-selected="false">Questions <span class="hd-tn '
+                      'hd-tbadge">1</span>', screen)
         self.assertIn('1 question waits for you', screen)
         self.assertNotIn('<details class="hd-qs"', screen)
         self.assertNotIn('data-role="questions"', screen)  # the cards show only on the Questions tab

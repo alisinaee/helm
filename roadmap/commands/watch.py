@@ -3,7 +3,8 @@ print one line.
 
 The line is `start P2.4`, `stop P2.4` (a queued stop request), `answer Q3 yes`, `panel P5 <summary>` (R11.2: any other
 board action of the person; the lines it prints are marked seen) or `timeout` after --max seconds (exit 0 in every
-case). An idle lead session can sit in this command, so a Start from the GUI reaches it at almost no token cost. Only entries and answers that appear after the command starts count. The files are polled by their mtime every
+case). An idle lead session can sit in this command, so a Start from the GUI reaches it at almost no token cost. Only
+entries and answers that appear after the command starts count. The files are polled by their mtime every
 2 seconds; the clock and the sleep are injectable so the tests need no real waiting.
 """
 

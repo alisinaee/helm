@@ -1,4 +1,5 @@
-"""Secret scrubbing vectors (HEAD-SPEC H2): every rule masks its sample, and task ids, refs, shas and ordinary words pass."""
+"""Secret scrubbing vectors (HEAD-SPEC H2): every rule masks its sample, and task ids, refs, shas and ordinary words
+pass."""
 
 import unittest
 

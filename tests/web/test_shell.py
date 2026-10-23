@@ -24,8 +24,11 @@ ICON_REF = re.compile(r"icons\.svg#(i-[A-Za-z0-9-]+)")
 SYMBOL_ID = re.compile(r'<symbol\b[^>]*\bid="(i-[A-Za-z0-9-]+)"')
 SECTION_MODULE = re.compile(r'module:\s*("[^"]+"|null)')
 INLINE = re.compile(r"""\sstyle\s*=|\son[a-z]{3,}\s*=""", re.IGNORECASE)
-FLOW_CSS_MAX = 6 * 1024  # flow.css: Overview, Inbox, Activity and the question card (5.7 KB on 2026-10-23, after the parsa-ui merge)
-CSS_TOTAL_MAX = 192 * 1024  # the one shared web/css total cap, imported by the other CSS tests. 2026-10-17: sections grow (System v2, Activity, Roadmap map, Tokens); cap raised from 80 KB so work is not blocked. Keep per-file budgets in their own tests.
+# flow.css: Overview, Inbox, Activity and the question card (5.7 KB on 2026-10-23, after the parsa-ui merge)
+FLOW_CSS_MAX = 6 * 1024
+# the one shared web/css total cap, imported by the other CSS tests. 2026-10-17: sections grow (System v2, Activity,
+# Roadmap map, Tokens); cap raised from 80 KB so work is not blocked. Keep per-file budgets in their own tests.
+CSS_TOTAL_MAX = 192 * 1024
 SHELL_CSS_MAX = 11 * 1024  # R11.129/R11.125: usage mini bars, rail count badges; mobile fit + UI design pass merged
 ICONS_MAX = 6 * 1024  # raised from 5 KB for the R12.1 icon set (22 symbols)
 SHELL_FILES = ("shell.css", "panel.css", "work.css", "plan.css", "admin.css", "flow.css", "motion.css")

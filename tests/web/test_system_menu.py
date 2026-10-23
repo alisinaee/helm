@@ -14,7 +14,8 @@ SCRIPT = r"""
 const { pathToFileURL } = await import("node:url");
 const m = await import(pathToFileURL(process.argv[1] + "/js/views/system-menu.js").href);
 const acts = (t, d, o) => m.menuItems(t, d, o).map((i) => i.action);
-const d = { board: [{ id: "R1", title: "Fix <b>", status: "doing" }], work: [{ id: "W3", title: "Card", status: "open" }],
+const d = { board: [{ id: "R1", title: "Fix <b>", status: "doing" }], work: [{ id: "W3", title: "Card",
+status: "open" }],
   progress: { done: 1, total: 4, pct: 25 } };
 const many = { board: Array.from({ length: 14 }, (_, i) => ({ id: "R" + i, title: "t", status: "todo" })), work: [] };
 const box = { x: 0, y: 0, w: 500, h: 400 }, size = { w: 100, h: 80 };
@@ -22,7 +23,8 @@ const it = [{ disabled: false }, { disabled: true }, { disabled: false }];
 console.log(JSON.stringify({
   comp: acts({ id: "c:a", kind: "component", group: false }, d, { expanded: false, canDrill: false }),
   grp: acts({ id: "k:a", kind: "container", group: true }, d, { expanded: true, canDrill: true }),
-  grpLabel: m.menuItems({ id: "g", kind: "group", group: true }, d, { expanded: true }).find((i) => i.action === "toggle").label,
+  grpLabel: m.menuItems({ id: "g", kind: "group", group: true }, d,
+  { expanded: true }).find((i) => i.action === "toggle").label,
   tasks: m.menuItems({ id: "c:a", kind: "component" }, d, {}).find((i) => i.action === "tasks"),
   tasks0: m.menuItems({ id: "c:a", kind: "component" }, null, {}).find((i) => i.action === "tasks"),
   html: m.menuHtml({ id: "c:a", label: "A <script>", kind: "component" }, d, { pid: "p1" }),

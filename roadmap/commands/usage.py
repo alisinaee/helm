@@ -5,6 +5,7 @@ and statusline (a Claude Code status line command that stores the rate_limits it
 """
 
 import json
+import shlex
 import subprocess
 import sys
 
@@ -25,7 +26,8 @@ def register(sub, common):
     line = actions.add_parser("statusline", parents=[common],
                               help="Claude Code status line: store its rate_limits, then print a status line")
     line.add_argument("--then", metavar="CMD", default=None,
-                      help="status line command to run after storing (gets the same JSON on stdin; its output is shown)")
+                      help="status line command to run after storing (gets the same JSON on stdin; its output is shown)"
+                           "")
     line.set_defaults(handler=handle_statusline)
     actions.add_parser("stops", parents=[common], help="show the effective stops (5h and week)"
                        ).set_defaults(handler=handle_stops)
@@ -165,10 +167,11 @@ def handle_statusline(args):
         pass
     if args.then:
         try:
-            proc = subprocess.run(args.then, shell=True, input=raw, capture_output=True, text=True,
-                                  timeout=THEN_TIMEOUT_S)
-            sys.stdout.write(proc.stdout)
-        except (subprocess.TimeoutExpired, OSError):
+            argv = shlex.split(args.then)
+            if argv:
+                proc = subprocess.run(argv, input=raw, capture_output=True, text=True, timeout=THEN_TIMEOUT_S)
+                sys.stdout.write(proc.stdout)
+        except (subprocess.TimeoutExpired, OSError, ValueError):
             pass
         return None
     print(_short_line(payload))

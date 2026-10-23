@@ -5,7 +5,8 @@ snapshot and from a synthetic one that carries a blocker, an approved phase, an 
 deferred task and a title that needs escaping. The checks: lanes list open tasks in plan order; the Approve button only
 shows on unapproved phases; a blocker marks its task Blocked; the Up and Down buttons are disabled at the ends and
 every draggable card has them (drag is never the only path); the timeline bar widths follow the estimates; the empty
-states use the spec words; the Overview has the restored sections; every data-action these views emit is handled by app.js; and the
+states use the spec words; the Overview has the restored sections; every data-action these views emit is handled by
+app.js; and the
 plan.css budget and the route, dispatch and Alt-key wiring hold. The node checks are skipped when node is not installed.
 """
 

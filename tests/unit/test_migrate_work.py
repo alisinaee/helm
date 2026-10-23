@@ -1,6 +1,7 @@
 """Tests for the R7 Work item migration (roadmap/store/migrate.py, docs/work-map-R7.json).
 
-Reads synthetic fixtures from tests/fixtures/migrate/ (the real board files are git-ignored) and copies them into a temp dir.
+Reads synthetic fixtures from tests/fixtures/migrate/ (the real board files are git-ignored) and copies them into a temp
+dir.
 """
 
 import json

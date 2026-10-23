@@ -178,7 +178,8 @@ class StoredRefreshTest(SlotsCase):
             return {"access_token": "tok-b-new", "refresh_token": "r-new", "expires_in": 3600}
         from roadmap.services import usage_sources
         seen = []
-        payload = {"five_hour": {"utilization": 1, "resets_at": None}, "seven_day": {"utilization": 2, "resets_at": None}}
+        payload = {"five_hour": {"utilization": 1, "resets_at": None}, "seven_day": {"utilization": 2,
+            "resets_at": None}}
         with mock.patch.object(usage_sources, "_post_json", post):
             out = usage.sync_others(fetch=lambda t: seen.append(t) or payload)
         self.assertEqual(out, {"work": "ok"})
@@ -212,7 +213,8 @@ class MismatchTest(SlotsCase):
 
     def test_sync_marks_a_mixed_up_folder(self):
         self.owners({"tok-b": {"accountUuid": "uuid-a"}})
-        payload = {"five_hour": {"utilization": 1, "resets_at": None}, "seven_day": {"utilization": 2, "resets_at": None}}
+        payload = {"five_hour": {"utilization": 1, "resets_at": None}, "seven_day": {"utilization": 2,
+            "resets_at": None}}
         out = usage.sync_others(fetch=lambda t: payload)
         self.assertEqual(out, {"work": "mismatch"})
         row = {r["id"]: r for r in usage_accounts.list_status()["accounts"]}["work"]

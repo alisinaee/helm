@@ -57,7 +57,8 @@ class GatePure(unittest.TestCase):
                                  "3 uncommitted files", "2 unpushed commits", "cursor idle: run the review audit"])
 
     def test_idle_lines_only_beside_other_work_and_not_when_running(self):
-        self.assertEqual(head_svc.gate([], dirty=1, now=NOW), ["1 uncommitted files", "cursor idle: run the review audit",
+        self.assertEqual(head_svc.gate([], dirty=1, now=NOW), ["1 uncommitted files",
+            "cursor idle: run the review audit",
                                                               "agy idle: run an audit"])
         running = [{"title": "cursor review", "model": "x", "status": "running"}]
         items = head_svc.gate([], dirty=1, running=running, now=NOW)

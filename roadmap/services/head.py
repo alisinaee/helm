@@ -107,7 +107,8 @@ def make_summary(text, given=None):
 
 def clean_assets(items):
     """Names and paths of a prompt's attachments (HEAD-SPEC section 13): text only, control characters stripped, masked,
-    each cut to ASSET_CHARS, no repeats, at most ASSETS_MAX. Anything that is not a list gives []. Never reads a file."""
+    each cut to ASSET_CHARS, no repeats, at most ASSETS_MAX. Anything that is not a list gives []. Never reads a
+    file."""
     out = []
     if not isinstance(items, (list, tuple)):
         return out
@@ -206,10 +207,12 @@ def _flock_bounded(fh, timeout):
 
 def _spool_append(data_dir, payload, timeout=None):
     """Park one unnumbered entry in the spool without the directory lock. flock on the spool file orders it
-    against the adopting writer. The flock wait is bounded by timeout: past it, locked is raised and nothing is written."""
+    against the adopting writer. The flock wait is bounded by timeout: past it, locked is raised and nothing is
+    written."""
     path = _path(data_dir, SPOOL_FILE)
     if os.path.islink(path):
-        raise RoadmapError("invalid_data", "refusing to append to a symlink, left unchanged: " + path, EXIT_INVALID_DATA)
+        raise RoadmapError("invalid_data", "refusing to append to a symlink, left unchanged: " + path,
+            EXIT_INVALID_DATA)
     os.makedirs(data_dir, exist_ok=True)
     line = json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n"
     fd = _open_spool(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND)
@@ -248,12 +251,14 @@ def _spooled_entry(e, text, nonce):
 def _adopt_locked(data_dir, deadline=None):
     """Move spooled captures into head.jsonl, in spool order. Caller holds the directory lock. Lines that could not
     be adopted (the cap, a refused file, or the deadline passed) stay in the spool, in order, for the next writer.
-    A line whose nonce is already in head.jsonl (a replay after a crash) is not logged again. Returns the number adopted."""
+    A line whose nonce is already in head.jsonl (a replay after a crash) is not logged again. Returns the number
+    adopted."""
     path = _path(data_dir, SPOOL_FILE)
     if not os.path.exists(path):
         return 0
     if os.path.islink(path):
-        raise RoadmapError("invalid_data", "refusing to read a symlinked spool, left unchanged: " + path, EXIT_INVALID_DATA)
+        raise RoadmapError("invalid_data", "refusing to read a symlinked spool, left unchanged: " + path,
+            EXIT_INVALID_DATA)
     adopted = 0
     fd = _open_spool(path, os.O_RDWR)
     with os.fdopen(fd, "r+", encoding="utf-8") as fh:

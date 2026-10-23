@@ -1,4 +1,4 @@
-"""Tests for roadmap/store/jobs_db.py and the backend switch in roadmap/services/jobs.py (R7.91).
+"""Tests for roadmap/services/jobs_db.py and the backend switch in roadmap/services/jobs.py (R7.91).
 
 Single-flight claims (two connections race), files required for edit jobs, one event per write in the same
 transaction, and the JSON backend left as the default. Every test runs in temp folders; nothing real is touched.
@@ -14,7 +14,8 @@ from unittest import mock
 
 from roadmap.errors import RoadmapError
 from roadmap.services import jobs
-from roadmap.store import config, db, events, jobs_db, paths
+from roadmap.services import jobs_db
+from roadmap.store import config, db, events, paths
 
 
 class DbCase(unittest.TestCase):

@@ -12,7 +12,8 @@ import unittest
 from unittest import mock
 
 from roadmap.services import loader
-from roadmap.store import db, events, head_db, jobs_db, paths, tasks_db
+from roadmap.services import jobs_db
+from roadmap.store import db, events, head_db, paths, tasks_db
 
 
 class UnifiedStoreCase(unittest.TestCase):

@@ -69,7 +69,8 @@ ST_DISCONNECTED = "disconnected"  # Helm does not read this login (the person di
 ST_IDLE = "idle"                  # connected but not active: not read live, the last reading is kept
 ST_UNKNOWN = "unknown"            # active, never synced yet
 ST_WRONG = "wrong_login"           # the stored token belongs to another account: log in again
-_CODE_STATUS = {"mismatch": ST_WRONG, "no_item": ST_SIGNED_OUT, "no_token": ST_SIGNED_OUT, "expired": ST_EXPIRED, "denied": ST_DENIED,
+_CODE_STATUS = {"mismatch": ST_WRONG, "no_item": ST_SIGNED_OUT, "no_token": ST_SIGNED_OUT, "expired": ST_EXPIRED,
+    "denied": ST_DENIED,
                 "net": ST_ERROR, "other": ST_ERROR}
 _EMAIL = re.compile(r"([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
@@ -454,13 +455,15 @@ def read_location(account):
 
 def login_command(config_dir=None):
     """The shell line that signs Claude Code in at this place (the person runs it; it opens the browser)."""
-    prefix = ("CLAUDE_CONFIG_DIR=" + shlex.quote(_home_short(config_dir)).replace("'~", "~'") + " ") if config_dir else ""
+    prefix = ("CLAUDE_CONFIG_DIR=" + shlex.quote(_home_short(config_dir)).replace("'~",
+        "~'") + " ") if config_dir else ""
     return prefix + "claude auth login"
 
 
 def logout_command(config_dir=None):
     """The shell line that signs Claude Code itself out at this place. Never run by Helm (docs/USAGE-ACCOUNTS.md)."""
-    prefix = ("CLAUDE_CONFIG_DIR=" + shlex.quote(_home_short(config_dir)).replace("'~", "~'") + " ") if config_dir else ""
+    prefix = ("CLAUDE_CONFIG_DIR=" + shlex.quote(_home_short(config_dir)).replace("'~",
+        "~'") + " ") if config_dir else ""
     return prefix + "claude auth logout"
 
 

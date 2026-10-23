@@ -1,4 +1,5 @@
-"""Checks for the write path's CSRF retry in web/js/api.js (R7.61). A tab that loaded before a server restart holds the old
+"""Checks for the write path's CSRF retry in web/js/api.js (R7.61). A tab that loaded before a server restart holds the
+old
 CSRF value, so postJson gets 403 with a CSRF message. The client re-reads the value from the served page (GET /, same
 origin) and retries once. Only a 403 that names the CSRF token is retried, and only when the page holds a different
 value. The node checks run api.js with stub browser globals and no timers; they are skipped when node is not installed.

@@ -1,4 +1,5 @@
-"""Checks for web/css/motion.css (docs/MOTION-PLAN.md, CSS worker): it is linked last in index.html, it defines the three
+"""Checks for web/css/motion.css (docs/MOTION-PLAN.md, CSS worker): it is linked last in index.html, it defines the
+three
 durations and two easings, it draws the loading state from aria-busy, it has a reduced-motion block, and it stays small
 with no raw colours. Stdlib only; the files are read as text.
 """

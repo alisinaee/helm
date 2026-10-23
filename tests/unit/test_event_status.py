@@ -155,7 +155,8 @@ class AskFoldTests(EventCase):
         self.set_status("R7.45", "done")
         self.assertEqual(head_svc.fold_asks(self.data), [eid])
         self.assertEqual(self.row(eid)["status"], "done")
-        notes = [r.get("note") for r in self.head_records() if r.get("t") == "u" and r.get("id") == eid and r.get("note")]
+        notes = [r.get("note") for r in self.head_records()
+                 if r.get("t") == "u" and r.get("id") == eid and r.get("note")]
         self.assertEqual(notes, ["auto: R7.44 " + sha1[:7] + ", R7.45 " + sha2[:7]])
         self.assertEqual(head_svc.fold_asks(self.data), [])
 

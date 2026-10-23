@@ -199,7 +199,8 @@ _PATH_BAD = set("*?[]{}")
 
 def _commit_path(root, path):
     """One explicit repo-relative file: no glob character, no pathspec magic (leading ':'), no '--', no '..', no
-    absolute path, and it resolves to a real file inside the repo (or a tracked file, so a deletion can be committed)."""
+    absolute path, and it resolves to a real file inside the repo (or a tracked file, so a deletion can be
+    committed)."""
     text = str(path or "")
     if text.startswith(":") or text == "--" or _PATH_BAD & set(text):
         raise RoadmapError("usage", "path '" + text[:200] + "' must be an explicit file, not a glob or pathspec",

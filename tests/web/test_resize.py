@@ -20,7 +20,8 @@ class ResizeTest(unittest.TestCase):
 
     def test_js_contract(self):
         js = read("js", "resize.js")
-        for s in ("setPointerCapture", "requestAnimationFrame", 'role", "separator"', "aria-orientation", "aria-valuenow",
+        for s in ("setPointerCapture", "requestAnimationFrame", 'role", "separator"', "aria-orientation",
+            "aria-valuenow",
                   "ArrowLeft", "ArrowRight", "dblclick", "localStorage", "--w-nav", "--w-side", "STEP = 16", "min: 56",
                   "min: 280", "720"):
             self.assertIn(s, js)

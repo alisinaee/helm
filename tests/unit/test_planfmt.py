@@ -80,7 +80,8 @@ class ParsePlanTests(unittest.TestCase):
     def test_every_error_names_the_line_and_the_allowed_values(self):
         cases = {
             "P M1 doing | X": "status 'doing' is not valid (allowed: todo|partial|done|hold|-)",
-            "T M1.1 todo 5 gpt/low | x": "model 'gpt' is not valid (allowed: haiku|sonnet|opus|cursor|agy|opencode|head|-)",
+            "T M1.1 todo 5 gpt/low | x": "model 'gpt' is not valid (allowed: haiku|sonnet|opus|cursor|agy|opencode|"
+                                         "head|-)",
             "T M1.1 todo 5 haiku/max | x": "thinking 'max' is not valid (allowed: low|medium|high|-)",
             "T M1.1 todo five haiku/low | x": "tokensK 'five' is not a whole number",
             "T M1 todo 5 haiku/low | x": "task id 'M1' must look like P1.2",

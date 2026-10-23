@@ -57,10 +57,10 @@ def store_backend(data_dir):
 
 
 def claim_job(data_dir, task, files, worker, kind=None, title=None, model=None):
-    """Single-flight claim of a task (sqlite backend only; see store/jobs_db.claim). Returns (job, created)."""
+    """Single-flight claim of a task (sqlite backend only; see services/jobs_db.claim). Returns (job, created)."""
     if store_backend(data_dir) != "sqlite":
         raise RoadmapError("usage", "claim needs the sqlite store (ROADMAP_STORE=sqlite or store: sqlite)", EXIT_USAGE)
-    from roadmap.store import jobs_db
+    from roadmap.services import jobs_db
     return jobs_db.claim(data_dir, task, files, worker, kind=kind, title=title, model=model or "unknown")
 
 
@@ -106,7 +106,7 @@ def start_job(data_dir, title, model, task=None, parent=None, role=None, environ
     With no parent given, the parent is $ROADMAP_PARENT_JOB (environ, default os.environ). A worker with no parent
     and exactly one running lead (role lead, or model head) gets that lead as its parent."""
     if store_backend(data_dir) == "sqlite":
-        from roadmap.store import jobs_db
+        from roadmap.services import jobs_db
         return jobs_db.start(data_dir, title, model, task=task, parent=parent, role=role, effort=effort,
                              engine_model=engine_model)
     _require_data_dir(data_dir)
@@ -210,7 +210,7 @@ def finish_job(data_dir, job_id, status, note=None, tokens_k=None, reason=None):
     reason (failed jobs only) is the first line of the error, kept to REASON_MAX characters. A known reason
     (see _UNAVAILABLE_RE) also marks the job's engine unavailable for ENGINE_BLOCK_HOURS."""
     if store_backend(data_dir) == "sqlite":
-        from roadmap.store import jobs_db
+        from roadmap.services import jobs_db
         return jobs_db.finish(data_dir, job_id, status, note=note, tokens_k=tokens_k, reason=reason)
     _require_data_dir(data_dir)
     if status not in ("done", "failed"):
@@ -249,7 +249,7 @@ def set_job_usage(data_dir, job_id, usage, overwrite=False):
     """Store measured tokens {in, out, cacheRead, cacheWrite, model} on a job of any status (R10.32). Returns True when
     stored; False when the job is gone or already has them and overwrite is False. Never changes the status."""
     if store_backend(data_dir) == "sqlite":
-        from roadmap.store import jobs_db
+        from roadmap.services import jobs_db
         return jobs_db.set_usage(data_dir, job_id, usage, overwrite)
     _require_data_dir(data_dir)
     with lock.locked(data_dir):
@@ -387,7 +387,7 @@ def progress_job(data_dir, job_id, tokens_k):
 def list_jobs(data_dir):
     """Return every job record in file order. A corrupt file is invalid_data (exit 5)."""
     if store_backend(data_dir) == "sqlite":
-        from roadmap.store import jobs_db
+        from roadmap.services import jobs_db
         return jobs_db.list_jobs(data_dir)
     _require_data_dir(data_dir)
     return [dict(j) for j in _read_doc(data_dir)["jobs"] if isinstance(j, dict)]

@@ -1,3 +1,5 @@
+"""Tests for the system data reader."""
+
 import json
 import os
 import shutil

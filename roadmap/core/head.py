@@ -81,7 +81,8 @@ def parse_link(ref):
 
 
 def parse_lines(lines):
-    """Parse head.jsonl lines. Returns (records, skipped): skipped counts bad JSON, unknown `t`, and any `v` other than 1."""
+    """Parse head.jsonl lines. Returns (records, skipped): skipped counts bad JSON, unknown `t`, and any `v` other than
+    1."""
     records, skipped = [], 0
     for line in lines:
         line = line.strip()

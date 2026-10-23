@@ -178,7 +178,8 @@ class CursorDetector(_FileDetector):
         # The real engine is named by CURSOR_MODEL in the command (grok-4.7-xhigh, auto, ...); no value means auto.
         engine = re.search(r"CURSOR_MODEL=(\S+)", cmd)
         engine_model = engine.group(1) if engine else "auto"
-        return {"title": ("Cursor Auto" if engine_model == "auto" else "Cursor " + engine_model) + ": " + label, "model": "cursor", "text": cmd, "kind": "file",
+        return {"title": ("Cursor Auto" if engine_model == "auto" else "Cursor " + engine_model) + ": " + label,
+            "model": "cursor", "text": cmd, "kind": "file",
                 "watch": output, "agent": "", "engine_model": engine_model}
 
 
@@ -638,7 +639,8 @@ def _session_start(project, data_dir, clock, started, now=None, panel=""):
                                                                   + panel_lines)}}
 
 
-# ------------------------------------------------------------------ head capture: UserPromptSubmit (HEAD-SPEC section 3)
+# ------------------------------------------------------------------ head capture: UserPromptSubmit (HEAD-SPEC section
+# 3)
 
 HEAD_MIN_WORDS = 4         # a prompt of 3 words or fewer is an ack and is not logged
 HEAD_SKIP_PREFIXES = ("<task-notification", "<system-reminder", "<command-", "<bash-", "<local-command-")
@@ -653,7 +655,8 @@ _MODEL_ID_RE = re.compile(r"^claude-(opus|sonnet|haiku)-(\d+)-(\d+)(?:-\d{8})?$"
 
 
 def model_name(value):
-    """A short model name from a hook payload 'model': a string, or an object with display_name or id. 'claude-sonnet-5-5'
+    """A short model name from a hook payload 'model': a string, or an object with display_name or id.
+    'claude-sonnet-5-5'
     becomes 'Sonnet 5.5'. None when there is no name."""
     if isinstance(value, dict):
         value = value.get("display_name") or value.get("id")
@@ -680,7 +683,8 @@ def _session_model(payload):
 
 def _transcript_model(path):
     """The short name of the newest 'claude-' model in the Claude Code transcript at path, read from its last 64 KB and
-    last 50 lines only. None when the path is not a file, the read fails, or no entry names a claude model. Fail-open."""
+    last 50 lines only. None when the path is not a file, the read fails, or no entry names a claude model.
+    Fail-open."""
     try:
         if not isinstance(path, str) or not path.strip() or not os.path.isfile(path):
             return None

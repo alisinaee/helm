@@ -137,7 +137,8 @@ class App:
     def handle(self, req):
         """The Reply for a request: Host check first, then API routes, then static pages."""
         if not security.host_allowed(req.headers.get("Host"), self.port):
-            return routes.error_reply(421, "misdirected_request", "this server answers only on 127.0.0.1, localhost or its public host")
+            return routes.error_reply(421, "misdirected_request",
+                "this server answers only on 127.0.0.1, localhost or its public host")
         reply = routes.match(self, req)
         if reply is not None:
             return reply

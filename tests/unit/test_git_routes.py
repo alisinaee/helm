@@ -1,4 +1,5 @@
-"""GIT-SPEC step 2: the read routes under /api/v1/projects/{pid}/git/ (status, log, branches, show, diff), and the commit
+"""GIT-SPEC step 2: the read routes under /api/v1/projects/{pid}/git/ (status, log, branches, show, diff), and the
+commit
 and branch board refs (roadmap.core.refs). Checks: a non-repo folder gives 404 'Not a git repo'; log n is 1..100; show
 and diff need the same-origin page (403 otherwise) and are refused on the phone listener; a secret name or a binary
 file is skipped with its reason; a path that leaves the project gives 400; an unknown commit gives 404. Runs on an

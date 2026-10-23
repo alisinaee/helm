@@ -67,8 +67,8 @@ class TimelineUxSourceTests(unittest.TestCase):
         self.assertIn("function ticksOf(range, every)", self.source)
 
     def test_the_default_range_is_the_narrowest_with_jobs_and_the_map_keeps_today(self):
-        self.assertIn("const range = view === \"map\" ? rangeOf(route) : rangeIn(route) || defaultRangeOf(route, raws);",
-                      self.source)
+        self.assertIn("const range = view === \"map\" ? rangeOf(route) : rangeIn(route) || "
+                      "defaultRangeOf(route, raws);", self.source)
         self.assertIn('return hit || "all";', self.source)
 
     def test_the_now_button_scrolls_back_to_the_now_line(self):

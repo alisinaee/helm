@@ -29,7 +29,8 @@ def write_transcript(path, lines, meta=None):
 class UsageTests(HookTestCase):
     def test_read_usage_dedupes_repeated_message_and_skips_junk(self):
         path = os.path.join(self.tmp, "a.jsonl")
-        write_transcript(path, [line("m1", "claude-sonnet-5-5", 2, 10, 100, 50), line("m1", "claude-sonnet-5-5", 2, 30, 100, 50),
+        write_transcript(path, [line("m1", "claude-sonnet-5-5", 2, 10, 100, 50), line("m1", "claude-sonnet-5-5", 2, 30,
+            100, 50),
                                 line("m2", "claude-sonnet-5-5", 1, 5, 200, 0)])
         self.assertEqual(jobtokens.read_usage(path),
                          {"in": 3, "out": 35, "cacheRead": 300, "cacheWrite": 50, "model": "sonnet"})
@@ -46,7 +47,8 @@ class UsageTests(HookTestCase):
     def test_parse_jobs_exposes_tokens_and_units(self):
         text = json.dumps({"jobs": [{"id": "j1", "title": "t", "model": "haiku", "status": "done",
                                       "started": "2026-10-16T10:00:00+00:00",
-                                      "tokens": {"in": 1, "out": 1, "cacheRead": 0, "cacheWrite": 0, "model": "haiku"}}]})
+                                      "tokens": {"in": 1, "out": 1, "cacheRead": 0, "cacheWrite": 0,
+                                          "model": "haiku"}}]})
         rows, _ = parse_jobs(text, __import__("datetime").datetime.now().astimezone())
         self.assertEqual(rows[0]["units"], 6)
         self.assertEqual(rows[0]["tokens"]["out"], 1)
@@ -76,7 +78,8 @@ class UsageTests(HookTestCase):
                          [line("m1", "claude-sonnet-5-5", 1, 2, 3, 4)],
                          {"description": "Parser fix P0.8", "model": "sonnet"})
         write_transcript(os.path.join(root, "s1", "subagents", "agent-bbbbbbbbbb.jsonl"),
-                         [line("m1", "claude-sonnet-5-5", 9, 9, 9, 9)], {"description": "Other work", "model": "sonnet"})
+                         [line("m1", "claude-sonnet-5-5", 9, 9, 9, 9)], {"description": "Other work",
+                             "model": "sonnet"})
         data_dir = jobs.data_dir_of(jobs.resolve_project("demo"))
         dry = jobtokens.backfill(data_dir, root, dry_run=True)
         self.assertEqual(dry["matched"], 1)

@@ -1,4 +1,5 @@
-"""UX group B (R8.5-R8.10): the Overview cards, the Activity rows, the Agents rows and the Roadmap lanes. The checks read
+"""UX group B (R8.5-R8.10): the Overview cards, the Activity rows, the Agents rows and the Roadmap lanes. The checks
+read
 the renderers and the two CSS files they use; no browser is needed."""
 
 import os

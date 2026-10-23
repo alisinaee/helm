@@ -19,7 +19,8 @@ from roadmap.core.parsers import (ISSUE_OPEN, error_entry, parse_activity, parse
 
 SNAPSHOT_SCHEMA_VERSION = 1
 PHASE_WEIGHT = {"done": 1.0, "partial": 0.5}
-LIVE_JOB_STATUSES = ("running", "claimed")           # job states that are in flight (a claimed job is picked, not yet run)
+# job states that are in flight (a claimed job is picked, not yet run)
+LIVE_JOB_STATUSES = ("running", "claimed")
 ACTIVE = ("todo", "partial")                        # task states counted as "left"
 EXCLUDED = ("deferred", "backlog")                 # states left out of totals, progress, tokens (BACKLOG-SPEC 2)
 RECENT_WINDOW = timedelta(minutes=30)               # finished jobs shown under their task

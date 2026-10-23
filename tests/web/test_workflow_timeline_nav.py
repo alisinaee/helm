@@ -40,7 +40,8 @@ class TimelineNavTest(unittest.TestCase):
         node = shutil.which("node")
         if not node:
             raise unittest.SkipTest("node is not installed")
-        proc = subprocess.run([node, "--experimental-default-type=module", "--input-type=module", "-e", SCRIPT, "file://" + SRC],
+        proc = subprocess.run([node, "--experimental-default-type=module", "--input-type=module", "-e", SCRIPT,
+            "file://" + SRC],
                               capture_output=True, text=True, check=False, timeout=60)
         if proc.returncode != 0:
             raise AssertionError("node failed: " + proc.stderr[-800:])

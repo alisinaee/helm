@@ -14,8 +14,8 @@ import unittest
 from unittest import mock
 
 from roadmap.errors import RoadmapError
-from roadmap.services import leases, supervisor
-from roadmap.store import db, jobs_db
+from roadmap.services import jobs_db, leases, supervisor
+from roadmap.store import db
 
 
 class SupervisorCase(unittest.TestCase):

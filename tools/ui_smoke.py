@@ -46,7 +46,8 @@ SCHEME_FLAGS = {
 }
 # Each route checks for one of these class names inside the page: the section's own markup.
 PAGE_MARK = "page-title"
-MARKERS = {"overview": "ov-card", "work/board": "wk-col", "work/list": "wk-table", "work/tree": "wk-tree", "work/planner": "hd-screen",
+MARKERS = {"overview": "ov-card", "work/board": "wk-col", "work/list": "wk-table", "work/tree": "wk-tree",
+    "work/planner": "hd-screen",
            "roadmap": "lane", "tokens": "page-title", "head": "hd-bar"}
 COMING_SOON = "Coming soon"
 ERROR_TEXT = "This section could not be shown."

@@ -30,7 +30,9 @@ CSS_DIR = os.path.join(WEB, "css")
 SHELL_TEST = os.path.join(TESTS, "web", "test_shell.py")
 RENDER = os.path.join(TESTS, "web", "render_head.mjs")
 FIXTURE = os.path.join(REPO, "fixtures", "demo", "alpha", "docs", "head.jsonl")
-HEAD_CSS_MAX = 7424  # raised 2026-10-15 for spec 13 (cards) and the List table view; again for R10.16 (reply column, questions group); again 2026-10-19 for the phone pass and the one-row Head header (H393)
+# raised 2026-10-15 for spec 13 (cards) and the List table view; again for R10.16 (reply column, questions group); again
+# 2026-10-19 for the phone pass and the one-row Head header (H393)
+HEAD_CSS_MAX = 7424
 TRACKS = "20px 60px minmax(0,1fr) 32px"
 ROW_ID = re.compile(r'<div class="row-grid hd-row" data-id="(H\d+)"')
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=|<script', re.IGNORECASE)
@@ -132,7 +134,8 @@ class HeadSource(unittest.TestCase):
 
     def test_list_view_is_a_table_with_the_ten_columns_in_order(self):
         self.assertIn('<table class="hd-tbl"', self.src)
-        self.assertIn('["#", "hd-n"], ["Kind", "hd-kind"], ["You wrote", "hd-sumc"], ["Head replied", "hd-rpc"],', self.src)
+        self.assertIn('["#", "hd-n"], ["Kind", "hd-kind"], ["You wrote", "hd-sumc"], ["Head replied", "hd-rpc"],',
+            self.src)
         self.assertIn('["State", "hd-stc"], ["Bound to", "hd-bnd"], ["Age", "hd-age"], ["Added", "hd-when"],', self.src)
         self.assertIn('["Acc", "hd-acc"],', self.src)
         self.assertIn('["Copy", "hd-cp"]];', self.src)
@@ -164,7 +167,8 @@ class HeadCss(unittest.TestCase):
 
     def test_ten_fixed_tracks_on_the_shared_grid_and_summary_takes_the_rest(self):
         css = read(CSS)
-        self.assertIn(".hd-row.row-grid{position:relative;align-items:center;grid-template-columns:" + TRACKS + "}", css)
+        self.assertIn(".hd-row.row-grid{position:relative;align-items:center;grid-template-columns:" + TRACKS + "}",
+            css)
         self.assertEqual(len(TRACKS.split(" ")), 4)
         self.assertEqual(TRACKS.split(" ")[2], "minmax(0,1fr)")
         self.assertRegex(css, r"\.hd-meta\{grid-column:2 / -1")
@@ -292,7 +296,8 @@ class HeadRender(unittest.TestCase):
         self.assertRegex(match.group(2), r"^\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{2}:\d{2}$")
         self.assertRegex(match.group(1), r"^\d{4}-\d{2}-\d{2}T")
         self.assertIn('class="hd-added" title="', self.out["open"])
-        self.assertRegex(self.out["open"], r"Added \d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}")
+        self.assertRegex(self.out["open"],
+            r"Added \d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}")
 
     def test_open_row_footer_holds_status_all_chips_and_actions(self):
         html = self.out["open"]
@@ -326,7 +331,8 @@ class HeadRender(unittest.TestCase):
 
     def test_no_head_claim_says_how_to_claim(self):
         html = self.out["unclaimed"]
-        self.assertIn('<span class="chip chip-neutral hd-model hd-badge-off">Head: not claimed (run roadmap head claim)</span>', html)
+        self.assertIn('<span class="chip chip-neutral hd-model hd-badge-off">Head: not claimed (run roadmap head claim)'
+                      '</span>', html)
 
     def test_alerts_count_unhandled_needs_and_unaccepted_done(self):
         html = self.out["screen"]
@@ -418,9 +424,11 @@ class HeadRender(unittest.TestCase):
     def test_list_columns_are_in_order_and_newest_first(self):
         html = self.out["list"]
         heads = re.findall(r'<th scope="col" class="[^"]+">([^<]+)</th>', html)
-        self.assertEqual(heads, ["#", "Kind", "You wrote", "Head replied", "State", "Bound to", "Age", "Added", "Acc", "Copy"])
+        self.assertEqual(heads, ["#", "Kind", "You wrote", "Head replied", "State", "Bound to", "Age", "Added", "Acc",
+            "Copy"])
         rows = re.findall(r'<tr class="hd-row" data-id="(H\d+)">', html)
-        self.assertEqual(rows, list(reversed(re.findall(r'<tr class="hd-row" data-id="(H\d+)">', self.out["listOldest"]))))
+        self.assertEqual(rows, list(reversed(re.findall(r'<tr class="hd-row" data-id="(H\d+)">',
+            self.out["listOldest"]))))
         self.assertEqual(rows[0], "H6")
 
     def test_list_cells_are_ten_per_row_with_numbers_right_aligned(self):
@@ -429,17 +437,21 @@ class HeadRender(unittest.TestCase):
         self.assertEqual(html.count('<td colspan="10">'), 7)
         self.assertEqual(len(re.findall(r'<td class="hd-(?:n|kind|sumc|rpc|stc|bnd|age|when|acc|cp)', html)), 7 * 10)
         self.assertRegex(html, r'<td class="hd-age rg-num[^"]*"[^>]*>\d+[mhd]</td>')
-        self.assertRegex(html, r'<td class="hd-when rg-num" title="\d{4}-\d{2}-\d{2}T[^"]*">\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{2}:\d{2}</td>')
+        self.assertRegex(html,
+            r'<td class="hd-when rg-num" title="\d{4}-\d{2}-\d{2}T[^"]*">\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|'
+            r'Oct|Nov|Dec) \d{2}:\d{2}</td>')
 
     def test_list_row_hit_button_and_detail_panel_match_the_card_view(self):
         html = self.out["listOpen"]
-        self.assertIn('<button type="button" class="hd-hit" data-action="head-toggle" data-id="H1" aria-expanded="true"', html)
+        self.assertIn('<button type="button" class="hd-hit" data-action="head-toggle" data-id="H1" '
+                      'aria-expanded="true"', html)
         self.assertIn('<tbody class="hd-item is-open">', html)
         self.assertIn('<div class="hd-panel" id="hd-p-H1">', html)
         self.assertIn('id="hd-p-H4" hidden>', html)
         self.assertIn("&lt;img src=x onerror=alert(1)&gt;", html)
         self.assertNotIn("<img", html)
-        order = [html.index('<p class="hd-lbl">' + label + "</p>") for label in ("You wrote", "Head replied", "State", "Bound to")]
+        order = [html.index('<p class="hd-lbl">' + label + "</p>") for label in ("You wrote", "Head replied", "State",
+            "Bound to")]
         self.assertEqual(order, sorted(order))
 
     def test_list_summary_wraps_and_the_sum_is_the_cell_text(self):

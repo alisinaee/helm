@@ -109,7 +109,8 @@ class DeploymentTest(Base):
 
     def test_override(self):
         write(self.root, "docs/system.json", json.dumps(
-            {"deployment": {"nodes": [{"id": "cloud", "label": "Cloud", "sub": "", "kind": "device", "group": "dev"}]}}))
+            {"deployment": {"nodes": [{"id": "cloud", "label": "Cloud", "sub": "", "kind": "device",
+                "group": "dev"}]}}))
         d = self.run_fn(sb.deployment)
         self.assertIn("cloud", [n["id"] for n in d["nodes"]])
 
@@ -119,7 +120,8 @@ class UsecasesTest(Base):
         self.put("cli.py", "def reg(sub):\n    sub.add_parser('board', help='show the board')\n")
         self.put("routes.py", "ROUTES = [\n(re.compile(r\"/api/v1/health\"), (\"GET\",), h),\n"
                  "(re.compile(r\"/api/v1/projects/(?P<id>[^/]+)/system\"), (\"GET\", \"POST\"), s),\n]\n")
-        self.put("web/js/routes.js", "export const SECTIONS = [\n  { id: \"overview\", label: \"Overview\", module: \"a\" },\n"
+        self.put("web/js/routes.js",
+            "export const SECTIONS = [\n  { id: \"overview\", label: \"Overview\", module: \"a\" },\n"
                  "  { id: \"git\", label: \"Git\" },\n];\n")
         comps = [{"id": "app", "name": "App", "files": ["**"], "kind": "module"},
                  {"id": "bot", "name": "Bot", "files": ["nothing/**"], "kind": "agent"}]

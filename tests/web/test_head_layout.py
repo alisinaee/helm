@@ -38,7 +38,8 @@ class CardMetaGridTests(unittest.TestCase):
 
     def test_meta_is_a_grid_with_fixed_age_and_added_tracks(self):
         self.assertRegex(self.css,
-                         r"\.hd-meta\{grid-column:2 / -1;display:grid;grid-template-columns:auto minmax\(0,1fr\) 56px 112px;")
+                         r"\.hd-meta\{grid-column:2 / -1;display:grid;grid-template-columns:auto minmax\(0,1fr\) 56px "
+                         r"112px;")
         self.assertNotRegex(self.css, r"\.hd-meta\{[^}]*display:flex")
 
     def test_numbers_are_right_aligned_and_tabular(self):
