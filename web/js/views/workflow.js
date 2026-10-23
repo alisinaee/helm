@@ -141,6 +141,27 @@ function stampOf(raw) {
   return h.toString(36) + ":" + s.length;
 }
 
+// The loading state (R9.44): visible "Loading" text; past LOAD_SLOW_MS a Retry appears. A timer re-renders once so the
+// Retry shows even when nothing else changes.
+const LOAD_SLOW_MS = 8000;
+let loadSince = 0;
+let loadTimer = null;
+
+function loadingHtml(kind) {
+  const now = Date.now();
+  if (!loadSince) loadSince = now;
+  const slow = now - loadSince >= LOAD_SLOW_MS;
+  if (!slow && !loadTimer && typeof window !== "undefined") {
+    loadTimer = setTimeout(function () {
+      loadTimer = null;
+      window.dispatchEvent(new Event("hashchange"));
+    }, LOAD_SLOW_MS - (now - loadSince) + 50);
+  }
+  return skeletonHtml(["w-60", "w-90"]) + '<p class="wf-hint">' + (slow ? "Still loading the " + kind + ". " +
+    '<button type="button" class="btn btn-small" data-wf-retry="' + (kind === "diagram" ? "graph" : "data") +
+    '">Retry</button>' : "Loading the " + kind + "...") + "</p>";
+}
+
 function fetchSnapshot(pid) {
   const now = Date.now();
   const entry = cache.get(pid) || { raw: null, at: 0, error: null, pending: false };
@@ -1163,7 +1184,7 @@ function mapBody(route, raw, range, stamp) {
   }
   if (!graphKit) {
     loadGraph();
-    return skeletonHtml(["w-60", "w-90"]);
+    return loadingHtml("diagram");
   }
   return mapSvg(graphKit, { pid: route.id, raw: raw, route: route, range: range, now: nowMs(), stamp: stamp });
 }
@@ -1283,8 +1304,9 @@ export function sectionView(vm) {
       return bannerHtml("danger", "Could not load the workflow. Retrying.", failed.error.message || "Unknown error") +
         '<p class="wf-hint"><button type="button" class="btn btn-small" data-wf-retry="data">Retry now</button></p>';
     }
-    return skeletonHtml(["w-60", "w-90"]);
+    return loadingHtml("workflow");
   }
+  loadSince = 0;
   const view = viewOf(route);
   const raws = entries.map(function (e) {
     return e.raw;
@@ -1393,11 +1415,14 @@ function onClick(e) {
   if (retry) {
     if (retry.getAttribute("data-wf-retry") === "graph") {
       graphFailed = false;
+      loadingGraph = false;
+      loadSince = 0;
       loadGraph();
     } else {
       cache.forEach(function (entry) {
         entry.at = 0;
         entry.error = null;
+        entry.pending = false;
       });
     }
     window.dispatchEvent(new Event("hashchange"));
