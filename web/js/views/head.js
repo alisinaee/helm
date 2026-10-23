@@ -285,7 +285,8 @@ function boundHtml(links, pid, max) {
 
 function statusHtml(row) {
   if (row.status === "done" && row.auto) {
-    return '<span class="chip chip-neutral hd-outline" title="Auto-done: waiting for the person">done?</span>';
+    return '<span class="chip chip-neutral hd-outline" title="Auto-done by the head: waiting for your OK">' +
+      "awaiting OK</span>";
   }
   const state = stateOf(row.status);
   return '<span class="chip chip-' + esc(state[2]) + '" data-state="' + esc(state[0]) + '">' + esc(state[1]) +
@@ -301,9 +302,12 @@ function kindHtml(kind) {
 // The rule state chip on a rule row (R7.103): in rules, proposed, kept as context, or to review. Empty for other kinds.
 const RULE_STATE_TONE = { "in rules": "success", "proposed": "haiku", "kept as context": "neutral",
   "to review": "warning" };
+const RULE_STATE_LABEL = { "to review": "needs review", "proposed": "proposed rule" };
 function ruleStateHtml(row) {
   if (row.kind !== "rule" || !row.ruleState) return "";
-  return " " + chipHtml(row.ruleState, RULE_STATE_TONE[row.ruleState] || "neutral");
+  const label = RULE_STATE_LABEL[row.ruleState] || row.ruleState;
+  return " " + chipHtml(label, RULE_STATE_TONE[row.ruleState] || "neutral").replace("<span ",
+    '<span title="Rule state: ' + esc(label) + '" ');
 }
 
 // One history line as text. The route sends objects ({ts, by, set|link|note}); a plain string passes through.
@@ -584,7 +588,8 @@ function listRowHtml(vm, row, opts) {
       '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="hd-p-' + eid + '" aria-label="' +
       esc((open ? "Hide " : "Show ") + id) + '">' + eid + "</button>") +
     cell("hd-kind", kindHtml(row.kind) + ruleStateHtml(row)) +
-    cell("hd-sumc", '<span class="hd-sum"' + (hasText ? ' data-preview="1"' : "") + ' data-sum="' + esc(row.sum || "") +
+    cell("hd-sumc", '<span class="hd-kind-inline">' + kindHtml(row.kind) + ruleStateHtml(row) + "</span>" +
+      '<span class="hd-sum"' + (hasText ? ' data-preview="1"' : "") + ' data-sum="' + esc(row.sum || "") +
       '" title="' + esc(full && full.text ? full.text : shown) + '">' + esc(shown) + "</span>" +
       (muted ? '<span class="hd-sum2" title="' + esc(muted) + '">' + esc(muted) + "</span>" : "") +
       '<span class="hd-rep-inline">' + esc(reply) + "</span>") +

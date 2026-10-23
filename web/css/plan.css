@@ -5,7 +5,7 @@
 .lane-state{grid-column:2}
 .lane-prog{grid-column:3;display:grid;gap:var(--sp-1);font-size:var(--fs-12)}
 .lane-meter{height:6px}
-.lane-open{grid-column:4;text-align:right}
+.lane-open{grid-column:4;text-align:right;white-space:nowrap}
 .lane-appr{grid-column:5;justify-self:end}
 .lane-act>.ref-copy{grid-column:6;justify-self:end}
 .lane-stats>.chip{grid-column:2/-1;grid-row:2;justify-self:end}
@@ -31,7 +31,7 @@
 .plan-views a[aria-current="page"],.iss-filters a[aria-current="true"]{background:var(--sel);border-color:var(--accent);font-weight:600}
 .iss-input{width:100%;min-width:0;min-height:var(--h-control);padding:0 var(--sp-2);font:inherit;color:var(--text-1);background:var(--surface-0);border:1px solid var(--line);border-radius:var(--r-control)}
 @media (max-width:700px){
-.lane-head{grid-template-columns:minmax(0,1fr) 72px 96px 32px}
+.lane-head{grid-template-columns:minmax(0,1fr) 80px 96px 32px}
 .lane-toggle,.lane-prog,.lane-stats>.chip{grid-column:1/-1}
 .lane-state{grid-column:1}
 .lane-state,.lane-open,.lane-appr,.lane-act>.ref-copy{grid-row:2}

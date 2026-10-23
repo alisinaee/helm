@@ -345,7 +345,7 @@ class HeadRender(unittest.TestCase):
         html = self.out["screen"]
         self.assertIn('data-action="head-accept" data-id="H7"', html)
         self.assertIn('data-action="head-reopen" data-id="H3"', html)
-        self.assertIn('done?', html)
+        self.assertIn('awaiting OK', html)
         self.assertIn('data-state="done">Done</span>', self.out["done"])
 
     def test_row_ids_and_copy_refs_use_the_project(self):

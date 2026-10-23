@@ -46,9 +46,12 @@ export function mergedLines(scopes, limit) {
 // "R10.4 done -> done" reads "R10.4 done → done".
 export function activityRowHtml(e, ctx) {
   const what = e.summary || e.verb || "change";
-  const shown = esc(what).replace(/\s*(?:-&gt;|→)\s*/g, " → ");
+  // A no-op transition (done -> done) reads "re-confirmed" and has nothing to undo.
+  const same = /^(.*?)\s*(\S+)\s*(?:->|→)\s*\2\s*$/.exec(what);
+  const shown = same ? esc((same[1] ? same[1] + " " : "") + "re-confirmed (" + same[2] + ")")
+    : esc(what).replace(/\s*(?:-&gt;|→)\s*/g, " → ");
   const label = esc("Undo " + what);
-  const undo = e.undo && e.activity && e.project
+  const undo = e.undo && !same && e.activity && e.project
     ? '<button type="button" class="act-undo" data-action="undo-line" data-project="' + esc(e.project) +
       '" data-activity="' + esc(e.activity) + '" aria-label="' + label + '" title="' + label +
       '"><svg class="ico" aria-hidden="true" focusable="false"><path d="M9 14 4 9l5-5"/>' +
