@@ -10,12 +10,15 @@ this skill is `/helm`.
 
 Args: (none = resume) | `save` | `status`.
 
-Helm is this repo (`~/StudioProjects/helm`, CLI `bin/roadmap` = `bin/helm`), served at https://helm.mjplabs.ir
-(Authelia login) by the systemd user unit `helm.service`. The person reads the board, not the chat, so every piece of
-work must show up there. Answer in the person's language (usually Persian), short and plain.
+Helm is this repo (CLI `bin/roadmap` = `bin/helm`). On the mjp-labs server it is `~/StudioProjects/helm`, served at
+https://helm.mjplabs.ir (Authelia login) by the systemd user unit `helm.service`. On Ali's Mac it is `~/Works/helm`,
+served on http://localhost:8780 by the launchd agent `com.roadmap-board.agent`. The person reads the board, not the
+chat, so every piece of work must show up there. Answer in the person's language (usually Persian), short and plain.
+
+The skill is global, so it works from any project folder; the board is the one of the folder you are in.
 
 ```
-H=~/StudioProjects/helm/bin/roadmap
+H=$(ls ~/Works/helm/bin/roadmap ~/StudioProjects/helm/bin/roadmap 2>/dev/null | head -1)
 ```
 
 ## /helm (resume, first thing in a new chat)
