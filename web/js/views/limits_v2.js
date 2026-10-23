@@ -6,7 +6,7 @@
 
 import { getJson, postJson } from "../api.js";
 import { withBusy } from "../busy.js";
-import { applyMeters, esc } from "../dom.js";
+import { applyMeters, fillPct, esc } from "../dom.js";
 import { copyButton, refSummary } from "../ref.js";
 import { showToast } from "./toast.js";
 
@@ -127,8 +127,8 @@ function tone(rec) {
 
 function cardHtml(w, rec, vm) {
   const win = WINDOWS[w];
-  const stop = clamp(stopOf(rec), 1, 100);
-  const used = rec.used === null ? 0 : clamp(rec.used, 0, 100);
+  const stop = fillPct(stopOf(rec));
+  const used = rec.used === null ? 0 : fillPct(rec.used);
   const reached = rec.on && rec.used !== null && rec.used >= stopOf(rec);
   const pid = overridePid(vm);
   const seg = Object.keys(MODE_WORDS).map(function (m) {

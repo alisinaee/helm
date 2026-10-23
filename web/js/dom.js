@@ -15,6 +15,11 @@ export function esc(value) {
   });
 }
 
+// The one 0-100 fill/stop scale for every usage bar (top bar mini bars and Tokens > Limits). Null/NaN reads 0.
+export function fillPct(value) {
+  return clampPct(value);
+}
+
 function clampPct(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return 0;

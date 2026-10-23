@@ -190,6 +190,12 @@ class ShellRenderTests(unittest.TestCase):
         self.assertNotIn("62/60%", meters)
         self.assertIn("Week unknown", self.out["topbarStopped"])
 
+    def test_top_bar_and_limits_bars_share_one_percent_scale(self):
+        root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        for rel in ("web/js/views/topbar.js", "web/js/views/limits_v2.js"):
+            with open(os.path.join(root, rel), encoding="utf-8") as fh:
+                self.assertIn("fillPct(", fh.read(), rel)
+
 
 if __name__ == "__main__":
     sys.exit(unittest.main())

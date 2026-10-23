@@ -4,7 +4,7 @@
 // missing values read "unknown".
 
 import { csrfToken } from "../api.js";
-import { esc } from "../dom.js";
+import { fillPct, esc } from "../dom.js";
 import { fmtPercent } from "../format.js";
 import { mark, status as logStatus } from "../log.js";
 import { SECTIONS, SETTINGS, sectionById } from "../routes.js";
@@ -156,7 +156,7 @@ function enterHtml(vm) {
 }
 
 // Stop for one window from the meter rows, read defensively: a five-hour row (window five_hour / 5h) or, when
-// there is none, the weekly stop. Null when no stop is set.
+// there is none, no stop (the weekly stop is never borrowed). Null when no stop is set.
 function stopFor(vm, win) {
   const rows = limitRows(vm.meterRows) || [];
   const w = vm.limits && vm.limits.windows ? vm.limits.windows[win === "five" ? "five_hour" : "week"] : null;
@@ -168,6 +168,7 @@ function stopFor(vm, win) {
       return typeof r.limit === "number" && /^(five_hour|5h|five)/.test(String(r.window || ""));
     });
     if (hit.length) return hit.reduce(function (a, b) { return b.limit < a.limit ? b : a; }).limit;
+    return null;  // the 5h bar never borrows the weekly stop (R11.151)
   }
   const row = bindingStopRow(rows);
   return row && typeof row.limit === "number" ? row.limit : null;
@@ -194,10 +195,10 @@ function miniHtml(vm, id, label, long, pct, stop, resets) {
   const when = clockOf(resets);
   const title = long + " " + text + (stop !== null ? ", stop at " + fmtPercent(stop) : ", no stop") +
     (when ? ", resets " + when : "") + (ageText(vm.usage) ? "; updated " + ageText(vm.usage) : "");
-  const tick = stop !== null ? '<span class="mini-tick" data-pct="' + esc(Math.min(100, stop)) + '"></span>' : "";
+  const tick = stop !== null ? '<span class="mini-tick" data-pct="' + fillPct(stop) + '"></span>' : "";
   return '<span class="mini' + (known ? "" : " is-unknown") + '" data-win="' + id + '" title="' + esc(title) + '">' +
     '<span class="mini-l">' + label + '</span><span class="meter' + tone + '"><span class="meter-fill" data-pct="' +
-    (known ? esc(Math.min(100, Math.max(0, pct))) : 0) + '"></span>' + tick + '</span><span class="mini-v">' +
+    (known ? fillPct(pct) : 0) + '"></span>' + tick + '</span><span class="mini-v">' +
     esc(text) + "</span></span>";
 }
 

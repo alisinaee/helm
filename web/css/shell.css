@@ -52,7 +52,7 @@
 .top-menu{position:absolute;right:0;top:100%;z-index:var(--z-over);padding:var(--sp-2);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow-2)}
 @media (max-width:479px){.top-enter{display:none}}
 .mini{display:inline-flex;align-items:center;gap:var(--sp-1);font-size:var(--fs-11);color:var(--text-2);white-space:nowrap}
-.mini .meter{width:56px;height:6px}
+.mini .meter{width:56px;flex:none;height:6px;box-sizing:border-box}
 .mini.is-unknown .mini-v,.mini.is-unknown .mini-l{color:var(--unknown)}
 .main{grid-area:main;min-width:0;min-height:0;padding:var(--sp-4) var(--sp-6) var(--sp-8);overflow:hidden auto;overscroll-behavior:contain}
 .side{grid-area:side;display:flex;flex-direction:column;width:var(--w-side);min-width:0;overflow:hidden;background:var(--surface-1);border-left:1px solid var(--track)}
