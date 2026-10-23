@@ -3,10 +3,11 @@
 // files. The log switch is kept in this browser (log.js); the log status and report are read-only GET requests.
 
 import { esc } from "../dom.js";
-import { csrfToken, getJson } from "../api.js";
+import { csrfToken, getJson, postJson } from "../api.js";
 import { helpRows, setSingleKeys, singleKeysOn } from "../keys.js";
 import { setEnabled, status as logStatusNow } from "../log.js";
 import { loadUi, MODE_ORDER, resolveMode, saveMode, saveTheme, THEME_ORDER, updateUi } from "../state.js";
+import { withBusy } from "../busy.js";
 import { showToast } from "./toast.js";
 
 // The ids are the data-theme values (docs/THEMES-PLAN.md). Labels: "classic" is the blue palette, shown as Midnight;
@@ -144,6 +145,92 @@ function maybeRefreshLogStatus() {
   refreshLogStatus().catch(function () {});
 }
 
+// Notifications (R11.163): the master switch and one switch per kind live in the global config (GET/POST
+// /api/v1/notify). The state is read once per visit; a click flips it at once and saves in the background.
+const NOTIFY_URL = "/api/v1/notify";
+const notifyState = { data: null, failed: false, loading: false };
+
+function notifyRerender() {
+  if (typeof document !== "undefined") document.dispatchEvent(new Event("rb:render"));
+}
+
+function loadNotify() {
+  if (notifyState.loading || notifyState.data || typeof fetch === "undefined") return;
+  notifyState.loading = true;
+  getJson(NOTIFY_URL).then(function (res) {
+    notifyState.data = res && res.data && Array.isArray(res.data.kinds) ? res.data : null;
+    notifyState.failed = !notifyState.data;
+  }).catch(function () {
+    notifyState.failed = true;
+  }).finally(function () {
+    notifyState.loading = false;
+    notifyRerender();
+  });
+}
+
+function notifySwitch(label, on, action, kind) {
+  return '<button type="button" class="btn sw" role="switch" aria-checked="' + (on ? "true" : "false") +
+    '" aria-label="' + esc(label + (on ? ", on" : ", off")) + '" data-action="' + action + '"' +
+    (kind ? ' data-kind="' + esc(kind) + '"' : "") + ' data-focus="' + action + (kind ? "-" + esc(kind) : "") + '">' +
+    (on ? "On" : "Off") + "</button>";
+}
+
+function notifyHtml() {
+  const d = notifyState.data;
+  const head = '<section class="ov-card" aria-labelledby="set-notify"><h3 id="set-notify" class="lim-h">' +
+    "Notifications</h3>";
+  if (!d) {
+    return head + '<p class="page-note">' + (notifyState.failed ? "Notification settings are not available right now."
+      : "Checking notification settings.") + "</p></section>";
+  }
+  const rows = d.kinds.map(function (k) {
+    return '<li class="set-row"><span class="set-row-name">' + esc(k.label) + "</span>" +
+      notifySwitch(k.label, k.on && d.enabled, "set-notify-kind", k.id) + "</li>";
+  }).join("");
+  return head + '<div class="set-row"><span class="set-row-name">Desktop notifications</span>' +
+    notifySwitch("Desktop notifications", d.enabled, "set-notify") + "</div>" +
+    '<ul class="set-rows' + (d.enabled ? "" : " is-off") + '">' + rows + "</ul>" +
+    '<p class="page-note">Helm shows a macOS notification when it needs you. ' +
+    'One per project and kind each minute.</p>' +
+    '<button type="button" class="btn" data-action="notify-test" data-focus="notify-test"' +
+    (d.enabled ? "" : " disabled") + ">Send test notification</button></section>";
+}
+
+function saveNotify(body) {
+  postJson(NOTIFY_URL, body).then(function (res) {
+    if (res && res.data && Array.isArray(res.data.kinds)) notifyState.data = res.data;
+  }).catch(function (err) {
+    notifyState.data = null;
+    showToast({ text: err && err.message ? err.message : "The setting was not saved.", tone: "danger" });
+  }).finally(notifyRerender);
+}
+
+function notifyAction(action, el) {
+  const d = notifyState.data;
+  if (!d) return true;
+  if (action === "set-notify") {
+    d.enabled = !d.enabled;
+    saveNotify({ enabled: d.enabled });
+  } else if (action === "set-notify-kind") {
+    const kind = el.getAttribute("data-kind");
+    const row = d.kinds.filter(function (k) {
+      return k.id === kind;
+    })[0];
+    if (!row) return true;
+    row.on = !row.on;
+    saveNotify({ kind: kind, on: row.on });
+  } else {
+    withBusy(el, postJson(NOTIFY_URL, { test: true })).then(function (res) {
+      const shown = res && res.data && res.data.shown;
+      showToast(shown ? { text: "Test notification sent.", tone: "success" }
+        : { text: "No notification was shown. Check macOS notification settings for Helm." });
+    }).catch(function (err) {
+      showToast({ text: err && err.message ? err.message : "The test could not be sent.", tone: "danger" });
+    });
+  }
+  return true;
+}
+
 function loggingHtml() {
   const on = logStatusNow().enabled ? "on" : "off";
   return '<section class="ov-card" aria-labelledby="set-log"><h3 id="set-log" class="lim-h">Logging</h3>' +
@@ -163,6 +250,8 @@ export function sectionView() {
   // The phone page carries no CSRF value and records nothing, so it has no Logging section.
   const logging = typeof document !== "undefined" && csrfToken() ? loggingHtml() : "";
   if (logging) maybeRefreshLogStatus();
+  const notifying = logging ? notifyHtml() : "";
+  if (logging) loadNotify();
   return '<div class="set-stack"><div class="page-head">' +
     '<p class="page-note">Browser preferences only; projects keep separate settings.</p></div>' +
     '<section class="ov-card" aria-labelledby="set-look"><h3 id="set-look" class="lim-h">Appearance</h3>' +
@@ -177,7 +266,7 @@ export function sectionView() {
     '<p class="page-note">Press ? anywhere to see this list.</p>' + singleKeysHtml() + keysHtml() +
     '<button type="button" class="btn" data-action="help-open" data-focus="help-open">Show in a dialog</button>' +
     "</section>" +
-    logging +
+    notifying + logging +
     '<section class="ov-card" aria-labelledby="set-data"><h3 id="set-data" class="lim-h">Data</h3>' +
     '<p class="page-note">Global limits, the usage ledger and the global config live in the roadmap home folder. ' +
     "Each project keeps its rules in docs/rules.txt and its budget in budget.json. Run roadmap doctor to see the " +
@@ -270,6 +359,9 @@ export function settingsAction(action, el) {
   if (action === "set-single-keys") {
     setSingleKeys(el.getAttribute("data-value") === "on");
     return true;
+  }
+  if (action === "set-notify" || action === "set-notify-kind" || action === "notify-test") {
+    return notifyAction(action, el);
   }
   if (action === "log-report") {
     copyReport().catch(function () {});

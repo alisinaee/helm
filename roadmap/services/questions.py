@@ -85,9 +85,9 @@ def ask(data_dir, task, text, opts=(), default=None, block=False, timeout_s=None
         doc["questions"].append(question)
         records.save("questions", data_dir, FILE, doc)
     if question["block"]:  # outside the lock; a blocking question is one the agent waits for
-        notify.notify_dir(data_dir, "question", "Question waiting", lambda project: question["id"] + " on "
-                          + (question["task"] or "-") + " needs you. Answer it in " + project
-                          + " or run: roadmap inbox")
+        notify.notify_dir(data_dir, "question", "Question waiting",
+                          lambda name: question["id"] + " on " + (question["task"] or "-")
+                          + " needs you. Answer it in Helm (Inbox) or run: roadmap inbox")
     return dict(question)
 
 

@@ -40,13 +40,13 @@ class QueueGapTests(HomeCase):
     def test_a_watching_session_gets_the_open_session_text_and_no_launch(self):
         with mock.patch.object(presence, "state", return_value=presence.WATCHING):
             queue.enqueue(self.data, "P2.7", by="lead")
-        self.assertEqual(self.fake.call_args[0][2], "Start P2.7 queued. Open a Claude session in demo or run: "
+        self.assertEqual(self.fake.call_args[0][2], "Start P2.7 queued. Open a Claude session or run: "
                          "roadmap watch")
         self.spawn.assert_not_called()
 
     def test_the_start_notification_has_the_start_kind_and_title(self):
         queue.enqueue(self.data, "P2.7", by="lead")
-        self.assertEqual(self.fake.call_args[0][:2], ("start", "Start queued"))
+        self.assertEqual(self.fake.call_args[0][:2], ("start", "Helm · Demo"))
 
     def test_a_presence_error_still_queues_and_shows_nothing(self):
         with mock.patch.object(presence, "state", side_effect=RuntimeError("boom")):

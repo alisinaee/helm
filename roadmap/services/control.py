@@ -294,7 +294,7 @@ def _mutate(project, change, now, timeout=None):
 def _notify_limit(project, state):
     """One notification the first time a limit blocks a project (services/notify.py). Never raises."""
     reason = notify.summary(state["block"].get("reason"))
-    notify.notify("limit", "Work blocked", "Limit reached in " + project["id"] + ": " + reason
+    notify.notify("limit", notify.title_for(notify.display_name(project)), "Work blocked, limit reached: " + reason
                   + ". Run: roadmap status", project["id"])
 
 

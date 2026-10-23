@@ -101,6 +101,11 @@ def update_limits(mutate):
     return _update(inner)
 
 
+def update(mutate):
+    """Run mutate(cfg) on the whole config under the config lock, then save. Returns mutate's result."""
+    return _update(mutate)
+
+
 def _update(mutate):
     """Read-modify-write under the config directory lock. The config is re-read inside the lock."""
     paths.ensure_dir(paths.config_dir())

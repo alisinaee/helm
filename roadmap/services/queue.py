@@ -48,12 +48,11 @@ def _notify_start(data_dir, task_id):
     try:
         idle = presence.state(data_dir) == presence.NONE
 
-        def body(project):
-            # the project id only: the folder path stays in the GUI's Copy command, never in a notification
+        def body(name):
+            # the project name is in the title; the folder path stays in the GUI's Copy command
             if not idle:
-                return "Start " + task_id + " queued. Open a Claude session in " + project + " or run: roadmap watch"
-            return ("Start " + task_id + " queued; no session open. Open a Claude session for " + project
-                    + " or run: roadmap watch")
+                return "Start " + task_id + " queued. Open a Claude session or run: roadmap watch"
+            return "Start " + task_id + " queued; no session open. Open a Claude session or run: roadmap watch"
 
         notify.notify_dir(data_dir, "start", "Start queued", body)
         if idle:

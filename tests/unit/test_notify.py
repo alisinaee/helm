@@ -96,7 +96,8 @@ class NotifyTests(HomeCase):
             notify.notify_dir(data_dir, "start", "Start queued",
                               lambda p: "Start P2.4 queued. Open a Claude session in " + p + " or run: roadmap watch")
         self.assertEqual(fake.call_args[0][3], "demo")
-        self.assertIn("in demo or run: roadmap watch", fake.call_args[0][2])
+        self.assertEqual(fake.call_args[0][1], "Helm \u00b7 Demo")
+        self.assertIn("in Demo or run: roadmap watch", fake.call_args[0][2])
 
 
 class NotifyHookTests(HomeCase):
@@ -121,15 +122,16 @@ class NotifyHookTests(HomeCase):
         args = self.fake.call_args[0]
         self.assertEqual(args[0], "start")
         self.assertEqual(args[3], "demo")
-        self.assertEqual(args[2], "Start P2.4 queued; no session open. Open a Claude session for demo or run: "
+        self.assertEqual(args[2], "Start P2.4 queued; no session open. Open a Claude session or run: "
                          "roadmap watch")
+        self.assertEqual(args[1], "Helm \u00b7 Demo")
         self.assertNotIn(self.project, args[2])
 
     def test_with_a_session_open_the_text_says_so_and_nothing_is_launched(self):
         presence.touch_hook(self.data)
         with mock.patch.object(queue, "_spawn") as spawn:
             queue.enqueue(self.data, "P2.4", by="lead")
-        self.assertEqual(self.fake.call_args[0][2], "Start P2.4 queued. Open a Claude session in demo or run: "
+        self.assertEqual(self.fake.call_args[0][2], "Start P2.4 queued. Open a Claude session or run: "
                          "roadmap watch")
         spawn.assert_not_called()
 

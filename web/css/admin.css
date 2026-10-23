@@ -39,3 +39,8 @@
 .rule-row { grid-template-columns: minmax(0, 1fr) auto 5.5rem var(--ref-col); row-gap: var(--sp-1) }
 .rule-row > .rule-main { grid-column: 1 / -1; white-space: normal; align-items: flex-start }
 }
+/* R11.163: notification rows, name left and switch in a fixed right column */
+.set-rows { display: grid; gap: 0; padding: 0; margin: 0; list-style: none }
+.set-row { display: grid; grid-template-columns: minmax(0, 1fr) 5.5rem; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-1) 0; border-bottom: 1px solid var(--track) }
+.set-rows.is-off { opacity: .55 }

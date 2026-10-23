@@ -567,13 +567,12 @@ def _raise_notices(data_dir, before, now):
     new_needs = sorted(eid for eid, status in after.items() if status == "needs-you" and before.get(eid) != "needs-you")
     if new_needs:
         text = ", ".join(new_needs[:3]) + " needs you"
-        notify.notify_dir(data_dir, NEEDS_YOU_KIND, "Head needs you",
-                          lambda project: text + " in " + project + ". Run: roadmap head list")
+        notify.notify_dir(data_dir, NEEDS_YOU_KIND, "Head needs you", lambda name: text + ". Run: roadmap head list")
     waiting = _awaiting_review(data_dir, now, _stale_min())
     if waiting:
         text = str(len(waiting)) + " done, not accepted"
         notify.notify_dir(data_dir, REVIEW_KIND, "Head review waiting",
-                          lambda project: text + " in " + project + ". Review them: roadmap head list")
+                          lambda name: text + ", review waiting. Run: roadmap head list")
 
 
 def _noticed(handler):

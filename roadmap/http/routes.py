@@ -21,7 +21,7 @@ from roadmap.errors import (EXIT_CONFLICT, EXIT_ERROR, EXIT_EXTERNAL, EXIT_INVAL
                             EXIT_USAGE, RoadmapError)
 from roadmap import log as rlog
 from roadmap.http import security
-from roadmap.services import agentguard, claude_slots, commands, control, loader, usage, usage_accounts
+from roadmap.services import agentguard, claude_slots, commands, control, loader, notify, usage, usage_accounts
 from roadmap.services import git as git_service
 from roadmap.services import head as head_service
 from roadmap.services import history as history_service
@@ -321,6 +321,41 @@ def limits_put(app, req, match):
 
 def limits_route(app, req, match):
     return limits_get(app, req, match) if req.method == "GET" else limits_put(app, req, match)
+
+
+def notify_get(app, req, match):
+    """GET /api/v1/notify: the notification switches (master and one per kind). Read only."""
+    return json_reply(200, notify.settings())
+
+
+def notify_post(app, req, match):
+    """POST /api/v1/notify: {enabled: bool} the master switch, {kind, on: bool} one kind, or {test: true} to send one
+    test notification now (only while the master switch is on). Board page only."""
+    _write_guard(app, req)
+    if _cmd_source(app, req)[0] != "gui":
+        raise RoadmapError("forbidden", "only the board page may change the notification settings", EXIT_USAGE)
+    try:
+        body = security.strict_json_loads(req.read_body().decode("utf-8"))
+    except ValueError:
+        raise RoadmapError("invalid_input", "the body must be JSON", EXIT_USAGE)
+    if not isinstance(body, dict):
+        raise RoadmapError("invalid_input", "the body must be an object", EXIT_USAGE)
+    if body.get("test") is True:
+        reply = notify.settings()
+        reply["shown"] = bool(reply["enabled"] and notify.send_test())
+        return json_reply(200, reply)
+    try:
+        if isinstance(body.get("enabled"), bool):
+            return json_reply(200, notify.set_enabled(body["enabled"]))
+        if isinstance(body.get("kind"), str) and isinstance(body.get("on"), bool):
+            return json_reply(200, notify.set_kind(body["kind"], body["on"]))
+    except ValueError as exc:
+        raise RoadmapError("invalid_input", str(exc), EXIT_USAGE)
+    raise RoadmapError("invalid_input", "send enabled, kind with on, or test", EXIT_USAGE)
+
+
+def notify_route(app, req, match):
+    return notify_get(app, req, match) if req.method == "GET" else notify_post(app, req, match)
 
 
 ACCOUNT_ACTIONS = ("connect", "disconnect", "switch", "check", "login", "remove", "use", "refresh")
@@ -1060,6 +1095,7 @@ ROUTES = (
     (re.compile(r"/api/v1/tokens/history"), ("GET",), tokens_history),
     (re.compile(r"/api/v1/usage"), ("GET",), usage_get),
     (re.compile(r"/api/v1/limits"), ("GET", "PUT", "POST"), limits_route),
+    (re.compile(r"/api/v1/notify"), ("GET", "POST"), notify_route),
     (re.compile(r"/api/v1/usage/sync"), ("POST",), usage_sync),
     (re.compile(r"/api/v1/usage/accounts"), ("GET", "POST"), usage_accounts_route),
     (re.compile(r"/api/v1/usage/login"), ("POST",), usage_login),

@@ -332,7 +332,7 @@ class IdleNotificationTests(HomeCase):
         self.assertEqual(len(self.bodies), 1)
         self.assertNotIn(self.project, self.bodies[0])
         self.assertNotIn("cd ", self.bodies[0])
-        self.assertIn("demo", self.bodies[0])
+        self.assertIn("P1.1", self.bodies[0])  # the project name moved to the title (R11.163)
 
 
 if __name__ == "__main__":

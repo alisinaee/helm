@@ -91,3 +91,23 @@ class SettingsLoggingSource(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SettingsNotificationsSource(unittest.TestCase):
+    """R11.163: the Notifications group talks to /api/v1/notify with the existing switch style."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.src = read(SETTINGS_JS)
+
+    def test_group_has_master_kind_switches_and_test_button(self):
+        self.assertIn("Notifications</h3>", self.src)
+        self.assertIn('"set-notify"', self.src)
+        self.assertIn('"set-notify-kind"', self.src)
+        self.assertIn('data-action="notify-test"', self.src)
+        self.assertIn('"/api/v1/notify"', self.src)
+        self.assertIn("{ test: true }", self.src)
+
+    def test_other_settings_controls_are_still_wired(self):
+        for action in ("set-theme", "set-color-mode", "set-density", "set-log", "set-single-keys", "log-report"):
+            self.assertIn('action === "%s"' % action, self.src)
