@@ -114,8 +114,8 @@ def _stop_reason(windows, usage, local_fresh):
         name = WINDOW_NAMES[window]
         if not _is_number(reading):
             from roadmap.services import limits
-            return "stop: %s stop at %g%%: usage is stale (%s): sync usage before starting new work" % (
-                name, stop_at, limits._stale_age_text())
+            return ("stop: %s stop at %g%%: usage is stale (%s): sync usage before starting new work "
+                    "(run: roadmap usage sync)") % (name, stop_at, limits._stale_age_text())
         if reading >= stop_at:
             return "stop: %s %g%% >= %g%%" % (name, reading, stop_at)
     return None

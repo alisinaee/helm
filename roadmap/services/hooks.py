@@ -443,7 +443,9 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
 
 PRE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit", "Bash", "Agent", "Task", "WebFetch", "WebSearch")
 # while the project is blocked, these roadmap commands are the only ones a Bash call may run
-ALLOWED_WHILE_BLOCKED = (("inbox",), ("status",), ("ask",), ("rules", "show"), ("watch",))
+ALLOWED_WHILE_BLOCKED = (("inbox",), ("status",), ("ask",), ("rules", "show"), ("watch",),
+                         ("usage", "sync"), ("usage", "show"), ("usage", "stops"), ("usage", "account"),
+                         ("head",), ("job", "list"), ("job", "done"), ("job", "fail"), ("limit", "show"))
 PRE_TIMEOUT_S = 0.3        # a PreToolUse that takes longer lets the tool call through
 PRESENCE_MIN_BUDGET_S = 0.2  # the presence stamp is skipped when less of PRE_TIMEOUT_S is left
 DENY_LOG_S = 60            # a denial is logged at most once a minute per project
@@ -458,9 +460,13 @@ def _too_slow(clock, started):
 
 
 def _roadmap_command(command):
-    """True for a Bash command that is one roadmap command: it starts with 'roadmap ' and chains nothing."""
+    """True for a Bash command that is one roadmap command: its first word is roadmap or helm (bare, bin/roadmap, an
+    absolute or ~ path) and it chains nothing."""
     text = command.strip()
-    return text.startswith("roadmap ") and not any(op in text for op in _SHELL_OPERATORS)
+    words = text.split()
+    if len(words) < 2 or os.path.basename(words[0]) not in ("roadmap", "helm"):
+        return False
+    return not any(op in text for op in _SHELL_OPERATORS)
 
 
 def _project_quiet(payload, cwd):

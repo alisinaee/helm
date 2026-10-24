@@ -340,7 +340,7 @@ def evaluate(project, now=None):
 def describe(row):
     """The reason line of a row that warns or blocks (the words the hooks and the status show)."""
     if row.get("src") == "limits2" and row.get("used") is None:
-        return "%s stop at %g%%: usage is stale (%s): sync usage before starting new work" % (
+        return "%s stop at %g%%: usage is stale (%s): sync usage before starting new work (run: roadmap usage sync)" % (
             limits_v2.FIELDS[row["measure"]][3], row["value"], _stale_age_text())
     if row.get("src") == "limits2":
         verb = "reached" if row["state"] == "block" else "at"

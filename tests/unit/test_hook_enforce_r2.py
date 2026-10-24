@@ -181,9 +181,17 @@ class Finding4BlockedAllowlist(Base):
         control.stop("demo", now=MOMENT)
         for command in ("roadmap resume", "roadmap override --hours 2", "roadmap limit budget project 99999",
                         "roadmap phase approve P0", "roadmap rules add all do x", "roadmap rules rm R1",
-                        "roadmap rules sync", "roadmap hooks uninstall demo", "roadmap usage sync",
+                        "roadmap rules sync", "roadmap hooks uninstall demo", "roadmap job start",
                         "roadmap task done P0.1"):
             self.reason(self.bash(command))
+
+    def test_usage_sync_and_closing_commands_run_while_blocked(self):
+        control.stop("demo", now=MOMENT)
+        for command in ("bin/roadmap usage sync", "~/Works/helm/bin/roadmap usage sync", "roadmap usage sync",
+                        "helm head list", "roadmap job done J1", "roadmap limit show"):
+            self.assertIsNone(self.bash(command), command)
+        self.reason(self.bash("roadmap job start P0.1"))
+        self.reason(self.bash("cd x; roadmap usage sync"))
 
     def test_a_chained_roadmap_command_is_denied_while_blocked(self):
         control.stop("demo", now=MOMENT)
