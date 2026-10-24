@@ -203,7 +203,10 @@ def _issues_closed(issues_all):
             for i in closed[:ISSUES_CLOSED_MAX]]
 
 
-def _work_view(work_text, tasks, errors):
+WORK_TASKS_SHOWN = 20
+
+
+def _work_view(work_text, tasks, errors, jobs=()):
     """The work key (WORK-MODEL section 2, M7): one row per Work item in work.json order, {id, title, kind, status,
     prio, badges, progress: {done, total}}. Status and progress roll up from the agent tasks linked to the item
     (work.json links: task id -> work id). A linked task missing from tasks.json counts as cancelled. None when
@@ -219,6 +222,11 @@ def _work_view(work_text, tasks, errors):
         errors.append(error_entry("work.json", exc))
         return None
     state_of = {t["id"]: t["state"] for t in tasks}
+    model_of = {t["id"]: t.get("model") for t in tasks}
+    job_of = {}
+    for j in jobs:
+        if j.get("task") and j.get("id"):
+            job_of[j["task"]] = j["id"]  # jobs are in start order: the last one wins (newest)
     rows = []
     for item in items:
         linked = sorted(tid for tid, wid in links.items() if wid == item.get("id"))
@@ -228,9 +236,14 @@ def _work_view(work_text, tasks, errors):
         result = workstatus.rollup({"state": stored, "reopened": pending},
                                    [{"state": state_of.get(tid, "cancelled")} for tid in linked],
                                    person_accepted=item.get("accepted") is not None)
+        ordered = sorted(linked, key=lambda tid: state_of.get(tid) == "done")[:WORK_TASKS_SHOWN]
         rows.append({"id": item.get("id"), "title": item.get("title"), "kind": item.get("kind"),
                      "status": result["status"], "prio": "P%d" % int(item.get("prio", 2)),
-                     "badges": result["badges"], "progress": result["progress"]})
+                     "badges": result["badges"], "progress": result["progress"],
+                     "owner": item.get("owner") or ("head" if linked else None),
+                     "outcome": item.get("outcome") or None,
+                     "tasks": [{"id": tid, "state": state_of.get(tid, "cancelled"), "model": model_of.get(tid) or None,
+                                "job": job_of.get(tid)} for tid in ordered]})
     return rows
 
 
@@ -688,7 +701,7 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
     closed = _issues_closed(issues_all)
     if closed:
         out["issuesClosed"] = closed
-    work = _work_view(files.get("work.json"), tasks, errors)
+    work = _work_view(files.get("work.json"), tasks, errors, jobs)
     if work is not None:
         out["work"] = work
         out["needsYou"] = list(out["needsYou"]) + [
