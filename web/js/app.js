@@ -8,6 +8,7 @@ import { bannerHtml, emptyHtml, esc, patch, setHidden, skeletonHtml } from "./do
 import { buildViewModel, createStore, isSheetWidth, loadMode, loadPrefs, loadTheme, loadUi, normalizeSnapshot,
   panelIsOpen, resolveMode, saveMode, savePrefs, sectionOpenState, updateUi } from "./state.js";
 import { currentRoute, onRouteChange } from "./router.js";
+import { importVerdict, isNetworkError, retryDelayMs } from "./retry.js";
 import { fullRouteOf, fullSystemOf, loadSection, sectionById } from "./routes.js";
 import { configureCommands, pendingValue, run } from "./cmd.js";
 import { withBusy } from "./busy.js";
@@ -39,11 +40,14 @@ const prefsCache = new Map();
 const failedSections = new Set();
 const loadedSections = new Map();
 // A failed section import is not cached: its rejected promise is dropped, the error is kept here for the inline
-// "Could not load" state, and a retry imports again. autoRetried allows one automatic retry per section.
+// "Could not load" state, and a retry imports again. A network failure retries on its own with backoff (retry.js):
+// importQuiet holds the sections in that quiet phase (a "Reconnecting" line), importErrors the ones that show the
+// red state; importFirstFail and importTimers drive the backoff.
 const importErrors = new Map();
 const importTries = new Map();
-const autoRetried = new Set();
-const AUTO_RETRY_MS = 1000;
+const importQuiet = new Set();
+const importFirstFail = new Map();
+const importTimers = new Map();
 const loadingSections = new Set();
 let timer = null;
 let busy = false;
@@ -132,7 +136,8 @@ function importErrorHtml(section) {
 }
 
 // The section in <main>. A module loads once; until it is in, a skeleton shows and the next render picks it up.
-// A failed import is retried once after AUTO_RETRY_MS, then only by the Retry button.
+// A failed import caused by the network retries with backoff (retry.js) and shows "Reconnecting" meanwhile; after
+// about 30 s of failures, or for a code error, the Retry state shows (the backoff keeps going quietly behind it).
 function ensureLoaded(section) {
   if (loadingSections.has(section.id)) return;
   loadingSections.add(section.id);
@@ -142,30 +147,58 @@ function ensureLoaded(section) {
   const target = tries > 1 ? Object.assign({}, section, { module: section.module + "?retry=" + tries }) : section;
   loadSection(target).then(function (mod) {
     importErrors.delete(section.id);
+    importQuiet.delete(section.id);
+    importFirstFail.delete(section.id);
     loadedSections.set(section.id, mod);
     // The Planner binds its delegated listeners once, on the <main> element that stays in place across renders.
     if (section.id === "planner" && typeof mod.bind === "function") mod.bind(document.getElementById("main"));
   }, function (err) {
-    importErrors.set(section.id, err || new Error("import failed"));
-    if (!autoRetried.has(section.id)) {
-      autoRetried.add(section.id);
-      setTimeout(function () {
-        if (importErrors.has(section.id)) retrySection(section.id);
-      }, AUTO_RETRY_MS);
+    const now = Date.now();
+    if (!importFirstFail.has(section.id)) importFirstFail.set(section.id, now);
+    const verdict = importVerdict(err, importFirstFail.get(section.id), now);
+    if (verdict === "quiet") {
+      importQuiet.add(section.id);
+    } else {
+      importQuiet.delete(section.id);
+      importErrors.set(section.id, err || new Error("import failed"));
     }
+    if (isNetworkError(err)) scheduleRetry(section.id, tries);
   }).then(function () {
     loadingSections.delete(section.id);
     render();
   });
 }
 
-// Retry button and the automatic retry: the error clears, a skeleton shows, and the import runs again.
+function scheduleRetry(sectionId, failures) {
+  if (importTimers.has(sectionId)) return;
+  importTimers.set(sectionId, setTimeout(function () {
+    importTimers.delete(sectionId);
+    const section = sectionById(sectionId);
+    if (section && section.module && !loadedSections.has(sectionId)) ensureLoaded(section);
+  }, retryDelayMs(failures)));
+}
+
+// Retry button: the error clears, a skeleton shows, and the import runs again.
 function retrySection(sectionId) {
   const section = sectionById(sectionId);
   if (!section || !section.module || loadedSections.has(sectionId)) return;
+  if (importTimers.has(sectionId)) { clearTimeout(importTimers.get(sectionId)); importTimers.delete(sectionId); }
   importErrors.delete(sectionId);
+  importQuiet.delete(sectionId);
+  importFirstFail.delete(sectionId);
   ensureLoaded(section);
   render();
+}
+
+// The connection came back: every section that failed imports again at once.
+function retryAllSections() {
+  const ids = new Set([...importErrors.keys(), ...importQuiet]);
+  ids.forEach(function (id) {
+    const section = sectionById(id);
+    if (!section || !section.module || loadedSections.has(id)) return;
+    if (importTimers.has(id)) { clearTimeout(importTimers.get(id)); importTimers.delete(id); }
+    ensureLoaded(section);
+  });
 }
 
 function mainHtml(vm) {
@@ -174,6 +207,10 @@ function mainHtml(vm) {
   if (loadedSections.has(section.id)) return loadedSections.get(section.id).sectionView(vm);
   if (!section.module) return comingSoonHtml(section);
   if (importErrors.has(section.id)) return importErrorHtml(section);
+  if (importQuiet.has(section.id)) {
+    return '<div aria-busy="true"><p class="muted" role="status">Reconnecting\u2026</p>' +
+      skeletonHtml(["w-60", "w-90"]) + "</div>";
+  }
   ensureLoaded(section);
   return '<div aria-busy="true">' + skeletonHtml(["w-60", "w-90"]) + "</div>";
 }
@@ -434,6 +471,7 @@ async function refresh() {
     store.conn = { ok: false, lastOkAt: store.conn.lastOkAt, error: err.message };
   }
   if (!wasOk || !store.conn.ok) changed = true;
+  if (wasOk === false && store.conn.ok) retryAllSections();
   announce(store.conn.ok);
   await Promise.all(idsToRead(route).map(async function (id) {
     try {

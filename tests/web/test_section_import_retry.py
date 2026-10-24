@@ -5,6 +5,7 @@ section" state with a Retry button (data-action section-retry), and one automati
 URL gets a query, because the browser caches a failed module URL. tools/ui_smoke.py waits for the section's marker.
 """
 
+import json
 import os
 import re
 import shutil
@@ -43,11 +44,27 @@ class SectionImportRetryTests(unittest.TestCase):
         self.assertIn('"?retry=" + tries', ensure)
         self.assertIn("tries > 1", ensure)
 
-    def test_one_automatic_retry_after_about_a_second(self):
-        self.assertIn("const AUTO_RETRY_MS = 1000;", self.app)
+    def test_network_failures_retry_with_backoff_and_on_reconnect(self):
         ensure = function_body(self.app, "ensureLoaded")
-        self.assertIn("autoRetried.has(section.id)", ensure)
-        self.assertIn("}, AUTO_RETRY_MS);", ensure)
+        self.assertIn("importVerdict(", ensure)
+        self.assertIn("scheduleRetry(section.id, tries)", ensure)
+        self.assertIsNotNone(function_body(self.app, "retryAllSections"))
+        self.assertIn("if (wasOk === false && store.conn.ok) retryAllSections();", self.app)
+        self.assertIn("Reconnecting", function_body(self.app, "mainHtml"))
+
+    @unittest.skipUnless(shutil.which("node"), "node is not installed")
+    def test_retry_policy(self):
+        script = (
+            'import { retryDelayMs, isNetworkError, importVerdict } from %r;'
+            'const e = new TypeError("Failed to fetch dynamically imported module: x");'
+            'console.log(JSON.stringify([[1,2,3,4,5,9].map(retryDelayMs), isNetworkError(e),'
+            ' isNetworkError(new SyntaxError("bad")), importVerdict(e, 0, 29000), importVerdict(e, 0, 30000),'
+            ' importVerdict(new SyntaxError("x"), 0, 10)]));'
+        ) % ("file://" + os.path.join(REPO, "web", "js", "retry.js"))
+        out = subprocess.run(["node", "--input-type=module", "-e", script], capture_output=True, text=True)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertEqual(json.loads(out.stdout),
+                         [[1000, 2000, 4000, 8000, 15000, 15000], True, False, "quiet", "error", "error"])
 
     def test_inline_error_with_retry_button(self):
         body = function_body(self.app, "importErrorHtml")
