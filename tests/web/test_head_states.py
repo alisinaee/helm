@@ -136,7 +136,8 @@ class StateSource(unittest.TestCase):
     def test_filter_bar_offers_the_states_and_keeps_open_and_all(self):
         block = self.src.split("export const FILTERS", 1)[1][:400]
         labels = [label for _, label in re.findall(r'\["(\w+)", "([^"]+)"\]', block)]
-        self.assertEqual(labels, ["Open", "Queue", "Doing", "Done", "Failed", "Needs you", "Blocked", "Closed", "All"])
+        self.assertEqual(labels, ["Open", "Queue", "Doing", "Done", "Failed", "Unbound", "Needs you", "Blocked",
+                                  "Closed", "All"])
         self.assertNotIn("Unhandled", self.src)
 
     def test_every_ledger_status_maps_to_one_of_the_seven_states(self):

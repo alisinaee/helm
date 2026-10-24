@@ -773,6 +773,7 @@ GATE_WEEK_STOP = 95
 GATE_PAUSE_FILE = "head-pause"   # a file in the data dir: its presence pauses the gate
 GATE_STAMP_FILE = "head-gate.json"
 GATE_OPEN = ("new", "understood", "bound", "doing")
+GATE_UNBOUND_MIN = 15        # an open ask with no link after this many minutes is flagged "unbound"
 GATE_MAX_AGE_MIN = 24 * 60   # open asks older than this are counted in a "+N older asks" line, not listed
 _IDLE_TOOLS = (("cursor", "cursor idle: run the review audit"), ("agy", "agy idle: run an audit"))
 
@@ -813,7 +814,9 @@ def gate(rows, *, queue=(), running=(), dirty=None, unpushed=None, usage=None, p
         if age > GATE_MAX_AGE_MIN:
             older += 1
             continue
-        label = "unanswered" if r["status"] in ("new", "understood") else r["status"]
+        label = r["status"]
+        if label in ("new", "understood"):  # no link yet; red from GATE_UNBOUND_MIN (HEAD-SPEC 11.4)
+            label = "unbound" if age > GATE_UNBOUND_MIN else "unanswered"
         asks.append("%s %s %s: %s" % (r["id"], label, _age_text(age), r.get("sum", "")[:50]))
     if older:
         asks.append("+%d older asks: roadmap head list" % older)

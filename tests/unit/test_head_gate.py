@@ -31,7 +31,7 @@ class GatePure(unittest.TestCase):
         self.assertEqual(head_svc.gate(rows, usage={"fiveHourPercent": 90}, now=NOW), [])
         self.assertEqual(head_svc.gate(rows, usage={"weeklyPercent": 95.0}, now=NOW), [])
         items = head_svc.gate(rows, usage={"weeklyPercent": True}, now=NOW)
-        self.assertEqual(items[0], "H1 unanswered 40m: do the thing")
+        self.assertEqual(items[0], "H1 unbound 40m: do the thing")
 
     def test_under_stops_or_missing_reading_still_gates(self):
         rows = [row("H1")]
@@ -53,7 +53,7 @@ class GatePure(unittest.TestCase):
     def test_queue_and_idle_and_work_lines(self):
         rows = [row("H1")]
         items = head_svc.gate(rows, queue=["R7.29"], dirty=3, unpushed=2, now=NOW)
-        self.assertEqual(items, ["H1 unanswered 40m: do the thing", "task R7.29 queued, not started",
+        self.assertEqual(items, ["H1 unbound 40m: do the thing", "task R7.29 queued, not started",
                                  "3 uncommitted files", "2 unpushed commits", "cursor idle: run the review audit"])
 
     def test_idle_lines_only_beside_other_work_and_not_when_running(self):
@@ -78,13 +78,13 @@ class GateAgeLimit(unittest.TestCase):
     def test_ask_two_days_old_is_not_listed_but_counted(self):
         rows = [row("H1", ts=self.OLD_TS), row("H2", ts="2026-10-15T09:00:00Z", sum_text="recent")]
         items = head_svc.gate(rows, now=NOW)
-        self.assertEqual(items[0], "H2 unanswered 1h: recent")
+        self.assertEqual(items[0], "H2 unbound 1h: recent")
         self.assertEqual(items[1], "+1 older asks: roadmap head list")
         self.assertFalse(any(item.startswith("H1 ") for item in items))
 
     def test_ask_one_hour_old_is_listed(self):
         items = head_svc.gate([row("H1", ts="2026-10-15T08:30:00Z")], now=NOW)
-        self.assertEqual(items, ["H1 unanswered 1h: do the thing", "cursor idle: run the review audit",
+        self.assertEqual(items, ["H1 unbound 1h: do the thing", "cursor idle: run the review audit",
                                  "agy idle: run an audit"])
 
     def test_no_older_asks_means_no_plus_item(self):
@@ -127,7 +127,7 @@ class GateHook(ControlCase):
         reply = self.gate()
         self.assertEqual(reply["decision"], "block")
         self.assertIn("continue with:", reply["reason"])
-        self.assertIn("unanswered", reply["reason"])
+        self.assertIn("unbound", reply["reason"])
         self.assertIsNone(self.gate(now=self.epoch + 300))
         self.assertIsNotNone(self.gate(now=self.epoch + head_svc.GATE_WINDOW_S + 1))
 
@@ -173,11 +173,11 @@ class GateEdges(unittest.TestCase):
     def test_cursor_and_agy_both_running_add_no_idle_lines(self):
         running = [{"title": "cursor review", "model": "x"}, {"title": "agy audit", "model": "y"}]
         items = head_svc.gate([row("H1")], dirty=1, running=running, now=NOW)
-        self.assertEqual(items, ["H1 unanswered 40m: do the thing", "1 uncommitted files"])
+        self.assertEqual(items, ["H1 unbound 40m: do the thing", "1 uncommitted files"])
 
     def test_ask_summary_is_cut_to_fifty_characters(self):
         items = head_svc.gate([row("H1", sum_text="x" * 80)], now=NOW)
-        self.assertEqual(items[0], "H1 unanswered 40m: " + "x" * 50)
+        self.assertEqual(items[0], "H1 unbound 40m: " + "x" * 50)
 
     def test_unparseable_timestamp_counts_as_zero_minutes(self):
         items = head_svc.gate([row("H1", ts="yesterday-ish")], now=NOW)
@@ -189,3 +189,16 @@ class GateEdges(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GateUnbound(unittest.TestCase):
+    def test_unbound_label_only_after_fifteen_minutes(self):
+        young = row("H1", ts=(NOW - datetime.timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%SZ"))
+        old = row("H2", ts=(NOW - datetime.timedelta(minutes=20)).strftime("%Y-%m-%dT%H:%M:%SZ"))
+        items = head_svc.gate([young, old, row("H3", status="bound")], now=NOW)
+        self.assertEqual(items[:2], ["H3 bound 40m: do the thing", "H2 unbound 20m: do the thing"])
+        self.assertEqual(items[2], "H1 unanswered 10m: do the thing")
+
+    def test_session_idle_lines_skip_audit_tools_when_none_configured(self):
+        items = head_svc.gate([], queue=["R1"], dirty=2, now=NOW, audit_tools=[])
+        self.assertEqual(items, ["task R1 queued, not started", "2 uncommitted files"])

@@ -282,7 +282,12 @@ function linkedHtml(task, snap) {
   }).slice(-3).map(function (j) {
     return "<li>" + esc(j.id) + " " + esc(j.title || "") + " · " + esc(j.status) + "</li>";
   });
-  return sectionHtml("Linked", '<p class="d-meta">Issues</p>' + listHtml(issues, "None open.") +
+  const asks = ((snap.askOf || {})[task.id] || []).map(function (id) {
+    return '<li><a class="chip chip-neutral" href="#/p/' + esc(snap.id) + "/head?id=" + encodeURIComponent(id) +
+      '" title="Open ' + esc(id) + ' in Head">ask:' + esc(id) + "</a></li>";
+  });
+  return sectionHtml("Linked", (asks.length ? '<p class="d-meta">Asks</p><ul class="d-list">' + asks.join("") +
+    "</ul>" : "") + '<p class="d-meta">Issues</p>' + listHtml(issues, "None open.") +
     '<p class="d-meta">Questions</p>' + listHtml(questions, "None open.") +
     '<p class="d-meta">Jobs</p>' + listHtml(jobs, "No jobs yet."));
 }

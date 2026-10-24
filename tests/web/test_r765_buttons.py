@@ -23,7 +23,7 @@ ALLOWED = {
     ("settings.js", 59): "option label from a fixed list",
     ("tokens_history.js", 427): "account action word (Refresh, Connect, Log in...) passed by fixed callers",
     ("workflow.js", 920): "control text passed by fixed callers",
-    ("details.js", 394): "the user's own answer option, full text, aria-label names the question",
+    ("details.js", 399): "the user's own answer option, full text, aria-label names the question",
 }
 
 # A button whose visible text is built from a variable: >" + esc(x) + "</button> or >' + esc(x) + '</button>.

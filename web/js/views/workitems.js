@@ -19,7 +19,12 @@ const COL_OF = { "Won't do": "done" };
 const PRIO = /^P[0-3]$/;
 const NO_ITEM = "No Work item";
 
+let asksOf = {};
+let pidOf = "";
+
 export function workItems(snap) {
+  asksOf = snap && snap.askOf && typeof snap.askOf === "object" ? snap.askOf : {};
+  pidOf = snap && snap.id ? String(snap.id) : "";
   return snap && Array.isArray(snap.work) ? snap.work.filter(function (w) {
     return w && w.id;
   }) : null;
@@ -102,10 +107,24 @@ function tasksHtml(pid, w) {
   }).join("") + "</ul>";
 }
 
+// ask:H12 chips of the head asks bound to the tasks of a Work item; each opens that ask in Head.
+function asksHtml(pid, w) {
+  const ids = [];
+  (Array.isArray(w.tasks) ? w.tasks : []).forEach(function (t) {
+    (asksOf[String(t.id)] || []).forEach(function (id) {
+      if (ids.indexOf(id) < 0) ids.push(id);
+    });
+  });
+  return ids.length ? '<p class="wi-asks">' + ids.map(function (id) {
+    return '<a class="chip chip-neutral" href="#/p/' + esc(pid || pidOf) + "/head?id=" + encodeURIComponent(id) +
+      '" title="Open ' + esc(id) + ' in Head">ask:' + esc(id) + "</a>";
+  }).join(" ") + "</p>" : "";
+}
+
 function drawerHtml(pid, w) {
   return '<details class="wi-d"><summary class="wk-title" data-focus="wi-title-' + esc(w.id) + '">' + esc(w.title) +
     '</summary><p class="wi-outcome">' + (w.outcome ? esc(w.outcome) : "Outcome unknown.") + "</p>" +
-    tasksHtml(pid, w) + "</details>";
+    tasksHtml(pid, w) + asksHtml(pid, w) + "</details>";
 }
 
 function cardHtml(pid, w) {

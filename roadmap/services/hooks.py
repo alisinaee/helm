@@ -635,7 +635,7 @@ def _session_start(project, data_dir, clock, started, now=None, panel=""):
         stamp = control.clock_text(state.get("stoppedAt"))
         lines.append("roadmap: stopped by user at " + stamp + ". Run roadmap inbox.")
     lines += control.pending_lines(data_dir, limit=INBOX_LINES - len(lines))
-    head_lines = _head_session_lines(data_dir, now)
+    head_lines = _head_idle_lines(project, data_dir, now) + _head_session_lines(data_dir, now)
     panel_lines = panel.split("\n") if panel else []
     if not lines and not head_lines and not panel_lines:
         return None
@@ -972,6 +972,28 @@ def _head_session_lines(data_dir, now=None):
         segments.append("%d needs-you" % len(needs))
     line = "head: " + ", ".join(segments) + ". Run roadmap head brief."
     return [line[:HEAD_SESSION_CHARS]]
+
+
+HEAD_IDLE_LINES = 3
+HEAD_IDLE_CHARS = 80
+
+
+def _head_idle_lines(project, data_dir, now=None):
+    """Up to HEAD_IDLE_LINES short 'idle: ...' lines (HEAD-SPEC 11.2): the gate's queued tasks, uncommitted files and
+    unpushed commits. Only where the project captures. The cursor and agy lines need head.auditTools to name them (an
+    empty or missing list adds none). Never raises."""
+    try:
+        if not _head_on(data_dir):
+            return []
+        moment = datetime.datetime.fromtimestamp(time.time() if now is None else now, datetime.timezone.utc)
+        queue = [e.get("task") for e in queue_service.list_queue(data_dir)]
+        dirty, unpushed = _git_counts(project["path"], data_dir)
+        tools = audit_tools(_head_config(data_dir).get("head")) or []
+        items = head_svc.gate([], queue=queue, dirty=dirty, unpushed=unpushed, now=moment, audit_tools=tools,
+                              limit=HEAD_IDLE_LINES)
+    except Exception:
+        return []
+    return [("idle: " + item)[:HEAD_IDLE_CHARS] for item in items[:HEAD_IDLE_LINES]]
 
 
 def _short_age(minutes):

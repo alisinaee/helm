@@ -313,7 +313,7 @@ class HeadRender(unittest.TestCase):
 
     def test_numbers_and_summary_sit_in_their_own_cells(self):
         html = self.out["screen"]
-        self.assertIn('class="hd-c hd-age rg-num hd-amber"', html)
+        self.assertIn('class="hd-c hd-age rg-num hd-stale"', html)  # H4: unbound over 15 min is red
         self.assertIn('<span class="hd-c hd-sum rg-t"', html)
 
     def test_user_text_is_escaped_not_injected(self):
@@ -424,7 +424,8 @@ class HeadRender(unittest.TestCase):
     def test_list_columns_are_in_order_and_newest_first(self):
         html = self.out["list"]
         heads = re.findall(r'<th scope="col" class="[^"]+">([^<]+)</th>', html)
-        self.assertEqual(heads, ["#", "Kind", "You wrote", "Head replied", "State", "P", "Bound to", "Age", "Added", "Acc",
+        self.assertEqual(heads, ["#", "Kind", "You wrote", "Head replied", "State", "P", "Bound to", "Age", "Added",
+            "Acc",
             "Copy"])
         rows = re.findall(r'<tr class="hd-row" data-id="(H\d+)">', html)
         self.assertEqual(rows, list(reversed(re.findall(r'<tr class="hd-row" data-id="(H\d+)">',

@@ -24,7 +24,8 @@ import { toolbarHtml } from "../toolbar.js";
 import { collect, pageState, questionCardHtml, questionKey, watchCountdowns } from "./inbox.js";
 
 export const FILTERS = [["open", "Open"], ["queue", "Queue"], ["doing", "Doing"], ["done", "Done"],
-  ["failed", "Failed"], ["needs", "Needs you"], ["blocked", "Blocked"], ["closed", "Closed"], ["all", "All"]];
+  ["failed", "Failed"], ["unbound", "Unbound"], ["needs", "Needs you"], ["blocked", "Blocked"],
+  ["closed", "Closed"], ["all", "All"]];
 const KINDS = ["ask", "decision", "rule", "bug", "preference", "question", "review", "info"];
 // Each ledger status shows as one state: [filter key, label, chip tone]. Tones are the existing token chips, distinct
 // per state; the kind chips use their own tones (KIND_TONE). Queue is new or understood, Doing is bound or doing.
@@ -38,6 +39,7 @@ const KIND_TONE = { ask: "haiku", bug: "danger", rule: "opus", decision: "succes
 const CLOSED = ["done", "declined", "merged"];
 const UNHANDLED = ["new", "understood"];
 const BOUND_MAX = 2;
+const UNBOUND_MIN = 15;
 const FULL_CONCURRENCY = 3;
 const FULL_ID = /^H\d{1,4}$/;
 const SORTS = ["new", "old"];
@@ -72,7 +74,9 @@ function passes(row, opts) {
   const f = opts.f || "all";
   const st = row.status;
   if (f === "open" && CLOSED.indexOf(st) >= 0) return false;
-  if (f !== "open" && f !== "all" && stateOf(st)[0] !== f) return false;
+  if (f === "unbound") {
+    if (CLOSED.indexOf(st) >= 0 || (linksOf(row).length > 0)) return false;
+  } else if (f !== "open" && f !== "all" && stateOf(st)[0] !== f) return false;
   if (opts.kind && row.kind !== opts.kind) return false;
   if (opts.sid && String(row.acct || row.sid || "") !== opts.sid) return false;
   if (opts.q) {
@@ -233,7 +237,10 @@ function rowAge(row) {
   if (!isFinite(at)) return { age: row.age, amber: !!row.amber, stale: !!row.stale };
   const minutes = Math.max(0, (Date.now() - at) / 60000);
   const unhandled = UNHANDLED.indexOf(row.status) >= 0;
-  return { age: Math.floor(minutes), amber: unhandled && minutes > 30, stale: unhandled && minutes > 120 };
+  // An open ask with no link is red after 15 minutes (HEAD-SPEC 11.4).
+  const unbound = unhandled && linksOf(row).length === 0;
+  return { age: Math.floor(minutes), amber: unhandled && minutes > 30, stale: unhandled && (minutes > 120 ||
+    (unbound && minutes > UNBOUND_MIN)) };
 }
 
 // The section that shows each linked kind; the ref's id is the item selected there. Other kinds stay plain chips.
@@ -263,6 +270,25 @@ function linkOf(ref) {
 function taskTone(st) {
   if (st === "done" || st === "doing") return "success";
   return st === "blocked" || st === "hold" ? "warning" : "neutral";
+}
+
+// The resolved links of a row (title, status, jobs) when the snapshot has them, else its plain refs.
+function linksOf(row) {
+  if (Array.isArray(row.linked) && row.linked.length) return row.linked;
+  return Array.isArray(row.links) ? row.links : [];
+}
+
+// "2/4" progress of the bound tasks and the model of each running job, for the closed row.
+function progHtml(row) {
+  const p = row.prog && row.prog.total ? row.prog : null;
+  const models = [];
+  linksOf(row).forEach(function (link) {
+    (linkOf(link).jobs || []).forEach(function (j) {
+      if (j && j.model && j.state !== "done" && models.indexOf(String(j.model)) < 0) models.push(String(j.model));
+    });
+  });
+  return (p ? '<span class="hd-prog rg-num" title="Bound tasks done">' + esc(p.done + "/" + p.total) + "</span>" : "") +
+    (models.length ? '<span class="hd-job" title="Running">' + esc(models.join(", ")) + "</span>" : "");
 }
 
 // The bound-to chips: at most max of them (the closed row shows two), each with its status when the snapshot has
@@ -422,7 +448,7 @@ function stateReason(row) {
 
 // The "Bound to" block: each bound task with its id (a link to Work), title, status chip and running job model.
 function boundBlockHtml(row, pid) {
-  const items = (Array.isArray(row.links) ? row.links.map(linkOf) : []).map(function (link) {
+  const items = linksOf(row).map(linkOf).map(function (link) {
     const label = link.ref.split(":").pop();
     const href = refHref(link.ref, pid);
     const idHtml = href ? '<a class="chip chip-neutral" href="' + esc(href) + '" title="' + esc(link.ref) + '">' +
@@ -471,7 +497,7 @@ function rowHtml(vm, row, opts) {
     '<span class="hd-c hd-copy">' + copyButton("ask", id, id, { project: pid, sum: row.sum || "" }) + "</span>" +
     '<span class="hd-meta">' +
     '<span class="hd-c hd-status">' + statusHtml(row) + "</span>" +
-    '<span class="hd-c hd-bound">' + boundHtml(row.links, pid, BOUND_MAX) + "</span>" +
+    '<span class="hd-c hd-bound">' + boundHtml(linksOf(row), pid, BOUND_MAX) + progHtml(row) + "</span>" +
     '<span class="hd-c hd-age rg-num' + (ra.stale ? " hd-stale" : ra.amber ? " hd-amber" : "") + '"' +
     (ra.stale ? ' title="Stale"' : "") + ">" + esc(ageText(ra.age)) + "</span>" +
     '<span class="hd-c hd-when rg-num" title="' + esc(row.ts || "") + '">' + esc(whenText(row.ts)) + "</span>" +
@@ -597,7 +623,7 @@ function listRowHtml(vm, row, opts) {
     cell("hd-rpc", '<span class="hd-rep" title="' + esc(reply) + '">' + esc(reply) + "</span>") +
     cell("hd-stc", statusHtml(row)) +
     cell("hd-pr", prioChip(prioOfRow(vm && vm.project && vm.project.snapshot, row))) +
-    cell("hd-bnd", row.links && row.links.length ? boundHtml(row.links, pid, BOUND_MAX) :
+    cell("hd-bnd", linksOf(row).length ? boundHtml(linksOf(row), pid, BOUND_MAX) + progHtml(row) :
       '<span class="hd-none" title="Not bound yet">—</span>') +
     age + when +
     cell("hd-acc", row.acc ? '<span aria-label="Accepted" title="Accepted">✓</span>' : "") +
@@ -845,6 +871,8 @@ function refreshPaged(pid, snapRows) {
       if (!fresh) return;
       if (fresh.status !== undefined) row.status = fresh.status;
       if (fresh.links !== undefined) row.links = fresh.links;
+      if (fresh.linked !== undefined) row.linked = fresh.linked;
+      if (fresh.prog !== undefined) row.prog = fresh.prog;
     });
   });
 }
