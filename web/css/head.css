@@ -78,3 +78,4 @@
 .hd-tabs{flex-shrink:0}.hd-all{margin-inline-start:auto}.hd-bar>.tb{flex:1 1 0;min-width:0}
 .hd-qban{display:flex;align-items:center;gap:var(--sp-2);margin:0;padding:var(--sp-1) var(--sp-3);border:1px solid var(--warning);border-radius:var(--r-control)}
 .hd-qs{flex:1 1 auto;min-height:0;overflow:auto;max-width:960px}
+.hd-pr{width:2.5rem}

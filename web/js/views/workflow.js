@@ -14,6 +14,7 @@ import { buildHash, currentRoute, projectHash } from "../router.js";
 import { pageState } from "./inbox.js";
 import { toolbarHtml } from "../toolbar.js";
 import { tableHtml } from "./wf_table.js";
+import { taskWorkMap } from "./workitems.js";
 
 const LANE_H = 44;
 const PLOT_W = 960;
@@ -1320,6 +1321,12 @@ export function sectionView(vm) {
   const model = view === "map" ? { empty: false, jobCount: 0, byKey: new Map() }
     : layout(route.name === "project" ? raws[0] : raws, range, nowMs(), view === "timeline" ? tlNav : null);
   model.view = view;
+  model.workMap = new Map();
+  raws.forEach(function (raw) {
+    taskWorkMap(raw).forEach(function (v, k) {
+      model.workMap.set(k, v);
+    });
+  });
   model.route = route;
   lastModel = model;
   const head = '<div class="page-head"><p class="page-note">Live. ' +

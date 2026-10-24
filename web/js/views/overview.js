@@ -17,6 +17,7 @@ import { legendSection } from "./legend.js";
 import { nextSection } from "./next.js";
 import { phasesSection } from "./phases.js";
 import { recentSection } from "./recent.js";
+import { overviewWorkHtml } from "./workitems.js";
 
 const WARN_SHARE = 0.8;
 const WINDOW_WORD = { day: "daily", week: "weekly", total: "total" };
@@ -209,7 +210,9 @@ function projectOverview(vm) {
       '<p class="ov-more"><a href="' + esc(inboxHash(vm)) + '">Open Inbox</a></p>',
     { project: snap.id, count: snap.needUser }) + runningSection(vm) + phases;
   const meterCount = snap.meters ? snap.meters.length : 0;
-  const side = cardHtml("meters", "Meters", "", metersBody(snap), { project: snap.id, count: meterCount }) +
+  const workList = overviewWorkHtml(snap);
+  const side = (workList ? cardHtml("work", "Work", "", workList, { project: snap.id, count: snap.work.length }) : "") +
+    cardHtml("meters", "Meters", "", metersBody(snap), { project: snap.id, count: meterCount }) +
     blockersHtml(snap) + activityHtml(snap, now) +
     nextSection(vm) + recentSection(vm) + extrasSection(vm) + legendSection(vm);
   return bannerStack([limitBanner(worstLimit(scopes), true), controlBanner(vm)]) +

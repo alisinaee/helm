@@ -15,6 +15,7 @@ import { subtaskToggle, treeView } from "./tree.js";
 import { bind as bindPlanner, filterGroups as plannerFilterGroups, screenHtml as plannerScreen,
   setStatusFilter as setPlannerStatus } from "./planner.js";
 import { toolbarHtml } from "../toolbar.js";
+import { workBoardView, workItems, workListView, workTreeView } from "./workitems.js";
 
 // R10.7: the Planner is the fourth view of Work. It reads the same snapshot (tasks and features) as the other three.
 const VIEWS = ["board", "list", "tree", "planner"];
@@ -22,7 +23,7 @@ const VIEW_LABEL = { board: "Board", list: "List", tree: "Tree", planner: "Plann
 const PREF_PREFIX = "work.";
 const COLUMN_KEYS = COLUMNS.map(function (c) {
   return c.key;
-});
+}).concat(["backlog", "review"]);
 
 function savedParams(pid) {
   const raw = loadUi().filters[PREF_PREFIX + pid];
@@ -193,6 +194,11 @@ function issuesShown(ctx) {
 }
 
 function bodyHtml(ctx) {
+  // R9.23: with a work[] key the Board, List and Tree show Work items only, never an agent task.
+  if (workItems(ctx.snap) && ctx.view !== "planner") {
+    if (!workItems(ctx.snap).length) return emptyHtml("No Work items yet.", "<span>Add one: roadmap work add.</span>");
+    return ctx.view === "list" ? workListView(ctx) : ctx.view === "tree" ? workTreeView(ctx) : workBoardView(ctx);
+  }
   const issues = issuesShown(ctx);
   if (!ctx.all.length && !issues.length) {
     return emptyHtml("No tasks in this project yet.", "<span>Tasks load from the project plan.</span>");

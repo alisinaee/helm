@@ -3,6 +3,7 @@
 // Failed, Queued, Done (newest first in each group). Numbers sit in fixed right-aligned columns (rg-num num). The
 // model comes from workflow.js layout(); this module only reads it and returns markup (no inline style or handler).
 
+import { groupByWork } from "./workitems.js";
 import { chipHtml, esc } from "../dom.js";
 import { MISSING, fmtDuration, fmtTokens } from "../format.js";
 import { buildHash } from "../router.js";
@@ -162,8 +163,13 @@ export function tableHtml(model) {
   const head = "<tr>" + ["ID", "Title", "State", "Model", "Jobs", "Tokens", "Elapsed", "Updated"].map(function (h) {
     return '<th scope="col"' + (/^(Jobs|Tokens|Elapsed|Updated)$/.test(h) ? ' class="rg-num"' : "") + ">" + h + "</th>";
   }).join("") + '<th scope="col">Next</th></tr>';
-  const body = shown.map(function (x) {
-    return rowHtml(x.row, x.sum, model);
+  const body = groupByWork(shown, function (x) {
+    return x.row.task;
+  }, model.workMap).map(function (g) {
+    return (g.label ? '<tr class="wf-wg"><th scope="colgroup" colspan="9">' + esc(g.label) + "</th></tr>" : "") +
+      g.items.map(function (x) {
+        return rowHtml(x.row, x.sum, model);
+      }).join("");
   }).join("");
   return nav + '<div class="wf-scroll" tabindex="0" role="region" aria-label="Tasks table">' +
     '<table class="wf-table"><caption class="sr-only">Tasks in this range</caption>' +

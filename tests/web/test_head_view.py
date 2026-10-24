@@ -136,10 +136,10 @@ class HeadSource(unittest.TestCase):
         self.assertIn('<table class="hd-tbl"', self.src)
         self.assertIn('["#", "hd-n"], ["Kind", "hd-kind"], ["You wrote", "hd-sumc"], ["Head replied", "hd-rpc"],',
             self.src)
-        self.assertIn('["State", "hd-stc"], ["Bound to", "hd-bnd"], ["Age", "hd-age"], ["Added", "hd-when"],', self.src)
+        self.assertIn('["State", "hd-stc"], ["P", "hd-pr"], ["Bound to", "hd-bnd"], ["Age", "hd-age"],', self.src)
         self.assertIn('["Acc", "hd-acc"],', self.src)
         self.assertIn('["Copy", "hd-cp"]];', self.src)
-        self.assertIn('<tr class="hd-detail"><td colspan="10">', self.src)
+        self.assertIn('<tr class="hd-detail"><td colspan="11">', self.src)
 
     def test_view_toggle_is_in_the_hash_and_defaults_to_the_list(self):
         self.assertIn('go(el, Object.assign(st, { view: value }))', self.src)
@@ -424,7 +424,7 @@ class HeadRender(unittest.TestCase):
     def test_list_columns_are_in_order_and_newest_first(self):
         html = self.out["list"]
         heads = re.findall(r'<th scope="col" class="[^"]+">([^<]+)</th>', html)
-        self.assertEqual(heads, ["#", "Kind", "You wrote", "Head replied", "State", "Bound to", "Age", "Added", "Acc",
+        self.assertEqual(heads, ["#", "Kind", "You wrote", "Head replied", "State", "P", "Bound to", "Age", "Added", "Acc",
             "Copy"])
         rows = re.findall(r'<tr class="hd-row" data-id="(H\d+)">', html)
         self.assertEqual(rows, list(reversed(re.findall(r'<tr class="hd-row" data-id="(H\d+)">',
@@ -434,7 +434,7 @@ class HeadRender(unittest.TestCase):
     def test_list_cells_are_ten_per_row_with_numbers_right_aligned(self):
         html = self.out["list"]
         self.assertEqual(html.count('<tr class="hd-row"'), 7)
-        self.assertEqual(html.count('<td colspan="10">'), 7)
+        self.assertEqual(html.count('<td colspan="11">'), 7)
         self.assertEqual(len(re.findall(r'<td class="hd-(?:n|kind|sumc|rpc|stc|bnd|age|when|acc|cp)', html)), 7 * 10)
         self.assertRegex(html, r'<td class="hd-age rg-num[^"]*"[^>]*>\d+[mhd]</td>')
         self.assertRegex(html,

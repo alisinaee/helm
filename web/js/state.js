@@ -336,6 +336,8 @@ export function normalizeSnapshot(raw, fetchedAt) {
     activity: list(raw.activity).map(normalizeActivity),
     blocked: idList(raw.blocked),
     issues: list(raw.issues).map(normalizeIssue),
+    // R9.23: Work items as the snapshot sends them; null (not []) when the project has no Work model yet.
+    work: Array.isArray(raw.work) ? raw.work : null,
     // R7.97: the newest closed or wontfix issues as {id, title, kind, closed}; the Board's Done column reads them.
     issuesClosed: list(raw.issuesClosed).map(function (i) {
       return { id: String(i.id || ""), title: String(i.title || ""), kind: String(i.kind || ""),

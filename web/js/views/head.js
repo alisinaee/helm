@@ -10,6 +10,7 @@
 // Every value goes through esc() or textContent; the commands are head.accept, head.set, head.bind, head.split,
 // head.merge and the copy button.
 
+import { prioChip, prioOfRow } from "./workitems.js";
 import { esc } from "../dom.js";
 import { chipHtml } from "../dom.js";
 import { emptyHtml as pageEmpty, parseOne, swapNode } from "../dom.js";
@@ -552,10 +553,10 @@ function formsHtml(id) {
 }
 
 // The list view: one table row per entry (columns: # Kind Summary State Bound to Age Added Acc Copy). Each entry is a
-// tbody, so the row and its full-width detail row (colspan 9, the same panel as the card) open and close together.
+// tbody, so the row and its full-width detail row (colspan 11, the same panel as the card) open and close together.
 const LIST_COLS = [["#", "hd-n"], ["Kind", "hd-kind"], ["You wrote", "hd-sumc"], ["Head replied", "hd-rpc"],
-  ["State", "hd-stc"], ["Bound to", "hd-bnd"], ["Age", "hd-age"], ["Added", "hd-when"], ["Acc", "hd-acc"],
-  ["Copy", "hd-cp"]];
+  ["State", "hd-stc"], ["P", "hd-pr"], ["Bound to", "hd-bnd"], ["Age", "hd-age"], ["Added", "hd-when"],
+  ["Acc", "hd-acc"], ["Copy", "hd-cp"]];
 
 // The reply cell text: the loaded reply, else the row's reply preview (sent with the rows), else a dash while the row
 // has no preview (the phone listener, and snapshot rows before their page arrives). "No reply yet" when known empty.
@@ -595,12 +596,13 @@ function listRowHtml(vm, row, opts) {
       '<span class="hd-rep-inline">' + esc(reply) + "</span>") +
     cell("hd-rpc", '<span class="hd-rep" title="' + esc(reply) + '">' + esc(reply) + "</span>") +
     cell("hd-stc", statusHtml(row)) +
+    cell("hd-pr", prioChip(prioOfRow(vm && vm.project && vm.project.snapshot, row))) +
     cell("hd-bnd", row.links && row.links.length ? boundHtml(row.links, pid, BOUND_MAX) :
       '<span class="hd-none" title="Not bound yet">—</span>') +
     age + when +
     cell("hd-acc", row.acc ? '<span aria-label="Accepted" title="Accepted">✓</span>' : "") +
     cell("hd-cp", copyButton("ask", id, id, { project: pid, sum: row.sum || "" })) + "</tr>";
-  const detail = '<tr class="hd-detail"><td colspan="10">' + panelHtml(vm, row, opts, open) + "</td></tr>";
+  const detail = '<tr class="hd-detail"><td colspan="11">' + panelHtml(vm, row, opts, open) + "</td></tr>";
   return '<tbody class="hd-item' + (open ? " is-open" : "") + '">' + tr + detail + "</tbody>";
 }
 

@@ -70,3 +70,18 @@
 .wk-tree-row>.wk-word{grid-column:2;grid-row:2}
 .wk-tree-row>.rg-chips{grid-column:2;grid-row:3;justify-self:start}
 }
+/* Work items (R9.20, R9.23): P chip track, Work board/list rows, group header rows */
+.wi-p{min-width:2rem;justify-content:center;font-variant-numeric:tabular-nums}.wi-p0{color:var(--danger)}.wi-p1{color:var(--warning)}
+.wi-board{grid-template-columns:repeat(5,minmax(0,1fr))}
+.wi-prog{display:grid;grid-template-columns:minmax(0,1fr) 3rem;gap:var(--sp-2);align-items:center}.wi-n{text-align:right}
+.wi-d summary{cursor:pointer}.wi-outcome{margin:var(--sp-1) 0;color:var(--text-2);font-size:var(--fs-12)}
+.wi-tasks{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.wi-task{display:grid;grid-template-columns:4.5rem 5rem 5rem minmax(0,1fr);gap:var(--sp-2);font-size:var(--fs-12);color:var(--text-2)}
+.wi-list{list-style:none;margin:0;padding:0}
+.wi-row{display:grid;grid-template-columns:3.5rem 2.5rem minmax(0,1fr) 9rem 8rem 6rem 5rem;gap:var(--sp-2);align-items:center;min-height:var(--h-row);border-bottom:1px solid var(--track);font-size:var(--fs-13)}
+.wi-row-ov{grid-template-columns:2.5rem 3rem minmax(0,1fr) 5rem 7rem}
+.wi-head{color:var(--text-3);font-size:var(--fs-12)}
+.wi-c{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wi-t{white-space:normal}
+.wi-fold>summary{cursor:pointer;padding:var(--sp-2) 0}
+.ag-wg,.wf-wg th{background:var(--surface-2);color:var(--text-1);padding:var(--sp-1) var(--sp-2);font-size:var(--fs-12);text-align:left}
+@media (max-width:767px){.wi-head{display:none}.wi-row,.wi-row-ov{grid-template-columns:1fr 1fr;padding:var(--sp-2) 0}.wi-t{grid-column:1 / -1;order:-1}.wi-c::before{content:attr(data-l) ": ";color:var(--text-3)}.wi-t::before{content:none}.wi-task{grid-template-columns:4.5rem 1fr 1fr}}

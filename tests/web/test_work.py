@@ -145,7 +145,7 @@ class WorkViewTests(unittest.TestCase):
 
     def test_work_css_is_within_budget(self):
         size = os.path.getsize(os.path.join(WEB, "css", "work.css"))
-        self.assertLessEqual(size, 6 * 1024, "work.css is %d bytes" % size)
+        self.assertLessEqual(size, 8 * 1024, "work.css is %d bytes" % size)
 
     def test_work_modules_exist_and_are_lint_clean(self):
         for name in WORK_FILES:

@@ -6,6 +6,7 @@
 // timeline is LATER. A worker is a job whose parent is the lead job (the parent and role fields come from WP20).
 // The history controls carry data-agent (not data-action) and are wired once, below, by document listeners.
 
+import { groupByWork, taskWorkMap } from "./workitems.js";
 import { getJson } from "../api.js";
 import { run } from "../cmd.js";
 import { chipHtml, emptyHtml, esc } from "../dom.js";
@@ -259,6 +260,17 @@ function historyControls(pid, all, hist) {
       (hist.loading ? " disabled" : "") + ">Load more</button>" : "") + "</span></div>";
 }
 
+// R9.23 M9: rows grouped under a Work item header row ("W3 Work board ..."), "No Work item" last. No work map (the
+// snapshot lists no agent tasks per Work item): the rows stay one plain run.
+function groupedHtml(jobs, wmap, rowFn) {
+  return groupByWork(jobs, function (j) {
+    return j.task;
+  }, wmap).map(function (g) {
+    return (g.label ? '<li class="ag-row ag-wg"><span class="rg-t">' + esc(g.label) + "</span></li>" : "") +
+      g.items.map(rowFn).join("");
+  }).join("");
+}
+
 // One block per project in view: its live tree and its finished jobs.
 function projectBlock(entry, now, showName) {
   const snap = entry.snap;
@@ -268,19 +280,20 @@ function projectBlock(entry, now, showName) {
   const head = '<li class="ag-row" aria-hidden="true"><div class="row-grid rg-agent rg-head">' +
     agentCells("", "Model", "Title", "Task", '<span class="ag-effort">Effort</span>',
       '<span class="rg-num">Elapsed</span>', '<span class="rg-num">Tokens</span>', "") + "</div></li>";
+  const wmap = taskWorkMap(snap);
   const live = tree.roots.length
-    ? '<ul class="ag-list" aria-label="Running agents">' + head + tree.roots.map(function (job) {
+    ? '<ul class="ag-list" aria-label="Running agents">' + head + groupedHtml(tree.roots, wmap, function (job) {
       return agentRowHtml(job, entry.id, tree, blocked, now, 0);
-    }).join("") + "</ul>"
+    }) + "</ul>"
     : emptyHtml("No agents running.");
   const hist = historyOf(entry.id);
   const all = historyRows(entry.id, snap);
   hist.known = all.length;
   const past = all.length
     ? '<ol class="ag-list" aria-label="Last finished jobs">' + head +
-      all.slice(0, hist.visible).map(function (job) {
+      groupedHtml(all.slice(0, hist.visible), wmap, function (job) {
         return finishedHtml(job, entry.id);
-      }).join("") + "</ol>" + historyControls(entry.id, all, hist)
+      }) + "</ol>" + historyControls(entry.id, all, hist)
     : '<p class="ov-sum">No finished jobs yet.</p>';
   return '<section class="ov-card" aria-label="Agents">' + heading + live +
     '<h3 class="ov-h">Recently finished jobs</h3>' + past + "</section>";
