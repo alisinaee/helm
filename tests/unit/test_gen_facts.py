@@ -13,7 +13,7 @@ import unittest
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 TOOL = os.path.join(REPO, "tools", "gen_facts.py")
 SHIM = os.path.join(REPO, "bin", "roadmap")
-MAX_BYTES = 60 * 1024
+MAX_BYTES = 64 * 1024  # (2026-10-24: Work model + notify grew the facts)
 
 
 def _env(home):

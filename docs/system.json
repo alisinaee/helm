@@ -23,7 +23,7 @@
      "files": ["roadmap/store/**", "roadmap/templates/**", "docs/*.json", "docs/*.jsonl"],
      "notes": "Per-project JSON and JSONL state under docs/ and the global roadmap home.", "tasks": ["R7.96"]},
     {"id": "web-shell", "name": "Web shell", "layer": "ui", "kind": "module",
-     "files": ["web/index.html", "web/legacy.html", "web/icons.svg", "web/logo.png", "web/js/*.js", "web/css/**"],
+     "files": ["web/index.html", "web/legacy.html", "web/icons.svg", "web/logo.png", "web/app-icon.png", "web/js/*.js", "web/css/**"],
      "entry": "web/index.html", "notes": "SPA shell: hash router, state, api client, shared CSS.",
      "tasks": ["R1.7", "R10.17"]},
     {"id": "views", "name": "Views", "layer": "ui", "kind": "module", "files": ["web/js/views/**"],

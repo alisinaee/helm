@@ -21,7 +21,7 @@ import tempfile
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_OUT = os.path.join(REPO, "docs", "facts", "FACTS.md")
-MAX_BYTES = 60 * 1024
+MAX_BYTES = 64 * 1024  # (2026-10-24: Work model + notify grew the facts)
 HELP_CAP = 1500          # characters of --help text kept per command
 HELP_TIMEOUT = 60        # seconds per help call
 CONST_RE = re.compile(r"(_MAX|_CAP|_LIMIT|_KEEP)$|^(KEEP|CAP|LIMIT)$|^KEEP_|^LIMIT_")
