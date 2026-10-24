@@ -2,6 +2,7 @@
 secret in it) must never reach the log."""
 
 import re
+import time
 
 from tests.api.support import PROJECT_ID, ServerCase
 
@@ -12,6 +13,10 @@ class AccessLog(ServerCase):
     def test_line_has_method_path_status_and_ms_but_no_query(self):
         with self.assertLogs("roadmap.http.access", level="INFO") as logs:
             res = self.request("GET", "/api/v1/health?k=" + SECRET + "&x=1")
+            # the server thread writes the access line after the response is sent: wait for it
+            deadline = time.monotonic() + 2
+            while not logs.records and time.monotonic() < deadline:
+                time.sleep(0.01)
         self.assertEqual(res.status, 200)
         self.assertEqual(len(logs.records), 1)
         line = logs.records[0].getMessage()
