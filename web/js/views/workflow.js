@@ -1079,12 +1079,12 @@ function mapSvg(kit, ctx) {
     '<div class="wfg-host" data-wf-map-host data-wf-rev="' + esc(pendingMap.rev) + '"></div></div>';
 }
 
-// Opens the map centred on Now, fitted to its height but never below OPEN_K (so the card titles stay readable). Later
+// Opens the map fitted whole to its frame (R9.45), never past 1:1 and never below the viewport minimum. Later
 // renders keep the reader's own zoom and pan.
 function openAtNow(api, flow) {
-  const k = Math.min(1, Math.max(OPEN_K, (api.size().h - 32) / Math.max(1, flow.height)));
-  api.zoom(k / api.view().k);
-  api.centerOn("now", true);
+  api.fit();
+  const k = api.view().k;
+  if (k > 1) api.zoom(1 / k);
 }
 
 // Puts the pending diagram into the host the last patch rendered, with the minimap beside it. Runs after every patch.

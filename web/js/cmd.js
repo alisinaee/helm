@@ -75,6 +75,24 @@ async function undoActivity(activity, project, opts, key) {
   refreshNow();
 }
 
+// R9.42: a brief drop is quiet. The connection counts as down (red Offline) only after DOWN_GRACE_MS without a good
+// reading; before that it is "wait" (Reconnecting). downSince is the first failed poll; any ok clears it.
+export const DOWN_GRACE_MS = 5000;
+let downSince = 0;
+export function connPhase(conn, now) {
+  if (!conn || conn.ok !== false) { downSince = 0; return conn && conn.ok === true ? "ok" : "wait"; }
+  const t = typeof now === "number" ? now : Date.now();
+  if (!downSince) downSince = t;
+  return t - downSince >= DOWN_GRACE_MS ? "down" : "reconnecting";
+}
+export function resetConnGrace() { downSince = 0; }
+
+function notifyPaused() {
+  const down = downSince && Date.now() - downSince >= DOWN_GRACE_MS;
+  if (down) showToast({ text: "Offline. Changes are paused until the connection returns.", tone: "danger" });
+  else showToast({ text: "Reconnecting. Try again in a moment." });
+}
+
 // opts: label (toast text), project (id; default the current project), apply and revert (local state),
 // key and value (a pending value for the snapshot-backed control, see pendingValue), busyEl (a function that returns
 // the button to show loading, called after the optimistic re-render, which replaces the pressed button).
@@ -82,7 +100,7 @@ export async function run(op, args, opts) {
   const o = opts || {};
   const label = o.label || op;
   if (!writable()) {
-    showToast({ text: "Offline. Changes are paused until the connection returns.", tone: "danger" });
+    notifyPaused();
     return null;
   }
   const project = o.project || projectOf();
@@ -139,7 +157,7 @@ async function undoBatch(activities, project, o, keys) {
 export async function runBatch(items, opts) {
   const o = opts || {};
   if (!writable()) {
-    showToast({ text: "Offline. Changes are paused until the connection returns.", tone: "danger" });
+    notifyPaused();
     return null;
   }
   const project = o.project || projectOf();

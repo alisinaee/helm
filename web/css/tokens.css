@@ -533,3 +533,9 @@
 .lv-numwrap, .lv-unit { white-space: nowrap }
 .ag-legend { margin: 0 }
 .rg-agent > .ag-lead > input { margin: 0 }
+
+/* The usage band wraps: meters share a row, the note and actions get a full-width row (no one-letter-per-line note). */
+.band.band { grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
+.band .band-actions { grid-column: 1 / -1; min-width: 0; }
+.band-actions .banner { flex: 1 1 100%; min-width: min(16rem, 100%); }
+.band-value[title] { color: var(--text-2); font-weight: 500; }

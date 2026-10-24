@@ -30,10 +30,11 @@ function toneFor(pct) {
 }
 
 function meterBlock(label, pct, resetsAt, now, approx) {
-  const text = (approx && pct != null ? "~" : "") + fmtPercent(pct);
+  const text = pct == null ? "unknown" : (approx ? "~" : "") + fmtPercent(pct);
+  const why = pct == null ? ' title="Unknown: no fresh reading."' : "";
   return '<div class="band-meter">' +
     '<div class="band-head"><span class="band-label">' + esc(label) + "</span>" +
-    '<span class="band-value">' + esc(text) + "</span></div>" +
+    '<span class="band-value"' + why + ">" + esc(text) + "</span></div>" +
     meterHtml(pct, toneFor(pct)) +
     '<p class="band-sub">' + esc(fmtResets(resetsAt, now)) + "</p></div>";
 }

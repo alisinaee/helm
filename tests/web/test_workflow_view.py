@@ -229,8 +229,8 @@ class WorkflowMapTests(unittest.TestCase):
         self.assertNotIn("Handoff", table)
         self.assertNotIn("Sequence", table)
 
-    def test_map_opens_centred_on_now_and_keeps_the_user_view_after(self):
-        self.assertIn('api.centerOn("now", true)', self.source)
+    def test_map_opens_fitted_and_keeps_the_user_view_after(self):
+        self.assertIn("api.fit();", self.source)
         self.assertIn("if (opening) openAtNow(api, st.flow);", self.source)
         self.assertIn("const view = opening ? undefined : store.view;", self.source)
         # The previous viewport is destroyed before the new one reads the live view.

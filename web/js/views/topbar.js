@@ -11,6 +11,7 @@ import { SECTIONS, SETTINGS, sectionById } from "../routes.js";
 import { sectionHash } from "../router.js";
 import { panelIsOpen } from "../state.js";
 import { showToast } from "./toast.js";
+import { connPhase, DOWN_GRACE_MS } from "../cmd.js";
 import { weeklyStopRow } from "./limits.js";
 
 const THEME_LABEL = { obsidian: "Obsidian & Lime", classic: "Midnight", black: "Classic" };
@@ -222,12 +223,32 @@ function metersHtml(vm) {
     (stale ? '<span class="dot top-stale" aria-hidden="true"></span>' : "") + "</a>" + age + enter;
 }
 
+let connTimer = null;
+
 function connHtml(conn) {
-  if (conn.ok === true) {
+  const phase = connPhase(conn);
+  if (phase === "ok") {
+    if (connTimer) { clearTimeout(connTimer); connTimer = null; }
     return '<span class="conn" data-state="ok"><span class="dot" aria-hidden="true"></span>Live</span>';
   }
-  if (conn.ok === false) {
+  if (phase === "down") {
     return '<span class="conn" data-state="down"><span class="dot" aria-hidden="true"></span>Offline</span>';
+  }
+  if (phase === "reconnecting") {
+    // Quiet for the grace, then the pill turns red by itself without waiting for the next poll.
+    if (!connTimer && typeof setTimeout === "function") {
+      connTimer = setTimeout(function () {
+        connTimer = null;
+        if (typeof document === "undefined") return;
+        const el = document.querySelector('.conn[data-state="wait"][data-grace]');
+        if (!el) return;
+        el.setAttribute("data-state", "down");
+        el.removeAttribute("data-grace");
+        el.lastChild.textContent = "Offline";
+      }, DOWN_GRACE_MS + 50);
+    }
+    return '<span class="conn" data-state="wait" data-grace="1"><span class="dot" aria-hidden="true"></span>' +
+      "Reconnecting…</span>";
   }
   return '<span class="conn" data-state="wait"><span class="dot" aria-hidden="true"></span>Connecting</span>';
 }
