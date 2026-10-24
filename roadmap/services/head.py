@@ -501,6 +501,10 @@ def _done_at_bind(data_dir, refs):
     if not refs:
         return []
     done = {"task:" + str(t.get("id")) for t in jobs.task_records(data_dir) if str(t.get("status")) == "done"}
+    from roadmap.services import work
+    states, owner = work.head_states(data_dir)
+    done = {ref for ref in done if ref[len("task:"):] not in owner}
+    done |= {ref for ref, state in states.items() if state == "done" and not ref.startswith("_")}
     return [ref for ref in refs if ref in done]
 
 
@@ -510,9 +514,18 @@ def fold_asks(data_dir, now=None):
     still reviews the closed ask. Returns the ids closed."""
     tasks = {str(t.get("id")): t for t in jobs.task_records(data_dir)}
     states = {"task:" + tid: str(t.get("status")) for tid, t in tasks.items()}
+    from roadmap.services import work
+    work_states, owner = work.head_states(data_dir)
+    states.update({k: v for k, v in work_states.items() if not k.startswith("_")})
     closed = []
     for row in head.fold(_records(data_dir), states, now=now):
         if row.get("manual") is not None or _kind(row) != "ask":
+            continue
+        verdict = work.ask_close(row["links"], work_states, owner)
+        if verdict is not None:  # bound to a Work item: closes only when it is accepted or Won't do
+            if verdict[0] and not head.all_bound_done(row):
+                update(data_dir, row["id"], by="auto", sets={"status": "done"}, note=verdict[1], now=now)
+                closed.append(row["id"])
             continue
         ids = [ref[len("task:"):] for ref in row["links"] if ref.startswith("task:")]
         if not ids or any(states.get("task:" + tid) != "done" for tid in ids) or head.all_bound_done(row):

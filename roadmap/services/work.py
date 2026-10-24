@@ -323,3 +323,66 @@ def list_views(data_dir):
     """Every Work item in id order, derived status included."""
     doc = _doc(data_dir)
     return [_view(data_dir, doc, item) for item in sorted(doc["items"], key=lambda i: _num(i["id"]))]
+
+
+# ---------------------------------------------------------------- fold into asks, inbox and queue (M6)
+
+_LINK_OF = {workstatus.DONE: "done", workstatus.WONT_DO: "done", workstatus.REVIEW: "review",
+            workstatus.DOING: "doing"}
+
+
+def head_states(data_dir):
+    """What the head fold reads for Work-bound links: ({link ref: state}, {task id: Work id}).
+
+    work:W12 and task:<id of W12> both read the Work item's state, so an ask never closes on one task done: done after
+    accept (or Won't do), review while the item is in Review, doing while it is Doing, open otherwise."""
+    states, owner = {}, {}
+    doc = _doc(data_dir)
+    for item in doc["items"]:
+        rows = _task_rows(data_dir, doc, item["id"])
+        view = _view(data_dir, doc, item)
+        state = _LINK_OF.get(view["status"], "open")
+        states["work:" + item["id"]] = state
+        states["_status:" + item["id"]] = view["status"]
+        for row in rows:
+            owner[row["id"]] = item["id"]
+            states["task:" + row["id"]] = state
+    return states, owner
+
+
+def lifted_ids(links, owner):
+    """The Work ids an ask is bound to: work:W refs and the Work item of each task ref, in link order."""
+    out = []
+    for ref in links:
+        kind, _, value = str(ref).partition(":")
+        wid = value if kind == "work" else owner.get(value) if kind == "task" else None
+        if wid and wid not in out:
+            out.append(wid)
+    return out
+
+
+def ask_close(links, states, owner):
+    """None when the ask is not bound to a Work item (the old rule applies); else (close, note). close is True when
+    every Work item it is bound to is Done or Won't do; the note is 'W12 accepted' (or "W12 won't do")."""
+    wids = lifted_ids(links, owner)
+    if not wids:
+        return None
+    if any(states.get("work:" + w) != "done" for w in wids):
+        return False, ""
+    words = ["accepted" if states.get("_status:" + w) == workstatus.DONE else "won't do" for w in wids]
+    return True, ", ".join(w + " " + word for w, word in zip(wids, words))
+
+
+def review_items(data_dir):
+    """The Inbox items for Work items in Review: one per item, derived on every read, so accept or reopen clears it
+    and a repeat never duplicates. Each carries the accept op."""
+    return [{"kind": "review", "id": v["id"], "title": "Review " + v["id"] + " " + v["title"],
+             "action": {"op": "work.accept", "args": {"id": v["id"]}}}
+            for v in list_views(data_dir) if v["status"] == workstatus.REVIEW]
+
+
+def task_prios(data_dir):
+    """{agent task id: 'P0'..'P3'} from its Work item's prio, for the supervisor queue (a task has no own prio)."""
+    doc = _doc(data_dir)
+    prio = {i["id"]: "P%d" % i["prio"] for i in doc["items"]}
+    return {tid: prio[wid] for tid, wid in doc["links"].items() if wid in prio}

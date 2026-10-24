@@ -227,13 +227,34 @@ def _fold_tasks(conn):
     return done
 
 
-def _fold_asks(conn):
+def _work_states(data_dir):
+    """(states, owner) of the Work items for the ask fold; empty when there is no readable work.json."""
+    if data_dir is None:
+        return {}, {}
+    from roadmap.services import work
+    try:
+        return work.head_states(data_dir)
+    except Exception:
+        return {}, {}
+
+
+def _fold_asks(conn, data_dir=None):
+    from roadmap.services import work
+    work_states, owner = _work_states(data_dir)
     tasks = {r["id"]: (r["status"], json.loads(r["data"]))
              for r in conn.execute("SELECT id, status, data FROM tasks").fetchall()}
     closed = []
     for ask in conn.execute("SELECT seq, id, data FROM asks WHERE t = 'e' ORDER BY seq").fetchall():
         body = json.loads(ask["data"])
         if body.get("status") in HAND_STATUSES:
+            continue
+        verdict = work.ask_close(body.get("links") or [], work_states, owner)
+        if verdict is not None:  # bound to a Work item: closes only when it is accepted or Won't do
+            if verdict[0]:
+                body.update({"status": "done", "by": "auto", "note": verdict[1]})
+                conn.execute("UPDATE asks SET data = ? WHERE seq = ?", (json.dumps(body, sort_keys=True), ask["seq"]))
+                events.append(conn, "ask.closed", "ask", ask["id"], {"by": "auto", "note": verdict[1]})
+                closed.append(ask["id"])
             continue
         ids = [str(ref)[len("task:"):] for ref in body.get("links") or [] if str(ref).startswith("task:")]
         if not ids or any(tasks.get(t, (None,))[0] != "done" for t in ids):
@@ -293,7 +314,7 @@ def tick(data_dir, now=None):
                 report = {"reaped": _reap(conn, now_s), "expired_leases": leases.drop_expired(conn, now_s)}
                 report["queued"], report["needs_you"] = _retry(conn, now_s)
                 report["done_tasks"] = _fold_tasks(conn)
-                report["closed_asks"] = _fold_asks(conn)
+                report["closed_asks"] = _fold_asks(conn, data_dir)
             report["ran"] = True
         finally:
             with db.txn(conn):
@@ -303,11 +324,14 @@ def tick(data_dir, now=None):
     return report
 
 
-def next_launches(conn, slots, now=None):
+def next_launches(conn, slots, now=None, work_prio=None):
     """The queued jobs to start next, at most slots of them, best first: priority P0..P3, then age (queued_at),
     then insertion order. Skips a job whose task already runs or is claimed, or whose files are leased or taken by
     an earlier pick. Each pick is reserved in the caller's transaction: its status goes queued -> claimed and its
-    files are leased, so the same job is never returned twice. Returns job dicts (claimed)."""
+    files are leased, so the same job is never returned twice. work_prio ({task id: 'P0'..'P3'},
+    services/work.task_prios) replaces the job's own prio for a task of a Work item (WORK-MODEL
+    section 2).
+    Returns job dicts (claimed)."""
     limit = max(0, int(slots))
     if limit == 0:
         return []
@@ -319,7 +343,13 @@ def next_launches(conn, slots, now=None):
     queued = []
     for row in conn.execute("SELECT rowid, data FROM jobs WHERE status = 'queued' ORDER BY rowid").fetchall():
         queued.append((row["rowid"], json.loads(row["data"])))
-    queued.sort(key=lambda item: (_prio_rank(item[1]), float(item[1].get("queued_at") or 0.0), item[0]))
+    work_prio = work_prio or {}
+
+    def rank(job):
+        prio = work_prio.get(job.get("task"))
+        return PRIORITIES.index(prio) if prio in PRIORITIES else _prio_rank(job)
+
+    queued.sort(key=lambda item: (rank(item[1]), float(item[1].get("queued_at") or 0.0), item[0]))
     picked = []
     for _, job in queued:
         if len(picked) >= limit:

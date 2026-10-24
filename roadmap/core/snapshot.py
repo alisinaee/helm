@@ -234,6 +234,24 @@ def _work_view(work_text, tasks, errors):
     return rows
 
 
+_WORK_LINK = {"Done": "done", "Won't do": "done", "Review": "review", "Doing": "doing"}
+
+
+def _work_link_states(work_text, work_rows):
+    """{ref: state} for the head fold: work:W12 and task:<task of W12> read the Work item's state (done after accept,
+    review in Review, doing in Doing), so an ask closes on the item and never on one task (WORK-MODEL section 3)."""
+    if not work_rows:
+        return {}
+    try:
+        links = json.loads(work_text).get("links") or {}
+    except (ValueError, AttributeError):
+        return {}
+    state = {r["id"]: _WORK_LINK.get(r["status"], "open") for r in work_rows}
+    out = {"work:" + wid: st for wid, st in state.items()}
+    out.update({"task:" + tid: state[wid] for tid, wid in links.items() if wid in state})
+    return out
+
+
 def head_link_state(tasks, jobs, issues=()):
     """The link states the head fold reads: task:<id> from the task state, job:<id> as running, done or open,
     issue:<id> as open or done. A task with a running job on it reads as running, so the ask it is bound to is doing
@@ -673,6 +691,9 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
     work = _work_view(files.get("work.json"), tasks, errors)
     if work is not None:
         out["work"] = work
+        out["needsYou"] = list(out["needsYou"]) + [
+            {"kind": "review", "id": w["id"], "title": "Review %s %s" % (w["id"], w["title"])}
+            for w in work if w["status"] == "Review"]
     if meters is not None:
         out["meters"] = meters
     if rules is not None:
@@ -682,7 +703,10 @@ def build_snapshot(files, config, now, control=None, meters=None, rules=None, se
     if folder is not None:
         out["project"]["path"] = str(folder)
     if head_records is not None:
-        head = _head_view(head_records, head_link_state(tasks, jobs, issues_all), moment, tasks=tasks,
+        link_state = head_link_state(tasks, jobs, issues_all)
+        if work is not None:
+            link_state.update(_work_link_states(files.get("work.json"), work))
+        head = _head_view(head_records, link_state, moment, tasks=tasks,
                           issues=issues_open, jobs=jobs, issues_all=issues_all,
                           rule_states=rule_state_map(rule_proposals))
         out["askOf"] = head.pop("askOf")

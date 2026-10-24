@@ -12,7 +12,8 @@ from roadmap.core import planfmt
 
 VERSION = 1
 RECORD_TYPES = ("e", "u", "s")
-LINK_KINDS = ("task", "sub", "issue", "feature", "question", "backlog", "review", "rule", "doc", "commit", "job", "ask")
+LINK_KINDS = ("task", "sub", "issue", "feature", "question", "backlog", "review", "rule", "doc", "commit", "job", "ask",
+              "work")
 MAX_LINKS = 6
 MANUAL_STATUSES = ("merged", "declined", "needs-you", "done", "open")
 ACTIVE_LINK_STATES = ("doing", "partial", "running")
@@ -222,6 +223,8 @@ def _status(entry, link_state):
         return "blocked", False
     if any(s in ACTIVE_LINK_STATES for s in states):
         return "doing", False
+    if "review" in states:  # a bound Work item waits for the person's accept (WORK-MODEL section 3)
+        return "review", False
     if links:
         return "bound", False
     if entry["triaged"]:

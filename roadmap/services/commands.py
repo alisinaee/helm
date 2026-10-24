@@ -1162,12 +1162,23 @@ def inbox_lines(data_dir, now=None):
         lines.append("answered: %s %s" % (q["id"], q.get("answer")))
     for q in questions.list_questions(data_dir, open_only=True)[:2]:
         lines.append("open: %s %s" % (q["id"], _short(q["text"], 60)))
+    for item in _review_items(data_dir)[:2]:
+        lines.append("%s (roadmap work accept %s)" % (_short(item["title"], 60), item["id"]))
     if not lines:
         return ["inbox: nothing waiting"]
     if len(lines) > INBOX_MAX_LINES:
         shown = len(lines) - (INBOX_MAX_LINES - 1)
         lines = lines[:INBOX_MAX_LINES - 1] + ["(+%d more: roadmap ask list)" % shown]
     return lines
+
+
+def _review_items(data_dir):
+    """The Inbox review items: one per Work item in Review (services/work.review_items). Empty when unreadable."""
+    from roadmap.services import work
+    try:
+        return work.review_items(data_dir)
+    except Exception:
+        return []
 
 
 def _recent(stamp, moment):
