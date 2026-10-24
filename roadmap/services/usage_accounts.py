@@ -196,7 +196,10 @@ def active_for_sync(cfg=None):
         if not accounts(cfg):  # the person removed every account: the sync reads nothing
             return {"id": DEFAULT_ID, "location": None, "connected": False}
         account = _find(cfg, active_id(cfg))
-        return {"id": account["id"], "location": location(account), "connected": account["enabled"]}
+        where = location(account)
+        # refreshable: a config-dir login plain claude does not use now (Helm may refresh its token pair itself)
+        refreshable = where is not None and read_location(account) is not None
+        return {"id": account["id"], "location": where, "connected": account["enabled"], "refreshable": refreshable}
     except Exception as exc:  # the sync must keep working with the old single login
         log.warning("usage accounts unreadable, using the default login: %s", type(exc).__name__)
         return {"id": DEFAULT_ID, "location": None, "connected": True}

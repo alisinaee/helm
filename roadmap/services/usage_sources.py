@@ -102,6 +102,24 @@ def keychain_stamp(service=KEYCHAIN_SERVICE):
     return found.group(1) if found else ""
 
 
+def location_stamp(location=None):
+    """Stamp of one account's login place (keychain item mtime plus credentials file mtime/size), "" when unreadable.
+    None is the default login. A rewrite by Claude Code or a new login changes it. Metadata only, no secrets."""
+    if location is None:
+        return keychain_stamp()
+    parts = []
+    if location.get("service"):
+        parts.append(keychain_stamp(location["service"]))
+    path = location.get("file")
+    if path:
+        try:
+            st = os.stat(path)
+            parts.append("%d:%d" % (st.st_mtime_ns, st.st_size))
+        except OSError:
+            parts.append("")
+    return "|".join(parts) if any(parts) else ""
+
+
 def _keychain_write(text, service=KEYCHAIN_SERVICE):
     """Replace the keychain item's data, keeping its account. The secret goes hex encoded through stdin."""
     account = _keychain_account(service)

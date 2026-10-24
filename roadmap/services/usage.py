@@ -125,6 +125,14 @@ def _force_refresh(location=None):
         raise UsageError(str(exc), exc.code)
 
 
+def _login_stamp(where):
+    """usage_sources.location_stamp, never raising."""
+    try:
+        return usage_sources.location_stamp(where)
+    except Exception:
+        return ""
+
+
 def _no_refresh():
     """The 401 retry when usageTokenRefresh is off: no refresh, the login is reported expired."""
     raise UsageError(usage_sources.EXPIRED_REASON, CODE_EXPIRED)
@@ -480,16 +488,20 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
     if disconnected and store.get("syncError") != CODE_DISCONNECTED:
         _update_store({"syncError": CODE_DISCONNECTED, "lastError": None})
     backoff = background and _in_future(store.get("keychainRetryAfter"), moment)
-    if backoff and store.get("keychainStamp") and usage_sources.keychain_stamp() != store.get("keychainStamp"):
-        # The keychain item was rewritten since the failure (a new `claude auth login`): try it now, not in 6 hours.
-        _update_store({"keychainRetryAfter": None, "keychainStamp": None})
-        backoff = False
+    rewritten = False
+    if store.get("keychainStamp") and store.get("syncError") in KEYCHAIN_CODES and not disconnected:
+        # The login item/file was rewritten since the failure (Claude Code ran, a new `claude auth login`): try it
+        # now, past both the 6 h backoff and the 60 s manual gap.
+        rewritten = _login_stamp(account["location"]) != store.get("keychainStamp")
+        if rewritten:
+            _update_store({"keychainRetryAfter": None, "keychainStamp": None})
+            backoff = False
     skip = disconnected or backoff
     oauth_error = None
     if not background and not disconnected:
         if store.get("syncError") in KEYCHAIN_CODES:
             age = _age_s(store.get("manualAttemptAt"), moment)
-            if age is not None and age < MANUAL_KEYCHAIN_GAP_S:
+            if age is not None and age < MANUAL_KEYCHAIN_GAP_S and not rewritten:
                 skip = True
                 if store.get("syncError") not in UNAVAILABLE_CODES:
                     oauth_error = UsageError("the keychain was checked a moment ago, try again in a minute",
@@ -497,9 +509,11 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
         if not skip:
             _update_store({"manualAttemptAt": moment.isoformat(timespec="seconds")})
     if not skip:
-        allow = token_refresh_allowed(cfg)
-        own_login = get_token is None
         where = account["location"]
+        # A config-dir login that plain claude does not use is Helm's alone to refresh (root cause of the nightly
+        # stale usage: it was refreshed only with the opt-in usageTokenRefresh). The login in use stays opt-in.
+        allow = token_refresh_allowed(cfg) or bool(account.get("refreshable", False))
+        own_login = get_token is None
         try:
             if where is None:
                 keychain_token = read_keychain_token if not allow else functools.partial(read_keychain_token,
@@ -522,8 +536,8 @@ def sync_once(config=None, get_token=None, fetch=None, background=False, now=Non
             else:
                 _record_error(str(exc), exc.code, retry)
                 oauth_error = exc
-            if retry is not None and where is None:
-                _update_store({"keychainStamp": usage_sources.keychain_stamp()})
+            if retry is not None:
+                _update_store({"keychainStamp": _login_stamp(where)})
         else:
             changes = dict(usage_record(reading, SOURCE_ENDPOINT), lastError=None, syncError=None,
                            keychainRetryAfter=None)
