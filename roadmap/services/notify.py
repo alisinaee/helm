@@ -31,12 +31,13 @@ OSASCRIPT_TIMEOUT_S = 3
 STATE_FILE = "notify.json"
 TITLE = "Helm"
 APPLET_NAME = "Helm.app"
-APPLET_VERSION = 2
+APPLET_VERSION = 3
 APPLET_ID = "dev.helm.notify"
 MESSAGE_FILE = "notify-message.json"
 STAMP_FILE = "helm-notify.stamp"
 BUILD_TIMEOUT_S = 60
-LOGO = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "web", "logo.png")
+# the Helm H mark on a dark rounded tile (web/logo.png is a black mask for the nav, too dark for a notification)
+LOGO = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "web", "app-icon.png")
 # The kinds the Settings page can switch one by one (config "notifyKinds", default all on). "test" is not listed:
 # it only goes out from the Send test button.
 KINDS = (("question", "Blocking question"), ("start", "Start queued"), ("limit", "Limit reached"),
