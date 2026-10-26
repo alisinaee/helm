@@ -18,7 +18,7 @@ const tasks = [];
 for (let i = 1; i <= 15; i++) tasks.push({ id: "A." + i, phase: "A", title: "t" + i, state: "todo" });
 tasks.push({ id: "B.1", phase: "B", title: "b", state: "partial" });
 const raw = { project: { id: "x", title: "x" }, summary: {}, overall: { project: { done: 0, total: 16 } },
-  phases: [{ id: "A", name: "Alpha", state: "todo", done: 0, total: 15, progress: 0 },
+  phases: [{ id: "A", name: "Alpha", state: "todo", done: 0, total: 15, progress: 0, approved: false },
            { id: "B", name: "Beta", state: "partial", done: 0, total: 1, progress: 0.5 }],
   tasks: tasks, jobs: [{ id: "j1", task: "B.1", status: "running" }], blocked: [] };
 const s = state.createStore();
@@ -64,6 +64,12 @@ class RoadmapViewTests(unittest.TestCase):
         self.assertIn("▶ doing", h)
         self.assertIn("▶ 1 doing", h)
         self.assertEqual(h.count("▶ 1 doing"), 1)
+
+    def test_approve_only_for_explicitly_unapproved(self):
+        h = self.out["folded"]
+        self.assertEqual(h.count('data-action="phase-approve"'), 1)  # A has approved false, B has no key
+        self.assertIn('title="Let agents start tasks in this phase"', h)
+        self.assertNotIn(">Approved<", h)
 
     def test_no_money_in_lanes(self):
         for word in ("budget", "spent", "est "):

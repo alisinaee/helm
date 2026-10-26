@@ -3,6 +3,7 @@
 .lane-head{display:grid;grid-template-columns:minmax(0,1fr) 96px 180px 72px 96px 32px;gap:var(--sp-1) var(--sp-2);align-items:center}
 .lane-act,.lane-stats{display:contents}
 .lane-state{grid-column:2}
+.lane-state,.lane-prog,.lane-open,.lane-appr,.lane-act>.ref-copy{grid-row:1}
 .lane-prog{grid-column:3;display:grid;gap:var(--sp-1);font-size:var(--fs-12)}
 .lane-meter{height:6px}
 .lane-open{grid-column:4;text-align:right;white-space:nowrap}

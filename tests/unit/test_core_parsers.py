@@ -26,6 +26,12 @@ class TasksParserTests(unittest.TestCase):
         self.assertEqual(data["updated"], "2026-10-13")
         self.assertEqual([t["state"] for t in data["tasks"]], ["done", "deferred"])
 
+    def test_phase_approved_only_false_blocks(self):
+        raw = json.dumps({"phases": [{"id": "A"}, {"id": "B", "approved": False}, {"id": "C", "approved": True}],
+                          "tasks": []})
+        data, _ = parse_tasks(raw)
+        self.assertEqual([p["approved"] for p in data["phases"]], [True, False, True])
+
     def test_bad_json_gives_error(self):
         data, errors = parse_tasks("{not json")
         self.assertEqual(data, {"updated": "", "phases": [], "tasks": []})

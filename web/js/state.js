@@ -299,7 +299,7 @@ export function normalizeSnapshot(raw, fetchedAt) {
         runningCount: running.length,
         running: running,
         recent: idList(p.recent),
-        approved: p.approved === true,
+        approved: p.approved !== false,
       };
     }),
     jobs: jobs.map(function (j) {

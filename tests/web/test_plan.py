@@ -130,7 +130,7 @@ class PlanRenderTests(unittest.TestCase):
         html = self.out["lanesSynth"]
         self.assertIn('data-action="phase-approve" data-phase="P1"', html)
         self.assertNotIn('data-action="phase-approve" data-phase="P2"', html)
-        self.assertIn("Approved", html)
+        self.assertNotIn(">Approved<", html)
 
     def test_blocked_task_carries_the_badge(self):
         html = self.out["lanesSynth"]

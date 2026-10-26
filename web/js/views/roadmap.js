@@ -130,10 +130,11 @@ function laneHtml(vm, snap, phase, doing) {
     return doing[t.id];
   }).length;
   const pct = phase.onlyDeferred || phase.progress == null ? null : phase.progress * 100;
-  const act = phase.state === "done" ? "" : phase.approved
-    ? chipHtml("Approved", "success")
+  // Approve shows only for a phase explicitly marked not approved; an approved phase shows nothing (never asked)
+  const act = phase.state === "done" || phase.approved !== false ? ""
     : '<button type="button" class="btn btn-primary btn-small" data-action="phase-approve" data-phase="' + id +
-      '" aria-label="Approve ' + id + " " + esc(phase.name) + '">Approve</button>';
+      '" title="Let agents start tasks in this phase"' +
+      ' aria-label="Approve ' + id + " " + esc(phase.name) + '">Approve</button>';
   const stats = '<div class="lane-stats"><span class="lane-state">' + esc(STATE_WORD[phase.state] || phase.state) +
     "</span>" + '<div class="lane-prog"><span class="num">' +
     esc(fmtCount(phase.done) + "/" + fmtCount(phase.total)) + " done</span>" +
