@@ -98,9 +98,14 @@ class RefreshSinceTests(unittest.TestCase):
         self.assertIn("GET_TIMEOUT_MS", api)
         self.assertIn("AbortController", api)
 
-    def test_no_sse_added(self):
-        self.assertNotIn("EventSource", self.app)
-        self.assertNotIn("EventSource", read(API))
+    def test_sse_with_poll_fallback(self):
+        # R7.82 U2: live.js owns the EventSource; app.js keeps the poll (slowed while the stream is healthy).
+        live = read(os.path.join(REPO, "web", "js", "live.js"))
+        self.assertIn("EventSource", live)
+        self.assertIn("/api/v1/stream", live)
+        self.assertIn("startLive(", self.app)
+        self.assertIn("pollInterval(", self.app)
+        self.assertIn("sinceUrl(", self.app)
 
 
 if __name__ == "__main__":

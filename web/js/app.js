@@ -3,7 +3,8 @@
 // renders on every pass; the section in <main> is a module loaded on first visit (routes.js), and a section that
 // fails renders its own error without taking the shell down. Writes go through cmd.js, the one write path.
 
-import { getJson, postJson, sinceUrl } from "./api.js";
+import { getJson, postJson, sinceUrl, streamStatus } from "./api.js";
+import { pollInterval, startLive } from "./live.js";
 import { bannerHtml, emptyHtml, esc, patch, setHidden, skeletonHtml } from "./dom.js";
 import { buildViewModel, createStore, isSheetWidth, loadMode, loadPrefs, loadTheme, loadUi, normalizeSnapshot,
   panelIsOpen, resolveMode, saveMode, savePrefs, sectionOpenState, updateUi } from "./state.js";
@@ -50,6 +51,7 @@ const importFirstFail = new Map();
 const importTimers = new Map();
 const loadingSections = new Set();
 let timer = null;
+let live = null;
 let busy = false;
 let followUp = false;
 // A pass that found nothing new skips the render, but at least this often one renders anyway (clock-driven labels).
@@ -525,7 +527,7 @@ async function loop() {
   } finally {
     const again = followUp;
     followUp = false;
-    schedule(again ? 0 : document.hidden ? SLOW_MS : FAST_MS);
+    schedule(again ? 0 : pollInterval(document.hidden ? SLOW_MS : FAST_MS, !!live && live.healthy()));
   }
 }
 
@@ -757,6 +759,17 @@ function boot() {
   });
   render();
   schedule(0);
+  // R7.82 U2: a server push refreshes at once; while the stream is healthy the poll is only a 30 s safety net.
+  live = startLive({
+    setTimeout: function (f, ms) { return window.setTimeout(f, ms); },
+    clearTimeout: function (t) { window.clearTimeout(t); },
+    now: Date.now,
+    fetchStatus: streamStatus,
+    cachedRev: storedRev,
+    onRev: function () { schedule(0); },
+    onUp: function () { if (store.conn.ok === false) schedule(0); },
+    onDown: function () {},
+  });
 }
 
 boot();

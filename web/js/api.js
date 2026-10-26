@@ -148,3 +148,11 @@ export async function postJson(url, body) {
   }
   throw failure(response.status, refusal);
 }
+
+// R7.82 U2: the HTTP status of the stream endpoint (headers only; the body is never read). 0 on a network error.
+export function streamStatus(url) {
+  if (typeof fetch !== "function") return Promise.resolve(0);
+  const abort = typeof AbortController === "function" ? new AbortController() : null;
+  return fetch(url, { headers: { Accept: "text/event-stream" }, signal: abort ? abort.signal : undefined })
+    .then(function (res) { if (abort) abort.abort(); return res.status; }, function () { return 0; });
+}
