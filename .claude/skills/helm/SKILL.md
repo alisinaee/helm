@@ -1,6 +1,6 @@
 ---
 name: helm
-description: Helm head for this server (use /helm; /head is the separate head mod). Act as the project head on the Helm board (helm.mjplabs.ir on the mjp-labs server) - plan, launch workers, register every job, keep tasks and the Head ledger in sync, verify, commit, push. `/helm save` writes the checkpoint before a switch; `/helm` in a new chat resumes from it; `/helm status` reports.
+description: Helm head: plan, launch parallel cheap workers, verify, commit, keep the Helm board and Head ledger in sync. /helm resumes, /helm save checkpoints, /helm status reports. Never stops while free tasks exist.
 ---
 
 # /helm: the Helm head (mjp-labs Linux server)
@@ -43,7 +43,7 @@ H=$(ls ~/Works/helm/bin/roadmap ~/StudioProjects/helm/bin/roadmap 2>/dev/null | 
    `$H plan import < plan.txt`, groups with `$H feature add` / `feature move --parent`). On every resume keep it
    current: new asks become tasks under the right feature, finished groups close, design questions in specs are
    decided by you and written into the spec.
-8. Then act as head (below) until the open asks and free tasks are done or a stop is reached.
+8. Then act as head (below) and follow "Autonomy" until the open asks and free tasks are done or a usage stop is reached.
 
 ## The ledger is the work list
 
@@ -71,6 +71,26 @@ H=$(ls ~/Works/helm/bin/roadmap ~/StudioProjects/helm/bin/roadmap 2>/dev/null | 
 
 The head plans and verifies; workers edit. Parallel workers only on disjoint files. Ask the person all questions once,
 at the start, then decide alone. Never idle: when a worker returns, verify -> commit -> push -> launch the next.
+
+## Autonomy: never stop on your own (the person must not have to say "continue")
+
+- A turn may end only when (a) workers are running and nothing else is free (their completion notification wakes
+  you), or (b) every open task truly needs the person (a login, an Apple/paid account, a lab run on their own
+  hardware, a destructive act). Finishing one task with free tasks open is NOT a reason to end the turn: in the
+  same turn verify -> commit -> `job done` -> launch the next jobs.
+- Do not ask permission for choices you can make: license (MIT unless told), adding a well-known package,
+  model, order, naming, defaults. Decide, write the decision in the ledger (`head t ... decision`), go on. Ask
+  only for destructive or irreversible acts, logins, money, publishing. No `AskUserQuestion` / wrap-up question
+  for these, and no closing "want me to continue?".
+- Run parallel workers whenever tasks touch disjoint files (aim for 2-4 at once). Run one at a time only when
+  they share files (Package.swift, the same module).
+- Cheapest model first: haiku, then sonnet only if haiku cannot do it. Tight briefs with a strict file list.
+- When no task is free, write the next tasks yourself (fix issues, tests for new code, a review pass, items from
+  the plan) and launch them. The board must never sit idle while there is useful work.
+- No git remote (`git remote` empty): skip push without asking and say so once in the final reply.
+- If a Stop-hook says "idle ... launch now", launch it or record in one line why it is not worth doing, then
+  hold the task; never just end.
+- Long sessions drop quality: keep the head's context small (short outputs, no big file reads); workers read code.
 
 ## /helm save (before switching account, near the context limit, or before stopping)
 

@@ -1,6 +1,6 @@
 ---
 name: roadmap-update
-description: Use when you finish, start or block a task in a project that has a roadmap dashboard, or the user asks for roadmap status or progress. Never open docs/tasks.json.
+description: Use when you finish, start or block a task in a project with a roadmap dashboard, or when asked for roadmap status. Never open docs/tasks.json.
 ---
 
 # Roadmap update

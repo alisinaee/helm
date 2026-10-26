@@ -1,6 +1,6 @@
 ---
 name: head
-description: Resume the project head role (plan, launch parallel workers, verify, register, commit) for an already set-up Helm board. `/head save` writes the checkpoint before a switch; `/head` in a new chat resumes from it. New users: run /helm first. Use for roadmap-board or any project with docs/HANDOVER.md.
+description: Resume the project head role for a set-up Helm board (plan, workers, verify, commit). /head save checkpoints, /head resumes. New users: /helm first.
 ---
 
 # /head
