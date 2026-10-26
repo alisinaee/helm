@@ -30,7 +30,8 @@ class TasksParserTests(unittest.TestCase):
         raw = json.dumps({"phases": [{"id": "A"}, {"id": "B", "approved": False}, {"id": "C", "approved": True}],
                           "tasks": []})
         data, _ = parse_tasks(raw)
-        self.assertEqual([p["approved"] for p in data["phases"]], [True, False, True])
+        self.assertEqual([p.get("approved", True) for p in data["phases"]], [True, False, True])
+        self.assertNotIn("approved", data["phases"][0])  # absent key stays absent; the page reads it as approved
 
     def test_bad_json_gives_error(self):
         data, errors = parse_tasks("{not json")

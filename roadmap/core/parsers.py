@@ -114,8 +114,10 @@ def parse_tasks(text, name="tasks.json"):
                 "name": str(p.get("name", p["id"])),
                 "state": st if st in STATES else "todo",
             }
-            # a phase without the key counts as approved (see services/tasks.unapproved_phases): only false blocks
-            phase["approved"] = p.get("approved") is not False
+            # a phase without the key counts as approved (see services/tasks.unapproved_phases): only false blocks.
+            # The key is sent only when the file has it; the page reads a missing key as approved.
+            if "approved" in p:
+                phase["approved"] = p["approved"] is not False
             phases.append(phase)
         tasks = []
         extra_errors = []
