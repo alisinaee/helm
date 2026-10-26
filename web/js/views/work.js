@@ -23,7 +23,7 @@ const VIEW_LABEL = { board: "Board", list: "List", tree: "Tree", planner: "Plann
 const PREF_PREFIX = "work.";
 const COLUMN_KEYS = COLUMNS.map(function (c) {
   return c.key;
-}).concat(["backlog", "review"]);
+}).concat(["backlog", "review", "wontfix"]);
 
 function savedParams(pid) {
   const raw = loadUi().filters[PREF_PREFIX + pid];

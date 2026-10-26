@@ -1,0 +1,22 @@
+/* Work board (R7.24, R7.25): quick add, card menu, kind badge, drag states. Split from work.css for its size cap. */
+.wi-board{grid-template-columns:repeat(6,minmax(0,1fr))}
+.wi-bar{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
+.wi-bar .wk-hint{flex:1 1 12rem}
+.wi-plus{margin-left:auto;min-width:var(--h-small);padding:0}
+.wi-add{display:grid;grid-template-columns:minmax(10rem,2fr) repeat(4,minmax(5rem,1fr));gap:var(--sp-2);align-items:end;background:var(--surface-2);border-radius:var(--r-card);padding:var(--sp-2);font-size:var(--fs-12);color:var(--text-2)}
+.wi-add label{display:grid;gap:2px;min-width:0}
+.wi-add input,.wi-add select{font:inherit;color:var(--text-1);background:var(--surface-1);border:1px solid var(--line);border-radius:var(--r-control);min-height:var(--h-control);padding:0 var(--sp-2);min-width:0}
+.wi-add[data-kind=task] .wi-iss{display:none}
+.wi-out{grid-column:span 3}
+.wi-add-acts{display:flex;gap:var(--sp-2)}
+.wi-err{grid-column:1/-1;margin:0;color:var(--danger)}
+.wi-card{cursor:default}
+.wi-card[draggable=true]{cursor:grab}
+.wi-card:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.wi-menu{margin-left:auto}
+.wi-menu summary{list-style:none;display:flex;align-items:center;justify-content:center;min-width:var(--h-small);min-height:var(--h-small);padding:0}
+.wi-menu summary::-webkit-details-marker{display:none}
+.wi-kind{text-transform:capitalize}
+.wi-kind-bug,.wi-kind-blocker{color:var(--danger)}
+.wi-kind-risk{color:var(--warning)}
+@media (max-width:767px){.wi-board{display:block}.wi-add{grid-template-columns:1fr 1fr}.wi-add label:first-child,.wi-out{grid-column:1/-1}.wi-add input,.wi-add select,.wi-menu summary{min-height:44px}.wi-menu summary{min-width:44px}}

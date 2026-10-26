@@ -72,7 +72,6 @@
 }
 /* Work items (R9.20, R9.23): P chip track, Work board/list rows, group header rows */
 .wi-p{min-width:2rem;justify-content:center;font-variant-numeric:tabular-nums}.wi-p0{color:var(--danger)}.wi-p1{color:var(--warning)}
-.wi-board{grid-template-columns:repeat(5,minmax(0,1fr))}
 .wi-prog{display:grid;grid-template-columns:minmax(0,1fr) 3rem;gap:var(--sp-2);align-items:center}.wi-n{text-align:right}
 .wi-d summary{cursor:pointer}.wi-outcome{margin:var(--sp-1) 0;color:var(--text-2);font-size:var(--fs-12)}
 .wi-tasks{list-style:none;margin:0;padding:0;display:grid;gap:2px}

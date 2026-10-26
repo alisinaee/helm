@@ -237,7 +237,8 @@ def _work_view(work_text, tasks, errors, jobs=()):
                                    [{"state": state_of.get(tid, "cancelled")} for tid in linked],
                                    person_accepted=item.get("accepted") is not None)
         ordered = sorted(linked, key=lambda tid: state_of.get(tid) == "done")[:WORK_TASKS_SHOWN]
-        rows.append({"id": item.get("id"), "title": item.get("title"), "kind": item.get("kind"),
+        extra = {k: item[k] for k in ("issue", "sev") if k in item}
+        rows.append({**extra, "id": item.get("id"), "title": item.get("title"), "kind": item.get("kind"),
                      "status": result["status"], "prio": "P%d" % int(item.get("prio", 2)),
                      "badges": result["badges"], "progress": result["progress"],
                      "owner": item.get("owner") or ("head" if linked else None),

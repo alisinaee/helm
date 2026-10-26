@@ -364,6 +364,8 @@ commands.OPS["usage.restore"] = commands._Op(_check_usage_restore, _h_usage_rest
 # Work items (M4, docs/WORK-MODEL.md section 6): logged with an activity line; accept and reopen are person only.
 commands.OPS["work.add"] = commands._Op(work.check_add, work.h_add)
 commands.OPS["work.set"] = commands._Op(work.check_set, work.h_set)
+commands.OPS["work.move"] = commands._Op(work.check_move, work.h_move)
+commands.OPS["work.reorder"] = commands._Op(work.check_reorder, work.h_reorder, public=False)
 commands.OPS["work.link"] = commands._Op(work.check_link, work.h_link)
 commands.OPS["work.accept"] = commands._Op(work.check_one, work.h_accept)
 commands.OPS["work.reopen"] = commands._Op(work.check_one, work.h_reopen)

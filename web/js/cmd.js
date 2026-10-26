@@ -94,8 +94,9 @@ function notifyPaused() {
 }
 
 // opts: label (toast text), project (id; default the current project), apply and revert (local state),
-// key and value (a pending value for the snapshot-backed control, see pendingValue), busyEl (a function that returns
-// the button to show loading, called after the optimistic re-render, which replaces the pressed button).
+// onError (called with the message instead of the failure toast), key and value (a pending value for the
+// snapshot-backed control, see pendingValue), busyEl (a function that returns the button to show loading, called
+// after the optimistic re-render, which replaces the pressed button).
 export async function run(op, args, opts) {
   const o = opts || {};
   const label = o.label || op;
@@ -117,7 +118,8 @@ export async function run(op, args, opts) {
     if (key) pending.delete(key);
     if (typeof o.revert === "function") o.revert();
     rerender();
-    showToast({ text: label + " failed: " + (err.message || "unknown error"), tone: "danger" });
+    if (typeof o.onError === "function") o.onError(err.message || "unknown error");
+    else showToast({ text: label + " failed: " + (err.message || "unknown error"), tone: "danger" });
     return null;
   }
   const data = reply.data || {};

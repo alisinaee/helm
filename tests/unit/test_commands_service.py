@@ -25,7 +25,7 @@ class RegistryTests(CmdCase):
             "rules.accept", "rules.add", "rules.propose", "rules.reject", "rules.rm", "rules.sync",
             "subtask.add", "subtask.toggle", "task.add", "task.backlog", "task.cap", "task.move",
             "task.promote", "task.rename", "task.start", "task.status", "task.stop", "undo", "usage.set",
-            "work.accept", "work.add", "work.link", "work.reopen", "work.set"]))
+            "work.accept", "work.add", "work.link", "work.move", "work.reopen", "work.set"]))
 
     def test_unknown_op_is_a_usage_error_with_next(self):
         with self.assertRaises(RoadmapError) as ctx:

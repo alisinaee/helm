@@ -1,8 +1,9 @@
 """Work items (the human card) and the link from agent tasks to them (docs/WORK-MODEL.md sections 1, 2 and 6, M4).
 
-Ops (registered in services/cmdops.py): work.add, work.set, work.link, work.accept, work.reopen. Internal inverses for
-undo: work.restore (one item back, or dropped) and work.relink (links back). Each op returns (data, summary, inverse)
-and commands.run writes the activity line and the undo record.
+Ops (registered in services/cmdops.py): work.add, work.set, work.link, work.accept, work.reopen,
+work.move. Internal inverses for undo: work.restore (one item back, or dropped), work.relink (links back) and
+work.reorder (rank back). Each op returns (data, summary, inverse) and commands.run writes the activity line and
+the undo record.
 
 Storage: docs/work.json (items, links, events). The store v4 tables (store/work_db.py) cannot be written from here:
 commands.run holds the one db transaction while an op runs, and a second connection cannot take the write lock
@@ -32,6 +33,8 @@ WORK_ID = re.compile(r"^W[1-9][0-9]{0,5}$")
 JARGON = re.compile(r"[/\\]|\.(py|js|json|md|html|css)\b|\b(wave|W\d+|haiku|sonnet|opus)\b", re.IGNORECASE)
 NEXT_LIST = "roadmap status"
 CLOSED_STATES = ("Backlog", "Won't do")
+ISSUE_KINDS = ("bug", "risk", "question", "blocker")
+STATE_STATUS = {"backlog": "Backlog", "wontfix": "Won't do", "todo": "Todo"}
 
 
 # ---------------------------------------------------------------- storage
@@ -152,8 +155,19 @@ def check_add(a):
     kind = commands._text(a.get("kind")) or "task"
     if kind not in KINDS:
         raise commands._usage("kind must be task or issue", NEXT_LIST)
-    return {"title": _title(a.get("title")), "outcome": _outcome(a.get("outcome")), "kind": kind,
-            "prio": _prio(a.get("prio")), "phase": commands._text(a.get("phase")) or None}
+    clean = {"title": _title(a.get("title")), "outcome": _outcome(a.get("outcome")), "kind": kind,
+             "prio": _prio(a.get("prio")), "phase": commands._text(a.get("phase")) or None}
+    sub = commands._text(a.get("issue"))
+    if sub and (kind != "issue" or sub not in ISSUE_KINDS):
+        raise commands._usage("issue must be one of " + ", ".join(ISSUE_KINDS) + " (kind issue only)", NEXT_LIST)
+    if sub:
+        clean["issue"] = sub
+    sev = commands._text(a.get("sev"))
+    if sev:
+        if kind != "issue" or sev not in ("1", "2", "3"):
+            raise commands._usage("sev must be 1, 2 or 3 (kind issue only)", NEXT_LIST)
+        clean["sev"] = int(sev)
+    return clean
 
 
 def check_set(a):
@@ -166,9 +180,28 @@ def check_set(a):
         clean["outcome"] = _outcome(a.get("outcome"))
     if "prio" in a:
         clean["prio"] = _prio(a.get("prio"))
+    if "state" in a:
+        state = commands._text(a.get("state"))
+        if state not in STATE_STATUS:
+            raise commands._usage("state must be backlog, wontfix or todo", NEXT_LIST)
+        clean["state"] = state
     if len(clean) == 1:
-        raise commands._usage("nothing to set: give title, outcome or prio", NEXT_LIST)
+        raise commands._usage("nothing to set: give title, outcome, prio or state", NEXT_LIST)
     return clean
+
+
+def check_move(a):
+    direction = commands._text(a.get("dir"))
+    if direction not in ("up", "down"):
+        raise commands._usage("dir must be up or down", NEXT_LIST)
+    return {"id": _wid(a, "id"), "dir": direction}
+
+
+def check_reorder(a):
+    order = a.get("order")
+    if not isinstance(order, list) or not all(isinstance(x, str) for x in order):
+        raise commands._usage("order must be a list of Work ids")
+    return {"order": order}
 
 
 def check_link(a):
@@ -214,6 +247,9 @@ def h_add(data_dir, a, now):
         item = {"id": wid, "kind": a["kind"], "title": a["title"], "outcome": a["outcome"], "status": "Todo",
                 "prio": a["prio"], "owner": "you", "phase": a["phase"], "created": stamp, "updated": stamp,
                 "accepted": None, "reopened": 0, "reopenDone": None}
+        for key in ("issue", "sev"):
+            if key in a:
+                item[key] = a[key]
         doc["items"].append(item)
         _event(doc, "work.add", wid, {"title": a["title"], "kind": a["kind"]}, now)
         _save(data_dir, doc)
@@ -226,6 +262,16 @@ def h_set(data_dir, a, now):
         doc = _doc(data_dir)
         item = _find(doc, a["id"])
         prior = dict(item)
+        if "state" in a:
+            _person_only("work set state")
+            view = _view(data_dir, doc, item)
+            if a["state"] == "todo" and item["status"] not in CLOSED_STATES:
+                raise RoadmapError("conflict", a["id"] + " is " + view["status"] + "; Todo is derived", EXIT_CONFLICT,
+                                   next=NEXT_LIST)
+            if a["state"] != "todo" and view["status"] in ("Done", "Review"):
+                raise RoadmapError("conflict", a["id"] + " is " + view["status"] + "; reopen it first", EXIT_CONFLICT,
+                                   next=NEXT_LIST)
+            item["status"] = STATE_STATUS[a["state"]]
         for key in ("title", "outcome", "prio"):
             if key in a:
                 item[key] = a[key]
@@ -234,6 +280,43 @@ def h_set(data_dir, a, now):
         _save(data_dir, doc)
         view = _view(data_dir, doc, item)
     return view, a["id"] + " changed", {"op": "work.restore", "args": {"id": a["id"], "item": prior}}
+
+
+def h_move(data_dir, a, now):
+    """Rank: swap with the nearest neighbour of the same status and prio (list order is the rank)."""
+    with lock.locked(data_dir):
+        doc = _doc(data_dir)
+        item = _find(doc, a["id"])
+        view = _view(data_dir, doc, item)
+        items = doc["items"]
+        prior = [i["id"] for i in items]
+        at = items.index(item)
+        step = -1 if a["dir"] == "up" else 1
+        j = at + step
+        while 0 <= j < len(items):
+            other = _view(data_dir, doc, items[j])
+            if other["status"] == view["status"] and other["prio"] == view["prio"]:
+                break
+            j += step
+        else:
+            raise RoadmapError("conflict", a["id"] + " is already " + ("first" if step < 0 else "last") +
+                               " among its status and priority", EXIT_CONFLICT, next=NEXT_LIST)
+        items[at], items[j] = items[j], items[at]
+        _event(doc, "work.move", a["id"], {"dir": a["dir"]}, now)
+        _save(data_dir, doc)
+        out = _view(data_dir, doc, item)
+    return out, a["id"] + " moved " + a["dir"], {"op": "work.reorder", "args": {"order": prior}}
+
+
+def h_reorder(data_dir, a, now):
+    """Undo of work.move: the item order back as it was."""
+    with lock.locked(data_dir):
+        doc = _doc(data_dir)
+        pos = {wid: n for n, wid in enumerate(a["order"])}
+        doc["items"].sort(key=lambda i: pos.get(i["id"], len(pos)))
+        _event(doc, "work.reorder", "", {}, now)
+        _save(data_dir, doc)
+    return {"order": a["order"]}, "undo move", None
 
 
 def h_link(data_dir, a, now):
