@@ -8,6 +8,8 @@ routing or the log.
 
 import ipaddress
 import os
+import select
+import socket
 import socketserver
 import stat
 import threading
@@ -342,7 +344,11 @@ class _Handler(BaseHTTPRequestHandler):
             error_log.error("unexpected error handling %s %s: %s", method, path, type(exc).__name__)
             _exc_event(exc, path)
             reply = routes.error_reply(500, "internal", "unexpected error (" + type(exc).__name__ + ")")
-        self._send(reply, head)
+        try:
+            self._send(reply, head)
+        finally:
+            if reply.on_close is not None:
+                reply.on_close()
         elapsed_ms = int((time.monotonic() - started) * 1000)
         access_log.info("%s %s %d %dms", method, path, reply.status, elapsed_ms)
         _api_event(method, path, reply.status, elapsed_ms)
@@ -359,15 +365,44 @@ class _Handler(BaseHTTPRequestHandler):
             self.send_header(name, value)
         for name, value in reply.headers:
             self.send_header(name, value)
-        has_body = reply.status not in (204, 304)
+        has_body = reply.status not in (204, 304) and not reply.stream
         if has_body:
             self.send_header("Content-Type", reply.ctype)
             self.send_header("Content-Length", str(len(reply.body)))
-        self.send_header("Connection", "close")
+        self.send_header("Connection", "keep-alive" if reply.stream else "close")
+        if reply.stream:
+            self.send_header("Content-Type", reply.ctype)
         self.end_headers()
         self.close_connection = True
+        if reply.stream:
+            self._run_stream(reply, head)
+            return
         if has_body and not head and reply.body:
             self.wfile.write(reply.body)
+
+    def _client_gone(self):
+        """True when the client closed its side (the socket is readable and gives EOF)."""
+        try:
+            ready, _, _ = select.select([self.connection], [], [], 0)
+            return bool(ready) and self.connection.recv(1, socket.MSG_PEEK) == b""
+        except (OSError, ValueError):
+            return True
+
+    def _run_stream(self, reply, head):
+        """Write a streaming reply's chunks until the client leaves, the generator ends or the server stops."""
+        try:
+            if head:
+                return
+            for chunk in reply.stream:
+                if self.server.stopping.is_set() or self._client_gone():
+                    return
+                if chunk:
+                    self.wfile.write(chunk)
+                    self.wfile.flush()
+        except (BrokenPipeError, ConnectionError, OSError):
+            pass
+        finally:
+            reply.stream.close()
 
     def send_error(self, code, message=None, explain=None):
         """Parser-level failures (bad request line and the like) get the same JSON envelope and headers."""
@@ -400,6 +435,7 @@ class RoadmapServer(ThreadingHTTPServer):
         self.app = App(self.server_address[1], token, sync, static_files)
         self._supervise = supervise
         self._supervisor_stop = threading.Event()
+        self.stopping = threading.Event()
 
     def serve_forever(self, poll_interval=0.5):
         """Serve; when supervise is set, also run the supervisor loop in a daemon thread until shutdown()."""
@@ -409,6 +445,7 @@ class RoadmapServer(ThreadingHTTPServer):
         super().serve_forever(poll_interval)
 
     def shutdown(self):
+        self.stopping.set()
         self._supervisor_stop.set()
         super().shutdown()
 
@@ -446,6 +483,7 @@ class PhoneServer(RoadmapServer):
         ThreadingHTTPServer.__init__(self, (BIND_HOST, int(port)), _Handler)
         self._supervise = False  # the phone listener never runs the supervisor (the main listener does)
         self._supervisor_stop = threading.Event()
+        self.stopping = threading.Event()
         self.app = PhoneApp(self.server_address[1], token_source, tunnel_host, static_files, limiter)
 
 

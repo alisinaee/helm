@@ -10,6 +10,8 @@ import json
 import os
 import platform
 import re
+import threading
+import time
 from datetime import datetime
 from urllib.parse import parse_qsl
 
@@ -60,9 +62,11 @@ STATUS_BY_EXIT = {EXIT_USAGE: 400, EXIT_NOT_FOUND: 404, EXIT_CONFLICT: 409, EXIT
 class Reply:
     """One response: status, body bytes, content type, extra headers and the CSP to send with it."""
 
-    __slots__ = ("status", "body", "ctype", "headers", "csp")
+    __slots__ = ("status", "body", "ctype", "headers", "csp", "stream", "on_close")
 
-    def __init__(self, status, body=b"", ctype=JSON_TYPE, headers=(), csp=None):
+    def __init__(self, status, body=b"", ctype=JSON_TYPE, headers=(), csp=None, stream=None, on_close=None):
+        self.stream = stream  # a generator of bytes chunks (b"" = idle tick); the handler writes them until it ends
+        self.on_close = on_close
         self.status = status
         self.body = body
         self.ctype = ctype
@@ -256,6 +260,67 @@ def projects(app, req, match):
     etag = '"%s"' % "|".join(snap["rev"] for snap in snaps)
     body = {"projects": [_summary(entry, snap) for entry, snap in zip(entries, snaps)]}
     return json_reply(200, body, headers=[("ETag", etag)])
+
+
+STREAM_MAX = 8
+STREAM_TICK_S = 1.0
+STREAM_PING_S = 15.0
+
+
+class _Slots:
+    """The open-stream count of one app (one per listener)."""
+
+    def __init__(self, limit=STREAM_MAX):
+        self.limit = limit
+        self.count = 0
+        self.lock = threading.Lock()
+
+    def take(self):
+        with self.lock:
+            if self.count >= self.limit:
+                return False
+            self.count += 1
+            return True
+
+    def release(self):
+        with self.lock:
+            self.count = max(0, self.count - 1)
+
+
+def _rev_event(pid, rev):
+    return ("event: rev\ndata: %s\n\n" % json.dumps({"project": pid, "rev": rev})).encode("utf-8")
+
+
+def _stream_events(tick_s, ping_s):
+    """The event stream: a rev event per project on connect, one per change (polled every tick_s), a ping comment every
+    ping_s. Yields b"" between ticks so the handler can look for a closed client."""
+    seen = {}
+    last_ping = time.monotonic()
+    while True:
+        for entry in config_store.list_projects():
+            pid = entry["id"]
+            try:
+                rev = loader.project_revision(pid)
+            except Exception:  # a project that cannot be read right now is skipped until it can
+                continue
+            if seen.get(pid) != rev:
+                seen[pid] = rev
+                yield _rev_event(pid, rev)
+        if time.monotonic() - last_ping >= ping_s:
+            last_ping = time.monotonic()
+            yield b": ping\n\n"
+        yield b""
+        time.sleep(tick_s)
+
+
+def stream(app, req, match):
+    """GET /api/v1/stream: Server-Sent Events of project revisions. At most STREAM_MAX at once (503 beyond)."""
+    slots = app.__dict__.setdefault("stream_slots", _Slots())
+    if not slots.take():
+        return error_reply(503, "too_many_streams", "at most %d event streams at once" % STREAM_MAX)
+    gen = _stream_events(STREAM_TICK_S, STREAM_PING_S)
+    return Reply(200, ctype="text/event-stream", headers=[("Connection", "keep-alive"), ("X-Accel-Buffering", "no")],
+                 stream=gen, on_close=slots.release)
 
 
 def project_snapshot(app, req, match):
@@ -1079,6 +1144,7 @@ ROUTES = (
     (re.compile(r"/api/v1/health"), ("GET",), health),
     (re.compile(r"/api/v1/meta"), ("GET",), meta),
     (re.compile(r"/api/v1/projects"), ("GET",), projects),
+    (re.compile(r"/api/v1/stream"), ("GET",), stream),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/snapshot"), ("GET",), project_snapshot),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/head"), ("GET",), project_head),
     (re.compile(r"/api/v1/projects/(?P<pid>" + _PID + r")/panel"), ("GET",), project_panel),
