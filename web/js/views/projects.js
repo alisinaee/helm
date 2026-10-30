@@ -110,15 +110,13 @@ function allRowHtml(rows, route) {
   }, 0);
   const href = "#/all/" + (sectionById(route.section) ? route.section : "overview");
   const current = route.name !== "project";
+  const needsBadge = needs ? '<span class="p-badge" data-kind="needs" title="' + esc(needs + " need you") + '">' +
+    esc(needs) + '<span class="sr-only"> need you</span></span>' : "";
+  const runBadge = running ? '<span class="p-badge" data-kind="running">' + iconHtml("agents") + esc(running) +
+    '<span class="sr-only"> jobs running</span></span>' : "";
   return '<li><a class="p-row p-all" href="' + esc(href) + '"' + (current ? ' aria-current="page"' : "") + ">" +
-    '<span class="p-head"><span class="p-name">All projects</span><span class="p-word">' +
-    esc(plural(rows.length, "project", "projects")) + "</span></span>" +
-    '<span class="p-badges">' +
-    (needs ? '<span class="p-badge" data-kind="needs">' + esc(needs) + '<span class="sr-only"> need you</span>' +
-      "</span>" : "") +
-    (running ? '<span class="p-badge" data-kind="running">' + iconHtml("agents") + esc(running) +
-      '<span class="sr-only"> jobs running</span></span>' : "") +
-    "</span></a></li>";
+    '<span class="p-head"><span class="p-name">All projects</span>' + needsBadge + runBadge +
+    '<span class="p-word">' + esc(plural(rows.length, "project", "projects")) + "</span></span></a></li>";
 }
 
 export function projectsView(vm) {
