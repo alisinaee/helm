@@ -27,6 +27,10 @@ export function toggleMore() {
   moreOpen = !moreOpen;
 }
 
+export function closeMore() {
+  moreOpen = false;
+}
+
 function icon(name) {
   return '<svg class="ico" aria-hidden="true" focusable="false"><use href="/icons.svg#i-' + esc(name) +
     '"></use></svg>';

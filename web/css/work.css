@@ -54,7 +54,8 @@
 .wk-tab,.wk-chip,.wk-views button,.wk-card .btn,.wk-menu summary{min-height:44px}
 .wk-chip{max-width:48%;text-align:left}
 .wk-table thead,.wk-c-sel,.wk-c-phase,.wk-bulk{display:none}
-.wk-table tr{display:flex;flex-wrap:wrap;gap:4px var(--sp-2);padding:var(--sp-2) 0;min-height:44px;border-bottom:1px solid var(--track)}
+.wk-table,.wk-table tbody{display:block;width:100%}
+.wk-table tr{display:flex;flex-wrap:wrap;gap:4px var(--sp-2);padding:var(--sp-2) 0;min-height:44px;border-bottom:1px solid var(--track);box-sizing:border-box;width:100%}
 .wk-table{table-layout:auto}
 .wk-table td,.wk-table th{height:auto;border:0;padding:0;white-space:normal;width:auto}
 .wk-table .wk-c-title{order:2;flex:1 1 100%;width:auto}

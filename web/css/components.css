@@ -591,8 +591,17 @@ display: none;
 }
 }
 @media (max-width: 639px) {
-.band-actions {flex-direction: column;align-items: stretch}
-.band-actions > .btn {align-self: flex-start}
+.band-actions {flex-direction: column;flex-wrap: nowrap;align-items: stretch}
+.band-actions > .btn {align-self: flex-start;min-height: 44px}
+.run-item {grid-template-columns: minmax(0, 1fr) auto var(--ref-col);row-gap: var(--sp-1);padding: var(--sp-2) 0}
+.run-item > .rg-chips {grid-column: 1;grid-row: 1;flex-wrap: wrap}
+.run-item > .rg-num {grid-column: 2;grid-row: 1}
+.run-item > .ref-copy {grid-column: 3;grid-row: 1}
+.run-item > .run-title {grid-column: 1 / -1;grid-row: 2;white-space: normal;overflow-wrap: anywhere}
+.run-row {grid-template-columns: minmax(0, 1fr) auto;row-gap: var(--sp-1);padding: var(--sp-2) 0}
+.run-row > .run-task {grid-column: 1;grid-row: 1}
+.run-row > .run-time {grid-column: 2;grid-row: 1}
+.run-row > .run-title {grid-column: 1 / -1;grid-row: 2;white-space: normal;overflow-wrap: anywhere}
 .task-row {grid-template-columns: 56px minmax(0, 1fr) auto;column-gap: var(--sp-2);padding-left: var(--sp-4)}
 .task-row .t-main {grid-column: 2;grid-row: 1}
 .task-row .t-tokens {
@@ -618,7 +627,7 @@ display: none;
 @media (min-width: 640px) and (max-width: 1023px) {
 .task-row {grid-template-columns: minmax(0, 56px) minmax(0, 1fr) minmax(0, 56px) minmax(0, 64px) minmax(0, 72px) minmax(0, 96px) minmax(0, 92px)}
 }
-/* Phone (< 640px): labels wrap inside their button, tap targets >= 36px, button rows wrap, fixed-track rows scroll inside themselves. */
+/* Phone (< 640px): labels wrap inside their button, tap targets >= 44px, button rows wrap, fixed-track rows scroll inside themselves. */
 @media (max-width: 639px) {
 .btn,
 .btn-small,
@@ -627,15 +636,16 @@ display: none;
 .theme-switch,
 .ref-copy {min-width: 0; max-width: 100%}
 .btn,
-.btn-small {height: auto; min-height: 36px; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; text-align: center; justify-content: center}
+.btn-small {height: auto; min-height: 44px; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; text-align: center; justify-content: center}
 .row-grid > .btn {white-space: nowrap; overflow: hidden; text-overflow: ellipsis}
 .chip {height: auto; min-height: var(--h-control); white-space: normal; overflow-wrap: anywhere; line-height: 1.25; text-align: center}
-.job-chip {height: auto; min-height: 36px; white-space: normal; overflow-wrap: anywhere; line-height: 1.25}
-.theme-switch, .ref-copy {min-width: 36px; min-height: 36px}
+.job-chip {height: auto; min-height: 44px; white-space: normal; overflow-wrap: anywhere; line-height: 1.25}
+.theme-switch {min-width: 44px; min-height: 44px}
+.ref-copy {min-width: 24px; min-height: 24px}
 .section-title {min-width: 0; white-space: normal; overflow-wrap: anywhere}
 .legend-list dt {white-space: normal; overflow-wrap: anywhere}
-.seg, .ag-foot-btns, .band-actions {flex-wrap: wrap}
-.tk-by, .tk-spend, .rg-share, .rg-weekly, .run-item, .fin-row, .run-row {overflow-x: auto}
+.seg, .ag-foot-btns {flex-wrap: wrap}
+.tk-by, .tk-spend, .rg-share, .rg-weekly, .fin-row {overflow-x: auto}
 .bnav-i {min-width: 0; max-width: 100%}
 .bnav-i .nav-l {overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%}
 }

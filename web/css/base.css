@@ -74,10 +74,16 @@ a {
   outline: none
 }
 @media (max-width: 640px) {
-button,
+button:not(.ref-copy):not(.hx-x),
 select,
 a.btn {
-  min-height: var(--h-row)
+  min-height: var(--h-touch, 44px)
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+select,
+textarea {
+  min-height: var(--h-touch, 44px);
+  font-size: 16px
 }
 }
 @media (prefers-reduced-motion: reduce) {

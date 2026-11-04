@@ -15,7 +15,7 @@ import { configureCommands, pendingValue, run } from "./cmd.js";
 import { withBusy } from "./busy.js";
 import { initKeys, setKeyHooks } from "./keys.js";
 import { featureLinkChange } from "./views/details.js";
-import { bnavView, navView, toggleMore } from "./views/nav.js";
+import { bnavView, closeMore, navView, toggleMore } from "./views/nav.js";
 import { pageAction } from "./views/inbox.js";
 import { openPalette } from "./views/palette.js";
 import { limitAction } from "./views/limits.js";
@@ -602,6 +602,13 @@ function closeHelp() {
 }
 
 function onClick(event) {
+  if (!event.target.closest || !event.target.closest("#bnav")) {
+    const moreEl = document.getElementById("bnav-more");
+    if (moreEl && !moreEl.hidden) {
+      closeMore();
+      render();
+    }
+  }
   const el = event.target.closest ? event.target.closest("[data-action]") : null;
   if (!el) return;
   const route = currentRoute();
@@ -753,6 +760,7 @@ function boot() {
   });
   helpDialog.addEventListener("close", render);
   onRouteChange(function () {
+    closeMore();
     noteRoute();
     render();
     schedule(0);
