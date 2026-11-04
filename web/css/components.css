@@ -656,7 +656,7 @@ display: none;
   .top-tools {flex: 1 1 0; min-width: 0; justify-content: flex-end}
   .top-tools .pill {flex: 1 1 0; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; justify-content: flex-start}
   .top-tools .btn, .top-tools .top-age {flex: none}
-  .crumb {flex: 0 1 auto; max-width: 34%}
+  .crumb {flex: 1 1 auto; min-width: 0; max-width: none}
 }
 
 /* Theme choice colour dot (Settings > Appearance). The ring keeps the dark half visible on dark surfaces. */

@@ -111,6 +111,14 @@ class MobileGlassCssTests(unittest.TestCase):
         )
         self.assertNotIn(bad_shadow, self.glass)
 
+    def test_appbar_sticky_and_tools_on_mobile(self):
+        # Appbar on mobile must be fixed at top, have safe-area padding, and hide squished status pills
+        expected = ".top {\n    position: fixed;\n    top: 0;\n    left: 0;\n    right: 0;\n    z-index: 20;"
+        self.assertIn(expected, self.glass)
+        self.assertIn(".top-tools > .pill {\n    display: none !important;\n  }", self.glass)
+        self.assertIn(".crumb {\n    flex: 1 1 auto;\n    min-width: 0;\n    max-width: none;\n  }", self.glass)
+        self.assertIn(".crumb-part, .crumb-sep {\n    display: inline-block !important;\n  }", self.glass)
+
 
 class MobileWorkAndComponentsCssTests(unittest.TestCase):
     def test_work_table_block_display_on_mobile(self):

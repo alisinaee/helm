@@ -56,10 +56,14 @@
 .tb-menu-item:focus-visible, .tb-opt input:focus-visible, .tb-view-select:focus-visible {
   outline: 2px solid var(--focus);outline-offset: 1px}
 @media (max-width: 767px) {
+  .tb {position: static}
   .tb-row {gap: 6px var(--sp-1)}
   .tb-acts {gap: var(--sp-1);flex-wrap: wrap;max-width: 100%;min-width: 0}
+  .tb-seg {display: inline-flex;overflow-x: auto;-webkit-overflow-scrolling: touch;max-width: 100%;scrollbar-width: none}
+  .tb-seg::-webkit-scrollbar {display: none}
+  .tb-seg-btn {flex: 0 0 auto;white-space: nowrap}
   .tb-row > * {min-width: 0;max-width: 100%}
-  .tb-chip, .tb-menu-item, .tb-clear-link {height: auto;white-space: normal;overflow-wrap: anywhere;line-height: 1.25;text-align: left}
+  .tb-chip, .tb-menu-item, .tb-clear-link {height: auto;white-space: normal;overflow-wrap: break-word;line-height: 1.25;text-align: left}
   .tb-search {flex: 1 1 100%;max-width: none;width: auto;min-width: 0}
   .tb-seg-btn, .tb-search, .tb-chip, .tb-clear-link, .tb-menu-item, .tb-row .btn, .tb-view-select {
     min-height: 44px}

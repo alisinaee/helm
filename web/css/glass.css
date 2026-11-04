@@ -157,9 +157,81 @@ body::before {
 
 /* Phones: the top bar and the bottom nav float as glass pills. */
 @media (max-width: 640px) {
+  :root {
+    --h-top: calc(52px + env(safe-area-inset-top, 0px));
+  }
   .top {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
     margin: 0;
     border-radius: 0;
+    border-top: 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--track);
+    background: var(--surface-1);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    padding-top: env(safe-area-inset-top, 0px);
+    height: var(--h-top);
+    box-sizing: border-box;
+  }
+  .top-tools > .pill {
+    display: none !important;
+  }
+  .crumb {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+  }
+  .crumb-part, .crumb-sep {
+    display: inline-block !important;
+  }
+  .crumb-part {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-1);
+    font-weight: 600;
+  }
+  .crumb-sep {
+    color: var(--text-3);
+    font-size: var(--fs-12);
+  }
+  .crumb-proj {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .top-tools {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+    flex: none;
+  }
+  .top-tools [data-action="control"] {
+    height: 36px;
+    min-height: 36px;
+    padding: 0 var(--sp-3);
+    font-size: var(--fs-12);
+    font-weight: 600;
+    border-radius: 999px;
+  }
+  .top-tools .theme-switch,
+  .top-tools [data-action="panel-toggle"] {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
   }
   .bnav {
     left: var(--sp-2);
