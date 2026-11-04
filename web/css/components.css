@@ -636,10 +636,11 @@ display: none;
 .theme-switch,
 .ref-copy {min-width: 0; max-width: 100%}
 .btn,
-.btn-small {height: auto; min-height: 44px; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; text-align: center; justify-content: center}
+.btn-small {height: auto; min-height: 44px; white-space: normal; overflow-wrap: break-word; word-break: normal; line-height: 1.25; text-align: center; justify-content: center}
 .row-grid > .btn {white-space: nowrap; overflow: hidden; text-overflow: ellipsis}
-.chip {height: auto; min-height: var(--h-control); white-space: normal; overflow-wrap: anywhere; line-height: 1.25; text-align: center}
-.job-chip {height: auto; min-height: 44px; white-space: normal; overflow-wrap: anywhere; line-height: 1.25}
+.chip {height: auto; min-height: var(--h-control); white-space: normal; overflow-wrap: break-word; word-break: normal; line-height: 1.25; text-align: center}
+.job-chip {height: auto; min-height: 44px; white-space: normal; overflow-wrap: break-word; word-break: normal; line-height: 1.25}
+.tb-seg-btn, .tb .btn, .sys-bar button, .sys-tabs button {white-space: nowrap}
 .theme-switch {min-width: 44px; min-height: 44px}
 .ref-copy {min-width: 24px; min-height: 24px}
 .section-title {min-width: 0; white-space: normal; overflow-wrap: anywhere}

@@ -139,9 +139,9 @@
 .tk-tabs { justify-self: start; margin-bottom: var(--sp-3); max-width: 100% }
 .tk-tabs > button { min-height: var(--h-control) }
 @media (max-width: 640px) {
-  .tk-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none }
+  .tk-tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; max-width: 100%; }
   .tk-tabs::-webkit-scrollbar { display: none }
-  .tk-tabs > button { min-height: 44px }
+  .tk-tabs > button { flex: none; white-space: nowrap; min-height: 44px }
 }
 .tk-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3) }
 .tk-chips { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2) }

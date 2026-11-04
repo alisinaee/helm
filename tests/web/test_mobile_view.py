@@ -5,6 +5,7 @@ Verifies:
 - safe-area insets and touch target token (--h-touch: 44px) in web/css/tokens.css
 - touch target sizing and 16px input font (iOS zoom prevention) in web/css/base.css
 - overflow prevention, safe-area padding, and sheet scroll in web/css/shell.css
+- flexible 4-item bnav-row and no text bleed in web/css/glass.css
 - mobile table display: block conversion in web/css/work.css
 - non-wrapping action bands and 2-row run item grid in web/css/components.css
 - right-anchored mobile dropdown in web/css/system.css
@@ -64,6 +65,10 @@ class MobileShellCssTests(unittest.TestCase):
     def test_app_clips_horizontal_overflow(self):
         self.assertIn("overflow-x:hidden", self.shell)
 
+    def test_bnav_row_is_flex_and_fills(self):
+        self.assertIn(".bnav-row{display:flex;height:100%}", self.shell)
+        self.assertIn(".bnav-i{flex:1 1 0;min-width:0;", self.shell)
+
     def test_bnav_safe_area_padding(self):
         self.assertIn("height:calc(var(--h-bnav) + env(safe-area-inset-bottom,0px))", self.shell)
         self.assertIn("padding-bottom:env(safe-area-inset-bottom,0px)", self.shell)
@@ -82,6 +87,29 @@ class MobileShellCssTests(unittest.TestCase):
     def test_top_safe_areas(self):
         self.assertIn("padding-left:calc(var(--sp-3) + env(safe-area-inset-left,0px))", self.shell)
         self.assertIn("padding-right:calc(var(--sp-3) + env(safe-area-inset-right,0px))", self.shell)
+
+
+class MobileGlassCssTests(unittest.TestCase):
+    def setUp(self):
+        self.glass = read_file("css", "glass.css")
+
+    def test_bnav_not_overflow_hidden(self):
+        # bnav must not clip overflow so the 'More' sheet can float above it
+        self.assertNotIn("overflow: hidden;\n  }\n  .bnav-i", self.glass)
+
+    def test_bnav_has_solid_surface_background(self):
+        # bnav must have solid surface to prevent scrolled page content bleeding through
+        self.assertIn("background: var(--surface-1);", self.glass)
+
+    def test_bnav_active_item_no_crescent_shadow(self):
+        # bnav-i[aria-current="page"] must not have one-sided inset 2px left shadow on a pill
+        bad_shadow = (
+            ":root[data-theme=\"obsidian\"] .bnav-i[aria-current=\"page\"] {\n"
+            "  background: var(--glass-fill-strong);\n"
+            "  color: var(--accent);\n"
+            "  box-shadow: inset 2px 0 0"
+        )
+        self.assertNotIn(bad_shadow, self.glass)
 
 
 class MobileWorkAndComponentsCssTests(unittest.TestCase):
@@ -105,6 +133,14 @@ class MobileWorkAndComponentsCssTests(unittest.TestCase):
             ".run-item > .run-title {grid-column: 1 / -1;grid-row: 2;white-space: normal;overflow-wrap: anywhere}"
         )
         self.assertIn(expected_title, comp)
+
+    def test_no_destructive_letter_split_wrap(self):
+        comp = read_file("css", "components.css")
+        bad_wrap = (
+            ".btn,\n.btn-small {height: auto; min-height: 44px; "
+            "white-space: normal; overflow-wrap: anywhere;"
+        )
+        self.assertNotIn(bad_wrap, comp)
 
     def test_touch_targets_in_components(self):
         comp = read_file("css", "components.css")

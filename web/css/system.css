@@ -32,7 +32,13 @@
 .sys-menu-list>*>:last-child{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .sys-crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-1);font-size:var(--fs-12);color:var(--text-2)}
 .sys-tog{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;cursor:pointer}
-@media (max-width:640px){.sys{height:calc(100vh - var(--h-top) - var(--h-bnav) - var(--sp-6) - env(safe-area-inset-bottom,0px))}.sys-seg-l{display:none}}
+@media (max-width:640px){
+.sys{height:calc(100vh - var(--h-top) - var(--h-bnav) - var(--sp-6) - env(safe-area-inset-bottom,0px))}
+.sys-seg-l{display:none}
+.sys-seg{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;max-width:100%}
+.sys-ov-tr{max-width:calc(100vw - 32px);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sys-ov-bl{max-width:calc(100vw - 32px);overflow-x:auto;-webkit-overflow-scrolling:touch}
+}
 .sys-crumb{color:var(--text-1);font-weight:600}
 .sys-lbl-bg{fill:var(--surface-1);stroke:var(--line);stroke-width:1}
 .sys-lbl{fill:var(--text-2);font-size:11px;text-anchor:middle}

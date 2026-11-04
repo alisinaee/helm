@@ -158,25 +158,58 @@ body::before {
 /* Phones: the top bar and the bottom nav float as glass pills. */
 @media (max-width: 640px) {
   .top {
-    margin: var(--sp-2) var(--sp-2) 0;
-    border-radius: var(--glass-r);
+    margin: 0;
+    border-radius: 0;
   }
   .bnav {
     left: var(--sp-2);
     right: var(--sp-2);
-    bottom: var(--sp-2);
+    bottom: calc(var(--sp-2) + env(safe-area-inset-bottom, 0px));
     height: var(--h-bnav);
-    background: var(--glass-fill-strong);
+    background: var(--surface-1);
     border: 1px solid var(--glass-edge);
     border-radius: 16px;
     box-shadow: var(--glass-shadow);
-    overflow: hidden;
   }
   .bnav-i { border-radius: var(--r-card); margin: 2px; }
   .main { border-radius: 0; }
   .toasts {
     right: var(--sp-3);
-    bottom: calc(var(--h-bnav) + 20px);
+    bottom: calc(var(--h-bnav) + 20px + env(safe-area-inset-bottom, 0px));
+  }
+  :root[data-theme="obsidian"] body::before {
+    background:
+      linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 60px 60px,
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 60px 60px,
+      radial-gradient(40% 35% at 85% 18%, var(--glow-sphere), transparent 75%),
+      radial-gradient(40% 45% at 10% 100%, var(--field-b), transparent 70%);
+  }
+  :root[data-theme="obsidian"] .bnav-i { border-radius: var(--r-card); }
+  :root[data-theme="obsidian"] .bnav-i[aria-current="page"] {
+    border-radius: var(--r-card);
+    box-shadow: none;
+    background: var(--sel);
+    color: var(--accent);
+  }
+  .sheet {
+    background: var(--surface-1);
+    border: 1px solid var(--glass-edge);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
+  }
+  .sheet .nav-i {
+    min-height: 44px;
+    padding: 0 var(--sp-3);
+    color: var(--text-1);
+    justify-content: flex-start;
+  }
+  .app[data-nav="mini"] .sheet .nav-l,
+  .sheet .nav-l {
+    position: static;
+    width: auto;
+    height: auto;
+    clip: auto;
+    overflow: visible;
+    display: inline-block;
   }
 }
 
@@ -318,11 +351,15 @@ select:hover {
 :root[data-theme="obsidian"] .lv-scale { font-family: var(--font-mono); letter-spacing: 0 }
 :root[data-theme="obsidian"] .nav-i,
 :root[data-theme="obsidian"] .bnav-i { border-radius: 999px; }
-:root[data-theme="obsidian"] .nav-i[aria-current="page"],
-:root[data-theme="obsidian"] .bnav-i[aria-current="page"] {
+:root[data-theme="obsidian"] .nav-i[aria-current="page"] {
   background: var(--glass-fill-strong);
   color: var(--accent);
   box-shadow: inset 2px 0 0 var(--accent);
+}
+:root[data-theme="obsidian"] .bnav-i[aria-current="page"] {
+  background: var(--glass-fill-strong);
+  color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 :root[data-theme="obsidian"] .btn-primary {
   background: var(--accent);
