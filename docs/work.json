@@ -1,0 +1,443 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "W1",
+      "kind": "task",
+      "title": "Head: a ledger of everything I ask, bound to work",
+      "outcome": "every message is an ask with a status; nothing is lost",
+      "status": "Todo",
+      "prio": 0,
+      "owner": "you",
+      "phase": null,
+      "created": "2026-10-24T05:19:08Z",
+      "updated": "2026-10-24T05:19:08Z",
+      "accepted": null,
+      "reopened": 0,
+      "reopenDone": null
+    },
+    {
+      "id": "W2",
+      "kind": "task",
+      "title": "Reliable core service that keeps working",
+      "outcome": "watcher, auto-continue, no duplicates, no crashes",
+      "status": "Todo",
+      "prio": 1,
+      "owner": "you",
+      "phase": null,
+      "created": "2026-10-24T05:19:08Z",
+      "updated": "2026-10-24T05:19:08Z",
+      "accepted": null,
+      "reopened": 0,
+      "reopenDone": null
+    },
+    {
+      "id": "W3",
+      "kind": "task",
+      "title": "Work board like Trello, issues included",
+      "outcome": "Work items as cards, Review then Accept, agents grouped",
+      "status": "Todo",
+      "prio": 1,
+      "owner": "you",
+      "phase": null,
+      "created": "2026-10-24T05:19:08Z",
+      "updated": "2026-10-24T05:19:08Z",
+      "accepted": null,
+      "reopened": 0,
+      "reopenDone": null
+    },
+    {
+      "id": "W4",
+      "kind": "task",
+      "title": "Clean, aligned UI on every screen and phone",
+      "outcome": "rule 0 grid everywhere; UX audit routine",
+      "status": "Todo",
+      "prio": 2,
+      "owner": "you",
+      "phase": null,
+      "created": "2026-10-24T05:19:09Z",
+      "updated": "2026-10-24T05:19:09Z",
+      "accepted": null,
+      "reopened": 0,
+      "reopenDone": null
+    },
+    {
+      "id": "W5",
+      "kind": "task",
+      "title": "Outside review of the code and UI",
+      "outcome": "independent review findings filed and fixed",
+      "status": "Todo",
+      "prio": 2,
+      "owner": "you",
+      "phase": null,
+      "created": "2026-10-24T05:19:09Z",
+      "updated": "2026-10-24T05:19:09Z",
+      "accepted": null,
+      "reopened": 0,
+      "reopenDone": null
+    },
+    {
+      "id": "W6",
+      "kind": "task",
+      "title": "Command palette and copy references",
+      "outcome": "Cmd-K search; copy a ref on every row",
+      "status": "Todo",
+      "prio": 3,
+      "owner": "you",
+      "phase": null,
+      "created": "2026-10-24T05:19:09Z",
+      "updated": "2026-10-24T05:19:09Z",
+      "accepted": null,
+      "reopened": 0,
+      "reopenDone": null
+    },
+    {
+      "id": "W7",
+      "kind": "task",
+      "title": "Git section",
+      "outcome": "status, history, branches, commit and push policy",
+      "status": "Todo",
+      "prio": 3,
+      "owner": "you",
+      "phase": null,
+      "created": "2026-10-24T05:19:10Z",
+      "updated": "2026-10-24T05:19:10Z",
+      "accepted": null,
+      "reopened": 0,
+      "reopenDone": null
+    },
+    {
+      "id": "W8",
+      "kind": "task",
+      "title": "Event log and Mark bug button",
+      "outcome": "one log for UI and core; a bug button",
+      "status": "Todo",
+      "prio": 3,
+      "owner": "you",
+      "phase": null,
+      "created": "2026-10-24T05:19:10Z",
+      "updated": "2026-10-24T05:19:10Z",
+      "accepted": null,
+      "reopened": 0,
+      "reopenDone": null
+    },
+    {
+      "id": "W9",
+      "kind": "task",
+      "title": "Start a project with research, live progress",
+      "outcome": "project new --research with live job tokens",
+      "status": "Todo",
+      "prio": 3,
+      "owner": "you",
+      "phase": null,
+      "created": "2026-10-24T05:19:10Z",
+      "updated": "2026-10-24T05:19:10Z",
+      "accepted": null,
+      "reopened": 0,
+      "reopenDone": null
+    }
+  ],
+  "links": {
+    "R7.31": "W1",
+    "R7.73": "W1",
+    "R9.20": "W1",
+    "R7.82": "W2",
+    "R7.24": "W3",
+    "R7.25": "W3",
+    "R9.5": "W3",
+    "R9.23": "W3",
+    "R7.22": "W3",
+    "R7.5": "W4",
+    "R7.26": "W4",
+    "R3.6": "W5",
+    "R7.59": "W5",
+    "R6.19": "W6",
+    "R7.12": "W6",
+    "R7.29": "W7",
+    "R7.16": "W8",
+    "R6.18": "W9",
+    "R6.22": "W9"
+  },
+  "events": [
+    {
+      "ts": "2026-10-24T05:19:08Z",
+      "kind": "work.add",
+      "entity": "work_item",
+      "entity_id": "W1",
+      "payload": {
+        "title": "Head: a ledger of everything I ask, bound to work",
+        "kind": "task"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:08Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R7.31",
+      "payload": {
+        "from": null,
+        "to": "W1"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:08Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R7.73",
+      "payload": {
+        "from": null,
+        "to": "W1"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:08Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R9.20",
+      "payload": {
+        "from": null,
+        "to": "W1"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:08Z",
+      "kind": "work.add",
+      "entity": "work_item",
+      "entity_id": "W2",
+      "payload": {
+        "title": "Reliable core service that keeps working",
+        "kind": "task"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:08Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R7.82",
+      "payload": {
+        "from": null,
+        "to": "W2"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:08Z",
+      "kind": "work.add",
+      "entity": "work_item",
+      "entity_id": "W3",
+      "payload": {
+        "title": "Work board like Trello, issues included",
+        "kind": "task"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:08Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R7.24",
+      "payload": {
+        "from": null,
+        "to": "W3"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:08Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R7.25",
+      "payload": {
+        "from": null,
+        "to": "W3"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:08Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R9.5",
+      "payload": {
+        "from": null,
+        "to": "W3"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:09Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R9.23",
+      "payload": {
+        "from": null,
+        "to": "W3"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:09Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R7.22",
+      "payload": {
+        "from": null,
+        "to": "W3"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:09Z",
+      "kind": "work.add",
+      "entity": "work_item",
+      "entity_id": "W4",
+      "payload": {
+        "title": "Clean, aligned UI on every screen and phone",
+        "kind": "task"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:09Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R7.5",
+      "payload": {
+        "from": null,
+        "to": "W4"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:09Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R7.26",
+      "payload": {
+        "from": null,
+        "to": "W4"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:09Z",
+      "kind": "work.add",
+      "entity": "work_item",
+      "entity_id": "W5",
+      "payload": {
+        "title": "Outside review of the code and UI",
+        "kind": "task"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:09Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R3.6",
+      "payload": {
+        "from": null,
+        "to": "W5"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:09Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R7.59",
+      "payload": {
+        "from": null,
+        "to": "W5"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:09Z",
+      "kind": "work.add",
+      "entity": "work_item",
+      "entity_id": "W6",
+      "payload": {
+        "title": "Command palette and copy references",
+        "kind": "task"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:09Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R6.19",
+      "payload": {
+        "from": null,
+        "to": "W6"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:09Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R7.12",
+      "payload": {
+        "from": null,
+        "to": "W6"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:10Z",
+      "kind": "work.add",
+      "entity": "work_item",
+      "entity_id": "W7",
+      "payload": {
+        "title": "Git section",
+        "kind": "task"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:10Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R7.29",
+      "payload": {
+        "from": null,
+        "to": "W7"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:10Z",
+      "kind": "work.add",
+      "entity": "work_item",
+      "entity_id": "W8",
+      "payload": {
+        "title": "Event log and Mark bug button",
+        "kind": "task"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:10Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R7.16",
+      "payload": {
+        "from": null,
+        "to": "W8"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:10Z",
+      "kind": "work.add",
+      "entity": "work_item",
+      "entity_id": "W9",
+      "payload": {
+        "title": "Start a project with research, live progress",
+        "kind": "task"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:10Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R6.18",
+      "payload": {
+        "from": null,
+        "to": "W9"
+      }
+    },
+    {
+      "ts": "2026-10-24T05:19:10Z",
+      "kind": "work.link",
+      "entity": "work_item",
+      "entity_id": "R6.22",
+      "payload": {
+        "from": null,
+        "to": "W9"
+      }
+    }
+  ]
+}

@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "phase": "R7",
+  "note": "Work items for R7 (docs/WORK-MODEL.md section 5). Each R7 agent task maps to one W#.",
+  "items": {
+    "W1": {
+      "title": "Head: a ledger of everything I ask, bound to work",
+      "outcome": "Every ask and decision is listed and tied to the Work item it moves."
+    },
+    "W2": {
+      "title": "Any model can be the head, safely and cheaply",
+      "outcome": "Head runs on Haiku, Cursor or Gemini with budget guards and short output."
+    },
+    "W3": {
+      "title": "Reliable core: one database, nothing lost",
+      "outcome": "One store holds jobs, head and tasks; no lost or duplicate work after a crash."
+    },
+    "W4": {
+      "title": "Every screen shows the same live truth",
+      "outcome": "Overview, board, agents and head show the same status without reloads."
+    },
+    "W5": {
+      "title": "Work board like Trello and Jira, issues included",
+      "outcome": "Work items sit on a board with priority, owner and issues; drag, add, filter."
+    },
+    "W6": {
+      "title": "Agents screen: what runs, which model, full history",
+      "outcome": "Each running or past job shows its model, effort, task and tokens."
+    },
+    "W7": {
+      "title": "Workflow map and timeline",
+      "outcome": "The flow and timeline show start to now, readable and draggable."
+    },
+    "W8": {
+      "title": "Usage and limits I can trust",
+      "outcome": "Live usage shows clearly when stale, with one stop value and honest errors."
+    },
+    "W9": {
+      "title": "Clean, aligned UI on every screen and phone",
+      "outcome": "Numbers in fixed columns, no horizontal scroll at 375px, one design system."
+    },
+    "W10": {
+      "title": "Tests, lint and reviews stay green",
+      "outcome": "Unit suite, lint and UI checks pass; review findings are fixed."
+    },
+    "W11": {
+      "title": "Docs and architecture match the product",
+      "outcome": "Docs, API notes and the architecture page describe what the product does."
+    },
+    "W12": {
+      "title": "Git section",
+      "outcome": "Git status, history, branches and the commit and push policy in one section."
+    },
+    "W13": {
+      "title": "Event log, bug button, copy refs",
+      "outcome": "Every change is logged; a bug button and copyable refs help me report."
+    },
+    "W14": {
+      "title": "Start work from the GUI",
+      "outcome": "I can start a session from the GUI, gated by the approved phase."
+    },
+    "W15": {
+      "title": "Planner v2: project structure and plan tree",
+      "outcome": "The plan shows project structure and a tree of work; design waits for approval."
+    }
+  },
+  "tasks": {
+    "R7.1": "W14",
+    "R7.2": "W6",
+    "R7.3": "W5",
+    "R7.4": "W10",
+    "R7.5": "W9",
+    "R7.6": "W11",
+    "R7.7": "W9",
+    "R7.8": "W10",
+    "R7.9": "W9",
+    "R7.10": "W9",
+    "R7.11": "W14",
+    "R7.12": "W13",
+    "R7.13": "W15",
+    "R7.14": "W7",
+    "R7.16": "W13",
+    "R7.17": "W7",
+    "R7.18": "W10",
+    "R7.19": "W10",
+    "R7.20": "W14",
+    "R7.21": "W11",
+    "R7.22": "W5",
+    "R7.23": "W9",
+    "R7.24": "W5",
+    "R7.25": "W5",
+    "R7.26": "W9",
+    "R7.27": "W8",
+    "R7.28": "W8",
+    "R7.29": "W12",
+    "R7.30": "W7",
+    "R7.31": "W1",
+    "R7.32": "W1",
+    "R7.33": "W4",
+    "R7.34": "W1",
+    "R7.35": "W1",
+    "R7.36": "W1",
+    "R7.37": "W1",
+    "R7.38": "W6",
+    "R7.39": "W6",
+    "R7.40": "W4",
+    "R7.41": "W6",
+    "R7.42": "W9",
+    "R7.43": "W1",
+    "R7.44": "W1",
+    "R7.45": "W4",
+    "R7.46": "W1",
+    "R7.47": "W9",
+    "R7.48": "W10",
+    "R7.49": "W1",
+    "R7.50": "W4",
+    "R7.51": "W4",
+    "R7.52": "W4",
+    "R7.53": "W10",
+    "R7.54": "W9",
+    "R7.55": "W10",
+    "R7.56": "W9",
+    "R7.57": "W4",
+    "R7.58": "W4",
+    "R7.59": "W9",
+    "R7.60": "W6",
+    "R7.61": "W4",
+    "R7.62": "W7",
+    "R7.63": "W8",
+    "R7.64": "W2",
+    "R7.65": "W9",
+    "R7.66": "W1",
+    "R7.67": "W2",
+    "R7.68": "W2",
+    "R7.69": "W2",
+    "R7.70": "W2",
+    "R7.71": "W2",
+    "R7.72": "W2",
+    "R7.73": "W2",
+    "R7.74": "W7",
+    "R7.75": "W12",
+    "R7.76": "W8",
+    "R7.77": "W8",
+    "R7.78": "W5",
+    "R7.79": "W11",
+    "R7.80": "W1",
+    "R7.81": "W1",
+    "R7.82": "W3",
+    "R7.83": "W3",
+    "R7.84": "W3",
+    "R7.85": "W3",
+    "R7.86": "W3",
+    "R7.87": "W3",
+    "R7.88": "W3",
+    "R7.89": "W2",
+    "R7.90": "W6",
+    "R7.91": "W3",
+    "R7.92": "W3",
+    "R7.93": "W3",
+    "R7.94": "W3",
+    "R7.95": "W6",
+    "R7.96": "W3",
+    "R7.97": "W5",
+    "R7.98": "W10",
+    "R7.99": "W3",
+    "R7.100": "W8",
+    "R7.101": "W5",
+    "R7.102": "W3",
+    "R7.103": "W1",
+    "R7.104": "W5",
+    "R7.105": "W3",
+    "R7.106": "W15",
+    "R7.107": "W3",
+    "R7.108": "W5",
+    "R7.109": "W15",
+    "R7.110": "W4",
+    "R7.111": "W9"
+  }
+}

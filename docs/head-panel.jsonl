@@ -1,0 +1,80 @@
+{"id":"P1","ts":"2026-10-17T10:32:31+03:30","src":"gui","op":"question.answer","sum":"question.answer Q9 answered Head","ref":"Q9"}
+{"id":"P2","ts":"2026-10-17T10:32:49+03:30","src":"gui","op":"question.answer","sum":"question.answer Q10 answered Yes","ref":"Q10"}
+{"id":"P3","ts":"2026-10-17T10:32:57+03:30","src":"gui","op":"question.answer","sum":"question.answer Q11 answered some junk test texts","ref":"Q11"}
+{"id":"P4","ts":"2026-10-17T10:57:16+03:30","src":"gui","op":"task.add","sum":"task.add R3.8 todo in R3: \"Update System diagrams and check them (roadmap-board)\"","ref":""}
+{"id":"P5","ts":"2026-10-17T10:57:21+03:30","src":"gui","op":"task.add","sum":"task.add R3.9 todo in R3: \"Update System diagrams and check them (roadmap-board)\"","ref":""}
+{"id":"P6","ts":"2026-10-17T10:58:54+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 50%","ref":""}
+{"id":"P7","ts":"2026-10-17T10:58:57+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 75%","ref":""}
+{"id":"P8","ts":"2026-10-17T10:59:00+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 80%","ref":""}
+{"id":"P9","ts":"2026-10-17T10:59:03+03:30","src":"gui","op":"limits.set","sum":"week stop at 95%","ref":""}
+{"id":"P10","ts":"2026-10-17T10:59:04+03:30","src":"gui","op":"limits.set","sum":"week stop at 30%","ref":""}
+{"id":"P11","ts":"2026-10-17T10:59:06+03:30","src":"gui","op":"limits.set","sum":"week stop at 30%","ref":""}
+{"id":"P12","ts":"2026-10-17T10:59:08+03:30","src":"gui","op":"limits.set","sum":"week stop at 32%","ref":""}
+{"id":"P13","ts":"2026-10-17T10:59:09+03:30","src":"gui","op":"limits.set","sum":"week stop at 33%","ref":""}
+{"id":"P14","ts":"2026-10-17T11:48:18+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 90%","ref":""}
+{"id":"P15","ts":"2026-10-17T13:03:32+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 48%","ref":""}
+{"id":"P16","ts":"2026-10-17T13:03:35+03:30","src":"gui","op":"limits.set","sum":"week stop at 48%","ref":""}
+{"id":"P17","ts":"2026-10-17T13:27:06+03:30","src":"gui","op":"rules.accept","sum":"rules.accept RP5 accepted as R17: \"Show the real model and effort of every job on the Agents list.\"","ref":"RP5"}
+{"id":"P18","ts":"2026-10-17T13:27:08+03:30","src":"gui","op":"rules.accept","sum":"rules.accept RP6 accepted as R18: \"Register every job on the dashboard, including follow-ups to running workers.\"","ref":"RP6"}
+{"id":"P19","ts":"2026-10-17T13:27:10+03:30","src":"gui","op":"rules.accept","sum":"rules.accept RP7 accepted as R19: \"Workers never run usage sync, read the keychain, touch the person dashboard tab or port 8780.\"","ref":"RP7"}
+{"id":"P20","ts":"2026-10-17T13:27:12+03:30","src":"gui","op":"rules.accept","sum":"rules.accept RP8 accepted as R20: \"UI rule 0: numbers and actions in fixed grid columns; review the UI after each wave.\"","ref":"RP8"}
+{"id":"P21","ts":"2026-10-17T13:27:13+03:30","src":"gui","op":"rules.accept","sum":"rules.accept RP9 accepted as R21: \"Head shows every captured item; nothing is hidden by limits or lazy loading.\"","ref":"RP9"}
+{"id":"P22","ts":"2026-10-17T13:27:16+03:30","src":"gui","op":"rules.accept","sum":"rules.accept RP10 accepted as R22: \"Every message from the person is captured in Head; the head reviews rule-kind items and proposes rul\"","ref":"RP10"}
+{"id":"P23","ts":"2026-10-17T13:27:18+03:30","src":"gui","op":"rules.accept","sum":"rules.accept RP11 accepted as R23: \"No secrets in Head, the ledger or logs.\"","ref":"RP11"}
+{"id":"P24","ts":"2026-10-17T13:27:20+03:30","src":"gui","op":"rules.accept","sum":"rules.accept RP12 accepted as R24: \"Work items are human cards (plain words, outcome); agent tasks are machine packages bound to one Wor\"","ref":"RP12"}
+{"id":"P25","ts":"2026-10-17T13:27:21+03:30","src":"gui","op":"rules.accept","sum":"rules.accept RP13 accepted as R25: \"Usage stops: Claude workers stop at 80% of the 5-hour window and 95% of the week.\"","ref":"RP13"}
+{"id":"P26","ts":"2026-10-17T13:27:23+03:30","src":"gui","op":"rules.accept","sum":"rules.accept RP14 accepted as R26: \"Model roles: Haiku edits; Opus or Sonnet low/medium only for hard review and planning; Cursor and ag\"","ref":"RP14"}
+{"id":"P27","ts":"2026-10-17T14:08:38+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 61%","ref":""}
+{"id":"P28","ts":"2026-10-17T14:08:43+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 70%","ref":""}
+{"id":"P29","ts":"2026-10-17T14:37:19+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 80%","ref":""}
+{"id":"P30","ts":"2026-10-17T14:54:29+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 73%","ref":""}
+{"id":"P31","ts":"2026-10-17T14:54:31+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 76%","ref":""}
+{"id":"P32","ts":"2026-10-17T21:14:00+03:30","src":"gui","op":"limits.set","sum":"week stop at 74%","ref":""}
+{"id":"P33","ts":"2026-10-17T21:14:01+03:30","src":"gui","op":"limits.set","sum":"week stop at 100%","ref":""}
+{"id":"P34","ts":"2026-10-17T21:23:31+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 89%","ref":""}
+{"id":"P35","ts":"2026-10-17T21:23:33+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 76%","ref":""}
+{"id":"P36","ts":"2026-10-17T21:42:26+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 76%","ref":""}
+{"id":"P37","ts":"2026-10-17T21:42:30+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 100%","ref":""}
+{"id":"P38","ts":"2026-10-18T11:36:21+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 90%","ref":"","epoch":1792310781.316304,"key":"five_hour"}
+{"id":"P39","ts":"2026-10-18T11:36:28+03:30","src":"gui","op":"limits.set","sum":"week stop at 75%","ref":"","epoch":1792310788.025812,"key":"week"}
+{"id":"P40","ts":"2026-10-18T12:00:01+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 100%","ref":"","epoch":1792312201.9465659,"key":"five_hour"}
+{"id":"P41","ts":"2026-10-18T12:00:03+03:30","src":"gui","op":"limits.set","sum":"week stop at 100%","ref":"","epoch":1792312203.0932071,"key":"week"}
+{"id":"P42","ts":"2026-10-18T12:06:32+03:30","src":"gui","op":"limits.set","sum":"week stop at 85%","ref":"","epoch":1792312592.153269,"key":"week"}
+{"id":"P43","ts":"2026-10-18T13:46:06+03:30","src":"gui","op":"usage.sync","sum":"usage Update pressed: a fresh usage reading was asked for","ref":"","epoch":1792318566.974288}
+{"id":"P44","ts":"2026-10-19T08:21:17+03:30","src":"gui","op":"limits.set","sum":"week stop at 100%","ref":"","epoch":1792385477.300864,"key":"week"}
+{"id":"P45","ts":"2026-10-19T08:46:15+03:30","src":"gui","op":"limits.set","sum":"week stop at 96%","ref":"","epoch":1792386975.1419709,"key":"week"}
+{"id":"P46","ts":"2026-10-19T08:46:21+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 90%","ref":"","epoch":1792386981.357337,"key":"five_hour"}
+{"id":"P47","ts":"2026-10-19T09:14:28+03:30","src":"gui","op":"limits.set","sum":"week stop off","ref":"","epoch":1792388668.8386,"key":"week"}
+{"id":"P48","ts":"2026-10-19T09:14:29+03:30","src":"gui","op":"limits.set","sum":"5 hours stop off","ref":"","epoch":1792388669.748066,"key":"five_hour"}
+{"id":"P49","ts":"2026-10-19T10:09:41+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 85%","ref":"","epoch":1792391981.950786,"key":"five_hour"}
+{"id":"P50","ts":"2026-10-19T10:11:12+03:30","src":"gui","op":"limits.set","sum":"5 hours stop off","ref":"","epoch":1792392072.7011788,"key":"five_hour"}
+{"id":"P51","ts":"2026-10-19T10:11:46+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 49%","ref":"","epoch":1792392106.589375,"key":"five_hour"}
+{"id":"P52","ts":"2026-10-19T10:11:54+03:30","src":"gui","op":"limits.set","sum":"week stop at 40%","ref":"","epoch":1792392114.670431,"key":"week"}
+{"id":"P53","ts":"2026-10-19T10:15:14+03:30","src":"gui","op":"limits.set","sum":"5 hours stop off","ref":"","epoch":1792392314.0000288,"key":"five_hour"}
+{"id":"P54","ts":"2026-10-19T10:15:14+03:30","src":"gui","op":"limits.set","sum":"week stop off","ref":"","epoch":1792392314.793626,"key":"week"}
+{"id":"P55","ts":"2026-10-20T09:23:53+03:30","src":"gui","op":"limits.set","sum":"week stop at 60%","ref":"","epoch":1792475633.877305,"key":"week"}
+{"id":"P56","ts":"2026-10-20T09:24:00+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 80%","ref":"","epoch":1792475640.650357,"key":"five_hour"}
+{"id":"P57","ts":"2026-10-20T10:41:14+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 85%","ref":"","epoch":1792480274.235404,"key":"five_hour"}
+{"id":"P58","ts":"2026-10-20T11:59:30+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 95%","ref":"","epoch":1792484970.256675,"key":"five_hour"}
+{"id":"P59","ts":"2026-10-20T12:48:01+03:30","src":"gui","op":"limits.set","sum":"week stop at 70%","ref":"","epoch":1792487881.686661,"key":"week"}
+{"id":"P60","ts":"2026-10-21T07:31:10+03:30","src":"gui","op":"limits.set","sum":"week stop at 76%","ref":"","epoch":1792555270.512819,"key":"week"}
+{"id":"P61","ts":"2026-10-21T07:31:35+03:30","src":"gui","op":"usage.sync","sum":"usage Update pressed: a fresh usage reading was asked for","ref":"","epoch":1792555295.489834}
+{"id":"P62","ts":"2026-10-21T07:32:03+03:30","src":"gui","op":"limits.set","sum":"week stop at 89%","ref":"","epoch":1792555323.211662,"key":"week"}
+{"id":"P63","ts":"2026-10-21T07:32:05+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 100%","ref":"","epoch":1792555325.796405,"key":"five_hour"}
+{"id":"P64","ts":"2026-10-21T07:49:25+03:30","src":"gui","op":"limits.set","sum":"5 hours stop off","ref":"","epoch":1792556365.192956,"key":"five_hour"}
+{"id":"P65","ts":"2026-10-21T07:49:26+03:30","src":"gui","op":"limits.set","sum":"week stop off","ref":"","epoch":1792556366.6419158,"key":"week"}
+{"id":"P66","ts":"2026-10-23T17:41:33+03:30","src":"gui","op":"usage.sync","sum":"usage Update pressed: a fresh usage reading was asked for","ref":"","epoch":1792764693.007135}
+{"id":"P67","ts":"2026-10-23T18:18:14+03:30","src":"gui","op":"limits.set","sum":"week stop at 20%","ref":"","epoch":1792766894.095048,"key":"week"}
+{"id":"P68","ts":"2026-10-24T08:10:27+03:30","src":"gui","op":"usage.sync","sum":"usage Update pressed: a fresh usage reading was asked for","ref":"","epoch":1792816827.35571}
+{"id":"P69","ts":"2026-10-24T09:26:03+03:30","src":"gui","op":"limits.set","sum":"week stop at 25%","ref":"","epoch":1792821363.705007,"key":"week"}
+{"id":"P70","ts":"2026-10-25T20:09:29+03:30","src":"gui","op":"limits.set","sum":"week stop at 75%","ref":"","epoch":1792946369.336274,"key":"week"}
+{"id":"P71","ts":"2026-10-25T20:09:54+03:30","src":"gui","op":"limits.set","sum":"week stop off","ref":"","epoch":1792946394.272434,"key":"week"}
+{"id":"P72","ts":"2026-10-26T11:08:14+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 80%","ref":"","epoch":1793000294.495065,"key":"five_hour"}
+{"id":"P73","ts":"2026-10-26T11:08:23+03:30","src":"gui","op":"limits.set","sum":"week stop at 60%","ref":"","epoch":1793000303.813301,"key":"week"}
+{"id":"P74","ts":"2026-10-26T18:08:22+03:30","src":"gui","op":"limits.set","sum":"week stop at 66%","ref":"","epoch":1793025502.85048,"key":"week"}
+{"id":"P75","ts":"2026-10-26T19:41:05+03:30","src":"gui","op":"limits.set","sum":"5 hours stop at 100%","ref":"","epoch":1793031065.1748219,"key":"five_hour"}
+{"id":"P76","ts":"2026-10-27T07:16:14+03:30","src":"gui","op":"limits.set","sum":"week stop at 70%","ref":"","epoch":1793072774.668868,"key":"week"}
+{"id":"P77","ts":"2026-10-27T12:25:49+03:30","src":"gui","op":"limits.set","sum":"week stop at 80%","ref":"","epoch":1793091349.4846778,"key":"week"}
+{"id":"P78","ts":"2026-10-28T10:57:11+03:30","src":"gui","op":"limits.set","sum":"week stop at 90%","ref":"","epoch":1793172431.2202408,"key":"week"}
+{"id":"P79","ts":"2026-10-28T16:12:37+03:30","src":"gui","op":"limits.set","sum":"week stop at 92%","ref":"","epoch":1793191357.27692,"key":"week"}
+{"id":"P80","ts":"2026-10-29T16:43:19+03:30","src":"gui","op":"limits.set","sum":"week stop at 100%","ref":"","epoch":1793279599.6949499,"key":"week"}

@@ -1,0 +1,1002 @@
+{
+  "a0685b635c48c2f03": {
+    "task": "R9.30",
+    "title": "haiku: R9.30 Inbox choice answers",
+    "model": "haiku"
+  },
+  "adb3634ad4971bce4": {
+    "task": "R9.31",
+    "title": "haiku: R9.31 head asks with options",
+    "model": "haiku"
+  },
+  "a47ff355d821a9493": {
+    "task": "R3.2",
+    "title": "haiku: Inbox tasks: check against code and do leftovers",
+    "model": "haiku"
+  },
+  "aa8abd270b7378e83": {
+    "task": "R7.31",
+    "title": "haiku: Planner crash/hang fix and Planner tasks",
+    "model": "haiku"
+  },
+  "af84a46a3e68fcf2a": {
+    "task": "R7.31",
+    "title": "haiku: UI/UX tester: see every section and file issues",
+    "model": "haiku"
+  },
+  "ad092fcea45fd9589": {
+    "task": "R7.31",
+    "title": "haiku: UI/UX tester v2: measure alignment, real data, rules",
+    "model": "haiku"
+  },
+  "afecfa15aabeb1aae": {
+    "task": "R9.70",
+    "title": "haiku: R9.70 Inbox option buttons layout",
+    "model": "haiku"
+  },
+  "af3bfd3dd92cf796c": {
+    "task": "R10.8",
+    "title": "haiku: R10.8 delete Research section",
+    "model": "haiku"
+  },
+  "a378f1c4268adbe0b": {
+    "task": "R10.14",
+    "title": "haiku: R10.14 Inbox section fixes",
+    "model": "haiku"
+  },
+  "a8a07044c7dbf8541": {
+    "task": "R10.3",
+    "title": "sonnet: R10.3 resizable side panels",
+    "model": "sonnet"
+  },
+  "aa0aa69287033f6d1": {
+    "task": "R10.7",
+    "title": "sonnet: R10.7 merge Planner into Work",
+    "model": "sonnet"
+  },
+  "ad583c74953df6008": {
+    "task": "R10.16",
+    "title": "haiku: R10.16 Head section chat capture",
+    "model": "haiku"
+  },
+  "a8477e51bfc9cf389": {
+    "task": "R10.15",
+    "title": "haiku: R10.15 green test baseline",
+    "model": "haiku"
+  },
+  "ab35fc313d788f378": {
+    "task": "R10.16",
+    "title": "haiku: R10.16 fix Stop-hook reply overwrite",
+    "model": "haiku"
+  },
+  "a876f60780a626c4a": {
+    "task": "R10.9",
+    "title": "sonnet: R10.9 Git section on OSS libs",
+    "model": "sonnet"
+  },
+  "ac9268ba50bceea3d": {
+    "task": "R10.10",
+    "title": "sonnet: R10.10 verify core audit, plan fixes",
+    "model": "sonnet"
+  },
+  "ae947451e197d00d1": {
+    "task": "R10.10",
+    "title": "haiku: R10.10 C1 no phantom db",
+    "model": "haiku"
+  },
+  "a33903a4528e80da8": {
+    "task": "R10.10",
+    "title": "haiku: R10.10 C2 work.json in loader",
+    "model": "haiku"
+  },
+  "adfc090d30117377d": {
+    "task": "R10.10",
+    "title": "haiku: R10.10 C5 running visibility",
+    "model": "haiku"
+  },
+  "a4e53e740d8b8ae74": {
+    "task": "R10.11",
+    "title": "sonnet: R10.11 roadmap init command",
+    "model": "sonnet"
+  },
+  "ab4643ce6e4bd838f": {
+    "task": "R10.13",
+    "title": "haiku: R10.13 remove dead Issues view",
+    "model": "haiku"
+  },
+  "a08a679dd8bcc43bb": {
+    "task": "R10.17",
+    "title": "haiku: R10.17 static asset cache-busting",
+    "model": "haiku"
+  },
+  "a432769ba202360cd": {
+    "task": "R7.31",
+    "title": "haiku: R10.18 finish Agents panel WIP, CSS caps",
+    "model": "haiku"
+  },
+  "ab4c1d2dbce5217d0": {
+    "task": "R10.15",
+    "title": "haiku: R10.15 head tests green",
+    "model": "haiku"
+  },
+  "af9ced290c3930fd8": {
+    "task": "R10.19",
+    "title": "haiku: R10.19 System map A1 service",
+    "model": "haiku"
+  },
+  "a5a77acc7fc8efe25": {
+    "task": "R10.22",
+    "title": "haiku: R10.22 System map A4 layout",
+    "model": "haiku"
+  },
+  "a8e79596db0c47be4": {
+    "task": "R10.10",
+    "title": "haiku: R10.10 fix Cursor review P1s",
+    "model": "haiku"
+  },
+  "a5ca30802db2c118b": {
+    "task": "R10.16",
+    "title": "haiku: R10.16 Head view: chat first",
+    "model": "haiku"
+  },
+  "afb515d02f410e771": {
+    "task": "R10.2",
+    "title": "haiku: R10.2 Inbox UX tester + fix",
+    "model": "haiku"
+  },
+  "a34812239ca19a9af": {
+    "task": "R10.2",
+    "title": "haiku: R10.2 Head UX tester + fix",
+    "model": "haiku"
+  },
+  "a0661e4fb78b6e94c": {
+    "task": "R10.6",
+    "title": "haiku: R10.6 shell UX tester + fix",
+    "model": "haiku"
+  },
+  "a635b3baf5fdaec85": {
+    "task": "R10.4",
+    "title": "haiku: R10.4 Work UX tester + fix",
+    "model": "haiku"
+  },
+  "a7b85eb88226cd429": {
+    "task": "R10.4",
+    "title": "haiku: R10.4 Agents UX tester + fix",
+    "model": "haiku"
+  },
+  "ae6dcf76e1cab4955": {
+    "task": "R10.15",
+    "title": "haiku: R10.15 last 2 failing web tests",
+    "model": "haiku"
+  },
+  "a64499505bc8b55b0": {
+    "task": "R10.20",
+    "title": "haiku: R10.20 System map A2 heat",
+    "model": "haiku"
+  },
+  "a9fea043a6da39a02": {
+    "task": "R10.13",
+    "title": "haiku: R10.13 Overview UX tester + fix",
+    "model": "haiku"
+  },
+  "a94dca81674c1e573": {
+    "task": "R10.9",
+    "title": "haiku: R10.9 Git UX tester + fix",
+    "model": "haiku"
+  },
+  "a07cb787f47413bf6": {
+    "task": "R10.5",
+    "title": "haiku: R10.5 page scrollbars fix",
+    "model": "haiku"
+  },
+  "af60f0e904edf64df": {
+    "task": "R10.14",
+    "title": "sonnet: R10.14 Inbox redesign (Sonnet)",
+    "model": "sonnet"
+  },
+  "aa667e3c2fddd6ded": {
+    "task": "R10.16",
+    "title": "sonnet: R10.16 Head layout: header + tabs",
+    "model": "sonnet"
+  },
+  "aa3cba2c18bb2450a": {
+    "task": "R10.28",
+    "title": "haiku: R10.28 top bar usage freshness",
+    "model": "haiku"
+  },
+  "a15fff5d8d2072c2a": {
+    "task": "R10.29",
+    "title": "opus: R10.29 usage auto-fetch (Opus)",
+    "model": "opus"
+  },
+  "a35e07d3e4c7e5ba7": {
+    "task": "R10.17",
+    "title": "haiku: R10.17 section import retry",
+    "model": "haiku"
+  },
+  "a3e3d74729acc0d85": {
+    "task": "R10.4",
+    "title": "sonnet: R10.4 Agents redesign (Sonnet)",
+    "model": "sonnet"
+  },
+  "a921b02f5f5f7706b": {
+    "task": "R7.31",
+    "title": "sonnet: R10.31 Workflow map fix (Sonnet)",
+    "model": "sonnet"
+  },
+  "a2ca5f7a98815aa8d": {
+    "task": "R10.29",
+    "title": "haiku: R10.29 refresh opt-in + tests",
+    "model": "haiku"
+  },
+  "ab206dc260a90f115": {
+    "task": "R10.21",
+    "title": "haiku: R10.21 System map A3 API",
+    "model": "haiku"
+  },
+  "add5b156801258cf5": {
+    "task": "R10.26",
+    "title": "haiku: R10.26 System map A8 CLI + seed",
+    "model": "haiku"
+  },
+  "a2bdf9d4b04571e21": {
+    "task": "R10.23",
+    "title": "sonnet: R10.23 System map A5 view (Sonnet)",
+    "model": "sonnet"
+  },
+  "a75dce6f258f6a4fe": {
+    "task": "R10.24",
+    "title": "sonnet: R10.24 System map A6 + layout polish",
+    "model": "sonnet"
+  },
+  "a2b5b89422698e6d8": {
+    "task": "R10.30",
+    "title": "sonnet: R10.30 Tokens page UI fix",
+    "model": "sonnet"
+  },
+  "a342fdfc039cb138a": {
+    "task": "R10.32",
+    "title": "sonnet: R10.32 per-job token capture backend",
+    "model": "sonnet"
+  },
+  "a89557622602bdb64": {
+    "task": "R10.27",
+    "title": "haiku: R10.27 web test cleanup",
+    "model": "haiku"
+  },
+  "af2390d77a2819db0": {
+    "task": "R10.32",
+    "title": "sonnet: R10.32 per-task tokens UI",
+    "model": "sonnet"
+  },
+  "a4686c448ef9676f4": {
+    "task": "R10.14",
+    "title": "sonnet: R10.14 Inbox question rows redesign",
+    "model": "sonnet"
+  },
+  "ab1b26a70f585bfa0": {
+    "task": "R10.31",
+    "title": "sonnet: R10.31 Workflow layout arrows zoom",
+    "model": "sonnet"
+  },
+  "aeef049ecd07f19a5": {
+    "task": "R10.33",
+    "title": "opus: R10.33 System section investigate+complete",
+    "model": "opus"
+  },
+  "af16857ecc5eef7a5": {
+    "task": "R10.14",
+    "title": "opus: R10.14 Inbox questions UX by Opus",
+    "model": "opus"
+  },
+  "aca3371c656a776fa": {
+    "task": "R10.34",
+    "title": "sonnet: R10.34 Helm brand rename (text/UI)",
+    "model": "sonnet"
+  },
+  "a9221782d9e689b2b": {
+    "task": "R10.27",
+    "title": "sonnet: R10.27 check-ui Tokens+Head fix",
+    "model": "sonnet"
+  },
+  "afec08e9357205c2d": {
+    "task": "R10.25",
+    "title": "sonnet: R10.25 System map full-screen route",
+    "model": "sonnet"
+  },
+  "a90dadfeae1254481": {
+    "task": "R10.27",
+    "title": "haiku: R10.27 ledger auto-close bug check",
+    "model": "haiku"
+  },
+  "a0a6562cd057068e3": {
+    "task": "R10.32",
+    "title": "sonnet: R10.35 per-task percent-of-limit estimate",
+    "model": "sonnet"
+  },
+  "aacaf12c36478a68a": {
+    "task": "R10.27",
+    "title": "haiku: R10.27 fix supervisor test for new bind rule",
+    "model": "haiku"
+  },
+  "ac82274c6f95e4fb9": {
+    "task": "R11.0",
+    "title": "haiku: R11.0 CSS budget raise",
+    "model": "haiku"
+  },
+  "acad37bd32cea8602": {
+    "task": "R11.1",
+    "title": "opus: R11.1 System v2 lead (Opus)",
+    "model": "opus"
+  },
+  "aa40e41662b5a2715": {
+    "task": "R11.2",
+    "title": "opus: R11.2 panel to head channel audit (Opus)",
+    "model": "opus"
+  },
+  "ac1adb70b0d11aa37": {
+    "task": "R11.3",
+    "title": "sonnet: R11.3 drag-resize handles",
+    "model": "sonnet"
+  },
+  "a7d6be373908da370": {
+    "task": "R11.4",
+    "title": "opus: R11.4 Activity redesign (Opus)",
+    "model": "opus"
+  },
+  "a3038bbfe6072ee01": {
+    "task": "R11.5",
+    "title": "opus: R11.5 Roadmap map (Opus)",
+    "model": "opus"
+  },
+  "a3d1048ef666e1d60": {
+    "task": "R11.6",
+    "title": "sonnet: R11.6 Tokens page features",
+    "model": "sonnet"
+  },
+  "aad4fd9500b2437cd": {
+    "task": "R11.7",
+    "title": "opus: R11.7 toolbar pattern spec + audit (Opus)",
+    "model": "opus"
+  },
+  "ade850a83a4294dc9": {
+    "task": "R7.31",
+    "title": "haiku: Inventory section top controls",
+    "model": "haiku"
+  },
+  "abbe4de3e4d301f36": {
+    "task": "R11.8",
+    "title": "opus: R11.8 Tokens account login design+backend (Opus)",
+    "model": "opus"
+  },
+  "a379d7638ab12a5cc": {
+    "task": "R11.101",
+    "title": "sonnet: R11.101 System v2 backend task binding",
+    "model": "sonnet"
+  },
+  "a18f4733fb3e89a69": {
+    "task": "R11.102",
+    "title": "sonnet: R11.102 ER and state diagrams derivation",
+    "model": "sonnet"
+  },
+  "a6c8ee67663b27179": {
+    "task": "R11.103",
+    "title": "sonnet: R11.103 class deployment usecase activity derivation",
+    "model": "sonnet"
+  },
+  "a3393ab5575963992": {
+    "task": "R11.104",
+    "title": "sonnet: R11.104 System UI core layout zoom fullscreen",
+    "model": "sonnet"
+  },
+  "a97bd86de17155b76": {
+    "task": "R11.105",
+    "title": "sonnet: R11.105 System context menu module",
+    "model": "sonnet"
+  },
+  "a6fde016f91ec1e50": {
+    "task": "R11.106",
+    "title": "sonnet: R11.106 System side panel tasks progress",
+    "model": "sonnet"
+  },
+  "ad33b73145fd03465": {
+    "task": "R11.107",
+    "title": "sonnet: R11.107 System SVG renderers new diagrams",
+    "model": "sonnet"
+  },
+  "afc2096aa19671377": {
+    "task": "R11.108",
+    "title": "sonnet: R11.108 syslayout expandable groups and drill",
+    "model": "sonnet"
+  },
+  "af907616a410eed2c": {
+    "task": "R11.109",
+    "title": "sonnet: R11.109 Workflow timeline drag scroll zoom",
+    "model": "sonnet"
+  },
+  "a078c9960c02002f7": {
+    "task": "R11.104",
+    "title": "haiku: R11.104 lint and a11y test fixes",
+    "model": "haiku"
+  },
+  "a229c4e2769cbe7f6": {
+    "task": "R11.2",
+    "title": "haiku: R11.2 finish panel to head channel",
+    "model": "haiku"
+  },
+  "a290aa11ef25d6ef1": {
+    "task": "R11.4",
+    "title": "sonnet: R11.4 finish Activity redesign",
+    "model": "sonnet"
+  },
+  "a000ed3aa8de706e9": {
+    "task": "R11.6",
+    "title": "sonnet: R11.6 R11.8 finish Tokens page",
+    "model": "sonnet"
+  },
+  "a7404561c674046f1": {
+    "task": "R11.104",
+    "title": "haiku: R11.104 p7 lint and r765 fixes",
+    "model": "haiku"
+  },
+  "a97254a17d468d88b": {
+    "task": "R11.5",
+    "title": "sonnet: R11.5 finish Roadmap map",
+    "model": "sonnet"
+  },
+  "a9ee5284f82088473": {
+    "task": "R11.109",
+    "title": "sonnet: R11.109 Workflow timeline drag zoom",
+    "model": "sonnet"
+  },
+  "a6bf7c071644322f5": {
+    "task": "R11.8",
+    "title": "haiku: R11.8 usage accounts routes",
+    "model": "haiku"
+  },
+  "a1c8c421f1feb4db3": {
+    "task": "R11.8",
+    "title": "haiku: R11.8 Account tab grid fix",
+    "model": "haiku"
+  },
+  "a7df9ab33dd8279b1": {
+    "task": "R11.110",
+    "title": "sonnet: R11.110 System v2 integration",
+    "model": "sonnet"
+  },
+  "a681d15dfa421a7d8": {
+    "task": "R11.111",
+    "title": "haiku: R11.111 seed system.json overrides",
+    "model": "haiku"
+  },
+  "a96fb0bd836713893": {
+    "task": "R11.112",
+    "title": "sonnet: R11.112 Classes diagram readable",
+    "model": "sonnet"
+  },
+  "af87d2f78154da046": {
+    "task": "R11.112",
+    "title": "haiku: R11.112 class diagram edges backend",
+    "model": "haiku"
+  },
+  "a8cc01169d128d903": {
+    "task": "R11.113",
+    "title": "haiku: R11.113 route class edges around boxes",
+    "model": "haiku"
+  },
+  "ae4ea9f1b41566081": {
+    "task": "R11.109",
+    "title": "haiku: R11.109 fix old timeline tests",
+    "model": "haiku"
+  },
+  "ad6d9f2f7e1baf6d0": {
+    "task": "R11.114",
+    "title": "sonnet: R11.114 diagram actions inside box",
+    "model": "sonnet"
+  },
+  "a44e61044d12b2f5b": {
+    "task": "R11.115",
+    "title": "sonnet: R11.115 System diagram spacing control",
+    "model": "sonnet"
+  },
+  "aacd19890e780f4a4": {
+    "task": "R11.115",
+    "title": "haiku: R11.115 Workflow and Roadmap map spacing",
+    "model": "haiku"
+  },
+  "a60ac55709afbafc1": {
+    "task": "R11.116",
+    "title": "sonnet: R11.116 Git section redesign",
+    "model": "sonnet"
+  },
+  "a1d845adbfe0c761c": {
+    "task": "R11.117",
+    "title": "sonnet: R11.117 Activity horizontal timeline",
+    "model": "sonnet"
+  },
+  "ace64a30075dbef2f": {
+    "task": "R11.118",
+    "title": "haiku: R11.118 Git diff preview",
+    "model": "haiku"
+  },
+  "a20c0285cb168a670": {
+    "task": "R11.118",
+    "title": "haiku: R11.118 gen_facts size cap fix",
+    "model": "haiku"
+  },
+  "a26ecc7a5d3777116": {
+    "task": "R11.119",
+    "title": "haiku: R11.119 toolbar: Workflow + Roadmap",
+    "model": "haiku"
+  },
+  "a4712badc3115a6d0": {
+    "task": "R11.119",
+    "title": "haiku: R11.119 toolbar: Work + Head + Planner",
+    "model": "haiku"
+  },
+  "a8115fe3fc5a21bbe": {
+    "task": "R11.119",
+    "title": "haiku: R11.119 toolbar: Activity Agents Inbox Rules",
+    "model": "haiku"
+  },
+  "a879008d5aa69b41c": {
+    "task": "R11.120",
+    "title": "haiku: R11.120 Roadmap map header alignment",
+    "model": "haiku"
+  },
+  "a2293dc858f228965": {
+    "task": "R11.124",
+    "title": "haiku: R11.124 Overview Activity NaN fix",
+    "model": "haiku"
+  },
+  "a253e96dd172d6603": {
+    "task": "R11.122",
+    "title": "sonnet: R11.122 live-refresh flicker fix",
+    "model": "sonnet"
+  },
+  "a48ec7f77d11dbd5c": {
+    "task": "R11.126",
+    "title": "sonnet: R11.126 Limits v2 backend and UI",
+    "model": "sonnet"
+  },
+  "ae214f70a3328f870": {
+    "task": "R11.129",
+    "title": "sonnet: R11.129 top bar, R11.125 badges, R11.127",
+    "model": "sonnet"
+  },
+  "a8512d0d29adcdadc": {
+    "task": "R11.121",
+    "title": "haiku: R11.121 toolbar narrow + audit fixes",
+    "model": "haiku"
+  },
+  "a968be2a3f24a83f3": {
+    "task": "R11.123",
+    "title": "haiku: R11.123 Classes modules expanded",
+    "model": "haiku"
+  },
+  "a5eea77646eddf9fe": {
+    "task": "R11.129",
+    "title": "haiku: R11.129 reconcile 13 web test failures",
+    "model": "haiku"
+  },
+  "a8faf7cd61f9dba41": {
+    "task": "R11.130",
+    "title": "sonnet: R11.130 System spacing and readability",
+    "model": "sonnet"
+  },
+  "a7f0aaba63c908fef": {
+    "task": "R11.132",
+    "title": "haiku: R11.132 morph keeps mounted host children",
+    "model": "haiku"
+  },
+  "a7c0a0f5022543891": {
+    "task": "R11.133",
+    "title": "haiku: R11.133 remove spacing upper limit",
+    "model": "haiku"
+  },
+  "a58bedf9d02ab1c9d": {
+    "task": "R7.31",
+    "title": "haiku: Read parspack.com pricing",
+    "model": "haiku"
+  },
+  "a66697e4475513e97": {
+    "task": "R7.31",
+    "title": "haiku: Read parspack servers page",
+    "model": "haiku"
+  },
+  "a77c0941b09411471": {
+    "task": "R7.31",
+    "title": "unknown: Find email masking in tokens/account UI",
+    "model": "unknown"
+  },
+  "a490e126ce30566b1": {
+    "task": "R7.31",
+    "title": "unknown: Survey boolean on/off controls in Helm UI",
+    "model": "unknown"
+  },
+  "a2456796dd7feca14": {
+    "task": "R11.135",
+    "title": "unknown: j1125: switch-style toggle CSS",
+    "model": "unknown"
+  },
+  "a0003d045462fdb64": {
+    "task": "R11.137",
+    "title": "unknown: j1126: Head section loading-before-open",
+    "model": "unknown"
+  },
+  "acc8575a166476111": {
+    "task": "R11.136",
+    "title": "unknown: j1127: spec multi-account add/switch",
+    "model": "unknown"
+  },
+  "a50e82055f488fe42": {
+    "task": "R11.136",
+    "title": "unknown: j1131: add/remove account route + UI",
+    "model": "unknown"
+  },
+  "ad34a94d24e817708": {
+    "task": "R11.139",
+    "title": "haiku: Shrink oversized toolbar buttons",
+    "model": "haiku"
+  },
+  "a2f3a8cc77c20de97": {
+    "task": "R11.140",
+    "title": "sonnet: Fix Timeline Today dead space",
+    "model": "sonnet"
+  },
+  "aec8fb8edb10cd5ed": {
+    "task": "R11.142",
+    "title": "haiku: Add Inbox dismiss button",
+    "model": "haiku"
+  },
+  "a610b0d080dcf9979": {
+    "task": "R11.143",
+    "title": "sonnet: Simplify add-account form to one field",
+    "model": "sonnet"
+  },
+  "ae64ae3e90a04cbac": {
+    "task": "R11.134",
+    "title": "sonnet: Investigate done-but-not-live gap",
+    "model": "sonnet"
+  },
+  "a371fc418019a1cc6": {
+    "task": "R11.138",
+    "title": "sonnet: Cut duplicate page-title row",
+    "model": "sonnet"
+  },
+  "aea7b2eba81a03d9a": {
+    "task": "R11.141",
+    "title": "haiku: Tokens defaults: Limits tab, account, Helm total",
+    "model": "haiku"
+  },
+  "a653a9bb462a4b507": {
+    "task": "R11.144",
+    "title": "opus: Opus: structural fix for head process gaps",
+    "model": "opus"
+  },
+  "a83beb84b557bdc2c": {
+    "task": "R11.145",
+    "title": "haiku: Fix add-account form layout",
+    "model": "haiku"
+  },
+  "a0600f7339b8f2033": {
+    "task": "R11.146",
+    "title": "sonnet: R11.146: fix Workflow Map freeze",
+    "model": "sonnet"
+  },
+  "adbb66b1b1afc5da3": {
+    "task": "R11.145",
+    "title": "haiku: R11.145: fix lint line length",
+    "model": "haiku"
+  },
+  "ae4cae9dcc5ba6064": {
+    "task": "R11.134",
+    "title": "haiku: R11.134: fix ps etimes macOS bug",
+    "model": "haiku"
+  },
+  "a5c12634a26eeef1d": {
+    "task": "R11.147",
+    "title": "haiku: R11.147: fix banner padding inconsistency",
+    "model": "haiku"
+  },
+  "a783632b75601566e": {
+    "task": "R11.149",
+    "title": "haiku: R11.149: fix missing banner gap",
+    "model": "haiku"
+  },
+  "ab6ccfeb8ec51c355": {
+    "task": "R11.138",
+    "title": "haiku: R11.138: fix Roadmap duplicate title",
+    "model": "haiku"
+  },
+  "a02282afb57c60465": {
+    "task": "R11.138",
+    "title": "sonnet: R11.138: finish duplicate-title sweep",
+    "model": "sonnet"
+  },
+  "a8cd5f99b7c01ea7c": {
+    "task": "R11.150",
+    "title": "sonnet: R11.150: Inbox UI matches Head table",
+    "model": "sonnet"
+  },
+  "a587d2fd84a344da2": {
+    "task": "R11.151",
+    "title": "haiku: R11.151: fix topbar usage bar mismatch",
+    "model": "haiku"
+  },
+  "a69d7a2b6ff98d65f": {
+    "task": "R11.138",
+    "title": "haiku: R11.138: fix stale planner test",
+    "model": "haiku"
+  },
+  "a40da62b04a29149b": {
+    "task": "R11.148",
+    "title": "haiku: R11.148: add Copy button to login command",
+    "model": "haiku"
+  },
+  "ac36141a043dd0b4c": {
+    "task": "R11.149",
+    "title": "haiku: R11.149: trim flow.css comment",
+    "model": "haiku"
+  },
+  "a334e63da3064e562": {
+    "task": "R11.152",
+    "title": "sonnet: R11.152: fix diagram panel overlay+jump",
+    "model": "sonnet"
+  },
+  "afc8e28d3b786017d": {
+    "task": "R11.150",
+    "title": "haiku: R11.150: fix lint line length",
+    "model": "haiku"
+  },
+  "a62d041320abe0138": {
+    "task": "R11.152",
+    "title": "sonnet: R11.152: finish diagram panel fix",
+    "model": "sonnet"
+  },
+  "a07de4b8f2b18194f": {
+    "task": "R11.153",
+    "title": "haiku: R11.153: fix [object Object] in Head panel",
+    "model": "haiku"
+  },
+  "af3e43e8692c8400e": {
+    "task": "R11.150",
+    "title": "sonnet: R11.150: match Inbox expand to Head's",
+    "model": "sonnet"
+  },
+  "afef3dc96a5668998": {
+    "task": "R11.154",
+    "title": "sonnet: R11.154: fix Head table columns",
+    "model": "sonnet"
+  },
+  "a3af690790a1f3da1": {
+    "task": "R11.152",
+    "title": "sonnet: R11.152: fix selection-switch jump",
+    "model": "sonnet"
+  },
+  "a53170a0b597c5895": {
+    "task": "R11.155",
+    "title": "haiku: R11.155: auto-check account on startup",
+    "model": "haiku"
+  },
+  "ae17dc76f8d00f3e1": {
+    "task": "R7.31",
+    "title": "sonnet: Review split-net project in Helm",
+    "model": "sonnet"
+  },
+  "a5adf379513df409b": {
+    "task": "R11.144",
+    "title": "sonnet: Wire Helm hooks into split-net",
+    "model": "sonnet"
+  },
+  "aebdb39f0c88a91a9": {
+    "task": "R11.144",
+    "title": "haiku: Make hooks install self-healing in /head",
+    "model": "haiku"
+  },
+  "a69ac886917574685": {
+    "task": "R11.156",
+    "title": "haiku: R11.156: fix split-net duplicate jobs",
+    "model": "haiku"
+  },
+  "a39afac90897aa45f": {
+    "task": "R11.157",
+    "title": "sonnet: R11.157: fix split-net dup+head claim",
+    "model": "sonnet"
+  },
+  "a686f9a732e515d00": {
+    "task": "R11.158",
+    "title": "sonnet: R11.158: fix Head tab overlap",
+    "model": "sonnet"
+  },
+  "ac641bbb601c0fdf4": {
+    "task": "R7.31",
+    "title": "opus: Opus plan: Helm onboarding issues",
+    "model": "opus"
+  },
+  "a4687df704dfd11fe": {
+    "task": "R7.31",
+    "title": "haiku: WP1 gitignore and collaboration docs",
+    "model": "haiku"
+  },
+  "a7d3a143cc8e2d3d1": {
+    "task": "R7.31",
+    "title": "sonnet: WP3 tests use fixtures not real board",
+    "model": "sonnet"
+  },
+  "ac028236066dc2050": {
+    "task": "R7.31",
+    "title": "haiku: WP4 db and system tests independent of board",
+    "model": "haiku"
+  },
+  "afe608a30d6fbbabf": {
+    "task": "R7.31",
+    "title": "sonnet: WP5 init --check and skill install",
+    "model": "sonnet"
+  },
+  "a8ae5b7792b06ab54": {
+    "task": "R7.31",
+    "title": "haiku: WP6 helm entry skill",
+    "model": "haiku"
+  },
+  "a1d50482fd1678829": {
+    "task": "R7.31",
+    "title": "haiku: WP7 head skill and CLAUDE.md owner-only",
+    "model": "haiku"
+  },
+  "a5da8606ee8f2438f": {
+    "task": "R11.159",
+    "title": "haiku: R11.159 fix two test failures",
+    "model": "haiku"
+  },
+  "a230319d5afa71003": {
+    "task": "R11.159",
+    "title": "sonnet: R11.159 Account tab action columns",
+    "model": "sonnet"
+  },
+  "a5fb0bdeb9785de82": {
+    "task": "R11.159",
+    "title": "sonnet: R11.159 full email, one Active",
+    "model": "sonnet"
+  },
+  "a7ba7d678a3e26502": {
+    "task": "R11.159",
+    "title": "haiku: R11.159 mini rail circle",
+    "model": "haiku"
+  },
+  "a08aa4f7aa3169108": {
+    "task": "R11.160",
+    "title": "sonnet: R11.160 stale usage blocks",
+    "model": "sonnet"
+  },
+  "a46aa253cabe444fe": {
+    "task": "R11.161",
+    "title": "haiku: R11.161 gate nag recent only",
+    "model": "haiku"
+  },
+  "a73d5bd40258f764e": {
+    "task": "R11.151",
+    "title": "sonnet: R11.151 top bar bars match",
+    "model": "sonnet"
+  },
+  "a99ff34d499ad3943": {
+    "task": "R11.162",
+    "title": "sonnet: R11.162 fix old lint errors",
+    "model": "sonnet"
+  },
+  "ae0d6261afd36ccdc": {
+    "task": "R7.13",
+    "title": "sonnet: R7.13 cap 99, decisions, H7 docs",
+    "model": "sonnet"
+  },
+  "aad548c5f64a90a78": {
+    "task": "R7.13",
+    "title": "sonnet: R7.13 Planner drop columns",
+    "model": "sonnet"
+  },
+  "abf82600a72f3204b": {
+    "task": "R11.163",
+    "title": "sonnet: R11.163 notifications icon, text, settings",
+    "model": "sonnet"
+  },
+  "a0267229d0e8eb3d6": {
+    "task": "R9.41",
+    "title": "sonnet: R9.41 rules+workflow layout bugs",
+    "model": "sonnet"
+  },
+  "a67955c9e85ac5abe": {
+    "task": "R9.46",
+    "title": "sonnet: R9.46 work layout bugs",
+    "model": "sonnet"
+  },
+  "a2527cb8edcfe8d69": {
+    "task": "R9.51",
+    "title": "sonnet: R9.51 head/roadmap/overview/inbox bugs",
+    "model": "sonnet"
+  },
+  "a8401909234b05aba": {
+    "task": "R9.55",
+    "title": "sonnet: R9.55 tokens/agents/settings bugs",
+    "model": "sonnet"
+  },
+  "a68534685d5b267a3": {
+    "task": "R11.164",
+    "title": "sonnet: R11.164 single source for usage stops",
+    "model": "sonnet"
+  },
+  "a73d60d023ba1762a": {
+    "task": "R11.165",
+    "title": "sonnet: R11.165 stale guard deadlock",
+    "model": "sonnet"
+  },
+  "a700a5728f5ca4b23": {
+    "task": "R11.166",
+    "title": "sonnet: R11.166 active token self-refresh",
+    "model": "sonnet"
+  },
+  "ab836994f07a94737": {
+    "task": "R9.42",
+    "title": "sonnet: R9.42 R9.45 R9.56 + usage card wrap",
+    "model": "sonnet"
+  },
+  "a6c7dd22278393c42": {
+    "task": "R9.5",
+    "title": "sonnet: R9.5 Work fold to Review",
+    "model": "sonnet"
+  },
+  "a4a3ffa291b63e17b": {
+    "task": "R9.20",
+    "title": "sonnet: R9.20 R9.23 Work UI",
+    "model": "sonnet"
+  },
+  "a572588471b03f037": {
+    "task": "R7.31",
+    "title": "sonnet: R7.31 gap audit vs HEAD spec",
+    "model": "sonnet"
+  },
+  "a73c9149daa9b01ca": {
+    "task": "R9.23",
+    "title": "sonnet: R9.23 snapshot work fields",
+    "model": "sonnet"
+  },
+  "a6e4cf53d64ac9030": {
+    "task": "R7.31",
+    "title": "sonnet: R7.31 HEAD section gaps",
+    "model": "sonnet"
+  },
+  "a3a0140a93bf691d3": {
+    "task": "R11.167",
+    "title": "sonnet: R11.167 section auto-recovery",
+    "model": "sonnet"
+  },
+  "a421535c37e3a3b26": {
+    "task": "R11.167",
+    "title": "haiku: R11.167 fix system map and facts cap",
+    "model": "haiku"
+  },
+  "a0ba64f637180a3b4": {
+    "task": "R11.168",
+    "title": "sonnet: R11.168 phase header + Approve",
+    "model": "sonnet"
+  },
+  "a75d3a882ab028fc0": {
+    "task": "R7.82",
+    "title": "sonnet: R7.82 U1 SSE stream server",
+    "model": "sonnet"
+  },
+  "ad133ba56245f4a91": {
+    "task": "R7.82",
+    "title": "sonnet: R7.82 U2 client EventSource",
+    "model": "sonnet"
+  },
+  "a5b6e602e51765ff3": {
+    "task": "R7.24",
+    "title": "sonnet: R7.24 R7.25 Work board interactions",
+    "model": "sonnet"
+  },
+  "a29a9e47964dd7330": {
+    "task": "R7.26",
+    "title": "sonnet: R7.26 UX audit read-only",
+    "model": "sonnet"
+  }
+}

@@ -1,0 +1,29 @@
+# Project rules. One rule per line: R3 haiku budget 60 | text
+# Scopes: all, lead, worker, haiku, sonnet, opus, phase:X, task:X, claude. Kinds: do, dont, budget N, done.
+R1 all dont | Never run roadmap service|serve|hooks install|usage sync; never touch port 8780, ~/.claude, the keychain or the person's browser tabs.
+R2 all do | UI rule 0: numbers and actions align in fixed grid columns; full width; dark and light; follow docs/UI-CHECKLIST.md.
+R3 all do | Answer short and spartan: the person has limited tokens. No long reports; show only what is needed.
+R4 all dont | Only the person accepts features, promotes backlog items or lifts limits. Agents ask with roadmap ask.
+R5 all dont | Never print or log secrets, tokens or absolute home paths; write ~ in docs.
+R6 worker do | Stage only your own files by explicit path; never git reset, add -A or amend a pushed commit; do not push (the head pushes).
+R7 worker do | Use a temp ROADMAP_HOME for every run. Tests: python3 -m unittest discover -s tests -t . -q | tail -5; then make check; make check-ui.
+R8 worker do | No inline script or style (CSP); no innerHTML outside web/js/dom.js; lines at most 120 columns; lint clean.
+R9 lead do | Plan, launch non-overlapping workers in parallel, verify each result, register jobs (roadmap job start/done), commit, push, show the board.
+R10 lead do | Haiku edits; Opus (medium/low) designs and reviews; Cursor (auto or grok 4.7 xhigh) reviews; agy does read-only audits, always verified.
+R11 lead dont | Do not idle while tasks exist unless the person said stop. At the weekly usage stop (95%) report instead of continuing.
+R12 claude do | Start with docs/HANDOVER.md and docs/HEAD-RUNBOOK.md; /head resumes the head role after an account switch.
+R13 all do | Head never idles: start ready tasks now and act on work the person already asked for.
+R14 all do | Parallel workers only on disjoint file lists; file overlap is the only limit.
+R15 all do | Keep replies short and spartan; the person has few tokens.
+R16 all do | Start a fresh session at about 70% context; /head resumes as head without re-tuning.
+R17 all do | Show the real model and effort of every job on the Agents list.
+R18 all do | Register every job on the dashboard, including follow-ups to running workers.
+R19 all do | Workers never run usage sync, read the keychain, touch the person dashboard tab or port 8780.
+R20 all do | UI rule 0: numbers and actions in fixed grid columns; review the UI after each wave.
+R21 all do | Head shows every captured item; nothing is hidden by limits or lazy loading.
+R22 all do | Every message from the person is captured in Head; the head reviews rule-kind items and proposes rules.
+R23 all do | No secrets in Head, the ledger or logs.
+R24 all do | Work items are human cards (plain words, outcome); agent tasks are machine packages bound to one Work item and never shown as cards.
+R25 all do | Usage stops: Claude workers stop at 80% of the 5-hour window and 95% of the week.
+R26 all do | Save Claude tokens: Haiku 5.5 does most work (edits, verifies); Sonnet 5.5 low/medium only for lighter hard work (multi-file logic, UI); Opus 5.5 low/medium only for hard design or review; never Fable or high effort; agy (Gemini Flash) first for small read-only jobs, output verified by Haiku.
+R27 all do | Free models (OpenCode GLM 5.3 Flash Free or similar) may take small read-only jobs only after the person's go-ahead and a working check; output verified like agy; on credit or API errors fall back to Haiku.
