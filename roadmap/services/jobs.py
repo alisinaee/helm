@@ -13,7 +13,8 @@ import re
 from roadmap.errors import EXIT_CONFLICT, EXIT_INVALID_DATA, EXIT_NOT_FOUND, EXIT_USAGE, RoadmapError
 from roadmap.store import atomic, config, lock, schema
 
-MODELS = ("haiku", "sonnet", "opus", "cursor", "agy", "opencode", "head", "unknown")
+MODELS = ("haiku", "sonnet", "opus", "cursor", "agy", "opencode", "head", "unknown",
+          "flash", "flash_lite", "pro", "gemini")
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 KEEP_FINISHED = 200
 PARENT_ENV = "ROADMAP_PARENT_JOB"
@@ -538,7 +539,15 @@ def _clean_effort(effort):
 
 
 def _clean_model(model):
-    text = "" if model is None else str(model).strip()
+    text = "" if model is None else str(model).strip().lower()
+    if "flash_lite" in text or "flash-lite" in text or "flashlite" in text:
+        text = "flash_lite"
+    elif "flash" in text:
+        text = "flash"
+    elif "pro" in text:
+        text = "pro"
+    elif "gemini" in text:
+        text = "gemini"
     if text not in MODELS:
         raise RoadmapError("usage", "model must be one of " + ", ".join(MODELS), EXIT_USAGE)
     return text

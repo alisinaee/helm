@@ -81,7 +81,10 @@ def _isatty(stream):
         return False
 
 
-def person_context(source, environ=None, stdin=None, stdout=None):
+_STREAM_DEFAULT = object()
+
+
+def person_context(source, environ=None, stdin=_STREAM_DEFAULT, stdout=_STREAM_DEFAULT):
     """True only when the call is provably the person's. That is a browser click with the same-origin proof (source
     gui), or an interactive terminal CLI (source cli, stdin and stdout are TTYs, no agent marker in the environment).
     An agent, the phone, a bare non-TTY cli (a Cursor, agy or script shell) and anything unproven are not the person."""
@@ -89,6 +92,6 @@ def person_context(source, environ=None, stdin=None, stdout=None):
         return gui_proven()
     if source != "cli" or agent_marked(environ):
         return False
-    stdin = sys.stdin if stdin is None else stdin
-    stdout = sys.stdout if stdout is None else stdout
+    stdin = sys.stdin if stdin is _STREAM_DEFAULT else stdin
+    stdout = sys.stdout if stdout is _STREAM_DEFAULT else stdout
     return _isatty(stdin) and _isatty(stdout)

@@ -1,4 +1,5 @@
 #!/bin/sh
+""":"
 # Helm CLI shim (bin/helm is an alias). Follows its own symlinks to find the repo, then runs the package from there.
 # Fast path: `roadmap hook pre` (the PreToolUse gate) exits 0 at once, without starting Python, while no project has a
 # block sentinel (<state>/block-<project>). Most tool calls therefore cost no Python start.
@@ -11,10 +12,10 @@ if [ "$1" = hook ] && [ "$2" = pre ]; then
     fi
     needs_python=
     if [ -z "$root" ]; then
-        state=$HOME/Library/Application\ Support/roadmap-board
+        state="$HOME/Library/Application Support/roadmap-board"
     else
         case $root in
-            '~'|'~/'*) root=$HOME${root#\~} ;;
+            '~'|'~/'*) root=$HOME${root#"~"} ;;
         esac
         case $root in
             /*) ;;
@@ -53,3 +54,14 @@ root=$(cd -P "$(dirname "$src")/.." && pwd)
 PYTHONPATH=$root
 export PYTHONPATH
 exec python3 -m roadmap "$@"
+":"""
+import os
+import sys
+
+root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if root not in sys.path:
+    sys.path.insert(0, root)
+from roadmap.cli import main
+
+if __name__ == "__main__":
+    main()

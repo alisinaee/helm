@@ -41,6 +41,8 @@ def _default_runner(argv):
         return 127, "", argv[0] + " not found"
     except subprocess.TimeoutExpired:
         return 124, "", argv[0] + " timed out"
+    except (PermissionError, OSError) as exc:
+        return 126, "", str(exc)
     return proc.returncode, proc.stdout, proc.stderr
 
 

@@ -220,6 +220,57 @@ def _apply_uninstall(settings):
     return removed
 
 
+def antigravity_hooks_file(project):
+    root = os.path.abspath(project["path"])
+    return os.path.join(root, ".agents", "hooks.json")
+
+
+def _antigravity_spec(command):
+    return {
+        "PreToolUse": [
+            {
+                "matcher": "run_command|write_file|edit_file|invoke_subagent",
+                "hooks": [{"type": "command", "command": command + " pre", "timeout": HOOK_TIMEOUT_S}],
+            }
+        ],
+        "SessionStart": [{"type": "command", "command": command, "timeout": HOOK_TIMEOUT_S}],
+        "PostToolUse": [
+            {
+                "matcher": "run_command|invoke_subagent|send_message",
+                "hooks": [{"type": "command", "command": command, "timeout": HOOK_TIMEOUT_S}],
+            }
+        ],
+        "PreInvocation": [{"type": "command", "command": command, "timeout": HOOK_TIMEOUT_S}],
+        "Stop": [{"type": "command", "command": command, "timeout": HOOK_TIMEOUT_S}],
+    }
+
+
+def _install_antigravity(project, command):
+    path = antigravity_hooks_file(project)
+    raw = _read_raw(path)
+    before = _parse(raw, path) if raw is not None else {}
+    data = copy.deepcopy(before)
+    data["helm"] = _antigravity_spec(command)
+    if data == before:
+        return False, path
+    atomic.write_json(path, data)
+    return True, path
+
+
+def _uninstall_antigravity(project):
+    path = antigravity_hooks_file(project)
+    if not os.path.exists(path):
+        return False
+    raw = _read_raw(path)
+    before = _parse(raw, path) if raw is not None else {}
+    if "helm" not in before:
+        return False
+    data = copy.deepcopy(before)
+    del data["helm"]
+    atomic.write_json(path, data)
+    return True
+
+
 def install(project_id, replace_legacy=False):
     """Merge the roadmap hook entries into the project's settings. Returns a summary."""
     project = config.get_project(project_id)
@@ -228,6 +279,7 @@ def install(project_id, replace_legacy=False):
     with lock.locked(os.path.dirname(path)):
         changed, folder, legacy_removed = _edit(
             project, path, lambda settings: _apply_install(settings, command, replace_legacy))
+    _install_antigravity(project, command)
     return {"project": project_id, "settings": path, "command": command, "changed": changed,
             "backup": folder, "legacyRemoved": legacy_removed}
 
@@ -236,6 +288,7 @@ def uninstall(project_id):
     """Remove only the roadmap hook entries. Returns a summary."""
     project = config.get_project(project_id)
     path = settings_file(project)
+    _uninstall_antigravity(project)
     if not os.path.exists(path):
         return {"project": project_id, "settings": path, "removed": 0, "changed": False, "backup": None}
     with lock.locked(os.path.dirname(path)):

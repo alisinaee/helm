@@ -25,10 +25,14 @@ def register(sub, common):
     listing = actions.add_parser("list", parents=[common], help="list the skill templates, sizes and install state")
     listing.add_argument("--project", metavar="ID", default=None,
                          help="project id (default: $ROADMAP_PROJECT, then the registered project of this folder)")
+    listing.add_argument("--harness", choices=("claude", "antigravity"), default="claude",
+                         help="agent harness to inspect (claude: .claude/skills, antigravity: .agents/skills)")
+    listing.add_argument("--antigravity", action="store_true",
+                         help="shorthand for --harness antigravity (.agents/skills)")
     listing.set_defaults(handler=_list)
 
     install = actions.add_parser("install", parents=[common],
-                                 help="copy the skills into <project>/.claude/skills")
+                                 help="copy the skills into <project>/.claude/skills or .agents/skills")
     install.add_argument("--project", metavar="ID", default=None,
                          help="project id (default: $ROADMAP_PROJECT, then the registered project of this folder)")
     install.add_argument("--target", metavar="DIR", default=None,
@@ -36,6 +40,10 @@ def register(sub, common):
     install.add_argument("--yes", action="store_true",
                          help="back up existing skill folders as <name>.bak-<timestamp> and replace them")
     install.add_argument("--dry-run", action="store_true", help="show what would change, write nothing")
+    install.add_argument("--harness", choices=("claude", "antigravity", "all"), default="claude",
+                         help="agent harness target (claude: .claude/skills, antigravity: .agents/skills, all: both)")
+    install.add_argument("--antigravity", action="store_true",
+                         help="shorthand for --harness antigravity (.agents/skills)")
     install.set_defaults(handler=_install)
 
 
@@ -70,12 +78,28 @@ def _root_or_none(args):
         return None, None
 
 
+def _get_subdir(args):
+    if getattr(args, "antigravity", False) or getattr(args, "harness", None) == "antigravity":
+        return os.path.join(".agents", "skills")
+    return SKILL_SUBDIR
+
+
+def _get_subdirs(args):
+    harness = getattr(args, "harness", None)
+    if getattr(args, "antigravity", False) or harness == "antigravity":
+        return [os.path.join(".agents", "skills")]
+    if harness == "all":
+        return [SKILL_SUBDIR, os.path.join(".agents", "skills")]
+    return [SKILL_SUBDIR]
+
+
 def _list(args):
     project_id, root = _root_or_none(args)
+    subdir = _get_subdir(args)
     rows = []
     for name, folder in templates():
         row = {"name": name, "bytes": os.path.getsize(os.path.join(folder, ENTRY)), "max_bytes": MAX_BYTES}
-        row["installed"] = None if root is None else os.path.isdir(os.path.join(root, SKILL_SUBDIR, name))
+        row["installed"] = None if root is None else os.path.isdir(os.path.join(root, subdir, name))
         rows.append(row)
     if not getattr(args, "json", False):
         for row in rows:
@@ -95,12 +119,12 @@ def _backup_name(dest, stamp, taken):
     return candidate
 
 
-def _plan(root, stamp, yes):
+def _plan(root, stamp, yes, subdir=SKILL_SUBDIR):
     """One row per template: where it goes, and whether it is created, replaced or a conflict."""
     rows = []
     taken = set()
     for name, folder in templates():
-        dest = os.path.join(root, SKILL_SUBDIR, name)
+        dest = os.path.join(root, subdir, name)
         row = {"name": name, "src": folder, "dest": dest, "backup": None}
         if not os.path.lexists(dest):
             row["action"] = "create"
@@ -127,7 +151,10 @@ def _install(args):
     if not templates():
         raise RoadmapError("not_found", "no skill templates are packaged in " + TEMPLATE_DIR, EXIT_NOT_FOUND)
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    rows = _plan(root, stamp, args.yes)
+    subdirs = _get_subdirs(args)
+    rows = []
+    for sdir in subdirs:
+        rows.extend(_plan(root, stamp, args.yes, subdir=sdir))
     conflicts = [row["name"] for row in rows if row["action"] == "conflict"]
     if conflicts and not args.dry_run and not args.yes:
         raise RoadmapError("conflict", "already installed, nothing written: " + ", ".join(conflicts)

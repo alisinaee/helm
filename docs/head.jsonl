@@ -1321,3 +1321,4 @@
 {"v":1,"t":"e","ts":"2026-11-05T07:34:59Z","src":"hook","sid":"c33cd4f3","acct":null,"kind":"question?","sum":"we have very bad issue on the helm i think each project save helm data in where ?","len":335,"h":"sha1:f817a05792da","prio":2,"id":"H452"}
 {"v":1,"t":"u","id":"H452","ts":"2026-11-05T07:36:12Z","by":"head","set":{"kind":"question","sum":"Board data is in each project's docs/ dir; Helm repo ignores it on purpose (3fd5610) and the repo is","status":"needs-you"}}
 {"v":1,"t":"s","ts":"2026-11-05T07:52:12Z","sid":"c33cd4f3","model":"Haiku 5.5","ev":"claim"}
+{"v":1,"t":"u","id":"H452","ts":"2026-11-05T07:53:03Z","by":"head","set":{"status":"done"},"note":"7ca117f on branch board-data-tracking (not merged to main)"}

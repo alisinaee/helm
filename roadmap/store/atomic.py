@@ -21,6 +21,10 @@ def read_json(path, default=_MISSING):
         if default is _MISSING:
             raise RoadmapError("not_found", "file not found: " + path, EXIT_NOT_FOUND)
         return default
+    except (PermissionError, OSError) as exc:
+        if default is not _MISSING:
+            return default
+        raise RoadmapError("not_found", "cannot read file: " + path + " (" + str(exc) + ")", EXIT_NOT_FOUND)
     except UnicodeDecodeError as exc:
         raise RoadmapError("invalid_data", "not UTF-8 text, left unchanged: " + path + " (" + str(exc) + ")",
                            EXIT_INVALID_DATA)

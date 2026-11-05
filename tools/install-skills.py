@@ -195,12 +195,15 @@ def main(argv=None):
     """Parse the options and run the install. Returns the exit code."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Install the roadmap skill drafts into a Claude Code skills folder.")
+    parser = argparse.ArgumentParser(description="Install the roadmap skill drafts into a skills folder.")
     parser.add_argument("--target", default=DEFAULT_TARGET, help="skills folder (default ~/.claude/skills)")
+    parser.add_argument("--antigravity", "--gemini", dest="antigravity", action="store_true",
+                        help="install into ~/.gemini/config/skills instead of ~/.claude/skills")
     parser.add_argument("--dry-run", action="store_true", help="print what would happen, change nothing")
     parser.add_argument("--yes", action="store_true", help="replace existing skill folders (backed up first)")
     args = parser.parse_args(argv)
-    return run(args.target, dry_run=args.dry_run, yes=args.yes)
+    target = os.path.join("~", ".gemini", "config", "skills") if args.antigravity else args.target
+    return run(target, dry_run=args.dry_run, yes=args.yes)
 
 
 if __name__ == "__main__":

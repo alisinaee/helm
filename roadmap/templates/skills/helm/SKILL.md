@@ -22,10 +22,10 @@ If the project is registered and its data files are present:
 - Offer `/head` to resume as project head. Stop.
 
 ## 3. Ask first
-If not set up, ask with AskUserQuestion: "Set up Helm for this project?" (yes / no). On no, stop.
+If not set up, ask (via ask_question in Antigravity or AskUserQuestion in Claude Code): "Set up Helm for this project?" (yes / no). On no, stop.
 
 ## 4. Ask how far to go
-Ask with AskUserQuestion:
+Ask (via ask_question or AskUserQuestion):
 - A) empty board only.
 - B) A plus a plan: analyse the project (README, code layout) and add phases and tasks with the roadmap-plan-new skill.
 - C) B plus the architecture view (`bin/roadmap system`, docs/system.json).

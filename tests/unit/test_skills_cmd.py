@@ -135,6 +135,21 @@ class SkillsInstallTests(HomeCase):
         self.assertNotEqual(first, second)
         self.assertTrue(second.endswith("-2"))
 
+    def test_antigravity_flag_installs_into_agents_skills(self):
+        code, body, err = _json(["skills", "install", "--target", self.target, "--antigravity"])
+        self.assertEqual(code, 0, err)
+        agy_dest = os.path.join(self.target, ".agents", "skills")
+        for name, _ in skills.templates():
+            self.assertTrue(os.path.isfile(os.path.join(agy_dest, name, "SKILL.md")))
+        self.assertFalse(os.path.exists(os.path.join(self.target, ".claude")))
+
+    def test_harness_all_installs_into_both_folders(self):
+        code, body, err = _json(["skills", "install", "--target", self.target, "--harness", "all"])
+        self.assertEqual(code, 0, err)
+        for sub in (".claude", ".agents"):
+            for name, _ in skills.templates():
+                self.assertTrue(os.path.isfile(os.path.join(self.target, sub, "skills", name, "SKILL.md")))
+
 
 class SkillsProjectTests(ProjectCase):
     def setUp(self):
@@ -153,6 +168,14 @@ class SkillsProjectTests(ProjectCase):
         code, body, _ = _json(["skills", "list", "--project", "demo"])
         self.assertEqual(code, 0)
         self.assertEqual([row["installed"] for row in body["data"]["skills"]], [True, True, True])
+
+    def test_list_with_antigravity_reports_install_state(self):
+        _json(["skills", "install", "--project", "demo", "--antigravity"])
+        code, body, _ = _json(["skills", "list", "--project", "demo", "--antigravity"])
+        self.assertEqual(code, 0)
+        self.assertEqual([row["installed"] for row in body["data"]["skills"]], [True, True, True])
+        code, body, _ = _json(["skills", "list", "--project", "demo"])  # claude check
+        self.assertEqual([row["installed"] for row in body["data"]["skills"]], [False, False, False])
 
     def test_unknown_project_is_not_found(self):
         code, body, _ = _json(["skills", "install", "--project", "nobody"])

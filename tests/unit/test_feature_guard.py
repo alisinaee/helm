@@ -75,6 +75,9 @@ class PersonContextRules(unittest.TestCase):
 class FeatureGuardCase(CmdCase):
     def setUp(self):
         super().setUp()
+        tty = mock.patch.object(agentguard, "_isatty", return_value=False)
+        tty.start()
+        self.addCleanup(tty.stop)
         env = mock.patch.dict(os.environ, {})
         env.start()
         self.addCleanup(env.stop)

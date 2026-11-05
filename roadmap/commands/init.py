@@ -42,16 +42,21 @@ def _service():
 
 SKILL_TEMPLATE = os.path.join(projects.TEMPLATE_DIR, "skills", "helm", "SKILL.md")
 SKILL_RELPATH = os.path.join(".claude", "skills", "helm", "SKILL.md")
+AGY_SKILL_RELPATH = os.path.join(".agents", "skills", "helm", "SKILL.md")
 
 
 def _install_skill(folder):
     """Copy the template skill into the project when it is missing. Never overwrites. True when copied."""
-    target = os.path.join(folder, SKILL_RELPATH)
-    if not os.path.isfile(SKILL_TEMPLATE) or os.path.exists(target):
+    if not os.path.isfile(SKILL_TEMPLATE):
         return False
-    os.makedirs(os.path.dirname(target), exist_ok=True)
-    shutil.copyfile(SKILL_TEMPLATE, target)
-    return True
+    copied = False
+    for rel in (SKILL_RELPATH, AGY_SKILL_RELPATH):
+        target = os.path.join(folder, rel)
+        if not os.path.exists(target):
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            shutil.copyfile(SKILL_TEMPLATE, target)
+            copied = True
+    return copied
 
 
 def _check(args):
@@ -66,8 +71,10 @@ def _check(args):
         state = hooks_install.status(entry["id"])
         events = [row["state"] for row in state["events"].values()]
         hooks = "installed" if state["installed"] else "%d/%d installed" % (events.count("installed"), len(events))
+    has_skill = (os.path.isfile(os.path.join(folder, SKILL_RELPATH))
+                 or os.path.isfile(os.path.join(folder, AGY_SKILL_RELPATH)))
     return {"registered": entry is not None, "id": entry["id"] if entry else None, "path": folder,
-            "dataFiles": files, "hooks": hooks, "skill": os.path.isfile(os.path.join(folder, SKILL_RELPATH))}
+            "dataFiles": files, "hooks": hooks, "skill": has_skill}
 
 
 def _init(args):

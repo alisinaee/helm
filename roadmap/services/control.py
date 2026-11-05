@@ -104,9 +104,12 @@ def _project(project_id):
 def read_state(project_id):
     """The saved control state, or None when there is none. A file that is not a JSON object is invalid_data."""
     path = control_path(project_id)
-    if not os.path.exists(path):
+    try:
+        if not os.path.exists(path):
+            return None
+        data = atomic.read_json(path)
+    except (PermissionError, OSError):
         return None
-    data = atomic.read_json(path)
     if not isinstance(data, dict):
         raise RoadmapError("invalid_data", "control file is not a JSON object; fix or remove it: " + path,
                            EXIT_INVALID_DATA)

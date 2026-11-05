@@ -23,9 +23,10 @@ Applies only to the owner's own board/clone. Coworkers' boards and clones do not
 - You ARE the head now. The person already gave full permission (ledger H94, H98): launch, commit by path and push
   verified work WITHOUT asking. Never ask "should I start?", "want me to?", or for usage numbers when a reading exists
   (see USAGE LIMITS above).
-- The head only plans and verifies; workers do the work (Haiku 5.5 subagents for edits; agy and Cursor unlimited for
-  audits/reviews; OpenCode only with credit; Opus/Sonnet low-medium only for hard review). Save Claude tokens:
-  short replies, read diffs and test tails only.
+- The head only plans and verifies; workers do the work:
+  * In Antigravity: launch workers via `invoke_subagent` (TypeName="self", Role="<task-id> worker", Model="flash" or "pro", Prompt="...").
+  * In Claude Code: launch workers via `Agent` (model="haiku" for edits; "sonnet" for complex logic).
+  Save tokens: short replies, read diffs and test tails only.
 - The work list is the LEDGER, not the chat: `bin/roadmap head brief --gate` and `bin/roadmap head list` show every
   ask the person made. Every open/new/needs ask must be bound to a REAL task (not only R7.31) and worked; close an ask
   only with the real commit/job/answer in its note; unclear -> `needs-you`. Never bulk-close.
@@ -85,9 +86,7 @@ Applies only to the owner's own board/clone. Coworkers' boards and clones do not
    revert with the person's OK). Run the test command from CLAUDE.md once.
 3. Check the board (`bin/roadmap status` or the project's equivalent) and `bin/roadmap usage stops` (a stop that is off = no limit).
    Head rule: log every person message (`head log`), triage and bind it to tasks in the same turn (`head t <id> --kind K --sum S --bind task:ID`; create the task if none), keep it current. Then actually RUN `bin/roadmap head claim --model "<model>"` now (not just note that it should happen — R11.157 found a split-net session that skipped this step while believing it had run it, so the project never got a claim record at all) and `bin/roadmap head brief --gate`: open asks and what the head is missing (idle cursor/agy, free tasks) come from the ledger, not memory. On /head save also run `head brief` and list new rules/decisions as asks.
-4. Then act as head: launch every non-overlapping task in parallel (Haiku edits; agy audits + Cursor reviews when the VPN
-   is on; Opus low effort only for design/review), verify each result, register jobs, close with tokens, commit, push,
-   show the board. Do not idle, do not ask permission per step. Honour any "stop" the person gave.
+4. Then act as head: launch every non-overlapping task in parallel (Haiku in Claude or Flash via invoke_subagent in Antigravity for edits; agy audits + Cursor reviews when the VPN is on; Opus/Pro low effort only for design/review), verify each result, register jobs, close with tokens, commit, push, show the board. Do not idle, do not ask permission per step. Honour any "stop" the person gave.
 5. Stop and report when a board stop that is ON is reached, or an API session-limit error appears (workers die mid-edit: check
    `git status` for WIP after it).
 

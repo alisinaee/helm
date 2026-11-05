@@ -80,8 +80,28 @@ class AgentDetector:
     name = "agent"
 
     def on_tool(self, tool, tool_input, tool_response, session_model=None):
-        if tool not in ("Agent", "Task"):
+        if tool not in ("Agent", "Task", "invoke_subagent"):
             return None
+        if tool == "invoke_subagent":
+            model = str(tool_input.get("Model") or session_model or "flash")
+            description = str(tool_input.get("Role") or "")
+            prompt = str(tool_input.get("Prompt") or "")
+            agent_id = ""
+            if isinstance(tool_response, str):
+                agent_id = tool_response.strip()
+            elif isinstance(tool_response, dict):
+                agent_id = str(tool_response.get("conversationId") or "")
+            known = model in jobs.MODELS or "flash" in model or "pro" in model
+            clean_m = jobs._clean_model(model) if known else "flash"
+            return {
+                "title": model + ": " + _summary(description or prompt),
+                "model": clean_m,
+                "effort": "",
+                "text": description + " " + prompt,
+                "kind": "agent",
+                "watch": "",
+                "agent": agent_id,
+            }
         text = _response_text(tool_response).replace("\n", " ")
         agent = _AGENT_ID_RE.search(text)
         output = _OUTPUT_RE.search(text)
@@ -146,9 +166,9 @@ class AgyDetector(_FileDetector):
     name = "agy"
 
     def on_tool(self, tool, tool_input, tool_response, session_model=None):
-        if tool != "Bash":
+        if tool not in ("Bash", "run_command"):
             return None
-        cmd = str(tool_input.get("command") or "")
+        cmd = str(tool_input.get("CommandLine") or tool_input.get("command") or "")
         if "agy-companion" not in cmd or _CONTROL_RE.search(cmd):
             return None
         found = _RESULT_RE.search(_response_text(tool_response))
@@ -167,9 +187,9 @@ class CursorDetector(_FileDetector):
     name = "cursor"
 
     def on_tool(self, tool, tool_input, tool_response, session_model=None):
-        if tool != "Bash":
+        if tool not in ("Bash", "run_command"):
             return None
-        cmd = str(tool_input.get("command") or "")
+        cmd = str(tool_input.get("CommandLine") or tool_input.get("command") or "")
         invocation = _cursor_invocation(cmd)
         if invocation is None:
             return None
@@ -281,6 +301,42 @@ def run_hook(raw, environ=None, cwd=None, now=None, clock=None):
         return None
 
 
+def _is_antigravity_payload(payload):
+    return (isinstance(payload, dict) and
+            ("toolCall" in payload or "workspacePaths" in payload or "lastUserInput" in payload
+             or "invocationNum" in payload or "terminationReason" in payload))
+
+
+def _normalize_payload(payload):
+    if not isinstance(payload, dict):
+        return payload
+    norm = dict(payload)
+    if "toolCall" in norm and isinstance(norm["toolCall"], dict):
+        tc = norm["toolCall"]
+        if not norm.get("tool_name"):
+            norm["tool_name"] = tc.get("name")
+        if not norm.get("tool_input"):
+            norm["tool_input"] = tc.get("args") or {}
+        if not norm.get("hook_event_name"):
+            norm["hook_event_name"] = "PostToolUse" if "error" in norm else "PreToolUse"
+    if "lastUserInput" in norm:
+        if not norm.get("prompt"):
+            norm["prompt"] = norm["lastUserInput"]
+        if not norm.get("hook_event_name"):
+            norm["hook_event_name"] = "UserPromptSubmit"
+    if "terminationReason" in norm and not norm.get("hook_event_name"):
+        norm["hook_event_name"] = "Stop"
+    if "conversationId" in norm and not norm.get("session_id"):
+        norm["session_id"] = norm["conversationId"]
+    if "modelName" in norm and not norm.get("session_model"):
+        norm["session_model"] = norm["modelName"]
+    if "workspacePaths" in norm and not norm.get("cwd"):
+        paths = norm["workspacePaths"]
+        if isinstance(paths, list) and paths:
+            norm["cwd"] = paths[0]
+    return norm
+
+
 def _handle(raw, environ, cwd, now, clock, started):
     try:
         payload = json.loads(raw) if raw and raw.strip() else {}
@@ -290,6 +346,7 @@ def _handle(raw, environ, cwd, now, clock, started):
     if not isinstance(payload, dict):
         _log("skip: stdin is not a JSON object")
         return None
+    payload = _normalize_payload(payload)
     event = str(payload.get("hook_event_name") or "")
     if event in USAGE_EVENTS:
         _usage_auto(payload, now)
@@ -310,7 +367,7 @@ def _handle(raw, environ, cwd, now, clock, started):
     if event == "SessionStart":
         _head_claim(project, data_dir, payload, now, clock, started)
         panel = _panel_text(data_dir, payload, "start", now, clock, started)
-        return _session_start(project, data_dir, clock, started, now, panel=panel)
+        return _session_start(project, data_dir, clock, started, now, panel=panel, payload=payload)
     pattern, names = project_settings(data_dir)
     regex = task_regex(pattern)
     known = jobs.known_task_ids(data_dir)
@@ -386,8 +443,8 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
                 tool = str(payload.get("tool_name") or "")
                 tool_input = payload.get("tool_input")
                 tool_input = tool_input if isinstance(tool_input, dict) else {}
-                session_model = _session_model(payload) if tool in ("Agent", "Task") else None
-                if tool == "Bash":
+                session_model = _session_model(payload) if tool in ("Agent", "Task", "invoke_subagent") else None
+                if tool in ("Bash", "run_command"):
                     _commit_candidates(project, data_dir, payload, tool_input, now)
                 for detector in active:
                     entry = detector.on_tool(tool, tool_input, payload.get("tool_response"),
@@ -407,7 +464,7 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
                                 closed.append(new["job"])
                             else:
                                 started.append(new)
-                if tool == "SendMessage":
+                if tool in ("SendMessage", "send_message"):
                     new = _followup_start(data_dir, tool_input, now)
                     if new is not None:
                         if _closed_at_start(project, data_dir, new, None):
@@ -441,7 +498,8 @@ def _run_event(project, data_dir, event, payload, active, regex, known, now):
 
 # ------------------------------------------------------------------ control: PreToolUse, SessionStart, Stop pickup
 
-PRE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit", "Bash", "Agent", "Task", "WebFetch", "WebSearch")
+PRE_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit", "Bash", "Agent", "Task", "WebFetch", "WebSearch",
+             "run_command", "write_file", "edit_file", "invoke_subagent")
 # while the project is blocked, these roadmap commands are the only ones a Bash call may run
 ALLOWED_WHILE_BLOCKED = (("inbox",), ("status",), ("ask",), ("rules", "show"), ("watch",),
                          ("usage", "sync"), ("usage", "show"), ("usage", "stops"), ("usage", "account"),
@@ -473,6 +531,8 @@ def _project_quiet(payload, cwd):
     """The registered project of the payload cwd, or None. The gate never reads ROADMAP_PROJECT: an ambient variable
     must not decide which project a tool call is denied for. Unlike _project_for, it logs nothing."""
     here = payload.get("cwd")
+    if not here and isinstance(payload.get("workspacePaths"), list) and payload["workspacePaths"]:
+        here = payload["workspacePaths"][0]
     here = here if isinstance(here, str) and here else cwd
     try:
         return jobs.resolve_project(None, {}, here)
@@ -491,39 +551,42 @@ def _pre_tool_use(payload, environ, cwd, now, clock, started):
     if tool not in PRE_TOOLS:
         return None
     tool_input = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
-    command = str(tool_input.get("command") or "") if tool == "Bash" else ""
-    roadmap_cmd = tool == "Bash" and _roadmap_command(command)
+    raw_cmd = tool_input.get("CommandLine") or tool_input.get("command") or ""
+    command = str(raw_cmd) if tool in ("Bash", "run_command") else ""
+    roadmap_cmd = (tool in ("Bash", "run_command")) and _roadmap_command(command)
     if roadmap_cmd and _allowed_while_blocked(command):
-        return None
+        return {"decision": "allow"} if _is_antigravity_payload(payload) else None
     project = _project_quiet(payload, cwd)
     if project is None or _too_slow(clock, started):
-        return None
+        return {"decision": "allow"} if _is_antigravity_payload(payload) else None
     _touch_presence(project, now, clock, started)
     pid = project["id"]
     if not os.path.exists(control.sentinel_path(pid)):
-        return None
+        return {"decision": "allow"} if _is_antigravity_payload(payload) else None
     state = control.read_state(pid)
     if not state:
-        return None
+        return {"decision": "allow"} if _is_antigravity_payload(payload) else None
     reason = _deny_reason(state, payload, project, now)
     if roadmap_cmd:
         # a roadmap command outside the allowlist: denied while the project is stopped or blocked, or for the task
         # this agent runs; otherwise it passes
         if reason is None and not (state.get("stop") is True or isinstance(state.get("block"), dict)):
-            return None
+            return {"decision": "allow"} if _is_antigravity_payload(payload) else None
         reason = reason or _not_allowed_reason(command)
     if reason is not None and state.get("stop") is not True and isinstance(state.get("block"), dict):
         # a limit block can be stale (usage reset, override expired, budget raised): recompute before denying
         fresh = _refresh_limits(pid, now, clock, started)
         if fresh is None:
-            return None
+            return {"decision": "allow"} if _is_antigravity_payload(payload) else None
         state = fresh
         reason = _deny_reason(fresh, payload, project, now)
         if roadmap_cmd and reason is None and isinstance(fresh.get("block"), dict):
             reason = _not_allowed_reason(command)
     if reason is None or _too_slow(clock, started):
-        return None
+        return {"decision": "allow"} if _is_antigravity_payload(payload) else None
     _log_denial(pid, reason, now)
+    if _is_antigravity_payload(payload):
+        return {"decision": "deny", "reason": reason}
     return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
                                    "permissionDecisionReason": reason}}
 
@@ -623,7 +686,7 @@ def _log_denial(pid, reason, now):
     _log("denied " + pid + ": " + reason)
 
 
-def _session_start(project, data_dir, clock, started, now=None, panel=""):
+def _session_start(project, data_dir, clock, started, now=None, panel="", payload=None):
     """Up to INBOX_LINES lines for the agent's context: the stop line first, then queued and answered items, then
     the head's line (HEAD-SPEC section 3) when the project captures."""
     lines = []
@@ -638,11 +701,13 @@ def _session_start(project, data_dir, clock, started, now=None, panel=""):
     head_lines = _head_idle_lines(project, data_dir, now) + _head_session_lines(data_dir, now)
     panel_lines = panel.split("\n") if panel else []
     if not lines and not head_lines and not panel_lines:
-        return None
+        return {} if (payload and _is_antigravity_payload(payload)) else None
     extra = _rule_lines(data_dir, _queued_task(data_dir), clock, started) if lines else []
+    full_text = "\n".join(lines[:INBOX_LINES] + extra + head_lines + panel_lines)
+    if payload and _is_antigravity_payload(payload):
+        return {"injectSteps": [{"systemMessage": {"systemMessage": full_text}}]}
     return {"hookSpecificOutput": {"hookEventName": "SessionStart",
-                                   "additionalContext": "\n".join(lines[:INBOX_LINES] + extra + head_lines
-                                                                  + panel_lines)}}
+                                   "additionalContext": full_text}}
 
 
 # ------------------------------------------------------------------ head capture: UserPromptSubmit (HEAD-SPEC section
@@ -879,7 +944,9 @@ def _user_prompt(payload, environ, cwd, now, clock, started):
     reply = _prompt_capture(payload, data_dir, now, clock, started)
     text = "\n".join(part for part in (panel, reply) if part)
     if not text:
-        return None
+        return {} if _is_antigravity_payload(payload) else None
+    if _is_antigravity_payload(payload):
+        return {"injectSteps": [{"ephemeralMessage": text}]}
     return {"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": text}}
 
 
@@ -1284,6 +1351,8 @@ def _verdict_of(now):
 
 def _project_for(payload, environ, cwd):
     here = payload.get("cwd")
+    if not here and isinstance(payload.get("workspacePaths"), list) and payload["workspacePaths"]:
+        here = payload["workspacePaths"][0]
     here = here if isinstance(here, str) and here else cwd
     try:
         return jobs.resolve_project(None, environ, here)
@@ -1431,7 +1500,7 @@ def _followup_start(data_dir, tool_input, now):
     """A SendMessage whose 'to' names an agent in the agents map starts a job "<model>: <task> follow-up" bound to that
     agent's task (R7.89). Returns the state entry, or None (unknown target, no task, or a failed start). A busy lock
     raises locked, so the caller's event is retried by a later one."""
-    target = str(tool_input.get("to") or "").strip()
+    target = str(tool_input.get("Recipient") or tool_input.get("to") or "").strip()
     info = _agents_map_read(data_dir).get(target) if target else None
     if not isinstance(info, dict) or not info.get("task"):
         return None
@@ -1456,7 +1525,7 @@ _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 def _commit_candidates(project, data_dir, payload, tool_input, now):
     """After a Bash git commit, bind HEAD to the tasks its message names (commit:<sha>) and log each done candidate.
     A failed commit re-reads the old HEAD, which binds nothing new. Returns the bound task ids."""
-    command = str(tool_input.get("command") or "")
+    command = str(tool_input.get("CommandLine") or tool_input.get("command") or "")
     if not _GIT_COMMIT_RE.search(command):
         return []
     here = payload.get("cwd")
