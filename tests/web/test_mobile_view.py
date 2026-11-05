@@ -119,6 +119,20 @@ class MobileGlassCssTests(unittest.TestCase):
         self.assertIn(".crumb {\n    flex: 1 1 auto;\n    min-width: 0;\n    max-width: none;\n  }", self.glass)
         self.assertIn(".crumb-part, .crumb-sep {\n    display: inline-block !important;\n  }", self.glass)
 
+    def test_bnav_badge_anchoring_and_contrast(self):
+        self.assertIn(".bnav-i .nav-b:not([data-dot]) {", self.glass)
+        self.assertIn("left: calc(50% + 4px);", self.glass)
+        self.assertIn(".bnav-i .nav-b[data-tone=\"neutral\"] {", self.glass)
+        self.assertIn("background: var(--surface-2);", self.glass)
+
+    def test_lane_name_wrapping_on_mobile(self):
+        self.assertIn(".lane-name {\n    white-space: normal;\n    overflow-wrap: break-word;", self.glass)
+        self.assertIn(".lane-toggle {\n    align-items: flex-start;\n  }", self.glass)
+
+    def test_agent_stop_button_styling(self):
+        self.assertIn('.ag-icon[data-action="agent-stop"] {', self.glass)
+        self.assertIn("color: var(--danger);", self.glass)
+
 
 class MobileWorkAndComponentsCssTests(unittest.TestCase):
     def test_work_table_block_display_on_mobile(self):
@@ -155,6 +169,20 @@ class MobileWorkAndComponentsCssTests(unittest.TestCase):
         self.assertIn(".btn,\n.btn-small {height: auto; min-height: 44px;", comp)
         self.assertIn(".theme-switch {min-width: 44px; min-height: 44px}", comp)
 
+    def test_task_row_mobile_layout(self):
+        comp = read_file("css", "components.css")
+        self.assertIn(".task-row {grid-template-columns: auto 1fr auto;column-gap: var(--sp-2);row-gap: 2px;", comp)
+        self.assertIn(".task-row .t-main {grid-column: 1 / -1;grid-row: 2;width: 100%}", comp)
+        expected_tok = ".task-row .t-tokens {\ngrid-column: 3;\ngrid-row: 1;\njustify-self: end;\ntext-align: right\n}"
+        self.assertIn(expected_tok, comp)
+        self.assertIn("-webkit-line-clamp: 2", comp)
+
+    def test_agent_lead_touch_target_on_mobile(self):
+        comp = read_file("css", "components.css")
+        self.assertIn(".rg-agent > .ag-lead { min-height: 44px; }", comp)
+        expected_box = '.rg-agent > .ag-lead input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }'
+        self.assertIn(expected_box, comp)
+
 
 class MobileSystemAndToolbarCssTests(unittest.TestCase):
     def test_system_more_dropdown_anchored_right(self):
@@ -164,6 +192,10 @@ class MobileSystemAndToolbarCssTests(unittest.TestCase):
     def test_toolbar_popover_docked_above_bnav(self):
         toolbar = read_file("css", "toolbar.css")
         self.assertIn("bottom: calc(var(--h-bnav) + env(safe-area-inset-bottom, 0px));", toolbar)
+
+    def test_inbox_expanded_body_touch_targets(self):
+        inbox = read_file("css", "inbox.css")
+        self.assertIn(".ib-body :is(.btn,input),.ib-body .ib-form input{min-height:44px;height:auto}", inbox)
 
 
 class MobileNavBehaviorTests(unittest.TestCase):

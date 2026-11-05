@@ -243,7 +243,64 @@ body::before {
     border-radius: 16px;
     box-shadow: var(--glass-shadow);
   }
-  .bnav-i { border-radius: var(--r-card); margin: 2px; }
+  .bnav-i {
+    position: relative;
+    border-radius: var(--r-card);
+    margin: 2px;
+  }
+  .bnav-i .nav-b:not([data-dot]) {
+    position: absolute;
+    top: 3px;
+    left: calc(50% + 4px);
+    margin-left: 0;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    box-sizing: border-box;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    z-index: 2;
+  }
+  .bnav-i .nav-b[data-tone="neutral"] {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text-1);
+  }
+  .bnav-i[aria-current="page"] .nav-b[data-tone="neutral"] {
+    background: var(--surface-1);
+    border-color: var(--accent);
+    color: var(--text-1);
+  }
+  .bnav-i .nav-b[data-dot] {
+    position: absolute;
+    top: 6px;
+    left: calc(50% + 6px);
+    margin-left: 0;
+  }
+  .lane-name {
+    white-space: normal;
+    overflow-wrap: break-word;
+    line-height: 1.35;
+  }
+  .lane-toggle {
+    align-items: flex-start;
+  }
+  .ag-icon[data-action="agent-stop"] {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--danger);
+    border-radius: var(--r-control);
+  }
+  .ag-icon[data-action="agent-stop"]:hover:not(:disabled),
+  .ag-icon[data-action="agent-stop"]:focus-visible {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: var(--on-accent);
+  }
   .main { border-radius: 0; }
   .toasts {
     right: var(--sp-3);
