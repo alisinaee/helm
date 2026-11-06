@@ -404,7 +404,8 @@ export function boardView(ctx) {
   const hint = ctx.fine
     ? "Drag a card to another column, or use its buttons. Keys: s Start, d Done, h Hold, x Reopen. " +
       "Alt+Up and Alt+Down move the focused card one column."
-    : "Use buttons or keys s/d/h/x.";
+    : (typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches
+      ? "Use the buttons on each card." : "Use buttons or keys s/d/h/x.");
   return '<p class="wk-hint">' + esc(hint) + "</p>" + tabsHtml(ctx, all) + '<div class="wk-board">' + cols + "</div>";
 }
 

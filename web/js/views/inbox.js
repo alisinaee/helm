@@ -17,7 +17,7 @@ import { toolbarHtml } from "../toolbar.js";
 
 const KEY_MAX = 6;
 const REC_SUFFIX = " (recommended)";
-const TIME_UP = "Time expired; applying default choice.";
+const TIME_UP = "Timed out. Pick an answer to close it.";
 const LEAVE_MS = 2400;
 // The filter bar: key, label and the item kind it shows ("all" shows everything).
 const FILTERS = [["all", "All"], ["questions", "Questions"], ["asks", "Head asks"], ["rules", "Rules"],

@@ -35,6 +35,7 @@
 @media (max-width:640px){
 .sys{height:calc(100vh - var(--h-top) - var(--h-bnav) - var(--sp-6) - env(safe-area-inset-bottom,0px))}
 .sys-seg-l{display:none}
+.sys-ov-tr{left:var(--sp-2);right:var(--sp-2);max-width:none;overflow:visible;flex-wrap:wrap;white-space:normal;justify-content:flex-end;row-gap:var(--sp-1)}
 .sys-seg{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;max-width:100%;scrollbar-width:none}
 .sys-seg::-webkit-scrollbar{display:none}
 .sys-seg .btn{flex:0 0 auto;white-space:nowrap;padding:0 var(--sp-3)}

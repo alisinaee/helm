@@ -20,8 +20,11 @@ function runRow(job, showProject) {
   const project = showProject && job.projectId
     ? ' <a href="' + esc(projectHash(job.projectId)) + '">' + esc(job.projectName) + "</a>"
     : "";
-  return '<div class="row-grid run-row"><span class="run-task">' + esc(job.task || job.id) + "</span>" +
-    chipHtml(job.model || "model?", model) +
+  // Over 12 hours with no finish: a leftover from a dead session, so it says "no update" instead of looking live.
+  const stale = typeof job.elapsedNow === "number" && job.elapsedNow > 12 * 3600;
+  return '<div class="row-grid run-row' + (stale ? " is-stale" : "") + '"><span class="run-task">' +
+    esc(job.task || job.id) + "</span>" + chipHtml(job.model || "model?", model) +
+    (stale ? chipHtml("no update", "warning") : "") +
     '<span class="run-title" title="' + esc(job.title) + '">' + esc(job.title || "") + project + "</span>" +
     '<span class="run-time rg-num">' + esc(fmtDuration(job.elapsedNow)) + "</span></div>";
 }

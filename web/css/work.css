@@ -62,6 +62,7 @@
 .wk-table .wk-c-title{min-width:0}
 .wk-table .wk-c-est,.wk-table .wk-c-spent,.wk-table .wk-c-cap{order:3;width:auto;text-align:right}
 .wk-table .wk-c-est{margin-left:auto}
+.wk-table td[data-label]::before{content:attr(data-label) " ";color:var(--text-3);font-size:var(--fs-11);margin-right:var(--sp-1)}
 .wk-table .wk-c-ref{order:3;width:auto;margin-left:auto}
 .wk-table .wk-group-head{display:block}
 .wk-tree-task{padding-left:0}.wk-subs{margin-left:4.5rem}

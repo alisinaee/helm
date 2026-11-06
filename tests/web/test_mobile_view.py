@@ -121,7 +121,7 @@ class MobileGlassCssTests(unittest.TestCase):
 
     def test_bnav_badge_anchoring_and_contrast(self):
         self.assertIn(".bnav-i .nav-b:not([data-dot]) {", self.glass)
-        self.assertIn("left: calc(50% + 4px);", self.glass)
+        self.assertIn("left: calc(50% + 11px);", self.glass)
         self.assertIn(".bnav-i .nav-b[data-tone=\"neutral\"] {", self.glass)
         self.assertIn("background: var(--surface-2);", self.glass)
 
