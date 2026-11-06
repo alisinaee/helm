@@ -80,5 +80,5 @@ padding-top:calc(var(--h-small) + var(--sp-4) + var(--sp-2))}
 .rmm-aside-meta,.rmm-aside-act{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-1);margin:0 0 var(--sp-2)}
 .rmm-aside-note{margin:0 0 var(--sp-2);color:var(--text-2);font-size:var(--fs-13)}
 @media (max-width:640px){.rmm-legend .rmm-hint{display:none}.rmm-stage{min-height:60vh}.rmm-ov .btn,.rmm-bar .btn{min-height:2.75rem}
-.rmm-host{padding-top:calc(2.75rem + var(--sp-4) + var(--sp-2))}}
+.rmm-host{padding-top:calc(6.5rem + var(--sp-2));padding-bottom:calc(var(--h-bnav) + var(--sp-4) + env(safe-area-inset-bottom,0px))}}
 @media (prefers-reduced-motion:reduce){.rmm-card.is-run .rmm-card-rect{animation:none}}

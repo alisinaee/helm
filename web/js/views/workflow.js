@@ -1336,8 +1336,9 @@ export function sectionView(vm) {
   let body;
   if (model.empty && view !== "map") {
     const agents = route.name === "project" ? projectHash(route.id, "agents") : "#/all/agents";
-    body = emptyHtml("No jobs recorded yet.", "<span>Agents record work with <code class=\"code\">roadmap job start" +
-      '</code>.</span> <a href="' + esc(agents) + '">Open Agents</a>');
+    body = emptyHtml("No jobs in the last 7 days.",
+      "<span>This chart only draws the last 7 days. Older jobs are listed in Agents.</span> <a href=\"" + esc(agents) +
+      '">Open Agents</a>');
   } else if (view === "table") {
     body = tableHtml(model);
   } else if (view === "map") {

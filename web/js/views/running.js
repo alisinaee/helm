@@ -41,11 +41,22 @@ function jobCopyHtml(job, pid) {
   return copyButton("job", job.id, job.title || job.id, { project: pid, sum: refSummary("job", job) });
 }
 
+// A running job older than this with no finish is probably a leftover from a dead session (no hook closed it). It is
+// still listed so the person can stop it, but it is marked "no update" instead of looking live.
+const STALE_RUN_MS = 12 * 60 * 60 * 1000;
+
+export function isStaleRun(job, now) {
+  return job.startedMs != null && (now || Date.now()) - job.startedMs > STALE_RUN_MS;
+}
+
 function runItemHtml(job, pid) {
-  return '<div class="row-grid run-item"><span class="rg-chips"><span class="rdot" aria-hidden="true"></span>' +
+  const stale = isStaleRun(job);
+  return '<div class="row-grid run-item' + (stale ? " is-stale" : "") + '"><span class="rg-chips">' +
+    '<span class="rdot" aria-hidden="true"></span>' +
     '<span class="run-id">' + esc(job.id) + "</span>" +
     (job.task ? chipHtml(job.task, "neutral") : "") + modelChip(job.model) +
-    (job.status === "claimed" ? chipHtml("claimed", "neutral") : "") + "</span>" +
+    (job.status === "claimed" ? chipHtml("claimed", "neutral") : "") +
+    (stale ? chipHtml("no update", "warning") : "") + "</span>" +
     '<p class="run-title rg-t" title="' + esc(job.title) + '">' + esc(job.title) + "</p>" +
     '<span class="rg-num">' + timerHtml(job) + "</span>" + jobCopyHtml(job, pid) + "</div>";
 }

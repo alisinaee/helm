@@ -54,13 +54,15 @@
 .wk-tab,.wk-chip,.wk-views button,.wk-card .btn,.wk-menu summary{min-height:44px}
 .wk-chip{max-width:48%;text-align:left}
 .wk-table thead,.wk-c-sel,.wk-c-phase,.wk-bulk{display:none}
-.wk-table tr{display:flex;flex-wrap:wrap;gap:4px var(--sp-2);padding:var(--sp-2) 0;min-height:44px;border-bottom:1px solid var(--track)}
+.wk-table,.wk-table tbody{display:block;width:100%}
+.wk-table tr{display:flex;flex-wrap:wrap;gap:4px var(--sp-2);padding:var(--sp-2) 0;min-height:44px;border-bottom:1px solid var(--track);box-sizing:border-box;width:100%}
 .wk-table{table-layout:auto}
 .wk-table td,.wk-table th{height:auto;border:0;padding:0;white-space:normal;width:auto}
 .wk-table .wk-c-title{order:2;flex:1 1 100%;width:auto}
 .wk-table .wk-c-title{min-width:0}
 .wk-table .wk-c-est,.wk-table .wk-c-spent,.wk-table .wk-c-cap{order:3;width:auto;text-align:right}
 .wk-table .wk-c-est{margin-left:auto}
+.wk-table td[data-label]::before{content:attr(data-label) " ";color:var(--text-3);font-size:var(--fs-11);margin-right:var(--sp-1)}
 .wk-table .wk-c-ref{order:3;width:auto;margin-left:auto}
 .wk-table .wk-group-head{display:block}
 .wk-tree-task{padding-left:0}.wk-subs{margin-left:4.5rem}

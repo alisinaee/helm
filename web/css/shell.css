@@ -60,10 +60,10 @@
 .side-tabs{display:flex;gap:var(--sp-1);padding:var(--sp-2);border-bottom:1px solid var(--track)}
 .side-body{flex:1 1 auto;min-height:0;padding:var(--sp-4);overflow:auto}
 .bnav{display:none;position:relative;background:var(--surface-1);border-top:1px solid var(--track)}
-.bnav-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:100%}
-.bnav-i{flex-direction:column;justify-content:center;gap:2px;min-height:var(--h-bnav);padding:var(--sp-1);font-size:var(--fs-11);text-align:center}
+.bnav-row{display:flex;height:100%}
+.bnav-i{flex:1 1 0;min-width:0;flex-direction:column;justify-content:center;gap:2px;min-height:var(--h-bnav);padding:var(--sp-1);font-size:var(--fs-11);text-align:center}
 .bnav-i .nav-b{position:absolute;top:4px;left:50%;margin-left:6px}
-.sheet{position:absolute;left:var(--sp-2);right:var(--sp-2);bottom:100%;z-index:var(--z-over);display:grid;gap:2px;margin-bottom:var(--sp-2);padding:var(--sp-2);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow-2)}
+.sheet{position:absolute;left:var(--sp-2);right:var(--sp-2);bottom:100%;z-index:var(--z-over);display:grid;gap:2px;margin-bottom:var(--sp-2);padding:var(--sp-2);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow-2);max-height:calc(100vh - var(--h-bnav) - var(--h-top) - 24px - env(safe-area-inset-bottom,0px));overflow-y:auto;-webkit-overflow-scrolling:touch}
 .scrim{position:fixed;inset:0;z-index:var(--z-over);background:var(--scrim)}
 .toasts{position:fixed;right:var(--sp-4);bottom:var(--sp-4);z-index:var(--z-toast);display:grid;gap:var(--sp-2);max-width:min(360px,calc(100vw - 32px))}
 .toast{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);background:var(--surface-2);color:var(--text-1);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow-2)}
@@ -85,19 +85,22 @@
 .app[data-nav-over] .nav-b{position:static;min-width:28px;height:18px;line-height:18px;margin-left:auto}
 }
 @media (max-width:640px){
-.app{height:auto;min-height:100vh}
+.app{height:auto;min-height:100vh;overflow-x:hidden}
 .main{overflow-y:visible}
-.app,.app[data-nav]{grid-template-columns:minmax(0,1fr);grid-template-rows:var(--h-top) minmax(0,1fr);grid-template-areas:"top" "main";padding-bottom:var(--h-bnav)}
+.app,.app[data-nav]{grid-template-columns:minmax(0,1fr);grid-template-rows:var(--h-top) minmax(0,1fr);grid-template-areas:"top" "main";padding-bottom:calc(var(--h-bnav) + env(safe-area-inset-bottom,0px))}
 .nav{display:none}
-.bnav{display:block;position:fixed;left:0;right:0;bottom:0;height:var(--h-bnav);z-index:var(--z-over)}
+.bnav{display:block;position:fixed;left:0;right:0;bottom:0;height:calc(var(--h-bnav) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;z-index:var(--z-over)}
 .app[data-nav="mini"] .bnav-i .nav-l{position:static;width:auto;height:auto;clip:auto;overflow:hidden}
 .bnav-i .ico{stroke-width:2.2}
-.top{padding:0 var(--sp-3);gap:var(--sp-2)}
+.top{padding-left:calc(var(--sp-3) + env(safe-area-inset-left,0px));padding-right:calc(var(--sp-3) + env(safe-area-inset-right,0px));gap:var(--sp-2)}
 .top-meters,.conn,.crumb-part,.crumb-sep,.top-age,.top-tools>[data-action=help-open],.top-tools>.pill.is-wait{display:none}
-.top-tools{gap:var(--sp-1)}
+.top-tools{gap:var(--sp-1);min-width:0}
+.top-tools>.pill.is-run{padding:0 var(--sp-1);font-size:var(--fs-11);white-space:nowrap}
+@media (max-width:380px){.top-tools>.pill.is-run span:not(.dot){display:none}}
+.top .crumb-proj,.top-tools .btn{min-height:40px}
 .main{padding:var(--sp-3) var(--sp-4) var(--sp-6)}
-.side{position:fixed;inset:0;width:100%;border-left:0}
-.toasts{right:var(--sp-3);bottom:calc(var(--h-bnav) + var(--sp-3))}
+.side{position:fixed;inset:0;width:100%;border-left:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.toasts{right:var(--sp-3);bottom:calc(var(--h-bnav) + env(safe-area-inset-bottom,0px) + var(--sp-3))}
 }
 .nav-brand{margin:0;padding:var(--sp-2);font-weight:700}
 .pill.is-run .dot{animation:run-blink 1.2s ease-in-out infinite}

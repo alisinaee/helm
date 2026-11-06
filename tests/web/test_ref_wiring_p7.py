@@ -121,7 +121,7 @@ class RefWiringP7Tests(unittest.TestCase):
     def test_running_rows_carry_a_valid_job_ref(self):
         html = self.out["running"]
         refs = [b.get("data-ref") for b in copy_buttons(html)]
-        rows = html.count('class="row-grid run-item"') + html.count('class="fin-row row-grid"')
+        rows = html.count('class="row-grid run-item') + html.count('class="fin-row row-grid"')
         self.assertEqual(len(refs), rows)
         self.assertIn("rb:splitnet/job/j90", refs)
         self.assertTrue(all(r.startswith("rb:splitnet/job/") for r in refs))

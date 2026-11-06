@@ -38,6 +38,8 @@
 .rule-text { white-space: normal; }
 .rule-row { grid-template-columns: minmax(0, 1fr) auto 5.5rem var(--ref-col); row-gap: var(--sp-1) }
 .rule-row > .rule-main { grid-column: 1 / -1; white-space: normal; align-items: flex-start }
+.rules-form .lim-edit { display: flex; flex-direction: column; align-items: stretch; }
+.rules-form .lim-field { width: 100%; }
 }
 /* R11.163: notification rows, name left and switch in a fixed right column */
 .set-rows { display: grid; gap: 0; padding: 0; margin: 0; list-style: none }

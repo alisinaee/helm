@@ -188,9 +188,9 @@ function rowHtml(ctx, task, checked) {
     '<td class="wk-c-phase">' + esc(task.phase) + "</td>" +
     '<td class="wk-c-status">' + esc(STATE_LABEL[task.state] || task.state) + "</td>" +
     '<td class="wk-c-model">' + (task.model ? modelChip(task.model) : "") + "</td>" +
-    '<td class="wk-c-est num">' + esc(fmtTokens(task.tokensK)) + "</td>" +
-    '<td class="wk-c-spent num">' + esc(fmtTokens(task.spentK)) + "</td>" +
-    '<td class="wk-c-cap num">' + esc(task.capK == null ? MISSING : fmtTokens(task.capK)) + "</td>" +
+    '<td class="wk-c-est num" data-label="Est">' + esc(fmtTokens(task.tokensK)) + "</td>" +
+    '<td class="wk-c-spent num" data-label="Spent">' + esc(fmtTokens(task.spentK)) + "</td>" +
+    '<td class="wk-c-cap num" data-label="Cap">' + esc(task.capK == null ? MISSING : fmtTokens(task.capK)) + "</td>" +
     '<td class="wk-c-flags">' + flags.join(" ") + "</td>" +
     '<td class="wk-c-ref">' + taskCopyHtml(ctx.pid, ctx.snap, copyItem(task)) + "</td></tr>";
 }

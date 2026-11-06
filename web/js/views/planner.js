@@ -300,7 +300,8 @@ function piecesOf(snap, state) {
   const addTop = state.edit && state.edit.kind === "add" && !state.edit.id ? editHtml(state.edit, {}) : "";
   if (!rows.length) {
     pieces.push({ name: "add", html: addTop });
-    pieces.push({ name: "list", html: emptyHtml("No plan yet. Ask your agent to create the roadmap.") });
+    pieces.push({ name: "list", html: emptyHtml("No plan yet. Ask your agent to create the roadmap. " +
+      "Tasks below are not linked to a feature yet.") });
     pieces.push({ name: "orph", html: orphansHtml(snap, features, tree, state) });
     return pieces;
   }

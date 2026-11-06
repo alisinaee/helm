@@ -46,6 +46,7 @@
   --h-small: 24px;
   --h-control: 28px;
   --h-row: 32px;
+  --h-touch: 44px;
   --r-control: 7px;
   --r-card: 10px;
   --rg: minmax(0, 1fr) auto;
@@ -54,6 +55,10 @@
   --w-side: 320px;
   --h-top: 48px;
   --h-bnav: 56px;
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.45);
   --z-over: 40;
@@ -131,8 +136,13 @@
 .tk-bar > .tk-tabs { margin-bottom: 0 }
 .tk-bar-who, .tk-bar-total { color: var(--text-3); font-size: var(--fs-12); white-space: nowrap }
 .tk-bar-total strong { color: var(--text-1); font-weight: 600 }
-.tk-tabs { justify-self: start; margin-bottom: var(--sp-3) }
+.tk-tabs { justify-self: start; margin-bottom: var(--sp-3); max-width: 100% }
 .tk-tabs > button { min-height: var(--h-control) }
+@media (max-width: 640px) {
+  .tk-tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; max-width: 100%; }
+  .tk-tabs::-webkit-scrollbar { display: none }
+  .tk-tabs > button { flex: none; white-space: nowrap; min-height: 44px }
+}
 .tk-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3) }
 .tk-chips { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2) }
 .tk-chip { display: inline-flex; align-items: center; gap: var(--sp-1); height: var(--h-control); padding: 0 var(--sp-3);
@@ -537,5 +547,5 @@
 /* The usage band wraps: meters share a row, the note and actions get a full-width row (no one-letter-per-line note). */
 .band.band { grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
 .band .band-actions { grid-column: 1 / -1; min-width: 0; }
-.band-actions .banner { flex: 1 1 100%; min-width: min(16rem, 100%); }
+.band-actions .banner { flex: 1 1 100%; min-width: 0; max-width: 100%; }
 .band-value[title] { color: var(--text-2); font-weight: 500; }

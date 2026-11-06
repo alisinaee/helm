@@ -60,5 +60,5 @@
 .ib-row>.ib-chev{grid-column:5;grid-row:1}
 .ib-row>.ib-main{grid-column:1/-1;grid-row:2;min-height:44px}
 .ib-body{padding-left:0}
-.ib-body :is(.btn,input),.ib-body .ib-form input{height:36px}
+.ib-body :is(.btn,input),.ib-body .ib-form input{min-height:44px;height:auto}
 }

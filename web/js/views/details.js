@@ -218,7 +218,7 @@ function capHtml(task, snap, vm, now) {
   const field = "cap-" + task.id;
   return sectionHtml("Cap", '<form class="d-form" data-side-form="cap" data-id="' + esc(task.id) + '">' +
     '<label for="' + esc(field) + '">Token cap (thousands) <input id="' + esc(field) +
-    '" name="value" type="number" min="0" step="any" inputmode="decimal" value="' +
+    '" name="value" type="number" min="0" step="any" inputmode="decimal" placeholder="e.g. 50" value="' +
     esc(cap == null ? "" : cap) + '" data-focus="cap-input"' + off + "></label>" +
     '<button type="submit" class="btn" aria-label="' + esc("Save token cap for " + task.id) +
     '" data-focus="cap-save"' + off + ">Save cap</button>" +
@@ -241,7 +241,8 @@ function subsHtml(task, snap, vm, now) {
   const field = "sub-new-" + task.id;
   const add = '<form class="d-form" data-side-form="sub-add" data-id="' + esc(task.id) + '">' +
     '<label for="' + esc(field) + '">Add a subtask <input id="' + esc(field) +
-    '" name="title" type="text" maxlength="200" data-focus="sub-add"' + off + "></label>" +
+    '" name="title" type="text" maxlength="200" placeholder="What needs doing?" data-focus="sub-add"' +
+    off + "></label>" +
     '<button type="submit" class="btn" aria-label="' + esc("Add subtask to " + task.id) +
     '" data-focus="sub-add-btn"' + off + ">Add subtask</button></form>";
   return sectionHtml("Subtasks", listHtml(items, "No subtasks yet.") + add);
@@ -258,7 +259,8 @@ function commentsHtml(task, snap, vm, now) {
   const field = "c-new-" + task.id;
   const add = '<form class="d-form" data-side-form="comment" data-id="' + esc(task.id) + '">' +
     '<label for="' + esc(field) + '">Add a comment <input id="' + esc(field) +
-    '" name="text" type="text" maxlength="2000" data-focus="comment-text"' + off + "></label>" +
+    '" name="text" type="text" maxlength="2000" placeholder="Write a comment" data-focus="comment-text"' +
+    off + "></label>" +
     '<button type="submit" class="btn" aria-label="' + esc("Add comment to " + task.id) +
     '" data-focus="comment-btn"' + off + ">Add comment</button></form>";
   return sectionHtml("Comments", listHtml(items, "No comments yet.") + add);
