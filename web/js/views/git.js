@@ -114,10 +114,21 @@ function loadVendor() {
   document.head.appendChild(script);
 }
 
+function scrollDetail() {
+  if (typeof window === "undefined" || !window.matchMedia) return;
+  if (window.matchMedia("(max-width: 1099px)").matches) {
+    const el = document.querySelector(".git-detail");
+    if (el && typeof el.scrollIntoView === "function") {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+}
+
 function pickCommit(pid, sha) {
   sel.sha = sha;
   sel.path = null;
   repaint();
+  scrollDetail();
   if (detail.has(sha)) return;
   getJson(gitBase(pid) + "show/" + encodeURIComponent(sha)).then(function (reply) {
     detail.set(sha, { commit: reply.data.commit, files: reply.data.files || [] });
@@ -141,6 +152,11 @@ function fetchWork(pid, path) {
 }
 
 function pickWork(pid, path) {
+  if (!path) {
+    sel.wkey = null;
+    repaint();
+    return;
+  }
   const key = pid + "\n" + path;
   const moved = sel.wkey !== key;
   sel.wkey = key;
@@ -286,7 +302,9 @@ function workDiffHtml(pid) {
       esc(letter) + "</span>";
   }
   const head = '<div class="git-dhead"><span class="git-dname" title="' + esc(path) + '">' +
-    esc(path.slice(cut + 1)) + "</span>" + pill + "</div>";
+    esc(path.slice(cut + 1)) + "</span>" + pill +
+    '<button type="button" class="git-dclose" data-git="wfile" data-path="" ' +
+    'aria-label="Close diff">✕</button></div>';
   if (!got) return head + skeletonHtml(["w-90", "w-60"]);
   if (got.error) return head + bannerHtml("warning", "Diff could not be read.", got.error);
   if (got.skipped) return head + emptyHtml("No diff shown.", got.skipped);
@@ -385,7 +403,9 @@ function onKey(event) {
 function onFocus(event) {
   const el = event.target;
   if (!el || !el.getAttribute || el.getAttribute("data-git") !== "wfile") return;
-  if (lastVm && lastVm.route.name === "project") pickWork(lastVm.route.id, el.getAttribute("data-path"));
+  const path = el.getAttribute("data-path");
+  if (!path) return;
+  if (lastVm && lastVm.route.name === "project") pickWork(lastVm.route.id, path);
 }
 
 function onSubmit(event) {
@@ -419,7 +439,8 @@ function fileRows(list, pid) {
     const dir = cut > 0 ? path.slice(0, cut + 1) : "";
     const on = sel.wkey === pid + "\n" + path;
     return '<li class="git-fr"><input type="checkbox" name="path" value="' + esc(path) +
-      '" aria-label="Commit file"><button type="button" class="git-fb" data-git="wfile" data-path="' + esc(path) +
+      '" aria-label="' + esc("Commit " + path) +
+      '"><button type="button" class="git-fb" data-git="wfile" data-path="' + esc(path) +
       '" aria-current="' + on + '" title="' + esc(path) + '"><span class="git-st git-st-' +
       esc(letter.toLowerCase()) + '" title="' + esc(code) + '">' + esc(letter) + '</span><span class="git-fn"><b>' +
       esc(path.slice(cut + 1)) + "</b>" + (dir ? "<i>" + esc(dir) + "</i>" : "") + "</span></button></li>";
@@ -428,8 +449,10 @@ function fileRows(list, pid) {
 
 function commitPanel() {
   return '<form class="git-form" data-git="commit" novalidate>' +
+    '<label for="git-msg" class="sr-only">Commit message</label>' +
     '<textarea id="git-msg" name="message" rows="2" maxlength="4000" placeholder="Summary (required)" ' +
     'aria-label="Commit message"></textarea><div class="git-cr">' +
+    '<label for="git-task" class="sr-only">Task id</label>' +
     '<input id="git-task" name="task" type="text" maxlength="20" autocomplete="off" placeholder="Task id" ' +
     'aria-label="Task id"><button type="submit" class="btn btn-primary" data-focus="git-commit" disabled>' +
     '<span data-git-count>Commit</span></button></div><p class="git-foot">' + esc(NOTE) + "</p></form>";
@@ -477,7 +500,8 @@ function changesHtml(pid, entry) {
     'aria-label="Select all files"><span>Changes (' + files.length + ')</span></div>' +
     '<ul class="git-list" aria-label="Changed files">' + fileRows(files, pid) + "</ul>" +
     (canCommit ? commitPanel() : "") + "</div>";
-  const right = '<div class="git-right">' + workDiffHtml(pid) + "</div>";
+  const hasDiff = Boolean(sel.wkey && sel.wkey.indexOf(pid + "\n") === 0);
+  const right = '<div class="git-right' + (hasDiff ? " is-open" : "") + '">' + workDiffHtml(pid) + "</div>";
   parts.push('<div class="git-split">' + left + right + "</div>");
   return parts.join("");
 }

@@ -19,4 +19,5 @@
 .wi-kind{text-transform:capitalize}
 .wi-kind-bug,.wi-kind-blocker{color:var(--danger)}
 .wi-kind-risk{color:var(--warning)}
-@media (max-width:767px){.wi-board{display:block}.wi-add{grid-template-columns:1fr 1fr}.wi-add label:first-child,.wi-out{grid-column:1/-1}.wi-add input,.wi-add select,.wi-menu summary{min-height:44px}.wi-menu summary{min-width:44px}}
+@media (max-width:1023px){.wi-board{display:block}}
+@media (max-width:767px){.wi-add{grid-template-columns:1fr 1fr}.wi-add label:first-child,.wi-out{grid-column:1/-1}.wi-add input,.wi-add select,.wi-menu summary{min-height:44px}.wi-menu summary{min-width:44px}}

@@ -448,14 +448,14 @@ export function mountViewport(svg, vpG, opts) {
     } else moveFocus(closestNode(e.target) || active, plan.dir);
   });
   function moveFocus(cur, dir) {
-    if (!cur) return;
-    const items = nodes().map(function (el) {
+    const all = nodes();
+    if (!all.length) return;
+    if (!cur) { reveal(all[0]); return; }
+    const items = all.map(function (el) {
       const c = centreOf(el);
       return { key: el.getAttribute("data-wf-item") || el.getAttribute("data-wf-fold"), cx: c.x, cy: c.y, el: el };
     });
-    const from = items.find(function (n) {
-      return n.el === cur;
-    });
+    const from = items.find(function (n) { return n.el === cur; });
     const next = from ? nearest(items, from, dir) : null;
     if (next) reveal(next.el);
   }

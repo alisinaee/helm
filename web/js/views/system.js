@@ -825,6 +825,21 @@ function onKey(event) {
   } else if ((event.key === "Enter" || event.key === " ") && t && t.getAttribute && t.getAttribute("data-sys")) {
     event.preventDefault();
     select(t.getAttribute("data-sys"));
+  } else if (event.key.startsWith("Arrow") && t && t.closest && (t.closest("[data-sys]") || t.tagName === "svg")) {
+    event.preventDefault();
+    const all = Array.from(document.querySelectorAll(".sys svg g[data-sys]"));
+    if (!all.length) return;
+    const cur = t.closest ? t.closest("[data-sys]") : null;
+    const curIdx = cur ? all.indexOf(cur) : -1;
+    const forward = event.key === "ArrowDown" || event.key === "ArrowRight";
+    const nextIdx = curIdx < 0 ? 0 : forward ? (curIdx + 1) % all.length : (curIdx - 1 + all.length) % all.length;
+    const nextEl = all[nextIdx];
+    if (nextEl) {
+      all.forEach((el) => el.setAttribute("tabindex", "-1"));
+      nextEl.setAttribute("tabindex", "0");
+      if (nextEl.focus) nextEl.focus();
+      select(nextEl.getAttribute("data-sys"));
+    }
   } else if (event.key === "Escape") {
     if (selected) select(null);
     else if (fullHost) closeFull();

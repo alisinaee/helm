@@ -53,8 +53,9 @@ function crumbHtml(vm) {
   }
   const view = route.view ? '<span class="crumb-sep" aria-hidden="true">›</span>' +
     '<span class="crumb-part">' + esc(route.view) + "</span>" : "";
-  return '<h1 class="crumb">' + scope + '<span class="crumb-sep" aria-hidden="true">›</span>' +
-    '<span class="crumb-part">' + esc(label) + "</span>" + view + "</h1>";
+  return '<nav class="crumb" aria-label="Breadcrumb">' + scope +
+    '<span class="crumb-sep" aria-hidden="true">›</span>' +
+    '<h1 class="crumb-part">' + esc(label) + "</h1>" + view + "</nav>";
 }
 
 function controlHtml(vm) {
@@ -74,7 +75,7 @@ function controlHtml(vm) {
   const blocked = c.blocked ? " is-blocked" : " is-run";
   const word = c.blocked ? "Blocked" : "Running";
   const title = c.blocked && c.reason ? ' title="' + esc(c.reason) + '"' : "";
-  return '<span class="pill' + blocked + '"' + title + '><span class="dot" aria-hidden="true"></span>' +
+  return '<span class="pill' + blocked + '" role="status"' + title + '><span class="dot" aria-hidden="true"></span>' +
     word + "</span>" +
     '<button type="button" class="btn" data-action="control" data-op="control.stop" data-project="' +
     esc(c.id) + '" data-focus="control"' + offline + ">Stop</button>";
@@ -291,6 +292,7 @@ export function topbarView(vm) {
   return '<div class="top-row">' + crumbHtml(vm) +
     '<div class="top-tools">' + controlHtml(vm) + metersHtml(vm) + connHtml(vm.conn) +
     '<button type="button" class="btn" data-action="help-open" data-focus="help" aria-haspopup="dialog"' +
-    ' aria-label="Keyboard shortcuts">?</button>' + themeToggleHtml(mode) + panelToggleHtml(vm) +
+    ' aria-label="Keyboard shortcuts (?)">?<span class="sr-only" aria-label="Keyboard shortcuts"></span></button>' +
+    themeToggleHtml(mode) + panelToggleHtml(vm) +
     "</div></div>";
 }

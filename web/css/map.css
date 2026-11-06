@@ -1,8 +1,7 @@
 .wf-page,.wf{display:flex;flex-direction:column;gap:var(--sp-2);min-width:0}
 .wf-controls{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
-/* R11.139: one compact height for the view switch, range and Timeline nav buttons (was 28px links, 24px buttons, 44px on phones). */
 .wf-controls .plan-views a,.wf-controls .btn{min-height:var(--h-control);height:var(--h-control);padding:0 var(--sp-2);font-size:var(--fs-12)}
-.wf-scroll{overflow-x:auto;max-width:100%;min-width:0}
+.wf-scroll{overflow-x:auto;max-width:100%;min-width:0;touch-action:pan-y}
 .wf-grid{display:grid;grid-template-columns:9rem max-content 8.5rem;width:max-content}
 .wf-tl{touch-action:none;user-select:none}
 .wf-labels,.wf-gutters{position:sticky;z-index:1;background:var(--surface-1);align-self:start}
@@ -58,13 +57,18 @@
 .wf-k-queued{border:1.5px dashed var(--unknown)}
 .wf-edge-key{width:22px;border-top:2px solid var(--text-2)}
 .wf-edge-key.wf-e-block{border-top:2px dashed var(--danger)}
-@media (max-width:767px){.wf-table{min-width:0}.wf-table .btn{min-height:44px;min-width:44px}}
+@media (max-width:767px){
+.wf-controls .plan-views a,.wf-controls .btn,.wf-table .btn{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
+.wf-gutters{position:static}.wf-labels{width:5.5rem;min-width:5.5rem}.wf-grid{grid-template-columns:5.5rem max-content 8.5rem}.wf-table{min-width:0}
+}
 @media (max-width:640px){.wf-table,.wf-table tbody{display:block}.wf-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-.wf-table tr{display:block;position:relative;padding:var(--sp-2) 0;border-bottom:1px solid var(--track)}
-.wf-table td{display:inline-block;padding:0 var(--sp-3) 0 0;border:0;color:var(--text-2);font-size:var(--fs-12)}
-.wf-table td:nth-child(-n+2){display:block;padding-right:7.5rem;color:var(--text-1)}.wf-table td:nth-child(1){color:var(--text-3)}
+.wf-table tr{display:flex;flex-wrap:wrap;align-items:center;position:relative;padding:var(--sp-2) 0;border-bottom:1px solid var(--track)}
+.wf-table tr.wf-wg{display:block;width:100%}
+.wf-table tr.wf-wg th{display:block;width:100%;white-space:normal}
+.wf-table td{display:inline-flex;align-items:center;padding:0 var(--sp-2) 0 0;border:0;color:var(--text-2);font-size:var(--fs-12);overflow:visible}
+.wf-table td:nth-child(-n+2){display:block;width:100%;padding-right:0;color:var(--text-1)}.wf-table td:nth-child(1){color:var(--text-3)}
 .wf-table td:nth-child(2){white-space:normal;margin-bottom:var(--sp-1);font-size:var(--fs-13)}
-.wf-table td:nth-child(9){position:absolute;top:var(--sp-2);right:0;padding:0}
+.wf-table td:nth-child(9){margin-left:auto;padding:0;position:static}
 .wf-table td:nth-child(5)::before{content:"Jobs "}.wf-table td:nth-child(6)::before{content:"Tokens "}.wf-table td:nth-child(7)::before{content:"Took "}.wf-table td:nth-child(8)::before{content:"Updated "}
 .wf-table td::before{color:var(--text-3)}}
 .wf-page{height:100%}.wf{flex:1;min-height:0}.wf>.wf-scroll{flex:1;min-height:0;overflow:auto}.wf-table th{position:sticky;top:0;z-index:1;background:var(--surface-1)}

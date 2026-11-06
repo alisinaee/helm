@@ -179,7 +179,7 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     : "";
   const badge = job.task && blocked.indexOf(job.task) !== -1 ? chipHtml("blocked", "danger") : "";
   const label = job.title || job.id;
-  const stop = '<button type="button" class="ag-icon" data-action="agent-stop" data-project="' + esc(pid) +
+  const stop = '<button type="button" class="ag-icon is-danger" data-action="agent-stop" data-project="' + esc(pid) +
     '" data-task="' + esc(job.task || "") + '" data-focus="stop-' + esc(pid) + "-" + esc(job.id) + '"' +
     (job.task ? "" : " disabled") + ' aria-label="Stop ' + esc(job.task || label) + '" title="Stop">' +
     STOP_ICON + "</button>";
@@ -189,7 +189,7 @@ export function agentRowHtml(job, pid, tree, blocked, now, depth) {
     (job.role ? chipHtml(job.role, "neutral") : "") + claimed + badge;
   const effort = '<span class="rg-chips ag-effort">' +
     esc(shortEffort(job.effort, job.model, job.engineModel)) + "</span>";
-  const title = '<span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
+  const title = '<span class="rg-t ag-title" title="' + esc(label) + '" tabindex="0">' + esc(label) + "</span>" +
     (handed || "");
   const elapsed = '<span class="rg-num num" data-started-ms="' +
     esc(String(job.startedMs == null ? "" : job.startedMs)) + '">' + esc(elapsedText(job, now)) + "</span>";
@@ -230,7 +230,7 @@ function finishedHtml(job, pid) {
   const model = chipHtml(engineLabel(job.model, job.engineModel), "neutral");
   const effort = '<span class="rg-chips ag-effort">' +
     esc(shortEffort(job.effort, job.model, job.engineModel)) + "</span>";
-  const title = '<span class="rg-t ag-title" title="' + esc(label) + '">' + esc(label) + "</span>" +
+  const title = '<span class="rg-t ag-title" title="' + esc(label) + '" tabindex="0">' + esc(label) + "</span>" +
     chipHtml(word, kind);
   const elapsed = '<span class="rg-num num">' + esc(fmtDuration(job.elapsedS)) + "</span>";
   const tokenCell = '<span class="rg-num num" title="' + (tokens === MISSING ? "Unknown: not measured yet" :
@@ -294,7 +294,7 @@ function projectBlock(entry, now, showName) {
       groupedHtml(all.slice(0, hist.visible), wmap, function (job) {
         return finishedHtml(job, entry.id);
       }) + "</ol>" + historyControls(entry.id, all, hist)
-    : '<p class="ov-sum">No finished jobs yet.</p>';
+    : emptyHtml("No finished jobs yet.");
   return '<section class="ov-card" aria-label="Agents">' + heading + live +
     '<h3 class="ov-h">Recently finished jobs</h3>' + past + "</section>";
 }
@@ -321,11 +321,23 @@ export function pageAction(action, el) {
   const task = el.getAttribute("data-task");
   if (!task) return;
   const pid = el.getAttribute("data-project");
+  if (typeof window !== "undefined" && window.confirm && !window.confirm("Stop task " + task + "?")) return;
   run("task.stop", { id: task }, { project: pid, label: "Stop requested for " + task });
 }
 
 function rerender() {
   document.dispatchEvent(new Event("rb:render"));
+}
+
+function focusRevealedRow(prevIndex) {
+  if (typeof document === "undefined" || !document.querySelectorAll) return;
+  setTimeout(function () {
+    const rows = document.querySelectorAll(".ag-list .ag-row");
+    if (rows && rows.length > prevIndex) {
+      const target = rows[prevIndex].querySelector("input, a, button") || rows[prevIndex];
+      if (target && target.focus) target.focus();
+    }
+  }, 0);
 }
 
 // A row's checkbox: the selection follows it.
@@ -341,9 +353,11 @@ function pickRow(el) {
 function loadMore(pid) {
   const hist = historyOf(pid);
   if (hist.loading) return;
+  const prevVisible = hist.visible;
   if (hist.known > hist.visible) {
     hist.visible += AGENT_PAGE;
     rerender();
+    focusRevealedRow(prevVisible);
     return;
   }
   hist.loading = true;
@@ -370,6 +384,7 @@ function loadMore(pid) {
   }).finally(function () {
     hist.loading = false;
     rerender();
+    focusRevealedRow(prevVisible);
   });
 }
 
@@ -402,11 +417,15 @@ if (typeof document !== "undefined" && typeof document.addEventListener === "fun
   });
   document.addEventListener("click", function (event) {
     const el = event.target && event.target.closest ? event.target.closest("[data-agent]") : null;
-    if (!el) return;
-    const action = el.getAttribute("data-agent");
-    const pid = el.getAttribute("data-project");
-    if (action === "more") loadMore(pid);
-    else if (action === "remove") removeSelected(pid);
+    if (el) {
+      const action = el.getAttribute("data-agent");
+      const pid = el.getAttribute("data-project");
+      if (action === "more") loadMore(pid);
+      else if (action === "remove") removeSelected(pid);
+      return;
+    }
+    const titleEl = event.target && event.target.closest ? event.target.closest(".ag-title") : null;
+    if (titleEl) titleEl.classList.toggle("is-expanded");
   });
 }
 

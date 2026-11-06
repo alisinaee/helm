@@ -31,8 +31,8 @@ SHELL_TEST = os.path.join(TESTS, "web", "test_shell.py")
 RENDER = os.path.join(TESTS, "web", "render_head.mjs")
 FIXTURE = os.path.join(REPO, "fixtures", "demo", "alpha", "docs", "head.jsonl")
 # raised 2026-10-15 for spec 13 (cards) and the List table view; again for R10.16 (reply column, questions group); again
-# 2026-10-19 for the phone pass and the one-row Head header (H393)
-HEAD_CSS_MAX = 7424
+# 2026-10-19 for the phone pass and the one-row Head header (H393); again for M2 UI/UX fixes
+HEAD_CSS_MAX = 7600
 TRACKS = "20px 60px minmax(0,1fr) 32px"
 ROW_ID = re.compile(r'<div class="row-grid hd-row" data-id="(H\d+)"')
 INLINE = re.compile(r'\sstyle\s*=|\son[a-z]{3,}\s*=|<script', re.IGNORECASE)
@@ -304,7 +304,7 @@ class HeadRender(unittest.TestCase):
         self.assertIn('<div class="hd-foot"><div class="hd-acts">', html)
         self.assertIn('data-action="head-set" data-id="H1" data-status="needs-you"', html)
         self.assertIn('data-action="head-set" data-id="H1" data-status="declined"', html)
-        self.assertIn("Bind...", html)
+        self.assertTrue("Bind…" in html or "Bind..." in html)
 
     def test_whole_row_toggle_has_no_nested_buttons_inside_it(self):
         html = self.out["screen"]

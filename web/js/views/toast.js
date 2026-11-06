@@ -22,7 +22,7 @@ function find(id) {
 }
 
 function start(t) {
-  if (t.timer || t.paused) return;
+  if (t.timer || t.paused || t.undo) return;
   t.startedAt = Date.now();
   t.timer = window.setTimeout(function () {
     dismissToast(t.id);
@@ -43,13 +43,13 @@ export function showToast(opts) {
     text: String(opts.text || ""),
     tone: opts.tone === "danger" || opts.tone === "success" ? opts.tone : "neutral",
     undo: undo,
-    left: undo ? UNDO_MS : PLAIN_MS,
+    left: undo ? Infinity : PLAIN_MS,
     timer: null,
     startedAt: 0,
     paused: false,
   };
   toasts.push(t);
-  start(t);
+  if (!undo) start(t);
   onChange();
   return t.id;
 }
@@ -102,6 +102,6 @@ export function toastsHtml() {
     return '<div class="toast" data-tone="' + esc(t.tone) + '" data-toast="' + esc(t.id) + '">' +
       '<p class="toast-text">' + esc(t.text) + "</p>" + undo +
       '<button type="button" class="btn" data-action="toast-close" data-toast="' + esc(t.id) +
-      '" aria-label="Dismiss notification: ' + esc(t.text) + '">×</button></div>';
+      '" title="Close" aria-label="Dismiss notification: Close — ' + esc(t.text) + '">×</button></div>';
   }).join("");
 }

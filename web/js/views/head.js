@@ -554,7 +554,7 @@ function panelHtml(vm, row, opts, open) {
   if (!opts.readOnly) {
     for (const name of ["bind", "split", "merge"]) {
       acts.push('<button type="button" class="btn" data-action="head-form" data-form="' + name + '" data-id="' +
-        eid + '">' + esc(name[0].toUpperCase() + name.slice(1)) + "...</button>");
+        eid + '">' + esc(name[0].toUpperCase() + name.slice(1)) + "…</button>");
     }
   }
   const foot = acts.length ? '<div class="hd-foot"><div class="hd-acts">' + acts.join("") + "</div></div>" : "";

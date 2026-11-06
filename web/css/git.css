@@ -10,7 +10,7 @@
 .git-act{display:flex;gap:var(--sp-2)}
 .git-tabs{display:inline-flex;justify-self:start;gap:2px;padding:2px;background:var(--surface-2);
   border-radius:var(--r-card)}
-.git-tab{all:unset;box-sizing:border-box;height:var(--h-control);padding:0 var(--sp-3);display:inline-flex;
+.git-tab{all:unset;box-sizing:border-box;min-height:44px;height:auto;padding:0 var(--sp-3);display:inline-flex;
   align-items:center;border-radius:var(--r-control);font-size:var(--fs-13);color:var(--text-2);cursor:pointer}
 .git-tab:hover{color:var(--text-1)}
 .git-tab[aria-selected=true]{background:var(--surface-1);color:var(--text-1);box-shadow:var(--shadow-1)}
@@ -70,12 +70,18 @@
 .git-pick{all:unset;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
 .git-pick:focus-visible{outline:2px solid var(--focus)}
 .git-hist{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-4);align-items:start}
-.git-detail{min-width:0;display:grid;gap:var(--sp-2)}
+.git-detail{min-width:0;display:grid;gap:var(--sp-2);scroll-margin-top:var(--sp-3)}
 .git-file{--rg:minmax(0,1fr) 3.5rem 3.5rem;cursor:pointer}
 .git-file[aria-current=true]{background:var(--sel)}
 .git-file .ok{color:var(--success)}.git-file .bad{color:var(--danger)}
 .git-modes{justify-self:start;display:inline-flex;gap:var(--sp-1)}
 .git-raw{margin:0;overflow:auto;font:var(--fs-12) var(--font-mono)}
 .git-detail .d2h-wrapper{overflow:auto;max-height:70vh;--d2h-bg-color:var(--surface-1);--d2h-file-header-bg-color:var(--surface-2);--d2h-ins-bg-color:color-mix(in srgb,var(--success) 16%,transparent);--d2h-del-bg-color:color-mix(in srgb,var(--danger) 16%,transparent);--d2h-ins-label-color:var(--success);--d2h-del-label-color:var(--danger)}
-@media (min-width:900px){.git-split{grid-template-columns:minmax(0,26rem) minmax(0,1fr)}.git-right{display:block}}
+@media (max-width:899px){
+  .git-right:has(.git-dhead),.git-right.is-open{display:block;position:fixed;inset:auto 0 0 0;max-height:80vh;z-index:calc(var(--z-over) + 2);background:var(--surface-1);border-top:1px solid var(--line);border-radius:var(--r-card) var(--r-card) 0 0;box-shadow:var(--shadow-2);overflow:auto;overscroll-behavior:contain}
+  .git-dclose{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;margin-left:auto;padding:0 var(--sp-2);background:transparent;border:0;color:var(--text-2);cursor:pointer}
+}
+@media (min-width:900px){.git-split{grid-template-columns:minmax(0,26rem) minmax(0,1fr)}.git-right{display:block}.git-dclose{display:none}}
+@media (max-width:768px){.git-log:not(.rg-head){min-height:44px;height:auto}.git-fr{min-height:44px;height:auto}.git-pick{min-height:44px;display:inline-flex;align-items:center}}
 @media (max-width:640px){.git-log{--rg:5.5rem 4rem minmax(0,1fr) 3.5rem}.git-au{display:none}}
+

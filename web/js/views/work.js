@@ -180,7 +180,8 @@ function headHtml(ctx) {
     }) });
   const tags = ctx.view === "planner" ? "" : splitFeat(ctx.filters ? ctx.filters.f : "").rest;
   const active = tags ? '<p class="wk-active" role="status"><span>Filtered: ' + esc(tags.split(",").join(" · ")) +
-    '</span><button type="button" class="btn btn-small" data-wk="clear" data-focus="wk-reset">Reset</button></p>' : "";
+    '</span><button type="button" class="btn btn-small" data-wk="clear" data-focus="wk-reset" ' +
+    'aria-label="Reset filters">Reset</button></p>' : "";
   return '<div class="page-head"><p class="page-note">' + esc(note) + "</p></div>" +
     bar + active;
 }

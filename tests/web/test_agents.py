@@ -106,8 +106,8 @@ class AgentsTests(unittest.TestCase):
         depths = [int(d) for d in TREE_ROW.findall(html)]
         self.assertEqual(depths.count(0), 3)     # J1, J4 and J5 are the roots
         self.assertEqual(depths.count(1), 2)     # J2 and J3 are workers under J1
-        lead = html.index('<span class="rg-t ag-title" title="job J1">job J1</span>')
-        worker = html.index('<span class="rg-t ag-title" title="job J2">job J2</span>')
+        lead = html.index('class="rg-t ag-title" title="job J1"')
+        worker = html.index('class="rg-t ag-title" title="job J2"')
         self.assertLess(lead, worker)
         self.assertLess(worker, html.index("job J4"))
 

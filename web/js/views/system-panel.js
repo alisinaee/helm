@@ -39,7 +39,8 @@ function head(a, b, c) {
 
 // A related node: a link to this section that system.js turns into a selection (it keeps the URL).
 function go(id, label) {
-  return '<a class="rg-t" href="#" data-sys-go="' + esc(id) + '" title="' + esc(label) + '">' + esc(label) + "</a>";
+  return '<button type="button" class="btn-link rg-t" data-sys-go="' + esc(id) + '" title="' + esc(label) + '">' +
+    esc(label) + "</button>";
 }
 
 function section(title, rows, more) {

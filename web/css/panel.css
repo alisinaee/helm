@@ -37,9 +37,9 @@
 .d-list{display:grid;gap:var(--sp-1)}
 .d-list li{overflow-wrap:anywhere;min-width:0}.d-sec>*{min-width:0}.d-list .chip{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .d-btns{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
-.d-form{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2)}
-.d-form label{flex:1 0 100%;font-size:var(--fs-12);color:var(--text-2)}
-.d-form input{flex:1 1 140px;min-width:0;min-height:var(--h-control);padding:0 var(--sp-2);background:var(--surface-0);color:var(--text-1);border:1px solid var(--line);border-radius:var(--r-control)}
+.d-form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--sp-2)}
+.d-form label{display:flex;flex-direction:column;gap:var(--sp-1);flex:1 1 140px;min-width:0;font-size:var(--fs-12);color:var(--text-2)}
+.d-form input{width:100%;min-width:0;min-height:var(--h-control);padding:0 var(--sp-2);background:var(--surface-0);color:var(--text-1);border:1px solid var(--line);border-radius:var(--r-control);box-sizing:border-box}
 .d-sub{display:flex;align-items:flex-start;gap:var(--sp-2);min-height:var(--h-row)}
 .d-sub span{overflow-wrap:anywhere}
 .d-sub[data-done="true"] span{text-decoration:line-through;color:var(--text-2)}
@@ -52,6 +52,7 @@
 }
 @media (max-width:1199px){
 .side{z-index:calc(var(--z-over) + 1)}
+.side-tab,.side-close{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
 }
 @media (prefers-reduced-motion:reduce){
 .side-tab{transition:none}

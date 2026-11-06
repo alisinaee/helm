@@ -66,7 +66,7 @@ a.hx-ref:hover{text-decoration:underline}
 .hx-detail{min-height:0;overflow:auto;padding:var(--sp-3);background:var(--surface-1);border:1px solid var(--track);border-radius:var(--r-card)}
 .hx-dhead{display:flex;align-items:center;gap:var(--sp-2)}
 .hx-dtime{color:var(--text-3);font-size:var(--fs-12)}
-.hx-x{display:inline-grid;place-items:center;width:28px;height:28px;margin-left:auto;padding:0;background:none;border:0;border-radius:var(--r-control);color:var(--text-2);cursor:pointer}
+.hx-x{display:inline-grid;place-items:center;width:44px;height:44px;min-width:44px;min-height:44px;margin-left:auto;padding:0;background:none;border:0;border-radius:var(--r-control);color:var(--text-2);cursor:pointer}
 .hx-x:hover{background:var(--surface-2)}
 .hx-x .ico{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2}
 .hx-dsum{margin:var(--sp-2) 0;font-weight:600;line-height:1.5;overflow-wrap:anywhere}
@@ -86,7 +86,7 @@ a.hx-ref:hover{text-decoration:underline}
 .hx-day{top:0}
 .hx-page .hx-list>.act-row.row-grid{grid-template-columns:2.75rem minmax(0,1fr) auto 2.75rem;grid-template-areas:"t w w u" "t a k n";padding:var(--sp-1) var(--sp-2)}
 .hx-time{grid-area:t;align-self:start}
-.hx-open{grid-area:w;min-height:var(--h-small)}
+.hx-open{grid-area:w;min-height:44px}
 .hx-actor{grid-area:a}
 .hx-kind{grid-area:k}
 .hx-tok{grid-area:n}
@@ -109,3 +109,8 @@ a.hx-ref:hover{text-decoration:underline}
 .hx-tl-ticks{display:flex;justify-content:space-between;color:var(--text-3);font-size:var(--fs-11)}
 .hx-tip{position:fixed;z-index:var(--z-toast);pointer-events:none;max-width:320px;padding:var(--sp-1) var(--sp-2);background:var(--surface-2);color:var(--text-1);border:1px solid var(--track);border-radius:var(--r-control);font-size:var(--fs-12)}
 .hx-tip[hidden]{display:none}
+.act-undo { position: relative; }
+.act-undo::before { content: ""; position: absolute; width: 44px; height: 44px; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+@media (max-width: 1024px) { .hx-open { min-height: 44px; } }
+
+

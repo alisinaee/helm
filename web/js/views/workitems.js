@@ -173,7 +173,7 @@ function menuHtml(w) {
     items.push('<button type="button" data-wi="rank" data-work="' + esc(w.id) + '" data-dir="' + d + '">Move ' + d +
       "</button>");
   });
-  return '<details class="wk-menu wi-menu"><summary aria-label="Actions for ' + esc(w.id) + '">...</summary>' +
+  return '<details class="wk-menu wi-menu"><summary aria-label="Actions for ' + esc(w.id) + '">…</summary>' +
     '<div class="wk-menu-list">' + items.join("") + "</div></details>";
 }
 

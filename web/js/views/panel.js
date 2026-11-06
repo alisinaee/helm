@@ -251,6 +251,30 @@ function moveRow(step) {
   rows[next].focus();
 }
 
+function trapSideFocus(event) {
+  if (event.key !== "Tab" || event.defaultPrevented) return;
+  const side = document.getElementById("side");
+  if (!side || side.getAttribute("aria-modal") !== "true") return;
+  const focusables = Array.from(side.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), ' +
+    'textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  ));
+  if (!focusables.length) return;
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  if (event.shiftKey) {
+    if (document.activeElement === first || !side.contains(document.activeElement)) {
+      event.preventDefault();
+      last.focus();
+    }
+  } else {
+    if (document.activeElement === last || !side.contains(document.activeElement)) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+}
+
 export function initPanel(opts) {
   rerender = opts.render;
   const side = document.getElementById("side");
@@ -266,4 +290,5 @@ export function initPanel(opts) {
     moveRow(-1);
   });
   window.addEventListener("keydown", onEscape, true);
+  window.addEventListener("keydown", trapSideFocus, true);
 }

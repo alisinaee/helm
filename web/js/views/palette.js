@@ -80,7 +80,7 @@ export function itemsFor(snap, pid) {
     items.push({ id: t.id, title: t.title, kind: "task", run: () => openItem(pid, "work", t.id) });
   }
   for (const i of snap.issues || []) {
-    items.push({ id: i.id, title: i.title, kind: "issue", run: () => openItem(pid, "issues", i.id) });
+    items.push({ id: i.id, title: i.title, kind: "issue", run: () => openItem(pid, "work", i.id) });
   }
   for (const q of snap.questions || []) {
     items.push({ id: q.id, title: q.text, kind: "question", run: () => openItem(pid, "inbox", q.id) });

@@ -64,6 +64,7 @@ background: var(--surface-2); border: 1px solid var(--line); border-radius: var(
 @media (hover: none) { .act-undo { opacity: 1 } }
 @media (max-width: 599px) {
 .ov-actions .btn { min-height: 44px }
+.act-undo { min-width: 44px; min-height: 44px }
 }
 .ag-list, .ag-kids { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2) }
 .ag-kids { padding-left: var(--sp-3); border-left: 2px solid var(--track) }

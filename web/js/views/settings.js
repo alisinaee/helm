@@ -84,8 +84,8 @@ function singleKeysHtml() {
   const on = singleKeysOn() ? "on" : "off";
   return '<p class="lim-label">Single-key shortcuts</p>' +
     choiceHtml("Single-key shortcuts", SINGLE_KEYS_SWITCH, on, "set-single-keys") +
-    '<p class="page-note">Keys such as ? [ ] and the letters for items. Turn them off if they get in the way. ' +
-    "Ctrl+K and Esc still work.</p>";
+    '<p class="page-note">Keyboard shortcuts like ?, [, ], and single-letter task actions (s, d, h, x). ' +
+    "Disable them if they interfere with typing. Ctrl+K and Esc remain active.</p>";
 }
 
 // The shortcut list from keys.js, the same rows as the ? help: one line per shortcut, so it wraps on a phone.
@@ -276,7 +276,8 @@ export function sectionView() {
     '<p class="lim-label">Mode</p>' + choiceHtml("Mode", MODES, ui.mode, "set-color-mode") +
     '<p class="lim-label">Density</p>' + choiceHtml("Density", DENSITIES, ui.density, "set-density") +
     "</section>" +
-    '<section class="ov-card" aria-labelledby="set-phone"><h3 id="set-phone" class="lim-h">Phone</h3>' +
+    '<section class="ov-card" aria-labelledby="set-phone">' +
+    '<h3 id="set-phone" class="lim-h">Mobile Access (Read-Only)</h3>' +
     '<p class="page-note">Read only on a phone: it can see every project and answer questions. It cannot change ' +
     "limits, overrides, rules, caps or approvals.</p></section>" +
     '<section class="ov-card" aria-labelledby="set-keys"><h3 id="set-keys" class="lim-h">Keyboard shortcuts</h3>' +

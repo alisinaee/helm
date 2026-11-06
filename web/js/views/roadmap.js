@@ -142,11 +142,12 @@ function laneHtml(vm, snap, phase, doing) {
     '<span class="num lane-open">' + esc(fmtCount(tasks.length)) + " open</span>" +
     (nowDoing ? chipHtml("▶ " + fmtCount(nowDoing) + " doing", "success") : "") + "</div>";
   const body = (cards + more) || '<li class="lane-empty">No open tasks in this phase.</li>';
-  return '<li class="lane"><div class="lane-head"><button type="button" class="lane-toggle" aria-expanded="' + open +
+  return '<li class="lane"><div class="lane-head"><h2 class="lane-heading">' +
+    '<button type="button" class="lane-toggle" aria-expanded="' + open +
     '" aria-controls="lane-' + id + '-body" data-action="toggle-item" data-item="lane:' + id +
     '" data-focus="item-lane:' + id + '"><span class="lane-caret" aria-hidden="true">' + (open ? "▾" : "▸") +
     '</span><span class="lane-id">' + id + '</span><span class="lane-name" title="' + esc(phase.name) + '">' +
-    esc(phase.name) + "</span></button>" +
+    esc(phase.name) + "</span></button></h2>" +
     '<div class="lane-act row-grid"><span class="lane-appr">' + act + "</span>" +
     phaseCopyHtml(vm.route.id, phase) + "</div>" + stats + "</div>" +
     '<ol class="lane-cards" id="lane-' + id + '-body" data-lane="' + id + '" aria-label="Tasks in ' + id + '"' +
@@ -197,11 +198,15 @@ function pageHead(vm, snap) {
   if (view === "map") {
     return '<div class="page-head rmm-head">' + note + tabs + "</div>";
   }
-  // The view tabs share the title row, pushed to the right edge (rm-title-row in flow.css).
+  const legend = '<ul class="rm-legend" role="list" aria-label="Status legend">' +
+    '<li><span class="rm-glyph" aria-hidden="true">●</span> Done</li>' +
+    '<li><span class="rm-glyph" aria-hidden="true">◐</span> In progress</li>' +
+    '<li><span class="rm-glyph" aria-hidden="true">○</span> To do</li>' +
+    '<li><span class="rm-glyph" aria-hidden="true">⏸</span> On hold</li>' +
+    '<li><span class="rm-glyph" aria-hidden="true">▶</span> doing = a job is running</li>' +
+    '</ul><p class="page-note rm-legend-note">Done tasks are not listed.</p>';
   return '<div class="page-head"><div class="rm-title-row">' + tabs + "</div>" +
-    note + "</div>" +
-    '<p class="page-note">● done  ◐ in progress  ○ to do  ⏸ on hold  ▶ doing = a job is running. ' +
-    "Done tasks are not listed.</p>";
+    note + "</div>" + legend;
 }
 
 export function sectionView(vm) {

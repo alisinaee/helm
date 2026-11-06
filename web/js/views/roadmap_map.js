@@ -140,8 +140,9 @@ function overlayHtml() {
     ctl("full", fullWord(), fullWord()) + "</div>";
   const space = '<div class="rmm-og" role="group" aria-label="Spacing"><span class="rmm-lbl">Spacing</span>' +
     '<button type="button" class="btn btn-small" data-rmm-space="-1" aria-label="Less space" title="Less space ([)">' +
-    "−</button>" + '<span class="rmm-sp-v" data-rmm-space="reset" title="Double-click to reset">' +
-    spaceText(ui.spacing) + "</span>" +
+    "−</button>" + '<button type="button" class="btn btn-small rmm-sp-v" data-rmm-space="reset" ' +
+    'aria-label="Reset spacing (' + spaceText(ui.spacing) + ')" title="Reset spacing">' +
+    spaceText(ui.spacing) + "</button>" +
     '<button type="button" class="btn btn-small" data-rmm-space="1" aria-label="More space" title="More space (])">' +
     "+</button></div>";
   return '<div class="rmm-ov">' + zoom + space + "</div>";
@@ -622,8 +623,12 @@ function onClick(e) {
     return;
   }
   const sp = t.closest("[data-rmm-space]");
-  if (sp && sp.getAttribute("data-rmm-space") !== "reset") {
-    changeSpacing(Number(sp.getAttribute("data-rmm-space")));
+  if (sp) {
+    if (sp.getAttribute("data-rmm-space") === "reset") {
+      setSpacing(1);
+    } else {
+      changeSpacing(Number(sp.getAttribute("data-rmm-space")));
+    }
     return;
   }
   const op = t.closest("[data-rmm-op]");
