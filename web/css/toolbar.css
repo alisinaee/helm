@@ -49,4 +49,4 @@
 .tb-row>.tb-seg{flex:0 1 auto}
 .tb-row>.tb-filters,.tb-row>.tb-acts{margin-left:auto}}
 @media (prefers-reduced-motion:reduce){.tb *{transition:none}}
-@media (max-width:640px){.tb-acts{margin-left:0;width:100%}.tb-acts>.btn{width:100%;justify-content:center}}
+@media (max-width:640px){.tb-acts:empty{display:none}.tb-acts:not(:empty){margin-left:0;width:100%}.tb-acts>.btn{width:100%;justify-content:center}}

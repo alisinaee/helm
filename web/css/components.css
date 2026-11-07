@@ -443,3 +443,4 @@ text-align: right
 .app[data-nav="mini"] .nav-brand {justify-content: center; padding-inline: 0}
 .main > .ov-card + .ov-card, .main > .ov-card + .tb + .ov-card { margin-top: var(--sp-4) }
 .rg-agent > .rg-main { max-width: 100%; justify-self: stretch }
+.nz-row>a,.wi-t>a,.empty p>a,.ov-more a{display:inline-flex;align-items:center;min-height:24px;min-width:24px}

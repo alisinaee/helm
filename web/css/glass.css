@@ -260,7 +260,7 @@ body::before {
     height: 16px;
     padding: 0 4px;
     border-radius: 999px;
-    font-size: 10px;
+    font-size: var(--fs-11);
     font-weight: 700;
     line-height: 16px;
     text-align: center;
@@ -849,7 +849,6 @@ h1, h2, h3, .page-title, .qc-text { text-wrap: balance }
   box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 10px color-mix(in srgb, var(--accent) 35%, transparent) }
 .app[data-nav="mini"] .nav .nav-i:hover:not([aria-current="page"]) { transform: none }
 
-/* Side menu, selected item (final rule): one flat tint and a 3px accent edge. No ring or radial fill, in every state. */
 :root[data-theme] .app[data-nav] .nav .nav-i[aria-current="page"] {
   background: var(--sel);
   color: var(--accent);
