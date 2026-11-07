@@ -1129,6 +1129,10 @@ function mountMaps() {
   activeMap = { pid: st.pid, api: api, graph: st.graph, flow: st.flow, svg: host.querySelector("svg"),
     focus: st.focus, fold: null, mini: null, st: st };
   if (opening) openAtNow(api, st.flow);
+  // The host can still be settling its size on this frame (tablet and phone layouts); fit again once it has.
+  if (opening) window.requestAnimationFrame(function () {
+    if (activeMap && activeMap.api === api) openAtNow(api, st.flow);
+  });
   host.addEventListener("pointerdown", function (e) {
     const fold = closestEl(e.target, "[data-wf-fold]");
     if (activeMap) activeMap.fold = fold ? fold.getAttribute("data-wf-fold") : null;

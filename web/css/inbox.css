@@ -67,7 +67,7 @@
 .git-gh,.git-fr{min-height:var(--h-touch);height:auto;gap:var(--sp-1)}.git-fr{grid-template-columns:var(--h-touch) 1fr}
 .git-cb{display:grid;place-items:center;width:var(--h-touch);height:var(--h-touch)}
 .ov-more a,.ov-chip a,.nz-txt a{display:inline-flex;align-items:center;min-height:var(--h-touch)}
-.band-btns{display:flex;align-items:center;gap:var(--sp-2)}.band-btns>.btn{min-height:var(--h-touch)}
+.band-btns{display:flex;align-items:center;gap:var(--sp-2)}.band-btns>.btn{min-height:var(--h-touch)}.band-btns>.ref-copy{margin-left:0}
 .wi-card{grid-template-columns:1fr var(--h-touch)}.wi-card .wk-card-top{display:contents}
 .wi-chips,.wi-prog,.wk-meta{grid-column:1/-1}.wi-chips{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
 .wi-card .wi-menu{grid-row:2;grid-column:2;margin:0;justify-self:end}.wi-d summary{overflow:hidden;text-overflow:ellipsis}
