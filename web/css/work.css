@@ -53,10 +53,18 @@
 .wk-tabs{display:flex;flex-wrap:wrap;gap:var(--sp-1)}
 .wk-tab,.wk-chip,.wk-views button,.wk-card .btn,.wk-menu summary{min-height:44px}
 .wk-chip{max-width:48%;text-align:left}
+}
+@media (max-width:640px){
+.wk-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.wk-tab{display:flex;align-items:center;justify-content:space-between;padding:0 var(--sp-3);min-width:0}
+.wk-tab .num{font-variant-numeric:tabular-nums}
+.wk-col-head{align-items:center;justify-content:space-between;min-height:44px}
+}
+@media (max-width:767px){
 .wk-table thead,.wk-c-sel,.wk-c-phase,.wk-bulk{display:none}
 .wk-table,.wk-table tbody{display:block;width:100%}
-.wk-table tr{display:flex;flex-wrap:wrap;gap:4px var(--sp-2);padding:var(--sp-2) 0;min-height:44px;border-bottom:1px solid var(--track);box-sizing:border-box;width:100%}
 .wk-table{table-layout:auto}
+.wk-table tr{display:flex;flex-wrap:wrap;gap:4px var(--sp-2);padding:var(--sp-2) 0;min-height:44px;border-bottom:1px solid var(--track);box-sizing:border-box;width:100%}
 .wk-table td,.wk-table th{height:auto;border:0;padding:0;white-space:normal;width:auto}
 .wk-table .wk-c-title{order:2;flex:1 1 100%;width:auto}
 .wk-table .wk-c-title{min-width:0}
@@ -72,7 +80,6 @@
 .wk-tree-row>.wk-word{grid-column:2;grid-row:2}
 .wk-tree-row>.rg-chips{grid-column:2;grid-row:3;justify-self:start}
 }
-/* Work items (R9.20, R9.23): P chip track, Work board/list rows, group header rows */
 .wi-p{min-width:2rem;justify-content:center;font-variant-numeric:tabular-nums}.wi-p0{color:var(--danger)}.wi-p1{color:var(--warning)}
 .wi-prog{display:grid;grid-template-columns:minmax(0,1fr) 3rem;gap:var(--sp-2);align-items:center}.wi-n{text-align:right}
 .wi-d summary{cursor:pointer}.wi-outcome{margin:var(--sp-1) 0;color:var(--text-2);font-size:var(--fs-12)}
@@ -86,3 +93,4 @@
 .wi-fold>summary{cursor:pointer;padding:var(--sp-2) 0}
 .ag-wg,.wf-wg th{background:var(--surface-2);color:var(--text-1);padding:var(--sp-1) var(--sp-2);font-size:var(--fs-12);text-align:left}
 @media (max-width:767px){.wi-head{display:none}.wi-row,.wi-row-ov{grid-template-columns:1fr 1fr;padding:var(--sp-2) 0}.wi-t{grid-column:1 / -1;order:-1}.wi-c::before{content:attr(data-l) ": ";color:var(--text-3)}.wi-t::before{content:none}.wi-task{grid-template-columns:4.5rem 1fr 1fr}}
+

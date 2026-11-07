@@ -438,9 +438,10 @@ function fileRows(list, pid) {
     const cut = path.lastIndexOf("/");
     const dir = cut > 0 ? path.slice(0, cut + 1) : "";
     const on = sel.wkey === pid + "\n" + path;
-    return '<li class="git-fr"><input type="checkbox" name="path" value="' + esc(path) +
+    return '<li class="git-fr"><label class="git-cb">' +
+      '<input type="checkbox" name="path" value="' + esc(path) +
       '" aria-label="' + esc("Commit " + path) +
-      '"><button type="button" class="git-fb" data-git="wfile" data-path="' + esc(path) +
+      '"></label><button type="button" class="git-fb" data-git="wfile" data-path="' + esc(path) +
       '" aria-current="' + on + '" title="' + esc(path) + '"><span class="git-st git-st-' +
       esc(letter.toLowerCase()) + '" title="' + esc(code) + '">' + esc(letter) + '</span><span class="git-fn"><b>' +
       esc(path.slice(cut + 1)) + "</b>" + (dir ? "<i>" + esc(dir) + "</i>" : "") + "</span></button></li>";
@@ -496,8 +497,9 @@ function changesHtml(pid, entry) {
     return parts.join("");
   }
   const canCommit = !s.detached && !s.in_progress;
-  const left = '<div class="git-left"><div class="git-gh"><input type="checkbox" data-git="all" ' +
-    'aria-label="Select all files"><span>Changes (' + files.length + ')</span></div>' +
+  const left = '<div class="git-left"><div class="git-gh"><label class="git-cb">' +
+    '<input type="checkbox" data-git="all" aria-label="Select all files"></label>' +
+    '<span>Changes (' + files.length + ')</span></div>' +
     '<ul class="git-list" aria-label="Changed files">' + fileRows(files, pid) + "</ul>" +
     (canCommit ? commitPanel() : "") + "</div>";
   const hasDiff = Boolean(sel.wkey && sel.wkey.indexOf(pid + "\n") === 0);

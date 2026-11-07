@@ -1,4 +1,3 @@
-/* Work board (R7.24, R7.25): quick add, card menu, kind badge, drag states. Split from work.css for its size cap. */
 .wi-board{grid-template-columns:repeat(6,minmax(0,1fr))}
 .wi-bar{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
 .wi-bar .wk-hint{flex:1 1 12rem}
@@ -20,4 +19,19 @@
 .wi-kind-bug,.wi-kind-blocker{color:var(--danger)}
 .wi-kind-risk{color:var(--warning)}
 @media (max-width:1023px){.wi-board{display:block}}
+@media (max-width:640px){
+.wi-bar>.btn,.wi-bar>.wk-chip{min-height:44px;flex:0 0 auto}
+.wi-bar .wk-hint{flex:1 1 100%;order:3}
+.lane-head{align-items:center}
+.lane-heading{grid-area:1/1/2/4;margin:0}
+.lane-act>.ref-copy{grid-row:1;width:44px;height:44px}
+.lane-stats>.chip{grid-row:4;justify-self:start}
+.rc-move{--rg:1fr 1fr;--ref-col:44px}
+.wi-plus{min-width:44px;min-height:44px}
+.wi-card .wk-card-top{align-items:center;min-height:44px}
+.wi-menu{margin-block:calc(var(--sp-1) * -1)}
+.wi-d summary{list-style:none}
+}
 @media (max-width:767px){.wi-add{grid-template-columns:1fr 1fr}.wi-add label:first-child,.wi-out{grid-column:1/-1}.wi-add input,.wi-add select,.wi-menu summary{min-height:44px}.wi-menu summary{min-width:44px}}
+
+@media (max-width:640px){.wk{grid-template-columns:minmax(0,1fr)}.wk>*{min-width:0}}

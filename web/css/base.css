@@ -74,6 +74,7 @@ a {
   outline: none
 }
 @media (max-width: 640px) {
+html:root{--fs-11:12px;--ref-col:var(--h-touch,44px)}
 button:not(.ref-copy):not(.hx-x),
 select,
 a.btn {

@@ -178,6 +178,6 @@ export function usageView(vm) {
     sum: refSummary("section", u.loaded ? 2 : 0) });
   const old = !u.loaded || u.stale || u.veryOld;
   return '<div class="band' + compact + '">' + body + entryHtml(old) +
-    '<div class="band-actions">' + statusLine(u) + updatedHtml + syncButton + copy +
-    syncLine(u.sync, u) + "</div></div>";
+    '<div class="band-actions">' + statusLine(u) + updatedHtml +
+    '<div class="band-btns">' + syncButton + copy + "</div>" + syncLine(u.sync, u) + "</div></div>";
 }

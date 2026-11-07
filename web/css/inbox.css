@@ -10,14 +10,10 @@
 .ib-item{border-top:1px solid var(--line)}
 .ib-item:first-child{border-top:0}
 .is-old .ib-row{opacity:.7}
-/* Rows follow the Head list's own grid language (web/css/head.css .hd-row): fixed tracks for kind/age/actions,
-   same padding, radius and hover highlight across the full row, so Inbox and Head read as one table style. */
+/* Rows follow the Head list grid (head.css .hd-row). */
 .ib-row.row-grid{position:relative;grid-template-columns:84px minmax(0,1fr) auto 3rem 28px 28px;column-gap:var(--sp-2);row-gap:2px;padding:var(--sp-2);border-radius:var(--r-card);align-items:center}
 .ib-row:hover,.is-open>.ib-row{background:var(--surface-2)}
-/* The whole row is the hit target, styled invisible/full-row like Head's row toggle (web/css/head.css .hd-hit):
-   an absolutely positioned button under the row's text (it takes no grid track), so it does not look like a boxed
-   button, but a click or Enter/Space anywhere on the row expands or collapses it. Real links/buttons in the row
-   (copy, task link, accept/open) are raised above it so they keep getting their own clicks. */
+/* The whole row is the hit target: an invisible full-row button under the text; links/buttons sit above it (z-index). */
 .ib-hit{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;background:none;cursor:pointer;color:inherit}
 .ib-row a,.ib-row button:not(.ib-hit){position:relative;z-index:1}
 .ib-kind{min-width:0;overflow:hidden}
@@ -52,13 +48,27 @@
 .ib-body .ib-link:hover{color:var(--text-1);background:var(--surface-2)}
 .ib-st .ib-link{margin-left:-10px}
 @media (max-width:599px){
-.ib-row.row-grid{grid-template-columns:auto minmax(0,1fr) auto 28px 44px;column-gap:8px}
+.ib-row.row-grid{grid-template-columns:auto minmax(0,1fr) auto var(--ref-col) 44px;column-gap:8px}
 .ib-row>.ib-task{grid-column:3;grid-row:1}
 .ib-row>.rg-num{grid-column:2;grid-row:1;justify-self:start}
 .ib-row>.ref-copy{grid-column:4;grid-row:1}
 .ib-row>.btn{grid-column:5;grid-row:1;width:44px;height:44px}
 .ib-row>.ib-chev{grid-column:5;grid-row:1}
-.ib-row>.ib-main{grid-column:1/-1;grid-row:2;min-height:44px}
+.ib-row>.ib-main{grid-column:1/-1;grid-row:2;min-height:44px;white-space:normal;overflow-wrap:anywhere}
+.ib-row .rg-t{white-space:normal;overflow:visible}
+.ib-row>.ref-copy,.ib-head>.ref-copy{width:var(--ref-col);height:var(--ref-col);align-self:center}
+.ib-body .qc-key{font-size:var(--fs-12)}
 .ib-body{padding-left:0}
 .ib-body :is(.btn,input),.ib-body .ib-form input{min-height:44px;height:auto}
+}
+.wi-chips{display:contents}.ib-h{display:none}
+@media (max-width:640px){
+.ib-head{justify-content:space-between}.ib-h{display:block}
+.git-gh,.git-fr{min-height:var(--h-touch);height:auto;gap:var(--sp-1)}.git-fr{grid-template-columns:var(--h-touch) 1fr}
+.git-cb{display:grid;place-items:center;width:var(--h-touch);height:var(--h-touch)}
+.ov-more a,.ov-chip a,.nz-txt a{display:inline-flex;align-items:center;min-height:var(--h-touch)}
+.band-btns{display:flex;align-items:center;gap:var(--sp-2)}.band-btns>.btn{min-height:var(--h-touch)}
+.wi-card{grid-template-columns:1fr var(--h-touch)}.wi-card .wk-card-top{display:contents}
+.wi-chips,.wi-prog,.wk-meta{grid-column:1/-1}.wi-chips{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
+.wi-card .wi-menu{grid-row:2;grid-column:2;margin:0;justify-self:end}.wi-d summary{overflow:hidden;text-overflow:ellipsis}
 }

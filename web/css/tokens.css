@@ -129,7 +129,6 @@
   --shadow-1: 0 1px 2px rgba(21, 25, 31, 0.12);
   --shadow-2: 0 8px 24px rgba(21, 25, 31, 0.18)
 }
-/* Tokens page (R11.6): tabs, controls, charts. Colours only from the tokens above. */
 .tk-panel[hidden], .tk-tip[hidden] { display: none }
 .tk-panel { display: grid; gap: var(--sp-3); min-width: 0; align-content: start }
 .tk-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2) var(--sp-3); margin-bottom: var(--sp-3) }
@@ -139,9 +138,12 @@
 .tk-tabs { justify-self: start; margin-bottom: var(--sp-3); max-width: 100% }
 .tk-tabs > button { min-height: var(--h-control) }
 @media (max-width: 640px) {
-  .tk-tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; max-width: 100%; }
+  .tk-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(5rem, 1fr); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; justify-self: stretch }
   .tk-tabs::-webkit-scrollbar { display: none }
-  .tk-tabs > button { flex: none; white-space: nowrap; min-height: 44px }
+  .tk-tabs > button { white-space: nowrap; min-height: 44px }
+  .usage-entry { display: grid; grid-template-columns: 1fr 1fr; align-items: end }
+  .usage-entry .btn { grid-column: 1 / -1 }
+  .tk-ax, .tk-lb, .lv-scale { font-size: 12px }
 }
 .tk-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3) }
 .tk-chips { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2) }
@@ -165,7 +167,7 @@
 .tk-svg-s { max-width: 360px }
 .tk-gl { stroke: var(--track); stroke-width: 1 }
 .tk-ax, .tk-lb { fill: var(--text-3); font-size: 11px; font-family: var(--font-ui) }
-.tk-lb { fill: var(--text-2); font-size: 11px }
+.tk-lb { fill: var(--text-2) }
 .tk-val { font-variant-numeric: tabular-nums }
 .tk-hit { fill: transparent }
 .tk-bar:hover .tk-hit { fill: var(--sel) }
@@ -175,7 +177,7 @@
 .tk-ln-haiku { stroke: var(--m-haiku); fill: var(--m-haiku) } .tk-ln-sonnet { stroke: var(--m-sonnet); fill: var(--m-sonnet) }
 .tk-ln-opus { stroke: var(--m-opus); fill: var(--m-opus) } .tk-ln-other { stroke: var(--unknown); fill: var(--unknown) }
 .tk-ln-week { stroke: var(--accent); fill: var(--accent) }
-.tk-path.tk-ln-haiku, .tk-path.tk-ln-sonnet, .tk-path.tk-ln-opus, .tk-path.tk-ln-other, .tk-path.tk-ln-week { fill: none }
+.tk-path[class*="tk-ln-"] { fill: none }
 .tk-dot { stroke: none; opacity: 0 }
 .tk-dot:hover { opacity: 1 }
 .tk-ring, .tk-seg { fill: none; stroke-width: 16 }
@@ -210,7 +212,6 @@
 .spend-list .tk-spend > :last-child { white-space: nowrap; overflow-wrap: normal }
 @media (prefers-reduced-motion: no-preference) { .tk-seg, .tk-dot { transition: all var(--t-fast) } }
 
-/* R11.8 accounts: one table. The list owns the tracks; header and rows take them through subgrid. */
 .spend-list.tk-acct-list {
   --acct-n: 3; --acct-cols: minmax(0, 1fr) minmax(0, 1.2fr) 11ch 5ch 5ch 6ch repeat(var(--acct-n), max-content);
   display: grid; grid-template-columns: var(--acct-cols); gap: var(--sp-2) var(--sp-3); width: 100%; min-width: 0 }
@@ -251,7 +252,6 @@
 .tk-st-bad { color: var(--warning) }
 .tk-acct-new { margin-top: var(--sp-1) }
 .tk-acct-cell::before { content: none }
-/* R11.145: add-account form is one flex row (wraps on narrow screens); fields stack label over input, buttons align to the field bottoms */
 .tk-acct-add { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--sp-2) var(--sp-3); margin: 0 0 var(--sp-2) }
 .tk-acct-add label { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0 }
 .tk-acct-add input, .tk-acct-add select { min-width: 0 }
@@ -271,7 +271,6 @@
   .tk-menu-list { right: auto; left: 0 }
 }
 
-/* Limits v2 (R11.126): one card per window, a usage bar with a draggable stop handle */
 .lv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3) }
 .lv-card { display: grid; gap: var(--sp-2); min-width: 0 }
 .lv-top, .lv-head, .lv-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) }
@@ -293,7 +292,6 @@
 .lv-unit, .lv-once { color: var(--text-2); font-size: var(--fs-12) }
 @media (max-width: 899px) { .lv-grid { grid-template-columns: minmax(0, 1fr) } }
 
-/* R11.135: on/off switch (track and knob), green when on, neutral when off; the On/Off word stays for a11y */
 .btn.sw { position: relative; min-width: 4.5rem; padding-inline: 1.9rem .6rem; border-radius: 999px; font-weight: 600;
   transition: background-color .15s, border-color .15s, color .15s }
 .btn.sw::before { content: ""; position: absolute; top: 50%; left: 4px; width: .9rem; height: .9rem; border-radius: 50%;
@@ -302,7 +300,6 @@
 .btn.sw[aria-checked="true"] { background: color-mix(in srgb, var(--success) 22%, var(--surface-2));
   border-color: var(--success); color: var(--success); padding-inline: .6rem 1.9rem }
 .btn.sw[aria-checked="true"]::before { background: var(--success); left: auto; right: 4px }
-/* the chosen On of an On/Off radio pair reads green too */
 .rule-tabs .btn[role="radio"][data-value="on"][aria-checked="true"] { border-color: var(--success); color: var(--success);
   background: color-mix(in srgb, var(--success) 22%, var(--surface-2)) }
 @media (prefers-reduced-motion: reduce) { .btn.sw, .btn.sw::before { transition: none } }

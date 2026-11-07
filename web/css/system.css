@@ -35,11 +35,11 @@
 @media (max-width:640px){
 .sys{height:calc(100vh - var(--h-top) - var(--h-bnav) - var(--sp-6) - env(safe-area-inset-bottom,0px))}
 .sys-seg-l{display:none}
-.sys-ov-tr{left:var(--sp-2);right:var(--sp-2);max-width:none;overflow:visible;flex-wrap:wrap;white-space:normal;justify-content:flex-end;row-gap:var(--sp-1)}
+.sys-lbl{font-size:12px}
 .sys-seg{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;max-width:100%;scrollbar-width:none}
 .sys-seg::-webkit-scrollbar{display:none}
-.sys-seg .btn{flex:0 0 auto;white-space:nowrap;padding:0 var(--sp-3)}
-.sys-ov-tr{max-width:calc(100vw - 32px);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.sys-seg .btn,.sys-ov-tr .btn{min-width:44px}.sys-seg .btn{flex:0 0 auto;white-space:nowrap;padding:0 var(--sp-3)}
+.sys-ov-tr{left:var(--sp-2);right:var(--sp-2);max-width:calc(100vw - 32px);flex-wrap:wrap;white-space:normal;justify-content:flex-end;row-gap:var(--sp-1);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .sys-ov-tr::-webkit-scrollbar{display:none}
 .sys-ov-tr > *{flex:0 0 auto}
 .sys-ov-bl{max-width:calc(100vw - 32px);overflow-x:auto;-webkit-overflow-scrolling:touch}

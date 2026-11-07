@@ -180,8 +180,9 @@ function menuHtml(w) {
 function cardHtml(pid, w) {
   return '<li class="wk-card wi-card' + (w.status === "Done" ? " is-done" : "") + '" data-work-item="' + esc(w.id) +
     '" tabindex="0" data-focus="wi-card-' + esc(w.id) + '"' + (canDrag() ? ' draggable="true"' : "") +
-    '><div class="wk-card-top"><span class="wk-id">' + esc(w.id) + "</span>" + prioChip(w.prio) + kindBadge(w) +
-    badgesHtml(w) + menuHtml(w) + "</div>" + drawerHtml(pid, w) + progressHtml(w) + '<div class="wk-meta"><span>' +
+    '><div class="wk-card-top"><span class="wi-chips"><span class="wk-id">' + esc(w.id) + "</span>" +
+    prioChip(w.prio) + kindBadge(w) + badgesHtml(w) + "</span>" + menuHtml(w) + "</div>" + drawerHtml(pid, w) +
+    progressHtml(w) + '<div class="wk-meta"><span>' +
     ownerText(w) + "</span>" + acceptHtml(pid, w) + "</div></li>";
 }
 
