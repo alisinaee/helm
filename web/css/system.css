@@ -59,3 +59,5 @@
 .sys-ico{flex:none}
 .sys-sep{align-self:stretch;width:1px;margin:2px 0;background:var(--line)}
 .sys-sp{min-width:44px;font-variant-numeric:tabular-nums}
+
+@media (max-width:1023px){.sys-ov-tl{top:var(--sp-2);left:var(--sp-2)}.sys-ov-tr{top:calc(var(--sp-2)*2 + 40px);left:var(--sp-2);right:auto;flex-wrap:wrap;max-width:calc(100% - var(--sp-4))}.sys-ov-tr ~ .empty{margin-top:calc(var(--sp-2)*3 + 84px)}}
