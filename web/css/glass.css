@@ -196,12 +196,14 @@ body::before {
     white-space: nowrap;
     color: var(--text-1);
     font-weight: 600;
+    font-size: var(--fs-17);
   }
   .crumb-sep {
     color: var(--text-3);
     font-size: var(--fs-12);
   }
   .crumb-proj {
+    font-size: var(--fs-15);
     max-width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;

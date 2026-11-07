@@ -86,7 +86,7 @@
 }
 @media (max-width:640px){
 .app{height:auto;min-height:100vh;overflow-x:hidden}
-.main{overflow-y:visible}
+.main{overflow-y:visible;overscroll-behavior:auto}
 .app,.app[data-nav]{grid-template-columns:minmax(0,1fr);grid-template-rows:var(--h-top) minmax(0,1fr);grid-template-areas:"top" "main";padding-bottom:calc(var(--h-bnav) + env(safe-area-inset-bottom,0px))}
 .nav{display:none}
 .bnav{display:block;position:fixed;left:0;right:0;bottom:0;height:calc(var(--h-bnav) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;z-index:var(--z-over)}
