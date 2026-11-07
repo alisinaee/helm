@@ -234,19 +234,20 @@ body::before {
     border-radius: 999px;
   }
   .bnav {
-    left: var(--sp-2);
-    right: var(--sp-2);
-    bottom: calc(var(--sp-2) + env(safe-area-inset-bottom, 0px));
+    left: 0;
+    right: 0;
+    bottom: 0;
     height: var(--h-bnav);
     background: var(--surface-1);
-    border: 1px solid var(--glass-edge);
-    border-radius: 16px;
-    box-shadow: var(--glass-shadow);
+    border: 0;
+    border-top: 1px solid var(--track);
+    border-radius: 0;
+    box-shadow: none;
   }
   .bnav-i {
     position: relative;
-    border-radius: var(--r-card);
-    margin: 2px;
+    border-radius: 0;
+    margin: 0;
   }
   .bnav-i .nav-b:not([data-dot]) {
     position: absolute;
@@ -313,10 +314,10 @@ body::before {
       radial-gradient(40% 35% at 85% 18%, var(--glow-sphere), transparent 75%),
       radial-gradient(40% 45% at 10% 100%, var(--field-b), transparent 70%);
   }
-  :root[data-theme="obsidian"] .bnav-i { border-radius: var(--r-card); }
+  :root[data-theme="obsidian"] .bnav-i { border-radius: 0; }
   :root[data-theme="obsidian"] .bnav-i[aria-current="page"] {
-    border-radius: var(--r-card);
-    box-shadow: none;
+    border-radius: 0;
+    box-shadow: inset 0 2px 0 var(--accent);
     background: var(--sel);
     color: var(--accent);
   }
@@ -479,7 +480,7 @@ select:hover {
 }
 :root[data-theme="obsidian"] .lv-scale { font-family: var(--font-mono); letter-spacing: 0 }
 :root[data-theme="obsidian"] .nav-i,
-:root[data-theme="obsidian"] .bnav-i { border-radius: 999px; }
+:root[data-theme="obsidian"] .bnav-i { border-radius: 0; }
 :root[data-theme="obsidian"] .nav-i[aria-current="page"] {
   background: var(--glass-fill-strong);
   color: var(--accent);

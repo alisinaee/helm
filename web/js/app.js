@@ -610,6 +610,40 @@ function onBnavWheel(event) {
   event.preventDefault();
 }
 
+let bnavDrag = null;
+
+function onBnavDown(event) {
+  if (event.pointerType !== "mouse" || event.button !== 0) return;
+  const row = event.target.closest ? event.target.closest(".bnav-row") : null;
+  if (!row || row.scrollWidth <= row.clientWidth) return;
+  bnavDrag = { row: row, x: event.clientX, left: row.scrollLeft, moved: false };
+}
+
+function onBnavMove(event) {
+  if (!bnavDrag) return;
+  const dx = event.clientX - bnavDrag.x;
+  if (!bnavDrag.moved && Math.abs(dx) < 5) return;
+  bnavDrag.moved = true;
+  bnavDrag.row.scrollLeft = bnavDrag.left - dx;
+}
+
+function swallowClick(event) {
+  event.stopPropagation();
+  event.preventDefault();
+}
+
+function onBnavUp() {
+  if (!bnavDrag) return;
+  const moved = bnavDrag.moved;
+  bnavDrag = null;
+  if (!moved) return;
+  // A drag ends with a click on the item under the pointer; ignore that one click.
+  document.addEventListener("click", swallowClick, { capture: true, once: true });
+  setTimeout(function () {
+    document.removeEventListener("click", swallowClick, { capture: true });
+  }, 300);
+}
+
 function onClick(event) {
   if (!event.target.closest || !event.target.closest("#bnav")) {
     const moreEl = document.getElementById("bnav-more");
@@ -762,6 +796,11 @@ function boot() {
   });
   // Mouse wheel over the phone bottom bar scrolls it sideways (vertical wheel -> horizontal).
   document.addEventListener("wheel", onBnavWheel, { passive: false });
+  // Mouse press-and-drag on the bottom bar scrolls it like a touch swipe.
+  document.addEventListener("pointerdown", onBnavDown);
+  document.addEventListener("pointermove", onBnavMove);
+  document.addEventListener("pointerup", onBnavUp);
+  document.addEventListener("pointercancel", onBnavUp);
   document.addEventListener("pointerover", onPointerOver);
   document.addEventListener("pointerout", onPointerOut);
   document.addEventListener("focusin", onPointerOver);

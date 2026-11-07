@@ -66,7 +66,7 @@ class MobileShellCssTests(unittest.TestCase):
         self.assertIn("overflow-x:hidden", self.shell)
 
     def test_bnav_row_is_flex_and_fills(self):
-        self.assertIn(".bnav-row{display:flex;height:100%;overflow-x:auto", self.shell)
+        self.assertIn(".bnav-row{display:flex;height:100%;user-select:none;overflow-x:auto", self.shell)
         self.assertIn(".bnav-i{flex:0 0 4.5rem;min-width:4.5rem;", self.shell)
 
     def test_bnav_safe_area_padding(self):
