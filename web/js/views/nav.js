@@ -169,12 +169,9 @@ export function navView(vm) {
 
 export function bnavView(vm) {
   const counts = countsFor(vm);
-  const bottom = SECTIONS.filter(function (s) {
-    return s.bottom;
-  });
-  const rest = SECTIONS.filter(function (s) {
-    return !s.bottom;
-  }).concat([SETTINGS]);
+  // Phone bar: every section, in a scrollable row; the More sheet keeps Settings.
+  const bottom = SECTIONS;
+  const rest = [SETTINGS];
   const more = '<button type="button" class="bnav-i" data-action="toggle-more" data-focus="bnav-more"' +
     ' aria-expanded="' + moreOpen + '" aria-controls="bnav-more">' + icon("more") +
     '<span class="nav-l">More</span></button>';

@@ -5,7 +5,7 @@ Verifies:
 - safe-area insets and touch target token (--h-touch: 44px) in web/css/tokens.css
 - touch target sizing and 16px input font (iOS zoom prevention) in web/css/base.css
 - overflow prevention, safe-area padding, and sheet scroll in web/css/shell.css
-- flexible 4-item bnav-row and no text bleed in web/css/glass.css
+- scrollable bnav-row and no text bleed in web/css/glass.css
 - mobile table display: block conversion in web/css/work.css
 - non-wrapping action bands and 2-row run item grid in web/css/components.css
 - right-anchored mobile dropdown in web/css/system.css
@@ -66,8 +66,8 @@ class MobileShellCssTests(unittest.TestCase):
         self.assertIn("overflow-x:hidden", self.shell)
 
     def test_bnav_row_is_flex_and_fills(self):
-        self.assertIn(".bnav-row{display:flex;height:100%}", self.shell)
-        self.assertIn(".bnav-i{flex:1 1 0;min-width:0;", self.shell)
+        self.assertIn(".bnav-row{display:flex;height:100%;overflow-x:auto", self.shell)
+        self.assertIn(".bnav-i{flex:0 0 4.5rem;min-width:4.5rem;", self.shell)
 
     def test_bnav_safe_area_padding(self):
         self.assertIn("height:calc(var(--h-bnav) + env(safe-area-inset-bottom,0px))", self.shell)
