@@ -1,5 +1,4 @@
-/* Liquid-glass layer (loaded last). Surfaces become translucent, blurred panels floating over a soft colour field.
-   Overrides only: no markup or script changes. Every colour and glass value comes from the tokens in tokens.css. */
+/* Liquid-glass layer. */
 
 /* The colour field behind everything, so the glass has something to refract. */
 body {
@@ -134,7 +133,8 @@ body::before {
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
 }
-.tb { background: transparent; }
+@media (min-width: 768px) { .tb { background: var(--surface-0); z-index: 6; } }
+@media (max-width: 767px) { .tb { background: transparent; } }
 
 /* Floating layers: sheet, toasts, help dialog. */
 .sheet,
@@ -424,7 +424,8 @@ select:hover {
 /* Chips and tags: small pills. */
 .chip,
 .tb-chip,
-.tk-chip {
+.tk-chip,
+.wk-chip {
   border-radius: 999px;
   background: var(--glass-fill);
   border-color: var(--glass-edge);
@@ -616,11 +617,7 @@ select {
   }
 }
 
-/* Text fields (third pass): every input, textarea and select shares one soft, modern look that follows the theme:
-   --r-control gives the corner (sharp in Classic, rounder in the others), --surface-0 recesses the field inside its card
-   in every look and mode, and --focus tints the border and a soft ring (lime/olive in Obsidian, blue in Midnight,
-   white/ink in Classic). Visual properties only: each form keeps its own width, height and padding. The :root prefix
-   outranks the older per-form rules without !important. */
+/* Text fields. */
 :root :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="button"], [type="submit"], [type="reset"], [type="image"]), textarea, select:not(.tb-view-select, .rmm-select)) {
   background-color: var(--surface-0);
   color: var(--text-1);
@@ -663,10 +660,7 @@ select {
   :root :is(input, textarea, select) { transition: none }
 }
 
-/* Navigation rail (fourth pass). Selected item: a soft accent wash, a glowing indicator bar and a slow shimmer sweeping
-   over the label; hover nudges the row. Everything comes from the theme tokens (--accent, --text-*), so Midnight is
-   blue, Obsidian lime/olive and Classic white/ink. In Classic (flat) the glow is off and the sweep runs gray to white.
-   The selector carries data-theme and .nav so it outranks the older per-theme rules above without !important. */
+/* Navigation rail. */
 .nav-list { gap: 4px }
 .nav-i, .nav-collapse { transition: background-color 140ms cubic-bezier(.22, 1, .36, 1), color 140ms cubic-bezier(.22, 1, .36, 1),
   transform 200ms cubic-bezier(.22, 1, .36, 1), box-shadow 200ms cubic-bezier(.22, 1, .36, 1) }
@@ -774,10 +768,7 @@ select {
 .hx-page .hx-list > .act-row:last-child { border-bottom-color: transparent }
 .hx-page .hx-list > .act-row:hover { background: var(--glass-fill) }
 
-/* Top bar: the status pill, the usage meters and the links share one row that has to fit the card, whether or not the side
-   panel is open. The card is a size container; the least important items drop out as it narrows, and the breadcrumb keeps a
-   readable minimum instead of collapsing to "O...". Widths measured at 1440 px: crumb 251, pill 228, meters 259, age 46,
-   Enter usage 98, connection 33, three buttons 121. */
+/* Top bar. */
 .top { container: topbar / inline-size }
 .crumb { min-width: 9rem }
 .top-tools .pill { min-width: 0; max-width: 15rem; overflow: hidden; text-overflow: ellipsis }

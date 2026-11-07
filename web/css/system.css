@@ -36,7 +36,7 @@
 .sys{height:calc(100vh - var(--h-top) - var(--h-bnav) - var(--sp-6) - env(safe-area-inset-bottom,0px))}
 .sys-seg-l{display:none}
 .sys-lbl{font-size:12px}
-.sys-seg{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;max-width:100%;scrollbar-width:none}
+.sys-seg{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:wrap;max-width:100%;scrollbar-width:none}
 .sys-seg::-webkit-scrollbar{display:none}
 .sys-seg .btn,.sys-ov-tr .btn{min-width:44px}.sys-seg .btn{flex:0 0 auto;white-space:nowrap;padding:0 var(--sp-3)}
 .sys-ov-tr{left:var(--sp-2);right:var(--sp-2);max-width:calc(100vw - 32px);flex-wrap:wrap;white-space:normal;justify-content:flex-end;row-gap:var(--sp-1);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -60,4 +60,4 @@
 .sys-sep{align-self:stretch;width:1px;margin:2px 0;background:var(--line)}
 .sys-sp{min-width:44px;font-variant-numeric:tabular-nums}
 
-@media (max-width:1023px){.sys-ov-tl{top:var(--sp-2);left:var(--sp-2)}.sys-ov-tr{top:calc(var(--sp-2)*2 + 40px);left:var(--sp-2);right:auto;flex-wrap:wrap;max-width:calc(100% - var(--sp-4))}.sys-ov-tr ~ .empty{margin-top:calc(var(--sp-2)*3 + 84px)}}
+@media (max-width:1480px){.sys-ov-tl{top:var(--sp-2);left:var(--sp-2)}.sys-ov-tr{top:calc(var(--sp-2)*2 + 40px);left:var(--sp-2);right:auto;flex-wrap:wrap;max-width:calc(100% - var(--sp-4))}.sys-ov-tr ~ .empty{margin-top:calc(var(--sp-2)*3 + 84px)}}

@@ -207,7 +207,10 @@ function toggleNavOver(open) {
 }
 
 function onOutsideClick(event) {
-  if (navOverOpen() && !(event.target.closest && event.target.closest(".nav"))) toggleNavOver(false);
+  if (!navOverOpen()) return;
+  const inNav = event.target.closest && event.target.closest(".nav");
+  const navLink = event.target.closest && event.target.closest("a.nav-i");
+  if (!inNav || navLink) toggleNavOver(false);
 }
 
 export function initKeys() {

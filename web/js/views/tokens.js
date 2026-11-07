@@ -107,7 +107,7 @@ export function sectionView(vm) {
   const head = '<div class="page-head"><h2 class="page-title">' + esc(title) + "</h2>" +
     '<p class="page-note">' + esc(isProject ? "This project's limit and spend."
       : "Account-wide weekly stop and every project's spend.") + "</p></div>";
-  const usage = '<section class="ov-card" aria-label="Usage now">' + usageView(bandVm(vm)) + unknownNoteHtml(vm) +
+  const usage = '<section class="ov-card" aria-label="Usage now">' + unknownNoteHtml(vm) + usageView(bandVm(vm)) +
     "</section>";
   // The two stop cards (limits_v2.js) and the share rows (limits.js, own heading and copy button).
   const stop = limitsV2Html(vm);

@@ -232,9 +232,7 @@ minmax(2rem, 3rem); column-gap: var(--sp-3); align-items: center; padding: 0 var
   display: grid;
   grid-template-columns: var(--rg) var(--ref-col); column-gap: var(--sp-2); align-items: center; min-width: 0;
 }
-.rg-chips,
-.rg-main {display: flex; align-items: center; gap: var(--sp-1); min-width: 0; overflow: hidden; white-space: nowrap
-}
+.rg-chips, .rg-main {display: flex; align-items: center; gap: var(--sp-1); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
 .rg-t {min-width: 0;overflow: hidden;text-overflow: ellipsis;white-space: nowrap}
 .rg-num {text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums
 }
@@ -255,7 +253,7 @@ minmax(2rem, 3rem); column-gap: var(--sp-3); align-items: center; padding: 0 var
 .ov-h:has(> .ref-copy) { display: flex; align-items: center; gap: var(--sp-2) }
 @media (max-width: 640px) { .ov-h:has(> .ref-copy), .ib-head { min-height: var(--h-touch) } .ov-h > .ref-copy { margin-block: calc(var(--sp-2) * -1) } }
 li:has(> .p-row) { display: grid; grid-template-columns: minmax(0, 1fr) var(--ref-col); align-items: center }
-.rc-move { --rg: 4.5rem 4.5rem minmax(0, 1fr); margin: 0; }
+.rc-move { --rg: 5rem 5.25rem minmax(0, 1fr); margin: 0; }
 .lane-act { --rg: minmax(0, 1fr); }
 .lane-act > .btn { width: auto }
 .lane-act > *, .tl-label > .lane-state { justify-self: end }
@@ -264,6 +262,7 @@ li:has(> .p-row) { display: grid; grid-template-columns: minmax(0, 1fr) var(--re
 .row-grid.rg-agent { --rg: 1.5rem 7.5rem minmax(0, 1fr) 4.5rem 3rem 4.5rem 7.5rem 4.25rem; grid-template-columns: var(--rg); gap: 0 var(--sp-2); align-items: center; }
 .row-grid.rg-agent > * { min-width: 0; }
 .rg-agent > .rg-chips { flex-wrap: nowrap; overflow: hidden; }
+.rg-agent > :nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rg-agent .chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rg-agent > .rg-main { display: flex; align-items: center; gap: var(--sp-2); overflow: hidden; }
 .rg-agent .ag-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 0 1 auto; min-width: 0; }

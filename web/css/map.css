@@ -65,7 +65,7 @@
 .wf-table tr{display:flex;flex-wrap:wrap;align-items:center;position:relative;padding:var(--sp-2) 0;border-bottom:1px solid var(--track)}
 .wf-table tr.wf-wg{display:block;width:100%}
 .wf-table tr.wf-wg th{display:block;width:100%;white-space:normal}
-.wf-table td{display:inline-flex;align-items:center;padding:0 var(--sp-2) 0 0;border:0;color:var(--text-2);font-size:var(--fs-12);overflow:visible}
+.wf-table td{display:inline-flex;align-items:center;gap:4px;padding:0 var(--sp-2) 0 0;border:0;color:var(--text-2);font-size:var(--fs-12);overflow:visible}
 .wf-table td:nth-child(-n+2){display:block;width:100%;padding-right:0;color:var(--text-1)}.wf-table td:nth-child(1){color:var(--text-3)}
 .wf-table td:nth-child(2){white-space:normal;margin-bottom:var(--sp-1);font-size:var(--fs-13)}
 .wf-table td:nth-child(9){margin-left:auto;padding:0;position:static}

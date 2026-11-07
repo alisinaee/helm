@@ -1,3 +1,4 @@
+/* Design tokens. */
 :root {
   --ref-col: 1.5rem;
   --sw-obsidian: linear-gradient(135deg, #0c0c0c 50%, #ccff00 50%);
@@ -300,11 +301,9 @@
 .btn.sw[aria-checked="true"] { background: color-mix(in srgb, var(--success) 22%, var(--surface-2));
   border-color: var(--success); color: var(--success); padding-inline: .6rem 1.9rem }
 .btn.sw[aria-checked="true"]::before { background: var(--success); left: auto; right: 4px }
-.rule-tabs .btn[role="radio"][data-value="on"][aria-checked="true"] { border-color: var(--success); color: var(--success);
-  background: color-mix(in srgb, var(--success) 22%, var(--surface-2)) }
 @media (prefers-reduced-motion: reduce) { .btn.sw, .btn.sw::before { transition: none } }
 
-/* Liquid-glass tokens (web/css/glass.css). Dark is the default; light mirrors the blocks above. */
+/* Liquid-glass tokens. */
 :root {
   --glass-fill: rgba(255, 255, 255, 0.07);
   --glass-fill-strong: rgba(255, 255, 255, 0.12);
@@ -343,8 +342,7 @@
   --glass-ink-soft: rgba(21, 25, 31, 0.10);
 }
 
-/* Obsidian & Lime (R10.37, docs/ux/DESIGN-SYSTEM.md). Dark is the default; the light mode is below. Contrast values from
-   the proposal; --defer and --m-* keep the dark values (all pass 4.5:1 on these darker surfaces, checked by tools/contrast.py). */
+/* Obsidian & Lime. */
 :root[data-theme="obsidian"] {
   color-scheme: dark;
   --surface-0: #000000;
@@ -385,8 +383,7 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
 }
 
-/* Obsidian & Lime, light mode (theme plan): lime-olive on warm white. Sets every colour and glass token the dark block
-   sets; the glow and grid tokens are softened so the backdrop stays quiet on white. */
+/* Obsidian & Lime, light mode. */
 :root[data-theme="obsidian"][data-mode="light"] {
   color-scheme: light;
   --surface-0: #f2f4ea;
@@ -428,8 +425,7 @@
   --ease-ob: cubic-bezier(0.4, 0, 0.2, 1)
 }
 
-/* Black (theme plan): plain black, white accent, flat glass (no blur, no colour fields). Status, model and defer colours
-   inherit the classic dark values from :root. */
+/* Black. */
 :root[data-theme="black"] {
   color-scheme: dark;
   --surface-0: #000000;
@@ -461,7 +457,7 @@
   --r-shell: 4px
 }
 
-/* Black, light mode: same flat rules on white. Status, model and defer colours are the classic light values. */
+/* Black, light mode. */
 :root[data-theme="black"][data-mode="light"] {
   color-scheme: light;
   --surface-0: #f5f5f5;
@@ -507,21 +503,20 @@
   --r-shell: 4px
 }
 
-/* Nav rail (glass.css): the label shimmer colours and where the drag handles sit relative to the floating cards
-   (frame padding + half the gap - half the 6px handle; Obsidian's frame has an extra margin and border). */
+/* Nav rail. */
 :root { --rz-off: 12px; --nav-sh-base: var(--text-1); --nav-sh-peak: var(--accent) }
 :root[data-theme="obsidian"] { --rz-off: 27px }
 :root[data-theme="black"] { --nav-sh-base: var(--text-2) }
 
-/* Toolbar height and soft list dividers (glass.css): one hairline colour for rows and group headers. */
+/* Toolbar height and dividers. */
 :root { --tb-h: 38px; --divider: color-mix(in srgb, var(--line) 20%, transparent) }
 @media (max-width: 640px) { :root { --tb-h: 40px } }
 
-/* R9.59: one line per shortcut, keys in a fixed column */
+/* Shortcuts. */
 .set-keys { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: var(--sp-1) var(--sp-2); align-items: baseline }
 .set-key { white-space: nowrap }
 @media (max-width: 599px) { .set-keys { grid-template-columns: 7rem minmax(0, 1fr) } }
-/* R9.55/R9.66/R9.67 spend: numbers share the width with the name; phone stacks each project as a card */
+/* Spend. */
 .spend-list .tk-spend { --rg: minmax(0, 1.4fr) minmax(5.5rem, 1fr) minmax(6.5rem, 1fr) minmax(5rem, 1fr) }
 .spend-list .tk-spend > :last-child { white-space: nowrap }
 .row-grid.tk-by { --rg: minmax(0, 1.4fr) minmax(3.5rem, .6fr) minmax(6rem, 1fr) minmax(6rem, 1fr) minmax(5.5rem, 1fr) }
@@ -541,7 +536,7 @@
 .ag-legend { margin: 0 }
 .rg-agent > .ag-lead > input { margin: 0 }
 
-/* The usage band wraps: meters share a row, the note and actions get a full-width row (no one-letter-per-line note). */
+/* Usage band. */
 .band.band { grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
 .band .band-actions { grid-column: 1 / -1; min-width: 0; }
 .band-actions .banner { flex: 1 1 100%; min-width: 0; max-width: 100%; }

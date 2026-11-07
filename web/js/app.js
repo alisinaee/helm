@@ -15,7 +15,7 @@ import { configureCommands, pendingValue, run } from "./cmd.js";
 import { withBusy } from "./busy.js";
 import { initKeys, setKeyHooks } from "./keys.js";
 import { featureLinkChange } from "./views/details.js";
-import { bnavView, closeMore, navView, toggleMore } from "./views/nav.js";
+import { bnavView, closeMore, navView, setNavOver, toggleMore } from "./views/nav.js";
 import { pageAction } from "./views/inbox.js";
 import { openPalette } from "./views/palette.js";
 import { limitAction } from "./views/limits.js";
@@ -811,6 +811,11 @@ function boot() {
   helpDialog.addEventListener("close", render);
   onRouteChange(function () {
     closeMore();
+    setNavOver(false);
+    if (root) root.removeAttribute("data-nav-over");
+    window.scrollTo(0, 0);
+    const m = document.getElementById("main");
+    if (m) m.scrollTop = 0;
     noteRoute();
     render();
     schedule(0);
