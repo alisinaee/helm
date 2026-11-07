@@ -486,9 +486,9 @@ select:hover {
   box-shadow: inset 2px 0 0 var(--accent);
 }
 :root[data-theme="obsidian"] .bnav-i[aria-current="page"] {
-  background: var(--glass-fill-strong);
+  background: var(--sel);
   color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+  box-shadow: inset 0 2px 0 var(--accent);
 }
 :root[data-theme="obsidian"] .btn-primary {
   background: var(--accent);
