@@ -601,6 +601,15 @@ function closeHelp() {
   if (helpDialog.open) helpDialog.close();
 }
 
+function onBnavWheel(event) {
+  const row = event.target.closest ? event.target.closest(".bnav-row") : null;
+  if (!row || row.scrollWidth <= row.clientWidth || event.ctrlKey) return;
+  const d = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+  if (!d) return;
+  row.scrollLeft += d;
+  event.preventDefault();
+}
+
 function onClick(event) {
   if (!event.target.closest || !event.target.closest("#bnav")) {
     const moreEl = document.getElementById("bnav-more");
@@ -751,6 +760,8 @@ function boot() {
     topLimits.at = Date.now();
     if (JSON.stringify(topLimits.windows) !== prev) document.dispatchEvent(new Event("rb:render"));
   });
+  // Mouse wheel over the phone bottom bar scrolls it sideways (vertical wheel -> horizontal).
+  document.addEventListener("wheel", onBnavWheel, { passive: false });
   document.addEventListener("pointerover", onPointerOver);
   document.addEventListener("pointerout", onPointerOut);
   document.addEventListener("focusin", onPointerOver);
