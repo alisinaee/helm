@@ -60,7 +60,7 @@
 .side-tabs{display:flex;gap:var(--sp-1);padding:var(--sp-2);border-bottom:1px solid var(--track)}
 .side-body{flex:1 1 auto;min-height:0;padding:var(--sp-4);overflow:auto}
 .bnav{display:none;position:relative;background:var(--surface-1);border-top:1px solid var(--track)}
-.bnav-row{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none}.bnav-row::-webkit-scrollbar{display:none}
+.bnav-row{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}.bnav-row::-webkit-scrollbar{display:none}
 .bnav-i{flex:0 0 4.5rem;min-width:4.5rem;scroll-snap-align:start;flex-direction:column;justify-content:center;gap:2px;min-height:var(--h-bnav);padding:var(--sp-1);font-size:var(--fs-11);text-align:center}
 .bnav-i .nav-b{position:absolute;top:var(--sp-1);left:50%;margin-left:6px}
 .sheet{position:absolute;left:var(--sp-2);right:var(--sp-2);bottom:100%;z-index:var(--z-over);display:grid;gap:2px;margin-bottom:var(--sp-2);padding:var(--sp-2);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow-2);max-height:calc(100vh - var(--h-bnav) - var(--h-top) - 24px - env(safe-area-inset-bottom,0px));overflow-y:auto;-webkit-overflow-scrolling:touch}
