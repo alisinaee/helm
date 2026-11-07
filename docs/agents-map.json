@@ -1,39 +1,4 @@
 {
-  "a0685b635c48c2f03": {
-    "task": "R9.30",
-    "title": "haiku: R9.30 Inbox choice answers",
-    "model": "haiku"
-  },
-  "adb3634ad4971bce4": {
-    "task": "R9.31",
-    "title": "haiku: R9.31 head asks with options",
-    "model": "haiku"
-  },
-  "a47ff355d821a9493": {
-    "task": "R3.2",
-    "title": "haiku: Inbox tasks: check against code and do leftovers",
-    "model": "haiku"
-  },
-  "aa8abd270b7378e83": {
-    "task": "R7.31",
-    "title": "haiku: Planner crash/hang fix and Planner tasks",
-    "model": "haiku"
-  },
-  "af84a46a3e68fcf2a": {
-    "task": "R7.31",
-    "title": "haiku: UI/UX tester: see every section and file issues",
-    "model": "haiku"
-  },
-  "ad092fcea45fd9589": {
-    "task": "R7.31",
-    "title": "haiku: UI/UX tester v2: measure alignment, real data, rules",
-    "model": "haiku"
-  },
-  "afecfa15aabeb1aae": {
-    "task": "R9.70",
-    "title": "haiku: R9.70 Inbox option buttons layout",
-    "model": "haiku"
-  },
   "af3bfd3dd92cf796c": {
     "task": "R10.8",
     "title": "haiku: R10.8 delete Research section",
@@ -997,6 +962,41 @@
   "a29a9e47964dd7330": {
     "task": "R7.26",
     "title": "sonnet: R7.26 UX audit read-only",
+    "model": "sonnet"
+  },
+  "a5aa51f7389a6fe2a": {
+    "task": "R7.31",
+    "title": "opus: Opus advice on merging branches into main",
+    "model": "opus"
+  },
+  "a4fcc734538e51302": {
+    "task": "R7.31",
+    "title": "haiku: Fetch jakubkrehel skills repo README",
+    "model": "haiku"
+  },
+  "a014107ff8d59a536": {
+    "task": "R7.31",
+    "title": "sonnet: Mobile CSS fix: shell and overview",
+    "model": "sonnet"
+  },
+  "a22aa32cd746b9a8a": {
+    "task": "R7.31",
+    "title": "sonnet: Mobile CSS fix: work and toolbar",
+    "model": "sonnet"
+  },
+  "a4746795ee5360cd8": {
+    "task": "R7.31",
+    "title": "sonnet: Mobile CSS fix: tokens git system graph",
+    "model": "sonnet"
+  },
+  "af9cfa12346d8aeef": {
+    "task": "R7.31",
+    "title": "sonnet: Mobile follow-up: JS and remaining items",
+    "model": "sonnet"
+  },
+  "aa3508d03783fefb7": {
+    "task": "R7.31",
+    "title": "sonnet: Fix nine failing web tests after mobile CSS",
     "model": "sonnet"
   }
 }

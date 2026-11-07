@@ -11063,6 +11063,120 @@
         "cacheWrite": 156463,
         "model": "sonnet"
       }
+    },
+    {
+      "id": "j1232",
+      "title": "opus: Opus advice on merging branches into main",
+      "model": "opus",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-11-06T15:48:29+03:30",
+      "ended": "2026-11-06T15:50:13+03:30",
+      "tokens": {
+        "in": 34,
+        "out": 8229,
+        "cacheRead": 970807,
+        "cacheWrite": 73337,
+        "model": "opus"
+      }
+    },
+    {
+      "id": "j1233",
+      "title": "haiku: Fetch jakubkrehel skills repo README",
+      "model": "haiku",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-11-06T15:58:27+03:30",
+      "ended": "2026-11-06T15:58:28+03:30",
+      "tokens": {
+        "in": 4,
+        "out": 1570,
+        "cacheRead": 3213,
+        "cacheWrite": 10431,
+        "model": "haiku"
+      }
+    },
+    {
+      "id": "j1234",
+      "title": "sonnet: Mobile CSS fix: shell and overview",
+      "model": "sonnet",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-11-07T09:27:53+03:30",
+      "ended": "2026-11-07T09:31:21+03:30",
+      "tokens": {
+        "in": 30,
+        "out": 9626,
+        "cacheRead": 1016811,
+        "cacheWrite": 85238,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1235",
+      "title": "sonnet: Mobile CSS fix: work and toolbar",
+      "model": "sonnet",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-11-07T09:27:59+03:30",
+      "ended": "2026-11-07T09:30:31+03:30",
+      "tokens": {
+        "in": 50,
+        "out": 13616,
+        "cacheRead": 1990360,
+        "cacheWrite": 63036,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1236",
+      "title": "sonnet: Mobile CSS fix: tokens git system graph",
+      "model": "sonnet",
+      "task": "R7.31",
+      "status": "done",
+      "started": "2026-11-07T09:28:05+03:30",
+      "ended": "2026-11-07T09:29:15+03:30",
+      "tokens": {
+        "in": 30,
+        "out": 6898,
+        "cacheRead": 1032661,
+        "cacheWrite": 45028,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1237",
+      "title": "sonnet: Mobile follow-up: JS and remaining items",
+      "model": "sonnet",
+      "task": "R7.31",
+      "effort": "medium",
+      "status": "done",
+      "started": "2026-11-07T09:32:04+03:30",
+      "ended": "2026-11-07T09:38:34+03:30",
+      "tokens": {
+        "in": 72,
+        "out": 15401,
+        "cacheRead": 2833152,
+        "cacheWrite": 66640,
+        "model": "sonnet"
+      }
+    },
+    {
+      "id": "j1238",
+      "title": "sonnet: Fix nine failing web tests after mobile CSS",
+      "model": "sonnet",
+      "task": "R7.31",
+      "effort": "medium",
+      "status": "done",
+      "started": "2026-11-07T09:42:00+03:30",
+      "ended": "2026-11-07T09:42:39+03:30",
+      "tokens": {
+        "in": 18,
+        "out": 4085,
+        "cacheRead": 534112,
+        "cacheWrite": 46443,
+        "model": "sonnet"
+      }
     }
   ]
 }
