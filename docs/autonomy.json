@@ -8,11 +8,11 @@
     "note": "moved to Tokens > Limits (R11.164)"
   },
   "usage": {
-    "weeklyPercent": 89,
-    "fiveHourPercent": 3,
-    "weeklyResetsAt": "2026-11-06T07:59:59.976616+00:00",
-    "fiveHourResetsAt": "2026-11-05T11:49:59.976602+00:00",
-    "updated": "2026-11-05T11:22:27+03:30",
+    "weeklyPercent": 23,
+    "fiveHourPercent": 18,
+    "weeklyResetsAt": "2026-11-13T08:00:00.234627+00:00",
+    "fiveHourResetsAt": "2026-11-08T09:20:00.234610+00:00",
+    "updated": "2026-11-08T10:22:25+03:30",
     "source": "Anthropic usage endpoint"
   }
 }

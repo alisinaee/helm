@@ -5,6 +5,8 @@ description: Helm head: plan, launch parallel cheap workers, verify, commit, kee
 
 # /helm: the Helm head (mjp-labs Linux server)
 
+**Stop first:** if `docs/roadmap.config.json` in the folder of this chat has `"helmDisabled": true`, do nothing here: say Helm is off for this project and that `/helm-disable` turns it off and setting the flag back to false turns it on. Do not run any step below.
+
 `/head` on this machine is a different tool (the head mod in ~/StudioProjects/home-server-head/mods/head);
 this skill is `/helm`.
 
